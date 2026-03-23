@@ -739,51 +739,91 @@ function initAudio() {
   loadSamp("violin");
 }
 
-/* ── FIX v4.1: Connect sampler to effects chain IMMEDIATELY on creation,
-     not inside onload. Avoids Tone.js timing bug where connect() inside
-     onload silently fails for instruments loaded after the first one.
-     Also uses full absolute URLs (no baseUrl) for CDN reliability. ── */
+/* ── FIX v4.2: PROBE-BASED LOADER
+     The nbrosowsky repo has different files per instrument — guessing
+     the note map fails (e.g. cello has no A4.mp3). So we:
+     1. Build a generous candidate list covering every chromatic note
+        across the instrument's plausible range.
+     2. Probe each URL with a quick HEAD fetch (parallel, fast).
+     3. Build the Tone.Sampler with ONLY the URLs that actually exist.
+     This guarantees zero 404s and works for every instrument. ── */
+
+/* Candidate notes: every chromatic pitch across 7 octaves.
+   Repo filenames use flats: Eb3.mp3, Bb2.mp3, Db4.mp3, etc. */
+var ALL_CHROMATIC = [];
+(function() {
+  var names = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+  for (var oct = 0; oct <= 7; oct++) {
+    for (var n = 0; n < names.length; n++) {
+      ALL_CHROMATIC.push(names[n] + oct);
+    }
+  }
+})();
+
 function loadSamp(id) {
   if (samplers[id] || loading[id]) return;
   var ins = findInst(id); if (!ins || ins.t !== "samp") return;
   loading[id] = true; renderInst(); updBdg();
 
-  /* Build full absolute URLs — the pattern that had violin working */
   var base = SBASE + id + "/";
-  var urls = {};
-  Object.keys(ins.n).forEach(function(k) { urls[k] = base + ins.n[k] + ".mp3"; });
+  dbg("Probing " + id + " samples...");
 
-  dbg("Loading " + id + " (" + Object.keys(urls).length + " samples)...");
-
-  var sp = new Tone.Sampler({
-    urls: urls,
-    release: 1.2,
-    onload: function() {
-      delete loading[id];
-      samplers[id] = sp;
-      /* Connection already established — just update UI */
-      renderInst(); updBdg();
-      dbg(id + " READY — " + Object.keys(urls).length + " samples loaded");
-    },
-    onerror: function(e) {
-      delete loading[id];
-      dbg(id + " LOAD ERROR: " + (e && e.message ? e.message : e || "unknown"));
-      renderInst(); updBdg();
-    }
+  /* Probe all candidate URLs in parallel with HEAD requests */
+  var probes = ALL_CHROMATIC.map(function(note) {
+    var url = base + note + ".mp3";
+    return fetch(url, {method: "HEAD", mode: "cors"})
+      .then(function(r) { return r.ok ? {note: note, url: url} : null; })
+      .catch(function() { return null; });
   });
 
-  /* KEY FIX: connect to effects chain NOW, before samples load.
-     The audio graph link exists immediately; audio flows once buffers arrive.
-     No disconnect/reconnect dance needed. */
-  sp.connect(dist);
+  Promise.all(probes).then(function(results) {
+    var found = {};
+    var count = 0;
+    for (var i = 0; i < results.length; i++) {
+      if (results[i]) { found[results[i].note] = results[i].url; count++; }
+    }
+
+    if (count === 0) {
+      delete loading[id];
+      dbg(id + " ERROR: no samples found at CDN");
+      renderInst(); updBdg();
+      return;
+    }
+
+    dbg(id + ": found " + count + " samples, building sampler...");
+
+    var sp = new Tone.Sampler({
+      urls: found,
+      release: 1.2,
+      onload: function() {
+        delete loading[id];
+        samplers[id] = sp;
+        renderInst(); updBdg();
+        dbg(id + " READY — " + count + " samples loaded");
+      },
+      onerror: function(e) {
+        delete loading[id];
+        dbg(id + " SAMPLER ERROR: " + (e && e.message ? e.message : e || "unknown"));
+        renderInst(); updBdg();
+      }
+    });
+
+    /* Connect immediately — audio flows once buffers arrive */
+    sp.connect(dist);
+
+  }).catch(function(e) {
+    delete loading[id];
+    dbg(id + " PROBE FAILED: " + e);
+    renderInst(); updBdg();
+  });
 
   setTimeout(function() {
     if (loading[id]) {
       delete loading[id];
-      dbg(id + " timed out after 30s — check network/console");
+      dbg(id + " timed out after 45s");
       renderInst(); updBdg();
     }
-  }, 30000);
+  }, 45000);
 }
 
 /* ── FIX v4: mkVoice connects _out (chain endpoint) to global bus, not raw synth ── */
