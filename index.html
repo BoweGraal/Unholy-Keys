@@ -739,29 +739,31 @@ function initAudio() {
   loadSamp("violin");
 }
 
-/* ── FIX v4: Use baseUrl + relative paths for reliable CDN sampler loading ── */
+/* ── FIX v4.1: Connect sampler to effects chain IMMEDIATELY on creation,
+     not inside onload. Avoids Tone.js timing bug where connect() inside
+     onload silently fails for instruments loaded after the first one.
+     Also uses full absolute URLs (no baseUrl) for CDN reliability. ── */
 function loadSamp(id) {
   if (samplers[id] || loading[id]) return;
   var ins = findInst(id); if (!ins || ins.t !== "samp") return;
   loading[id] = true; renderInst(); updBdg();
 
-  var baseUrl = SBASE + id + "/";
+  /* Build full absolute URLs — the pattern that had violin working */
+  var base = SBASE + id + "/";
   var urls = {};
-  Object.keys(ins.n).forEach(function(k) { urls[k] = ins.n[k] + ".mp3"; });
+  Object.keys(ins.n).forEach(function(k) { urls[k] = base + ins.n[k] + ".mp3"; });
 
-  dbg("Loading " + id + " from " + baseUrl + "...");
+  dbg("Loading " + id + " (" + Object.keys(urls).length + " samples)...");
 
   var sp = new Tone.Sampler({
     urls: urls,
-    baseUrl: baseUrl,
     release: 1.2,
     onload: function() {
       delete loading[id];
       samplers[id] = sp;
-      try { sp.disconnect(); } catch(e) {}
-      sp.connect(dist);
+      /* Connection already established — just update UI */
       renderInst(); updBdg();
-      dbg(id + " loaded OK (" + Object.keys(urls).length + " samples)");
+      dbg(id + " READY — " + Object.keys(urls).length + " samples loaded");
     },
     onerror: function(e) {
       delete loading[id];
@@ -770,13 +772,18 @@ function loadSamp(id) {
     }
   });
 
+  /* KEY FIX: connect to effects chain NOW, before samples load.
+     The audio graph link exists immediately; audio flows once buffers arrive.
+     No disconnect/reconnect dance needed. */
+  sp.connect(dist);
+
   setTimeout(function() {
     if (loading[id]) {
       delete loading[id];
-      dbg(id + " timed out after 25s");
+      dbg(id + " timed out after 30s — check network/console");
       renderInst(); updBdg();
     }
-  }, 25000);
+  }, 30000);
 }
 
 /* ── FIX v4: mkVoice connects _out (chain endpoint) to global bus, not raw synth ── */
@@ -786,11 +793,20 @@ function mkVoice(noteName) {
 
   /* SAMPLER path */
   if (ins.t === "samp") {
-    var sp = samplers[ins.id]; if (!sp) return null;
+    var sp = samplers[ins.id];
+    if (!sp) {
+      dbg(ins.id + " not loaded yet — click it again after green dot appears");
+      return null;
+    }
+    /* Debug: confirm sampler is connected */
+    if (!sp.numberOfOutputs || sp.numberOfOutputs < 1) {
+      dbg("WARNING: " + ins.id + " sampler has no outputs — reconnecting");
+      try { sp.connect(dist); } catch(e) { dbg("Reconnect failed: " + e); }
+    }
     return {
-      atk: function() { sp.triggerAttack(noteName); },
+      atk: function() { try { sp.triggerAttack(noteName); } catch(e) { dbg("atk err: " + e.message); } },
       rel: function() { try { sp.triggerRelease(noteName); } catch(e) {} },
-      ar:  function(dur) { sp.triggerAttackRelease(noteName, dur); },
+      ar:  function(dur) { try { sp.triggerAttackRelease(noteName, dur); } catch(e) { dbg("ar err: " + e.message); } },
       kill: function() {},
       setEnv: function() {}
     };
