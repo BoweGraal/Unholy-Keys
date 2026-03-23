@@ -739,17 +739,12 @@ function initAudio() {
   loadSamp("violin");
 }
 
-/* ── FIX v4.3: AUDIO ELEMENT PROBE
-     jsDelivr returns HTTP 200 for missing files (HTML error page),
-     so HEAD/fetch probes are unreliable. Instead we use Audio()
-     elements with preload='metadata' — the browser's audio decoder
-     itself tells us if the file is valid audio. Only verified URLs
-     get passed to Tone.Sampler, guaranteeing zero load errors.
-   ── */
+/* ── FIX v4.4: CONTENT-TYPE PROBE
+     jsDelivr returns HTTP 200 with text/html for missing files.
+     Audio() element probes also fail (browser accepts metadata from error pages).
+     Solution: fetch first bytes and check Content-Type header.
+     Only audio/mpeg URLs get passed to Tone.Sampler. ── */
 
-/* Candidate notes to check per instrument.
-   We check naturals + flats at every octave in range.
-   Tone.Sampler pitch-shifts to fill gaps, so even 4-5 hits is fine. */
 var PROBE_NOTES = [];
 (function() {
   var names = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
@@ -760,54 +755,50 @@ var PROBE_NOTES = [];
   }
 })();
 
-/* Probe a single URL using Audio element — returns Promise<bool> */
-function probeAudioFile(url) {
-  return new Promise(function(resolve) {
-    var a = new Audio();
-    var done = false;
-    function finish(ok) { if (done) return; done = true; a.src = ""; resolve(ok); }
-    a.preload = "metadata";
-    a.onloadedmetadata = function() { finish(true); };
-    a.onerror = function() { finish(false); };
-    a.src = url;
-    setTimeout(function() { finish(false); }, 6000);
-  });
-}
-
 function loadSamp(id) {
   if (samplers[id] || loading[id]) return;
   var ins = findInst(id); if (!ins || ins.t !== "samp") return;
   loading[id] = true; renderInst(); updBdg();
 
   var base = SBASE + id + "/";
-  dbg("Discovering " + id + " samples...");
+  dbg("Discovering " + id + " samples (content-type check)...");
 
-  /* Probe all candidates in parallel using Audio elements */
+  /* Probe all candidates — fetch with range header to minimize download,
+     then check if Content-Type is audio, not text/html */
   var probes = PROBE_NOTES.map(function(note) {
     var url = base + note + ".mp3";
-    return probeAudioFile(url).then(function(ok) {
-      return ok ? note : null;
-    });
+    return fetch(url, {method: "GET", mode: "cors", headers: {"Range": "bytes=0-1"}})
+      .then(function(r) {
+        var ct = (r.headers.get("content-type") || "").toLowerCase();
+        /* Real mp3 files return audio/mpeg. jsDelivr error pages return text/html */
+        if (ct.indexOf("audio") !== -1 || ct.indexOf("mpeg") !== -1 || ct.indexOf("octet-stream") !== -1) {
+          return note;
+        }
+        return null;
+      })
+      .catch(function() { return null; });
   });
 
   Promise.all(probes).then(function(results) {
     var urls = {};
     var count = 0;
+    var found = [];
     for (var i = 0; i < results.length; i++) {
       if (results[i]) {
         urls[results[i]] = base + results[i] + ".mp3";
+        found.push(results[i]);
         count++;
       }
     }
 
     if (count === 0) {
       delete loading[id];
-      dbg(id + " ERROR: 0 valid samples found at CDN");
+      dbg(id + " ERROR: 0 audio files found at CDN (all returned text/html)");
       renderInst(); updBdg();
       return;
     }
 
-    dbg(id + ": " + count + " valid samples found, loading...");
+    dbg(id + ": " + count + " verified — " + found.join(","));
 
     var sp = new Tone.Sampler({
       urls: urls,
@@ -816,7 +807,7 @@ function loadSamp(id) {
         delete loading[id];
         samplers[id] = sp;
         renderInst(); updBdg();
-        dbg(id + " READY — " + count + " samples (" + Object.keys(urls).join(",") + ")");
+        dbg(id + " READY — " + count + " samples loaded");
       },
       onerror: function(e) {
         delete loading[id];
