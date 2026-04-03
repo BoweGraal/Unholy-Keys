@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+6<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -338,6 +338,10 @@ var CATS=[
     {id:"sqr",l:"Square",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"square"},envelope:{attack:.01,decay:.25,sustain:.4,release:.2}})}},
     {id:"fms",l:"FM Synth",key:null,t:"syn",mk:function(){return new Tone.FMSynth({modulationIndex:12,envelope:{attack:.01,decay:.3,sustain:.5,release:.3}})}},
     {id:"ams",l:"AM Synth",key:null,t:"syn",mk:function(){return new Tone.AMSynth({envelope:{attack:.02,decay:.3,sustain:.6,release:.3}})}}
+  ]},
+  {id:"graal",l:"Graal",c:"#C44DFF",ac:"a3",items:[
+    {id:"graal-bassoon",l:"Rage Bassoon",key:null,t:"samp",sbase:"instruments/",ext:".wav",
+      n:{A3:"rage_bassoon_A3",A4:"rage_bassoon_A4",B3:"rage_bassoon_B3",B4:"rage_bassoon_B4",E3:"rage_bassoon_E3",E4:"rage_bassoon_E4",E5:"rage_bassoon_E5"}}
   ]}
 ];
 
@@ -377,7 +381,7 @@ var layout=buildLayout();
 
 function initAudio(){if(started)return;started=true;Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);rev=new Tone.Reverb({decay:2.5,wet:S.fxR}).connect(masterVol);dly=new Tone.FeedbackDelay({delayTime:"8n",feedback:.3,wet:S.fxD}).connect(rev);cho=new Tone.Chorus({frequency:1.5,delayTime:3.5,depth:.7,wet:S.fxC}).connect(dly);dist=new Tone.Distortion({distortion:.3,wet:S.fxDi}).connect(cho);audioReady=true;loadSamp("violin");}
 
-function loadSamp(id){if(samplers[id]||loading[id])return;var ins=findInst(id);if(!ins||ins.t!=="samp")return;loading[id]=true;renderInst();updBdg();var urls={};Object.keys(ins.n).forEach(function(k){urls[k]=ins.n[k]+".mp3";});var folder=ins.base||id;var sp=new Tone.Sampler({urls:urls,baseUrl:SBASE+folder+"/",release:1.2,onload:function(){delete loading[id];samplers[id]=sp;if(ins.fx){var chain=ins.fx();sp._fx=chain;sp.chain.apply(sp,chain.concat([dist]));}else{sp.connect(dist);}renderInst();updBdg();dbg(id+" loaded");},onerror:function(e){delete loading[id];dbg(id+" ERROR: "+(e&&e.message?e.message:e||"unknown"));renderInst();updBdg();}});setTimeout(function(){if(loading[id]){delete loading[id];renderInst();updBdg();}},15000);}
+function loadSamp(id){if(samplers[id]||loading[id])return;var ins=findInst(id);if(!ins||ins.t!=="samp")return;loading[id]=true;renderInst();updBdg();var urls={};var ext=ins.ext||".mp3";Object.keys(ins.n).forEach(function(k){urls[k]=ins.n[k]+ext;});var folder=ins.base||id;var baseUrl=ins.sbase||(SBASE+folder+"/");var sp=new Tone.Sampler({urls:urls,baseUrl:baseUrl,release:1.2,onload:function(){delete loading[id];samplers[id]=sp;if(ins.fx){var chain=ins.fx();sp._fx=chain;sp.chain.apply(sp,chain.concat([dist]));}else{sp.connect(dist);}renderInst();updBdg();dbg(id+" loaded");},onerror:function(e){delete loading[id];dbg(id+" ERROR: "+(e&&e.message?e.message:e||"unknown"));renderInst();updBdg();}});setTimeout(function(){if(loading[id]){delete loading[id];renderInst();updBdg();}},15000);}
 
 function mkVoice(noteName){if(!audioReady)return null;var ins=findInst(S.eng);if(!ins)return null;if(ins.t==="samp"){var sp=samplers[ins.id];if(!sp)return null;return{atk:function(){sp.triggerAttack(noteName);},rel:function(){try{sp.triggerRelease(noteName);}catch(e){}},ar:function(dur){sp.triggerAttackRelease(noteName,dur);},kill:function(){},setEnv:function(){}};}  var s=ins.mk();
   /* If synth has internal effects chain (_x), connect the LAST effect to global bus.
