@@ -148,7 +148,23 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
     <div class="hdr-btns">
       <button class="mbtn" id="bMobile">Mobile</button>
       <button class="jbtn" id="bjam">Jam Mode</button>
+      <button class="jbtn" id="bLive" style="background:linear-gradient(135deg,#D354A0,#FF4444)">Go Live</button>
     </div>
+  </div>
+  <div class="pnl" id="livePnl" style="border-color:#FF444444;background:#1a0808;display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FF4444;animation:pls 1s infinite"></span>
+        <span style="font-size:14px;font-weight:700;color:#FF6666">LIVE</span>
+        <span style="font-size:12px;color:var(--tx2)">Room:</span>
+        <span id="liveCode" style="font-size:16px;font-weight:700;color:var(--pk);letter-spacing:2px;font-family:monospace;cursor:pointer" title="Click to copy" onclick="navigator.clipboard.writeText(this.textContent)">------</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="liveViewers" style="font-size:12px;color:var(--tx3)">0 viewers</span>
+        <button class="btn" id="liveStop" style="background:#FF4444;border-color:#FF4444;color:#fff;padding:5px 14px;font-size:11px">End Stream</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-top:6px">Share the room code -- audience opens venue.html and enters it to watch you play</div>
   </div>
   <div class="pnl" style="border-color:#D354A044;background:#1a0a0a">
     <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Click below to capture ALL keys (D, Z, V) -- needed in Claude preview only:</div>
@@ -536,7 +552,7 @@ function playNote(nk,midi){if(!audioReady)return;silenceNote();var noteName=Tone
 
 function refreshNote(){if(arrowStack.length===0){silenceNote();return;}var dir=arrowStack[arrowStack.length-1];var nk=getMod()+"-"+dir;var midi=layout[nk];if(nk===activeNoteKey)return;if(midi!==undefined)playNote(nk,midi);else silenceNote();}
 
-function handleKeyDown(code,key){initAudio();if(key==="Escape"&&jamOn){exitJam();return;}if(code==="KeyT"&&jamOn){toggleSplit();return;}if(code==="KeyF"&&!jamOn){enterJam();return;}if(code==="KeyN"&&jamOn&&YT.list.length){YT.next();syncJamVideo();return;}if(code==="KeyP"&&jamOn&&YT.list.length){YT.prev();syncJamVideo();return;}if(code==="F1"){REC.toggle();updJamLoop();return;}if(code==="F2"){REC.playAll();updJamLoop();return;}if(code==="F3"){REC.stopAll();updJamLoop();return;}if(code==="F4"){REC.clearAll();updJamLoop();return;}if(code==="Insert"||code==="Numpad0"||code==="NumpadAdd"){if(S.oct<7){S.oct++;rebuild();showOctFlash();}return;}if(code==="Delete"||code==="NumpadSubtract"){if(S.oct>1){S.oct--;rebuild();showOctFlash();}return;}if(code==="Numpad1"){handleNumpad(1);return;}if(code==="Numpad2"){handleNumpad(2);return;}if(code==="Numpad3"){handleNumpad(3);return;}if(code==="Numpad4"){handleNumpad(4);return;}if(code==="Numpad5"){handleNumpad(5);return;}if(code==="Numpad6"){handleNumpad(6);return;}if(code==="Numpad7"){handleNumpad(7);return;}if(code==="Numpad8"){handleNumpad(8);return;}if(code==="Numpad9"){handleNumpad(9);return;}if(key===" "){if(!mods.space){mods.space=true;updModInd();refreshNote();}return;}if(code==="KeyD"){if(!mods.d){mods.d=true;updModInd();refreshNote();}return;}if(code==="KeyC"){if(!mods.c){mods.c=true;updChordInd();refreshNote();}return;}if(code==="KeyE"){if(!mods.e){mods.e=true;updModInd();refreshNote();}return;}if(code==="Digit3"){if(!mods.three){mods.three=true;updModInd();refreshNote();}return;}if(code==="KeyZ"){S.mode="impact";renderModes();return;}if(key==="Shift"){S.mode="sustain";renderModes();return;}if(key==="Control"){S.mode="staccato";renderModes();return;}if(code==="KeyV"){S.mode="legato";renderModes();return;}if(keyMap[key]){selInst(keyMap[key]);return;}var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(!dir)return;if(arrowStack.indexOf(dir)===-1)arrowStack.push(dir);dbg("stack=["+arrowStack.join(",")+"] mod="+getMod());refreshNote();}
+function handleKeyDown(code,key){initAudio();if(key==="Escape"&&jamOn){exitJam();return;}if(code==="KeyT"&&jamOn){toggleSplit();return;}if(code==="KeyF"&&!jamOn){enterJam();return;}if(code==="KeyN"&&jamOn&&YT.list.length){YT.next();syncJamVideo();return;}if(code==="KeyP"&&jamOn&&YT.list.length){YT.prev();syncJamVideo();return;}if(code==="F1"){REC.toggle();updJamLoop();return;}if(code==="F2"){REC.playAll();updJamLoop();return;}if(code==="F3"){REC.stopAll();updJamLoop();return;}if(code==="F4"){REC.clearAll();updJamLoop();return;}if(code==="Insert"||code==="Numpad0"||code==="NumpadAdd"){if(S.oct<7){S.oct++;rebuild();showOctFlash();}return;}if(code==="Delete"||code==="NumpadSubtract"){if(S.oct>1){S.oct--;rebuild();showOctFlash();}return;}if(code==="Numpad1"){handleNumpad(1);return;}if(code==="Numpad2"){handleNumpad(2);return;}if(code==="Numpad3"){handleNumpad(3);return;}if(code==="Numpad4"){handleNumpad(4);return;}if(code==="Numpad5"){handleNumpad(5);return;}if(code==="Numpad6"){handleNumpad(6);return;}if(code==="Numpad7"){handleNumpad(7);return;}if(code==="Numpad8"){handleNumpad(8);return;}if(code==="Numpad9"){handleNumpad(9);return;}if(key===" "){if(!mods.space){mods.space=true;updModInd();refreshNote();}return;}if(code==="KeyD"){if(!mods.d){mods.d=true;updModInd();refreshNote();}return;}if(code==="KeyC"){if(!mods.c){mods.c=true;updChordInd();refreshNote();}return;}if(code==="KeyE"){if(!mods.e){mods.e=true;updModInd();refreshNote();}return;}if(code==="Digit3"){if(!mods.three){mods.three=true;updModInd();refreshNote();}return;}if(code==="KeyZ"){S.mode="impact";renderModes();return;}if(key==="Shift"){S.mode=(S.mode==="sustain"?"impact":"sustain");renderModes();return;}if(key==="Control"){S.mode="staccato";renderModes();return;}if(code==="KeyV"){S.mode="legato";renderModes();return;}if(keyMap[key]){selInst(keyMap[key]);return;}var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(!dir)return;if(arrowStack.indexOf(dir)===-1)arrowStack.push(dir);dbg("stack=["+arrowStack.join(",")+"] mod="+getMod());refreshNote();}
 function handleKeyUp(code,key){if(key===" ")mods.space=false;if(code==="KeyD")mods.d=false;if(code==="KeyE"){mods.e=false;updModInd();refreshNote();}if(code==="Digit3"){mods.three=false;updModInd();refreshNote();}if(code==="KeyC"){mods.c=false;updChordInd();}var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(dir){var idx=arrowStack.indexOf(dir);if(idx!==-1)arrowStack.splice(idx,1);}updModInd();refreshNote();}
 
 var cap=document.getElementById("cap");
@@ -785,6 +801,78 @@ function startJamLoopAnim(){
   tick();
 }
 
+/* ── Live Broadcasting ── */
+var WS_URL="ws://localhost:8080";
+var liveWs=null,liveOn=false;
+function liveSend(msg){if(liveOn&&liveWs&&liveWs.readyState===1)try{liveWs.send(JSON.stringify(msg));}catch(e){}}
+function goLive(){
+  if(liveOn){endLive();return;}
+  try{liveWs=new WebSocket(WS_URL);}catch(e){dbg("Live connect failed");return;}
+  liveWs.onopen=function(){
+    liveWs.send(JSON.stringify({type:"create-room"}));
+  };
+  liveWs.onmessage=function(e){
+    var msg;try{msg=JSON.parse(e.data);}catch(x){return;}
+    if(msg.type==="room-created"){
+      liveOn=true;
+      document.getElementById("livePnl").style.display="block";
+      document.getElementById("liveCode").textContent=msg.room;
+      document.getElementById("bLive").textContent="LIVE";
+      document.getElementById("bLive").style.animation="pls 1s infinite";
+      liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
+    }
+    if(msg.type==="viewer-count"){
+      document.getElementById("liveViewers").textContent=msg.count+" viewer"+(msg.count!==1?"s":"");
+    }
+    if(msg.type==="chat"){
+      dbg(msg.name+": "+msg.text);
+    }
+  };
+  liveWs.onclose=function(){if(liveOn)endLive();};
+  liveWs.onerror=function(){dbg("Live connection error");};
+}
+function endLive(){
+  liveOn=false;
+  if(liveWs)try{liveWs.close();}catch(e){}
+  liveWs=null;
+  document.getElementById("livePnl").style.display="none";
+  document.getElementById("bLive").textContent="Go Live";
+  document.getElementById("bLive").style.animation="";
+}
+document.getElementById("bLive").onclick=function(){goLive();};
+document.getElementById("liveStop").onclick=function(){endLive();};
+
+/* Hook into playNote to broadcast */
+var _origPlayNote=playNote;
+playNote=function(nk,midi){
+  _origPlayNote(nk,midi);
+  liveSend({type:"note",midi:midi,on:true,inst:S.eng,mode:S.mode,nk:nk});
+};
+var _origSilence=silenceNote;
+silenceNote=function(){
+  _origSilence();
+  liveSend({type:"note",on:false});
+};
+/* Hook into selInst to broadcast instrument changes */
+var _origSelInst=selInst;
+selInst=function(id){
+  _origSelInst(id);
+  liveSend({type:"inst",id:id});
+  liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
+};
+/* Hook into YT.play to broadcast video sync */
+var _origYTPlay=YT.play;
+YT.play=function(vid,title){
+  _origYTPlay(vid,title);
+  liveSend({type:"video",vid:vid,title:title||"",time:0,action:"play"});
+};
+/* Broadcast state on scale/root/octave changes */
+var _origRebuild=rebuild;
+rebuild=function(){
+  _origRebuild();
+  liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
+};
+
 initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updModInd();initPowerSlider();initMobileSlider();initChordUI();renderHkGrid();renderRelKeys();setTimeout(initHist,100);
 
 }catch(e){console.error("BOOT ERROR:",e);document.body.innerHTML="<pre style='color:red;padding:20px'>"+e.stack+"</pre>";}
@@ -792,4 +880,3 @@ initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updMod
 </script>
 </body>
 </html>
-

@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Unholy Keys — Live</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
+  --pk:#D354A0;--pu:#7F77DD;--tl:#1D9E75;--co:#D85A30;--ro:#D4537E;--sk:#378ADD;--am:#EF9F27;--r:8px}
+body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;
+  min-height:100vh;overflow:hidden;-webkit-tap-highlight-color:transparent}
+
+/* JOIN SCREEN */
+#joinScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:20px;gap:20px}
+#joinScreen.hidden{display:none}
+.join-logo{font-size:42px;font-weight:700;letter-spacing:-1px;margin-bottom:4px}
+.join-logo b{color:var(--pk)}
+.join-sub{font-size:14px;color:var(--tx2);margin-bottom:20px;letter-spacing:2px;text-transform:uppercase}
+.join-box{background:var(--bg2);border:1px solid var(--bg4);border-radius:12px;padding:28px;
+  width:100%;max-width:380px;display:flex;flex-direction:column;gap:16px}
+.join-box label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.join-box input[type=text]{background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);
+  padding:10px 14px;border-radius:var(--r);font-size:14px;outline:none;width:100%}
+.join-box input[type=text]:focus{border-color:var(--pk)}
+.color-picks{display:flex;gap:8px;flex-wrap:wrap}
+.color-pick{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;
+  transition:transform .12s,border-color .12s}
+.color-pick:hover{transform:scale(1.15)}
+.color-pick.sel{border-color:#fff;transform:scale(1.15)}
+#enterBtn{padding:12px 32px;font-size:15px;font-weight:700;cursor:pointer;
+  background:linear-gradient(135deg,var(--pk),var(--pu));border:none;border-radius:var(--r);
+  color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:4px;width:100%}
+#enterBtn:hover{transform:scale(1.03)}
+
+/* VENUE (after join) */
+#venue{display:none;position:fixed;inset:0;overflow:hidden;background:#000}
+#venue.on{display:block}
+#mainCanvas{position:absolute;inset:0}
+
+/* Big Screen overlay */
+#bigScreen{position:absolute;top:2%;left:25%;width:50%;height:0;padding-bottom:28%;
+  background:#000;border:3px solid #222;border-radius:4px;display:none;z-index:5;
+  box-shadow:0 0 30px rgba(211,84,160,.2),inset 0 0 10px rgba(0,0,0,.8)}
+#bigScreen.on{display:block}
+#bigScreen iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+
+/* Chat panel */
+#chatPanel{position:fixed;bottom:0;left:0;right:0;height:200px;z-index:20;
+  background:rgba(10,10,15,.88);border-top:1px solid rgba(127,119,221,.2);
+  display:flex;flex-direction:column}
+#chatMsgs{flex:1;overflow-y:auto;padding:8px 14px;font-size:13px;line-height:1.6}
+.chat-msg .chat-name{font-weight:600;margin-right:6px}
+#chatInput{display:flex;border-top:1px solid var(--bg4);padding:6px 10px;gap:8px}
+#chatInput input{flex:1;background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);
+  padding:8px 12px;border-radius:var(--r);font-size:13px;outline:none}
+#chatInput input:focus{border-color:var(--pk)}
+#chatInput button{padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;
+  background:var(--pk);border:none;border-radius:var(--r);color:#fff}
+
+/* HUD */
+#hudTL{position:fixed;top:12px;left:14px;z-index:15;font-size:12px;color:var(--tx2);
+  background:rgba(10,10,15,.6);padding:6px 12px;border-radius:var(--r)}
+#hudTR{position:fixed;top:12px;right:14px;z-index:15;font-size:12px;color:var(--tx2);
+  background:rgba(10,10,15,.6);padding:6px 12px;border-radius:var(--r)}
+#hudBR{position:fixed;bottom:210px;right:14px;z-index:15;font-size:11px;color:var(--tx3);
+  background:rgba(10,10,15,.6);padding:6px 12px;border-radius:var(--r);text-align:right;line-height:1.5}
+#perfLeft{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);z-index:30;
+  display:none;font-size:22px;font-weight:700;color:var(--pk);
+  background:rgba(10,10,15,.8);padding:16px 32px;border-radius:12px;border:1px solid var(--pk)}
+</style>
+</head>
+<body>
+
+<!-- JOIN SCREEN -->
+<div id="joinScreen">
+  <div class="join-logo"><b>Unholy</b> Keys</div>
+  <div class="join-sub">Live Venue</div>
+  <div class="join-box">
+    <div>
+      <label>Display Name</label>
+      <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off">
+    </div>
+    <div>
+      <label>Room Code</label>
+      <input type="text" id="inRoom" placeholder="Enter room code" maxlength="12" autocomplete="off">
+    </div>
+    <div>
+      <label>Avatar Color</label>
+      <div class="color-picks" id="colorPicks"></div>
+    </div>
+    <button id="enterBtn">Enter Venue</button>
+    <div id="joinErr" style="font-size:12px;color:#D85A30;display:none"></div>
+  </div>
+</div>
+
+<!-- VENUE -->
+<div id="venue">
+  <canvas id="mainCanvas"></canvas>
+  <div id="bigScreen"><iframe id="ytFrame" allow="autoplay"></iframe></div>
+  <div id="hudTL">Room: <span id="hudRoom">---</span></div>
+  <div id="hudTR">Viewers: <span id="hudCount">0</span></div>
+  <div id="hudBR"></div>
+  <div id="perfLeft">Performer has left the stage</div>
+  <div id="chatPanel">
+    <div id="chatMsgs"></div>
+    <div id="chatInput">
+      <input type="text" id="chatText" placeholder="Say something..." maxlength="200" autocomplete="off">
+      <button id="chatSend">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+;(function(){
+"use strict";
+try{
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+var WS_URL = "ws://localhost:8080";
+
+/* ============================================================
+   CONSTANTS
+   ============================================================ */
+var AVATAR_COLORS = ["#D354A0","#7F77DD","#1D9E75","#D85A30","#378ADD","#EF9F27","#5DCB42","#C44DFF","#FF7F50","#97C459"];
+var ROOTS = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+
+/* ============================================================
+   INSTRUMENT DEFINITIONS (from index.html)
+   ============================================================ */
+var SBASE="https://nbrosowsky.github.io/tonejs-instruments/samples/";
+var GM="https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/";
+var GN={C2:"C2",A2:"A2",C3:"C3",A3:"A3",C4:"C4",A4:"A4",C5:"C5",A5:"A5",C6:"C6"};
+var GL={C1:"C1",A1:"A1",C2:"C2",A2:"A2",C3:"C3",A3:"A3",C4:"C4"};
+var GH={C4:"C4",A4:"A4",C5:"C5",A5:"A5",C6:"C6",A6:"A6",C7:"C7"};
+function gm(id,l,folder,n){return{id:id,l:l,key:null,t:"samp",sbase:GM+folder+"-mp3/",n:n||GN,gain:10};}
+
+var CATS=[
+  {id:"rock",l:"Guitar & Bass",c:"#D85A30",ac:"a3",items:[
+    {id:"guitar-acoustic",l:"Acoustic",key:null,t:"samp",n:{E2:"E2",A2:"A2",D3:"D3",G3:"G3",C4:"C4",E4:"E4",A4:"A4",C5:"C5"}},
+    {id:"guitar-electric",l:"Clean Elec",key:null,t:"samp",n:{E2:"E2",A2:"A2",C3:"C3",A3:"A3",C4:"C4",A4:"A4",C5:"C5",A5:"A5"}},
+    {id:"guitar-nylon",l:"Nylon",key:null,t:"samp",n:{E2:"E2",A2:"A2",E3:"E3",A3:"A3",E4:"E4",A4:"A4",E5:"E5"}},
+    {id:"bass-electric",l:"Bass Guitar",key:null,t:"samp",n:{E1:"E1",G1:"G1","C#2":"Cs2",E2:"E2",G2:"G2","C#3":"Cs3",E3:"E3",G3:"G3",E4:"E4"}},
+    {id:"rock-overdrive",l:"Overdrive",key:null,t:"samp",base:"guitar-electric",n:{E2:"E2",A2:"A2",C3:"C3",A3:"A3",C4:"C4",A4:"A4",C5:"C5",A5:"A5"},
+      fx:function(){return[new Tone.Distortion({distortion:.65,wet:1}),new Tone.EQ3({low:-4,mid:3,high:2,lowFrequency:250,highFrequency:3200}),new Tone.Chorus({frequency:2,delayTime:2.5,depth:.3,wet:.25})];}},
+    {id:"rock-hardrock",l:"Hard Rock",key:null,t:"samp",base:"guitar-electric",n:{E2:"E2",A2:"A2",C3:"C3",A3:"A3",C4:"C4",A4:"A4",C5:"C5",A5:"A5"},
+      fx:function(){return[new Tone.Distortion({distortion:.75,wet:1}),new Tone.EQ3({low:2,mid:1,high:4,lowFrequency:300,highFrequency:3500}),new Tone.Chorus({frequency:1.5,delayTime:3,depth:.4,wet:.2})];}},
+    {id:"rock-metal",l:"Metal",key:null,t:"samp",base:"guitar-electric",n:{E2:"E2",A2:"A2",C3:"C3",A3:"A3",C4:"C4",A4:"A4",C5:"C5",A5:"A5"},
+      fx:function(){return[new Tone.Distortion({distortion:.9,wet:1}),new Tone.EQ3({low:4,mid:-6,high:3,lowFrequency:200,highFrequency:4000})];}},
+    {id:"rock-clean",l:"Clean Tone",key:null,t:"samp",base:"guitar-electric",n:{E2:"E2",A2:"A2",C3:"C3",A3:"A3",C4:"C4",A4:"A4",C5:"C5",A5:"A5"},
+      fx:function(){return[new Tone.Chorus({frequency:3,delayTime:3.5,depth:.5,wet:.4}),new Tone.EQ3({low:0,mid:2,high:3,lowFrequency:300,highFrequency:4000})];}},
+    {id:"rock-bass-synth",l:"Bass DI",key:null,t:"samp",base:"bass-electric",n:{E1:"E1",G1:"G1","C#2":"Cs2",E2:"E2",G2:"G2","C#3":"Cs3",E3:"E3",G3:"G3",E4:"E4"},
+      fx:function(){return[new Tone.Distortion({distortion:.2,wet:.4}),new Tone.EQ3({low:5,mid:0,high:-3,lowFrequency:180,highFrequency:2500})];}},
+    {id:"rock-pinch",l:"Pinch Harm",key:null,t:"samp",base:"guitar-electric",n:{E2:"E2",A2:"A2",C3:"C3",A3:"A3",C4:"C4",A4:"A4",C5:"C5",A5:"A5"},
+      fx:function(){return[new Tone.Distortion({distortion:.8,wet:1}),new Tone.Chorus({frequency:4,delayTime:2,depth:.6,wet:.5})];}}
+  ]},
+  {id:"strings",l:"Strings",c:"#1D9E75",ac:"a1",items:[
+    {id:"violin",l:"Violin",key:null,t:"samp",n:{A3:"A3",C4:"C4",E4:"E4",A4:"A4",C5:"C5",E5:"E5",A5:"A5",C6:"C6",E6:"E6"}},
+    {id:"cello",l:"Cello",key:null,t:"samp",n:{C2:"C2",E2:"E2",A2:"A2",C3:"C3",E3:"E3",A3:"A3",C4:"C4",E4:"E4",A4:"A4",C5:"C5"}},
+    {id:"contrabass",l:"Contrabass",key:null,t:"samp",n:{G1:"G1",C2:"C2",D2:"D2",E2:"E2",A2:"A2",E3:"E3",B3:"B3"}},
+    {id:"harp",l:"Harp",key:null,t:"samp",n:{B1:"B1",D2:"D2",A2:"A2",C3:"C3",E3:"E3",B3:"B3",A4:"A4",C5:"C5",E5:"E5",B5:"B5",A6:"A6"}}
+  ]},
+  {id:"keys",l:"Keys & Tuned Perc",c:"#EF9F27",ac:"a5",items:[
+    {id:"piano",l:"Piano",key:null,t:"samp",n:{A1:"A1",C2:"C2",A2:"A2",C3:"C3",A3:"A3",C4:"C4",A4:"A4",C5:"C5",A5:"A5",C6:"C6",A6:"A6",C7:"C7"}},
+    {id:"organ",l:"Organ",key:null,t:"samp",n:{C2:"C2",C3:"C3",C4:"C4",C5:"C5"}},
+    {id:"harmonium",l:"Harmonium",key:null,t:"samp",n:{C2:"C2",E2:"E2",A2:"A2",C3:"C3",E3:"E3",A3:"A3",C4:"C4",E4:"E4",A4:"A4",C5:"C5"}},
+    {id:"xylophone",l:"Xylophone",key:null,t:"samp",n:{G4:"G4",C5:"C5",G5:"G5",C6:"C6",G6:"G6",C7:"C7",G7:"G7",C8:"C8"}}
+  ]},
+  {id:"brass",l:"Brass",c:"#D4537E",ac:"a3",items:[
+    {id:"trumpet",l:"Trumpet",key:null,t:"samp",n:{F3:"F3",A3:"A3",C4:"C4",F4:"F4",G4:"G4",D5:"D5",F5:"F5",A5:"A5",C6:"C6"}},
+    {id:"french-horn",l:"Fr. Horn",key:null,t:"samp",n:{A1:"A1",C2:"C2",G2:"G2",D3:"D3",F3:"F3",A3:"A3",C4:"C4",D5:"D5"}},
+    {id:"trombone",l:"Trombone",key:null,t:"samp",n:{C3:"C3",D3:"D3",F2:"F2",F3:"F3",C4:"C4",F4:"F4"}},
+    {id:"tuba",l:"Tuba",key:null,t:"samp",n:{F1:"F1",F2:"F2",D3:"D3",F3:"F3",D4:"D4"}}
+  ]},
+  {id:"woodwind",l:"Woodwinds",c:"#378ADD",ac:"a4",items:[
+    {id:"flute",l:"Flute",key:null,t:"samp",n:{C4:"C4",E4:"E4",A4:"A4",C5:"C5",E5:"E5",A5:"A5",C6:"C6",E6:"E6",A6:"A6",C7:"C7"}},
+    {id:"clarinet",l:"Clarinet",key:null,t:"samp",n:{D3:"D3",F3:"F3",D4:"D4",F4:"F4",D5:"D5",F5:"F5",D6:"D6"}},
+    {id:"bassoon",l:"Bassoon",key:null,t:"samp",n:{G2:"G2",A2:"A2",C3:"C3",G3:"G3",A3:"A3",C4:"C4",E4:"E4",G4:"G4",A4:"A4",C5:"C5"}},
+    {id:"saxophone",l:"Sax",key:null,t:"samp",n:{D3:"D3",E3:"E3",G3:"G3",C4:"C4",E4:"E4",A4:"A4",C5:"C5",E5:"E5",A5:"A5"}}
+  ]},
+  {id:"chip",l:"Chiptune / 8-bit",c:"#5DCB42",ac:"a2",items:[
+    {id:"chip-sq",l:"NES Square",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"square"},envelope:{attack:.001,decay:.05,sustain:.8,release:.05}})}},
+    {id:"chip-p25",l:"Pulse 25%",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"pulse",width:.25},envelope:{attack:.001,decay:.05,sustain:.8,release:.05}})}},
+    {id:"chip-tri",l:"NES Triangle",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"triangle"},envelope:{attack:.001,decay:.01,sustain:1,release:.01}})}},
+    {id:"chip-lead",l:"Chip Lead",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"square"},envelope:{attack:.005,decay:.15,sustain:.4,release:.1}})}},
+    {id:"chip-arp",l:"Chip Arp",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"pulse",width:.5},envelope:{attack:.001,decay:.08,sustain:0,release:.02}})}}
+  ]},
+  {id:"edm",l:"EDM / Electronic",c:"#D354A0",ac:"a3",items:[
+    {id:"edm-saw",l:"Supersaw",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"fatsawtooth",count:5,spread:30},envelope:{attack:.02,decay:.3,sustain:.6,release:.4}})}},
+    {id:"edm-pluck",l:"Pluck",key:null,t:"syn",mk:function(){return new Tone.PluckSynth({attackNoise:2,dampening:4000,resonance:.95})}},
+    {id:"edm-pad",l:"Warm Pad",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"fatsawtooth",count:3,spread:20},envelope:{attack:.5,decay:.5,sustain:.8,release:1.5}})}},
+    {id:"edm-sub",l:"Sub Bass",key:null,t:"syn",mk:function(){return new Tone.MonoSynth({oscillator:{type:"sawtooth"},filter:{Q:6,type:"lowpass",rolloff:-24},envelope:{attack:.01,decay:.2,sustain:.5,release:.2},filterEnvelope:{attack:.06,decay:.2,sustain:.3,release:.2,baseFrequency:200,octaves:3}})}},
+    {id:"edm-acid",l:"Acid 303",key:null,t:"syn",mk:function(){return new Tone.MonoSynth({oscillator:{type:"sawtooth"},filter:{Q:12,type:"lowpass",rolloff:-24},envelope:{attack:.005,decay:.2,sustain:.3,release:.1},filterEnvelope:{attack:.005,decay:.15,sustain:.1,release:.1,baseFrequency:300,octaves:4}})}},
+    {id:"edm-trance",l:"Trance Lead",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"fatsquare",count:3,spread:15},envelope:{attack:.01,decay:.2,sustain:.6,release:.3}})}},
+    {id:"edm-bell",l:"FM Bell",key:null,t:"syn",mk:function(){return new Tone.FMSynth({harmonicity:5.1,modulationIndex:14,envelope:{attack:.001,decay:.8,sustain:0,release:.5},modulation:{type:"square"},modulationEnvelope:{attack:.002,decay:.5,sustain:0,release:.3}})}},
+    {id:"edm-daft",l:"Daft Punk",key:null,t:"syn",mk:function(){var s=new Tone.MonoSynth({oscillator:{type:"sawtooth"},filter:{Q:8,type:"lowpass",rolloff:-24},envelope:{attack:.005,decay:.15,sustain:.7,release:.1},filterEnvelope:{attack:.005,decay:.3,sustain:.4,release:.2,baseFrequency:400,octaves:3.5}});var ph=new Tone.Phaser({frequency:.8,octaves:3,baseFrequency:800,wet:.4});var dd=new Tone.Distortion({distortion:.15,wet:.3});var gn=new Tone.Volume(8);s.chain(ph,dd,gn);s._x=[ph,dd,gn];var o=s.dispose.bind(s);s.dispose=function(){s._x.forEach(function(n){try{n.dispose();}catch(e){}});o();};return s;}},
+    {id:"edm-mau5",l:"Deadmau5",key:null,t:"syn",mk:function(){var s=new Tone.MonoSynth({oscillator:{type:"fatsawtooth",count:3,spread:15},filter:{Q:4,type:"lowpass",rolloff:-24},envelope:{attack:.01,decay:.25,sustain:.6,release:.3},filterEnvelope:{attack:.01,decay:.4,sustain:.3,release:.4,baseFrequency:300,octaves:4}});var ch=new Tone.Chorus({frequency:1.2,delayTime:4,depth:.5,wet:.3});var gn=new Tone.Volume(8);s.chain(ch,gn);s._x=[ch,gn];var o=s.dispose.bind(s);s.dispose=function(){s._x.forEach(function(n){try{n.dispose();}catch(e){}});o();};return s;}},
+    {id:"edm-strobe",l:"Strobe",key:null,t:"syn",mk:function(){var s=new Tone.MonoSynth({oscillator:{type:"fatsawtooth",count:5,spread:25},filter:{Q:2,type:"lowpass",rolloff:-12},envelope:{attack:.4,decay:.8,sustain:.7,release:2},filterEnvelope:{attack:.6,decay:1.2,sustain:.5,release:1.5,baseFrequency:200,octaves:3}});var ch=new Tone.Chorus({frequency:.6,delayTime:5,depth:.7,wet:.45});var rv=new Tone.Reverb({decay:4,wet:.3});var gn=new Tone.Volume(10);s.chain(ch,rv,gn);s._x=[ch,rv,gn];var o=s.dispose.bind(s);s.dispose=function(){s._x.forEach(function(n){try{n.dispose();}catch(e){}});o();};return s;}}
+  ]},
+  {id:"lofi",l:"Lo-fi / Chill",c:"#97C459",ac:"a5",items:[
+    {id:"lofi-keys",l:"Lo-fi Keys",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"triangle"},envelope:{attack:.08,decay:.6,sustain:.2,release:.8}})}},
+    {id:"lofi-pad",l:"Dream Pad",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"sine"},envelope:{attack:.8,decay:1,sustain:.7,release:2}})}},
+    {id:"lofi-ep",l:"Dusty EP",key:null,t:"syn",mk:function(){return new Tone.FMSynth({harmonicity:3,modulationIndex:2,envelope:{attack:.01,decay:.5,sustain:.2,release:1},modulation:{type:"sine"},modulationEnvelope:{attack:.01,decay:.3,sustain:.1,release:.5}})}},
+    {id:"lofi-bell",l:"Music Box",key:null,t:"syn",mk:function(){return new Tone.FMSynth({harmonicity:8,modulationIndex:4,envelope:{attack:.001,decay:1.2,sustain:0,release:.8},modulation:{type:"sine"},modulationEnvelope:{attack:.001,decay:.8,sustain:0,release:.5}})}},
+    {id:"lofi-warm",l:"Warm Haze",key:null,t:"syn",mk:function(){return new Tone.AMSynth({harmonicity:1.5,envelope:{attack:.3,decay:.8,sustain:.5,release:1.5},modulation:{type:"sine"},modulationEnvelope:{attack:.5,decay:.5,sustain:.8,release:1}})}},
+    {id:"lofi-bass",l:"Mellow Bass",key:null,t:"syn",mk:function(){return new Tone.MonoSynth({oscillator:{type:"triangle"},filter:{Q:1,type:"lowpass",rolloff:-12},envelope:{attack:.05,decay:.3,sustain:.4,release:.5},filterEnvelope:{attack:.05,decay:.2,sustain:.5,release:.5,baseFrequency:400,octaves:2}})}},
+    {id:"lofi-glass",l:"Glass Chime",key:null,t:"syn",mk:function(){return new Tone.FMSynth({harmonicity:6,modulationIndex:3,envelope:{attack:.001,decay:.6,sustain:0,release:1},modulation:{type:"triangle"},modulationEnvelope:{attack:.001,decay:.4,sustain:0,release:.3}})}}
+  ]},
+  {id:"basic",l:"Basic Synths",c:"#7F77DD",ac:"a4",items:[
+    {id:"tri",l:"Triangle",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"triangle"},envelope:{attack:.02,decay:.3,sustain:.6,release:.3}})}},
+    {id:"sin",l:"Sine",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"sine"},envelope:{attack:.02,decay:.2,sustain:.7,release:.4}})}},
+    {id:"saw",l:"Sawtooth",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"sawtooth"},envelope:{attack:.01,decay:.2,sustain:.5,release:.2}})}},
+    {id:"sqr",l:"Square",key:null,t:"syn",mk:function(){return new Tone.Synth({oscillator:{type:"square"},envelope:{attack:.01,decay:.25,sustain:.4,release:.2}})}},
+    {id:"fms",l:"FM Synth",key:null,t:"syn",mk:function(){return new Tone.FMSynth({modulationIndex:12,envelope:{attack:.01,decay:.3,sustain:.5,release:.3}})}},
+    {id:"ams",l:"AM Synth",key:null,t:"syn",mk:function(){return new Tone.AMSynth({envelope:{attack:.02,decay:.3,sustain:.6,release:.3}})}}
+  ]},
+  {id:"graal",l:"Graal",c:"#C44DFF",ac:"a3",items:[
+    {id:"graal-bassoon",l:"Rage Bassoon",key:null,t:"samp",sbase:"instruments/",ext:".wav",
+      n:{A3:"rage_bassoon_A3",A4:"rage_bassoon_A4",B3:"rage_bassoon_B3",B4:"rage_bassoon_B4",E3:"rage_bassoon_E3",E4:"rage_bassoon_E4",E5:"rage_bassoon_E5"}}
+  ]},
+  {id:"gm-keys",l:"GM Keys",c:"#DAA520",ac:"a5",items:[
+    gm("gm-grand-piano","Grand Piano","acoustic_grand_piano"),
+    gm("gm-bright-piano","Bright Piano","bright_acoustic_piano"),
+    gm("gm-electric-grand","Electric Grand","electric_grand_piano"),
+    gm("gm-honkytonk","Honky-tonk","honkytonk_piano"),
+    gm("gm-ep1","Electric Piano 1","electric_piano_1"),
+    gm("gm-ep2","Electric Piano 2","electric_piano_2"),
+    gm("gm-harpsichord","Harpsichord","harpsichord"),
+    gm("gm-clavinet","Clavinet","clavinet"),
+    gm("gm-celesta","Celesta","celesta",GH),
+    gm("gm-drawbar-organ","Drawbar Organ","drawbar_organ"),
+    gm("gm-perc-organ","Percussive Organ","percussive_organ"),
+    gm("gm-rock-organ","Rock Organ","rock_organ"),
+    gm("gm-church-organ","Church Organ","church_organ"),
+    gm("gm-reed-organ","Reed Organ","reed_organ"),
+    gm("gm-accordion","Accordion","accordion"),
+    gm("gm-harmonica","Harmonica","harmonica"),
+    gm("gm-tango-accordion","Tango Accordion","tango_accordion")
+  ]},
+  {id:"gm-guitar",l:"GM Guitar & Bass",c:"#B8630B",ac:"a3",items:[
+    gm("gm-nylon","Nylon Guitar","acoustic_guitar_nylon"),
+    gm("gm-steel","Steel Guitar","acoustic_guitar_steel"),
+    gm("gm-jazz","Jazz Guitar","electric_guitar_jazz"),
+    gm("gm-clean","Clean Guitar","electric_guitar_clean"),
+    gm("gm-muted","Muted Guitar","electric_guitar_muted"),
+    gm("gm-overdrive","Overdrive Guitar","overdriven_guitar"),
+    gm("gm-distortion","Distortion Guitar","distortion_guitar"),
+    gm("gm-harmonics","Guitar Harmonics","guitar_harmonics",GH),
+    gm("gm-acoustic-bass","Acoustic Bass","acoustic_bass",GL),
+    gm("gm-finger-bass","Finger Bass","electric_bass_finger",GL),
+    gm("gm-pick-bass","Pick Bass","electric_bass_pick",GL),
+    gm("gm-fretless","Fretless Bass","fretless_bass",GL),
+    gm("gm-slap1","Slap Bass 1","slap_bass_1",GL),
+    gm("gm-slap2","Slap Bass 2","slap_bass_2",GL),
+    gm("gm-synth-bass1","Synth Bass 1","synth_bass_1",GL),
+    gm("gm-synth-bass2","Synth Bass 2","synth_bass_2",GL)
+  ]},
+  {id:"gm-strings",l:"GM Strings & Choir",c:"#2E8B57",ac:"a1",items:[
+    gm("gm-violin","Violin","violin"),
+    gm("gm-viola","Viola","viola"),
+    gm("gm-cello","Cello","cello"),
+    gm("gm-contrabass","Contrabass","contrabass",GL),
+    gm("gm-tremolo","Tremolo Strings","tremolo_strings"),
+    gm("gm-pizzicato","Pizzicato","pizzicato_strings"),
+    gm("gm-harp","Orchestral Harp","orchestral_harp"),
+    gm("gm-timpani","Timpani","timpani",GL),
+    gm("gm-ensemble1","String Ensemble 1","string_ensemble_1"),
+    gm("gm-ensemble2","String Ensemble 2","string_ensemble_2"),
+    gm("gm-synth-str1","Synth Strings 1","synth_strings_1"),
+    gm("gm-synth-str2","Synth Strings 2","synth_strings_2"),
+    gm("gm-choir-aahs","Choir Aahs","choir_aahs"),
+    gm("gm-voice-oohs","Voice Oohs","voice_oohs"),
+    gm("gm-synth-choir","Synth Choir","synth_choir"),
+    gm("gm-orchestra-hit","Orchestra Hit","orchestra_hit")
+  ]},
+  {id:"gm-brass",l:"GM Brass & Wind",c:"#4682B4",ac:"a4",items:[
+    gm("gm-trumpet","Trumpet","trumpet"),
+    gm("gm-trombone","Trombone","trombone"),
+    gm("gm-tuba","Tuba","tuba",GL),
+    gm("gm-muted-trumpet","Muted Trumpet","muted_trumpet"),
+    gm("gm-french-horn","French Horn","french_horn"),
+    gm("gm-brass-section","Brass Section","brass_section"),
+    gm("gm-synth-brass1","Synth Brass 1","synth_brass_1"),
+    gm("gm-synth-brass2","Synth Brass 2","synth_brass_2"),
+    gm("gm-soprano-sax","Soprano Sax","soprano_sax"),
+    gm("gm-alto-sax","Alto Sax","alto_sax"),
+    gm("gm-tenor-sax","Tenor Sax","tenor_sax"),
+    gm("gm-bari-sax","Baritone Sax","baritone_sax"),
+    gm("gm-oboe","Oboe","oboe"),
+    gm("gm-english-horn","English Horn","english_horn"),
+    gm("gm-bassoon","Bassoon","bassoon"),
+    gm("gm-clarinet","Clarinet","clarinet"),
+    gm("gm-piccolo","Piccolo","piccolo",GH),
+    gm("gm-flute","Flute","flute"),
+    gm("gm-recorder","Recorder","recorder"),
+    gm("gm-pan-flute","Pan Flute","pan_flute"),
+    gm("gm-blown-bottle","Blown Bottle","blown_bottle"),
+    gm("gm-shakuhachi","Shakuhachi","shakuhachi"),
+    gm("gm-whistle","Whistle","whistle",GH),
+    gm("gm-ocarina","Ocarina","ocarina")
+  ]},
+  {id:"gm-perc",l:"GM Perc & World",c:"#FF7F50",ac:"a3",items:[
+    gm("gm-glockenspiel","Glockenspiel","glockenspiel",GH),
+    gm("gm-music-box","Music Box","music_box",GH),
+    gm("gm-vibraphone","Vibraphone","vibraphone"),
+    gm("gm-marimba","Marimba","marimba"),
+    gm("gm-xylophone","Xylophone","xylophone",GH),
+    gm("gm-tubular-bells","Tubular Bells","tubular_bells"),
+    gm("gm-dulcimer","Dulcimer","dulcimer"),
+    gm("gm-kalimba","Kalimba","kalimba"),
+    gm("gm-steel-drums","Steel Drums","steel_drums"),
+    gm("gm-tinkle-bell","Tinkle Bell","tinkle_bell",GH),
+    gm("gm-agogo","Agogo","agogo"),
+    gm("gm-woodblock","Woodblock","woodblock"),
+    gm("gm-taiko","Taiko Drum","taiko_drum"),
+    gm("gm-melodic-tom","Melodic Tom","melodic_tom"),
+    gm("gm-synth-drum","Synth Drum","synth_drum"),
+    gm("gm-sitar","Sitar","sitar"),
+    gm("gm-banjo","Banjo","banjo"),
+    gm("gm-shamisen","Shamisen","shamisen"),
+    gm("gm-koto","Koto","koto"),
+    gm("gm-bagpipe","Bagpipe","bagpipe"),
+    gm("gm-fiddle","Fiddle","fiddle"),
+    gm("gm-shanai","Shanai","shanai")
+  ]},
+  {id:"gm-synth",l:"GM Synth",c:"#9370DB",ac:"a4",items:[
+    gm("gm-lead-square","Lead: Square","lead_1_square"),
+    gm("gm-lead-saw","Lead: Sawtooth","lead_2_sawtooth"),
+    gm("gm-lead-calliope","Lead: Calliope","lead_3_calliope"),
+    gm("gm-lead-chiff","Lead: Chiff","lead_4_chiff"),
+    gm("gm-lead-charang","Lead: Charang","lead_5_charang"),
+    gm("gm-lead-voice","Lead: Voice","lead_6_voice"),
+    gm("gm-lead-fifths","Lead: Fifths","lead_7_fifths"),
+    gm("gm-lead-bass","Lead: Bass+Lead","lead_8_bass_lead"),
+    gm("gm-pad-newage","Pad: New Age","pad_1_new_age"),
+    gm("gm-pad-warm","Pad: Warm","pad_2_warm"),
+    gm("gm-pad-poly","Pad: Polysynth","pad_3_polysynth"),
+    gm("gm-pad-choir","Pad: Choir","pad_4_choir"),
+    gm("gm-pad-bowed","Pad: Bowed","pad_5_bowed"),
+    gm("gm-pad-metallic","Pad: Metallic","pad_6_metallic"),
+    gm("gm-pad-halo","Pad: Halo","pad_7_halo"),
+    gm("gm-pad-sweep","Pad: Sweep","pad_8_sweep"),
+    gm("gm-fx-rain","FX: Rain","fx_1_rain"),
+    gm("gm-fx-soundtrack","FX: Soundtrack","fx_2_soundtrack"),
+    gm("gm-fx-crystal","FX: Crystal","fx_3_crystal"),
+    gm("gm-fx-atmosphere","FX: Atmosphere","fx_4_atmosphere"),
+    gm("gm-fx-brightness","FX: Brightness","fx_5_brightness"),
+    gm("gm-fx-goblins","FX: Goblins","fx_6_goblins"),
+    gm("gm-fx-echoes","FX: Echoes","fx_7_echoes"),
+    gm("gm-fx-scifi","FX: Sci-Fi","fx_8_scifi")
+  ]}
+];
+
+/* Build flat instrument list */
+var allInst=[];
+CATS.forEach(function(cat){cat.items.forEach(function(ins){ins.cat=cat.id;ins.catC=cat.c;ins.acC=cat.ac;allInst.push(ins);});});
+function findInst(id){for(var i=0;i<allInst.length;i++)if(allInst[i].id===id)return allInst[i];return null;}
+
+/* ============================================================
+   AUDIO ENGINE
+   ============================================================ */
+var audioReady=false,started=false;
+var masterVol,rev,dly,cho,dist,lim,analyser;
+var samplers={},loading={};
+var activeVoice=null,activeInst="piano";
+
+function initAudio(){
+  if(started)return;
+  started=true;
+  Tone.start();
+  lim=new Tone.Limiter(-1).toDestination();
+  masterVol=new Tone.Volume(-6).connect(lim);
+  analyser=new Tone.Analyser("fft",256);
+  masterVol.connect(analyser);
+  rev=new Tone.Reverb({decay:2.5,wet:0.2}).connect(masterVol);
+  dly=new Tone.FeedbackDelay({delayTime:"8n",feedback:.3,wet:0}).connect(rev);
+  cho=new Tone.Chorus({frequency:1.5,delayTime:3.5,depth:.7,wet:0}).connect(dly);
+  dist=new Tone.Distortion({distortion:.3,wet:0}).connect(cho);
+  audioReady=true;
+}
+
+function loadSamp(id){
+  if(samplers[id]||loading[id])return;
+  var ins=findInst(id);
+  if(!ins||ins.t!=="samp")return;
+  loading[id]=true;
+  var urls={};
+  var ext=ins.ext||".mp3";
+  Object.keys(ins.n).forEach(function(k){urls[k]=ins.n[k]+ext;});
+  var folder=ins.base||id;
+  var baseUrl=ins.sbase||(SBASE+folder+"/");
+  var sp=new Tone.Sampler({urls:urls,baseUrl:baseUrl,release:1.2,
+    onload:function(){
+      delete loading[id];
+      samplers[id]=sp;
+      if(ins.fx){var chain=ins.fx();sp._fx=chain;sp.chain.apply(sp,chain.concat([dist]));}
+      else if(ins.gain){var gn=new Tone.Volume(ins.gain);sp.connect(gn);gn.connect(dist);sp._gn=gn;}
+      else{sp.connect(dist);}
+    },
+    onerror:function(){delete loading[id];}
+  });
+  setTimeout(function(){if(loading[id])delete loading[id];},15000);
+}
+
+function mkVoice(noteName,instId){
+  if(!audioReady)return null;
+  var ins=findInst(instId||activeInst);
+  if(!ins)return null;
+  if(ins.t==="samp"){
+    var sp=samplers[ins.id];
+    if(!sp)return null;
+    return{
+      atk:function(){sp.triggerAttack(noteName);},
+      rel:function(){try{sp.triggerRelease(noteName);}catch(e){}},
+      ar:function(dur){sp.triggerAttackRelease(noteName,dur);},
+      kill:function(){},
+      setEnv:function(){}
+    };
+  }
+  var s=ins.mk();
+  if(s._x&&s._x.length>0){s._x[s._x.length-1].connect(dist);}else{s.connect(dist);}
+  var isPluck=(ins.id==="edm-pluck");
+  return{
+    atk:function(){s.triggerAttack(noteName);},
+    rel:function(){try{s.triggerRelease();}catch(e){}},
+    ar:function(dur){if(isPluck){s.triggerAttack(noteName);}else{s.triggerAttackRelease(noteName,dur);}},
+    kill:function(){try{s.dispose();}catch(e){}},
+    setEnv:function(cfg){if(s.envelope){for(var k in cfg)s.envelope[k]=cfg[k];}}
+  };
+}
+
+function silenceNote(){
+  if(activeVoice){
+    var v=activeVoice;
+    activeVoice=null;
+    try{v.rel();}catch(e){}
+    var ins=findInst(activeInst);
+    if(!ins||ins.t!=="samp"){
+      setTimeout(function(){try{v.kill();}catch(e){}},500);
+    }
+  }
+}
+
+function playNoteFromEvent(midi,instId,mode){
+  if(!audioReady)return;
+  silenceNote();
+  var noteName=Tone.Frequency(midi,"midi").toNote();
+  if(instId&&instId!==activeInst){
+    activeInst=instId;
+    var ins=findInst(instId);
+    if(ins&&ins.t==="samp")loadSamp(instId);
+  }
+  var v=mkVoice(noteName,activeInst);
+  if(!v)return;
+  if(mode==="impact"){
+    v.ar("32n");
+  }else if(mode==="staccato"){
+    v.ar("16n");
+  }else{
+    v.atk();
+  }
+  activeVoice=v;
+  /* Trigger visual effects */
+  isPerformerPlaying=true;
+  lastNoteMidi=midi;
+  lastNoteTime=Date.now();
+  spawnParticles(midi);
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+var myId=null,myName="",myColor="#D354A0",roomCode="";
+var viewers={};  /* id -> {name,x,y,tx,ty,color,bubbleText,bubbleTime} */
+var performer={x:0.5,y:0.15,name:"Performer",color:"#D354A0",playing:false};
+var isPerformerPlaying=false,lastNoteMidi=60,lastNoteTime=0;
+var perfMode="sustain",perfInst="piano",perfScale="",perfKey="";
+var ws=null,wsReady=false;
+var particles=[],chatMessages=[];
+var bubbles={}; /* viewerId -> {text, time} */
+
+/* Canvas */
+var canvas,ctx,W=0,H=0;
+var STAGE_TOP=0.0,STAGE_BOTTOM=0.30;
+var FLOOR_TOP=0.30,FLOOR_BOTTOM=0.78;
+
+/* ============================================================
+   JOIN SCREEN
+   ============================================================ */
+var colorPicksEl=document.getElementById("colorPicks");
+var selectedColor=AVATAR_COLORS[0];
+AVATAR_COLORS.forEach(function(c,i){
+  var d=document.createElement("div");
+  d.className="color-pick"+(i===0?" sel":"");
+  d.style.background=c;
+  d.setAttribute("data-c",c);
+  d.addEventListener("click",function(){
+    var all=colorPicksEl.querySelectorAll(".color-pick");
+    for(var j=0;j<all.length;j++)all[j].classList.remove("sel");
+    d.classList.add("sel");
+    selectedColor=c;
+  });
+  colorPicksEl.appendChild(d);
+});
+
+document.getElementById("enterBtn").addEventListener("click",function(){
+  var name=document.getElementById("inName").value.trim();
+  var room=document.getElementById("inRoom").value.trim();
+  if(!name){showJoinErr("Please enter a display name");return;}
+  if(!room){showJoinErr("Please enter a room code");return;}
+  myName=name;
+  myColor=selectedColor;
+  roomCode=room;
+  enterVenue();
+});
+document.getElementById("inRoom").addEventListener("keydown",function(e){
+  if(e.key==="Enter")document.getElementById("enterBtn").click();
+});
+
+function showJoinErr(msg){
+  var el=document.getElementById("joinErr");
+  el.textContent=msg;
+  el.style.display="block";
+  setTimeout(function(){el.style.display="none";},3000);
+}
+
+/* ============================================================
+   ENTER VENUE
+   ============================================================ */
+function enterVenue(){
+  document.getElementById("joinScreen").classList.add("hidden");
+  document.getElementById("venue").classList.add("on");
+  document.getElementById("hudRoom").textContent=roomCode;
+
+  initAudio();
+  loadSamp("piano");
+  loadSamp("violin");
+  initCanvas();
+  connectWS();
+  requestAnimationFrame(renderLoop);
+}
+
+/* ============================================================
+   CANVAS SETUP
+   ============================================================ */
+function initCanvas(){
+  canvas=document.getElementById("mainCanvas");
+  ctx=canvas.getContext("2d");
+  resize();
+  window.addEventListener("resize",resize);
+  canvas.addEventListener("click",onCanvasClick);
+}
+
+function resize(){
+  W=window.innerWidth;
+  H=window.innerHeight;
+  canvas.width=W;
+  canvas.height=H;
+}
+
+function onCanvasClick(e){
+  var rect=canvas.getBoundingClientRect();
+  var cx=e.clientX-rect.left;
+  var cy=e.clientY-rect.top;
+  var nx=cx/W;
+  var ny=cy/H;
+  /* Only allow movement on the floor area */
+  if(ny<FLOOR_TOP||ny>FLOOR_BOTTOM)return;
+  /* Clamp x */
+  nx=Math.max(0.03,Math.min(0.97,nx));
+  ny=Math.max(FLOOR_TOP+0.02,Math.min(FLOOR_BOTTOM-0.02,ny));
+  if(myId&&viewers[myId]){
+    viewers[myId].tx=nx;
+    viewers[myId].ty=ny;
+    sendPos(nx,ny);
+  }
+}
+
+/* ============================================================
+   WEBSOCKET
+   ============================================================ */
+var lastPosSend=0;
+function connectWS(){
+  try{
+    ws=new WebSocket(WS_URL);
+  }catch(e){
+    console.log("WS connect error",e);
+    return;
+  }
+  ws.onopen=function(){
+    wsReady=true;
+    ws.send(JSON.stringify({type:"join-room",room:roomCode,name:myName,color:myColor}));
+  };
+  ws.onmessage=function(e){
+    try{var msg=JSON.parse(e.data);}catch(x){return;}
+    handleMsg(msg);
+  };
+  ws.onclose=function(){
+    wsReady=false;
+    setTimeout(function(){connectWS();},3000);
+  };
+  ws.onerror=function(){wsReady=false;};
+}
+
+function wsSend(obj){
+  if(ws&&wsReady)ws.send(JSON.stringify(obj));
+}
+
+function sendPos(x,y){
+  var now=Date.now();
+  if(now-lastPosSend<100)return;
+  lastPosSend=now;
+  wsSend({type:"pos",x:x,y:y});
+}
+
+function handleMsg(msg){
+  var t=msg.type;
+  if(t==="room-state"){
+    myId=msg.yourId||msg.myId;
+    if(msg.viewers){
+      msg.viewers.forEach(function(v){
+        viewers[v.id]={name:v.name,x:v.x||0.5,y:v.y||(FLOOR_TOP+0.1),
+          tx:v.x||0.5,ty:v.y||(FLOOR_TOP+0.1),color:v.color||"#7F77DD",
+          bubbleText:null,bubbleTime:0};
+      });
+    }
+    if(msg.performer){
+      performer.name=msg.performer.name||"Performer";
+    }
+    if(msg.inst)activeInst=msg.inst;
+    /* Restore performer state if joining mid-session */
+    if(msg.performerState){
+      var ps=msg.performerState;
+      if(ps.eng){activeInst=ps.eng;perfInst=ps.eng;var si=findInst(ps.eng);if(si&&si.t==="samp")loadSamp(ps.eng);}
+      if(ps.root)perfKey=ps.root;
+      if(ps.scale)perfScale=ps.scale;
+      if(ps.mode)perfMode=ps.mode;
+    }
+    /* Restore video if playing */
+    if(msg.video)handleVideo(msg.video);
+    updViewerCount();
+    updHudBR();
+  }
+  else if(t==="viewer-join"){
+    var jx=msg.x||0.5,jy=msg.y||(FLOOR_TOP+0.1);
+    viewers[msg.id]={name:msg.name,x:jx,y:jy,
+      tx:jx,ty:jy,color:msg.color||"#7F77DD",
+      bubbleText:null,bubbleTime:0};
+    addChat("system",msg.name+" joined the venue","#555568");
+    updViewerCount();
+  }
+  else if(t==="viewer-leave"){
+    if(viewers[msg.id]){
+      addChat("system",viewers[msg.id].name+" left","#555568");
+      delete viewers[msg.id];
+    }
+    updViewerCount();
+  }
+  else if(t==="pos"){
+    if(viewers[msg.id]){
+      viewers[msg.id].tx=msg.x;
+      viewers[msg.id].ty=msg.y;
+    }
+  }
+  else if(t==="note"){
+    if(msg.on){
+      playNoteFromEvent(msg.midi,msg.inst||activeInst,msg.mode||"sustain");
+    }else{
+      silenceNote();
+      isPerformerPlaying=false;
+    }
+  }
+  else if(t==="inst"){
+    activeInst=msg.id;
+    var ins=findInst(msg.id);
+    if(ins&&ins.t==="samp")loadSamp(msg.id);
+    updHudBR();
+  }
+  else if(t==="state"||t==="info"){
+    if(msg.scale)perfScale=msg.scale;
+    if(msg.root)perfKey=msg.root;
+    if(msg.key)perfKey=msg.key;
+    if(msg.mode)perfMode=msg.mode;
+    if(msg.eng){activeInst=msg.eng;perfInst=msg.eng;var si=findInst(msg.eng);if(si&&si.t==="samp")loadSamp(msg.eng);}
+    if(msg.inst){activeInst=msg.inst;perfInst=msg.inst;}
+    updHudBR();
+  }
+  else if(t==="video"){
+    handleVideo(msg);
+  }
+  else if(t==="chat"){
+    var sender=msg.name||"Unknown";
+    var sColor=msg.color||"#888";
+    addChat(sender,msg.text,sColor);
+    /* speech bubble */
+    if(msg.viewerId&&viewers[msg.viewerId]){
+      viewers[msg.viewerId].bubbleText=msg.text;
+      viewers[msg.viewerId].bubbleTime=Date.now();
+    }
+  }
+  else if(t==="performer-left"){
+    document.getElementById("perfLeft").style.display="block";
+    setTimeout(function(){document.getElementById("perfLeft").style.display="none";},5000);
+    silenceNote();
+    isPerformerPlaying=false;
+  }
+}
+
+/* ============================================================
+   CHAT
+   ============================================================ */
+function addChat(name,text,color){
+  chatMessages.push({name:name,text:text,color:color,time:Date.now()});
+  if(chatMessages.length>200)chatMessages.shift();
+  renderChat();
+}
+
+function renderChat(){
+  var el=document.getElementById("chatMsgs");
+  var html="";
+  var start=Math.max(0,chatMessages.length-80);
+  for(var i=start;i<chatMessages.length;i++){
+    var m=chatMessages[i];
+    html+='<div class="chat-msg"><span class="chat-name" style="color:'+m.color+'">'+esc(m.name)+':</span>'+esc(m.text)+'</div>';
+  }
+  el.innerHTML=html;
+  el.scrollTop=el.scrollHeight;
+}
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+document.getElementById("chatSend").addEventListener("click",sendChat);
+document.getElementById("chatText").addEventListener("keydown",function(e){
+  if(e.key==="Enter")sendChat();
+});
+
+function sendChat(){
+  var inp=document.getElementById("chatText");
+  var txt=inp.value.trim();
+  if(!txt)return;
+  inp.value="";
+  wsSend({type:"chat",text:txt});
+  addChat(myName,txt,myColor);
+  /* own bubble */
+  if(myId&&viewers[myId]){
+    viewers[myId].bubbleText=txt;
+    viewers[myId].bubbleTime=Date.now();
+  }
+}
+
+/* ============================================================
+   VIDEO SYNC
+   ============================================================ */
+var ytPlayer=null,ytReady=false;
+function handleVideo(msg){
+  var screen=document.getElementById("bigScreen");
+  var frame=document.getElementById("ytFrame");
+  if(msg.action==="play"){
+    screen.classList.add("on");
+    var vid=msg.vid||"";
+    var t=msg.time||0;
+    frame.src="https://www.youtube.com/embed/"+vid+"?autoplay=1&start="+Math.floor(t)+"&enablejsapi=0";
+  }else if(msg.action==="pause"){
+    /* Can't easily pause an iframe without API, hide */
+    frame.src="";
+  }else if(msg.action==="stop"){
+    screen.classList.remove("on");
+    frame.src="";
+  }
+}
+
+/* ============================================================
+   HUD
+   ============================================================ */
+function updViewerCount(){
+  var c=Object.keys(viewers).length;
+  document.getElementById("hudCount").textContent=c;
+}
+
+function updHudBR(){
+  var ins=findInst(activeInst);
+  var instName=ins?ins.l:activeInst;
+  var lines=[];
+  lines.push("Instrument: "+instName);
+  if(perfKey)lines.push("Key: "+perfKey);
+  if(perfScale)lines.push("Scale: "+perfScale);
+  if(perfMode)lines.push("Mode: "+perfMode);
+  document.getElementById("hudBR").innerHTML=lines.join("<br>");
+}
+
+/* ============================================================
+   PARTICLES
+   ============================================================ */
+function spawnParticles(midi){
+  var oct=Math.floor(midi/12)-1;
+  var hue=(midi%12)*30;
+  var px=performer.x*W;
+  var py=(STAGE_TOP+STAGE_BOTTOM)/2*H;
+  for(var i=0;i<12;i++){
+    particles.push({
+      x:px,y:py,
+      vx:(Math.random()-0.5)*6,
+      vy:-Math.random()*4-2,
+      life:1,
+      decay:0.015+Math.random()*0.015,
+      size:3+Math.random()*4,
+      hue:hue
+    });
+  }
+}
+
+function updateParticles(){
+  for(var i=particles.length-1;i>=0;i--){
+    var p=particles[i];
+    p.x+=p.vx;
+    p.y+=p.vy;
+    p.vy+=0.08;
+    p.life-=p.decay;
+    if(p.life<=0)particles.splice(i,1);
+  }
+}
+
+function drawParticles(){
+  for(var i=0;i<particles.length;i++){
+    var p=particles[i];
+    ctx.globalAlpha=p.life*0.8;
+    ctx.fillStyle="hsl("+p.hue+",80%,65%)";
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+/* ============================================================
+   DRAWING: AVATAR SPRITE
+   ============================================================ */
+function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving){
+  var s=scale||1;
+  var bw=16*s, bh=24*s;
+  var cx=x, cy=y;
+
+  /* Glow for performer when playing */
+  if(isPerf&&isPlaying){
+    var pulse=0.4+0.3*Math.sin(Date.now()*0.008);
+    ctx.save();
+    ctx.globalAlpha=pulse;
+    ctx.shadowColor=color;
+    ctx.shadowBlur=30*s;
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    ctx.arc(cx,cy-bh*0.3,bw*1.2,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* Bob when moving */
+  var bob=0;
+  if(moving){
+    bob=Math.sin(Date.now()*0.012)*2*s;
+  }
+
+  var headR=6*s;
+  var bodyW=10*s, bodyH=10*s;
+  var legW=3*s, legH=6*s;
+  var armW=3*s, armH=8*s;
+
+  /* Legs */
+  var legSpread=moving?Math.sin(Date.now()*0.01)*3*s:0;
+  ctx.fillStyle=darken(color,0.4);
+  ctx.fillRect(cx-4*s+legSpread,cy+bodyH*0.3+bob,legW,legH);
+  ctx.fillRect(cx+1*s-legSpread,cy+bodyH*0.3+bob,legW,legH);
+
+  /* Body */
+  ctx.fillStyle=color;
+  ctx.fillRect(cx-bodyW/2,cy-bodyH/2+bob,bodyW,bodyH);
+
+  /* Arms */
+  var armAngle=0;
+  if(isPerf&&isPlaying){
+    armAngle=Math.sin(Date.now()*0.015)*0.4;
+  }
+  ctx.save();
+  ctx.fillStyle=darken(color,0.2);
+  /* Left arm */
+  ctx.save();
+  ctx.translate(cx-bodyW/2,cy-bodyH*0.3+bob);
+  ctx.rotate(-0.2+armAngle);
+  ctx.fillRect(-armW,0,armW,armH);
+  ctx.restore();
+  /* Right arm */
+  ctx.save();
+  ctx.translate(cx+bodyW/2,cy-bodyH*0.3+bob);
+  ctx.rotate(0.2-armAngle);
+  ctx.fillRect(0,0,armW,armH);
+  ctx.restore();
+  ctx.restore();
+
+  /* Head */
+  ctx.fillStyle=lighten(color,0.3);
+  ctx.beginPath();
+  ctx.arc(cx,cy-bodyH/2-headR+2*s+bob,headR,0,Math.PI*2);
+  ctx.fill();
+
+  /* Eyes */
+  ctx.fillStyle="#000";
+  ctx.fillRect(cx-3*s,cy-bodyH/2-headR+2*s+bob-1*s,2*s,2*s);
+  ctx.fillRect(cx+1*s,cy-bodyH/2-headR+2*s+bob-1*s,2*s,2*s);
+
+  /* Name label */
+  ctx.font="bold "+Math.round(11*s)+"px 'Segoe UI',system-ui,sans-serif";
+  ctx.textAlign="center";
+  ctx.fillStyle="rgba(255,255,255,0.85)";
+  ctx.fillText(name,cx,cy-bodyH/2-headR*2-2*s+bob);
+}
+
+function darken(hex,amt){
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.round(r*(1-amt));g=Math.round(g*(1-amt));b=Math.round(b*(1-amt));
+  return"#"+pad2(r)+pad2(g)+pad2(b);
+}
+function lighten(hex,amt){
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.min(255,Math.round(r+(255-r)*amt));g=Math.min(255,Math.round(g+(255-g)*amt));b=Math.min(255,Math.round(b+(255-b)*amt));
+  return"#"+pad2(r)+pad2(g)+pad2(b);
+}
+function pad2(n){var s=n.toString(16);return s.length<2?"0"+s:s;}
+
+/* ============================================================
+   DRAWING: SPEECH BUBBLES
+   ============================================================ */
+function drawBubble(x,y,text){
+  var maxW=160;
+  ctx.font="12px 'Segoe UI',system-ui,sans-serif";
+  var tw=Math.min(ctx.measureText(text).width+16,maxW);
+  var bh=24;
+  var bx=x-tw/2,by=y-50;
+
+  ctx.fillStyle="rgba(10,10,15,0.85)";
+  ctx.strokeStyle="rgba(127,119,221,0.4)";
+  ctx.lineWidth=1;
+  roundRect(ctx,bx,by,tw,bh,6);
+  ctx.fill();
+  ctx.stroke();
+
+  /* Triangle pointer */
+  ctx.fillStyle="rgba(10,10,15,0.85)";
+  ctx.beginPath();
+  ctx.moveTo(x-5,by+bh);
+  ctx.lineTo(x+5,by+bh);
+  ctx.lineTo(x,by+bh+6);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle="#e0e0e8";
+  ctx.textAlign="center";
+  ctx.fillText(text.length>22?text.substring(0,22)+"...":text,x,by+16);
+}
+
+function roundRect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.lineTo(x+w-r,y);
+  c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);
+  c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h);
+  c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r);
+  c.quadraticCurveTo(x,y,x+r,y);
+  c.closePath();
+}
+
+/* ============================================================
+   DRAWING: STAGE & FLOOR
+   ============================================================ */
+function drawStage(){
+  var sy=STAGE_TOP*H, sh=(STAGE_BOTTOM-STAGE_TOP)*H;
+
+  /* Stage background gradient */
+  var grad=ctx.createLinearGradient(0,sy,0,sy+sh);
+  grad.addColorStop(0,"#0e0818");
+  grad.addColorStop(0.5,"#1a0e28");
+  grad.addColorStop(1,"#120a1c");
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,sy,W,sh);
+
+  /* Stage platform edge */
+  var platY=sy+sh-8;
+  var platGrad=ctx.createLinearGradient(0,platY,0,platY+8);
+  platGrad.addColorStop(0,"#3a1a4a");
+  platGrad.addColorStop(1,"#1a0a24");
+  ctx.fillStyle=platGrad;
+  ctx.fillRect(0,platY,W,8);
+
+  /* Spotlight effects */
+  drawSpotlight(W*0.3,sy,150,"rgba(211,84,160,0.06)");
+  drawSpotlight(W*0.5,sy,200,"rgba(127,119,221,0.08)");
+  drawSpotlight(W*0.7,sy,150,"rgba(211,84,160,0.06)");
+
+  /* FFT spectrum bars behind stage */
+  if(audioReady&&analyser){
+    drawFFT(sy,sh);
+  }
+
+  /* Stage glow shifts with register */
+  if(isPerformerPlaying){
+    var elapsed=Date.now()-lastNoteTime;
+    if(elapsed<2000){
+      var noteHue=(lastNoteMidi%12)*30;
+      var glowAlpha=Math.max(0,0.08*(1-elapsed/2000));
+      ctx.fillStyle="hsla("+noteHue+",60%,50%,"+glowAlpha+")";
+      ctx.fillRect(0,sy,W,sh);
+    }
+  }
+}
+
+function drawSpotlight(x,y,radius,color){
+  var grad=ctx.createRadialGradient(x,y,0,x,y+radius*1.5,radius);
+  grad.addColorStop(0,color);
+  grad.addColorStop(1,"transparent");
+  ctx.fillStyle=grad;
+  ctx.fillRect(x-radius,y,radius*2,radius*2);
+}
+
+function drawFFT(sy,sh){
+  try{
+    var data=analyser.getValue();
+    var barCount=64;
+    var barW=W/barCount;
+    for(var i=0;i<barCount;i++){
+      var val=data[i*Math.floor(data.length/barCount)]||0;
+      var db=Math.max(0,(val+100)/100);
+      var barH=db*sh*0.6;
+      if(barH<1)continue;
+      var hue=200+i*2;
+      ctx.fillStyle="hsla("+hue+",60%,40%,0.15)";
+      ctx.fillRect(i*barW,sy+sh-barH-8,barW-1,barH);
+    }
+  }catch(e){}
+}
+
+function drawFloor(){
+  var fy=FLOOR_TOP*H, fh=(FLOOR_BOTTOM-FLOOR_TOP)*H;
+
+  /* Floor gradient */
+  var grad=ctx.createLinearGradient(0,fy,0,fy+fh);
+  grad.addColorStop(0,"#0c0c14");
+  grad.addColorStop(1,"#080810");
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,fy,W,fh);
+
+  /* Tile pattern */
+  var tileSize=40;
+  ctx.strokeStyle="rgba(255,255,255,0.02)";
+  ctx.lineWidth=1;
+  for(var tx=0;tx<W;tx+=tileSize){
+    ctx.beginPath();ctx.moveTo(tx,fy);ctx.lineTo(tx,fy+fh);ctx.stroke();
+  }
+  for(var ty=fy;ty<fy+fh;ty+=tileSize){
+    ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(W,ty);ctx.stroke();
+  }
+}
+
+function drawBelowFloor(){
+  /* Area below floor (behind chat) */
+  var by=FLOOR_BOTTOM*H;
+  ctx.fillStyle="#060608";
+  ctx.fillRect(0,by,W,H-by);
+}
+
+/* ============================================================
+   NOTE FLASH
+   ============================================================ */
+function drawNoteFlash(){
+  if(!isPerformerPlaying)return;
+  var elapsed=Date.now()-lastNoteTime;
+  if(elapsed>600)return;
+  var alpha=Math.max(0,1-elapsed/600);
+  var noteName=ROOTS[((lastNoteMidi%12)+12)%12]+(Math.floor(lastNoteMidi/12)-1);
+  var px=performer.x*W;
+  var py=(STAGE_TOP+STAGE_BOTTOM)/2*H-50;
+  ctx.globalAlpha=alpha;
+  ctx.font="bold 28px 'Segoe UI',system-ui,sans-serif";
+  ctx.textAlign="center";
+  ctx.fillStyle="#fff";
+  ctx.fillText(noteName,px,py);
+  ctx.globalAlpha=1;
+}
+
+/* ============================================================
+   MAIN RENDER LOOP
+   ============================================================ */
+function renderLoop(){
+  ctx.clearRect(0,0,W,H);
+
+  /* Background */
+  ctx.fillStyle="#0a0a0f";
+  ctx.fillRect(0,0,W,H);
+
+  drawStage();
+  drawFloor();
+  drawBelowFloor();
+
+  /* Particles (behind avatars) */
+  updateParticles();
+  drawParticles();
+
+  /* Performer avatar */
+  var perfPx=performer.x*W;
+  var perfPy=(STAGE_TOP+STAGE_BOTTOM)/2*H+20;
+  drawAvatar(perfPx,perfPy,performer.color,performer.name,3,true,isPerformerPlaying,false);
+
+  /* Note flash near performer */
+  drawNoteFlash();
+
+  /* Audience avatars - lerp positions */
+  var now=Date.now();
+  var ids=Object.keys(viewers);
+  for(var i=0;i<ids.length;i++){
+    var v=viewers[ids[i]];
+    /* Lerp */
+    var dx=v.tx-v.x, dy=v.ty-v.y;
+    var dist2=dx*dx+dy*dy;
+    var moving=dist2>0.0001;
+    v.x+=dx*0.08;
+    v.y+=dy*0.08;
+
+    var vx=v.x*W, vy=v.y*H;
+    drawAvatar(vx,vy,v.color,v.name,2,false,false,moving);
+
+    /* Speech bubble */
+    if(v.bubbleText&&(now-v.bubbleTime)<4000){
+      var bAlpha=Math.max(0,1-(now-v.bubbleTime)/4000);
+      ctx.globalAlpha=bAlpha;
+      drawBubble(vx,vy-30,v.bubbleText);
+      ctx.globalAlpha=1;
+    }
+  }
+
+  requestAnimationFrame(renderLoop);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+updHudBR();
+
+}catch(e){
+  console.error("Venue init error:",e);
+}
+})();
+</script>
+</body>
+</html>
