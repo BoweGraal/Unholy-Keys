@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Unholy Keys v4.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/Theodeus/tuna/tuna.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -272,6 +273,27 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
     <div id="hkGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
   </div>
 
+  <div class="sl">Instrument Slots <span style="font-size:11px;font-weight:400;color:var(--tx3)">(PrtSc / ScrLk / Pause)</span></div>
+  <div class="pnl" style="padding:12px 16px">
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Select an instrument then click <b>Set</b> to assign it to a slot. In Jam mode press <b>PrintScreen</b>, <b>ScrollLock</b> or <b>Pause</b> to instantly switch.</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="background:var(--bg3);border-radius:var(--r);padding:8px;border:1px solid var(--bg4)">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px;font-weight:600;letter-spacing:.5px">SLOT 1 — PrtSc</div>
+        <div id="slotCfg1" style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px">(empty)</div>
+        <div class="btn" onclick="assignSlot(0)" style="padding:3px 8px;font-size:11px;width:100%;text-align:center;box-sizing:border-box">Set</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:8px;border:1px solid var(--bg4)">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px;font-weight:600;letter-spacing:.5px">SLOT 2 — ScrLk</div>
+        <div id="slotCfg2" style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px">(empty)</div>
+        <div class="btn" onclick="assignSlot(1)" style="padding:3px 8px;font-size:11px;width:100%;text-align:center;box-sizing:border-box">Set</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:8px;border:1px solid var(--bg4)">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px;font-weight:600;letter-spacing:.5px">SLOT 3 — Pause</div>
+        <div id="slotCfg3" style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px">(empty)</div>
+        <div class="btn" onclick="assignSlot(2)" style="padding:3px 8px;font-size:11px;width:100%;text-align:center;box-sizing:border-box">Set</div>
+      </div>
+    </div>
+  </div>
   <div class="sl">Instrument <span id="iBdg" class="bdg"></span></div>
   <div id="instBox"></div>
   <div class="sl">Note history</div>
@@ -296,7 +318,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
     <div id="layBox"></div>
     <div style="height:50px;background:var(--bg3);border-radius:var(--r);overflow:hidden;position:relative;margin-top:8px"><canvas id="rcv" style="width:100%;height:100%"></canvas><div id="rcPh" style="position:absolute;top:0;left:0;width:2px;height:100%;background:var(--pk);opacity:0"></div></div>
   </div>
-  <div class="hb"><b>Play:</b> Monophonic -- last arrow wins. <b>Space</b> (5-8) / <b>D</b> (9-12) / <b>Space+D</b> (13-16) / <b>Space+E</b> (17-20) / <b>Space+3</b> (21-24)<br><b>Modes:</b> <b>Z</b>=Impact / <b>Shift</b>=Sustain / <b>Ctrl</b>=Staccato / <b>V</b>=Legato<br><b>Power:</b> Drag the Power slider left (soft/quiet) or right (hard/loud + velocity boost)<br><b>Jam:</b> <b>F</b>=Enter / <b>Esc</b>=Exit / <b>T</b>=Toggle split / <b>N/P</b>=Next/Prev song<br><b>Loop:</b> <b>F1</b>=Record / <b>F2</b>=Play / <b>F3</b>=Stop / <b>F4</b>=Clear<br><b>Octave:</b> <b>Num+</b>=Up / <b>Num-</b>=Down / <b>Numpad 1-9</b>=Instrument hotkeys</div>
+  <div class="hb"><b>Play:</b> Monophonic -- last arrow wins. <b>Space</b> (5-8) / <b>D</b> (9-12) / <b>Space+D</b> (13-16) / <b>Space+E</b> (17-20) / <b>Space+3</b> (21-24)<br><b>Modes:</b> <b>Z</b>=Impact / <b>Shift</b>=Sustain / <b>Ctrl</b>=Staccato / <b>V</b>=Legato<br><b>Power:</b> Drag the Power slider left (soft/quiet) or right (hard/loud + velocity boost)<br><b>Jam:</b> <b>F</b>=Enter / <b>Esc</b>=Exit / <b>T</b>=Toggle split / <b>N/P</b>=Next/Prev song<br><b>Loop:</b> <b>F1</b>=Record / <b>F2</b>=Play / <b>F3</b>=Stop / <b>F4</b>=Clear<br><b>Octave:</b> <b>Num+</b>=Up / <b>Num-</b>=Down / <b>Numpad 1-9</b>=Instrument hotkeys<br><b>Slots:</b> <b>PrtSc</b>=Slot 1 / <b>ScrLk</b>=Slot 2 / <b>Pause</b>=Slot 3 (configure in Instrument Slots panel)</div>
 </div>
 <div id="jm">
   <div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><div id="jmVL"></div></div>
@@ -308,6 +330,14 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
         <select id="jScaleSel" onchange="S.scale=this.value;rebuild();updJInfo();document.getElementById('sS').value=S.scale" style="flex:1;max-width:150px"></select>
       </div>
       <div style="display:flex;gap:12px;align-items:center;margin-top:4px"><span style="font-size:10px;color:rgba(255,255,255,.4)">PWR</span><span id="jPowLbl" style="font-size:11px;font-weight:600;color:var(--pk)">60%</span><span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:6px">VOL</span><span id="jVolLbl" style="font-size:11px;font-weight:600;color:var(--tl)">50%</span></div>
+      <div style="display:flex;gap:4px;margin-top:6px">
+        <div id="jSlot1" onclick="switchSlot(0)" style="flex:1;padding:3px 4px;font-size:9px;font-weight:600;border-radius:4px;cursor:pointer;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);transition:all .12s">PrtSc · --</div>
+        <div id="jSlot2" onclick="switchSlot(1)" style="flex:1;padding:3px 4px;font-size:9px;font-weight:600;border-radius:4px;cursor:pointer;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);transition:all .12s">ScrLk · --</div>
+        <div id="jSlot3" onclick="switchSlot(2)" style="flex:1;padding:3px 4px;font-size:9px;font-weight:600;border-radius:4px;cursor:pointer;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);transition:all .12s">Pause · --</div>
+      </div>
+      <select id="jPresetSel" onchange="applyJamPreset(this)" style="margin-top:6px;width:100%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);padding:4px 6px;border-radius:4px;font-size:11px;outline:none">
+        <option value="">&#9654; Song Preset...</option>
+      </select>
     </div><div id="ji"><div class="jki" id="jiK"></div><div class="jsi" id="jiS"></div><div class="jpi" id="jiI"></div></div><button id="jx">ESC Exit</button><button id="jfs" onclick="jamFullscreen()" style="position:absolute;top:20px;right:230px;z-index:10;padding:8px 14px;font-size:11px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);color:#fff;text-transform:uppercase">&#9974; FS</button><button id="jtb">T Toggle split</button>
     <div id="jTopBar" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:8px;align-items:center">
       <div id="jPerfLbl" style="font-size:12px;font-weight:600;color:var(--pk);padding:4px 12px;border-radius:var(--r);background:rgba(211,84,160,.12);border:1px solid rgba(211,84,160,.25);display:none"></div>
@@ -650,9 +680,11 @@ var activeNoteKey=null,activeVoice=null,activeImpactIv=null;
 var CHORD_SHAPES={"Triad":[0,4,7],"Power":[0,7,12],"Sus2":[0,2,7],"Sus4":[0,5,7],"Maj7":[0,4,7,11],"Min Triad":[0,3,7],"Octave":[0,12]};
 var HARM_INTERVALS={"3rd":4,"4th":5,"5th":7,"6th":9,"Octave":12,"2nd":2};
 var chordShape="Triad",harmOn=false,harmInterval="5th",strumOn=false,strumSpeed=40;
+var instSlots=[null,null,null],activeSlot=-1; /* PrintScreen=0, ScrollLock=1, Pause=2 */
 var activeChordVoices=[],activeHarmVoice=null;
 var started=false,audioReady=false;
 var masterVol,rev,dly,cho,dist,lim,analyser;
+var _tuna,_tunaBridge,tunaWah,tunaPhaser,tunaTremolo,tunaOD;
 var samplers={},loading={};
 var hist=[];
 var jamOn=false,jCanvas=null,jCtx=null,jW=0,jH=0,jParts=[],jRoll=[],jGlow=0,jAnim=null;
@@ -676,14 +708,36 @@ function mirrorMap(n){if(n.length<NC)return n;var r=[];for(var g=0;g<6;g++){var 
 function buildLayout(){var iv=SCALES[S.scale],all=scaleNotes(S.root,iv,S.oct,Math.max(NC,iv.length*5));var n=all.slice(0,NC);var L={};REGS.forEach(function(mod,mi){DIRS.forEach(function(dir,di){L[mod+"-"+dir]=n[mi*4+di]||60;});});return L;}
 var layout=buildLayout();
 
-function initAudio(){if(started)return;started=true;Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);rev=new Tone.Reverb({decay:2.5,wet:S.fxR}).connect(masterVol);dly=new Tone.FeedbackDelay({delayTime:"8n",feedback:.3,wet:S.fxD}).connect(rev);cho=new Tone.Chorus({frequency:1.5,delayTime:3.5,depth:.7,wet:S.fxC}).connect(dly);dist=new Tone.Distortion({distortion:.3,wet:S.fxDi}).connect(cho);audioReady=true;loadSamp("violin");}
+function initAudio(){if(started)return;started=true;Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);rev=new Tone.Reverb({decay:2.5,wet:S.fxR}).connect(masterVol);dly=new Tone.FeedbackDelay({delayTime:"8n",feedback:.3,wet:S.fxD}).connect(rev);cho=new Tone.Chorus({frequency:1.5,delayTime:3.5,depth:.7,wet:S.fxC}).connect(dly);dist=new Tone.Distortion({distortion:.3,wet:S.fxDi}).connect(cho);
+  /* ── Tuna pedal board: reroute cho → [wah→phaser→tremolo→od] → dly ── */
+  try{if(typeof Tuna!=="undefined"){
+    _tuna=new Tuna(Tone.getContext().rawContext);
+    tunaWah=new _tuna.WahWah({automode:true,baseFrequency:0.5,excursionOctaves:2,sweep:0.2,resonance:3,sensitivity:0.5,bypass:1});
+    tunaPhaser=new _tuna.Phaser({rate:1.2,depth:0.3,feedback:0.2,stereoPhase:30,baseModulationFrequency:700,bypass:1});
+    tunaTremolo=new _tuna.Tremolo({intensity:0.3,rate:5,stereoPhase:0,bypass:1});
+    tunaOD=new _tuna.Overdrive({outputGain:0.5,drive:0.5,curveAmount:0.5,algorithmIndex:0,bypass:1});
+    /* Disconnect cho→dly, insert tuna chain between them */
+    cho.disconnect(dly);
+    cho.connect(tunaWah.input);                 /* Tone→raw: valid */
+    tunaWah.output.connect(tunaPhaser.input);   /* raw→raw */
+    tunaPhaser.output.connect(tunaTremolo.input);
+    tunaTremolo.output.connect(tunaOD.input);
+    /* Bridge back to Tone chain: tunaOD.output → bridge Gain → dly */
+    _tunaBridge=new Tone.Gain(1);
+    _tunaBridge.connect(dly);                   /* Tone→Tone */
+    tunaOD.output.connect(_tunaBridge.input);   /* raw AudioNode→native GainNode */
+    renderFx();
+    dbg("Tuna pedal board ready");
+  }}catch(e){dbg("Tuna init skipped: "+e);}
+  audioReady=true;loadSamp("violin");}
 
 function loadSamp(id){if(samplers[id]||loading[id])return;var ins=findInst(id);if(!ins||ins.t!=="samp")return;loading[id]=true;renderInst();updBdg();var urls={};var ext=ins.ext||".mp3";Object.keys(ins.n).forEach(function(k){urls[k]=ins.n[k]+ext;});var folder=ins.base||id;var baseUrl=ins.sbase||(SBASE+folder+"/");var sp=new Tone.Sampler({urls:urls,baseUrl:baseUrl,release:.5,onload:function(){delete loading[id];samplers[id]=sp;if(ins.fx){var chain=ins.fx();if(ins.gain){var gn=new Tone.Volume(ins.gain);chain.push(gn);}sp._fx=chain;sp.chain.apply(sp,chain.concat([dist]));}else if(ins.gain){var gn=new Tone.Volume(ins.gain);sp.connect(gn);gn.connect(dist);sp._gn=gn;}else{sp.connect(dist);}renderInst();updBdg();dbg(id+" loaded");},onerror:function(e){delete loading[id];dbg(id+" ERROR: "+(e&&e.message?e.message:e||"unknown"));renderInst();updBdg();}});setTimeout(function(){if(loading[id]){delete loading[id];renderInst();updBdg();}},15000);}
 
 function mkVoice(noteName){if(!audioReady)return null;var ins=findInst(S.eng);if(!ins)return null;if(ins.t==="samp"){var sp=samplers[ins.id];if(!sp)return null;
   var _retrigTm=null,_alive=false;
+  var XFADE=0.55;/* seconds — matches release:.5 on sampler with a tiny buffer */
   function _getBufDur(){try{if(sp._activeSources){var d=0;sp._activeSources.forEach(function(arr){arr.forEach(function(src){if(src.buffer&&src.buffer.duration>d)d=src.buffer.duration;});});if(d>0)return d;}}catch(e){}return 3;}
-  function _schedRetrig(){if(!_alive)return;var dur=_getBufDur();var delay=Math.max(0.5,(dur-0.4))*1000;_retrigTm=setTimeout(function(){if(!_alive)return;try{sp.triggerAttack(noteName);}catch(e){}_schedRetrig();},delay);}
+  function _schedRetrig(){if(!_alive)return;var dur=_getBufDur();var delay=Math.max(300,(dur-XFADE)*1000);_retrigTm=setTimeout(function(){if(!_alive)return;try{sp.releaseAll();sp.triggerAttack(noteName);}catch(e){}_schedRetrig();},delay);}
   function _stopRetrig(){_alive=false;if(_retrigTm){clearTimeout(_retrigTm);_retrigTm=null;}}
   return{atk:function(){sp.releaseAll();sp.triggerAttack(noteName);_alive=true;_schedRetrig();},rel:function(){_stopRetrig();try{sp.releaseAll();}catch(e){}},ar:function(dur){_stopRetrig();sp.releaseAll();sp.triggerAttackRelease(noteName,dur);},kill:function(){_stopRetrig();},setEnv:function(){}};}  var s=ins.mk();
   /* If synth has internal effects chain (_x), connect the LAST effect to global bus.
@@ -698,7 +752,7 @@ function playNote(nk,midi){if(!audioReady)return;silenceNote();var noteName=Tone
 
 function refreshNote(){if(arrowStack.length===0){silenceNote();return;}var dir=arrowStack[arrowStack.length-1];var nk=getMod()+"-"+dir;var midi=layout[nk];if(nk===activeNoteKey)return;if(midi!==undefined)playNote(nk,midi);else silenceNote();}
 
-function handleKeyDown(code,key){initAudio();if(key==="Escape"&&jamOn){exitJam();return;}if(code==="KeyT"&&jamOn){toggleSplit();return;}if(code==="KeyL"&&jamOn){toggleJamLoop();return;}if(code==="KeyF"&&!jamOn){enterJam();return;}if(code==="KeyF"&&jamOn){jamFullscreen();return;}if(code==="KeyN"&&jamOn){if(SETLIST.isActive()){SETLIST.next();syncJamVideo();}else if(YT.list.length){YT.next();syncJamVideo();}return;}if(code==="KeyP"&&jamOn){if(SETLIST.isActive()){SETLIST.prev();syncJamVideo();}else if(YT.list.length){YT.prev();syncJamVideo();}return;}if(code==="F1"){REC.toggle();updJamLoop();return;}if(code==="F2"){REC.playAll();updJamLoop();return;}if(code==="F3"){REC.stopAll();updJamLoop();return;}if(code==="F4"){REC.clearAll();updJamLoop();return;}if(code==="NumpadAdd"||code==="Numpad0"){if(S.oct<7){S.oct++;rebuild();showOctFlash();}return;}if(code==="NumpadSubtract"){if(S.oct>1){S.oct--;rebuild();showOctFlash();}return;}if(code==="Delete"){S.power=Math.max(0,Math.round((S.power-0.1)*10)/10);updPowerUI();return;}if(code==="PageDown"){S.power=Math.min(1,Math.round((S.power+0.1)*10)/10);updPowerUI();return;}if(code==="Insert"){S.vol=Math.max(0,Math.round((S.vol-0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();return;}if(code==="PageUp"){S.vol=Math.min(1,Math.round((S.vol+0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();return;}if(code==="Numpad1"){handleNumpad(1);return;}if(code==="Numpad2"){handleNumpad(2);return;}if(code==="Numpad3"){handleNumpad(3);return;}if(code==="Numpad4"){handleNumpad(4);return;}if(code==="Numpad5"){handleNumpad(5);return;}if(code==="Numpad6"){handleNumpad(6);return;}if(code==="Numpad7"){handleNumpad(7);return;}if(code==="Numpad8"){handleNumpad(8);return;}if(code==="Numpad9"){handleNumpad(9);return;}if(key===" "){if(!mods.space){mods.space=true;updModInd();refreshNote();}return;}if(code==="KeyD"){if(!mods.d){mods.d=true;updModInd();refreshNote();}return;}if(code==="CapsLock"){mods.c=!mods.c;updChordInd();refreshNote();return;}if(code==="KeyE"){if(!mods.e){mods.e=true;updModInd();refreshNote();}return;}if(code==="Digit3"){if(!mods.three){mods.three=true;updModInd();refreshNote();}return;}if(key==="Tab"){swapScale();return;}if(code==="KeyZ"){S.mode="impact";renderModes();return;}if(key==="Shift"){S.mode=(S.mode==="sustain"?"impact":"sustain");renderModes();return;}if(key==="Control"){S.mode="staccato";renderModes();return;}if(code==="KeyV"){S.mode="legato";renderModes();return;}if(keyMap[key]){selInst(keyMap[key]);return;}var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(!dir)return;if(arrowStack.indexOf(dir)===-1)arrowStack.push(dir);dbg("stack=["+arrowStack.join(",")+"] mod="+getMod());refreshNote();}
+function handleKeyDown(code,key){initAudio();if(key==="Escape"&&jamOn){exitJam();return;}if(code==="KeyT"&&jamOn){toggleSplit();return;}if(code==="KeyL"&&jamOn){toggleJamLoop();return;}if(code==="KeyF"&&!jamOn){enterJam();return;}if(code==="KeyF"&&jamOn){jamFullscreen();return;}if(code==="KeyN"&&jamOn){if(SETLIST.isActive()){SETLIST.next();syncJamVideo();}else if(YT.list.length){YT.next();syncJamVideo();}return;}if(code==="KeyP"&&jamOn){if(SETLIST.isActive()){SETLIST.prev();syncJamVideo();}else if(YT.list.length){YT.prev();syncJamVideo();}return;}if(code==="F1"){REC.toggle();updJamLoop();return;}if(code==="F2"){REC.playAll();updJamLoop();return;}if(code==="F3"){REC.stopAll();updJamLoop();return;}if(code==="F4"){REC.clearAll();updJamLoop();return;}if(code==="NumpadAdd"||code==="Numpad0"){if(S.oct<7){S.oct++;rebuild();showOctFlash();}return;}if(code==="NumpadSubtract"){if(S.oct>1){S.oct--;rebuild();showOctFlash();}return;}if(code==="Delete"){S.power=Math.max(0,Math.round((S.power-0.1)*10)/10);updPowerUI();return;}if(code==="PageDown"){S.power=Math.min(1,Math.round((S.power+0.1)*10)/10);updPowerUI();return;}if(code==="Insert"){S.vol=Math.max(0,Math.round((S.vol-0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();return;}if(code==="PageUp"){S.vol=Math.min(1,Math.round((S.vol+0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();return;}if(code==="PrintScreen"){switchSlot(0);return;}if(code==="ScrollLock"){switchSlot(1);return;}if(code==="Pause"){switchSlot(2);return;}if(code==="Numpad1"){handleNumpad(1);return;}if(code==="Numpad2"){handleNumpad(2);return;}if(code==="Numpad3"){handleNumpad(3);return;}if(code==="Numpad4"){handleNumpad(4);return;}if(code==="Numpad5"){handleNumpad(5);return;}if(code==="Numpad6"){handleNumpad(6);return;}if(code==="Numpad7"){handleNumpad(7);return;}if(code==="Numpad8"){handleNumpad(8);return;}if(code==="Numpad9"){handleNumpad(9);return;}if(key===" "){if(!mods.space){mods.space=true;updModInd();refreshNote();}return;}if(code==="KeyD"){if(!mods.d){mods.d=true;updModInd();refreshNote();}return;}if(code==="CapsLock"){mods.c=!mods.c;updChordInd();refreshNote();return;}if(code==="KeyE"){if(!mods.e){mods.e=true;updModInd();refreshNote();}return;}if(code==="Digit3"){if(!mods.three){mods.three=true;updModInd();refreshNote();}return;}if(key==="Tab"){swapScale();return;}if(code==="KeyZ"){S.mode="impact";renderModes();return;}if(key==="Shift"){S.mode=(S.mode==="sustain"?"impact":"sustain");renderModes();return;}if(key==="Control"){S.mode="staccato";renderModes();return;}if(code==="KeyV"){S.mode="legato";renderModes();return;}if(keyMap[key]){selInst(keyMap[key]);return;}var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(!dir)return;if(arrowStack.indexOf(dir)===-1)arrowStack.push(dir);dbg("stack=["+arrowStack.join(",")+"] mod="+getMod());refreshNote();}
 function handleKeyUp(code,key){if(key===" ")mods.space=false;if(code==="KeyD")mods.d=false;if(code==="KeyE"){mods.e=false;updModInd();refreshNote();}if(code==="Digit3"){mods.three=false;updModInd();refreshNote();}/* CapsLock is toggle, no keyUp needed */var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(dir){var idx=arrowStack.indexOf(dir);if(idx!==-1)arrowStack.splice(idx,1);}updModInd();refreshNote();}
 
 var cap=document.getElementById("cap");
@@ -724,7 +778,11 @@ document.getElementById("bMobile").onclick=function(){enterMobile();};
 document.getElementById("mb-exit").onclick=function(){exitMobile();};
 document.getElementById("ytQ").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();YT.search();}});
 
-function selInst(id){var ins=findInst(id);if(!ins)return;if(ins.t==="samp"&&!samplers[id]){initAudio();loadSamp(id);}S.eng=id;renderInst();updBdg();updJInfo();renderHkGrid();if(jamOn){renderJamHkStrip();var jSel=document.getElementById("jInstSel");if(jSel)jSel.value=id;}document.getElementById("mb-inst-disp").textContent=ins.l;}
+function selInst(id){var ins=findInst(id);if(!ins)return;if(ins.t==="samp"&&!samplers[id]){initAudio();loadSamp(id);}S.eng=id;
+  /* Sync activeSlot — if manually picking a non-slot instrument, clear active slot indicator */
+  var matched=false;for(var _i=0;_i<3;_i++){if(instSlots[_i]===id){activeSlot=_i;matched=true;break;}}if(!matched)activeSlot=-1;
+  renderInst();updBdg();updJInfo();renderHkGrid();updSlotUI();
+  if(jamOn){renderJamHkStrip();var jSel=document.getElementById("jInstSel");if(jSel)jSel.value=id;}document.getElementById("mb-inst-disp").textContent=ins.l;}
 function updBdg(){var b=document.getElementById("iBdg"),ins=findInst(S.eng);if(!ins||!b)return;if(ins.t==="samp"){if(loading[ins.id]){b.style.cssText="background:#F5C51833;color:#F5C518";b.textContent="Loading "+ins.l+"...";}else if(samplers[ins.id]){b.style.cssText="background:#1D9E7533;color:#1D9E75";b.textContent=ins.l+" (VST)";}else{b.style.cssText="background:#F5C51833;color:#F5C518";b.textContent=ins.l;}}else{b.style.cssText="background:"+ins.catC+"33;color:"+ins.catC;b.textContent=ins.l;}}
 function updModInd(){var el=document.getElementById("modInd"),mod=getMod();if(!el)return;el.textContent=RLBL[mod];el.style.cssText="background:"+RCLR[mod]+"22;color:"+RCLR[mod];updJamHud();}
 function rebuild(){layout=buildLayout();renderGrid();buildJMini();renderRelKeys();}
@@ -810,6 +868,46 @@ var FXP={
     {l:"Wall of Sound",p:{distortion:.85,wet:.8}},
     {l:"Lo-fi Sat",p:{distortion:.25,wet:.35}},
     {l:"Destruction",p:{distortion:1,wet:.9}}
+  ],
+  /* ── Tuna pedal board presets ── */
+  wah:[
+    {l:"Off",p:{automode:true,baseFrequency:0.5,excursionOctaves:2,sweep:0.2,resonance:3,sensitivity:0.5,bypass:1}},
+    {l:"Slow Wah",p:{automode:true,baseFrequency:0.3,excursionOctaves:2,sweep:0.1,resonance:4,sensitivity:0.3,bypass:0}},
+    {l:"Classic",p:{automode:true,baseFrequency:0.5,excursionOctaves:2.5,sweep:0.25,resonance:5,sensitivity:0.5,bypass:0}},
+    {l:"Fast Wah",p:{automode:true,baseFrequency:0.7,excursionOctaves:3,sweep:0.35,resonance:6,sensitivity:0.7,bypass:0}},
+    {l:"Quack",p:{automode:true,baseFrequency:0.85,excursionOctaves:3.5,sweep:0.4,resonance:7,sensitivity:0.85,bypass:0}},
+    {l:"Crying",p:{automode:true,baseFrequency:0.35,excursionOctaves:2,sweep:0.15,resonance:9,sensitivity:0.4,bypass:0}},
+    {l:"Vowel",p:{automode:true,baseFrequency:0.55,excursionOctaves:1.5,sweep:0.3,resonance:12,sensitivity:0.55,bypass:0}}
+  ],
+  pha:[
+    {l:"Off",p:{rate:1.2,depth:0.3,feedback:0.2,stereoPhase:30,baseModulationFrequency:700,bypass:1}},
+    {l:"Slow Swirl",p:{rate:0.3,depth:0.6,feedback:0.3,stereoPhase:30,baseModulationFrequency:700,bypass:0}},
+    {l:"Classic",p:{rate:1.2,depth:0.4,feedback:0.25,stereoPhase:40,baseModulationFrequency:700,bypass:0}},
+    {l:"Jet",p:{rate:2.5,depth:0.7,feedback:0.6,stereoPhase:60,baseModulationFrequency:300,bypass:0}},
+    {l:"Deep Space",p:{rate:0.2,depth:0.9,feedback:0.55,stereoPhase:90,baseModulationFrequency:500,bypass:0}},
+    {l:"Shimmer",p:{rate:4,depth:0.5,feedback:0.15,stereoPhase:60,baseModulationFrequency:1000,bypass:0}},
+    {l:"Flanger",p:{rate:0.6,depth:0.8,feedback:0.75,stereoPhase:120,baseModulationFrequency:200,bypass:0}}
+  ],
+  tre:[
+    {l:"Off",p:{intensity:0.3,rate:5,stereoPhase:0,bypass:1}},
+    {l:"Gentle",p:{intensity:0.2,rate:3,stereoPhase:0,bypass:0}},
+    {l:"Classic",p:{intensity:0.45,rate:5,stereoPhase:0,bypass:0}},
+    {l:"Deep",p:{intensity:0.7,rate:4,stereoPhase:0,bypass:0}},
+    {l:"Fast Chop",p:{intensity:0.65,rate:11,stereoPhase:0,bypass:0}},
+    {l:"Surf",p:{intensity:0.6,rate:7,stereoPhase:20,bypass:0}},
+    {l:"Stutter",p:{intensity:0.9,rate:18,stereoPhase:0,bypass:0}},
+    {l:"Stereo Wide",p:{intensity:0.5,rate:5,stereoPhase:90,bypass:0}}
+  ],
+  od:[
+    {l:"Off",p:{outputGain:0.5,drive:0.5,curveAmount:0.5,algorithmIndex:0,bypass:1}},
+    {l:"Warm Boost",p:{outputGain:0.65,drive:0.25,curveAmount:0.25,algorithmIndex:0,bypass:0}},
+    {l:"Light Crunch",p:{outputGain:0.55,drive:0.45,curveAmount:0.45,algorithmIndex:0,bypass:0}},
+    {l:"Blues Screamer",p:{outputGain:0.6,drive:0.6,curveAmount:0.5,algorithmIndex:1,bypass:0}},
+    {l:"Hot Rod",p:{outputGain:0.5,drive:0.8,curveAmount:0.75,algorithmIndex:0,bypass:0}},
+    {l:"Amp Sim",p:{outputGain:0.65,drive:0.6,curveAmount:0.6,algorithmIndex:2,bypass:0}},
+    {l:"Tube Grit",p:{outputGain:0.5,drive:0.7,curveAmount:0.65,algorithmIndex:1,bypass:0}},
+    {l:"Soft Clip",p:{outputGain:0.6,drive:0.35,curveAmount:0.35,algorithmIndex:3,bypass:0}},
+    {l:"Full Crunch",p:{outputGain:0.5,drive:0.85,curveAmount:0.8,algorithmIndex:0,bypass:0}}
   ]
 };
 function applyFxPreset(type,idx){
@@ -819,6 +917,18 @@ function applyFxPreset(type,idx){
   if(type==="cho"&&cho){cho.frequency.value=pr.frequency;cho.delayTime=pr.delayTime;cho.depth=pr.depth;cho.wet.value=pr.wet;S.fxC=pr.wet;}
   if(type==="dist"&&dist){dist.distortion=pr.distortion;dist.wet.value=pr.wet;S.fxDi=pr.wet;}
   renderFx();
+}
+function applyTunaPreset(type,idx){
+  var fxp=FXP[type];if(!fxp||!fxp[idx])return;var pr=fxp[idx].p;
+  if(type==="wah"&&tunaWah){tunaWah.automode=pr.automode;tunaWah.baseFrequency=pr.baseFrequency;tunaWah.excursionOctaves=pr.excursionOctaves;tunaWah.sweep=pr.sweep;tunaWah.resonance=pr.resonance;tunaWah.sensitivity=pr.sensitivity;tunaWah.bypass=pr.bypass;}
+  if(type==="pha"&&tunaPhaser){tunaPhaser.rate=pr.rate;tunaPhaser.depth=pr.depth;tunaPhaser.feedback=pr.feedback;tunaPhaser.stereoPhase=pr.stereoPhase;tunaPhaser.baseModulationFrequency=pr.baseModulationFrequency;tunaPhaser.bypass=pr.bypass;}
+  if(type==="tre"&&tunaTremolo){tunaTremolo.intensity=pr.intensity;tunaTremolo.rate=pr.rate;tunaTremolo.stereoPhase=pr.stereoPhase;tunaTremolo.bypass=pr.bypass;}
+  if(type==="od"&&tunaOD){tunaOD.outputGain=pr.outputGain;tunaOD.drive=pr.drive;tunaOD.curveAmount=pr.curveAmount;tunaOD.algorithmIndex=pr.algorithmIndex;tunaOD.bypass=pr.bypass;}
+  renderFx();
+}
+function toggleTunaBypass(type){
+  var ef=type==="wah"?tunaWah:type==="pha"?tunaPhaser:type==="tre"?tunaTremolo:tunaOD;
+  if(!ef)return;ef.bypass=ef.bypass?0:1;renderFx();
 }
 function renderFx(){var c=document.getElementById("fxBox");c.innerHTML="";
   var fxDefs=[
@@ -838,6 +948,38 @@ function renderFx(){var c=document.getElementById("fxBox");c.innerHTML="";
     (function(type){dd.onchange=function(){applyFxPreset(type,+this.value);};})(fx.type);
     c.appendChild(d);
   });
+  /* ── Tuna Pedal Board section ── */
+  if(_tuna){
+    var hdr=document.createElement("div");
+    hdr.style.cssText="font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:1.5px;margin:14px 0 8px;padding-top:12px;border-top:1px solid var(--bg4)";
+    hdr.textContent="PEDAL BOARD";c.appendChild(hdr);
+    var tunaDefs=[
+      {type:"wah",l:"Wah",obj:function(){return tunaWah;},clr:"#EF9F27"},
+      {type:"pha",l:"Phaser",obj:function(){return tunaPhaser;},clr:"#378ADD"},
+      {type:"tre",l:"Tremolo",obj:function(){return tunaTremolo;},clr:"#1D9E75"},
+      {type:"od",l:"Overdrive",obj:function(){return tunaOD;},clr:"#D85A30"}
+    ];
+    tunaDefs.forEach(function(fx){
+      var ef=fx.obj();
+      var isOn=ef&&!ef.bypass;
+      var d=document.createElement("div");d.className="fi";
+      var sel='<select class="fpsel" style="flex:1">';
+      (FXP[fx.type]||[]).forEach(function(pr,i){sel+='<option value="'+i+'">'+pr.l+'</option>';});
+      sel+='</select>';
+      d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">'+
+        '<label style="white-space:nowrap">'+fx.l+'</label>'+sel+
+        '<div class="btn" style="padding:2px 10px;font-size:11px;flex-shrink:0;'+
+        (isOn?"background:"+fx.clr+";border-color:"+fx.clr+";color:#fff":"")+'">'+
+        (isOn?"ON":"OFF")+'</div></div>';
+      var dd=d.querySelector("select");
+      var btn=d.querySelector(".btn");
+      (function(type,clr){
+        dd.onchange=function(){applyTunaPreset(type,+this.value);};
+        btn.onclick=function(){toggleTunaBypass(type);};
+      })(fx.type,fx.clr);
+      c.appendChild(d);
+    });
+  }
 }
 
 var hcv,hcx;
@@ -867,7 +1009,11 @@ function buildJInstPick(){var sel=document.getElementById("jInstSel");if(!sel)re
   var rs=document.getElementById("jRootSel");if(rs&&rs.options.length===0){ROOTS_D.forEach(function(x,i){var o=document.createElement("option");o.value=i;o.textContent=x;rs.appendChild(o);});}if(rs)rs.value=S.root;
   var ss=document.getElementById("jScaleSel");if(ss&&ss.options.length===0){Object.keys(SCALES).forEach(function(x){var o=document.createElement("option");o.value=x;o.textContent=x;ss.appendChild(o);});}if(ss)ss.value=S.scale;
   var jp=document.getElementById("jPowLbl");if(jp)jp.textContent=Math.round(S.power*100)+"%";
-  var jv=document.getElementById("jVolLbl");if(jv)jv.textContent=Math.round(S.vol*100)+"%";}
+  var jv=document.getElementById("jVolLbl");if(jv)jv.textContent=Math.round(S.vol*100)+"%";
+  /* Song Preset dropdown */
+  var jps=document.getElementById("jPresetSel");
+  if(jps){jps.innerHTML='<option value="">\u25B6 Song Preset...</option>';PRESETS.list().forEach(function(p,i){var o=document.createElement("option");o.value=i;o.textContent=p.name;jps.appendChild(o);});}
+  updSlotUI();}
 function enterJam(){initAudio();jamOn=true;document.getElementById("app").classList.add("jx");document.getElementById("jm").classList.add("on");var src=document.getElementById("ytF").src||"";if(src&&src.indexOf("youtube")!==-1){document.getElementById("jmV").style.display="block";syncJamVideo();document.getElementById("jtb").style.display="block";}else{document.getElementById("jmV").style.display="none";document.getElementById("jtb").style.display="none";}jCanvas=document.getElementById("jcv");jCtx=jCanvas.getContext("2d");setTimeout(function(){resizeJam();updJInfo();buildJMini();buildJInstPick();updJamPresetLbl();updJamLoop();renderJamHkStrip();startJamLoopAnim();if(jAnim)cancelAnimationFrame(jAnim);jAnim=requestAnimationFrame(jamLoop);},30);}
 function jamFullscreen(){try{var jel=document.getElementById("jm");if(document.fullscreenElement||document.webkitFullscreenElement){if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();}else{if(jel.requestFullscreen)jel.requestFullscreen();else if(jel.webkitRequestFullscreen)jel.webkitRequestFullscreen();}}catch(e){}}
 function exitJam(){jamOn=false;document.getElementById("app").classList.remove("jx");document.getElementById("jm").classList.remove("on");document.getElementById("jmF").src="";if(jAnim){cancelAnimationFrame(jAnim);jAnim=null;}if(jLoopAnim){cancelAnimationFrame(jLoopAnim);jLoopAnim=null;}try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
@@ -973,6 +1119,8 @@ var PRESETS=(function(){
       var snap=_snap();snap.name=nm;_data.push(snap);_save();_renderSel();
       document.getElementById("presetName").value="";
       var ins=findInst(S.eng);document.getElementById("presetInfo").textContent="Saved: "+nm+" ("+ins.l+", "+ROOTS_D[S.root]+" "+S.scale+")";
+      /* refresh jam preset picker if open */
+      var jps=document.getElementById("jPresetSel");if(jps){jps.innerHTML='<option value="">\u25B6 Song Preset...</option>';_data.forEach(function(p,i){var o=document.createElement("option");o.value=i;o.textContent=p.name;jps.appendChild(o);});}
     },
     load:function(){var sel=document.getElementById("myPresetSel");var idx=+sel.value;if(isNaN(idx)||!_data[idx])return;
       initAudio();_apply(_data[idx]);
@@ -1235,6 +1383,42 @@ function renderJamHkStrip(){
   }
 }
 
+/* ── Instrument Slots (PrintScreen / ScrollLock / Pause) ── */
+function assignSlot(n){instSlots[n]=S.eng;updSlotUI();}
+function switchSlot(n){
+  if(!instSlots[n])return;
+  selInst(instSlots[n]);
+  activeSlot=n; /* force correct slot after selInst may have matched differently */
+  updSlotUI();
+  /* Show flash in jam mode */
+  if(jamOn){var d=document.getElementById("jOctDisp");if(d){var ins=findInst(instSlots[n]);d.textContent=(ins?ins.l:"")+" [Slot "+(n+1)+"]";d.style.opacity="1";clearTimeout(d._t);d._t=setTimeout(function(){d.style.opacity="0";},1000);}}
+}
+function updSlotUI(){
+  var keys=["PrtSc","ScrLk","Pause"];
+  for(var i=0;i<3;i++){
+    var ins=instSlots[i]?findInst(instSlots[i]):null;
+    var lbl=ins?ins.l:"(empty)";
+    var isA=(activeSlot===i);
+    /* Main panel slot labels */
+    var cfg=document.getElementById("slotCfg"+(i+1));
+    if(cfg){cfg.textContent=lbl;cfg.style.color=isA?"var(--pk)":"var(--tx)";}
+    /* Jam mode slot buttons */
+    var jb=document.getElementById("jSlot"+(i+1));
+    if(jb){
+      jb.textContent=keys[i]+" \u00B7 "+(ins?ins.l:"--");
+      jb.style.background=isA?"rgba(211,84,160,.3)":"rgba(255,255,255,.06)";
+      jb.style.borderColor=isA?"var(--pk)":"rgba(255,255,255,.12)";
+      jb.style.color=isA?"#fff":"rgba(255,255,255,.4)";
+    }
+  }
+}
+function applyJamPreset(sel){
+  if(!sel.value&&sel.value!=="0")return;
+  var idx=+sel.value;var p=PRESETS.list()[idx];
+  if(!p)return;
+  initAudio();PRESETS.applySnap(p);updJInfo();
+  sel.value=""; /* reset dropdown */
+}
 /* ── Related Keys (same pitch classes, different mode/root) ── */
 function getPitchClasses(root,intervals){
   var s=[];for(var i=0;i<intervals.length;i++)s.push((root+intervals[i])%12);
@@ -1405,3 +1589,4 @@ initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updMod
 </script>
 </body>
 </html>
+
