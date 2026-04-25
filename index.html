@@ -280,17 +280,17 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
       <div style="background:var(--bg3);border-radius:var(--r);padding:8px;border:1px solid var(--bg4)">
         <div style="font-size:10px;color:var(--tx3);margin-bottom:3px;font-weight:600;letter-spacing:.5px">SLOT 1 — PrtSc</div>
         <div id="slotCfg1" style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px">(empty)</div>
-        <div class="btn" onclick="assignSlot(0)" style="padding:3px 8px;font-size:11px;width:100%;text-align:center;box-sizing:border-box">Set</div>
+        <div id="slotSet1" class="btn" style="padding:3px 8px;font-size:11px;width:100%;text-align:center;box-sizing:border-box">Set</div>
       </div>
       <div style="background:var(--bg3);border-radius:var(--r);padding:8px;border:1px solid var(--bg4)">
         <div style="font-size:10px;color:var(--tx3);margin-bottom:3px;font-weight:600;letter-spacing:.5px">SLOT 2 — ScrLk</div>
         <div id="slotCfg2" style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px">(empty)</div>
-        <div class="btn" onclick="assignSlot(1)" style="padding:3px 8px;font-size:11px;width:100%;text-align:center;box-sizing:border-box">Set</div>
+        <div id="slotSet2" class="btn" style="padding:3px 8px;font-size:11px;width:100%;text-align:center;box-sizing:border-box">Set</div>
       </div>
       <div style="background:var(--bg3);border-radius:var(--r);padding:8px;border:1px solid var(--bg4)">
         <div style="font-size:10px;color:var(--tx3);margin-bottom:3px;font-weight:600;letter-spacing:.5px">SLOT 3 — Pause</div>
         <div id="slotCfg3" style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px">(empty)</div>
-        <div class="btn" onclick="assignSlot(2)" style="padding:3px 8px;font-size:11px;width:100%;text-align:center;box-sizing:border-box">Set</div>
+        <div id="slotSet3" class="btn" style="padding:3px 8px;font-size:11px;width:100%;text-align:center;box-sizing:border-box">Set</div>
       </div>
     </div>
   </div>
@@ -716,19 +716,25 @@ function initAudio(){if(started)return;started=true;Tone.start();lim=new Tone.Li
     tunaPhaser=new _tuna.Phaser({rate:1.2,depth:0.3,feedback:0.2,stereoPhase:30,baseModulationFrequency:700,bypass:1});
     tunaTremolo=new _tuna.Tremolo({intensity:0.3,rate:5,stereoPhase:0,bypass:1});
     tunaOD=new _tuna.Overdrive({outputGain:0.5,drive:0.5,curveAmount:0.5,algorithmIndex:0,bypass:1});
-    /* Disconnect cho→dly, insert tuna chain between them */
-    cho.disconnect(dly);
-    cho.connect(tunaWah.input);                 /* Tone→raw: valid */
-    tunaWah.output.connect(tunaPhaser.input);   /* raw→raw */
-    tunaPhaser.output.connect(tunaTremolo.input);
-    tunaTremolo.output.connect(tunaOD.input);
-    /* Bridge back to Tone chain: tunaOD.output → bridge Gain → dly */
+    /* Build bridge FIRST so fallback works if connection step fails */
     _tunaBridge=new Tone.Gain(1);
-    _tunaBridge.connect(dly);                   /* Tone→Tone */
-    tunaOD.output.connect(_tunaBridge.input);   /* raw AudioNode→native GainNode */
-    renderFx();
-    dbg("Tuna pedal board ready");
-  }}catch(e){dbg("Tuna init skipped: "+e);}
+    _tunaBridge.connect(dly);
+    /* Reconnect chain: cho → wah → pha → tre → od → bridge → dly */
+    cho.disconnect(dly);
+    try{
+      cho.connect(tunaWah.input);
+      tunaWah.output.connect(tunaPhaser.input);
+      tunaPhaser.output.connect(tunaTremolo.input);
+      tunaTremolo.output.connect(tunaOD.input);
+      tunaOD.output.connect(_tunaBridge.input);
+      dbg("Tuna pedal board ready");
+    }catch(ce){
+      /* Connection failed — restore direct cho→dly so audio still works */
+      try{cho.connect(dly);}catch(e2){}
+      _tuna=null;dbg("Tuna connect failed (restored direct path): "+ce);
+    }
+    renderFx(); /* refresh now that tuna state is known */
+  }}catch(e){try{cho.connect(dly);}catch(e2){}dbg("Tuna init failed: "+e);}
   audioReady=true;loadSamp("violin");}
 
 function loadSamp(id){if(samplers[id]||loading[id])return;var ins=findInst(id);if(!ins||ins.t!=="samp")return;loading[id]=true;renderInst();updBdg();var urls={};var ext=ins.ext||".mp3";Object.keys(ins.n).forEach(function(k){urls[k]=ins.n[k]+ext;});var folder=ins.base||id;var baseUrl=ins.sbase||(SBASE+folder+"/");var sp=new Tone.Sampler({urls:urls,baseUrl:baseUrl,release:.5,onload:function(){delete loading[id];samplers[id]=sp;if(ins.fx){var chain=ins.fx();if(ins.gain){var gn=new Tone.Volume(ins.gain);chain.push(gn);}sp._fx=chain;sp.chain.apply(sp,chain.concat([dist]));}else if(ins.gain){var gn=new Tone.Volume(ins.gain);sp.connect(gn);gn.connect(dist);sp._gn=gn;}else{sp.connect(dist);}renderInst();updBdg();dbg(id+" loaded");},onerror:function(e){delete loading[id];dbg(id+" ERROR: "+(e&&e.message?e.message:e||"unknown"));renderInst();updBdg();}});setTimeout(function(){if(loading[id]){delete loading[id];renderInst();updBdg();}},15000);}
@@ -948,38 +954,37 @@ function renderFx(){var c=document.getElementById("fxBox");c.innerHTML="";
     (function(type){dd.onchange=function(){applyFxPreset(type,+this.value);};})(fx.type);
     c.appendChild(d);
   });
-  /* ── Tuna Pedal Board section ── */
-  if(_tuna){
-    var hdr=document.createElement("div");
-    hdr.style.cssText="font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:1.5px;margin:14px 0 8px;padding-top:12px;border-top:1px solid var(--bg4)";
-    hdr.textContent="PEDAL BOARD";c.appendChild(hdr);
-    var tunaDefs=[
-      {type:"wah",l:"Wah",obj:function(){return tunaWah;},clr:"#EF9F27"},
-      {type:"pha",l:"Phaser",obj:function(){return tunaPhaser;},clr:"#378ADD"},
-      {type:"tre",l:"Tremolo",obj:function(){return tunaTremolo;},clr:"#1D9E75"},
-      {type:"od",l:"Overdrive",obj:function(){return tunaOD;},clr:"#D85A30"}
-    ];
-    tunaDefs.forEach(function(fx){
-      var ef=fx.obj();
-      var isOn=ef&&!ef.bypass;
-      var d=document.createElement("div");d.className="fi";
-      var sel='<select class="fpsel" style="flex:1">';
-      (FXP[fx.type]||[]).forEach(function(pr,i){sel+='<option value="'+i+'">'+pr.l+'</option>';});
-      sel+='</select>';
-      d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">'+
-        '<label style="white-space:nowrap">'+fx.l+'</label>'+sel+
-        '<div class="btn" style="padding:2px 10px;font-size:11px;flex-shrink:0;'+
-        (isOn?"background:"+fx.clr+";border-color:"+fx.clr+";color:#fff":"")+'">'+
-        (isOn?"ON":"OFF")+'</div></div>';
-      var dd=d.querySelector("select");
-      var btn=d.querySelector(".btn");
-      (function(type,clr){
-        dd.onchange=function(){applyTunaPreset(type,+this.value);};
-        btn.onclick=function(){toggleTunaBypass(type);};
-      })(fx.type,fx.clr);
-      c.appendChild(d);
-    });
-  }
+  /* ── Tuna Pedal Board section — always rendered, functional after audio init ── */
+  var hdrP=document.createElement("div");
+  hdrP.style.cssText="font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:1.5px;margin:14px 0 8px;padding-top:12px;border-top:1px solid var(--bg4);display:flex;align-items:center;gap:8px";
+  hdrP.innerHTML='PEDAL BOARD'+(!_tuna?'<span style="font-size:10px;font-weight:400;color:var(--tx3);letter-spacing:0">(click any key to enable)</span>':'');
+  c.appendChild(hdrP);
+  var tunaDefs=[
+    {type:"wah",l:"Wah",obj:function(){return tunaWah;},clr:"#EF9F27"},
+    {type:"pha",l:"Phaser",obj:function(){return tunaPhaser;},clr:"#378ADD"},
+    {type:"tre",l:"Tremolo",obj:function(){return tunaTremolo;},clr:"#1D9E75"},
+    {type:"od",l:"Overdrive",obj:function(){return tunaOD;},clr:"#D85A30"}
+  ];
+  tunaDefs.forEach(function(fx){
+    var ef=fx.obj();
+    var isOn=ef&&!ef.bypass;
+    var d=document.createElement("div");d.className="fi";
+    var sel='<select class="fpsel" style="flex:1"'+((!_tuna)?' disabled':'')+' >';
+    (FXP[fx.type]||[]).forEach(function(pr,i){sel+='<option value="'+i+'">'+pr.l+'</option>';});
+    sel+='</select>';
+    d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;opacity:'+(_tuna?'1':'.45')+'">'+
+      '<label style="white-space:nowrap">'+fx.l+'</label>'+sel+
+      '<div class="btn" style="padding:2px 10px;font-size:11px;flex-shrink:0;'+
+      (isOn?"background:"+fx.clr+";border-color:"+fx.clr+";color:#fff":"")+'">'+
+      (isOn?"ON":"OFF")+'</div></div>';
+    var dd=d.querySelector("select");
+    var btn=d.querySelector(".btn");
+    (function(type,clr){
+      dd.onchange=function(){applyTunaPreset(type,+this.value);};
+      btn.onclick=function(){toggleTunaBypass(type);};
+    })(fx.type,fx.clr);
+    c.appendChild(d);
+  });
 }
 
 var hcv,hcx;
@@ -1583,10 +1588,32 @@ rebuild=function(){
 };
 
 initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updModInd();initPowerSlider();initMobileSlider();initChordUI();renderHkGrid();renderRelKeys();setTimeout(initHist,100);YT.renderFavs();PRESETS.renderSel();SETLIST.renderListSel();
+/* Wire onclick handlers programmatically so IIFE-scoped functions are accessible */
+(function(){
+  /* Metronome */
+  var _mb=document.getElementById("metB");if(_mb)_mb.onclick=function(){MET.toggle();};
+  /* Slot Set buttons */
+  var _ss1=document.getElementById("slotSet1"),_ss2=document.getElementById("slotSet2"),_ss3=document.getElementById("slotSet3");
+  if(_ss1)_ss1.onclick=function(){assignSlot(0);};
+  if(_ss2)_ss2.onclick=function(){assignSlot(1);};
+  if(_ss3)_ss3.onclick=function(){assignSlot(2);};
+  /* YT / PRESETS / SETLIST buttons — belt-and-suspenders */
+  var _ytS=document.querySelector("button[onclick=\"YT.search()\"]");if(_ytS)_ytS.onclick=function(){YT.search();};
+  var _ytL=document.querySelector("button[onclick=\"YT.loadUrl()\"]");if(_ytL)_ytL.onclick=function(){YT.loadUrl();};
+  var _ytF=document.querySelector("button[onclick=\"YT.saveFav()\"]");if(_ytF)_ytF.onclick=function(){YT.saveFav();};
+  var _pSv=document.querySelector("button[onclick=\"PRESETS.save()\"]");if(_pSv)_pSv.onclick=function(){PRESETS.save();};
+  var _pLd=document.querySelector("button[onclick=\"PRESETS.load()\"]");if(_pLd)_pLd.onclick=function(){PRESETS.load();};
+  var _pRm=document.querySelector("button[onclick=\"PRESETS.remove()\"]");if(_pRm)_pRm.onclick=function(){PRESETS.remove();};
+  var _slC=document.querySelector("button[onclick=\"SETLIST.create()\"]");if(_slC)_slC.onclick=function(){SETLIST.create();};
+  var _slL=document.querySelector("button[onclick=\"SETLIST.loadList()\"]");if(_slL)_slL.onclick=function(){SETLIST.loadList();};
+  var _slR=document.querySelector("button[onclick=\"SETLIST.removeList()\"]");if(_slR)_slR.onclick=function(){SETLIST.removeList();};
+  var _slA=document.querySelector("button[onclick=\"SETLIST.addFromUrl()\"]");if(_slA)_slA.onclick=function(){SETLIST.addFromUrl();};
+  var _slP=document.querySelector("button[onclick=\"SETLIST.play()\"]");if(_slP)_slP.onclick=function(){SETLIST.play();};
+  var _slSv=document.querySelector("button[onclick=\"SETLIST.saveEdits()\"]");if(_slSv)_slSv.onclick=function(){SETLIST.saveEdits();};
+})();
 
 }catch(e){console.error("BOOT ERROR:",e);document.body.innerHTML="<pre style='color:red;padding:20px'>"+e.stack+"</pre>";}
 })();
 </script>
 </body>
 </html>
-
