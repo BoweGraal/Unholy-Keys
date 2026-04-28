@@ -1331,10 +1331,37 @@ var BACKING=(function(){
 
   function _esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 
+  /* Key-sig parsing — "G Major" or "G Major.E Major" suffix in filename */
+  var _KEY_NOTES={"c":0,"c#":1,"db":1,"d":2,"d#":3,"eb":3,"e":4,"f":5,"f#":6,"gb":6,"g":7,"g#":8,"ab":8,"a":9,"a#":10,"bb":10,"b":11};
+  var _KEY_SCALES={"major":"Major","minor":"Natural minor","natural minor":"Natural minor","harmonic minor":"Harmonic minor","melodic minor":"Melodic minor","dorian":"Dorian","phrygian":"Phrygian","lydian":"Lydian","mixolydian":"Mixolydian","locrian":"Locrian","blues":"Blues","pentatonic major":"Pentatonic major","pentatonic minor":"Pentatonic minor","whole tone":"Whole tone","chromatic":"Chromatic"};
+  function _parseOneKey(s){
+    var m=s.trim().match(/^([A-Ga-g][#b]?)\s+(.+)$/);
+    if(!m)return null;
+    var r=_KEY_NOTES[m[1].toLowerCase()];
+    var sc=_KEY_SCALES[m[2].trim().toLowerCase()];
+    if(r===undefined||!sc)return null;
+    return{root:r,scale:sc};
+  }
+
   function _parseName(fn){
     var base=fn.replace(/\.(mp3|wav|flac|ogg|m4a|aac)$/i,"");
-    var m=base.match(/^(.+?)\s*[-–—]\s*(.+)$/);
-    return m?{artist:m[1].trim(),song:m[2].trim()}:{artist:"",song:base};
+    /* Check if the last " - " segment is a key sig (e.g. "G Major" or "G Major.E Major") */
+    var keyData=null,cleanBase=base;
+    var lastDash=base.lastIndexOf(" - ");
+    if(lastDash!==-1){
+      var tail=base.substring(lastDash+3);
+      var kparts=tail.split(".");
+      var k0=_parseOneKey(kparts[0]);
+      if(k0){
+        var k1=kparts.length>=2?_parseOneKey(kparts[1]):null;
+        keyData={primary:k0,alt:k1||null};
+        cleanBase=base.substring(0,lastDash);
+      }
+    }
+    var m=cleanBase.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+    var r=m?{artist:m[1].trim(),song:m[2].trim()}:{artist:"",song:cleanBase};
+    r.keyData=keyData;
+    return r;
   }
 
   function _renderLib(q){
@@ -1383,6 +1410,23 @@ var BACKING=(function(){
     currentFile=f;
     if(backingAudio){backingAudio.src=f.url;backingAudio.play().catch(function(){});}
     var lbl=document.getElementById("backingCurLbl");if(lbl){lbl.textContent="♫ "+f.name;lbl.style.display="block";}
+    /* Auto-apply key signature encoded in filename */
+    if(f.keyData&&f.keyData.primary){
+      var pk=f.keyData.primary;
+      onAlt=false;
+      S.root=pk.root;S.scale=pk.scale;
+      document.getElementById("sR").value=S.root;
+      document.getElementById("sS").value=S.scale;
+      if(f.keyData.alt){
+        var ak=f.keyData.alt;
+        altRoot=ak.root;altScale=ak.scale;
+        document.getElementById("sR2").value=altRoot;
+        document.getElementById("sS2").value=altScale;
+      }
+      var _si=document.getElementById("swapInd");
+      if(_si){_si.textContent="Primary";_si.style.cssText="background:var(--bg3);color:var(--tx3);font-size:11px";}
+      rebuild();updJInfo();
+    }
   }
 
   function _addToPlaylist(filename){
@@ -1415,7 +1459,7 @@ var BACKING=(function(){
         lib.forEach(function(f){if(f.url)try{URL.revokeObjectURL(f.url);}catch(e){}});
         lib=[];
         var files=Array.from(inp.files||[]).filter(function(f){return/\.(mp3|wav|flac|ogg|m4a|aac)$/i.test(f.name);}).sort(function(a,b){return a.name.localeCompare(b.name);});
-        files.forEach(function(f){var p=_parseName(f.name);lib.push({filename:f.name,name:f.name.replace(/\.[^.]+$/,""),artist:p.artist,song:p.song,file:f,url:URL.createObjectURL(f)});});
+        files.forEach(function(f){var p=_parseName(f.name);var dn=p.artist?(p.artist+" — "+p.song):p.song;lib.push({filename:f.name,name:dn,artist:p.artist,song:p.song,keyData:p.keyData,file:f,url:URL.createObjectURL(f)});});
         var lbl=document.getElementById("backingCountLbl");if(lbl)lbl.textContent="— "+lib.length+" track"+(lib.length===1?"":"s")+" loaded";
         var si=document.getElementById("backingSearch");if(si)si.style.display=lib.length?"":"none";
         _renderLib();_renderPlaylist();
