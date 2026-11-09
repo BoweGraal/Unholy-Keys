@@ -223,7 +223,7 @@ var CATS=[
     {id:"ams",l:"AM Synth",key:null,t:"syn",mk:function(){return new Tone.AMSynth({envelope:{attack:.02,decay:.3,sustain:.6,release:.3}})}}
   ]},
   {id:"graal",l:"Graal",c:"#C44DFF",ac:"a3",items:[
-    {id:"graal-bassoon",l:"Rage Bassoon",key:null,t:"samp",sbase:"instruments/",ext:".wav",
+    {id:"graal-bassoon",l:"Rage Bassoon",key:null,t:"samp",sbase:"https://bowegraal.github.io/Unholy-Keys/Instruments/",ext:".wav",
       n:{A3:"rage_bassoon_A3",A4:"rage_bassoon_A4",B3:"rage_bassoon_B3",B4:"rage_bassoon_B4",E3:"rage_bassoon_E3",E4:"rage_bassoon_E4",E5:"rage_bassoon_E5"}}
   ]},
   {id:"gm-keys",l:"GM Keys",c:"#DAA520",ac:"a5",items:[
@@ -392,6 +392,28 @@ var CATS=[
     gm("gm-fx-goblins","FX: Goblins","fx_6_goblins"),
     gm("gm-fx-echoes","FX: Echoes","fx_7_echoes"),
     gm("gm-fx-scifi","FX: Sci-Fi","fx_8_scifi")
+  ]},
+  {id:"hq-piano",l:"HQ Pianos",c:"#C9A84C",ac:"a5",items:[
+    {id:"salamander",l:"Salamander Grand",key:null,t:"samp",
+      sbase:"https://tonejs.github.io/audio/salamander/",
+      n:{A0:"A0",C1:"C1","D#1":"Ds1","F#1":"Fs1",A1:"A1",C2:"C2","D#2":"Ds2","F#2":"Fs2",A2:"A2",C3:"C3","D#3":"Ds3","F#3":"Fs3",A3:"A3",C4:"C4","D#4":"Ds4","F#4":"Fs4",A4:"A4",C5:"C5","D#5":"Ds5","F#5":"Fs5",A5:"A5",C6:"C6","D#6":"Ds6","F#6":"Fs6",A6:"A6",C7:"C7","D#7":"Ds7","F#7":"Fs7",A7:"A7",C8:"C8"},gain:0},
+    {id:"salamander-bright",l:"Bright Grand",key:null,t:"samp",
+      sbase:"https://tonejs.github.io/audio/salamander/",
+      n:{A0:"A0",C1:"C1","F#1":"Fs1",A1:"A1",C2:"C2","F#2":"Fs2",A2:"A2",C3:"C3","F#3":"Fs3",A3:"A3",C4:"C4","F#4":"Fs4",A4:"A4",C5:"C5","F#5":"Fs5",A5:"A5",C6:"C6","F#6":"Fs6",A6:"A6",C7:"C7",C8:"C8"},gain:2,
+      fx:function(){return[new Tone.EQ3({low:-3,mid:2,high:5,lowFrequency:250,highFrequency:4000})];}},
+    {id:"salamander-warm",l:"Warm Grand",key:null,t:"samp",
+      sbase:"https://tonejs.github.io/audio/salamander/",
+      n:{A0:"A0",C1:"C1","F#1":"Fs1",A1:"A1",C2:"C2","F#2":"Fs2",A2:"A2",C3:"C3","F#3":"Fs3",A3:"A3",C4:"C4","F#4":"Fs4",A4:"A4",C5:"C5","F#5":"Fs5",A5:"A5",C6:"C6","F#6":"Fs6",A6:"A6",C7:"C7",C8:"C8"},gain:2,
+      fx:function(){return[new Tone.EQ3({low:4,mid:1,high:-4,lowFrequency:200,highFrequency:3000}),new Tone.Reverb({decay:2.5,wet:.2})];}},
+    {id:"salamander-dreamy",l:"Dreamy Grand",key:null,t:"samp",
+      sbase:"https://tonejs.github.io/audio/salamander/",
+      n:{A0:"A0",C1:"C1","F#1":"Fs1",A1:"A1",C2:"C2","F#2":"Fs2",A2:"A2",C3:"C3","F#3":"Fs3",A3:"A3",C4:"C4","F#4":"Fs4",A4:"A4",C5:"C5","F#5":"Fs5",A5:"A5",C6:"C6","F#6":"Fs6",A6:"A6",C7:"C7",C8:"C8"},gain:2,
+      fx:function(){return[new Tone.Chorus({frequency:.4,delayTime:6,depth:.7,wet:.4}),new Tone.Reverb({decay:5,wet:.4}),new Tone.EQ3({low:2,mid:0,high:-2,lowFrequency:250,highFrequency:3500})];}}
+  ]},
+  {id:"hq-casio",l:"Casio",c:"#6B8E23",ac:"a4",items:[
+    {id:"casio-keys",l:"Casio Keys",key:null,t:"samp",
+      sbase:"https://tonejs.github.io/audio/casio/",
+      n:{A1:"A1",C2:"C2",E2:"E2","G#2":"Gs2",A2:"A2",C3:"C3",E3:"E3","G#3":"Gs3"},gain:6}
   ]}
 ];
 
@@ -399,6 +421,12 @@ var CATS=[
 var allInst=[];
 CATS.forEach(function(cat){cat.items.forEach(function(ins){ins.cat=cat.id;ins.catC=cat.c;ins.acC=cat.ac;allInst.push(ins);});});
 function findInst(id){for(var i=0;i<allInst.length;i++)if(allInst[i].id===id)return allInst[i];return null;}
+/* Everything arriving over the socket is untrusted: other audience members choose their own name and colour. */
+function safeColor(c,def){return(typeof c==="string"&&/^#[0-9a-fA-F]{3,8}$/.test(c))?c:(def||"#7F77DD");}
+function safeText(t,max){return String(t==null?"":t).slice(0,max||200);}
+/* The performer sends the key as a number 0-11 (0 = C). It was shown raw ("Key: 9") and C never showed at all. */
+function keyName(r){if(typeof r==="number"&&isFinite(r))return ROOTS[((Math.round(r)%12)+12)%12];return safeText(r,8);}
+function safeNum(n,def){n=+n;return isFinite(n)?Math.max(0,Math.min(1,n)):def;}
 
 /* ============================================================
    AUDIO ENGINE
@@ -448,7 +476,7 @@ function loadSamp(id){
 
 function mkVoice(noteName,instId){
   if(!audioReady)return null;
-  var ins=findInst(instId||activeInst);
+  var ins=findInst(instId||activeInst)||findInst("piano");
   if(!ins)return null;
   if(ins.t==="samp"){
     var sp=samplers[ins.id];
@@ -478,15 +506,15 @@ function silenceNote(){
     var v=activeVoice;
     activeVoice=null;
     try{v.rel();}catch(e){}
-    var ins=findInst(activeInst);
-    if(!ins||ins.t!=="samp"){
-      setTimeout(function(){try{v.kill();}catch(e){}},500);
-    }
+    /* Always clean up the voice itself (a no-op for samplers). Deciding by the *current* instrument
+       leaked the synth whenever the performer switched instrument while a note was held. */
+    setTimeout(function(){try{v.kill();}catch(e){}},500);
   }
 }
 
 function playNoteFromEvent(midi,instId,mode){
   if(!audioReady)return;
+  midi=+midi;if(!isFinite(midi)||midi<0||midi>127)return;
   silenceNote();
   var noteName=Tone.Frequency(midi,"midi").toNote();
   if(instId&&instId!==activeInst){
@@ -554,7 +582,7 @@ document.getElementById("enterBtn").addEventListener("click",function(){
   if(!room){showJoinErr("Please enter a room code");return;}
   myName=name;
   myColor=selectedColor;
-  roomCode=room;
+  roomCode=room.toUpperCase();
   enterVenue();
 });
 document.getElementById("inRoom").addEventListener("keydown",function(e){
@@ -571,17 +599,31 @@ function showJoinErr(msg){
 /* ============================================================
    ENTER VENUE
    ============================================================ */
+var venueStarted=false,stopReconnect=false;
 function enterVenue(){
   document.getElementById("joinScreen").classList.add("hidden");
   document.getElementById("venue").classList.add("on");
   document.getElementById("hudRoom").textContent=roomCode;
-
-  initAudio();
-  loadSamp("piano");
-  loadSamp("violin");
-  initCanvas();
+  stopReconnect=false;
+  if(!venueStarted){
+    venueStarted=true;
+    initAudio();
+    loadSamp("piano");
+    loadSamp("violin");
+    initCanvas();
+    requestAnimationFrame(renderLoop);
+  }
   connectWS();
-  requestAnimationFrame(renderLoop);
+}
+/* Back to the join screen with a message (wrong room code, room closed). */
+function backToJoin(msg){
+  stopReconnect=true;
+  try{if(ws)ws.close();}catch(e){}
+  wsReady=false;viewers={};myId=null;
+  silenceNote();isPerformerPlaying=false;
+  document.getElementById("venue").classList.remove("on");
+  document.getElementById("joinScreen").classList.remove("hidden");
+  showJoinErr(msg);
 }
 
 /* ============================================================
@@ -639,9 +681,11 @@ function connectWS(){
     try{var msg=JSON.parse(e.data);}catch(x){return;}
     handleMsg(msg);
   };
+  var sock=ws;
   ws.onclose=function(){
+    if(ws!==sock)return; /* an older socket closing must not restart a newer one */
     wsReady=false;
-    setTimeout(function(){connectWS();},3000);
+    if(!stopReconnect)setTimeout(function(){if(!stopReconnect)connectWS();},3000);
   };
   ws.onerror=function(){wsReady=false;};
 }
@@ -659,12 +703,19 @@ function sendPos(x,y){
 
 function handleMsg(msg){
   var t=msg.type;
+  if(t==="error"){
+    /* e.g. "Room not found": this used to be ignored, leaving you alone in an empty venue */
+    backToJoin(safeText(msg.msg,80)||"Could not join that room");
+    return;
+  }
   if(t==="room-state"){
     myId=msg.yourId||msg.myId;
-    if(msg.viewers){
+    viewers={}; /* fresh list: after a reconnect the old one still held everyone, including a stale copy of you */
+    if(Array.isArray(msg.viewers)){
       msg.viewers.forEach(function(v){
-        viewers[v.id]={name:v.name,x:v.x||0.5,y:v.y||(FLOOR_TOP+0.1),
-          tx:v.x||0.5,ty:v.y||(FLOOR_TOP+0.1),color:v.color||"#7F77DD",
+        var vx=safeNum(v.x,0.5),vy=safeNum(v.y,FLOOR_TOP+0.1);
+        viewers[v.id]={name:safeText(v.name,24),x:vx,y:vy,
+          tx:vx,ty:vy,color:safeColor(v.color),
           bubbleText:null,bubbleTime:0};
       });
     }
@@ -676,7 +727,7 @@ function handleMsg(msg){
     if(msg.performerState){
       var ps=msg.performerState;
       if(ps.eng){activeInst=ps.eng;perfInst=ps.eng;var si=findInst(ps.eng);if(si&&si.t==="samp")loadSamp(ps.eng);}
-      if(ps.root)perfKey=ps.root;
+      if(ps.root!==undefined&&ps.root!==null)perfKey=keyName(ps.root);
       if(ps.scale)perfScale=ps.scale;
       if(ps.mode)perfMode=ps.mode;
     }
@@ -686,11 +737,11 @@ function handleMsg(msg){
     updHudBR();
   }
   else if(t==="viewer-join"){
-    var jx=msg.x||0.5,jy=msg.y||(FLOOR_TOP+0.1);
-    viewers[msg.id]={name:msg.name,x:jx,y:jy,
-      tx:jx,ty:jy,color:msg.color||"#7F77DD",
+    var jx=safeNum(msg.x,0.5),jy=safeNum(msg.y,FLOOR_TOP+0.1);
+    viewers[msg.id]={name:safeText(msg.name,24),x:jx,y:jy,
+      tx:jx,ty:jy,color:safeColor(msg.color),
       bubbleText:null,bubbleTime:0};
-    addChat("system",msg.name+" joined the venue","#555568");
+    addChat("system",safeText(msg.name,24)+" joined the venue","#555568");
     updViewerCount();
   }
   else if(t==="viewer-leave"){
@@ -702,8 +753,8 @@ function handleMsg(msg){
   }
   else if(t==="pos"){
     if(viewers[msg.id]){
-      viewers[msg.id].tx=msg.x;
-      viewers[msg.id].ty=msg.y;
+      viewers[msg.id].tx=safeNum(msg.x,viewers[msg.id].tx);
+      viewers[msg.id].ty=safeNum(msg.y,viewers[msg.id].ty);
     }
   }
   else if(t==="note"){
@@ -722,8 +773,8 @@ function handleMsg(msg){
   }
   else if(t==="state"||t==="info"){
     if(msg.scale)perfScale=msg.scale;
-    if(msg.root)perfKey=msg.root;
-    if(msg.key)perfKey=msg.key;
+    if(msg.root!==undefined&&msg.root!==null)perfKey=keyName(msg.root);
+    if(msg.key)perfKey=keyName(msg.key);
     if(msg.mode)perfMode=msg.mode;
     if(msg.eng){activeInst=msg.eng;perfInst=msg.eng;var si=findInst(msg.eng);if(si&&si.t==="samp")loadSamp(msg.eng);}
     if(msg.inst){activeInst=msg.inst;perfInst=msg.inst;}
@@ -733,12 +784,14 @@ function handleMsg(msg){
     handleVideo(msg);
   }
   else if(t==="chat"){
-    var sender=msg.name||"Unknown";
-    var sColor=msg.color||"#888";
-    addChat(sender,msg.text,sColor);
+    var sender=safeText(msg.name,24)||"Unknown";
+    var sColor=safeColor(msg.color,"#888888");
+    var sText=safeText(msg.text,300);
+    if(!sText)return;
+    addChat(sender,sText,sColor);
     /* speech bubble */
     if(msg.viewerId&&viewers[msg.viewerId]){
-      viewers[msg.viewerId].bubbleText=msg.text;
+      viewers[msg.viewerId].bubbleText=sText;
       viewers[msg.viewerId].bubbleTime=Date.now();
     }
   }
@@ -754,7 +807,7 @@ function handleMsg(msg){
    CHAT
    ============================================================ */
 function addChat(name,text,color){
-  chatMessages.push({name:name,text:text,color:color,time:Date.now()});
+  chatMessages.push({name:safeText(name,24),text:safeText(text,300),color:safeColor(color,"#888888"),time:Date.now()});
   if(chatMessages.length>200)chatMessages.shift();
   renderChat();
 }
@@ -771,7 +824,7 @@ function renderChat(){
   el.scrollTop=el.scrollHeight;
 }
 
-function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
 document.getElementById("chatSend").addEventListener("click",sendChat);
 document.getElementById("chatText").addEventListener("keydown",function(e){
@@ -801,8 +854,9 @@ function handleVideo(msg){
   var frame=document.getElementById("ytFrame");
   if(msg.action==="play"){
     screen.classList.add("on");
-    var vid=msg.vid||"";
-    var t=msg.time||0;
+    var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
+    if(!vid)return;
+    var t=Math.max(0,+msg.time||0);
     frame.src="https://www.youtube.com/embed/"+vid+"?autoplay=1&start="+Math.floor(t)+"&enablejsapi=0";
   }else if(msg.action==="pause"){
     /* Can't easily pause an iframe without API, hide */
@@ -829,7 +883,8 @@ function updHudBR(){
   if(perfKey)lines.push("Key: "+perfKey);
   if(perfScale)lines.push("Scale: "+perfScale);
   if(perfMode)lines.push("Mode: "+perfMode);
-  document.getElementById("hudBR").innerHTML=lines.join("<br>");
+  var hud=document.getElementById("hudBR");hud.textContent="";
+  lines.forEach(function(l,i){if(i)hud.appendChild(document.createElement("br"));hud.appendChild(document.createTextNode(safeText(l,80)));});
 }
 
 /* ============================================================
