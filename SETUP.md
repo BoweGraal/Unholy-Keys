@@ -57,7 +57,7 @@ You need to change `WS_URL` in **two files** to point to your deployed server.
 
 ### In `index.html`
 
-Find this line (near the bottom, around line 805):
+Search the file for `WS_URL` and find this line:
 ```javascript
 var WS_URL="ws://localhost:8080";
 ```
@@ -69,7 +69,7 @@ var WS_URL="wss://unholy-keys-production-xxxx.up.railway.app";
 
 ### In `venue.html`
 
-Find this line (near the top, around line 124):
+Search the file for `WS_URL` and find this line:
 ```javascript
 var WS_URL = "ws://localhost:8080";
 ```
