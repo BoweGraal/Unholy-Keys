@@ -224,8 +224,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
     <div id="side-nav">
       <div class="nav-item active" data-sec="play" onclick="setSection('play')"><span class="nav-icon">&#9835;</span>Play</div>
       <div class="nav-item" data-sec="inst" onclick="setSection('inst')"><span class="nav-icon">&#127928;</span>Instruments</div>
-      <div class="nav-item" data-sec="fx" onclick="setSection('fx')"><span class="nav-icon">&#127899;</span>Effects</div>
-      <div class="nav-item" data-sec="presets" onclick="setSection('presets')"><span class="nav-icon">&#128190;</span>Presets</div>
+      <div class="nav-item" data-sec="presets" onclick="setSection('presets')"><span class="nav-icon">&#128190;</span>Presets &amp; FX</div>
       <div class="nav-item" data-sec="music" onclick="setSection('music')"><span class="nav-icon">&#127925;</span>Music</div>
       <div class="nav-item" data-sec="record" onclick="setSection('record')"><span class="nav-icon">&#9210;</span>Record</div>
     </div>
@@ -287,6 +286,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   <div class="pnl" style="padding:12px 16px">
     <div style="display:flex;flex-wrap:wrap;gap:6px" id="perfPresetBox"></div>
   </div>
+  <div class="sl">Effects</div>
+  <div class="pnl"><div class="fg" id="fxBox" style="margin-top:0"></div></div>
   <div class="sl">My Presets</div>
   <div class="pnl" style="padding:12px 16px">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
@@ -375,9 +376,6 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   <div class="nh"><canvas id="hcv"></canvas></div>
   <div class="sl" id="gLbl">Note grid</div>
   <div id="grid"></div>
-  </div>
-  <div class="app-section" id="sec-fx">
-  <div class="pnl"><div class="sl" style="margin-top:0">Effects</div><div class="fg" id="fxBox"></div></div>
   </div>
   <div class="app-section" id="sec-music-2">
   <div class="sl">Play along</div>
@@ -902,8 +900,31 @@ var vidGain=null,vidAnalyser=null,vidSource=null;
 var _pdSaved={wah:.7,dly:.4,tre:.65,crush:.5};
 var _pdPreset={pdWah:0,pdDly:0,pdTre:0,pdCrush:0};
 var _fxPreset={rev:0,cho:0,dist:0};
-function saveSession(){try{localStorage.setItem("uk_session",JSON.stringify({S:{root:S.root,scale:S.scale,oct:S.oct,map:S.map,vol:S.vol,mode:S.mode,eng:S.eng,fxR:S.fxR,fxC:S.fxC,fxDi:S.fxDi,pdWah:S.pdWah,pdDly:S.pdDly,pdTre:S.pdTre,pdCrush:S.pdCrush,power:S.power},pdSaved:{wah:_pdSaved.wah,dly:_pdSaved.dly,tre:_pdSaved.tre,crush:_pdSaved.crush},pdPreset:{pdWah:_pdPreset.pdWah,pdDly:_pdPreset.pdDly,pdTre:_pdPreset.pdTre,pdCrush:_pdPreset.pdCrush},fxPreset:{rev:_fxPreset.rev,cho:_fxPreset.cho,dist:_fxPreset.dist},altRoot:altRoot,altScale:altScale,altOct:altOct,chordShape:chordShape,chordOn:mods.c,harmOn:harmOn,harmInterval:harmInterval,strumOn:strumOn,strumSpeed:strumSpeed,vizMode:(typeof VIZFX!=="undefined"?VIZFX.getCur():0)}));}catch(e){}}
-function loadSession(){try{var raw=localStorage.getItem("uk_session");if(!raw)return;var sn=JSON.parse(raw);var ss=sn.S||{};if(ss.root!==undefined)S.root=ss.root;if(ss.scale)S.scale=ss.scale;if(ss.oct!==undefined)S.oct=ss.oct;if(ss.map)S.map=ss.map;if(ss.vol!==undefined)S.vol=ss.vol;if(ss.mode)S.mode=ss.mode;if(ss.eng)S.eng=ss.eng;if(ss.fxR!==undefined)S.fxR=ss.fxR;if(ss.fxC!==undefined)S.fxC=ss.fxC;if(ss.fxDi!==undefined)S.fxDi=ss.fxDi;if(ss.pdWah!==undefined)S.pdWah=ss.pdWah;if(ss.pdDly!==undefined)S.pdDly=ss.pdDly;if(ss.pdTre!==undefined)S.pdTre=ss.pdTre;if(ss.pdCrush!==undefined)S.pdCrush=ss.pdCrush;if(ss.power!==undefined)S.power=ss.power;if(sn.pdSaved){_pdSaved.wah=sn.pdSaved.wah||.7;_pdSaved.dly=sn.pdSaved.dly||.4;_pdSaved.tre=sn.pdSaved.tre||.65;_pdSaved.crush=sn.pdSaved.crush||.5;}if(sn.pdPreset){_pdPreset.pdWah=sn.pdPreset.pdWah||0;_pdPreset.pdDly=sn.pdPreset.pdDly||0;_pdPreset.pdTre=sn.pdPreset.pdTre||0;_pdPreset.pdCrush=sn.pdPreset.pdCrush||0;}if(sn.fxPreset){_fxPreset.rev=sn.fxPreset.rev||0;_fxPreset.cho=sn.fxPreset.cho||0;_fxPreset.dist=sn.fxPreset.dist||0;}if(sn.altRoot!==undefined)altRoot=sn.altRoot;if(sn.altScale)altScale=sn.altScale;if(sn.altOct!==undefined)altOct=sn.altOct;if(sn.chordShape)chordShape=sn.chordShape;if(sn.chordOn!==undefined)mods.c=sn.chordOn;if(sn.harmOn!==undefined)harmOn=sn.harmOn;if(sn.harmInterval)harmInterval=sn.harmInterval;if(sn.strumOn!==undefined)strumOn=sn.strumOn;if(sn.strumSpeed!==undefined)strumSpeed=sn.strumSpeed;if(sn.vizMode!==undefined&&typeof VIZFX!=="undefined")VIZFX.set(sn.vizMode);var _e;_e=document.getElementById("sR");if(_e)_e.value=S.root;_e=document.getElementById("sS");if(_e)_e.value=S.scale;_e=document.getElementById("sO");if(_e)_e.value=S.oct;_e=document.getElementById("sR2");if(_e)_e.value=altRoot;_e=document.getElementById("sS2");if(_e)_e.value=altScale;_e=document.getElementById("sO2");if(_e)_e.value=altOct;_e=document.getElementById("sV");if(_e)_e.value=S.vol;_e=document.getElementById("mixKeys");if(_e)_e.value=S.vol;_e=document.getElementById("mixKeysLbl");if(_e)_e.textContent=Math.round(S.vol*100)+"%";rebuild();renderModes();renderInst();renderFx();updBdg();updPowerUI();updChordInd();updHarmBtn();updJamVol();}catch(e){console.warn("loadSession:",e);}}
+/* Current effect settings (everything except the wet/mix amounts, which live in S).
+   Saved with the session so a reload rebuilds the chain exactly as it was left. Before this,
+   only the mix amounts came back and every effect silently reverted to its default settings,
+   so e.g. Studio Vocal reloaded with a chorus twice as deep as the preset's. */
+var FXS={rv:{decay:2.5},ch:{frequency:1.5,delayTime:3.5,depth:.7},dt:{distortion:.3},wah:{baseFrequency:100,octaves:6,sensitivity:-30},dly:{delayTime:"8n",feedback:.25},tre:{frequency:5,depth:.5},crush:{bits:8}};
+var _savedPerfPreset=-1;
+function fxsMerge(src){if(!src)return;Object.keys(FXS).forEach(function(k){if(!src[k])return;Object.keys(FXS[k]).forEach(function(q){if(src[k][q]!==undefined&&src[k][q]!==null)FXS[k][q]=src[k][q];});});}
+/* A manual effect change means the highlighted performance preset no longer describes the sound */
+function fxTouched(){if(typeof activePerfPreset!=="undefined"&&activePerfPreset>=0&&typeof renderPerfPresets==="function")renderPerfPresets();}
+/* Sessions saved before FXS existed: recover the settings from whichever performance preset
+   matches the saved mix amounts, else from the effect dropdown selections. */
+function fxsFromLegacySession(){
+  var wets=[S.fxR,S.fxC,S.fxDi,S.pdWah,S.pdDly,S.pdTre,S.pdCrush];
+  var any=wets.some(function(w){return w>0;});
+  if(any&&typeof PERF_PRESETS!=="undefined"){
+    for(var i=0;i<PERF_PRESETS.length;i++){var pr=PERF_PRESETS[i],pd=pr.pd||{};
+      var pw=[pr.rv.wet,pr.ch.wet,pr.dt.wet,pd.wah||0,pd.dly||0,pd.tre||0,pd.crush||0];
+      if(pw.every(function(w,j){return Math.abs(w-wets[j])<1e-6;})){fxsMerge({rv:pr.rv,ch:pr.ch,dt:pr.dt});_savedPerfPreset=i;return;}
+    }
+  }
+  function pick(type,idx){var a=FXP[type]||[];return (a[idx]||a[0]||{}).p;}
+  fxsMerge({rv:pick("rev",_fxPreset.rev),ch:pick("cho",_fxPreset.cho),dt:pick("dist",_fxPreset.dist),wah:pick("pwah",_pdPreset.pdWah),dly:pick("pdly",_pdPreset.pdDly),tre:pick("ptre",_pdPreset.pdTre),crush:pick("pcrush",_pdPreset.pdCrush)});
+}
+function saveSession(){try{localStorage.setItem("uk_session",JSON.stringify({S:{root:S.root,scale:S.scale,oct:S.oct,map:S.map,vol:S.vol,mode:S.mode,eng:S.eng,fxR:S.fxR,fxC:S.fxC,fxDi:S.fxDi,pdWah:S.pdWah,pdDly:S.pdDly,pdTre:S.pdTre,pdCrush:S.pdCrush,power:S.power},pdSaved:{wah:_pdSaved.wah,dly:_pdSaved.dly,tre:_pdSaved.tre,crush:_pdSaved.crush},pdPreset:{pdWah:_pdPreset.pdWah,pdDly:_pdPreset.pdDly,pdTre:_pdPreset.pdTre,pdCrush:_pdPreset.pdCrush},fxPreset:{rev:_fxPreset.rev,cho:_fxPreset.cho,dist:_fxPreset.dist},fxs:FXS,perfPreset:(activePerfPreset>=0?activePerfPreset:-1),altRoot:altRoot,altScale:altScale,altOct:altOct,chordShape:chordShape,chordOn:mods.c,harmOn:harmOn,harmInterval:harmInterval,strumOn:strumOn,strumSpeed:strumSpeed,vizMode:(typeof VIZFX!=="undefined"?VIZFX.getCur():0)}));}catch(e){}}
+function loadSession(){try{var raw=localStorage.getItem("uk_session");if(!raw)return;var sn=JSON.parse(raw);var ss=sn.S||{};if(ss.root!==undefined)S.root=ss.root;if(ss.scale)S.scale=ss.scale;if(ss.oct!==undefined)S.oct=ss.oct;if(ss.map)S.map=ss.map;if(ss.vol!==undefined)S.vol=ss.vol;if(ss.mode)S.mode=ss.mode;if(ss.eng)S.eng=ss.eng;if(ss.fxR!==undefined)S.fxR=ss.fxR;if(ss.fxC!==undefined)S.fxC=ss.fxC;if(ss.fxDi!==undefined)S.fxDi=ss.fxDi;if(ss.pdWah!==undefined)S.pdWah=ss.pdWah;if(ss.pdDly!==undefined)S.pdDly=ss.pdDly;if(ss.pdTre!==undefined)S.pdTre=ss.pdTre;if(ss.pdCrush!==undefined)S.pdCrush=ss.pdCrush;if(ss.power!==undefined)S.power=ss.power;if(sn.pdSaved){_pdSaved.wah=sn.pdSaved.wah||.7;_pdSaved.dly=sn.pdSaved.dly||.4;_pdSaved.tre=sn.pdSaved.tre||.65;_pdSaved.crush=sn.pdSaved.crush||.5;}if(sn.pdPreset){_pdPreset.pdWah=sn.pdPreset.pdWah||0;_pdPreset.pdDly=sn.pdPreset.pdDly||0;_pdPreset.pdTre=sn.pdPreset.pdTre||0;_pdPreset.pdCrush=sn.pdPreset.pdCrush||0;}if(sn.fxPreset){_fxPreset.rev=sn.fxPreset.rev||0;_fxPreset.cho=sn.fxPreset.cho||0;_fxPreset.dist=sn.fxPreset.dist||0;}if(sn.fxs){fxsMerge(sn.fxs);_savedPerfPreset=(typeof sn.perfPreset==="number"&&PERF_PRESETS[sn.perfPreset])?sn.perfPreset:-1;}else{fxsFromLegacySession();}if(sn.altRoot!==undefined)altRoot=sn.altRoot;if(sn.altScale)altScale=sn.altScale;if(sn.altOct!==undefined)altOct=sn.altOct;if(sn.chordShape)chordShape=sn.chordShape;if(sn.chordOn!==undefined)mods.c=sn.chordOn;if(sn.harmOn!==undefined)harmOn=sn.harmOn;if(sn.harmInterval)harmInterval=sn.harmInterval;if(sn.strumOn!==undefined)strumOn=sn.strumOn;if(sn.strumSpeed!==undefined)strumSpeed=sn.strumSpeed;if(sn.vizMode!==undefined&&typeof VIZFX!=="undefined")VIZFX.set(sn.vizMode);var _e;_e=document.getElementById("sR");if(_e)_e.value=S.root;_e=document.getElementById("sS");if(_e)_e.value=S.scale;_e=document.getElementById("sO");if(_e)_e.value=S.oct;_e=document.getElementById("sR2");if(_e)_e.value=altRoot;_e=document.getElementById("sS2");if(_e)_e.value=altScale;_e=document.getElementById("sO2");if(_e)_e.value=altOct;_e=document.getElementById("sV");if(_e)_e.value=S.vol;_e=document.getElementById("mixKeys");if(_e)_e.value=S.vol;_e=document.getElementById("mixKeysLbl");if(_e)_e.textContent=Math.round(S.vol*100)+"%";rebuild();renderModes();renderInst();renderFx();renderPerfPresets(_savedPerfPreset);updBdg();updPowerUI();updChordInd();updHarmBtn();updJamVol();}catch(e){console.warn("loadSession:",e);}}
 var samplers={},loading={};
 var hist=[];
 var jamOn=false,jCanvas=null,jCtx=null,jW=0,jH=0,jParts=[],jRoll=[],jGlow=0,jAnim=null;
@@ -927,14 +948,14 @@ function mirrorMap(n){if(n.length<NC)return n;var r=[];for(var g=0;g<6;g++){var 
 function buildLayout(){var iv=SCALES[S.scale],all=scaleNotes(S.root,iv,S.oct,Math.max(NC,iv.length*5));var n=all.slice(0,NC);var L={};REGS.forEach(function(mod,mi){DIRS.forEach(function(dir,di){L[mod+"-"+dir]=n[mi*4+di]||60;});});return L;}
 var layout=buildLayout();
 
-function initAudio(){if(started)return;started=true;Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);rev=new Tone.Reverb({decay:2.5,wet:S.fxR}).connect(masterVol);
+function initAudio(){if(started)return;started=true;Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);rev=new Tone.Reverb({decay:FXS.rv.decay,wet:S.fxR}).connect(masterVol);
   /* ── Native Tone.js pedal board: cho → AutoWah → Delay → Tremolo → BitCrusher → rev ── */
-  pdCrush=new Tone.BitCrusher({bits:8,wet:S.pdCrush}).connect(rev);
-  pdTre=new Tone.Tremolo({frequency:5,depth:.5,wet:S.pdTre}).start().connect(pdCrush);
-  pdDly=new Tone.FeedbackDelay({delayTime:"8n",feedback:.25,wet:S.pdDly}).connect(pdTre);
-  pdWah=new Tone.AutoWah({baseFrequency:100,octaves:6,sensitivity:-30,Q:2,gain:20,wet:S.pdWah}).connect(pdDly);
-  cho=new Tone.Chorus({frequency:1.5,delayTime:3.5,depth:.7,wet:S.fxC}).start().connect(pdWah);
-  dist=new Tone.Distortion({distortion:.3,wet:S.fxDi}).connect(cho);
+  pdCrush=new Tone.BitCrusher({bits:FXS.crush.bits,wet:S.pdCrush}).connect(rev);
+  pdTre=new Tone.Tremolo({frequency:FXS.tre.frequency,depth:FXS.tre.depth,wet:S.pdTre}).start().connect(pdCrush);
+  pdDly=new Tone.FeedbackDelay({delayTime:FXS.dly.delayTime,feedback:FXS.dly.feedback,wet:S.pdDly}).connect(pdTre);
+  pdWah=new Tone.AutoWah({baseFrequency:FXS.wah.baseFrequency,octaves:FXS.wah.octaves,sensitivity:FXS.wah.sensitivity,Q:2,gain:20,wet:S.pdWah}).connect(pdDly);
+  cho=new Tone.Chorus({frequency:FXS.ch.frequency,delayTime:FXS.ch.delayTime,depth:FXS.ch.depth,wet:S.fxC}).start().connect(pdWah);
+  dist=new Tone.Distortion({distortion:FXS.dt.distortion,wet:S.fxDi}).connect(cho);
   /* ── Backing track + video audio chain ── */
   try{var _bctx=Tone.getContext().rawContext;
     backingAudio=new Audio();
@@ -1109,10 +1130,10 @@ var FXP={
     {l:"Destroy",p:{bits:4,wet:.9}}
   ]
 };
-function applyFxPreset(type,idx){var pr=FXP[type][idx].p;if(type==="rev"&&rev){rev.decay=pr.decay;rev.wet.value=pr.wet;S.fxR=pr.wet;}if(type==="cho"&&cho){cho.frequency.value=pr.frequency;cho.delayTime=pr.delayTime;cho.depth=pr.depth;cho.wet.value=pr.wet;S.fxC=pr.wet;}if(type==="dist"&&dist){dist.distortion=pr.distortion;dist.wet.value=pr.wet;S.fxDi=pr.wet;}_fxPreset[type]=idx;renderFx();saveSession();}
-function applyPdPreset(id,type,idx){var pr=(FXP[type]||[])[idx];if(!pr)return;var p=pr.p;if(id==="pdWah"&&pdWah){pdWah.baseFrequency=p.baseFrequency;pdWah.octaves=p.octaves;pdWah.sensitivity=p.sensitivity;pdWah.wet.value=p.wet;S.pdWah=p.wet;}if(id==="pdDly"&&pdDly){pdDly.delayTime.value=p.delayTime;pdDly.feedback.value=p.feedback;pdDly.wet.value=p.wet;S.pdDly=p.wet;}if(id==="pdTre"&&pdTre){try{pdTre.frequency.value=p.frequency;}catch(e){}try{pdTre.depth.value=p.depth;}catch(e){}pdTre.wet.value=p.wet;S.pdTre=p.wet;}if(id==="pdCrush"&&pdCrush){pdCrush.bits=p.bits;pdCrush.wet.value=p.wet;S.pdCrush=p.wet;}_pdPreset[id]=idx;renderFx();saveSession();}
-function togglePedalBoard(){var anyOn=(S.pdWah>0||S.pdDly>0||S.pdTre>0||S.pdCrush>0);var _boardWasOn=anyOn;if(anyOn){if(S.pdWah>0)_pdSaved.wah=S.pdWah;if(S.pdDly>0)_pdSaved.dly=S.pdDly;if(S.pdTre>0)_pdSaved.tre=S.pdTre;if(S.pdCrush>0)_pdSaved.crush=S.pdCrush;S.pdWah=0;S.pdDly=0;S.pdTre=0;S.pdCrush=0;if(pdWah)pdWah.wet.value=0;if(pdDly)pdDly.wet.value=0;if(pdTre)pdTre.wet.value=0;if(pdCrush)pdCrush.wet.value=0;}else{S.pdWah=_pdSaved.wah;S.pdDly=_pdSaved.dly;S.pdTre=_pdSaved.tre;S.pdCrush=_pdSaved.crush;if(pdWah)pdWah.wet.value=S.pdWah;if(pdDly)pdDly.wet.value=S.pdDly;if(pdTre)pdTre.wet.value=S.pdTre;if(pdCrush)pdCrush.wet.value=S.pdCrush;}renderFx();saveSession();showJamToast(_boardWasOn?"Board OFF":"Board ON","#D354A0");}
-function togglePedal(id){var obj=id==="pdWah"?pdWah:id==="pdDly"?pdDly:id==="pdTre"?pdTre:pdCrush;var key=id==="pdWah"?"wah":id==="pdDly"?"dly":id==="pdTre"?"tre":"crush";if(!obj)return;if(S[id]>0){_pdSaved[key]=S[id];S[id]=0;}else{S[id]=_pdSaved[key]||.6;}obj.wet.value=S[id];renderFx();saveSession();}
+function applyFxPreset(type,idx){initAudio();var pr=FXP[type][idx].p;fxsMerge(type==="rev"?{rv:pr}:type==="cho"?{ch:pr}:{dt:pr});if(type==="rev"&&rev){rev.decay=pr.decay;rev.wet.value=pr.wet;S.fxR=pr.wet;}if(type==="cho"&&cho){cho.frequency.value=pr.frequency;cho.delayTime=pr.delayTime;cho.depth=pr.depth;cho.wet.value=pr.wet;S.fxC=pr.wet;}if(type==="dist"&&dist){dist.distortion=pr.distortion;dist.wet.value=pr.wet;S.fxDi=pr.wet;}_fxPreset[type]=idx;fxTouched();renderFx();saveSession();}
+function applyPdPreset(id,type,idx){var pr=(FXP[type]||[])[idx];if(!pr)return;var p=pr.p;fxsMerge(id==="pdWah"?{wah:p}:id==="pdDly"?{dly:p}:id==="pdTre"?{tre:p}:{crush:p});if(id==="pdWah"&&pdWah){pdWah.baseFrequency=p.baseFrequency;pdWah.octaves=p.octaves;pdWah.sensitivity=p.sensitivity;pdWah.wet.value=p.wet;S.pdWah=p.wet;}if(id==="pdDly"&&pdDly){pdDly.delayTime.value=p.delayTime;pdDly.feedback.value=p.feedback;pdDly.wet.value=p.wet;S.pdDly=p.wet;}if(id==="pdTre"&&pdTre){try{pdTre.frequency.value=p.frequency;}catch(e){}try{pdTre.depth.value=p.depth;}catch(e){}pdTre.wet.value=p.wet;S.pdTre=p.wet;}if(id==="pdCrush"&&pdCrush){pdCrush.bits=p.bits;pdCrush.wet.value=p.wet;S.pdCrush=p.wet;}_pdPreset[id]=idx;fxTouched();renderFx();saveSession();}
+function togglePedalBoard(){var anyOn=(S.pdWah>0||S.pdDly>0||S.pdTre>0||S.pdCrush>0);var _boardWasOn=anyOn;if(anyOn){if(S.pdWah>0)_pdSaved.wah=S.pdWah;if(S.pdDly>0)_pdSaved.dly=S.pdDly;if(S.pdTre>0)_pdSaved.tre=S.pdTre;if(S.pdCrush>0)_pdSaved.crush=S.pdCrush;S.pdWah=0;S.pdDly=0;S.pdTre=0;S.pdCrush=0;if(pdWah)pdWah.wet.value=0;if(pdDly)pdDly.wet.value=0;if(pdTre)pdTre.wet.value=0;if(pdCrush)pdCrush.wet.value=0;}else{S.pdWah=_pdSaved.wah;S.pdDly=_pdSaved.dly;S.pdTre=_pdSaved.tre;S.pdCrush=_pdSaved.crush;if(pdWah)pdWah.wet.value=S.pdWah;if(pdDly)pdDly.wet.value=S.pdDly;if(pdTre)pdTre.wet.value=S.pdTre;if(pdCrush)pdCrush.wet.value=S.pdCrush;}fxTouched();renderFx();saveSession();showJamToast(_boardWasOn?"Board OFF":"Board ON","#D354A0");}
+function togglePedal(id){var obj=id==="pdWah"?pdWah:id==="pdDly"?pdDly:id==="pdTre"?pdTre:pdCrush;var key=id==="pdWah"?"wah":id==="pdDly"?"dly":id==="pdTre"?"tre":"crush";if(!obj)return;if(S[id]>0){_pdSaved[key]=S[id];S[id]=0;}else{S[id]=_pdSaved[key]||.6;}obj.wet.value=S[id];fxTouched();renderFx();saveSession();}
 function renderFx(){var c=document.getElementById("fxBox");c.innerHTML="";
   var fxDefs=[
     {id:"fxR",l:"Reverb",type:"rev",f:function(v){if(rev)rev.wet.value=v;}},
@@ -1127,6 +1148,7 @@ function renderFx(){var c=document.getElementById("fxBox");c.innerHTML="";
     d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><label>'+fx.l+'</label>'+sel+'</div><input type="range" min="0" max="1" step=".05" value="'+v+'"><div class="fv">'+Math.round(v*100)+'%</div>';
     var inp=d.querySelector("input"),vd=d.querySelector(".fv"),dd=d.querySelector("select");
     inp.oninput=function(){var val=+this.value;S[fx.id]=val;fx.f(val);vd.textContent=Math.round(val*100)+"%";};
+    inp.onchange=function(){fxTouched();saveSession();};
     (function(type){dd.onchange=function(){applyFxPreset(type,+this.value);};})(fx.type);
     c.appendChild(d);
   });
@@ -2647,6 +2669,7 @@ var PERF_PRESETS=[
   /* Strum */
   if(pr.strum!==null){strumOn=pr.strum;if(pr.strumSpd)strumSpeed=pr.strumSpd;var sb=document.getElementById("strumBtn");if(sb){if(strumOn){sb.textContent="On";sb.style.cssText="background:var(--tl);border-color:var(--tl);color:#fff;padding:5px 12px;font-size:12px";}else{sb.textContent="Off";sb.style.cssText="padding:5px 12px;font-size:12px";}}var ss=document.getElementById("strumSpd");if(ss)ss.value=strumSpeed;var sl=document.getElementById("strumSpdLbl");if(sl)sl.textContent=strumSpeed+"ms";updChordInd();}
   /* FX */
+  fxsMerge({rv:pr.rv,ch:pr.ch,dt:pr.dt});
   if(rev){rev.decay=pr.rv.decay;rev.wet.value=pr.rv.wet;S.fxR=pr.rv.wet;}
   if(cho){cho.frequency.value=pr.ch.frequency;cho.delayTime=pr.ch.delayTime;cho.depth=pr.ch.depth;cho.wet.value=pr.ch.wet;S.fxC=pr.ch.wet;}
   if(dist){dist.distortion=pr.dt.distortion;dist.wet.value=pr.dt.wet;S.fxDi=pr.dt.wet;}
@@ -3129,7 +3152,6 @@ initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updMod
 var SEC_MAP={
   play:["sec-play","sec-play-grid"],
   inst:["sec-inst"],
-  fx:["sec-fx"],
   presets:["sec-presets"],
   music:["sec-music","sec-music-2"],
   record:["sec-record"]
