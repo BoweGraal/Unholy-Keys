@@ -100,6 +100,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #jToast.on{opacity:1!important}
 #jm{display:none;position:fixed;inset:0;background:#000;z-index:9999;overflow:hidden;cursor:none}
 #jm.cursor-show{cursor:default}
+#jm.picker-open,#jm.picker-open *{cursor:default}
+#jm.picker-open #jpList>div,#jm.picker-open button,#jm.picker-open select{cursor:pointer}
 #jm.on{display:block}
 #jmV{position:absolute;top:12%;bottom:12%;left:0;right:0;z-index:1;background:#000}
 #jmV iframe{width:100%;height:100%;border:none;opacity:.72}
@@ -544,7 +546,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
     <div style="background:#12121f;border:1px solid rgba(255,255,255,.13);border-radius:18px;padding:26px 28px;width:520px;max-width:92vw;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 80px rgba(0,0,0,.7)">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
         <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:.2px">&#9654; Next Song</div>
-        <button onclick="closeJamPicker()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.55);border-radius:7px;padding:4px 11px;font-size:13px;cursor:pointer">&#10005;</button>
+        <button id="jpCloseBtn" title="Close (Esc)" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.55);border-radius:7px;padding:4px 11px;font-size:13px;cursor:pointer">&#10005;</button>
       </div>
       <div id="jpList" style="flex:1;overflow-y:auto;min-height:60px;max-height:40vh;display:flex;flex-direction:column;gap:3px;padding-right:2px"></div>
       <div style="flex-shrink:0;display:flex;flex-direction:column;gap:8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px">
@@ -555,7 +557,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
         <select id="jpInst" style="width:100%;background:#1e1e30;border:1px solid rgba(255,255,255,.14);color:#fff;padding:7px 8px;border-radius:8px;font-size:12px;outline:none"></select>
         <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,.25)"><div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>or load a preset<div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div></div>
         <select id="jpPreset" style="width:100%;background:#1e1e30;border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.7);padding:7px 8px;border-radius:8px;font-size:12px;outline:none"><option value="">— Presets —</option></select>
-        <button onclick="jpPlay()" id="jpPlayBtn" style="width:100%;padding:12px;font-size:14px;font-weight:700;background:var(--pk);border:none;color:#fff;border-radius:10px;cursor:pointer;letter-spacing:.8px;transition:opacity .1s">&#9654;&nbsp; PLAY</button>
+        <button id="jpPlayBtn" style="width:100%;padding:12px;font-size:14px;font-weight:700;background:var(--pk);border:none;color:#fff;border-radius:10px;cursor:pointer;letter-spacing:.8px;transition:opacity .1s">&#9654;&nbsp; PLAY</button>
       </div>
     </div>
   </div>
@@ -984,6 +986,14 @@ cap.addEventListener("keydown",function(e){e.preventDefault();e.stopPropagation(
 cap.addEventListener("keyup",function(e){e.preventDefault();e.stopPropagation();this.value="";handleKeyUp(e.code,e.key);});
 document.addEventListener("keydown",function(e){
   if(e.key==="F12"){e.preventDefault();LOCAL.restart();BACKING.restart();showJamToast("↺ Restart","#D354A0");return;}
+  /* While the song picker is open it owns the keyboard: Esc/Q close, Enter plays,
+     everything else goes to the dialog's own controls instead of playing notes or exiting jam. */
+  if(jamOn&&jamPickerOpen()){
+    if(e.key==="Escape"||e.code==="KeyQ"){e.preventDefault();e.stopPropagation();closeJamPicker();return;}
+    if(e.key==="Enter"){e.preventDefault();e.stopPropagation();jpPlay();return;}
+    if(e.key==="F11"){e.preventDefault();jamFullscreen();return;}
+    return;
+  }
   if(jamOn){e.preventDefault();e.stopPropagation();handleKeyDown(e.code,e.key);return;}
   if(!jamOn&&(e.target.tagName==="SELECT"||e.target.tagName==="INPUT")&&e.target.id!=="cap")return;
   if(e.key===" "||e.key==="ArrowUp"||e.key==="ArrowDown"||e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="Tab"||e.key==="Shift"||e.key==="Control"||e.code==="CapsLock"||e.code==="KeyZ"||e.code==="KeyV"||e.code==="KeyD"||e.code==="KeyE"||e.code==="KeyF"||e.code==="KeyQ"||e.code==="KeyT"||e.code==="KeyL"||e.code==="KeyN"||e.code==="KeyP"||e.code==="Digit3"||e.key==="F11"||e.code==="F1"||e.code==="F2"||e.code==="F3"||e.code==="F4"||e.code==="F5"||e.code==="Insert"||e.code==="Numpad0"||e.code==="Delete"||e.code==="PageUp"||e.code==="PageDown"||e.code==="Backquote"||(e.code.indexOf("Numpad")===0&&e.code!=="NumpadEnter"))e.preventDefault();
@@ -1180,7 +1190,7 @@ function buildJInstPick(){var sel=document.getElementById("jInstSel");if(!sel)re
   }
 function enterJam(){initAudio();jamOn=true;document.getElementById("app").classList.add("jx");document.getElementById("jm").classList.add("on");document.getElementById("jmV").style.display="block";if(LOCAL.currentFile){/* Local MP4 — use video element as background */LOCAL.syncToJam();var _jtb0=document.getElementById("jtb");if(_jtb0)_jtb0.style.display="block";}else{/* YouTube/Invidious — use iframe */var _jv=document.getElementById("jmVid"),_jf=document.getElementById("jmF");if(_jv){_jv.pause();_jv.src="";_jv.style.display="none";}if(_jf)_jf.style.display="block";var src=document.getElementById("ytF").src||"";if(src&&src.indexOf("http")===0){syncJamVideo();var _jtb1=document.getElementById("jtb");if(_jtb1)_jtb1.style.display="block";}else{var _jtb2=document.getElementById("jtb");if(_jtb2)_jtb2.style.display="none";}}jCanvas=document.getElementById("jcv");jCtx=jCanvas.getContext("2d");setTimeout(function(){resizeJam();updJInfo();buildJMini();buildJInstPick();updJamPresetLbl();renderJamHkStrip();if(jAnim)cancelAnimationFrame(jAnim);jAnim=requestAnimationFrame(jamLoop);},30);}
 function jamFullscreen(){try{var jel=document.getElementById("jm");if(document.fullscreenElement||document.webkitFullscreenElement){if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();}else{if(jel.requestFullscreen)jel.requestFullscreen();else if(jel.webkitRequestFullscreen)jel.webkitRequestFullscreen();}}catch(e){}}
-function exitJam(){jamOn=false;LOCAL.stopJam();document.getElementById("app").classList.remove("jx");document.getElementById("jm").classList.remove("on");document.getElementById("jmF").src="";if(jAnim){cancelAnimationFrame(jAnim);jAnim=null;}if(jLoopAnim){cancelAnimationFrame(jLoopAnim);jLoopAnim=null;}try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
+function exitJam(){jamOn=false;closeJamPicker();LOCAL.stopJam();document.getElementById("app").classList.remove("jx");document.getElementById("jm").classList.remove("on");document.getElementById("jmF").src="";if(jAnim){cancelAnimationFrame(jAnim);jAnim=null;}if(jLoopAnim){cancelAnimationFrame(jLoopAnim);jLoopAnim=null;}try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
 document.addEventListener("fullscreenchange",function(){var btn=document.getElementById("jfs");if(btn)btn.textContent=document.fullscreenElement?"\u2715 FS":"\u26F6 FS";});
 document.addEventListener("webkitfullscreenchange",function(){var btn=document.getElementById("jfs");if(btn)btn.textContent=document.webkitFullscreenElement?"\u2715 FS":"\u26F6 FS";});
 function toggleSplit(){var ifr=document.getElementById("jmF");var on=(ifr.style.opacity!=="0");ifr.style.opacity=on?"0":"0.72";var btn=document.getElementById("jtb");if(btn)btn.style.color=on?"rgba(255,255,255,.35)":"rgba(255,255,255,.75)";}
@@ -2726,15 +2736,27 @@ function renderJamHkStrip(){
 /* ── Jam Song Picker ── */
 var _jpSelFile=null;
 
+function jamPickerOpen(){var el=document.getElementById("jamPicker");return !!(el&&el.style.display==="flex");}
 function openJamPicker(){
   var el=document.getElementById("jamPicker");if(!el)return;
   el.style.display="flex";
+  var jm=document.getElementById("jm");if(jm)jm.classList.add("picker-open");
+  /* Drop any held notes/modifiers so nothing sticks while the picker has the keyboard */
+  arrowStack=[];mods.space=false;mods.d=false;mods.e=false;mods.three=false;silenceNote();updModInd();
   _jpSelFile=null;
   _jpBuildList();_jpBuildDrops();
 }
 function closeJamPicker(){
   var el=document.getElementById("jamPicker");if(el)el.style.display="none";
+  var jm=document.getElementById("jm");if(jm)jm.classList.remove("picker-open");
+  if(document.activeElement&&el&&el.contains(document.activeElement))document.activeElement.blur();
 }
+(function(){
+  var x=document.getElementById("jpCloseBtn");if(x)x.onclick=function(){closeJamPicker();};
+  var pb=document.getElementById("jpPlayBtn");if(pb)pb.onclick=function(){jpPlay();};
+  /* Click on the dark backdrop (outside the dialog) also closes */
+  var bg=document.getElementById("jamPicker");if(bg)bg.addEventListener("mousedown",function(e){if(e.target===bg)closeJamPicker();});
+})();
 function _jpBuildList(){
   var box=document.getElementById("jpList");if(!box)return;
   box.innerHTML="";
@@ -3145,6 +3167,13 @@ window.filterInstruments=function(val){
   if(!q||totalVisible>0){if(noMatch)noMatch.style.display="none";}
   else{if(!noMatch){noMatch=document.createElement("div");noMatch.id="inst-no-match";noMatch.className="inst-no-match";noMatch.textContent="No instruments match your search";box.parentNode.insertBefore(noMatch,box.nextSibling);}noMatch.style.display="";}
 };
+
+/* Inline on*="" attributes run in global scope, but everything above lives inside this IIFE.
+   Expose what the markup calls so those buttons work (Swap, Strum, Harmony, pedalboard,
+   YouTube prev/next/speed/volume, loop recorder, Export). */
+window.YT=YT;window.SETLIST=SETLIST;window.PRESETS=PRESETS;window.REC=REC;window.MET=MET;
+window.swapScale=swapScale;window.toggleStrum=toggleStrum;window.toggleHarm=toggleHarm;
+window.togglePedalBoard=togglePedalBoard;window.exportLocalStorage=exportLocalStorage;
 
 }catch(e){console.error("BOOT ERROR:",e);document.body.innerHTML="<pre style='color:red;padding:20px'>"+e.stack+"</pre>";}
 })();
