@@ -40,7 +40,7 @@ function clamp(v) { return Math.max(0.05, Math.min(0.95, v)); }
 function clampY(v) { return Math.max(0.34, Math.min(0.74, v)); } // stay on the venue floor, off the stage
 
 function makeBot(i) {
-  var bot = { name: rand(NAMES) + " " + (i + 1), x: 0.5, y: 0.5, ws: null, timers: [], first: i === 0 };
+  var bot = { name: rand(NAMES) + " " + (i + 1), x: 0.12 + Math.random() * 0.76, y: 0.36 + Math.random() * 0.36, ws: null, timers: [], first: i === 0 };
   var ws = new WebSocket(URL);
   bot.ws = ws;
   ws.on("open", function() {
