@@ -13,6 +13,7 @@ var path = require("path");
 var PORT = process.env.PORT || 8080;
 var rooms = {};
 var STARTED = Date.now();
+var STREAM_BYTES = 0;   /* stream data sent to viewers since the server started (counts toward the host's bandwidth allowance) */
 
 /* ── HTTP side ──────────────────────────────────────────────────────────────
    /health  JSON status, so you can check a deployed server from any browser.
@@ -28,7 +29,8 @@ var TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".c
 function health() {
   var viewers = 0; Object.keys(rooms).forEach(function(k) { viewers += rooms[k].viewers.size; });
   return { ok: true, service: "unholy-keys-relay", rooms: Object.keys(rooms).length, viewers: viewers,
-    uptimeSeconds: Math.round((Date.now() - STARTED) / 1000), node: process.version };
+    uptimeSeconds: Math.round((Date.now() - STARTED) / 1000), node: process.version,
+    streamMBSentSinceStart: Math.round(STREAM_BYTES / 1e5) / 10 };
 }
 var server = http.createServer(function(req, res) {
   var url = (req.url || "/").split("?")[0];
@@ -50,7 +52,8 @@ var server = http.createServer(function(req, res) {
     res.end(data);
   });
 });
-var wss = new WebSocket.Server({ server: server, maxPayload: 16 * 1024 });
+/* Text messages stay capped at 16 KB (checked per message below); binary stream packets can be larger (video keyframes). */
+var wss = new WebSocket.Server({ server: server, maxPayload: 256 * 1024 });
 
 var MAX_VIEWERS = 200;
 /* The stored video message is from when the performer last sent it. A viewer joining now
@@ -62,7 +65,24 @@ function liveVideo(r) {
     v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
   return v;
 }
-var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1 };
+var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1 };
+
+/* ── Live sound/visual stream ──
+   The performer sends binary packets: byte 0 is the kind (1 = audio, 2 = visuals), the rest is
+   opaque to the server. They go to every viewer as-is. A viewer whose connection is backing up
+   skips visual packets first, then audio, so one slow phone never slows the show for anyone else. */
+var MAX_BUFFER_VISUAL = 512 * 1024, MAX_BUFFER_AUDIO = 2 * 1024 * 1024;
+function relayStream(ws, data) {
+  if (ws.role !== "performer" || !ws.room || !rooms[ws.room] || rooms[ws.room].performer !== ws) return;
+  if (!data || data.length < 2 || !allow(ws, "stream", 300, 150)) return;
+  var kind = data[0], r = rooms[ws.room];
+  if (kind !== 1 && kind !== 2) return;
+  var limit = kind === 1 ? MAX_BUFFER_AUDIO : MAX_BUFFER_VISUAL;
+  r.viewers.forEach(function(v) {
+    if (v.ws.readyState !== 1 || v.ws.bufferedAmount > limit) return;
+    try { v.ws.send(data, { binary: true }); r.bytesOut = (r.bytesOut || 0) + data.length; STREAM_BYTES += data.length; } catch (e) {}
+  });
+}
 
 function genCode() {
   var code;
@@ -106,7 +126,9 @@ wss.on("connection", function(ws) {
   ws.on("pong", function() { ws.isAlive = true; });
   ws.on("error", function() {});
 
-  ws.on("message", function(raw) {
+  ws.on("message", function(raw, isBinary) {
+    if (isBinary) { relayStream(ws, raw); return; }
+    if (raw.length > 16 * 1024) return;
     var msg;
     try { msg = JSON.parse(raw); } catch(e) { return; }
     if (!msg || typeof msg !== "object" || typeof msg.type !== "string") return;
@@ -146,7 +168,8 @@ wss.on("connection", function(ws) {
         yourId: id,
         viewers: viewerList(roomCode),
         performerState: r.state,
-        video: liveVideo(r)
+        video: liveVideo(r),
+        stream: r.stream || null
       });
 
       // Notify everyone else
@@ -163,6 +186,7 @@ wss.on("connection", function(ws) {
       if (!PERFORMER_TYPES[msg.type]) return;
       if (msg.type === "state") rooms[ws.room].state = msg;
       if (msg.type === "video") { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); }
+      if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
       broadcast(ws.room, msg, ws);
       return;
     }
@@ -222,3 +246,11 @@ server.listen(PORT, function() {
   }
   console.log("  Health check:    http://localhost:" + PORT + "/health");
 });
+
+/* Tell each performer how much stream data their show has sent, so they can watch their bandwidth. */
+setInterval(function() {
+  Object.keys(rooms).forEach(function(k) {
+    var r = rooms[k];
+    if (r.performer && r.bytesOut !== r._lastReported) { r._lastReported = r.bytesOut; send(r.performer, { type: "stream-stats", bytesOut: r.bytesOut || 0, viewers: r.viewers.size }); }
+  });
+}, 5000);
