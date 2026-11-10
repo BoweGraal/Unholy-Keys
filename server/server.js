@@ -127,8 +127,10 @@ wss.on("connection", function(ws) {
   ws.on("error", function() {});
 
   ws.on("message", function(raw, isBinary) {
-    if (isBinary) { relayStream(ws, raw); return; }
-    if (raw.length > 16 * 1024) return;
+    /* only the performer's stream packets may exceed 16 KB; anything else that large drops the sender */
+    if (isBinary && ws.role === "performer") { relayStream(ws, raw); return; }
+    if (raw.length > 16 * 1024) { try { ws.terminate(); } catch (e) {} return; }
+    if (isBinary) return;
     var msg;
     try { msg = JSON.parse(raw); } catch(e) { return; }
     if (!msg || typeof msg !== "object" || typeof msg.type !== "string") return;
