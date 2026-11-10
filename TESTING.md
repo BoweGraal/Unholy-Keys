@@ -112,7 +112,7 @@ Deploy the `server` folder to Railway or Render first ([SETUP.md](SETUP.md)). Yo
    npm run crowd -- ABC123 20 wss://unholy-keys-production.up.railway.app
    ```
 
-4. **Make it permanent** once it all works: set `WS_URL` near the top of the live section in both `index.html` and `venue.html` to your `wss://` address, so everyone gets it without `?ws=`.
+4. **The default server** is `wss://unholy-keys.onrender.com`, set as `WS_URL` in both `index.html` and `venue.html`. If you move hosts, change it in both files.
 
 How the pages pick a server, first match wins:
 1. A `?ws=` address (or one remembered from an earlier `?ws=`)
