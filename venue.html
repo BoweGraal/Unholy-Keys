@@ -1294,7 +1294,7 @@ function updTapHint(){
    ============================================================ */
 var SP=(function(){
   var cfgA=null,cfgV=null,adec=null,vdec=null,nextT=0,lastAudio=0,lastVideo=0,lastDecoded=0,gotKey=false,gain=null,announced=false;
-  var AHEAD=0.35;
+  var AHEAD=0.35,st={audioPackets:0,audioDecoded:0,visualPackets:0,visualFrames:0,lastError:""};
   function canSound(){return !!(window.AudioDecoder&&window.EncodedAudioChunk);}
   function canVisuals(){return !!(window.VideoDecoder&&window.EncodedVideoChunk);}
   function ctx(){return Tone.getContext().rawContext;}
@@ -1302,7 +1302,7 @@ var SP=(function(){
     try{if(adec&&adec.state!=="closed")adec.close();}catch(e){}
     adec=null;nextT=0;
     if(!cfgA||!canSound())return;
-    try{adec=new AudioDecoder({output:onAudio,error:function(e){console.warn("[Unholy Keys] sound decoder:",e&&e.message);adec=null;setTimeout(makeA,1000);}});adec.configure(cfgA);}catch(e){adec=null;console.warn("[Unholy Keys] this browser can't decode the live sound:",e&&e.message);}
+    try{adec=new AudioDecoder({output:onAudio,error:function(e){st.lastError="sound decoder: "+(e&&e.message);console.warn("[Unholy Keys] "+st.lastError);adec=null;setTimeout(makeA,1000);}});adec.configure(cfgA);}catch(e){adec=null;st.lastError="can't decode the live sound: "+(e&&e.message);console.warn("[Unholy Keys] "+st.lastError);}
   }
   function makeV(){
     try{if(vdec&&vdec.state!=="closed")vdec.close();}catch(e){}
@@ -1312,7 +1312,8 @@ var SP=(function(){
   }
   function onAudio(ad){
     try{
-      var c=ctx();if(c.state!=="running"){ad.close();return;}
+      st.audioDecoded++;
+      var c=ctx();if(c.state!=="running"){st.lastError="audio is not unlocked ("+c.state+")";try{c.resume();}catch(x){}ad.close();return;}
       if(!gain){gain=c.createGain();gain.connect(c.destination);}
       var ch=ad.numberOfChannels,buf=c.createBuffer(ch,ad.numberOfFrames,ad.sampleRate);
       for(var i=0;i<ch;i++)ad.copyTo(buf.getChannelData(i),{planeIndex:i,format:"f32-planar"});
@@ -1325,6 +1326,7 @@ var SP=(function(){
   }
   function onFrame(f){
     var cv=document.getElementById("streamCv");
+    st.visualFrames++;
     try{if(cv){var g=cv.getContext("2d");g.drawImage(f,0,0,cv.width,cv.height);}}catch(e){}
     f.close();
   }
@@ -1332,10 +1334,10 @@ var SP=(function(){
     if(!(ab instanceof ArrayBuffer)||ab.byteLength<11)return;
     var dv=new DataView(ab),kind=dv.getUint8(0),flags=dv.getUint8(1),ts=dv.getFloat64(2),data=new Uint8Array(ab,10);
     if(kind===1){
-      lastAudio=Date.now();
+      lastAudio=Date.now();st.audioPackets++;
       if(adec&&adec.state==="configured"&&adec.decodeQueueSize<50){try{adec.decode(new EncodedAudioChunk({type:"key",timestamp:ts,data:data}));}catch(e){}}
     }else if(kind===2){
-      lastVideo=Date.now();
+      lastVideo=Date.now();st.visualPackets++;
       var key=!!(flags&1);
       if(!vdec||vdec.state!=="configured")return;
       if(!gotKey&&!key)return;                               /* wait for a keyframe (one every 2 s) */
@@ -1347,7 +1349,8 @@ var SP=(function(){
   function config(m){
     if(!m||!m.active){reset();return;}
     announced=true;
-    if(m.audio&&(!cfgA||cfgA.sampleRate!==m.audio.sampleRate||cfgA.numberOfChannels!==m.audio.numberOfChannels)){cfgA={codec:"opus",sampleRate:+m.audio.sampleRate||48000,numberOfChannels:+m.audio.numberOfChannels||2};makeA();}
+    /* Opus always decodes at 48 kHz, whatever rate the performer's sound card runs at */
+    if(m.audio&&(!cfgA||cfgA.numberOfChannels!==(+m.audio.numberOfChannels||2))){cfgA={codec:"opus",sampleRate:48000,numberOfChannels:+m.audio.numberOfChannels||2};makeA();}
     if(m.video&&!cfgV){cfgV={codec:String(m.video.codec||"vp8"),codedWidth:+m.video.width||480,codedHeight:+m.video.height||270};makeV();}
     updHudBR();
   }
@@ -1371,6 +1374,8 @@ var SP=(function(){
     if(snd){var h=document.getElementById("tapHint");if(h)h.style.display="none";}
   }
   setInterval(updScreen,500);
+  /* For troubleshooting: type ukStreamStats() in the browser console */
+  window.ukStreamStats=function(){var c=null;try{c=ctx();}catch(e){}return {soundLive:soundLive(),visualsLive:visualsLive(),audioConfig:cfgA,decoderState:adec?adec.state:"none",audioContext:c?c.state:"none",audioPackets:st.audioPackets,audioDecoded:st.audioDecoded,visualPackets:st.visualPackets,visualFrames:st.visualFrames,lastError:st.lastError};};
   return{packet:packet,config:config,reset:reset,soundLive:soundLive,visualsLive:visualsLive,canSound:canSound,get announced(){return announced;}};
 })();
 
