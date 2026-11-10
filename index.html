@@ -32,6 +32,11 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #inst-search:focus{border-color:var(--pk)}
 #inst-search::placeholder{color:var(--tx3)}
 .inst-no-match{padding:20px;text-align:center;color:var(--tx3);font-size:13px}
+#instCols{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+#instCols .col{padding:5px 11px;border-radius:14px;border:1px solid var(--bg4);background:var(--bg3);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;user-select:none;white-space:nowrap}
+#instCols .col:hover{color:var(--tx);border-color:var(--tx3)}
+#instCols .col.on{background:var(--pk);border-color:var(--pk);color:#fff}
+#instCols .col span{opacity:.6;font-weight:400;margin-left:5px}
 .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px}
 .logo{font-size:28px;font-weight:700;letter-spacing:-1px}.logo b{color:var(--pk)}
 .logo-s{font-size:12px;color:var(--tx2);margin-top:2px}
@@ -368,6 +373,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   </div>
   <div class="app-section" id="sec-inst">
   <input type="text" id="inst-search" placeholder="Search instruments by name..." oninput="filterInstruments(this.value)">
+  <div id="instCols"></div>
   <div class="sl">Instrument <span id="iBdg" class="bdg"></span></div>
   <div id="instBox"></div>
   </div>
@@ -467,7 +473,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
       <button class="btn" id="showAddBtn" style="flex:1">+ Add Song</button>
     </div>
   </div>
-  <div class="hb"><b>Play:</b> Monophonic -- last arrow wins. <b>Space</b> (5-8) / <b>D</b> (9-12) / <b>Space+D</b> (13-16) / <b>Space+E</b> (17-20) / <b>Space+3</b> (21-24)<br><b>Modes:</b> <b>Z</b>=Impact / <b>Tab</b>=Sustain&#8644;Impact / <b>Ctrl</b>=Staccato / <b>V</b>=Legato<br><b>Key sig:</b> <b>Shift</b>=Swap alt scale / <b>Tab</b>=toggle sustain&#8644;impact<br><b>Power:</b> Drag the Power slider left (soft/quiet) or right (hard/loud + velocity boost)<br><b>Jam:</b> <b>F</b>=Enter / <b>Esc</b>=Exit / <b>T</b>=Toggle split / <b>N/P</b>=Next/Prev song<br><b>FX:</b> <b>`</b>=Random effect / <b>F4</b>=FX picker / <b>F5</b>=Cycle / <b>Numpad *</b>=Random / <b>Numpad /</b>=Toggle alternate<br><b>Octave:</b> <b>Num+</b>=Up / <b>Num-</b>=Down / <b>Numpad 1-9</b>=Instrument hotkeys (configure in sidebar)</div>
+  <div class="hb"><b>Play:</b> Monophonic -- last arrow wins. <b>Space</b> (5-8) / <b>D</b> (9-12) / <b>Space+D</b> (13-16) / <b>Space+E</b> (17-20) / <b>Space+3</b> (21-24)<br><b>Modes:</b> <b>Z</b>=Impact / <b>Tab</b>=Sustain&#8644;Impact / <b>Ctrl</b>=Staccato / <b>V</b>=Legato<br><b>Key sig:</b> <b>Shift</b>=Swap alt scale / <b>Tab</b>=toggle sustain&#8644;impact<br><b>Volume:</b> <b>-</b> / <b>=</b> (or <b>Insert</b> / <b>PageUp</b>) = Down / Up<br><b>Power:</b> Drag the Power slider left (soft/quiet) or right (hard/loud + velocity boost)<br><b>Jam:</b> <b>F</b>=Enter / <b>Esc</b>=Exit / <b>T</b>=Toggle split / <b>N/P</b>=Next/Prev song<br><b>FX:</b> <b>`</b>=Random effect / <b>F4</b>=FX picker / <b>F5</b>=Cycle / <b>Numpad *</b>=Random / <b>Numpad /</b>=Toggle alternate<br><b>Octave:</b> <b>Num+</b>=Up / <b>Num-</b>=Down / <b>Numpad 1-9</b>=Instrument hotkeys (configure in sidebar)</div>
   </div>
   </div>
 </div>
@@ -597,7 +603,7 @@ var GMH={C3:"C3",A3:"A3",C4:"C4",A4:"A4",C5:"C5",A5:"A5",C6:"C6",A6:"A6",C7:"C7"
 function gm(id,l,folder,n){return{id:id,l:l,key:null,t:"samp",sbase:GM+folder+"-mp3/",n:n||GN,gain:18};}
 var MK="https://gleitz.github.io/midi-js-soundfonts/MusyngKite/";
 var FB="https://gleitz.github.io/midi-js-soundfonts/FatBoy/";
-function mk(id,l,folder,n){return{id:id,l:l,key:null,t:"samp",sbase:MK+folder+"-mp3/",n:n||GN,gain:18};}
+function mk(id,l,folder,n,gain){return{id:id,l:l,key:null,t:"samp",sbase:MK+folder+"-mp3/",n:n||GN,gain:gain||18};}
 function fb(id,l,folder,n){return{id:id,l:l,key:null,t:"samp",sbase:FB+folder+"-mp3/",n:n||GN,gain:18};}
 
 /* ============================================================
@@ -837,7 +843,7 @@ var CATS=[
     gm("gm-lead-charang","Lead: Charang","lead_5_charang"),
     gm("gm-lead-voice","Lead: Voice","lead_6_voice"),
     gm("gm-lead-fifths","Lead: Fifths","lead_7_fifths"),
-    gm("gm-lead-bass","Lead: Bass+Lead","lead_8_bass_lead"),
+    gm("gm-lead-bass","Lead: Bass+Lead","lead_8_bass__lead"),
     gm("gm-pad-newage","Pad: New Age","pad_1_new_age"),
     gm("gm-pad-warm","Pad: Warm","pad_2_warm"),
     gm("gm-pad-poly","Pad: Polysynth","pad_3_polysynth"),
@@ -876,9 +882,305 @@ var CATS=[
     {id:"casio-keys",l:"Casio Keys",key:null,t:"samp",
       sbase:"https://tonejs.github.io/audio/casio/",
       n:{A1:"A1",C2:"C2",E2:"E2","G#2":"Gs2",A2:"A2",C3:"C3",E3:"E3","G#3":"Gs3"},gain:6}
+  ]},
+  {id:"mk-keys",l:"Keys (MusyngKite)",c:"#DAA520",ac:"a5",col:"mk",items:[
+    mk("mk-grand-piano","MK Grand Piano","acoustic_grand_piano",GN,24),
+    mk("mk-bright-piano","MK Bright Piano","bright_acoustic_piano",GN,24),
+    mk("mk-electric-grand","MK Electric Grand","electric_grand_piano",GN,24),
+    mk("mk-honkytonk","MK Honky-tonk","honkytonk_piano",GN,24),
+    mk("mk-ep1","MK Electric Piano 1","electric_piano_1",GN,24),
+    mk("mk-ep2","MK Electric Piano 2","electric_piano_2",GN,24),
+    mk("mk-harpsichord","MK Harpsichord","harpsichord",GN,24),
+    mk("mk-clavinet","MK Clavinet","clavinet",GN,24),
+    mk("mk-celesta","MK Celesta","celesta",GH,24),
+    mk("mk-drawbar-organ","MK Drawbar Organ","drawbar_organ",GN,24),
+    mk("mk-perc-organ","MK Percussive Organ","percussive_organ",GN,24),
+    mk("mk-rock-organ","MK Rock Organ","rock_organ",GN,24),
+    mk("mk-church-organ","MK Church Organ","church_organ",GN,24),
+    mk("mk-reed-organ","MK Reed Organ","reed_organ",GN,24),
+    mk("mk-accordion","MK Accordion","accordion",GN,24),
+    mk("mk-harmonica","MK Harmonica","harmonica",GN,24),
+    mk("mk-tango-accordion","MK Tango Accordion","tango_accordion",GN,24)
+  ]},
+  {id:"mk-bass",l:"Bass (MusyngKite)",c:"#B8630B",ac:"a3",col:"mk",items:[
+    mk("mk-acoustic-bass","MK Acoustic Bass","acoustic_bass",GL,24),
+    mk("mk-finger-bass","MK Finger Bass","electric_bass_finger",GL,24),
+    mk("mk-pick-bass","MK Pick Bass","electric_bass_pick",GL,24),
+    mk("mk-fretless","MK Fretless Bass","fretless_bass",GL,24),
+    mk("mk-slap1","MK Slap Bass 1","slap_bass_1",GL,24),
+    mk("mk-slap2","MK Slap Bass 2","slap_bass_2",GL,24),
+    mk("mk-synth-bass1","MK Synth Bass 1","synth_bass_1",GL,24),
+    mk("mk-synth-bass2","MK Synth Bass 2","synth_bass_2",GL,24)
+  ]},
+  {id:"mk-strings",l:"Strings & Choir (MusyngKite)",c:"#2E8B57",ac:"a1",col:"mk",items:[
+    mk("mk-violin","MK Violin","violin",GW,24),
+    mk("mk-viola","MK Viola","viola",GW,24),
+    mk("mk-cello","MK Cello","cello",GW,24),
+    mk("mk-contrabass","MK Contrabass","contrabass",GL,24),
+    mk("mk-tremolo","MK Tremolo Strings","tremolo_strings",GW,24),
+    mk("mk-pizzicato","MK Pizzicato","pizzicato_strings",GW,24),
+    mk("mk-harp","MK Orchestral Harp","orchestral_harp",GW,24),
+    mk("mk-timpani","MK Timpani","timpani",GL,24),
+    mk("mk-ensemble1","MK String Ensemble 1","string_ensemble_1",GW,24),
+    mk("mk-ensemble2","MK String Ensemble 2","string_ensemble_2",GW,24),
+    mk("mk-synth-str1","MK Synth Strings 1","synth_strings_1",GW,24),
+    mk("mk-synth-str2","MK Synth Strings 2","synth_strings_2",GW,24),
+    mk("mk-choir-aahs","MK Choir Aahs","choir_aahs",GN,24),
+    mk("mk-voice-oohs","MK Voice Oohs","voice_oohs",GN,24),
+    mk("mk-synth-choir","MK Synth Choir","synth_choir",GN,24),
+    mk("mk-orchestra-hit","MK Orchestra Hit","orchestra_hit",GN,24)
+  ]},
+  {id:"mk-brass",l:"Brass & Wind (MusyngKite)",c:"#4682B4",ac:"a4",col:"mk",items:[
+    mk("mk-trumpet","MK Trumpet","trumpet",GN,24),
+    mk("mk-trombone","MK Trombone","trombone",GN,24),
+    mk("mk-tuba","MK Tuba","tuba",GL,24),
+    mk("mk-muted-trumpet","MK Muted Trumpet","muted_trumpet",GN,24),
+    mk("mk-french-horn","MK French Horn","french_horn",GN,24),
+    mk("mk-brass-section","MK Brass Section","brass_section",GN,24),
+    mk("mk-synth-brass1","MK Synth Brass 1","synth_brass_1",GN,24),
+    mk("mk-synth-brass2","MK Synth Brass 2","synth_brass_2",GN,24),
+    mk("mk-soprano-sax","MK Soprano Sax","soprano_sax",GN,24),
+    mk("mk-alto-sax","MK Alto Sax","alto_sax",GN,24),
+    mk("mk-tenor-sax","MK Tenor Sax","tenor_sax",GN,24),
+    mk("mk-bari-sax","MK Baritone Sax","baritone_sax",GN,24),
+    mk("mk-oboe","MK Oboe","oboe",GN,24),
+    mk("mk-english-horn","MK English Horn","english_horn",GN,24),
+    mk("mk-bassoon","MK Bassoon","bassoon",GN,24),
+    mk("mk-clarinet","MK Clarinet","clarinet",GN,24),
+    mk("mk-piccolo","MK Piccolo","piccolo",GH,24),
+    mk("mk-flute","MK Flute","flute",GMH,24),
+    mk("mk-recorder","MK Recorder","recorder",GH,24),
+    mk("mk-pan-flute","MK Pan Flute","pan_flute",GMH,24),
+    mk("mk-blown-bottle","MK Blown Bottle","blown_bottle",GMH,24),
+    mk("mk-shakuhachi","MK Shakuhachi","shakuhachi",GN,24),
+    mk("mk-whistle","MK Whistle","whistle",GH,24),
+    mk("mk-ocarina","MK Ocarina","ocarina",GH,24)
+  ]},
+  {id:"mk-perc",l:"Perc & World (MusyngKite)",c:"#FF7F50",ac:"a3",col:"mk",items:[
+    mk("mk-glockenspiel","MK Glockenspiel","glockenspiel",GH,24),
+    mk("mk-music-box","MK Music Box","music_box",GH,24),
+    mk("mk-vibraphone","MK Vibraphone","vibraphone",GN,24),
+    mk("mk-marimba","MK Marimba","marimba",GN,24),
+    mk("mk-xylophone","MK Xylophone","xylophone",GH,24),
+    mk("mk-tubular-bells","MK Tubular Bells","tubular_bells",GN,24),
+    mk("mk-dulcimer","MK Dulcimer","dulcimer",GN,24),
+    mk("mk-kalimba","MK Kalimba","kalimba",GN,24),
+    mk("mk-steel-drums","MK Steel Drums","steel_drums",GN,24),
+    mk("mk-tinkle-bell","MK Tinkle Bell","tinkle_bell",GH,24),
+    mk("mk-agogo","MK Agogo","agogo",GN,24),
+    mk("mk-woodblock","MK Woodblock","woodblock",GN,24),
+    mk("mk-taiko","MK Taiko Drum","taiko_drum",GN,24),
+    mk("mk-melodic-tom","MK Melodic Tom","melodic_tom",GN,24),
+    mk("mk-synth-drum","MK Synth Drum","synth_drum",GN,24),
+    mk("mk-sitar","MK Sitar","sitar",GN,24),
+    mk("mk-banjo","MK Banjo","banjo",GN,24),
+    mk("mk-shamisen","MK Shamisen","shamisen",GN,24),
+    mk("mk-koto","MK Koto","koto",GN,24),
+    mk("mk-bagpipe","MK Bagpipe","bagpipe",GN,24),
+    mk("mk-fiddle","MK Fiddle","fiddle",GW,24),
+    mk("mk-shanai","MK Shanai","shanai",GMH,24)
+  ]},
+  {id:"mk-synth",l:"Synth (MusyngKite)",c:"#9370DB",ac:"a4",col:"mk",items:[
+    mk("mk-lead-square","MK Lead: Square","lead_1_square",GN,24),
+    mk("mk-lead-saw","MK Lead: Sawtooth","lead_2_sawtooth",GN,24),
+    mk("mk-lead-calliope","MK Lead: Calliope","lead_3_calliope",GN,24),
+    mk("mk-lead-chiff","MK Lead: Chiff","lead_4_chiff",GN,24),
+    mk("mk-lead-charang","MK Lead: Charang","lead_5_charang",GN,24),
+    mk("mk-lead-voice","MK Lead: Voice","lead_6_voice",GN,24),
+    mk("mk-lead-fifths","MK Lead: Fifths","lead_7_fifths",GN,24),
+    mk("mk-lead-bass","MK Lead: Bass+Lead","lead_8_bass__lead",GN,24),
+    mk("mk-pad-newage","MK Pad: New Age","pad_1_new_age",GN,24),
+    mk("mk-pad-warm","MK Pad: Warm","pad_2_warm",GN,24),
+    mk("mk-pad-poly","MK Pad: Polysynth","pad_3_polysynth",GN,24),
+    mk("mk-pad-choir","MK Pad: Choir","pad_4_choir",GN,24),
+    mk("mk-pad-bowed","MK Pad: Bowed","pad_5_bowed",GN,24),
+    mk("mk-pad-metallic","MK Pad: Metallic","pad_6_metallic",GN,24),
+    mk("mk-pad-halo","MK Pad: Halo","pad_7_halo",GN,24),
+    mk("mk-pad-sweep","MK Pad: Sweep","pad_8_sweep",GN,24),
+    mk("mk-fx-rain","MK FX: Rain","fx_1_rain",GN,24),
+    mk("mk-fx-soundtrack","MK FX: Soundtrack","fx_2_soundtrack",GN,24),
+    mk("mk-fx-crystal","MK FX: Crystal","fx_3_crystal",GN,24),
+    mk("mk-fx-atmosphere","MK FX: Atmosphere","fx_4_atmosphere",GN,24),
+    mk("mk-fx-brightness","MK FX: Brightness","fx_5_brightness",GN,24),
+    mk("mk-fx-goblins","MK FX: Goblins","fx_6_goblins",GN,24),
+    mk("mk-fx-echoes","MK FX: Echoes","fx_7_echoes",GN,24),
+    mk("mk-fx-scifi","MK FX: Sci-Fi","fx_8_scifi",GN,24)
+  ]},
+  {id:"mello",l:"Mellotron",c:"#B5651D",ac:"a3",col:"mello",items:[
+    {id:"mel-tron-flute",l:"Tron Flute",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/TRON%20FLUTE/",ext:".m4a",
+      n:{"G3":"G1 TRON FLUT","A#3":"A#1 TRON FLU","C#4":"C#2 TRON FLU","E4":"E2 TRON FLUT","G4":"G2 TRON FLUT","A#4":"A#2 TRON FLU","D5":"D3 TRON FLUT","F5":"F3 TRON FLT","G#5":"G#3TRON FLUT","B5":"B3TRON FLUTE","D6":"D4TRON FLUTE","F6":"F4TRON FLUTE"},gain:-1},
+    {id:"mel-mkii-violins",l:"MkII Violins",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/MKII%20VIOLINS/",ext:".m4a",
+      n:{"G3":"G1 3 VLNS","A#3":"A#1 3 VLNS","C#4":"C#2 3 VLNS","E4":"E2 3 VLNS","G4":"G2 3 VLNS","A#4":"A#2 3 VLNS","D5":"D3 3 VLNS","F5":"F3 3 VLNS","G#5":"G#3 3 VLNS","B5":"B3 3 VLNS","D6":"D4 3 VLNS","F6":"F4 3 VLNS"},gain:2},
+    {id:"mel-tron-16-violins",l:"Tron 16 Violins",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/TRON%2016VLNS/",ext:".m4a",
+      n:{"G3":"G1 16 VIOLIN","A#3":"A#1 16 VIOLI","C#4":"C#2 16 VIOLI","E4":"E2 16 VIOLIN","G4":"G2 16 VIOLIN","A#4":"A#2 16 VIOLI","D5":"D3 16 VIOLIN","F5":"F3 16 VIOLIN","G#5":"G#3 16 VIOLI","B5":"B3 16 VIOLIN","D6":"D4 16 VIOLIN","F6":"F4 16 VIOLIN"},gain:2},
+    {id:"mel-tron-cello",l:"Tron Cello",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/TRON%20CELLO/",ext:".m4a",
+      n:{"G1":"G1  TRON CEL","A#1":"A#1TRON CELL","C#2":"C#2TRON CELL","E2":"E2TRON CELLO","G2":"G2TRON CELLO","A#2":"A#2TRON CELL","D3":"D3TRON CELLO","F3":"F3 TRON CELL","G#3":"G#3 TRON CEL","B3":"B3 TRON CELL","D4":"D4 TRON CELL","F4":"F4 TRON CELL"},gain:1},
+    {id:"mel-tron-viola",l:"Tron Viola",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/TRON%20VIOLA/",ext:".m4a",
+      n:{"G2":"G1 VIOLA","A#2":"A#1 VIOLA","C#3":"C#2 VIOLA","E3":"E2 VIOLA","G3":"G2 VIOLA","A#3":"A#2 VIOLA","D4":"D3 VIOLA","F4":"F3 VIOLA","G#4":"G#3 VIOLA","B4":"B3 VIOLA","D5":"D4 VIOLA","F5":"F4 VIOLA"},gain:-2},
+    {id:"mel-m300-viola",l:"M300 Viola",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/300%20STRINGS/",ext:".m4a",
+      n:{"E3":"E3 300 VIOLA","G3":"G3 300 VIOLA","A#3":"A#3 300 VIOL","C4":"C4 300 VIOLA","D#4":"D#4 300 VIOL","F#4":"F#4 300 VIOL","A4":"A4 300 VIOLA","C5":"C5 300 VIOLA","D#5":"D#5 300 VIOL","F5":"F5 300 VIOLA","G#5":"G#5 300 VIOL","C6":"C6 300 VIOLA"},gain:0},
+    {id:"mel-m300-cello",l:"M300 Cello",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/300%20STRINGS/",ext:".m4a",
+      n:{"A2":"A1.300 CELLO","B2":"B1.300 CELLO","C3":"C2. 300 CELL","D3":"D2.300 CELLO","E3":"E2.300 CELLO","F3":"F2. 300 CELL","G3":"G2.300 CELLO","G#3":"G#2.300 CELL","A#3":"A#2.300 CELL","C4":"C3 300 CELLO","C#4":"C#3300.CELLO","D#4":"D#3 300 CELL"},gain:0},
+    {id:"mel-mixed-strings",l:"Mixed Strings",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/MIXED%20STRGS/",ext:".m4a",
+      n:{"G2":"G1 MIXED STR","A#2":"A#1 MIXED ST","C#3":"C#2 MIXED ST","E3":"E2 MIXED STR","G3":"G2 MIXED STR","A#3":"A#2 MIXED ST","D4":"D3 MIXED STR","F4":"F3 MIXED STR","G#4":"G#3 MIXED ST","B4":"B3 MIXED STR","D5":"D4 MIXED STR","F5":"F4 MIXED STR"},gain:0},
+    {id:"mel-8-voice-choir",l:"8-Voice Choir",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/8VOICE%20CHOIR/",ext:".m4a",
+      n:{"G2":"G1 8VOICE CH","A#2":"A#18VOICE CH","C#3":"C#28VOICE CH","E3":"E2 8VOICE CH","G3":"G2 8VOICE CH","A#3":"A#28VOICE CH","D4":"D3 8VOICE CH","F4":"F3 8VOICE CH","G#4":"G#38VOICE CH","B4":"B3 8VOICE CH","D5":"D4 8VOICE CH","F5":"F4 8VOICE CH"},gain:1},
+    {id:"mel-boys-choir",l:"Boys Choir",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/BOYS%20CHOIR/",ext:".m4a",
+      n:{"G3":"G1 BOYS CHOI","A#3":"A#1 BOYS CHO","C#4":"C#2 BOYS CHO","E4":"E2 BOYS CHOI","G4":"G2 BOYS CHOI","A#4":"A#2 BOYS CHO","D5":"D3 BOYS CHOI","F5":"F3 BOYS CHOI","G#5":"G#3 BOYS CHO","B5":"B3 BOYS CHOI","D6":"D4 BOYS CHOI","F6":"F4 BOYS CHOI"},gain:-1},
+    {id:"mel-mkii-brass",l:"MkII Brass",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/MKII%20BRASS/",ext:".m4a",
+      n:{"G2":"G1 BRS","A#2":"A#1 BRS","C#3":"C#2 BRS","E3":"E2 BRS","G3":"G2 BRS","A#3":"A#2 BRS","D4":"D3 BRS","F4":"F3 BRS","G#4":"G#3 BRS","B4":"B3 BRS","D5":"D4 BRS","F5":"F4 BRS"},gain:3},
+    {id:"mel-half-speed-brass",l:"Half-Speed Brass",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/HALFSP.BRASS/",ext:".m4a",
+      n:{"G1":"G1 1 2 BRASS","A#1":"A#1 1 2 BRAS","C#2":"C#2 1 2 BRAS","E2":"E2 1 2 BRASS","G2":"G2 1 2 BRASS","A#2":"A#2 1 2 BRAS","D3":"D3 1 2 BRASS","F3":"F3 1 2 BRASS","G#3":"G#3 1 2 BRS","B3":"B3 1 2 BRASS","D4":"D4 1 2 BRASS","F4":"F4 1 2 BRASS"},gain:0},
+    {id:"mel-strings-brass",l:"Strings + Brass",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/STRGS%2BBRASS/",ext:".m4a",
+      n:{"G2":"G1 STNG BRS","A#2":"A#1 STNG BRS","C#3":"C#2 STNG BRS","E3":"E2 STNG BRS","G3":"G2 STNG BRS","A#3":"A#2 STNG BRS","D4":"D3 STNG BRS","F4":"F3 STNG BRS","G#4":"G#3 STNG BRS","B4":"B3 STNG BRS","D5":"D4 STNG BRS","F5":"F4 STNG BRS"},gain:3},
+    {id:"mel-trombone-trumpet",l:"Trombone + Trumpet",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/TROMB%2BTRMPT/",ext:".m4a",
+      n:{"G2":"G1 TRMB TRMP","A#2":"A#1TRMB TRMP","C#3":"C#2TRMB TRMP","E3":"E2TRMB TRMP","G3":"G2TRMB TRMP","A#3":"A#2TRMB TRMP","D4":"D3TRMB TRMP","F4":"F3TRMB TRMP","G#4":"G#3TRMB TRMP","B4":"B3TRMB TRMP","D5":"D4TRMB TRMP","F5":"F4TRMB TRMP"},gain:2},
+    {id:"mel-mkii-sax",l:"MkII Sax",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/MKII%20SAX/",ext:".m4a",
+      n:{"G2":"G1 MKII SAX","A#2":"A#1 MKII SAX","C#3":"C#2 MKII SAX","E3":"E2 MKII SAX","G3":"G2 MKII SAX","A#3":"A#2 MKII SAX","D4":"D3 MKII SAX","F4":"F3 MKII SAX","G#4":"G#3 MKII SAX","B4":"B3 MKII SAX","D5":"D4 MKII SAX","F5":"F4 MKII SAX"},gain:2},
+    {id:"mel-mkii-organ",l:"MkII Organ",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/MKII%20ORGAN/",ext:".m4a",
+      n:{"G2":"G1 ORGAN","A#2":"A#1ORGAN","C#3":"C#2ORGAN","E3":"E2ORGAN","G3":"G2ORGAN","A#3":"A#2ORGAN","D4":"D3ORGAN","F4":"F3ORGAN","G#4":"G#3ORGAN","B4":"B3ORGAN","D5":"D4ORGAN","F5":"F4ORGAN"},gain:-1},
+    {id:"mel-mkii-guitar",l:"MkII Guitar",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/MKII%20GUITAR/",ext:".m4a",
+      n:{"G2":"G1 GUITAR","A#2":"A#1GUITAR","C#3":"C#2GUITAR","E3":"E2GUITAR","G3":"G2GUITAR","A#3":"A#2GUITAR","D4":"D3GUITAR","F4":"F3GUITAR","G#4":"G#3GUITAR","B4":"B3GUITAR","D5":"D4GUITAR","F5":"F4GUITAR"},gain:1},
+    {id:"mel-mkii-vibes",l:"MkII Vibes",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/MKII%20VIBES/",ext:".m4a",
+      n:{"G3":"G1 VIBES","A#3":"A#1 VIBES","C#4":"C#2 VIBES","E4":"E2 VIBES","G4":"G2 VIBES","A#4":"A#2 VIBES","D5":"D3 VIBES","F5":"F3 VIBES","G#5":"G#3 VIBES","B5":"B3 VIBES","D6":"D4 VIBES","F6":"F4 VIBES"},gain:-3}
+  ]},
+  {id:"chamberlin",l:"Chamberlin",c:"#8B5A2B",ac:"a3",col:"mello",items:[
+    {id:"cham-3-violins",l:"Chamberlin 3 Violins",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMB%203%20VLNS/",ext:".m4a",
+      n:{"G3":"G1 VLNS","A#3":"A#1 VLNS","C#4":"C#2 VLNS","E4":"E2 VLNS","G4":"G2 VLNS","A#4":"A#2 VLNS","D5":"D3 VLNS","F5":"F3 VLNS","G#5":"G#3 VLNS","B5":"B3 VLNS","D6":"D4 VLNS","F6":"F4 VLNS"},gain:0},
+    {id:"cham-alto-sax",l:"Chamberlin Alto Sax",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMB%20ALTOSAX/",ext:".m4a",
+      n:{"G3":"G1 ALTO SAX","A#3":"A#1 ALTO SAX","C#4":"C#2ALTO SAX","E4":"E2  ALTO SAX","G4":"G2  ALTO SAX","A#4":"A#2ALTO SAX","D5":"D3  ALTO SAX","F5":"F3 ALTO SAX","G#5":"G#3ALTO SAX","B5":"B3  ALTO SAX","D6":"D4  ALTO SAX","F6":"F4 ALTO SAX"},gain:-3},
+    {id:"cham-cello",l:"Chamberlin Cello",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMBLN%20CELLO/",ext:".m4a",
+      n:{"G2":"G1 CH CELLO","A#2":"A#1 CH CELLO","C#3":"C#2 CH CELLO","E3":"E2 CH CELLO","G3":"G2 CH CELLO","A#3":"A#2 CH CELLO","D4":"D3 CH CELLO","F4":"F3 CH CELLO","G#4":"G#3 CH CELLO","B4":"B3 CH CELLO","D5":"D4 CH CELLO","F5":"F4 CH CELLO"},gain:0},
+    {id:"cham-clarinet",l:"Chamberlin Clarinet",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHM%20CLARINET/",ext:".m4a",
+      n:{"C#2":"C#1 CLRT","A2":"A1 CLRT","C3":"C2 CLRT","D#3":"D#2 CLRT","F#3":"F#2 CLRT","A3":"A2 CLRT","C#4":"C#3 CLRT","E4":"E3 CLRT","G4":"G3 CLRT","A#4":"A#3 CLRT","D5":"D4 CLRT","F5":"F4 CLRT"},gain:-3},
+    {id:"cham-female-voice",l:"Chamberlin Female Voice",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMB%20FEMALE/",ext:".m4a",
+      n:{"C3":"C1 FEMALE","D4":"D2 FEMALE","E4":"E2 FEMALE","G4":"G2 FEMALE","A4":"A2 FEMALE","B4":"B2 FEMALE","C#5":"C#3 FEMALE","D#5":"D#3 FEMALE","F5":"F3 FEMALE","G#5":"G#3 FEMALE","A#5":"A#3 FEMALE","C6":"C4 FEMALE"},gain:-1},
+    {id:"cham-flute",l:"Chamberlin Flute",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMBLN%20FLUTE/",ext:".m4a",
+      n:{"G3":"G1 CH FLT","A#3":"A#1 CH FLT","C#4":"C#2 CH FLT","E4":"E2 CH FLT","G4":"G2 CH FLT","A#4":"A#2 CH FLT","D5":"D3 CH FLT","F5":"F3 CH FLT","G#5":"G#3 CH FLT","B5":"B3 CH FLT","D6":"D4 CH FLT","F6":"F4 CH FLT"},gain:-3},
+    {id:"cham-male-voice",l:"Chamberlin Male Voice",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMB%20MALE%20VC/",ext:".m4a",
+      n:{"G2":"G1 CHAMB MAL","A#2":"A#1 CHAMB MA","C#3":"C#2 CHAMB MA","E3":"E2 CHAMB MAL","G3":"G2 CHAMB MAL","A#3":"A#2 CHAMB MA","D4":"D3 CHAMB MAL","F4":"F3 CHAMB MAL","G#4":"G#3 CHAMB MA","B4":"B3 CHAMB MA","D5":"D4 CHAMB MAL","F5":"F4 CHAMB MAL"},gain:-1},
+    {id:"cham-oboe",l:"Chamberlin Oboe",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMBLN%20OBOE/",ext:".m4a",
+      n:{"A#3":"A#1 OBOE","C#4":"C#2 OBOE","E4":"E2 OBOE","F#4":"F#2 OBOE","A4":"A2 OBOE","C5":"C3 OBOE","D#5":"D#3 OBOE","F#5":"F#3 OBOE","A5":"A3 OBOE","B5":"B3 OBOE","D6":"D4 OBOE","F6":"F4 OBOE"},gain:-3},
+    {id:"cham-tenor-sax",l:"Chamberlin Tenor Sax",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMB%20TNR%20SAX/",ext:".m4a",
+      n:{"G#2":"G#1 T SAX","B2":"B1 T SAX","D3":"D2 T SAX","F3":"F2 T SAX","G#3":"G#2 T SAX","B3":"B2 T SAX","D4":"D3 T SAX","F4":"F3 T SAX","G#4":"G#3 T SAX","B4":"B3 T SAX","D5":"D4 T SAX","F5":"F4 T SAX"},gain:-2},
+    {id:"cham-trombone",l:"Chamberlin Trombone",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMB%20TRMBONE/",ext:".m4a",
+      n:{"G2":"G1 TROMBONE","A#2":"A#1 TROMBONE","C#3":"C#2 TROMBONE","E3":"E2 TROMBONE","G3":"G2 TROMBONE","A#3":"A#2 TROMBONE","C4":"C3 TROMBONE","D#4":"D#3TROMBONE","F#4":"F#3TROMBONE","A4":"A3TROMBONE","C5":"C4TROMBONE","F5":"F4TROMBONE"},gain:-2},
+    {id:"cham-trumpet",l:"Chamberlin Trumpet",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/archiveorg-mellotron/CHMB%20TRUMPET/",ext:".m4a",
+      n:{"G3":"G1 TRUMPET","A#3":"A#1 TRUMPET","C#4":"C#2 TRUMPET","E4":"E2 TRUMPET","G4":"G2 TRUMPET","A#4":"A#2 TRUMPET","D5":"D3TRUMPET","F5":"F3TRUMPET","G#5":"G#3TRUMPET","B5":"B3TRUMPET","D6":"D4TRUMPET","F6":"F4TRUMPET"},gain:-2}
+  ]},
+  {id:"epiano",l:"Electric Pianos",c:"#E0A030",ac:"a5",col:"ep",items:[
+    {id:"ep-wurlitzer-ep200",l:"Wurlitzer EP200",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sfzinstruments-greg-sullivan-e-pianos/wurlitzer-ep200/samples/",ext:".m4a",
+      n:{"A1":"a1ff","E2":"e2mp","F2":"f2ff","A2":"a2mp","D#3":"eb3mp","E3":"e3ff","C#4":"db4ff","E4":"e4ff","G#4":"ab4f","C#5":"db5ff","G5":"g5ff","G#6":"ab6f"},
+      adj:{"A1":[-5,0],"E2":[-4,0],"F2":[-6,0],"D#3":[-9,0],"E4":[-3,0],"C#5":[0,1.7],"G5":[-7,0]},gain:-1},
+    {id:"ep-yamaha-cp80",l:"Yamaha CP80",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sfzinstruments-greg-sullivan-e-pianos/cp80/samples/",ext:".m4a",
+      n:{"D#1":"027-D#1-MP","B1":"035-B1-FF","A#2":"046-A#2-F","A3":"057-A3-MP","D#4":"063-D#4-MP","G#4":"068-G#4-MP","C5":"072-C5-FF","A#5":"082-A#5-FF","E6":"088-E6-FF","B6":"095-B6-F","C#7":"097-C#7-F","B7":"107-B7-F"},
+      adj:{"D#1":[0,3.0],"B1":[0,2.0],"A#5":[0,2.0]},gain:0}
+  ]},
+  {id:"vc-keys",l:"Versilian Keys & Strings",c:"#3CB371",ac:"a1",col:"vcsl",items:[
+    {id:"vc-concert-harp",l:"Concert Harp",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Composite%20Chordophones/Concert%20Harp/",ext:".m4a",
+      n:{"E1":"KSHarp_E1_f1","B1":"KSHarp_B1_f1","D2":"KSHarp_D2_f1","E3":"KSHarp_E3_f1","G3":"KSHarp_G3_f1","D4":"KSHarp_D4_mf1","A4":"KSHarp_A4_f1","E5":"KSHarp_E5_f1","G5":"KSHarp_G5_f1","A6":"KSHarp_A6_f1","B6":"KSHarp_B6_f1","F7":"KSHarp_F7_f1"},
+      adj:{"E1":[22,0],"B1":[10,-2.3],"D2":[0,-7.3],"E3":[-3,2.2],"G3":[-3,-2.9],"D4":[7,3.8],"A4":[10,0],"E5":[6,-4.9],"G5":[6,0],"A6":[8,0],"B6":[8,-4.1],"F7":[22,0]},gain:23},
+    {id:"vc-folk-harp",l:"Folk Harp",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Composite%20Chordophones/Folk%20Harp/",ext:".m4a",
+      n:{"C2":"EWHarp_Normal_C1_v3_RR1","E2":"EWHarp_Normal_E1_v3_RR1","G#2":"EWHarp_Normal_G#1_v3_RR1","F#3":"EWHarp_Normal_F#2_v3_RR1","A#3":"EWHarp_Normal_A#2_v3_RR1","D4":"EWHarp_Normal_D3_v3_RR1","F#4":"EWHarp_Normal_F#3_v3_RR1","A#4":"EWHarp_Normal_A#3_v3_RR1","D5":"EWHarp_Normal_D4_v3_RR1","C6":"EWHarp_Normal_C5_v3_RR1","E6":"EWHarp_Normal_E5_v3_RR1","G#6":"EWHarp_Normal_G#5_v3_RR1"},
+      adj:{"C2":[-41,4.3],"E2":[-19,-3.9],"G#2":[-11,1.8],"F#3":[-5,0],"A#3":[-6,1.9],"D4":[-3,0],"A#4":[-4,-1.7],"D5":[-5,-2.8],"C6":[-9,4.3],"E6":[0,6.3],"G#6":[-5,-1.6]},gain:15},
+    {id:"vc-french-harpsichord",l:"French Harpsichord",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Zithers/Harpsichord%2C%20French/Sustains/",ext:".m4a",
+      n:{"D1":"Harpsi2_Normal_D0_rr1_Main","A#1":"Harpsi2_Normal_A#0_rr1_Main","D2":"Harpsi2_Normal_D1_rr1_Main","A#2":"Harpsi2_Normal_A#1_rr1_Main","D3":"Harpsi2_Normal_D2_rr1_Main","F#3":"Harpsi2_Normal_F#2_rr1_Main","C4":"Harpsi2_Normal_C3_rr1_Main","E4":"Harpsi2_Normal_E3_rr1_Main","G#4":"Harpsi2_Normal_G#3_rr1_Main","E5":"Harpsi2_Normal_E4_rr1_Main","G#5":"Harpsi2_Normal_G#4_rr1_Main","C6":"Harpsi2_Normal_C5_rr1_Main"},
+      adj:{"D1":[0,4.4],"D2":[0,3.2],"D3":[0,1.6],"C4":[0,1.6],"G#5":[0,-3.2],"C6":[0,5.5]},gain:15},
+    {id:"vc-italian-harpsichord",l:"Italian Harpsichord",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Zithers/Harpsichord%2C%20Italian/Sustains/stop1/",ext:".m4a",
+      n:{"F#1":"Harpsichord_stop1_F#0_1","A#1":"Harpsichord_stop1_A#0_1","D#2":"Harpsichord_stop1_D#1_1","B2":"Harpsichord_stop1_B1_1","D#3":"Harpsichord_stop1_D#2_1","F#3":"Harpsichord_stop1_F#2_1","B3":"Harpsichord_stop1_B2_1","D#4":"Harpsichord_stop1_D#3_1","F#4":"Harpsichord_stop1_F#3_1","D#5":"Harpsichord_stop1_D#4_1","G#5":"Harpsichord_stop1_G#4_1","B5":"Harpsichord_stop1_B4_1"},
+      adj:{"F#1":[0,-1.8],"A#1":[0,2.8],"D#2":[0,1.8],"B2":[0,1.8],"D#3":[0,-2.1],"D#4":[0,6.8],"G#5":[0,-1.8],"B5":[0,1.5]},gain:12},
+    {id:"vc-lute-harpsichord",l:"Lute Harpsichord",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Zithers/Harpsichord%2C%20English/Sustains/Lute/",ext:".m4a",
+      n:{"A#1":"ZuckermannKitHarpsi_Lute_Sus_A#0_rr1","D2":"ZuckermannKitHarpsi_Lute_Sus_D1_rr1","F#2":"ZuckermannKitHarpsi_Lute_Sus_F#1_rr1","E3":"ZuckermannKitHarpsi_Lute_Sus_E2_rr1","G#3":"ZuckermannKitHarpsi_Lute_Sus_G#2_rr1","C4":"ZuckermannKitHarpsi_Lute_Sus_C3_rr1","E4":"ZuckermannKitHarpsi_Lute_Sus_E3_rr1","G#4":"ZuckermannKitHarpsi_Lute_Sus_G#3_rr1","C5":"ZuckermannKitHarpsi_Lute_Sus_C4_rr1","G#5":"ZuckermannKitHarpsi_Lute_Sus_G#4_rr1","C6":"ZuckermannKitHarpsi_Lute_Sus_C5_rr1","E6":"ZuckermannKitHarpsi_Lute_Sus_E5_rr1"},
+      adj:{"F#2":[0,-2.5],"G#3":[0,7.9],"C4":[0,-4.2],"C5":[0,1.5],"G#5":[0,-1.7],"E6":[0,3.0]},gain:19},
+    {id:"vc-upright-piano",l:"Upright Piano",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Zithers/Upright%20Piano%2C%20Knight/Sustains/",ext:".m4a",
+      n:{"A0":"Player_vl2_rr1_A-1","D#1":"Player_vl2_rr1_D#0","B1":"Player_vl2_rr1_B0","C#3":"Player_vl2_rr1_C#2","G3":"Player_vl2_rr1_G2","C#4":"Player_vl2_rr1_C#3","A4":"Player_vl2_rr1_A3","D#5":"Player_vl2_rr1_D#4","A5":"Player_vl2_rr1_A4","B6":"Player_vl2_rr1_B5","G7":"Player_vl2_rr1_G6","C8":"Player_vl2_rr1_C7"},
+      adj:{"A0":[-6,0],"D#1":[-22,0],"B1":[-4,0],"C#3":[-4,0],"G3":[-4,0],"C#4":[-4,2.5],"A4":[-7,0],"D#5":[-3,-4.2],"A5":[-11,0],"B6":[-13,2.0],"G7":[-37,2.4],"C8":[0,1.6]},gain:10},
+    {id:"vc-steinway-b-grand",l:"Steinway B Grand",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Zithers/Grand%20Piano%2C%20Steinway%20B/Sus/",ext:".m4a",
+      n:{"A#0":"JHPiano_Sus_Close_A#0_vl4_rr1","E1":"JHPiano_Sus_Close_E1_vl4_rr1","A#1":"JHPiano_Sus_Close_A#1_vl4_rr1","C3":"JHPiano_Sus_Close_C3_vl4_rr1","F#3":"JHPiano_Sus_Close_F#3_vl4_rr1","C4":"JHPiano_Sus_Close_C4_vl4_rr1","F#4":"JHPiano_Sus_Close_F#4_vl4_rr1","C5":"JHPiano_Sus_Close_C5_vl4_rr1","F#5":"JHPiano_Sus_Close_F#5_vl4_rr1","G#6":"JHPiano_Sus_Close_G#6_vl4_rr1","D7":"JHPiano_Sus_Close_D7_vl4_rr1","G#7":"JHPiano_Sus_Close_G#7_vl4_rr1"},
+      adj:{"F#4":[0,1.6],"F#5":[0,2.2],"D7":[0,2.2],"G#7":[0,4.8]},gain:5},
+    {id:"vc-dan-tranh",l:"Dan Tranh",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Zithers/Dan%20Tranh/Normal/",ext:".m4a",
+      n:{"B2":"B1_ff_1","C#3":"C#2_ff_1","D#3":"D#2_ff_1","B3":"B2_ff_1","C#4":"C#3_ff_1","D#4":"D#3_ff_1","F#4":"F#3_ff_1","G#4":"G#3_ff_1","B4":"B3_ff_1","F#5":"F#4_ff_1","G#5":"G#4_ff_1","B5":"B4_ff_1"},
+      adj:{"B2":[0,1.7],"D#3":[0,4.9],"B3":[0,-5.2],"C#4":[0,-2.4],"D#4":[0,-1.5],"F#4":[0,-2.2],"G#4":[0,-2.7],"F#5":[0,4.0],"G#5":[0,4.9]},gain:18},
+    {id:"vc-bowed-psaltery",l:"Bowed Psaltery",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Zithers/Psaltery%2C%20Bowed%20and%20Plucked/LongBow/",ext:".m4a",
+      n:{"A#4":"BowedPsaltery_A#3_Main_LongBow_rr2","C5":"BowedPsaltery_C4_Main_LongBow_rr1","D5":"BowedPsaltery_D4_Main_LongBow_rr1","E5":"BowedPsaltery_E4_Main_LongBow_rr2","F#5":"BowedPsaltery_F#4_Main_LongBow_rr1","G#5":"BowedPsaltery_G#4_Main_LongBow_rr1","A#5":"BowedPsaltery_A#4_Main_LongBow_rr2","C6":"BowedPsaltery_C5_Main_LongBow_rr1","D6":"BowedPsaltery_D5_Main_LongBow_rr2","E6":"BowedPsaltery_E5_Main_LongBow_rr2","F#6":"BowedPsaltery_F#5_Main_LongBow_rr2"},
+      adj:{"A#4":[0,5.2],"D5":[0,-6.6],"E5":[0,1.8],"C6":[0,-3.4],"E6":[0,-2.4]},gain:25},
+    {id:"vc-plucked-psaltery",l:"Plucked Psaltery",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Zithers/Psaltery%2C%20Bowed%20and%20Plucked/Pluck/",ext:".m4a",
+      n:{"A#4":"BowedPsaltery_A#3_Main_Pluck_rr1","C5":"BowedPsaltery_C4_Main_Pluck_rr1","D5":"BowedPsaltery_D4_Main_Pluck_rr1","E5":"BowedPsaltery_E4_Main_Pluck_rr2","F#5":"BowedPsaltery_F#4_Main_Pluck_rr1","G#5":"BowedPsaltery_G#4_Main_Pluck_rr3","A#5":"BowedPsaltery_A#4_Main_Pluck_rr1","C6":"BowedPsaltery_C5_Main_Pluck_rr1","D6":"BowedPsaltery_D5_Main_Pluck_rr1","E6":"BowedPsaltery_E5_Main_Pluck_rr1","F#6":"BowedPsaltery_F#5_Main_Pluck_rr3"},
+      adj:{"A#4":[-10,0],"C5":[-6,-2.5],"D5":[-4,-4.2],"E5":[-5,2.7],"F#5":[-7,3.3],"A#5":[-4,0],"C6":[-3,-5.9],"D6":[-8,0],"E6":[-7,0],"F#6":[-7,0]},gain:24},
+    {id:"vc-strumstick",l:"Strumstick",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Chordophones/Composite%20Chordophones/Strumstick/Finger/",ext:".m4a",
+      n:{"D3":"Strumstick_Finger_Str1_Main_D2_vl3_rr1","E3":"Strumstick_Finger_Str1_Main_E2_vl3_rr1","G3":"Strumstick_Finger_Str1_Main_G2_vl3_rr1","C#4":"Strumstick_Finger_Str2_Main_C#3_vl3_rr1","D4":"Strumstick_Finger_Str2_Main_D3_vl3_rr1","E4":"Strumstick_Finger_Str3_Main_E3_vl3_rr1","G4":"Strumstick_Finger_Str3_Main_G3_vl3_rr1","A4":"Strumstick_Finger_Str3_Main_A3_vl3_rr1","B4":"Strumstick_Finger_Str3_Main_B3_vl3_rr1","E5":"Strumstick_Finger_Str3_Main_E4_vl3_rr1","G5":"Strumstick_Finger_Str3_Main_G4_vl3_rr1","A5":"Strumstick_Finger_Str3_Main_A4_vl3_rr1"},
+      adj:{"E3":[0,9.0],"G3":[0,-2.0],"D4":[0,6.0],"G4":[0,-1.7],"A4":[0,2.1],"E5":[0,2.6]},gain:14},
+    {id:"vc-tx81z-fm-piano",l:"TX81Z FM Piano",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Electrophones/TX81Z/FM%20Piano/",ext:".m4a",
+      n:{"C0":"FMPiano_C0_vl3","G#0":"FMPiano_G#0_vl3","C1":"FMPiano_C1_vl3","C2":"FMPiano_C2_vl3","G#2":"FMPiano_G#2_vl3","E3":"FMPiano_E3_vl3","G#3":"FMPiano_G#3_vl3","E4":"FMPiano_E4_vl3","C5":"FMPiano_C5_vl3","C6":"FMPiano_C6_vl3","E6":"FMPiano_E6_vl3"},gain:16}
+  ]},
+  {id:"vc-wind",l:"Versilian Organs & Winds",c:"#5F9EA0",ac:"a4",col:"vcsl",items:[
+    {id:"vc-pipe-organ-loud",l:"Pipe Organ (Loud)",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Aerophones/Edge-blown%20Aerophones/Pipe%20Organ/Loud/",ext:".m4a",
+      n:{"C2":"Rode_Man3Open_C1","F#2":"Rode_Man3Open_F#1","A2":"Rode_Man3Open_A1","F#3":"Rode_Man3Open_F#2","C4":"Rode_Man3Open_C3","D#4":"Rode_Man3Open_D#3","A4":"Rode_Man3Open_A3","C5":"Rode_Man3Open_C4","F#5":"Rode_Man3Open_F#4","D#6":"Rode_Man3Open_D#5","F#6":"Rode_Man3Open_F#5","C7":"Rode_Man3Open_C6"},
+      adj:{"C4":[0,-2.6],"D#4":[3,0],"D#6":[0,-2.2]},gain:20},
+    {id:"vc-pipe-organ-quiet",l:"Pipe Organ (Quiet)",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Aerophones/Edge-blown%20Aerophones/Pipe%20Organ/Quiet/",ext:".m4a",
+      n:{"C2":"NT5_Man3Quiet_C1_rr1","F#2":"NT5_Man3Quiet_F#1_rr1","A2":"NT5_Man3Quiet_A1_rr1","F#3":"NT5_Man3Quiet_F#2_rr1","C4":"NT5_Man3Quiet_C3_rr1","D#4":"NT5_Man3Quiet_D#3_rr1","A4":"NT5_Man3Quiet_A3_rr1","C5":"NT5_Man3Quiet_C4_rr1","F#5":"NT5_Man3Quiet_F#4_rr1","D#6":"NT5_Man3Quiet_D#5_rr1","F#6":"NT5_Man3Quiet_F#5_rr1","C7":"NT5_Man3Quiet_C6_rr1"},
+      adj:{"C2":[6,5.2],"F#2":[-15,5.2],"F#3":[-5,-2.8],"D#4":[0,-2.8],"C5":[3,2.5],"D#6":[8,0],"F#6":[3,-2.8],"C7":[0,2.6]},gain:25},
+    {id:"vc-renaissance-organ",l:"Renaissance Organ",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Aerophones/Edge-blown%20Aerophones/Renaissance%20Organ/Full/",ext:".m4a",
+      n:{"C2":"RenOrgan_Full_Room_C1_rr1","E2":"RenOrgan_Full_Room_E1_rr1","G#2":"RenOrgan_Full_Room_G#1_rr1","E3":"RenOrgan_Full_Room_E2_rr1","G#3":"RenOrgan_Full_Room_G#2_rr1","C4":"RenOrgan_Full_Room_C3_rr1","E4":"RenOrgan_Full_Room_E3_rr1","G#4":"RenOrgan_Full_Room_G#3_rr1","C5":"RenOrgan_Full_Room_C4_rr1","G#5":"RenOrgan_Full_Room_G#4_rr1","C6":"RenOrgan_Full_Room_C5_rr1","E6":"RenOrgan_Full_Room_E5_rr1"},
+      adj:{"E3":[0,-1.7],"G#3":[0,3.6],"C4":[0,-4.1],"G#4":[0,1.5],"E6":[4,-1.9]},gain:11},
+    {id:"vc-alto-recorder",l:"Alto Recorder",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Aerophones/Edge-blown%20Aerophones/Baroque%20Alto%20Recorder/SusVib/",ext:".m4a",
+      n:{"F4":"AltRecorder_SusVib_F3_rr1_Main","G#4":"AltRecorder_SusVib_G#3_rr1_Main","A#4":"AltRecorder_SusVib_A#3_rr1_Main","C5":"AltRecorder_SusVib_C4_rr1_Main","D5":"AltRecorder_SusVib_D4_rr1_Main","E5":"AltRecorder_SusVib_E4_rr1_Main","F#5":"AltRecorder_SusVib_F#4_rr1_Main","G#5":"AltRecorder_SusVib_G#4_rr1_Main","A#5":"AltRecorder_SusVib_A#4_rr1_Main","C6":"AltRecorder_SusVib_C5_rr1_Main","D6":"AltRecorder_SusVib_D5_rr1_Main","E6":"AltRecorder_SusVib_E5_rr1_Main"},
+      adj:{"F4":[-4,3.6],"G#4":[0,4.8],"C5":[0,1.8],"E5":[0,-5.8],"G#5":[0,6.2],"A#5":[0,-1.7],"C6":[0,-2.2]},gain:15},
+    {id:"vc-tenor-recorder",l:"Tenor Recorder",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Aerophones/Edge-blown%20Aerophones/Baroque%20Tenor%20Recorder/SusVib/",ext:".m4a",
+      n:{"C4":"TenRecorder_SusVib_C3_rr1_Main","D4":"TenRecorder_SusVib_D3_rr1_Main","E4":"TenRecorder_SusVib_E3_rr1_Main","G4":"TenRecorder_SusVib_G3_rr1_Main","A4":"TenRecorder_SusVib_A3_rr1_Main","B4":"TenRecorder_SusVib_B3_rr1_Main","C5":"TenRecorder_SusVib_C4_rr1_Main","D5":"TenRecorder_SusVib_D4_rr1_Main","E5":"TenRecorder_SusVib_E4_rr1_Main","G5":"TenRecorder_SusVib_G4_rr1_Main","A5":"TenRecorder_SusVib_A4_rr1_Main","B5":"TenRecorder_SusVib_B4_rr1_Main"},
+      adj:{"C4":[-5,0],"D4":[0,-2.2],"E4":[0,5.7],"G4":[-5,-3.2],"C5":[-4,0],"D5":[0,-3.9],"E5":[-3,5.8],"A5":[0,-6.1],"B5":[0,2.8]},gain:16},
+    {id:"vc-ocarina",l:"Ocarina",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Aerophones/Edge-blown%20Aerophones/Ocarina%2C%20Typical/Sustains/SusVib/",ext:".m4a",
+      n:{"A4":"StdOcarina_SusVib_A3","C5":"StdOcarina_SusVib_C4","C#5":"StdOcarina_SusVib_C#4","D#5":"StdOcarina_SusVib_D#4","E5":"StdOcarina_SusVib_E4","F#5":"StdOcarina_SusVib_F#4","G#5":"StdOcarina_SusVib_G#4","A5":"StdOcarina_SusVib_A4","A#5":"StdOcarina_SusVib_A#4","C6":"StdOcarina_SusVib_C5"},
+      adj:{"A4":[-10,1.8],"C5":[0,-1.8],"C#5":[-5,-2.5],"D#5":[0,1.9],"E5":[0,4.3],"F#5":[-4,-1.8],"G#5":[-5,-4.6],"A5":[-8,0],"A#5":[-9,0],"C6":[-9,0]},gain:5},
+    {id:"vc-tenor-sax-vibrato",l:"Tenor Sax (Vibrato)",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Aerophones/Reed%20Aerophones/Tenor%20Saxophone/Vibrato/",ext:".m4a",
+      n:{"A#2":"BrettTenor_Vib_Main_A#1_var2","C3":"BrettTenor_Vib_Main_C2_var4","E3":"BrettTenor_Vib_Main_E2_var2","C4":"BrettTenor_Vib_Main_C3_var1","D4":"BrettTenor_Vib_Main_D3_var1","E4":"BrettTenor_Vib_Main_E3_var3","A#4":"BrettTenor_Vib_Main_A#3_var3","C5":"BrettTenor_Vib_Main_C4_var2","D5":"BrettTenor_Vib_Main_D4_var1","G#5":"BrettTenor_Vib_Main_G#4_var3","C6":"BrettTenor_Vib_Main_C5_var2","D6":"BrettTenor_Vib_Main_D5_var3"},
+      adj:{"A#2":[6,-3.9],"E3":[0,-5.2],"C4":[0,4.9],"D4":[0,3.3],"A#4":[4,-2.9],"C5":[0,-2.3],"D5":[-4,2.5],"D6":[0,-5.4]},gain:19},
+    {id:"vc-saxello",l:"Saxello",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Aerophones/Reed%20Aerophones/Saxello/Vibrato/",ext:".m4a",
+      n:{"A#3":"BrettSaxello_SusVB_MainSpirit_A#2_vl2_rr1","D4":"BrettSaxello_SusVB_MainSpirit_D3_vl2_rr1","F#4":"BrettSaxello_SusVB_MainSpirit_F#3_vl2_rr1","A#4":"BrettSaxello_SusVB_MainSpirit_A#3_vl2_rr1","D5":"BrettSaxello_SusVB_MainSpirit_D4_vl2_rr1","F#5":"BrettSaxello_SusVB_MainSpirit_F#4_vl2_rr1","A#5":"BrettSaxello_SusVB_MainSpirit_A#4_vl2_rr1","D#6":"BrettSaxello_SusVB_MainSpirit_D#5_vl2_rr1"},
+      adj:{"A#4":[0,3.4],"D5":[0,-1.9],"F#5":[0,-1.5],"A#5":[0,2.2],"D#6":[5,0]},gain:7},
+    {id:"vc-chromatic-harmonica",l:"Chromatic Harmonica",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Aerophones/Free%20Aerophones/Harmonica-Hohner-Super64/Sustains/Vib/",ext:".m4a",
+      n:{"C3":"Hohner-Super64_Vib_C2","E3":"Hohner-Super64_Vib_E2","G3":"Hohner-Super64_Vib_G2","C4":"Hohner-Super64_Vib_C3","E4":"Hohner-Super64_Vib_E3","G4":"Hohner-Super64_Vib_G3","E5":"Hohner-Super64_Vib_E4","G5":"Hohner-Super64_Vib_G4","C6":"Hohner-Super64_Vib_C5","E6":"Hohner-Super64_Vib_E5","G6":"Hohner-Super64_Vib_G5","C7":"Hohner-Super64_Vib_C6"},
+      adj:{"E3":[0,-2.3],"C4":[0,3.3]},gain:10}
+  ]},
+  {id:"vc-mallet",l:"Versilian Mallets & Bells",c:"#DB7093",ac:"a3",col:"vcsl",items:[
+    {id:"vc-kalimba",l:"Kalimba",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Plucked%20Idiophones/Kalimba%2C%20Kenya/",ext:".m4a",
+      n:{"B3":"Mbira6_Normal_MainSpirit_B2_k8_vl3_rr2","C#4":"Mbira6_Normal_MainSpirit_C#3_k7_vl3_rr2","D#4":"Mbira6_Normal_MainSpirit_D#3_k6_vl3_rr2","F#4":"Mbira6_Normal_MainSpirit_F#3_k10_vl3_rr2","G#4":"Mbira6_Normal_MainSpirit_G#3_k4_vl3_rr2","B4":"Mbira6_Normal_MainSpirit_B3_k3_vl3_rr2","C#5":"Mbira6_Normal_MainSpirit_C#4_k2_vl3_rr2","D#5":"Mbira6_Normal_MainSpirit_D#4_k13_vl3_rr2","F#5":"Mbira6_Normal_MainSpirit_F#4_k14_vl3_rr2","A5":"Mbira6_Normal_MainSpirit_A4_k1_vl3_rr2","B5":"Mbira6_Normal_MainSpirit_B4_k15_vl3_rr2"},
+      adj:{"B3":[0,3.3],"C#4":[-30,0],"D#4":[7,4.3],"F#4":[0,5.8],"G#4":[-38,-6.2],"B4":[-21,0],"C#5":[0,-1.8],"D#5":[0,7.6],"F#5":[-43,-1.9],"A5":[44,0],"B5":[0,5.2]},gain:19},
+    {id:"vc-mbira",l:"Mbira",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Plucked%20Idiophones/Mbira%20dzaVadzimu%20Nyamaropa%2C%20Zimbabwe%2C%20Low%20B/",ext:".m4a",
+      n:{"A#2":"MBira4_pluck_Main_A#1_14_50_100_rr1","E3":"MBira4_pluck_Main_E2_10_50_100_rr3","F#3":"MBira4_pluck_Main_F#2_8_50_100_rr2","B3":"MBira4_pluck_Main_B2_13_50_100_rr3","D#4":"MBira4_pluck_Main_D#3_15_50_100_rr1","F#4":"MBira4_pluck_Main_F#3_11_50_100_rr2","G#4":"MBira4_pluck_Main_G#3_7_50_100_rr2","B4":"MBira4_pluck_Main_B3_3_50_100_rr2","D#5":"MBira4_pluck_Main_D#4_18_50_100_rr5","G#5":"MBira4_pluck_Main_G#4_21_50_100_rr3","A5":"MBira4_pluck_Main_A4_22_50_100_rr3","C#6":"MBira4_pluck_Main_C#5_24_50_100_rr5"},
+      adj:{"A#2":[-80,0],"E3":[0,1.6],"F#3":[0,-3.1],"B3":[0,-2.1],"D#4":[4,0],"F#4":[-12,0],"G#4":[-32,0],"B4":[-14,3.1],"D#5":[-5,0],"G#5":[-56,0],"A5":[-32,0],"C#6":[-8,0]},gain:33},
+    {id:"vc-vibraphone",l:"Vibraphone",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Struck%20Idiophones/Vibraphone/Soft%20Mallets/",ext:".m4a",
+      n:{"F3":"Vibes_soft_F2_v2_rr1_Main","A3":"Vibes_soft_A2_v2_rr1_Main","C4":"Vibes_soft_C3_v2_rr1_Main","E4":"Vibes_soft_E3_v2_rr1_Main","G4":"Vibes_soft_G3_v2_rr1_Main","B4":"Vibes_soft_B3_v2_rr1_Main","D5":"Vibes_soft_D4_v2_rr1_Main","F5":"Vibes_soft_F4_v2_rr1_Main","A5":"Vibes_soft_A4_v2_rr1_Main","C6":"Vibes_soft_C5_v2_rr1_Main","E6":"Vibes_soft_E5_v2_rr1_Main"},
+      adj:{"F3":[0,-1.7],"A3":[0,2.9],"C4":[0,6.4],"E4":[0,-2.3],"G4":[0,2.0],"D5":[0,-2.5],"C6":[0,-1.6]},gain:9},
+    {id:"vc-bowed-vibraphone",l:"Bowed Vibraphone",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Struck%20Idiophones/Vibraphone/Bowed/",ext:".m4a",
+      n:{"A3":"Vibes_bowed_A2_rr1_Main","E4":"Vibes_bowed_E3_rr1_Main","G4":"Vibes_bowed_G3_rr1_Main","D5":"Vibes_bowed_D4_rr1_Main","A5":"Vibes_bowed_A4_rr1_Main","E6":"Vibes_bowed_E5_rr1_Main"},
+      adj:{"A3":[0,4.8],"E4":[0,-3.7],"A5":[0,3.1],"E6":[0,-7.9]},gain:34},
+    {id:"vc-marimba",l:"Marimba",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Struck%20Idiophones/Marimba/",ext:".m4a",
+      n:{"F2":"Marimba_hit_Outrigger_F1_loud_01","C3":"Marimba_hit_Outrigger_C2_loud_01","G3":"Marimba_hit_Outrigger_G2_loud_01","B3":"Marimba_hit_Outrigger_B2_loud_01","F4":"Marimba_hit_Outrigger_F3_loud_01","C5":"Marimba_hit_Outrigger_C4_loud_01","G5":"Marimba_hit_Outrigger_G4_loud_01","B5":"Marimba_hit_Outrigger_B4_loud_01","F6":"Marimba_hit_Outrigger_F5_loud_01","C7":"Marimba_hit_Outrigger_C6_loud_01"},
+      adj:{"F2":[0,1.8],"C3":[0,-3.3],"B3":[0,1.5],"F4":[0,-2.9],"C5":[0,-2.8],"B5":[0,-6.8],"F6":[0,2.9]},gain:26},
+    {id:"vc-balafon",l:"Balafon",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Struck%20Idiophones/Balafon/Hard%20Mallet/",ext:".m4a",
+      n:{"C#4":"EthnicXylo_hardM_C#3_vl3_rr1_Mid","F4":"EthnicXylo_hardM_F3_vl3_rr1_Mid","C5":"EthnicXylo_hardM_C4_vl3_rr1_Mid","F5":"EthnicXylo_hardM_F4_vl3_rr1_Mid","C6":"EthnicXylo_hardM_C5_vl3_rr1_Mid","F6":"EthnicXylo_hardM_F5_vl3_rr1_Mid"},
+      adj:{"C#4":[0,-2.8],"C5":[0,3.3],"F5":[0,4.5],"C6":[0,-3.0]},gain:19},
+    {id:"vc-glockenspiel",l:"Glockenspiel",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Struck%20Idiophones/Glockenspiel/",ext:".m4a",
+      n:{"G4":"glock_loud_G4_01","C5":"glock_loud_C5_01","G5":"glock_loud_G5_01","C6":"glock_loud_C6_01","G6":"glock_soft_G6_01","G#6":"glock_loud_G#6_01","C7":"glock_loud_C7_01"},
+      adj:{"C5":[0,-2.5],"G5":[0,-2.0],"C6":[0,2.1],"G6":[0,9.5],"G#6":[0,-2.5]},gain:28},
+    {id:"vc-tubular-bells",l:"Tubular Bells",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Struck%20Idiophones/Tubular%20Bells%201/",ext:".m4a",
+      n:{"C4":"chimes_C3_f_rr1","D4":"chimes_D3_ff_rr1","E4":"chimes_E3_ff_rr2","F#4":"chimes_F#3_fff_rr1","G#4":"chimes_G#3_ff_rr1","A#4":"chimes_A#3_ff_rr1","C5":"chimes_C4_ff_rr2","D5":"chimes_D4_ff_rr2","E5":"chimes_E4_ff_rr2"},
+      adj:{"E4":[0,2.8],"F#4":[0,-3.7],"C5":[0,-2.2]},gain:6},
+    {id:"vc-xylophone",l:"Xylophone",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Struck%20Idiophones/Xylophone/Medium%20Mallets/",ext:".m4a",
+      n:{"G3":"Xylo_Medium_G3_ff_01_far","C4":"Xylo_Medium_C4_ff_01_far","G4":"Xylo_Medium_G4_ff_01_far","C5":"Xylo_Medium_C5_ff_01_far","G5":"Xylo_Medium_G5_ff_01_far","C6":"Xylo_Medium_C6_ff_01_far","G6":"Xylo_Medium_G6_ff_01_far","C7":"Xylo_Medium_C7_ff_01_far"},
+      adj:{"G4":[0,-3.7],"C7":[0,2.7]},gain:12},
+    {id:"vc-wine-glasses",l:"Wine Glasses",key:null,t:"samp",direct:1,sbase:"https://smpldsnds.github.io/sgossner-vcsl/Idiophones/Friction%20Idiophones/Wine%20Glasses/Sustains/Slow/",ext:".m4a",
+      n:{"D#5":"glass1_D#4_Slow_1_Main","F#5":"glass2_F#4_Slow_1_Main","A#5":"glass3_A#4_Slow_1_Main","D6":"glass4_D5_Slow_2_Main"},
+      adj:{"D#5":[-28,0],"F#5":[10,1.5],"A#5":[-53,-2.9],"D6":[-5,0]},gain:36}
   ]}
 ];
 
+/* Collections: where each group of instruments comes from. Used by the picker above the instrument list. */
+var COLS=[{id:"all",l:"All"},{id:"core",l:"Core samples"},{id:"synth",l:"Synths"},{id:"gm",l:"General MIDI"},{id:"mk",l:"MusyngKite"},{id:"fb",l:"FatBoy"},{id:"piano",l:"Grand & Casio"},{id:"ep",l:"Electric pianos"},{id:"mello",l:"Mellotron"},{id:"vcsl",l:"Versilian"},{id:"graal",l:"Graal"}];
+var CAT_COL={rock:"core",strings:"core",keys:"core",brass:"core",woodwind:"core",chip:"synth",edm:"synth",lofi:"synth",basic:"synth",graal:"graal","gm-keys":"gm","gm-guitar":"gm","gm-strings":"gm","gm-brass":"gm","gm-perc":"gm","gm-synth":"gm","mk-guitar":"mk","fb-guitar":"fb","hq-piano":"piano","hq-casio":"piano"};
+CATS.forEach(function(cat){cat.col=cat.col||CAT_COL[cat.id]||"core";});
+var instCol="all";try{var _ic=localStorage.getItem("uk_inst_col");if(_ic&&COLS.some(function(c){return c.id===_ic;}))instCol=_ic;}catch(e){}
 var allInst=[],keyMap={};
 CATS.forEach(function(cat){cat.items.forEach(function(ins){ins.cat=cat.id;ins.catC=cat.c;ins.acC=cat.ac;allInst.push(ins);if(ins.key)keyMap[ins.key]=ins.id;});});
 function findInst(id){for(var i=0;i<allInst.length;i++)if(allInst[i].id===id)return allInst[i];return null;}
@@ -980,7 +1282,42 @@ function initAudio(){if(started)return;started=true;Tone.start();lim=new Tone.Li
   }catch(e){dbg("backing chain: "+e);}
   audioReady=true;loadSamp("violin");}
 
-function loadSamp(id){if(samplers[id]||loading[id])return;var ins=findInst(id);if(!ins||ins.t!=="samp")return;loading[id]=true;renderInst();updBdg();var urls={};var ext=ins.ext||".mp3";Object.keys(ins.n).forEach(function(k){urls[k]=ins.n[k]+ext;});var folder=ins.base||id;var baseUrl=ins.sbase||(SBASE+folder+"/");var sp=new Tone.Sampler({urls:urls,baseUrl:baseUrl,release:.5,onload:function(){delete loading[id];samplers[id]=sp;if(ins.fx){var chain=ins.fx();if(ins.gain){var gn=new Tone.Volume(ins.gain);chain.push(gn);}sp._fx=chain;sp.chain.apply(sp,chain.concat([dist]));}else if(ins.gain){var gn=new Tone.Volume(ins.gain);sp.connect(gn);gn.connect(dist);sp._gn=gn;}else{sp.connect(dist);}renderInst();updBdg();dbg(id+" loaded");},onerror:function(e){delete loading[id];dbg(id+" ERROR: "+(e&&e.message?e.message:e||"unknown"));renderInst();updBdg();}});setTimeout(function(){if(loading[id]){delete loading[id];renderInst();updBdg();}},15000);}
+/* ── Sample sets loaded directly ────────────────────────────────────────────
+   Instruments marked direct:1 are fetched and decoded here instead of by Tone:
+   - their file names contain spaces and '#', which Tone's own loader double-encodes into 404s;
+   - adj:{note:[cents,dB]} applies the per-sample tuning and level corrections the sample
+     library ships with (Tone.Sampler can only shift by whole notes). Tuning is applied by
+     re-labelling the decoded audio's sample rate, level by scaling it.
+   A set still loads if a few files fail; the sampler pitch-shifts from the nearest one. */
+function retuneBuf(buf,a){
+  if(!a||(!a[0]&&!a[1]))return buf;
+  var ctx=Tone.getContext().rawContext,ratio=Math.pow(2,(a[0]||0)/1200),g=Math.pow(10,(a[1]||0)/20);
+  var out=ctx.createBuffer(buf.numberOfChannels,buf.length,Math.max(8000,Math.min(96000,buf.sampleRate*ratio)));
+  for(var ch=0;ch<buf.numberOfChannels;ch++){var s=buf.getChannelData(ch),d=out.getChannelData(ch);for(var i=0;i<s.length;i++)d[i]=s[i]*g;}
+  return out;
+}
+function loadDirect(id,ins,release,ready,fail){
+  var ctx=Tone.getContext().rawContext,notes=Object.keys(ins.n),bufs={},left=notes.length,ext=ins.ext||".mp3";
+  if(!left){fail();return;}
+  notes.forEach(function(k){
+    var url=ins.sbase+ins.n[k].split("/").map(encodeURIComponent).join("/")+ext;
+    fetch(url).then(function(r){if(!r.ok)throw new Error(r.status);return r.arrayBuffer();})
+      .then(function(ab){return new Promise(function(res,rej){ctx.decodeAudioData(ab,res,rej);});})
+      .then(function(b){bufs[k]=retuneBuf(b,ins.adj&&ins.adj[k]);})
+      .catch(function(){})
+      .then(function(){
+        if(--left>0)return;
+        if(samplers[id])return;
+        if(Object.keys(bufs).length<Math.max(2,Math.ceil(notes.length/2))){fail();return;}
+        ready(new Tone.Sampler({urls:bufs,release:release}));
+      });
+  });
+}
+function sampReady(id,ins,sp){delete loading[id];samplers[id]=sp;if(ins.fx){var chain=ins.fx();if(ins.gain){var gn=new Tone.Volume(ins.gain);chain.push(gn);}sp._fx=chain;sp.chain.apply(sp,chain.concat([dist]));}else if(ins.gain){var gn=new Tone.Volume(ins.gain);sp.connect(gn);gn.connect(dist);sp._gn=gn;}else{sp.connect(dist);}renderInst();updBdg();dbg(id+" loaded");}
+function sampFail(id){delete loading[id];renderInst();updBdg();}
+function loadSamp(id){if(samplers[id]||loading[id])return;var ins=findInst(id);if(!ins||ins.t!=="samp")return;loading[id]=true;renderInst();updBdg();
+  if(ins.direct){loadDirect(id,ins,.5,function(sp){sampReady(id,ins,sp);},function(){sampFail(id);});setTimeout(function(){if(loading[id]&&!samplers[id])sampFail(id);},45000);return;}
+  var urls={};var ext=ins.ext||".mp3";Object.keys(ins.n).forEach(function(k){urls[k]=ins.n[k]+ext;});var folder=ins.base||id;var baseUrl=ins.sbase||(SBASE+folder+"/");var sp=new Tone.Sampler({urls:urls,baseUrl:baseUrl,release:.5,onload:function(){sampReady(id,ins,sp);},onerror:function(e){dbg(id+" ERROR: "+(e&&e.message?e.message:e||"unknown"));sampFail(id);}});setTimeout(function(){if(loading[id]){delete loading[id];renderInst();updBdg();}},15000);}
 
 function mkVoice(noteName){if(!audioReady)return null;var ins=findInst(S.eng);if(!ins)return null;if(ins.t==="samp"){var sp=samplers[ins.id];if(!sp)return null;
   var _retrigTm=null,_alive=false;
@@ -1003,7 +1340,7 @@ function playNote(nk,midi){if(!audioReady)return;silenceNote();var noteName=Tone
 
 function refreshNote(){if(arrowStack.length===0){silenceNote();return;}var dir=arrowStack[arrowStack.length-1];var nk=getMod()+"-"+dir;var midi=layout[nk];if(nk===activeNoteKey)return;if(midi!==undefined)playNote(nk,midi);else silenceNote();}
 
-function handleKeyDown(code,key){initAudio();if(key==="F11"){jamFullscreen();showJamToast("Fullscreen","#888");return;}if(key==="F12"){LOCAL.restart();BACKING.restart();showJamToast("↺ Restart","#D354A0");return;}if(key==="Escape"&&jamOn){exitJam();return;}if(code==="KeyT"&&jamOn){toggleSplit();return;}if(code==="KeyL"&&jamOn){toggleJamLoop();return;}if(code==="KeyQ"&&jamOn){var _jp=document.getElementById("jamPicker");if(_jp&&_jp.style.display==="flex"){closeJamPicker();}else{openJamPicker();}return;}if(code==="KeyF"&&!jamOn){enterJam();return;}if(code==="KeyF"&&jamOn){jamFullscreen();return;}if(code==="KeyN"&&jamOn){if(typeof SHOW!=="undefined"&&SHOW.playing){SHOW.advance(1);return;}if(SETLIST.isActive()){SETLIST.next();syncJamVideo();}else if(LOCAL.hasPlaylist()){LOCAL.next();}else if(BACKING.hasPlaylist()){BACKING.next();}else if(YT.list.length){YT.next();syncJamVideo();}showJamToast("▶▶ Next","#1D9E75");return;}if(code==="KeyP"&&jamOn){if(typeof SHOW!=="undefined"&&SHOW.playing){SHOW.advance(-1);return;}if(SETLIST.isActive()){SETLIST.prev();syncJamVideo();}else if(LOCAL.hasPlaylist()){LOCAL.prev();}else if(BACKING.hasPlaylist()){BACKING.prev();}else if(YT.list.length){YT.prev();syncJamVideo();}showJamToast("◄◄ Prev","#1D9E75");return;}if(code==="Backquote"){VIZFX.random();return;}if(code==="F4"&&jamOn){openVizStampPicker();return;}if(code==="F5"&&jamOn){VIZFX.cycle();return;}if(code==="NumpadMultiply"&&jamOn){VIZFX.random();return;}if(code==="NumpadDivide"&&jamOn){VIZFX.toggleAlt();return;}if(code==="NumpadAdd"||code==="Numpad0"){if(S.oct<7){S.oct++;rebuild();showOctFlash();saveSession();}return;}if(code==="NumpadSubtract"){if(S.oct>1){S.oct--;rebuild();showOctFlash();saveSession();}return;}if(code==="Delete"){S.power=Math.max(0,Math.round((S.power-0.1)*10)/10);updPowerUI();showJamToast("Power "+Math.round(S.power*100)+"%","#7F77DD");return;}if(code==="PageDown"){S.power=Math.min(1,Math.round((S.power+0.1)*10)/10);updPowerUI();showJamToast("Power "+Math.round(S.power*100)+"%","#7F77DD");return;}if(code==="Insert"){S.vol=Math.max(0,Math.round((S.vol-0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();showJamToast("Vol "+Math.round(S.vol*100)+"%","#EF9F27");return;}if(code==="PageUp"){S.vol=Math.min(1,Math.round((S.vol+0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();showJamToast("Vol "+Math.round(S.vol*100)+"%","#EF9F27");return;}if(code==="Numpad1"){handleNumpad(1);return;}if(code==="Numpad2"){handleNumpad(2);return;}if(code==="Numpad3"){handleNumpad(3);return;}if(code==="Numpad4"){handleNumpad(4);return;}if(code==="Numpad5"){handleNumpad(5);return;}if(code==="Numpad6"){handleNumpad(6);return;}if(code==="Numpad7"){handleNumpad(7);return;}if(code==="Numpad8"){handleNumpad(8);return;}if(code==="Numpad9"){handleNumpad(9);return;}if(key===" "){if(!mods.space){mods.space=true;updModInd();if(spaceGraceTimer)clearTimeout(spaceGraceTimer);spaceGraceTimer=setTimeout(function(){spaceGraceTimer=null;refreshNote();},spaceGraceMs);}return;}if(code==="KeyD"){if(!mods.d){mods.d=true;updModInd();if(spaceGraceTimer){clearTimeout(spaceGraceTimer);spaceGraceTimer=null;}refreshNote();}return;}if(code==="CapsLock"){mods.c=!mods.c;updChordInd();refreshNote();showJamToast(mods.c?"Chord ON":"Chord OFF","#EF9F27");return;}if(code==="KeyE"){if(!mods.e){mods.e=true;updModInd();refreshNote();}return;}if(code==="Digit3"){if(!mods.three){mods.three=true;updModInd();refreshNote();}return;}if(key==="Tab"){S.mode=(S.mode==="sustain"?"impact":"sustain");renderModes();return;}if(code==="KeyZ"){S.mode="impact";renderModes();return;}if(key==="Shift"){swapScale();return;}if(key==="Control"){S.mode="staccato";renderModes();return;}if(code==="KeyV"){S.mode="legato";renderModes();return;}if(keyMap[key]){selInst(keyMap[key]);return;}var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(!dir)return;if(arrowStack.indexOf(dir)===-1)arrowStack.push(dir);dbg("stack=["+arrowStack.join(",")+"] mod="+getMod());refreshNote();}
+function handleKeyDown(code,key){initAudio();if(key==="F11"){jamFullscreen();showJamToast("Fullscreen","#888");return;}if(key==="F12"){LOCAL.restart();BACKING.restart();showJamToast("↺ Restart","#D354A0");return;}if(key==="Escape"&&jamOn){exitJam();return;}if(code==="KeyT"&&jamOn){toggleSplit();return;}if(code==="KeyL"&&jamOn){toggleJamLoop();return;}if(code==="KeyQ"&&jamOn){var _jp=document.getElementById("jamPicker");if(_jp&&_jp.style.display==="flex"){closeJamPicker();}else{openJamPicker();}return;}if(code==="KeyF"&&!jamOn){enterJam();return;}if(code==="KeyF"&&jamOn){jamFullscreen();return;}if(code==="KeyN"&&jamOn){if(typeof SHOW!=="undefined"&&SHOW.playing){SHOW.advance(1);return;}if(SETLIST.isActive()){SETLIST.next();syncJamVideo();}else if(LOCAL.hasPlaylist()){LOCAL.next();}else if(BACKING.hasPlaylist()){BACKING.next();}else if(YT.list.length){YT.next();syncJamVideo();}showJamToast("▶▶ Next","#1D9E75");return;}if(code==="KeyP"&&jamOn){if(typeof SHOW!=="undefined"&&SHOW.playing){SHOW.advance(-1);return;}if(SETLIST.isActive()){SETLIST.prev();syncJamVideo();}else if(LOCAL.hasPlaylist()){LOCAL.prev();}else if(BACKING.hasPlaylist()){BACKING.prev();}else if(YT.list.length){YT.prev();syncJamVideo();}showJamToast("◄◄ Prev","#1D9E75");return;}if(code==="Backquote"){VIZFX.random();return;}if(code==="F4"&&jamOn){openVizStampPicker();return;}if(code==="F5"&&jamOn){VIZFX.cycle();return;}if(code==="NumpadMultiply"&&jamOn){VIZFX.random();return;}if(code==="NumpadDivide"&&jamOn){VIZFX.toggleAlt();return;}if(code==="NumpadAdd"||code==="Numpad0"){if(S.oct<7){S.oct++;rebuild();showOctFlash();saveSession();}return;}if(code==="NumpadSubtract"){if(S.oct>1){S.oct--;rebuild();showOctFlash();saveSession();}return;}if(code==="Delete"){S.power=Math.max(0,Math.round((S.power-0.1)*10)/10);updPowerUI();showJamToast("Power "+Math.round(S.power*100)+"%","#7F77DD");return;}if(code==="PageDown"){S.power=Math.min(1,Math.round((S.power+0.1)*10)/10);updPowerUI();showJamToast("Power "+Math.round(S.power*100)+"%","#7F77DD");return;}if(code==="Insert"||code==="Minus"){S.vol=Math.max(0,Math.round((S.vol-0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();showJamToast("Vol "+Math.round(S.vol*100)+"%","#EF9F27");return;}if(code==="PageUp"||code==="Equal"){S.vol=Math.min(1,Math.round((S.vol+0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();showJamToast("Vol "+Math.round(S.vol*100)+"%","#EF9F27");return;}if(code==="Numpad1"){handleNumpad(1);return;}if(code==="Numpad2"){handleNumpad(2);return;}if(code==="Numpad3"){handleNumpad(3);return;}if(code==="Numpad4"){handleNumpad(4);return;}if(code==="Numpad5"){handleNumpad(5);return;}if(code==="Numpad6"){handleNumpad(6);return;}if(code==="Numpad7"){handleNumpad(7);return;}if(code==="Numpad8"){handleNumpad(8);return;}if(code==="Numpad9"){handleNumpad(9);return;}if(key===" "){if(!mods.space){mods.space=true;updModInd();if(spaceGraceTimer)clearTimeout(spaceGraceTimer);spaceGraceTimer=setTimeout(function(){spaceGraceTimer=null;refreshNote();},spaceGraceMs);}return;}if(code==="KeyD"){if(!mods.d){mods.d=true;updModInd();if(spaceGraceTimer){clearTimeout(spaceGraceTimer);spaceGraceTimer=null;}refreshNote();}return;}if(code==="CapsLock"){mods.c=!mods.c;updChordInd();refreshNote();showJamToast(mods.c?"Chord ON":"Chord OFF","#EF9F27");return;}if(code==="KeyE"){if(!mods.e){mods.e=true;updModInd();refreshNote();}return;}if(code==="Digit3"){if(!mods.three){mods.three=true;updModInd();refreshNote();}return;}if(key==="Tab"){S.mode=(S.mode==="sustain"?"impact":"sustain");renderModes();return;}if(code==="KeyZ"){S.mode="impact";renderModes();return;}if(key==="Shift"){swapScale();return;}if(key==="Control"){S.mode="staccato";renderModes();return;}if(code==="KeyV"){S.mode="legato";renderModes();return;}if(keyMap[key]){selInst(keyMap[key]);return;}var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(!dir)return;if(arrowStack.indexOf(dir)===-1)arrowStack.push(dir);dbg("stack=["+arrowStack.join(",")+"] mod="+getMod());refreshNote();}
 function handleKeyUp(code,key){if(key===" "){if(spaceGraceTimer){clearTimeout(spaceGraceTimer);spaceGraceTimer=null;/* released before grace expired — don't play Space-only pip */}mods.space=false;}if(code==="KeyD")mods.d=false;if(code==="KeyE"){mods.e=false;updModInd();refreshNote();}if(code==="Digit3"){mods.three=false;updModInd();refreshNote();}/* CapsLock is toggle, no keyUp needed */var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(dir){var idx=arrowStack.indexOf(dir);if(idx!==-1)arrowStack.splice(idx,1);}updModInd();refreshNote();}
 
 var cap=document.getElementById("cap");
@@ -1023,7 +1360,7 @@ document.addEventListener("keydown",function(e){
   }
   if(jamOn){e.preventDefault();e.stopPropagation();handleKeyDown(e.code,e.key);return;}
   if(!jamOn&&(e.target.tagName==="SELECT"||e.target.tagName==="INPUT")&&e.target.id!=="cap")return;
-  if(e.key===" "||e.key==="ArrowUp"||e.key==="ArrowDown"||e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="Tab"||e.key==="Shift"||e.key==="Control"||e.code==="CapsLock"||e.code==="KeyZ"||e.code==="KeyV"||e.code==="KeyD"||e.code==="KeyE"||e.code==="KeyF"||e.code==="KeyQ"||e.code==="KeyT"||e.code==="KeyL"||e.code==="KeyN"||e.code==="KeyP"||e.code==="Digit3"||e.key==="F11"||e.code==="F1"||e.code==="F2"||e.code==="F3"||e.code==="F4"||e.code==="F5"||e.code==="Insert"||e.code==="Numpad0"||e.code==="Delete"||e.code==="PageUp"||e.code==="PageDown"||e.code==="Backquote"||(e.code.indexOf("Numpad")===0&&e.code!=="NumpadEnter"))e.preventDefault();
+  if(e.key===" "||e.key==="ArrowUp"||e.key==="ArrowDown"||e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="Tab"||e.key==="Shift"||e.key==="Control"||e.code==="CapsLock"||e.code==="KeyZ"||e.code==="KeyV"||e.code==="KeyD"||e.code==="KeyE"||e.code==="KeyF"||e.code==="KeyQ"||e.code==="KeyT"||e.code==="KeyL"||e.code==="KeyN"||e.code==="KeyP"||e.code==="Digit3"||e.key==="F11"||e.code==="F1"||e.code==="F2"||e.code==="F3"||e.code==="F4"||e.code==="F5"||e.code==="Insert"||e.code==="Minus"||e.code==="Equal"||e.code==="Numpad0"||e.code==="Delete"||e.code==="PageUp"||e.code==="PageDown"||e.code==="Backquote"||(e.code.indexOf("Numpad")===0&&e.code!=="NumpadEnter"))e.preventDefault();
   handleKeyDown(e.code,e.key);
 },{capture:true});
 document.addEventListener("keyup",function(e){handleKeyUp(e.code,e.key);});
@@ -1066,7 +1403,40 @@ function initSelects(){var r=document.getElementById("sR");ROOTS_D.forEach(funct
   var o2=document.getElementById("sO2");[1,2,3,4,5,6,7].forEach(function(x){var op=document.createElement("option");op.value=x;op.textContent=x;o2.appendChild(op);});o2.value=altOct;o2.onchange=function(){altOct=+o2.value;saveSession();};
 }
 function renderModes(){var c=document.getElementById("modeBox");c.innerHTML="";MODES.forEach(function(m){var b=document.createElement("div");b.className="btn"+(S.mode===m.id?" on":"");b.innerHTML=m.l+'<span class="hk">'+m.k+'</span>';b.onclick=function(){S.mode=m.id;renderModes();mbUpdMode();saveSession();showJamToast(m.icon+" "+m.l,"#1D9E75");};c.appendChild(b);});}
-function renderInst(){var c=document.getElementById("instBox");c.innerHTML="";CATS.forEach(function(cat){var lbl=document.createElement("div");lbl.className="cl";lbl.innerHTML='<span class="cd" style="background:'+cat.c+'"></span>'+cat.l;c.appendChild(lbl);var row=document.createElement("div");row.className="br";cat.items.forEach(function(ins){var b=document.createElement("div");var isA=S.eng===ins.id,isL=!!loading[ins.id],isR=ins.t==="samp"?!!samplers[ins.id]:true;b.className="btn"+(isA?" "+ins.acC:"");var dot="";if(ins.t==="samp"){if(isR)dot='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#1D9E75;margin-right:5px"></span>';else if(isL)dot='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F5C518;margin-right:5px;animation:pls 1s infinite"></span>';}b.innerHTML=dot+ins.l+(ins.key?'<span class="hk">'+ins.key+'</span>':"");(function(id){b.onclick=function(){selInst(id);};})(ins.id);row.appendChild(b);});c.appendChild(row);});}
+function applyInstFilter(){
+  var inp=document.getElementById("inst-search"),q=inp?(inp.value||"").toLowerCase().trim():"";
+  var box=document.getElementById("instBox");if(!box)return;
+  var cats=box.querySelectorAll(".cl"),rows=box.querySelectorAll(".br"),totalVisible=0;
+  for(var i=0;i<cats.length;i++){
+    var cat=cats[i],row=rows[i];if(!row)continue;
+    var inCol=(instCol==="all"||cat.getAttribute("data-col")===instCol),catVisible=0;
+    var btns=row.querySelectorAll(".btn"),catTxt=(cat.textContent||"").toLowerCase();
+    for(var j=0;j<btns.length;j++){
+      var txt=(btns[j].textContent||"").toLowerCase();
+      if(inCol&&(!q||txt.indexOf(q)!==-1||catTxt.indexOf(q)!==-1)){btns[j].style.display="";catVisible++;}
+      else{btns[j].style.display="none";}
+    }
+    cat.style.display=catVisible?"":"none";
+    row.style.display=catVisible?"":"none";
+    totalVisible+=catVisible;
+  }
+  var noMatch=document.getElementById("inst-no-match");
+  if(totalVisible>0){if(noMatch)noMatch.style.display="none";}
+  else{if(!noMatch){noMatch=document.createElement("div");noMatch.id="inst-no-match";noMatch.className="inst-no-match";box.parentNode.insertBefore(noMatch,box.nextSibling);}
+    noMatch.textContent=instCol==="all"?"No instruments match your search":"No instruments match your search in this collection";noMatch.style.display="";}
+}
+function renderInstCols(){
+  var c=document.getElementById("instCols");if(!c)return;c.innerHTML="";
+  COLS.forEach(function(col){
+    var n=0;CATS.forEach(function(cat){if(col.id==="all"||cat.col===col.id)n+=cat.items.length;});
+    if(!n)return;
+    var b=document.createElement("div");b.className="col"+(instCol===col.id?" on":"");
+    b.appendChild(document.createTextNode(col.l));var cnt=document.createElement("span");cnt.textContent=n;b.appendChild(cnt);
+    b.onclick=function(){instCol=col.id;try{localStorage.setItem("uk_inst_col",instCol);}catch(e){}renderInstCols();applyInstFilter();};
+    c.appendChild(b);
+  });
+}
+function renderInst(){var c=document.getElementById("instBox");c.innerHTML="";CATS.forEach(function(cat){var lbl=document.createElement("div");lbl.className="cl";lbl.setAttribute("data-col",cat.col);lbl.innerHTML='<span class="cd" style="background:'+cat.c+'"></span>'+cat.l;c.appendChild(lbl);var row=document.createElement("div");row.className="br";cat.items.forEach(function(ins){var b=document.createElement("div");var isA=S.eng===ins.id,isL=!!loading[ins.id],isR=ins.t==="samp"?!!samplers[ins.id]:true;b.className="btn"+(isA?" "+ins.acC:"");var dot="";if(ins.t==="samp"){if(isR)dot='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#1D9E75;margin-right:5px"></span>';else if(isL)dot='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F5C518;margin-right:5px;animation:pls 1s infinite"></span>';}b.innerHTML=dot+ins.l+(ins.key?'<span class="hk">'+ins.key+'</span>':"");(function(id){b.onclick=function(){selInst(id);};})(ins.id);row.appendChild(b);});c.appendChild(row);});applyInstFilter();}
 function renderGrid(){var c=document.getElementById("grid");c.innerHTML="";REGS.forEach(function(mod){var g=document.createElement("div");g.className="mg";var lbl=document.createElement("div");lbl.className="ml";lbl.innerHTML='<span class="md" style="background:'+RCLR[mod]+'"></span>'+RLBL[mod];g.appendChild(lbl);var row=document.createElement("div");row.className="nr";DIRS.forEach(function(dir){var nk=mod+"-"+dir,midi=layout[nk];var cell=document.createElement("div");cell.className="nc";cell.id="c-"+nk;cell.style.borderColor=RCLR[mod]+"44";cell.innerHTML='<div class="ar" style="color:'+RCLR[mod]+'">'+DARR[dir]+'</div><div class="nn">'+m2n(midi)+'</div><div class="fq">'+Math.round(m2f(midi))+' Hz</div>';(function(n,m){cell.onclick=function(){initAudio();playNote(n,m);};})(nk,midi);row.appendChild(cell);});g.appendChild(row);c.appendChild(g);});}
 /* FX Presets */
 var FXP={
@@ -3177,30 +3547,12 @@ window.setSection=function(sec){
 };
 
 /* ── Instrument Search ── */
-window.filterInstruments=function(val){
-  var q=val.toLowerCase().trim();
-  var box=document.getElementById("instBox");if(!box)return;
-  var cats=box.querySelectorAll(".cl");
-  var rows=box.querySelectorAll(".br");
-  var totalVisible=0;
-  for(var i=0;i<cats.length;i++){
-    var cat=cats[i],row=rows[i];if(!row)continue;
-    var btns=row.querySelectorAll(".btn");
-    var catVisible=0;
-    for(var j=0;j<btns.length;j++){
-      var txt=(btns[j].textContent||"").toLowerCase();
-      var catTxt=(cat.textContent||"").toLowerCase();
-      if(!q||txt.indexOf(q)!==-1||catTxt.indexOf(q)!==-1){btns[j].style.display="";catVisible++;}
-      else{btns[j].style.display="none";}
-    }
-    cat.style.display=catVisible?"":"none";
-    row.style.display=catVisible?"":"none";
-    totalVisible+=catVisible;
-  }
-  var noMatch=document.getElementById("inst-no-match");
-  if(!q||totalVisible>0){if(noMatch)noMatch.style.display="none";}
-  else{if(!noMatch){noMatch=document.createElement("div");noMatch.id="inst-no-match";noMatch.className="inst-no-match";noMatch.textContent="No instruments match your search";box.parentNode.insertBefore(noMatch,box.nextSibling);}noMatch.style.display="";}
-};
+/* Search box and collection picker filter the list together. renderInst() rebuilds the whole list
+   whenever an instrument is picked or finishes loading, so it re-applies this afterwards
+   (the search used to be silently dropped at that point). */
+window.filterInstruments=function(){applyInstFilter();};
+renderInstCols();applyInstFilter();
+
 
 /* Inline on*="" attributes run in global scope, but everything above lives inside this IIFE.
    Expose what the markup calls so those buttons work (Swap, Strum, Harmony, pedalboard,
