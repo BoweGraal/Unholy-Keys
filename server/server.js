@@ -1,14 +1,31 @@
 /*  Unholy Keys — Live Relay Server
     Handles rooms, note events, video sync, chat, avatar positions.
-    Deploy to Railway/Render free tier. */
+    Deploy to Railway/Render free tier.
+
+    Everything a client sends is untrusted. The performer may relay performance
+    events; audience members may only chat and move. Nothing a viewer sends is
+    forwarded unless it is one of those two message types, rebuilt field by field. */
 
 var WebSocket = require("ws");
 var PORT = process.env.PORT || 8080;
-var wss = new WebSocket.Server({ port: PORT });
+var wss = new WebSocket.Server({ port: PORT, maxPayload: 16 * 1024 });
 var rooms = {};
 
-function genCode() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
+var MAX_VIEWERS = 200;
+var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1 };
+
+function genCode() {
+  var code;
+  do { code = Math.random().toString(36).substring(2, 8).toUpperCase(); } while (code.length < 6 || rooms[code]);
+  return code;
+}
 function genId() { return Math.random().toString(36).substring(2, 10); }
+
+function str(v, max) { return (typeof v === "string" ? v : "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, max); }
+function color(v) { return (typeof v === "string" && /^#[0-9a-fA-F]{3,8}$/.test(v)) ? v : "#D354A0"; }
+function unit(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, +v.toFixed(3))) : null; }
+
+function send(ws, msg) { try { ws.send(JSON.stringify(msg)); } catch (e) {} }
 
 function broadcast(room, msg, exclude) {
   var r = rooms[room]; if (!r) return;
@@ -26,83 +43,103 @@ function viewerList(room) {
   return out;
 }
 
+/* Allow a short burst, then at most `perSec` messages a second. */
+function allow(ws, key, burst, perSec) {
+  var now = Date.now(), b = ws._rate || (ws._rate = {}), s = b[key] || (b[key] = { n: burst, t: now });
+  s.n = Math.min(burst, s.n + (now - s.t) / 1000 * perSec); s.t = now;
+  if (s.n < 1) return false;
+  s.n -= 1; return true;
+}
+
 wss.on("connection", function(ws) {
   ws.isAlive = true;
   ws.on("pong", function() { ws.isAlive = true; });
+  ws.on("error", function() {});
 
   ws.on("message", function(raw) {
     var msg;
     try { msg = JSON.parse(raw); } catch(e) { return; }
+    if (!msg || typeof msg !== "object" || typeof msg.type !== "string") return;
 
     /* ── Performer creates room ── */
     if (msg.type === "create-room") {
-      var code = msg.room || genCode();
+      if (ws.role) return;                       // one role per connection
+      var code = genCode();                      // never a client-chosen code: that let anyone take over a live room
       rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null };
       ws.room = code;
       ws.role = "performer";
-      ws.send(JSON.stringify({ type: "room-created", room: code }));
+      send(ws, { type: "room-created", room: code });
       console.log("Room created:", code);
       return;
     }
 
     /* ── Audience joins room ── */
     if (msg.type === "join-room") {
-      var r = rooms[msg.room];
-      if (!r) { ws.send(JSON.stringify({ type: "error", msg: "Room not found" })); return; }
+      if (ws.role) return;
+      var roomCode = str(msg.room, 12).toUpperCase();
+      var r = rooms[roomCode];
+      if (!r) { send(ws, { type: "error", msg: "Room not found" }); return; }
+      if (r.viewers.size >= MAX_VIEWERS) { send(ws, { type: "error", msg: "Room is full" }); return; }
       var id = genId();
-      ws.room = msg.room;
+      ws.room = roomCode;
       ws.role = "viewer";
       ws.viewerId = id;
-      ws.viewerName = msg.name || "Anonymous";
-      ws.viewerColor = msg.color || "#D354A0";
+      ws.viewerName = str(msg.name, 24) || "Anonymous";
+      ws.viewerColor = color(msg.color);
       var startX = +(0.25 + Math.random() * 0.5).toFixed(3);   // 0.25–0.75 normalized
       var startY = +(0.35 + Math.random() * 0.30).toFixed(3); // 0.35–0.65 normalized
       r.viewers.set(id, { ws: ws, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor });
 
       // Send room state to new viewer
-      ws.send(JSON.stringify({
+      send(ws, {
         type: "room-state",
         yourId: id,
-        viewers: viewerList(msg.room),
+        viewers: viewerList(roomCode),
         performerState: r.state,
         video: r.video
-      }));
+      });
 
       // Notify everyone else
-      broadcast(msg.room, { type: "viewer-join", id: id, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor }, ws);
+      broadcast(roomCode, { type: "viewer-join", id: id, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor }, ws);
 
       // Tell performer viewer count
-      if (r.performer) try { r.performer.send(JSON.stringify({ type: "viewer-count", count: r.viewers.size })); } catch(e) {}
-      console.log(ws.viewerName, "joined room", msg.room, "(" + r.viewers.size + " viewers)");
+      if (r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
+      console.log(ws.viewerName, "joined room", roomCode, "(" + r.viewers.size + " viewers)");
       return;
     }
 
     /* ── Performer broadcasts ── */
     if (ws.role === "performer" && ws.room && rooms[ws.room]) {
+      if (!PERFORMER_TYPES[msg.type]) return;
       if (msg.type === "state") rooms[ws.room].state = msg;
       if (msg.type === "video") rooms[ws.room].video = msg;
       broadcast(ws.room, msg, ws);
       return;
     }
 
-    /* ── Viewer broadcasts ── */
+    /* ── Viewer broadcasts: chat and position only ── */
     if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
-      msg.id = ws.viewerId;
-      msg.name = ws.viewerName;
-      if (msg.type === "chat") { msg.color = ws.viewerColor; msg.viewerId = ws.viewerId; }
-      if (msg.type === "pos") {
-        var rv = rooms[ws.room];
-        var v = rv ? rv.viewers.get(ws.viewerId) : null;
-        if (v) { v.x = msg.x; v.y = msg.y; }
+      if (msg.type === "chat") {
+        var text = str(msg.text, 300);
+        if (!text || !allow(ws, "chat", 5, 1)) return;
+        broadcast(ws.room, { type: "chat", id: ws.viewerId, viewerId: ws.viewerId, name: ws.viewerName, color: ws.viewerColor, text: text }, ws);
+        return;
       }
-      broadcast(ws.room, msg, ws);
-      return;
+      if (msg.type === "pos") {
+        var x = unit(msg.x), y = unit(msg.y);
+        if (x === null || y === null || !allow(ws, "pos", 20, 15)) return;
+        var v = rooms[ws.room].viewers.get(ws.viewerId);
+        if (v) { v.x = x; v.y = y; }
+        broadcast(ws.room, { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y }, ws);
+        return;
+      }
+      return; // anything else from a viewer is dropped (it used to be relayed to the whole room as-is)
     }
   });
 
   ws.on("close", function() {
     if (!ws.room) return;
-    if (ws.role === "performer" && rooms[ws.room]) {
+    if (ws.role === "performer" && rooms[ws.room] && rooms[ws.room].performer === ws) {
       broadcast(ws.room, { type: "performer-left" });
       console.log("Performer left, closing room", ws.room);
       delete rooms[ws.room];
@@ -111,7 +148,7 @@ wss.on("connection", function(ws) {
       rooms[ws.room].viewers.delete(ws.viewerId);
       broadcast(ws.room, { type: "viewer-leave", id: ws.viewerId });
       var r = rooms[ws.room];
-      if (r && r.performer) try { r.performer.send(JSON.stringify({ type: "viewer-count", count: r.viewers.size })); } catch(e) {}
+      if (r && r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
     }
   });
 });
