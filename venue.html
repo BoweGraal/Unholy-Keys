@@ -122,6 +122,23 @@ try{
    CONFIG
    ============================================================ */
 var WS_URL = "ws://localhost:8080";
+/* Which relay server to use, in order:
+   1. ?ws=wss://your-server in the address bar (remembered on this browser; ?ws=reset forgets it)
+   2. the server this page was loaded from, when it was loaded from the relay server itself
+      (http://localhost:8080 when testing locally, or your Railway/Render address)
+   3. WS_URL below (set this to your deployed server for the GitHub Pages copy) */
+function resolveWsUrl(){
+  var q=null;try{q=new URLSearchParams(location.search).get("ws");}catch(e){}
+  if(q){
+    if(q==="reset"){try{localStorage.removeItem("uk_ws");}catch(e){}}
+    else if(/^wss?:\/\/[^\s]+$/.test(q)){try{localStorage.setItem("uk_ws",q);}catch(e){}return q;}
+  }
+  try{var saved=localStorage.getItem("uk_ws");if(saved)return saved;}catch(e){}
+  if((location.protocol==="http:"||location.protocol==="https:")&&!/\.github\.io$/.test(location.hostname))
+    return (location.protocol==="https:"?"wss://":"ws://")+location.host;
+  return WS_URL;
+}
+var LIVE_URL = resolveWsUrl();
 
 /* ============================================================
    CONSTANTS
@@ -998,7 +1015,7 @@ function onCanvasClick(e){
 var lastPosSend=0;
 function connectWS(){
   try{
-    ws=new WebSocket(WS_URL);
+    ws=new WebSocket(LIVE_URL);
   }catch(e){
     console.log("WS connect error",e);
     return;
@@ -1017,7 +1034,7 @@ function connectWS(){
     wsReady=false;
     if(!stopReconnect)setTimeout(function(){if(!stopReconnect)connectWS();},3000);
   };
-  ws.onerror=function(){wsReady=false;};
+  ws.onerror=function(){wsReady=false;console.warn("[Unholy Keys] Could not reach the live relay server at "+LIVE_URL+" (retrying every 3s)");};
 }
 
 function wsSend(obj){

@@ -3317,6 +3317,23 @@ function startJamLoopAnim(){
 
 /* ── Live Broadcasting ── */
 var WS_URL="ws://localhost:8080";
+/* Which relay server to use, in order:
+   1. ?ws=wss://your-server in the address bar (remembered on this browser; ?ws=reset forgets it)
+   2. the server this page was loaded from, when it was loaded from the relay server itself
+      (http://localhost:8080 when testing locally, or your Railway/Render address)
+   3. WS_URL below (set this to your deployed server for the GitHub Pages copy) */
+function resolveWsUrl(){
+  var q=null;try{q=new URLSearchParams(location.search).get("ws");}catch(e){}
+  if(q){
+    if(q==="reset"){try{localStorage.removeItem("uk_ws");}catch(e){}}
+    else if(/^wss?:\/\/[^\s]+$/.test(q)){try{localStorage.setItem("uk_ws",q);}catch(e){}return q;}
+  }
+  try{var saved=localStorage.getItem("uk_ws");if(saved)return saved;}catch(e){}
+  if((location.protocol==="http:"||location.protocol==="https:")&&!/\.github\.io$/.test(location.hostname))
+    return (location.protocol==="https:"?"wss://":"ws://")+location.host;
+  return WS_URL;
+}
+var LIVE_URL=resolveWsUrl();
 var liveWs=null,liveOn=false;
 function liveSend(msg){if(liveOn&&liveWs&&liveWs.readyState===1)try{liveWs.send(JSON.stringify(msg));}catch(e){}}
 function goLive(){
@@ -3326,11 +3343,11 @@ function goLive(){
     if(liveOn)return;
     try{if(liveWs)liveWs.close();}catch(e){}
     liveWs=null;
-    btn.textContent="No server";btn.title="Could not reach the live relay server at "+WS_URL+". See SETUP.md.";
+    btn.textContent="No server";btn.title="Could not reach the live relay server at "+LIVE_URL+". See TESTING.md.";console.warn("[Unholy Keys] Could not reach the live relay server at "+LIVE_URL);
     setTimeout(function(){if(!liveOn&&!liveWs){btn.textContent="Live";}},2500);
   }
   if(liveWs)return; /* already connecting */
-  try{liveWs=new WebSocket(WS_URL);}catch(e){liveFail();return;}
+  try{liveWs=new WebSocket(LIVE_URL);}catch(e){liveFail();return;}
   btn.textContent="Connecting";
   liveWs.onopen=function(){
     liveWs.send(JSON.stringify({type:"create-room"}));
