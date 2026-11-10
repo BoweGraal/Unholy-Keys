@@ -46,6 +46,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   box-shadow:0 0 30px rgba(211,84,160,.2),inset 0 0 10px rgba(0,0,0,.8)}
 #bigScreen.on{display:block}
 #bigScreen iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+#tapHint{display:none;position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);white-space:nowrap;background:#D354A0;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:8px 12px;border-radius:14px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4);animation:tapPulse 1.6s ease-in-out infinite}
+@keyframes tapPulse{0%,100%{opacity:1}50%{opacity:.65}}
 
 /* Chat panel */
 #chatPanel{position:fixed;bottom:0;left:0;right:0;height:200px;z-index:20;
@@ -99,7 +101,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 <!-- VENUE -->
 <div id="venue">
   <canvas id="mainCanvas"></canvas>
-  <div id="bigScreen"><iframe id="ytFrame" allow="autoplay"></iframe></div>
+  <div id="bigScreen"><iframe id="ytFrame" allow="autoplay"></iframe><div id="tapHint"></div></div>
   <div id="hudTL">Room: <span id="hudRoom">---</span></div>
   <div id="hudTR">Viewers: <span id="hudCount">0</span></div>
   <div id="hudBR"></div>
@@ -1196,22 +1198,79 @@ function sendChat(){
    VIDEO SYNC
    ============================================================ */
 var ytPlayer=null,ytReady=false;
+/* ── YouTube player bridge ───────────────────────────────────────────────
+   Drives a youtube-nocookie.com embed through YouTube's postMessage protocol, the same
+   channel the official IFrame API uses underneath (that API's script would clash with
+   this page's own YT object). Gives play/pause/seek and the current time and state,
+   which is what keeps the audience in sync. States: -1 unstarted, 0 ended, 1 playing,
+   2 paused, 3 buffering, 5 cued. */
+function ytBridge(iframe){
+  var b={iframe:iframe,vid:null,time:0,state:-1,rate:1,muted:false,ready:false,onState:null,_t:Date.now(),_iv:null};
+  function post(o){try{if(iframe.contentWindow)iframe.contentWindow.postMessage(JSON.stringify(o),"*");}catch(e){}}
+  b.cmd=function(func,args){post({event:"command",func:func,args:args||[],id:1,channel:"widget"});};
+  function listen(){b.ready=false;clearInterval(b._iv);var n=0;b._iv=setInterval(function(){post({event:"listening",id:1,channel:"widget"});if(++n>60||b.ready)clearInterval(b._iv);},250);}
+  iframe.addEventListener("load",function(){if(iframe.getAttribute("src"))listen();});
+  function setState(st){if(st===b.state)return;if(b.state===1)b.time=b.now();b._t=Date.now();b.state=st;if(b.onState)b.onState(st);}
+  window.addEventListener("message",function(e){
+    if(!iframe.contentWindow||e.source!==iframe.contentWindow)return;
+    var d;try{d=typeof e.data==="string"?JSON.parse(e.data):e.data;}catch(x){return;}
+    if(!d||!d.event)return;
+    b.ready=true;
+    if(d.event==="infoDelivery"&&d.info){
+      if(typeof d.info.currentTime==="number"){b.time=d.info.currentTime;b._t=Date.now();}
+      if(typeof d.info.playbackRate==="number")b.rate=d.info.playbackRate;
+      if(typeof d.info.muted==="boolean")b.muted=d.info.muted;
+      if(typeof d.info.playerState==="number")setState(d.info.playerState);
+    }else if(d.event==="onStateChange"){
+      var st=typeof d.info==="number"?d.info:(d.info&&d.info.playerState);
+      if(typeof st==="number")setState(st);
+    }
+  });
+  b.now=function(){return b.state===1?b.time+(Date.now()-b._t)/1000*(b.rate||1):b.time;};
+  b.load=function(vid,start,opts){
+    opts=opts||{};start=Math.max(0,start||0);
+    if(b.vid===vid&&b.ready&&iframe.getAttribute("src")){b.cmd("seekTo",[start,true]);b.cmd(opts.paused?"pauseVideo":"playVideo");return;}
+    b.vid=vid;b.time=start;b._t=Date.now();b.state=-1;
+    if(b.ready&&iframe.getAttribute("src")){b.cmd(opts.paused?"cueVideoById":"loadVideoById",[vid,start]);return;}
+    var q="autoplay="+(opts.paused?0:1)+"&enablejsapi=1&playsinline=1&rel=0&start="+Math.floor(start)+(opts.mute?"&mute=1":"");
+    if(/^https?:$/.test(location.protocol))q+="&origin="+encodeURIComponent(location.origin);
+    iframe.src="https://www.youtube-nocookie.com/embed/"+vid+"?"+q;
+  };
+  b.clear=function(){clearInterval(b._iv);b.vid=null;b.state=-1;b.ready=false;b.time=0;iframe.removeAttribute("src");iframe.src="about:blank";};
+  return b;
+}
+var vYT=null;
+/* Follow the performer's video. A new video loads at the performer's position; after that the
+   page only seeks when it has drifted more than about a second, so playback stays smooth.
+   Phones won't start video with sound on their own, so a hint asks for one tap on the video. */
 function handleVideo(msg){
   var screen=document.getElementById("bigScreen");
   var frame=document.getElementById("ytFrame");
-  if(msg.action==="play"){
-    screen.classList.add("on");
-    var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
-    if(!vid)return;
-    var t=Math.max(0,+msg.time||0);
-    frame.src="https://www.youtube.com/embed/"+vid+"?autoplay=1&start="+Math.floor(t)+"&enablejsapi=0";
-  }else if(msg.action==="pause"){
-    /* Can't easily pause an iframe without API, hide */
-    frame.src="";
-  }else if(msg.action==="stop"){
-    screen.classList.remove("on");
-    frame.src="";
+  if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};}
+  if(msg.action==="stop"){screen.classList.remove("on");vYT.clear();updTapHint();return;}
+  var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
+  if(!vid)return;
+  screen.classList.add("on");
+  var playing=msg.action==="play";
+  var target=Math.max(0,+msg.time||0)+(playing?0.2:0);   /* ~network delay */
+  var rate=+msg.rate;if(!(rate>0&&rate<=4))rate=1;
+  if(vYT.vid!==vid){
+    vYT.load(vid,target,{paused:!playing});
+    clearTimeout(handleVideo._hint);handleVideo._hint=setTimeout(updTapHint,3000);
+  }else{
+    if(Math.abs(vYT.now()-target)>1.2)vYT.cmd("seekTo",[target,true]);
+    if(playing&&vYT.state!==1&&vYT.state!==3)vYT.cmd("playVideo");
+    if(!playing&&(vYT.state===1||vYT.state===3))vYT.cmd("pauseVideo");
   }
+  if(Math.abs(rate-(vYT.rate||1))>0.01)vYT.cmd("setPlaybackRate",[rate]);
+  vYT.want=playing?"play":"pause";
+}
+function updTapHint(){
+  var h=document.getElementById("tapHint");if(!h)return;
+  var stuck=vYT&&vYT.vid&&vYT.want==="play"&&vYT.state!==1&&vYT.state!==3;
+  var muted=vYT&&vYT.vid&&vYT.state===1&&vYT.muted;
+  h.textContent=muted?"Tap the speaker on the video for sound":"Tap \u25B6 on the video for the music";
+  h.style.display=(stuck||muted)?"block":"none";
 }
 
 /* ============================================================
