@@ -53,6 +53,15 @@ var server = http.createServer(function(req, res) {
 var wss = new WebSocket.Server({ server: server, maxPayload: 16 * 1024 });
 
 var MAX_VIEWERS = 200;
+/* The stored video message is from when the performer last sent it. A viewer joining now
+   should start where the video is now, so move the time on by however long it has been playing. */
+function liveVideo(r) {
+  if (!r.video) return null;
+  var v = Object.assign({}, r.video);
+  if (v.action === "play" && typeof v.time === "number" && r.videoAt)
+    v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
+  return v;
+}
 var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1 };
 
 function genCode() {
@@ -137,7 +146,7 @@ wss.on("connection", function(ws) {
         yourId: id,
         viewers: viewerList(roomCode),
         performerState: r.state,
-        video: r.video
+        video: liveVideo(r)
       });
 
       // Notify everyone else
@@ -153,7 +162,7 @@ wss.on("connection", function(ws) {
     if (ws.role === "performer" && ws.room && rooms[ws.room]) {
       if (!PERFORMER_TYPES[msg.type]) return;
       if (msg.type === "state") rooms[ws.room].state = msg;
-      if (msg.type === "video") rooms[ws.room].video = msg;
+      if (msg.type === "video") { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); }
       broadcast(ws.room, msg, ws);
       return;
     }
