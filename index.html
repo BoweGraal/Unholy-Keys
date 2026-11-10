@@ -48,7 +48,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   background:linear-gradient(135deg,var(--tl),var(--pu));border:none;border-radius:var(--r);color:#fff;text-transform:uppercase}
 .row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;align-items:flex-end}
 .cg{display:flex;flex-direction:column;gap:4px}
-.cg label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+.cg label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
 .natoct{text-transform:none;letter-spacing:0;color:var(--tx3);margin-left:6px;cursor:pointer;white-space:nowrap}.natoct input{vertical-align:-2px;margin:0 2px 0 0;accent-color:var(--pk)}
 .cg select,.cg input[type=number]{background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);
   padding:8px 12px;border-radius:var(--r);font-size:14px;outline:none}
@@ -115,6 +115,13 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #jmR{position:absolute;inset:0;z-index:2;background:transparent;overflow:hidden}
 #jcv{position:absolute;top:0;left:0;pointer-events:none;opacity:0.55}
 #jnd{display:none}
+#streamRow{margin-top:10px;padding-top:10px;border-top:1px solid #ff444422;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--tx2)}
+#streamRow .st{font-weight:600}
+#streamRow .st.on{color:#5DD39E}
+#streamRow .st.off{color:#E0A030}
+#streamRow .btn{padding:4px 10px;font-size:11px}
+#streamRow .use{color:var(--tx3);margin-left:auto}
+#streamRow .tip{flex-basis:100%;color:var(--tx3);font-size:11px}
 #jAud{display:none;position:absolute;right:20px;bottom:20px;width:300px;z-index:12;background:rgba(8,8,18,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;color:#eee;cursor:default;box-shadow:0 8px 30px rgba(0,0,0,.45)}
 #jAud.on{display:block}
 #jAudH{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.65);cursor:pointer;user-select:none}
@@ -267,6 +274,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
       </div>
     </div>
     <div style="font-size:11px;color:var(--tx3);margin-top:6px">Share the room code -- audience opens venue.html and enters it to watch you play</div>
+    <div id="streamRow"></div>
   </div>
   <div class="app-section active" id="sec-play">
   <div class="row">
@@ -1458,7 +1466,7 @@ function swapScale(){
   else{ind.textContent="Primary";ind.style.cssText="background:var(--bg3);color:var(--tx3);font-size:11px";}
   rebuild();saveSession();dbg("Swapped to "+(onAlt?"Alt":"Primary")+": "+ROOTS_D[S.root]+" "+S.scale);
 }
-function initSelects(){var r=document.getElementById("sR");ROOTS_D.forEach(function(x,i){var o=document.createElement("option");o.value=i;o.textContent=x;r.appendChild(o);});r.value=S.root;r.onchange=function(){S.root=+r.value;saveSession();rebuild();showJamToast(ROOTS[S.root]+" "+S.scale,"#7F77DD");};var s=document.getElementById("sS");Object.keys(SCALES).forEach(function(x){var o=document.createElement("option");o.value=x;o.textContent=x;s.appendChild(o);});s.value=S.scale;s.onchange=function(){S.scale=s.value;rebuild();saveSession();showJamToast(ROOTS[S.root]+" "+S.scale,"#7F77DD");};var o=document.getElementById("sO");[1,2,3,4,5,6,7].forEach(function(x){var op=document.createElement("option");op.value=x;op.textContent=x;o.appendChild(op);});o.value=S.oct;o.onchange=function(){S.oct=+o.value;rememberOct();rebuild();saveSession();};
+function initSelects(){var r=document.getElementById("sR");ROOTS_D.forEach(function(x,i){var o=document.createElement("option");o.value=i;o.textContent=x;r.appendChild(o);});r.value=S.root;r.onchange=function(){S.root=+r.value;saveSession();rebuild();showJamToast(ROOTS[S.root]+" "+S.scale,"#7F77DD");};var s=document.getElementById("sS");Object.keys(SCALES).forEach(function(x){var o=document.createElement("option");o.value=x;o.textContent=x;s.appendChild(o);});s.value=S.scale;s.onchange=function(){S.scale=s.value;rebuild();saveSession();showJamToast(ROOTS[S.root]+" "+S.scale,"#7F77DD");};var o=document.getElementById("sO");[1,2,3,4,5,6,7].forEach(function(x){var op=document.createElement("option");op.value=x;op.textContent=x;o.appendChild(op);});o.value=S.oct;o.onchange=function(){S.oct=+o.value;rememberOct();rebuild();saveSession();};
   var nc=document.getElementById("natOctCb");if(nc){nc.checked=natOctOn;nc.onchange=function(){natOctOn=nc.checked;try{localStorage.setItem("uk_nat_oct",natOctOn?"1":"0");}catch(e){}if(natOctOn)applyNatOct(S.eng);saveSession();};}document.getElementById("sV").oninput=function(e){S.vol=+e.target.value;};document.getElementById("sT").onchange=function(e){S.tempo=Math.max(60,Math.min(1200,+e.target.value));};
   /* Alt scale selectors */
   var r2=document.getElementById("sR2");ROOTS_D.forEach(function(x,i){var o=document.createElement("option");o.value=i;o.textContent=x;r2.appendChild(o);});r2.value=altRoot;r2.onchange=function(){altRoot=+r2.value;saveSession();};
@@ -3443,8 +3451,10 @@ function liveSend(msg){if(liveOn&&liveWs&&liveWs.readyState===1)try{liveWs.send(
 function goLive(){
   if(liveOn){endLive();return;}
   var btn=document.getElementById("bLive");
+  STREAM.start();                                          /* must run straight from the click: Chrome only shows the share prompt for a click */
   function liveFail(){
     if(liveOn)return;
+    STREAM.stop();
     try{if(liveWs)liveWs.close();}catch(e){}
     liveWs=null;
     btn.textContent="No server";btn.title="Could not reach the live relay server at "+LIVE_URL+". See TESTING.md.";console.warn("[Unholy Keys] Could not reach the live relay server at "+LIVE_URL);
@@ -3467,17 +3477,20 @@ function goLive(){
       document.getElementById("bLive").style.animation="pls 1s infinite";
       liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
       var vm=videoMsg();if(vm)liveSend(vm);               /* already playing something when going live */
+      STREAM.announce();STREAM.render();
     }
     if(msg.type==="viewer-count"){
       document.getElementById("liveViewers").textContent=msg.count+" viewer"+(msg.count!==1?"s":"");
       AUD.count=msg.count;
     }
     if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat")audEvent(msg);
+    if(msg.type==="stream-stats")STREAM.stats(msg);
   };
   liveWs.onclose=function(){if(liveOn)endLive();else liveFail();};
   liveWs.onerror=function(){liveFail();};
 }
 function endLive(){
+  STREAM.stop();
   liveOn=false;
   if(liveWs)try{liveWs.close();}catch(e){}
   liveWs=null;
@@ -3568,6 +3581,111 @@ function drawAud(){
 setInterval(drawAud,80);
 document.getElementById("jAudH").onclick=function(){AUD.min=!AUD.min;try{localStorage.setItem("uk_jaud_min",AUD.min?"1":"0");}catch(e){}document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";drawAud();};
 document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
+/* ── Live sound + visuals stream ──
+   When you go live, Chrome asks to share this tab. Its sound (your instruments, effects and
+   whatever backing track or video is playing) is encoded as Opus and sent through the relay
+   server, so the audience hears exactly what you hear. In jam mode the visualizer is also sent
+   as a small low-bitrate video for the venue's big screen (the music video itself is not).
+   Packet layout: byte 0 kind (1 audio, 2 visuals), byte 1 flags (1 = keyframe),
+   bytes 2-9 timestamp in microseconds (float64), then the encoded data. */
+var STREAM=(function(){
+  var st={read:0,dropped:0,audioSent:0,visualSent:0},cap=null,aEnc=null,vEnc=null,reader=null,vTimer=null,active=false,visualsOn=true,sentBytes=0,serverBytes=0,viewers=0,cfg=null,vCanvas=null,vCtx=null,lastKey=0,err="",tipShown=false;
+  var VW=480,VH=270,VFPS=10,VBITRATE=150000,ABITRATE=96000;
+  try{visualsOn=localStorage.getItem("uk_stream_vis")!=="0";}catch(e){}
+  function supported(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia&&window.AudioEncoder&&window.MediaStreamTrackProcessor);}
+  function sendBin(kind,flags,ts,chunk){
+    if(!liveOn||!liveWs||liveWs.readyState!==1)return;
+    if(kind===2&&liveWs.bufferedAmount>256*1024)return;     /* your upload is backing up: skip visuals, keep sound */
+    var n=chunk.byteLength,buf=new ArrayBuffer(10+n),dv=new DataView(buf);
+    dv.setUint8(0,kind);dv.setUint8(1,flags);dv.setFloat64(2,ts);chunk.copyTo(new Uint8Array(buf,10));
+    try{liveWs.send(buf);sentBytes+=buf.byteLength;if(kind===1)st.audioSent++;else st.visualSent++;}catch(e){}
+  }
+  function announce(){
+    if(!liveOn)return;
+    if(!active){liveSend({type:"stream",active:false});return;}
+    liveSend({type:"stream",active:true,audio:cfg?{codec:"opus",sampleRate:cfg.sampleRate,numberOfChannels:cfg.numberOfChannels}:null,video:vEnc?{codec:"vp8",width:VW,height:VH}:null});
+  }
+  function startAudio(track){
+    /* a 2 s queue: if the page is busy for a moment (jam visuals, a big redraw) the sound waits instead of being dropped */
+    var proc=new MediaStreamTrackProcessor({track:track,maxBufferSize:200});reader=proc.readable.getReader();
+    aEnc=new AudioEncoder({output:function(chunk){sendBin(1,0,chunk.timestamp,chunk);},error:function(e){err="Sound encoder stopped: "+(e&&e.message||e);stop();}});
+    (function pump(){reader.read().then(function(r){
+      if(r.done||!aEnc){if(r.value)r.value.close();return;}
+      var d=r.value;st.read++;
+      try{
+        if(aEnc.state==="unconfigured"){cfg={codec:"opus",sampleRate:d.sampleRate,numberOfChannels:Math.min(2,d.numberOfChannels),bitrate:ABITRATE};aEnc.configure(cfg);announce();}
+        if(d.numberOfChannels===cfg.numberOfChannels&&aEnc.encodeQueueSize<200)aEnc.encode(d);else st.dropped++;
+      }catch(e){}
+      d.close();pump();
+    }).catch(function(){});})();
+  }
+  function startVisuals(){
+    if(!window.VideoEncoder||!window.VideoFrame)return;
+    vCanvas=document.createElement("canvas");vCanvas.width=VW;vCanvas.height=VH;vCtx=vCanvas.getContext("2d");
+    try{
+      vEnc=new VideoEncoder({output:function(chunk){sendBin(2,chunk.type==="key"?1:0,chunk.timestamp,chunk);},error:function(){vEnc=null;announce();render();}});
+      vEnc.configure({codec:"vp8",width:VW,height:VH,bitrate:VBITRATE,framerate:VFPS,latencyMode:"realtime"});
+    }catch(e){vEnc=null;return;}
+    vTimer=setInterval(frame,1000/VFPS);
+  }
+  function frame(){
+    if(!vEnc||vEnc.state!=="configured"||!visualsOn||!jamOn||!jCanvas||vEnc.encodeQueueSize>2)return;
+    vCtx.fillStyle="#000";vCtx.fillRect(0,0,VW,VH);
+    try{vCtx.drawImage(jCanvas,0,0,VW,VH);}catch(e){}
+    /* small caption: instrument and key */
+    var ins=findInst(S.eng);vCtx.font="600 13px system-ui,sans-serif";vCtx.fillStyle="rgba(0,0,0,.45)";
+    var cap=(ins?ins.l:"")+"  ·  "+ROOTS[S.root]+" "+S.scale;var w=vCtx.measureText(cap).width;
+    vCtx.fillRect(8,VH-28,w+16,20);vCtx.fillStyle="rgba(255,255,255,.85)";vCtx.fillText(cap,16,VH-13);
+    var now=performance.now(),key=now-lastKey>2000;if(key)lastKey=now;   /* a keyframe every 2 s lets late joiners start quickly */
+    var vf=new VideoFrame(vCanvas,{timestamp:Math.round(now*1000)});
+    try{vEnc.encode(vf,{keyFrame:key});}catch(e){}
+    vf.close();
+  }
+  function start(){
+    err="";
+    if(active){render();return;}
+    if(!supported()){err="unsupported";render();return;}
+    navigator.mediaDevices.getDisplayMedia({video:{frameRate:1,width:320,height:180},audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},preferCurrentTab:true,selfBrowserSurface:"include",systemAudio:"exclude",surfaceSwitching:"exclude"}).then(function(ms){
+      var at=ms.getAudioTracks()[0];
+      if(!at){ms.getTracks().forEach(function(t){t.stop();});err="No sound was shared. Click Share sound and keep “Also share tab audio” switched on.";render();return;}
+      cap=ms;at.onended=function(){if(active){err="Sound sharing was stopped.";stop();}};
+      ms.getVideoTracks().forEach(function(t){t.onended=at.onended;});
+      sentBytes=0;active=true;startAudio(at);startVisuals();announce();render();
+    }).catch(function(e){err=(e&&e.name==="NotAllowedError")?"Sound sharing was cancelled, so the audience only hears your notes.":"Couldn’t share sound: "+(e&&e.message||e);render();});
+  }
+  function stop(){
+    var was=active;active=false;
+    try{if(reader)reader.cancel();}catch(e){}reader=null;
+    try{if(aEnc&&aEnc.state!=="closed")aEnc.close();}catch(e){}aEnc=null;
+    try{if(vEnc&&vEnc.state!=="closed")vEnc.close();}catch(e){}vEnc=null;
+    clearInterval(vTimer);vTimer=null;
+    if(cap)cap.getTracks().forEach(function(t){t.onended=null;t.stop();});cap=null;cfg=null;
+    if(was)announce();
+    render();
+  }
+  function mb(b){return b<1e6?(Math.round(b/1e4)/100)+" MB":(Math.round(b/1e5)/10)+" MB";}
+  function render(){
+    var row=document.getElementById("streamRow");if(!row)return;row.textContent="";
+    function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt)e.textContent=txt;row.appendChild(e);return e;}
+    if(err==="unsupported"){el("span","st off","Sharing your sound needs Chrome or Edge on a computer. The audience hears your notes only.");return;}
+    if(active){
+      el("span","st on","🔊 Sharing your sound with the audience");
+      var vb=el("span","btn"+(visualsOn?" on":""),"Visuals: "+(visualsOn?"On":"Off"));vb.title="Sends the jam-mode visualizer to the venue's big screen. Uses about 3 times the data of sound alone.";
+      vb.onclick=function(){visualsOn=!visualsOn;try{localStorage.setItem("uk_stream_vis",visualsOn?"1":"0");}catch(e){}render();};
+      var sb=el("span","btn","Stop sharing");sb.onclick=function(){stop();};
+      el("span","use",mb(serverBytes)+" of server data used this show");
+      el("span","tip",visualsOn?"Visuals go out while you're in jam mode. Your free Render plan includes about 5 GB a month: roughly 20 viewers for 2 hours with visuals, or 6 hours with sound only.":"Sound only. Your free Render plan includes about 5 GB a month: roughly 20 viewers for 6 hours.");
+    }else{
+      el("span","st off","🔇 The audience hears your notes, but not your backing music");
+      var b=el("span","btn","Share sound");b.onclick=function(){start();};
+      el("span","tip",err||"When Chrome asks, choose this tab and keep “Also share tab audio” switched on.");
+    }
+  }
+  /* For troubleshooting: type ukStreamStats() in the browser console */
+  window.ukStreamStats=function(){return {sharing:active,visualsOn:visualsOn,inJam:!!jamOn,audioFramesRead:st.read,audioFramesDropped:st.dropped,audioPacketsSent:st.audioSent,visualPacketsSent:st.visualSent,serverDataUsedMB:Math.round(serverBytes/1e5)/10,uploadBacklogKB:liveWs?Math.round(liveWs.bufferedAmount/1024):0};};
+  return{start:start,stop:stop,announce:announce,render:render,get active(){return active;},
+    stats:function(m){serverBytes=+m.bytesOut||0;viewers=+m.viewers||0;if(active)render();}};
+})();
 function videoMsg(){
   var st=YT.status();if(!st.vid)return null;
   if(st.state===-1||st.state===5)return null;              /* not started yet */

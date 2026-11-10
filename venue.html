@@ -46,6 +46,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   box-shadow:0 0 30px rgba(211,84,160,.2),inset 0 0 10px rgba(0,0,0,.8)}
 #bigScreen.on{display:block}
 #bigScreen iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+#streamCv{display:none;position:absolute;inset:0;width:100%;height:100%;background:#000}
 #tapHint{display:none;position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);white-space:nowrap;background:#D354A0;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:8px 12px;border-radius:14px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4);animation:tapPulse 1.6s ease-in-out infinite}
 @keyframes tapPulse{0%,100%{opacity:1}50%{opacity:.65}}
 
@@ -101,7 +102,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 <!-- VENUE -->
 <div id="venue">
   <canvas id="mainCanvas"></canvas>
-  <div id="bigScreen"><iframe id="ytFrame" allow="autoplay"></iframe><div id="tapHint"></div></div>
+  <div id="bigScreen"><iframe id="ytFrame" allow="autoplay"></iframe><canvas id="streamCv" width="480" height="270"></canvas><div id="tapHint"></div></div>
   <div id="hudTL">Room: <span id="hudRoom">---</span></div>
   <div id="hudTR">Viewers: <span id="hudCount">0</span></div>
   <div id="hudBR"></div>
@@ -751,6 +752,7 @@ var activeVoice=null,activeInst="piano";
 function initAudio(){
   if(started)return;
   started=true;
+  try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}   /* iPhone: don't let the silent switch mute the show */
   Tone.start();
   lim=new Tone.Limiter(-1).toDestination();
   masterVol=new Tone.Volume(-6).connect(lim);
@@ -864,6 +866,7 @@ function silenceNote(){
 function playNoteFromEvent(midi,instId,mode){
   if(!audioReady)return;
   midi=+midi;if(!isFinite(midi)||midi<0||midi>127)return;
+  if(SP.soundLive()){silenceNote();isPerformerPlaying=true;spawnParticles(midi);return;}   /* you already hear it in the stream */
   silenceNote();
   var noteName=Tone.Frequency(midi,"midi").toNote();
   if(instId&&instId!==activeInst){
@@ -1026,7 +1029,9 @@ function connectWS(){
     wsReady=true;
     ws.send(JSON.stringify({type:"join-room",room:roomCode,name:myName,color:myColor}));
   };
+  ws.binaryType="arraybuffer";
   ws.onmessage=function(e){
+    if(typeof e.data!=="string"){SP.packet(e.data);return;}
     try{var msg=JSON.parse(e.data);}catch(x){return;}
     handleMsg(msg);
   };
@@ -1081,6 +1086,7 @@ function handleMsg(msg){
       if(ps.mode)perfMode=ps.mode;
     }
     /* Restore video if playing */
+    SP.config(msg.stream);
     if(msg.video)handleVideo(msg.video);
     updViewerCount();
     updHudBR();
@@ -1130,7 +1136,10 @@ function handleMsg(msg){
     updHudBR();
   }
   else if(t==="video"){
-    handleVideo(msg);
+    if(!SP.soundLive())handleVideo(msg);                   /* the live stream already carries the music */
+  }
+  else if(t==="stream"){
+    SP.config(msg);
   }
   else if(t==="chat"){
     var sender=safeText(msg.name,24)||"Unknown";
@@ -1149,6 +1158,7 @@ function handleMsg(msg){
     setTimeout(function(){document.getElementById("perfLeft").style.display="none";},5000);
     silenceNote();
     isPerformerPlaying=false;
+    SP.reset();
   }
 }
 
@@ -1274,6 +1284,106 @@ function updTapHint(){
 }
 
 /* ============================================================
+   LIVE SOUND + VISUALS FROM THE PERFORMER
+   The performer's page shares its tab sound (instruments, effects and backing music) as Opus,
+   and in jam mode its visualizer as a small video. Packets: byte 0 kind (1 audio, 2 visuals),
+   byte 1 flags (1 = keyframe), bytes 2-9 timestamp (float64, microseconds), then data.
+   Sound is scheduled about a third of a second ahead to ride out network hiccups. While it is
+   arriving, this page stops playing its own copy of the notes and the YouTube video, so nothing
+   doubles up. Browsers without WebCodecs keep the old behaviour.
+   ============================================================ */
+var SP=(function(){
+  var cfgA=null,cfgV=null,adec=null,vdec=null,nextT=0,lastAudio=0,lastVideo=0,lastDecoded=0,gotKey=false,gain=null,announced=false;
+  var AHEAD=0.35,lastGrow=0,st={audioPackets:0,audioDecoded:0,visualPackets:0,visualFrames:0,rebuffers:0,lastError:""};
+  function canSound(){return !!(window.AudioDecoder&&window.EncodedAudioChunk);}
+  function canVisuals(){return !!(window.VideoDecoder&&window.EncodedVideoChunk);}
+  function ctx(){return Tone.getContext().rawContext;}
+  function makeA(){
+    try{if(adec&&adec.state!=="closed")adec.close();}catch(e){}
+    adec=null;nextT=0;
+    if(!cfgA||!canSound())return;
+    try{adec=new AudioDecoder({output:onAudio,error:function(e){st.lastError="sound decoder: "+(e&&e.message);console.warn("[Unholy Keys] "+st.lastError);adec=null;setTimeout(makeA,1000);}});adec.configure(cfgA);}catch(e){adec=null;st.lastError="can't decode the live sound: "+(e&&e.message);console.warn("[Unholy Keys] "+st.lastError);}
+  }
+  function makeV(){
+    try{if(vdec&&vdec.state!=="closed")vdec.close();}catch(e){}
+    vdec=null;gotKey=false;
+    if(!cfgV||!canVisuals())return;
+    try{vdec=new VideoDecoder({output:onFrame,error:function(){vdec=null;setTimeout(makeV,1000);}});vdec.configure(cfgV);}catch(e){vdec=null;}
+  }
+  function onAudio(ad){
+    try{
+      st.audioDecoded++;
+      var c=ctx();if(c.state!=="running"){st.lastError="audio is not unlocked ("+c.state+")";try{c.resume();}catch(x){}ad.close();return;}
+      if(!gain){gain=c.createGain();gain.connect(c.destination);}
+      var ch=ad.numberOfChannels,buf=c.createBuffer(ch,ad.numberOfFrames,ad.sampleRate);
+      for(var i=0;i<ch;i++)ad.copyTo(buf.getChannelData(i),{planeIndex:i,format:"f32-planar"});
+      var now=c.currentTime;
+      if(nextT<now+0.02||nextT>now+1.5){
+        /* ran dry (or piled up): restart the buffer, a little deeper each time it ran dry, up to 1 s */
+        if(nextT&&nextT<now+0.02){st.rebuffers++;AHEAD=Math.min(1.0,AHEAD+0.1);lastGrow=Date.now();}
+        nextT=now+AHEAD;
+      }else if(Date.now()-lastGrow>30000&&AHEAD>0.35){AHEAD=Math.max(0.35,AHEAD-0.05);lastGrow=Date.now();}   /* smooth for a while: shrink back toward low delay */      /* (re)start the buffer after a gap or a pile-up */
+      var src=c.createBufferSource();src.buffer=buf;src.connect(gain);src.start(nextT);nextT+=buf.duration;
+      lastDecoded=Date.now();
+    }catch(e){}
+    ad.close();
+  }
+  function onFrame(f){
+    var cv=document.getElementById("streamCv");
+    st.visualFrames++;
+    try{if(cv){var g=cv.getContext("2d");g.drawImage(f,0,0,cv.width,cv.height);}}catch(e){}
+    f.close();
+  }
+  function packet(ab){
+    if(!(ab instanceof ArrayBuffer)||ab.byteLength<11)return;
+    var dv=new DataView(ab),kind=dv.getUint8(0),flags=dv.getUint8(1),ts=dv.getFloat64(2),data=new Uint8Array(ab,10);
+    if(kind===1){
+      lastAudio=Date.now();st.audioPackets++;
+      if(adec&&adec.state==="configured"&&adec.decodeQueueSize<50){try{adec.decode(new EncodedAudioChunk({type:"key",timestamp:ts,data:data}));}catch(e){}}
+    }else if(kind===2){
+      lastVideo=Date.now();st.visualPackets++;
+      var key=!!(flags&1);
+      if(!vdec||vdec.state!=="configured")return;
+      if(!gotKey&&!key)return;                               /* wait for a keyframe (one every 2 s) */
+      if(!key&&vdec.decodeQueueSize>4)return;                /* slow phone: skip frames rather than fall behind */
+      if(key)gotKey=true;
+      try{vdec.decode(new EncodedVideoChunk({type:key?"key":"delta",timestamp:ts,data:data}));}catch(e){gotKey=false;}
+    }
+  }
+  function config(m){
+    if(!m||!m.active){reset();return;}
+    announced=true;
+    /* Opus always decodes at 48 kHz, whatever rate the performer's sound card runs at */
+    if(m.audio&&(!cfgA||cfgA.numberOfChannels!==(+m.audio.numberOfChannels||2))){cfgA={codec:"opus",sampleRate:48000,numberOfChannels:+m.audio.numberOfChannels||2};makeA();}
+    if(m.video&&!cfgV){cfgV={codec:String(m.video.codec||"vp8"),codedWidth:+m.video.width||480,codedHeight:+m.video.height||270};makeV();}
+    updHudBR();
+  }
+  function reset(){
+    announced=false;cfgA=null;cfgV=null;
+    try{if(adec&&adec.state!=="closed")adec.close();}catch(e){}adec=null;
+    try{if(vdec&&vdec.state!=="closed")vdec.close();}catch(e){}vdec=null;
+    lastAudio=lastVideo=lastDecoded=0;updScreen();updHudBR();
+  }
+  function soundLive(){return Date.now()-lastDecoded<2000;}
+  function visualsLive(){return gotKey&&Date.now()-lastVideo<2500;}
+  function updScreen(){
+    var screen=document.getElementById("bigScreen"),cv=document.getElementById("streamCv"),fr=document.getElementById("ytFrame");
+    if(!screen||!cv)return;
+    var vis=visualsLive(),snd=soundLive();
+    if(snd&&typeof vYT!=="undefined"&&vYT&&vYT.vid){vYT.clear();}            /* the stream already carries the music */
+    cv.style.display=vis?"block":"none";
+    if(fr)fr.style.visibility=vis?"hidden":"";
+    if(vis)screen.classList.add("on");
+    else if(snd)screen.classList.remove("on");
+    if(snd){var h=document.getElementById("tapHint");if(h)h.style.display="none";}
+  }
+  setInterval(updScreen,500);
+  /* For troubleshooting: type ukStreamStats() in the browser console */
+  window.ukStreamStats=function(){var c=null;try{c=ctx();}catch(e){}return {soundLive:soundLive(),visualsLive:visualsLive(),audioConfig:cfgA,decoderState:adec?adec.state:"none",audioContext:c?c.state:"none",audioPackets:st.audioPackets,audioDecoded:st.audioDecoded,visualPackets:st.visualPackets,visualFrames:st.visualFrames,rebuffers:st.rebuffers,bufferSeconds:c?Math.max(0,Math.round((nextT-c.currentTime)*100)/100):0,bufferTarget:AHEAD,lastError:st.lastError};};
+  return{packet:packet,config:config,reset:reset,soundLive:soundLive,visualsLive:visualsLive,canSound:canSound,get announced(){return announced;}};
+})();
+
+/* ============================================================
    HUD
    ============================================================ */
 function updViewerCount(){
@@ -1289,6 +1399,7 @@ function updHudBR(){
   if(perfKey)lines.push("Key: "+perfKey);
   if(perfScale)lines.push("Scale: "+perfScale);
   if(perfMode)lines.push("Mode: "+perfMode);
+  if(typeof SP!=="undefined"&&SP.announced)lines.push(SP.canSound()?"Sound: live from the performer":"Sound: simplified (update your browser for the full mix)");
   var hud=document.getElementById("hudBR");hud.textContent="";
   lines.forEach(function(l,i){if(i)hud.appendChild(document.createElement("br"));hud.appendChild(document.createTextNode(safeText(l,80)));});
 }
