@@ -121,6 +121,22 @@ How the pages pick a server, first match wins:
 
 ---
 
+## Live sound (what the audience hears)
+
+When you click **LIVE**, Chrome asks to share a tab. Pick **this tab** and keep **"Also share tab audio"** switched on. From then on the audience hears exactly what you hear: your instruments, effects, and whatever backing track or video is playing. In jam mode they also see the visualizer on the venue's big screen (not the music video itself).
+
+- The live panel shows **"Sharing your sound with the audience"**, a **Visuals** on/off switch, and how much server data the show has used.
+- If you cancel the share prompt, the audience still hears your notes (played on their own device) but not your backing music. Click **Share sound** to try again.
+- Needs Chrome or Edge on a computer. The audience needs a recent browser: iPhone with iOS 26 or later, or current Chrome on Android or a computer. Older phones fall back to notes only, and the venue says "Sound: simplified".
+- The audience hears you about half a second to a second behind. Music and notes stay together because they travel as one stream.
+- Play backing tracks from your local library rather than YouTube: the audience hears whatever you hear, ads included.
+
+**Data use.** Render's free plan includes about 5 GB of outbound data a month. Sound alone is roughly 45 MB per viewer per hour; with visuals, roughly 110 MB. That's about 20 viewers for 6 hours of sound only, or 2 hours with visuals. The live panel shows the running total for the current show.
+
+**Diagnostics.** On either page, open the console (F12) and type `ukStreamStats()`. On the performer page it shows frames captured, dropped and sent. On the venue it shows packets received and decoded, how often the sound buffer ran dry (`rebuffers`), and the last error.
+
+---
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |
@@ -135,6 +151,9 @@ How the pages pick a server, first match wins:
 | Crowd joins but `notes heard` stays at 0 | Notes aren't reaching the server | Click the "Click then play!" box on the performer page, then play |
 | Audience page is silent but notes arrive | The browser blocks sound until you interact | Click anywhere on the audience page once |
 | `audience cannot send performer events` fails | The deployed server is running old code | Redeploy the latest `server.js` |
+| Audience hears notes but no backing music | Sound sharing is off, or tab audio wasn't ticked | Click **Share sound** in the live panel and keep "Also share tab audio" on |
+| Venue says "Sound: simplified" | That phone or browser is too old for the live sound | Update the browser (iPhone: iOS 26 or later) |
+| Live sound is choppy | Slow connection on either end | Turn **Visuals** off; check `ukStreamStats()` on the venue for `rebuffers` |
 | A sample host check fails | That sample site is down or blocked on your network | Instruments from that collection won't load. Try another network to tell which |
 
 ---
