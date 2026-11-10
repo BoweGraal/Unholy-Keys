@@ -29,10 +29,12 @@ var NAMES = ["Rook", "Moth", "Vex", "Juno", "Kestrel", "Nyx", "Pike", "Sable", "
 var CHAT = ["this slaps", "LETS GO", "encore!", "what instrument is that?", "turn it up", "🔥🔥🔥", "play the bassoon one", "vibes", "hi from the back", "unholy indeed", "do a key change", "👏👏", "how long is the set?", "that solo though"];
 var COLORS = ["#D354A0", "#1D9E75", "#E0A030", "#5F9EA0", "#8A6BD1", "#E05050", "#3CB371", "#DB7093"];
 
-var stats = { connected: 0, joined: 0, failed: 0, notes: 0, inst: null, key: null, video: null, chatsIn: 0, chatsOut: 0, lastError: null, performerLeft: false };
+var stats = { connected: 0, joined: 0, failed: 0, notes: 0, inst: null, key: null, video: null, chatsIn: 0, chatsOut: 0, lastError: null, };
 var bots = [];
 var stopping = false;
 
+var NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+function keyName(r) { r = +r; return isFinite(r) ? NOTE_NAMES[((r % 12) + 12) % 12] : String(r); }
 function rand(a) { return a[Math.floor(Math.random() * a.length)]; }
 function clamp(v) { return Math.max(0.05, Math.min(0.95, v)); }
 
@@ -50,6 +52,7 @@ function makeBot(i) {
     if (m.type === "room-state") {
       stats.joined++;
       if (m.performerState && m.performerState.eng) stats.inst = m.performerState.eng;
+      if (m.performerState && m.performerState.scale) stats.key = keyName(m.performerState.root) + " " + m.performerState.scale;
       if (m.video && m.video.title) stats.video = m.video.title;
       // wander: a small step every 0.4-1s (the server allows 15 moves a second)
       bot.timers.push(setInterval(function() {
@@ -63,18 +66,21 @@ function makeBot(i) {
       }, 6000 + Math.random() * 9000));
       return;
     }
+    if (m.type === "performer-left") {
+      if (!stopping) { console.log("\nThe performer ended the show. Sending the crowd home."); stop(); }
+      return;
+    }
     if (!bot.first) return; // count performer events once, not once per bot
     if (m.type === "note" && m.on) stats.notes++;
     else if (m.type === "inst") stats.inst = m.id;
-    else if (m.type === "state") { if (m.eng) stats.inst = m.eng; stats.key = m.root + " " + m.scale; }
+    else if (m.type === "state") { if (m.eng) stats.inst = m.eng; stats.key = keyName(m.root) + " " + m.scale; }
     else if (m.type === "video") stats.video = m.title || m.vid;
     else if (m.type === "chat") stats.chatsIn++;
-    else if (m.type === "performer-left") stats.performerLeft = true;
   });
   ws.on("error", function(e) { stats.lastError = e.message; });
   ws.on("close", function() {
     bot.timers.forEach(clearInterval);
-    if (!stopping && bot.first && stats.performerLeft) { console.log("\nThe performer ended the show. Stopping."); stop(); }
+    if (!stopping && bot.first && stats.joined) { console.log("\nLost the connection to the server. Stopping."); stop(); }
   });
   return bot;
 }
