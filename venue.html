@@ -1294,7 +1294,7 @@ function updTapHint(){
    ============================================================ */
 var SP=(function(){
   var cfgA=null,cfgV=null,adec=null,vdec=null,nextT=0,lastAudio=0,lastVideo=0,lastDecoded=0,gotKey=false,gain=null,announced=false;
-  var AHEAD=0.35,st={audioPackets:0,audioDecoded:0,visualPackets:0,visualFrames:0,lastError:""};
+  var AHEAD=0.35,lastGrow=0,st={audioPackets:0,audioDecoded:0,visualPackets:0,visualFrames:0,rebuffers:0,lastError:""};
   function canSound(){return !!(window.AudioDecoder&&window.EncodedAudioChunk);}
   function canVisuals(){return !!(window.VideoDecoder&&window.EncodedVideoChunk);}
   function ctx(){return Tone.getContext().rawContext;}
@@ -1318,7 +1318,11 @@ var SP=(function(){
       var ch=ad.numberOfChannels,buf=c.createBuffer(ch,ad.numberOfFrames,ad.sampleRate);
       for(var i=0;i<ch;i++)ad.copyTo(buf.getChannelData(i),{planeIndex:i,format:"f32-planar"});
       var now=c.currentTime;
-      if(nextT<now+0.02||nextT>now+1.5)nextT=now+AHEAD;      /* (re)start the buffer after a gap or a pile-up */
+      if(nextT<now+0.02||nextT>now+1.5){
+        /* ran dry (or piled up): restart the buffer, a little deeper each time it ran dry, up to 1 s */
+        if(nextT&&nextT<now+0.02){st.rebuffers++;AHEAD=Math.min(1.0,AHEAD+0.1);lastGrow=Date.now();}
+        nextT=now+AHEAD;
+      }else if(Date.now()-lastGrow>30000&&AHEAD>0.35){AHEAD=Math.max(0.35,AHEAD-0.05);lastGrow=Date.now();}   /* smooth for a while: shrink back toward low delay */      /* (re)start the buffer after a gap or a pile-up */
       var src=c.createBufferSource();src.buffer=buf;src.connect(gain);src.start(nextT);nextT+=buf.duration;
       lastDecoded=Date.now();
     }catch(e){}
@@ -1375,7 +1379,7 @@ var SP=(function(){
   }
   setInterval(updScreen,500);
   /* For troubleshooting: type ukStreamStats() in the browser console */
-  window.ukStreamStats=function(){var c=null;try{c=ctx();}catch(e){}return {soundLive:soundLive(),visualsLive:visualsLive(),audioConfig:cfgA,decoderState:adec?adec.state:"none",audioContext:c?c.state:"none",audioPackets:st.audioPackets,audioDecoded:st.audioDecoded,visualPackets:st.visualPackets,visualFrames:st.visualFrames,lastError:st.lastError};};
+  window.ukStreamStats=function(){var c=null;try{c=ctx();}catch(e){}return {soundLive:soundLive(),visualsLive:visualsLive(),audioConfig:cfgA,decoderState:adec?adec.state:"none",audioContext:c?c.state:"none",audioPackets:st.audioPackets,audioDecoded:st.audioDecoded,visualPackets:st.visualPackets,visualFrames:st.visualFrames,rebuffers:st.rebuffers,bufferSeconds:c?Math.max(0,Math.round((nextT-c.currentTime)*100)/100):0,bufferTarget:AHEAD,lastError:st.lastError};};
   return{packet:packet,config:config,reset:reset,soundLive:soundLive,visualsLive:visualsLive,canSound:canSound,get announced(){return announced;}};
 })();
 
