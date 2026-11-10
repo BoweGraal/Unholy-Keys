@@ -37,6 +37,7 @@ var NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B
 function keyName(r) { r = +r; return isFinite(r) ? NOTE_NAMES[((r % 12) + 12) % 12] : String(r); }
 function rand(a) { return a[Math.floor(Math.random() * a.length)]; }
 function clamp(v) { return Math.max(0.05, Math.min(0.95, v)); }
+function clampY(v) { return Math.max(0.34, Math.min(0.74, v)); } // stay on the venue floor, off the stage
 
 function makeBot(i) {
   var bot = { name: rand(NAMES) + " " + (i + 1), x: 0.5, y: 0.5, ws: null, timers: [], first: i === 0 };
@@ -57,7 +58,7 @@ function makeBot(i) {
       // wander: a small step every 0.4-1s (the server allows 15 moves a second)
       bot.timers.push(setInterval(function() {
         bot.x = clamp(bot.x + (Math.random() - 0.5) * 0.06);
-        bot.y = clamp(bot.y + (Math.random() - 0.5) * 0.06);
+        bot.y = clampY(bot.y + (Math.random() - 0.5) * 0.06);
         send(bot, { type: "pos", x: bot.x, y: bot.y });
       }, 400 + Math.random() * 600));
       // chat now and then

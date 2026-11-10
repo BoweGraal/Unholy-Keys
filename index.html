@@ -115,6 +115,19 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #jmR{position:absolute;inset:0;z-index:2;background:transparent;overflow:hidden}
 #jcv{position:absolute;top:0;left:0;pointer-events:none;opacity:0.55}
 #jnd{display:none}
+#jAud{display:none;position:absolute;right:20px;bottom:20px;width:300px;z-index:12;background:rgba(8,8,18,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;color:#eee;cursor:default;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+#jAud.on{display:block}
+#jAudH{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.65);cursor:pointer;user-select:none}
+#jAudH .dot{width:8px;height:8px;border-radius:50%;background:#E24B4A;animation:pls 1s infinite;flex-shrink:0}
+#jAudH .n{margin-left:auto;color:#fff}
+#jAudH .mm{width:16px;text-align:center;color:rgba(255,255,255,.5)}
+#jAudCv{display:block;width:300px;height:120px}
+#jAudChat{padding:6px 10px 8px;font-size:12px;line-height:1.4;height:96px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
+#jAudChat div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:opacity .4s}
+#jAudChat b{font-weight:700;margin-right:5px}
+#jAudChat .empty{color:rgba(255,255,255,.35);font-style:italic;white-space:normal}
+#jAud.min #jAudCv,#jAud.min #jAudChat{display:none}
+#jm.cursor-show #jAud,#jm.picker-open #jAud{cursor:default}
 #jInstPick{position:absolute;top:16px;left:20px;z-index:20;display:flex;flex-direction:column;gap:4px}
 #jInstPick select{background:rgba(0,0,0,.5);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:var(--r);padding:6px 10px;font-size:12px;font-weight:600;outline:none;cursor:pointer}
 #jInstPick select option{background:#1a1a2e;color:#fff}
@@ -479,7 +492,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   </div>
 </div>
 <div id="jm">
-  <div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jAud" title="Your live audience. Click the header to shrink it."><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudMin">&#8211;</span></div><canvas id="jAudCv" width="600" height="240"></canvas><div id="jAudChat"><div class="empty">Chat from the venue shows up here</div></div></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
   <div id="jmR"><canvas id="jcv"></canvas><div id="jnd"></div>
     <button id="jx" style="display:none">ESC Exit</button>
     <button id="jfs" style="display:none;position:absolute;top:20px;right:130px;z-index:10;padding:8px 14px;font-size:11px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);color:#fff;text-transform:uppercase">&#9974; FS</button>
@@ -3449,6 +3462,7 @@ function goLive(){
       liveOn=true;
       document.getElementById("livePnl").style.display="block";
       document.getElementById("liveCode").textContent=msg.room;
+      audReset();
       document.getElementById("bLive").textContent="LIVE";
       document.getElementById("bLive").style.animation="pls 1s infinite";
       liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
@@ -3456,10 +3470,9 @@ function goLive(){
     }
     if(msg.type==="viewer-count"){
       document.getElementById("liveViewers").textContent=msg.count+" viewer"+(msg.count!==1?"s":"");
+      AUD.count=msg.count;
     }
-    if(msg.type==="chat"){
-      dbg(msg.name+": "+msg.text);
-    }
+    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat")audEvent(msg);
   };
   liveWs.onclose=function(){if(liveOn)endLive();else liveFail();};
   liveWs.onerror=function(){liveFail();};
@@ -3500,6 +3513,61 @@ YT.onPlay=function(vid,title){
 };
 /* Keep the audience in step: send play/pause the moment they happen, and the current
    position every few seconds while playing (the audience page corrects any drift). */
+/* ── Live audience panel (jam mode, bottom right) ──
+   A small copy of the venue: everyone in the room as a dot where they are standing,
+   and the latest chat. Shown in jam mode while you are live. Click the header to shrink it. */
+var AUD={people:{},chat:[],count:0,min:false};
+try{AUD.min=localStorage.getItem("uk_jaud_min")==="1";}catch(e){}
+function audReset(){AUD.people={};AUD.chat=[];AUD.count=0;renderAudChat();}
+function audEvent(msg){
+  var id=msg.id||msg.viewerId;
+  if(msg.type==="viewer-join"&&id){AUD.people[id]={name:String(msg.name||"").slice(0,24),color:/^#[0-9a-fA-F]{6}$/.test(msg.color)?msg.color:"#888888",x:+msg.x||.5,y:+msg.y||.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0};}
+  else if(msg.type==="pos"&&id){var p=AUD.people[id];if(!p)p=AUD.people[id]={name:String(msg.name||""),color:"#888888",x:+msg.x||.5,y:+msg.y||.5,dx:.5,dy:.5,said:0};p.x=+msg.x||p.x;p.y=+msg.y||p.y;}
+  else if(msg.type==="viewer-leave"&&id){delete AUD.people[id];}
+  else if(msg.type==="chat"){
+    if(id&&AUD.people[id])AUD.people[id].said=Date.now();
+    AUD.chat.push({name:String(msg.name||"?").slice(0,24),color:/^#[0-9a-fA-F]{6}$/.test(msg.color)?msg.color:"#cccccc",text:String(msg.text||"").slice(0,300),t:Date.now()});
+    if(AUD.chat.length>40)AUD.chat.shift();
+    renderAudChat();
+  }
+}
+function renderAudChat(){
+  var c=document.getElementById("jAudChat");if(!c)return;c.textContent="";
+  if(!AUD.chat.length){var e=document.createElement("div");e.className="empty";e.textContent="Chat from the venue shows up here";c.appendChild(e);return;}
+  var last=AUD.chat.slice(-5);
+  last.forEach(function(m,i){var d=document.createElement("div");var b=document.createElement("b");b.style.color=m.color;b.textContent=m.name;d.appendChild(b);d.appendChild(document.createTextNode(m.text));d.title=m.name+": "+m.text;d.style.opacity=String(.45+.55*(i+1)/last.length);c.appendChild(d);});
+}
+function drawAud(){
+  var box=document.getElementById("jAud");if(!box)return;
+  var show=jamOn&&liveOn;
+  if(show!==box.classList.contains("on"))box.classList.toggle("on",show);
+  box.classList.toggle("min",AUD.min);
+  if(!show)return;
+  document.getElementById("jAudRoom").textContent="Live \u00b7 "+(document.getElementById("liveCode").textContent||"");
+  var ids=Object.keys(AUD.people);
+  var n=Math.max(AUD.count,ids.length);document.getElementById("jAudN").textContent=n+" viewer"+(n!==1?"s":"");
+  if(AUD.min)return;
+  var cv=document.getElementById("jAudCv"),g=cv.getContext("2d"),W=cv.width,H=cv.height,sy=H/0.85;
+  g.clearRect(0,0,W,H);
+  /* stage (venue y 0-0.30) and floor (0.30-0.78), same layout as venue.html */
+  var st=g.createLinearGradient(0,0,0,.30*sy);st.addColorStop(0,"#2a1638");st.addColorStop(1,"#1a0f24");g.fillStyle=st;g.fillRect(0,0,W,.30*sy);
+  g.fillStyle="#0c0c14";g.fillRect(0,.30*sy,W,H-.30*sy);
+  g.fillStyle="rgba(211,84,160,.55)";g.fillRect(0,.30*sy-3,W,3);
+  /* you, on stage; glows while a note is sounding */
+  var px=W/2,py=.17*sy,on=!!activeVoice;
+  if(on){var gl=g.createRadialGradient(px,py,4,px,py,40);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(px,py,40,0,6.3);g.fill();}
+  g.fillStyle="#D354A0";g.beginPath();g.arc(px,py-6,9,0,6.3);g.fill();g.fillRect(px-8,py+3,16,14);
+  /* audience */
+  var now=Date.now();
+  ids.forEach(function(id){var p=AUD.people[id];p.dx+=(p.x-p.dx)*.25;p.dy+=(p.y-p.dy)*.25;
+    var x=p.dx*W,y=Math.min(H-6,p.dy*sy);
+    if(now-p.said<4000){g.strokeStyle="rgba(255,255,255,"+(1-(now-p.said)/4000)+")";g.lineWidth=2;g.beginPath();g.arc(x,y,12,0,6.3);g.stroke();}
+    g.fillStyle=p.color;g.beginPath();g.arc(x,y,7,0,6.3);g.fill();g.strokeStyle="rgba(0,0,0,.6)";g.lineWidth=1.5;g.stroke();});
+  if(!ids.length){g.fillStyle="rgba(255,255,255,.35)";g.font="22px system-ui,sans-serif";g.textAlign="center";g.fillText("Waiting for the audience\u2026",W/2,.6*sy);}
+}
+setInterval(drawAud,80);
+document.getElementById("jAudH").onclick=function(){AUD.min=!AUD.min;try{localStorage.setItem("uk_jaud_min",AUD.min?"1":"0");}catch(e){}document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";drawAud();};
+document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
 function videoMsg(){
   var st=YT.status();if(!st.vid)return null;
   if(st.state===-1||st.state===5)return null;              /* not started yet */
