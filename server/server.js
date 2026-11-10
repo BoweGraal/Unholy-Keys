@@ -7,9 +7,50 @@
     forwarded unless it is one of those two message types, rebuilt field by field. */
 
 var WebSocket = require("ws");
+var http = require("http");
+var fs = require("fs");
+var path = require("path");
 var PORT = process.env.PORT || 8080;
-var wss = new WebSocket.Server({ port: PORT, maxPayload: 16 * 1024 });
 var rooms = {};
+var STARTED = Date.now();
+
+/* ── HTTP side ──────────────────────────────────────────────────────────────
+   /health  JSON status, so you can check a deployed server from any browser.
+   Anything else serves the app's own pages from the folder above this one when
+   they are there (they are when you run it locally; on Railway/Render only this
+   folder is deployed, so those requests simply 404). Serving the pages over
+   http:// instead of opening the files directly also keeps the Bit Crush effect
+   working, which browsers block on file:// pages. */
+var WEB_ROOT = path.resolve(__dirname, "..");
+var TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json",
+  ".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif", ".svg": "image/svg+xml", ".ico": "image/x-icon",
+  ".wav": "audio/wav", ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".ogg": "audio/ogg" };
+function health() {
+  var viewers = 0; Object.keys(rooms).forEach(function(k) { viewers += rooms[k].viewers.size; });
+  return { ok: true, service: "unholy-keys-relay", rooms: Object.keys(rooms).length, viewers: viewers,
+    uptimeSeconds: Math.round((Date.now() - STARTED) / 1000), node: process.version };
+}
+var server = http.createServer(function(req, res) {
+  var url = (req.url || "/").split("?")[0];
+  if (url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" });
+    return res.end(JSON.stringify(health()));
+  }
+  var rel;
+  try { rel = decodeURIComponent(url); } catch (e) { res.writeHead(400); return res.end("Bad request"); }
+  if (rel === "/") rel = "/index.html";
+  var file = path.resolve(WEB_ROOT, "." + rel);
+  var ext = path.extname(file).toLowerCase();
+  var inside = file.indexOf(WEB_ROOT + path.sep) === 0;
+  var hidden = /[\\/](\.|node_modules[\\/]|server[\\/])/.test(file.slice(WEB_ROOT.length));
+  if (req.method !== "GET" || !inside || hidden || !TYPES[ext]) { res.writeHead(404, { "Content-Type": "text/plain" }); return res.end("Not found"); }
+  fs.readFile(file, function(err, data) {
+    if (err) { res.writeHead(404, { "Content-Type": "text/plain" }); return res.end("Not found"); }
+    res.writeHead(200, { "Content-Type": TYPES[ext], "Cache-Control": "no-cache" });
+    res.end(data);
+  });
+});
+var wss = new WebSocket.Server({ server: server, maxPayload: 16 * 1024 });
 
 var MAX_VIEWERS = 200;
 var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1 };
@@ -164,4 +205,11 @@ var hb = setInterval(function() {
 
 wss.on("close", function() { clearInterval(hb); });
 
-console.log("Unholy Keys relay server running on port " + PORT);
+server.listen(PORT, function() {
+  console.log("Unholy Keys relay server running on port " + PORT);
+  if (fs.existsSync(path.join(WEB_ROOT, "index.html"))) {
+    console.log("  Performer page:  http://localhost:" + PORT + "/");
+    console.log("  Audience page:   http://localhost:" + PORT + "/venue.html");
+  }
+  console.log("  Health check:    http://localhost:" + PORT + "/health");
+});

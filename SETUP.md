@@ -152,16 +152,9 @@ You (index.html)                    Audience (venue.html)
 
 ---
 
-## Local Testing (optional)
+## Local Testing
 
-If you want to test everything on your own machine before deploying:
-
-1. Install Node.js (18+): [nodejs.org](https://nodejs.org)
-2. Open a terminal in the `server` folder
-3. Run: `npm install && node server.js`
-4. Open `index.html` directly in your browser (or use `npx serve ..` from the server folder)
-5. The `WS_URL` is already set to `ws://localhost:8080` — works out of the box
-6. Open `venue.html` in another tab to test the audience view
+See [TESTING.md](TESTING.md): run the server and both pages on your own computer, fill the room with fake audience members, and check a deployed server.
 
 ---
 
