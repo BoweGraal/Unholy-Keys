@@ -48,7 +48,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   background:linear-gradient(135deg,var(--tl),var(--pu));border:none;border-radius:var(--r);color:#fff;text-transform:uppercase}
 .row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;align-items:flex-end}
 .cg{display:flex;flex-direction:column;gap:4px}
-.cg label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+.cg label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+.natoct{text-transform:none;letter-spacing:0;color:var(--tx3);margin-left:6px;cursor:pointer;white-space:nowrap}.natoct input{vertical-align:-2px;margin:0 2px 0 0;accent-color:var(--pk)}
 .cg select,.cg input[type=number]{background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);
   padding:8px 12px;border-radius:var(--r);font-size:14px;outline:none}
 .cg select:focus,.cg input:focus{border-color:var(--pk)}
@@ -258,7 +259,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   <div class="row">
     <div class="cg"><label>Root</label><select id="sR"></select></div>
     <div class="cg"><label>Scale</label><select id="sS"></select></div>
-    <div class="cg"><label>Octave</label><select id="sO"></select></div>
+    <div class="cg"><label>Octave <span class="natoct" title="Each instrument starts in the octave it is normally played in. Change the octave and it is remembered for that instrument."><input type="checkbox" id="natOctCb" checked> Auto</span></label><select id="sO"></select></div>
 
     <div class="cg"><label>Volume</label><input type="range" class="vsl" id="sV" min="0" max="1" step=".05" value=".5"></div>
     <div class="cg"><label>Impact BPM</label><input type="number" id="sT" value="600" min="60" max="1200" step="10" style="width:70px"></div>
@@ -1179,7 +1180,7 @@ var CATS=[
 /* Collections: where each group of instruments comes from. Used by the picker above the instrument list. */
 var COLS=[{id:"all",l:"All"},{id:"core",l:"Core samples"},{id:"synth",l:"Synths"},{id:"gm",l:"General MIDI"},{id:"mk",l:"MusyngKite"},{id:"fb",l:"FatBoy"},{id:"piano",l:"Grand & Casio"},{id:"ep",l:"Electric pianos"},{id:"mello",l:"Mellotron"},{id:"vcsl",l:"Versilian"},{id:"graal",l:"Graal"}];
 var CAT_COL={rock:"core",strings:"core",keys:"core",brass:"core",woodwind:"core",chip:"synth",edm:"synth",lofi:"synth",basic:"synth",graal:"graal","gm-keys":"gm","gm-guitar":"gm","gm-strings":"gm","gm-brass":"gm","gm-perc":"gm","gm-synth":"gm","mk-guitar":"mk","fb-guitar":"fb","hq-piano":"piano","hq-casio":"piano"};
-CATS.forEach(function(cat){cat.col=cat.col||CAT_COL[cat.id]||"core";});
+CATS.forEach(function(cat){cat.col=cat.col||CAT_COL[cat.id]||"core";cat.items.forEach(function(it){it.col=it.col||cat.col;});});
 var instCol="all";try{var _ic=localStorage.getItem("uk_inst_col");if(_ic&&COLS.some(function(c){return c.id===_ic;}))instCol=_ic;}catch(e){}
 var allInst=[],keyMap={};
 CATS.forEach(function(cat){cat.items.forEach(function(ins){ins.cat=cat.id;ins.catC=cat.c;ins.acC=cat.ac;allInst.push(ins);if(ins.key)keyMap[ins.key]=ins.id;});});
@@ -1340,7 +1341,7 @@ function playNote(nk,midi){if(!audioReady)return;silenceNote();var noteName=Tone
 
 function refreshNote(){if(arrowStack.length===0){silenceNote();return;}var dir=arrowStack[arrowStack.length-1];var nk=getMod()+"-"+dir;var midi=layout[nk];if(nk===activeNoteKey)return;if(midi!==undefined)playNote(nk,midi);else silenceNote();}
 
-function handleKeyDown(code,key){initAudio();if(key==="F11"){jamFullscreen();showJamToast("Fullscreen","#888");return;}if(key==="F12"){LOCAL.restart();BACKING.restart();showJamToast("↺ Restart","#D354A0");return;}if(key==="Escape"&&jamOn){exitJam();return;}if(code==="KeyT"&&jamOn){toggleSplit();return;}if(code==="KeyL"&&jamOn){toggleJamLoop();return;}if(code==="KeyQ"&&jamOn){var _jp=document.getElementById("jamPicker");if(_jp&&_jp.style.display==="flex"){closeJamPicker();}else{openJamPicker();}return;}if(code==="KeyF"&&!jamOn){enterJam();return;}if(code==="KeyF"&&jamOn){jamFullscreen();return;}if(code==="KeyN"&&jamOn){if(typeof SHOW!=="undefined"&&SHOW.playing){SHOW.advance(1);return;}if(SETLIST.isActive()){SETLIST.next();syncJamVideo();}else if(LOCAL.hasPlaylist()){LOCAL.next();}else if(BACKING.hasPlaylist()){BACKING.next();}else if(YT.list.length){YT.next();syncJamVideo();}showJamToast("▶▶ Next","#1D9E75");return;}if(code==="KeyP"&&jamOn){if(typeof SHOW!=="undefined"&&SHOW.playing){SHOW.advance(-1);return;}if(SETLIST.isActive()){SETLIST.prev();syncJamVideo();}else if(LOCAL.hasPlaylist()){LOCAL.prev();}else if(BACKING.hasPlaylist()){BACKING.prev();}else if(YT.list.length){YT.prev();syncJamVideo();}showJamToast("◄◄ Prev","#1D9E75");return;}if(code==="Backquote"){VIZFX.random();return;}if(code==="F4"&&jamOn){openVizStampPicker();return;}if(code==="F5"&&jamOn){VIZFX.cycle();return;}if(code==="NumpadMultiply"&&jamOn){VIZFX.random();return;}if(code==="NumpadDivide"&&jamOn){VIZFX.toggleAlt();return;}if(code==="NumpadAdd"||code==="Numpad0"){if(S.oct<7){S.oct++;rebuild();showOctFlash();saveSession();}return;}if(code==="NumpadSubtract"){if(S.oct>1){S.oct--;rebuild();showOctFlash();saveSession();}return;}if(code==="Delete"){S.power=Math.max(0,Math.round((S.power-0.1)*10)/10);updPowerUI();showJamToast("Power "+Math.round(S.power*100)+"%","#7F77DD");return;}if(code==="PageDown"){S.power=Math.min(1,Math.round((S.power+0.1)*10)/10);updPowerUI();showJamToast("Power "+Math.round(S.power*100)+"%","#7F77DD");return;}if(code==="Insert"||code==="Minus"){S.vol=Math.max(0,Math.round((S.vol-0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();showJamToast("Vol "+Math.round(S.vol*100)+"%","#EF9F27");return;}if(code==="PageUp"||code==="Equal"){S.vol=Math.min(1,Math.round((S.vol+0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();showJamToast("Vol "+Math.round(S.vol*100)+"%","#EF9F27");return;}if(code==="Numpad1"){handleNumpad(1);return;}if(code==="Numpad2"){handleNumpad(2);return;}if(code==="Numpad3"){handleNumpad(3);return;}if(code==="Numpad4"){handleNumpad(4);return;}if(code==="Numpad5"){handleNumpad(5);return;}if(code==="Numpad6"){handleNumpad(6);return;}if(code==="Numpad7"){handleNumpad(7);return;}if(code==="Numpad8"){handleNumpad(8);return;}if(code==="Numpad9"){handleNumpad(9);return;}if(key===" "){if(!mods.space){mods.space=true;updModInd();if(spaceGraceTimer)clearTimeout(spaceGraceTimer);spaceGraceTimer=setTimeout(function(){spaceGraceTimer=null;refreshNote();},spaceGraceMs);}return;}if(code==="KeyD"){if(!mods.d){mods.d=true;updModInd();if(spaceGraceTimer){clearTimeout(spaceGraceTimer);spaceGraceTimer=null;}refreshNote();}return;}if(code==="CapsLock"){mods.c=!mods.c;updChordInd();refreshNote();showJamToast(mods.c?"Chord ON":"Chord OFF","#EF9F27");return;}if(code==="KeyE"){if(!mods.e){mods.e=true;updModInd();refreshNote();}return;}if(code==="Digit3"){if(!mods.three){mods.three=true;updModInd();refreshNote();}return;}if(key==="Tab"){S.mode=(S.mode==="sustain"?"impact":"sustain");renderModes();return;}if(code==="KeyZ"){S.mode="impact";renderModes();return;}if(key==="Shift"){swapScale();return;}if(key==="Control"){S.mode="staccato";renderModes();return;}if(code==="KeyV"){S.mode="legato";renderModes();return;}if(keyMap[key]){selInst(keyMap[key]);return;}var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(!dir)return;if(arrowStack.indexOf(dir)===-1)arrowStack.push(dir);dbg("stack=["+arrowStack.join(",")+"] mod="+getMod());refreshNote();}
+function handleKeyDown(code,key){initAudio();if(key==="F11"){jamFullscreen();showJamToast("Fullscreen","#888");return;}if(key==="F12"){LOCAL.restart();BACKING.restart();showJamToast("↺ Restart","#D354A0");return;}if(key==="Escape"&&jamOn){exitJam();return;}if(code==="KeyT"&&jamOn){toggleSplit();return;}if(code==="KeyL"&&jamOn){toggleJamLoop();return;}if(code==="KeyQ"&&jamOn){var _jp=document.getElementById("jamPicker");if(_jp&&_jp.style.display==="flex"){closeJamPicker();}else{openJamPicker();}return;}if(code==="KeyF"&&!jamOn){enterJam();return;}if(code==="KeyF"&&jamOn){jamFullscreen();return;}if(code==="KeyN"&&jamOn){if(typeof SHOW!=="undefined"&&SHOW.playing){SHOW.advance(1);return;}if(SETLIST.isActive()){SETLIST.next();syncJamVideo();}else if(LOCAL.hasPlaylist()){LOCAL.next();}else if(BACKING.hasPlaylist()){BACKING.next();}else if(YT.list.length){YT.next();syncJamVideo();}showJamToast("▶▶ Next","#1D9E75");return;}if(code==="KeyP"&&jamOn){if(typeof SHOW!=="undefined"&&SHOW.playing){SHOW.advance(-1);return;}if(SETLIST.isActive()){SETLIST.prev();syncJamVideo();}else if(LOCAL.hasPlaylist()){LOCAL.prev();}else if(BACKING.hasPlaylist()){BACKING.prev();}else if(YT.list.length){YT.prev();syncJamVideo();}showJamToast("◄◄ Prev","#1D9E75");return;}if(code==="Backquote"){VIZFX.random();return;}if(code==="F4"&&jamOn){openVizStampPicker();return;}if(code==="F5"&&jamOn){VIZFX.cycle();return;}if(code==="NumpadMultiply"&&jamOn){VIZFX.random();return;}if(code==="NumpadDivide"&&jamOn){VIZFX.toggleAlt();return;}if(code==="NumpadAdd"||code==="Numpad0"){if(S.oct<7){S.oct++;rememberOct();rebuild();showOctFlash();saveSession();}return;}if(code==="NumpadSubtract"){if(S.oct>1){S.oct--;rememberOct();rebuild();showOctFlash();saveSession();}return;}if(code==="Delete"){S.power=Math.max(0,Math.round((S.power-0.1)*10)/10);updPowerUI();showJamToast("Power "+Math.round(S.power*100)+"%","#7F77DD");return;}if(code==="PageDown"){S.power=Math.min(1,Math.round((S.power+0.1)*10)/10);updPowerUI();showJamToast("Power "+Math.round(S.power*100)+"%","#7F77DD");return;}if(code==="Insert"||code==="Minus"){S.vol=Math.max(0,Math.round((S.vol-0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();showJamToast("Vol "+Math.round(S.vol*100)+"%","#EF9F27");return;}if(code==="PageUp"||code==="Equal"){S.vol=Math.min(1,Math.round((S.vol+0.1)*10)/10);document.getElementById("sV").value=S.vol;updJamVol();showJamToast("Vol "+Math.round(S.vol*100)+"%","#EF9F27");return;}if(code==="Numpad1"){handleNumpad(1);return;}if(code==="Numpad2"){handleNumpad(2);return;}if(code==="Numpad3"){handleNumpad(3);return;}if(code==="Numpad4"){handleNumpad(4);return;}if(code==="Numpad5"){handleNumpad(5);return;}if(code==="Numpad6"){handleNumpad(6);return;}if(code==="Numpad7"){handleNumpad(7);return;}if(code==="Numpad8"){handleNumpad(8);return;}if(code==="Numpad9"){handleNumpad(9);return;}if(key===" "){if(!mods.space){mods.space=true;updModInd();if(spaceGraceTimer)clearTimeout(spaceGraceTimer);spaceGraceTimer=setTimeout(function(){spaceGraceTimer=null;refreshNote();},spaceGraceMs);}return;}if(code==="KeyD"){if(!mods.d){mods.d=true;updModInd();if(spaceGraceTimer){clearTimeout(spaceGraceTimer);spaceGraceTimer=null;}refreshNote();}return;}if(code==="CapsLock"){mods.c=!mods.c;updChordInd();refreshNote();showJamToast(mods.c?"Chord ON":"Chord OFF","#EF9F27");return;}if(code==="KeyE"){if(!mods.e){mods.e=true;updModInd();refreshNote();}return;}if(code==="Digit3"){if(!mods.three){mods.three=true;updModInd();refreshNote();}return;}if(key==="Tab"){S.mode=(S.mode==="sustain"?"impact":"sustain");renderModes();return;}if(code==="KeyZ"){S.mode="impact";renderModes();return;}if(key==="Shift"){swapScale();return;}if(key==="Control"){S.mode="staccato";renderModes();return;}if(code==="KeyV"){S.mode="legato";renderModes();return;}if(keyMap[key]){selInst(keyMap[key]);return;}var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(!dir)return;if(arrowStack.indexOf(dir)===-1)arrowStack.push(dir);dbg("stack=["+arrowStack.join(",")+"] mod="+getMod());refreshNote();}
 function handleKeyUp(code,key){if(key===" "){if(spaceGraceTimer){clearTimeout(spaceGraceTimer);spaceGraceTimer=null;/* released before grace expired — don't play Space-only pip */}mods.space=false;}if(code==="KeyD")mods.d=false;if(code==="KeyE"){mods.e=false;updModInd();refreshNote();}if(code==="Digit3"){mods.three=false;updModInd();refreshNote();}/* CapsLock is toggle, no keyUp needed */var dir=null;if(key==="ArrowUp")dir="up";else if(key==="ArrowLeft")dir="left";else if(key==="ArrowDown")dir="down";else if(key==="ArrowRight")dir="right";if(dir){var idx=arrowStack.indexOf(dir);if(idx!==-1)arrowStack.splice(idx,1);}updModInd();refreshNote();}
 
 var cap=document.getElementById("cap");
@@ -1373,7 +1374,55 @@ document.getElementById("bMobile").onclick=function(){enterMobile();};
 document.getElementById("mb-exit").onclick=function(){exitMobile();};
 document.getElementById("ytQ").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();YT.search();}});
 
-function selInst(id){var ins=findInst(id);if(!ins)return;if(ins.t==="samp"&&!samplers[id]){initAudio();loadSamp(id);}S.eng=id;
+/* ── Natural octave per instrument ─────────────────────────────────────────
+   Picking an instrument moves the octave to where that instrument is normally played,
+   so the plain arrow keys land in its sweet spot (a contrabass starts low, a piccolo high)
+   and Space/D/E/3 climb from there. The number is the same Octave setting as the dropdown:
+   at octave 4 the plain Up arrow plays the key's root in the octave below middle C.
+   Change the octave yourself and that offset is remembered for that instrument.
+   The "Auto" box next to Octave turns this off. First matching rule wins. */
+var NAT_OCT_RULES=[
+  [/graal-bassoon/,4],                                   /* custom samples sit higher than a real bassoon */
+  [/bass\+lead/,4],
+  [/piccolo|glockenspiel|glock\b|tinkle|music ?box|whistle/,6],
+  [/contra ?bass|double bass|upright bass|tuba|\bbass(oon)?\b.*guitar|bass guitar|bass-electric|electric bass|acoustic[ _-]bass|fretless|slap bass|finger bass|pick bass|synth[ _-]?bass|bass di|sub bass|mellow bass|acid|303|baritone|bari sax|bass clarinet|timpani|didgeridoo|\bcello|bassoon|half-speed brass/,3],
+  [/violin|fiddle|flute|recorder|ocarina|pan ?flute|shakuhachi|oboe|soprano sax|saxello|trumpet|cornet|vibraphone|vibes|celesta|kalimba|steel ?drum|harmonica|xylophone|tubular|wine glass|bagpipe|shanai|shehnai|calliope|chiff|\blead\b|trance|fm bell|glass chime|chime|\bbells?\b|psaltery/,5]
+];
+function natOct(ins){
+  if(!ins)return 4;
+  if(typeof ins.oct==="number")return ins.oct;
+  var lowest=null;
+  if(ins.n&&ins.n!==GN&&ins.n!==GL&&ins.n!==GH&&(typeof GW==="undefined"||ins.n!==GW)&&(typeof GMH==="undefined"||ins.n!==GMH)){
+    Object.keys(ins.n).forEach(function(k){var m=noteToMidi(k);if(m!==null&&(lowest===null||m<lowest))lowest=m;});
+  }
+  var o=null;
+  /* Mellotron/Chamberlin tapes have a fixed, known range: start at the first C inside it */
+  if(ins.col==="mello"&&lowest!==null)o=Math.ceil(lowest/12);
+  if(o===null){var t=(ins.id+" "+ins.l).toLowerCase();for(var i=0;i<NAT_OCT_RULES.length;i++){if(NAT_OCT_RULES[i][0].test(t)){o=NAT_OCT_RULES[i][1];break;}}}
+  if(o===null)o=4;
+  /* never start more than 7 semitones below the lowest real sample (stretching further sounds bad) */
+  if(lowest!==null)while(o<7&&o*12<lowest-7)o++;
+  return Math.max(1,Math.min(7,o));
+}
+function noteToMidi(n){var m=/^([A-G])(#|b)?(-?\d)$/.exec(n);if(!m)return null;return "C D EF G A B".indexOf(m[1])+(m[2]==="#"?1:m[2]==="b"?-1:0)+(+m[3]+1)*12;}
+var natOctOn=true,natOctOff={};
+try{natOctOn=localStorage.getItem("uk_nat_oct")!=="0";natOctOff=JSON.parse(localStorage.getItem("uk_nat_oct_off")||"{}")||{};}catch(e){natOctOff={};}
+/* call after the user changes the octave by hand: remember it relative to this instrument's natural octave */
+function rememberOct(){
+  if(!natOctOn)return;
+  var off=S.oct-natOct(findInst(S.eng));
+  if(off)natOctOff[S.eng]=off;else delete natOctOff[S.eng];
+  try{localStorage.setItem("uk_nat_oct_off",JSON.stringify(natOctOff));}catch(e){}
+}
+function applyNatOct(id){
+  if(!natOctOn)return false;
+  var o=Math.max(1,Math.min(7,natOct(findInst(id))+(natOctOff[id]||0)));
+  if(o===S.oct)return false;
+  S.oct=o;var so=document.getElementById("sO");if(so)so.value=o;
+  rebuild();if(jamOn&&typeof showOctFlash==="function")showOctFlash();
+  return true;
+}
+function selInst(id){var ins=findInst(id);if(!ins)return;if(ins.t==="samp"&&!samplers[id]){initAudio();loadSamp(id);}S.eng=id;applyNatOct(id);
   var matched=false;for(var _i=0;_i<9;_i++){if(hkSlots[_i]===id){activeSlot=_i;matched=true;break;}}if(!matched)activeSlot=-1;
   renderInst();updBdg();updJInfo();renderHkGrid();
   if(jamOn){renderJamHkStrip();var jSel=document.getElementById("jInstSel");if(jSel)jSel.value=id;showJamToast(ins.l,"#EF9F27");}document.getElementById("mb-inst-disp").textContent=ins.l;saveSession();}
@@ -1396,7 +1445,8 @@ function swapScale(){
   else{ind.textContent="Primary";ind.style.cssText="background:var(--bg3);color:var(--tx3);font-size:11px";}
   rebuild();saveSession();dbg("Swapped to "+(onAlt?"Alt":"Primary")+": "+ROOTS_D[S.root]+" "+S.scale);
 }
-function initSelects(){var r=document.getElementById("sR");ROOTS_D.forEach(function(x,i){var o=document.createElement("option");o.value=i;o.textContent=x;r.appendChild(o);});r.value=S.root;r.onchange=function(){S.root=+r.value;saveSession();rebuild();showJamToast(ROOTS[S.root]+" "+S.scale,"#7F77DD");};var s=document.getElementById("sS");Object.keys(SCALES).forEach(function(x){var o=document.createElement("option");o.value=x;o.textContent=x;s.appendChild(o);});s.value=S.scale;s.onchange=function(){S.scale=s.value;rebuild();saveSession();showJamToast(ROOTS[S.root]+" "+S.scale,"#7F77DD");};var o=document.getElementById("sO");[1,2,3,4,5,6,7].forEach(function(x){var op=document.createElement("option");op.value=x;op.textContent=x;o.appendChild(op);});o.value=S.oct;o.onchange=function(){S.oct=+o.value;rebuild();saveSession();};document.getElementById("sV").oninput=function(e){S.vol=+e.target.value;};document.getElementById("sT").onchange=function(e){S.tempo=Math.max(60,Math.min(1200,+e.target.value));};
+function initSelects(){var r=document.getElementById("sR");ROOTS_D.forEach(function(x,i){var o=document.createElement("option");o.value=i;o.textContent=x;r.appendChild(o);});r.value=S.root;r.onchange=function(){S.root=+r.value;saveSession();rebuild();showJamToast(ROOTS[S.root]+" "+S.scale,"#7F77DD");};var s=document.getElementById("sS");Object.keys(SCALES).forEach(function(x){var o=document.createElement("option");o.value=x;o.textContent=x;s.appendChild(o);});s.value=S.scale;s.onchange=function(){S.scale=s.value;rebuild();saveSession();showJamToast(ROOTS[S.root]+" "+S.scale,"#7F77DD");};var o=document.getElementById("sO");[1,2,3,4,5,6,7].forEach(function(x){var op=document.createElement("option");op.value=x;op.textContent=x;o.appendChild(op);});o.value=S.oct;o.onchange=function(){S.oct=+o.value;rememberOct();rebuild();saveSession();};
+  var nc=document.getElementById("natOctCb");if(nc){nc.checked=natOctOn;nc.onchange=function(){natOctOn=nc.checked;try{localStorage.setItem("uk_nat_oct",natOctOn?"1":"0");}catch(e){}if(natOctOn)applyNatOct(S.eng);saveSession();};}document.getElementById("sV").oninput=function(e){S.vol=+e.target.value;};document.getElementById("sT").onchange=function(e){S.tempo=Math.max(60,Math.min(1200,+e.target.value));};
   /* Alt scale selectors */
   var r2=document.getElementById("sR2");ROOTS_D.forEach(function(x,i){var o=document.createElement("option");o.value=i;o.textContent=x;r2.appendChild(o);});r2.value=altRoot;r2.onchange=function(){altRoot=+r2.value;saveSession();};
   var s2=document.getElementById("sS2");Object.keys(SCALES).forEach(function(x){var o=document.createElement("option");o.value=x;o.textContent=x;s2.appendChild(o);});s2.value=altScale;s2.onchange=function(){altScale=s2.value;saveSession();};
