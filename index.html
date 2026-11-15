@@ -236,12 +236,40 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 .sd-song-settings{font-size:11px;color:var(--am);margin-top:4px;font-weight:600}
 .sd-next{opacity:.55}
 .sd-next .sd-song-name{font-size:13px}
+
+/* ── Jam setup menu: the main app slides in as a left drawer over jam mode ── */
+#jSetupBtn{position:absolute;top:16px;left:20px;z-index:21;display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.22);border-radius:var(--r);color:#fff;letter-spacing:.3px}
+#jSetupBtn:hover{background:linear-gradient(135deg,rgba(211,84,160,.45),rgba(127,90,240,.45));border-color:rgba(211,84,160,.6)}
+#jSetupBtn .hk{font-size:9px;opacity:.55;font-weight:600;border:1px solid rgba(255,255,255,.25);border-radius:3px;padding:1px 4px}
+#jm.cursor-hide-off #jSetupBtn,#jm #jSetupBtn{cursor:pointer}
+body.jset #jSetupBtn{opacity:0;pointer-events:none}
+body.jset #app.jx{display:flex;position:fixed;left:0;top:0;bottom:0;width:min(640px,96vw);max-width:none;margin:0;min-height:0;z-index:10001;background:var(--bg);border-right:1px solid rgba(211,84,160,.35);box-shadow:12px 0 60px rgba(0,0,0,.7);animation:jsetIn .22s cubic-bezier(.4,0,.2,1)}
+@keyframes jsetIn{from{transform:translateX(-40px);opacity:0}to{transform:none;opacity:1}}
+body.jset #app.jx #sidebar{width:150px;min-width:150px}
+body.jset #app.jx #side-actions,body.jset #app.jx #side-cap,body.jset #app.jx #side-hdr .logo-s{display:none}
+body.jset #app.jx #side-hdr .logo{font-size:17px}
+body.jset #app.jx #main-content{padding:16px 18px}
+body.jset #jm,body.jset #jm *{cursor:default}
+body.jset #jm button,body.jset #jm select{cursor:pointer}
+#jSetHdr{display:none;padding:4px 10px 8px}
+body.jset #jSetHdr{display:block}
+#jSetHdr button{width:100%;padding:7px 0;font-size:11px}
+.nav-item.jam-only{display:none}
+body.jset .nav-item.jam-only{display:flex}
+#vizModes{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:5px;margin-bottom:14px}
+#vizModes button,#vizAlts button{padding:7px 8px;font-size:11.5px;font-weight:600;text-align:left;cursor:pointer;background:var(--bg3);border:1px solid var(--bg4);border-radius:var(--r);color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#vizModes button:hover,#vizAlts button:hover{color:var(--tx);border-color:rgba(211,84,160,.45)}
+#vizModes button.on{background:linear-gradient(135deg,var(--pk),var(--pu));color:#fff;border-color:transparent}
+#vizAlts{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+#vizAlts button.on{background:rgba(245,197,24,.16);border-color:rgba(245,197,24,.6);color:#F5C518}
+#vizNow{font-size:15px;font-weight:700;color:#fff;margin:2px 0 12px}
 </style>
 </head>
 <body>
 <div id="app">
   <div id="sidebar">
     <div id="side-hdr"><div class="logo"><b>Unholy</b> Keys</div><div class="logo-s">v4.0 — Arrow key instrument</div></div>
+    <div id="jSetHdr"><button class="btn" id="jSetClose" title="Back to jamming (Esc or M)">&#10005; Close <span class="hk">Esc</span></button></div>
     <div id="side-actions">
       <button class="mbtn" id="bMobile">Mobile</button>
       <button class="jbtn" id="bjam">Jam</button>
@@ -253,6 +281,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
       <div class="nav-item" data-sec="presets" onclick="setSection('presets')"><span class="nav-icon">&#128190;</span>Presets &amp; FX</div>
       <div class="nav-item" data-sec="music" onclick="setSection('music')"><span class="nav-icon">&#127925;</span>Music</div>
       <div class="nav-item" data-sec="record" onclick="setSection('record')"><span class="nav-icon">&#9210;</span>Record</div>
+      <div class="nav-item jam-only" data-sec="visuals" onclick="setSection('visuals')"><span class="nav-icon">&#10024;</span>Visuals</div>
     </div>
     <div id="side-cap">
       Click to capture keys:
@@ -467,6 +496,18 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
     </div>
   </div>
   </div>
+  <div class="app-section" id="sec-visuals">
+    <div class="sl">Now showing</div>
+    <div id="vizNow">&#8212;</div>
+    <div class="sl">Style <span class="bdg" style="background:var(--bg3);color:var(--tx3)">F5 next &middot; * random</span></div>
+    <div id="vizAlts"></div>
+    <div class="sl">Visualizer</div>
+    <div id="vizModes"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" id="vizRandBtn">&#127922; Random</button>
+      <button class="btn" id="vizStampBtn">FX stamps&#8230;</button>
+    </div>
+  </div>
   <div class="app-section" id="sec-record">
   <div class="sl">Metronome</div>
   <div class="pnl" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><button class="btn" id="metB" onclick="MET.toggle()">Start</button><div class="cg"><label>BPM</label><input type="number" id="metV" value="120" min="40" max="300" step="1" style="width:70px"></div><div id="metD" style="width:20px;height:20px;border-radius:50%;background:var(--bg4);transition:background .05s"></div></div>
@@ -503,6 +544,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   <div id="jAud" title="Your live audience. Click the header to shrink it."><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudMin">&#8211;</span></div><canvas id="jAudCv" width="600" height="240"></canvas><div id="jAudChat"><div class="empty">Chat from the venue shows up here</div></div></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
   <div id="jmR"><canvas id="jcv"></canvas><div id="jnd"></div>
     <button id="jx" style="display:none">ESC Exit</button>
+    <button id="jSetupBtn" title="Set up anything: instruments, key, presets and effects, music, visuals (M)">&#9776; Setup <span class="hk">M</span></button>
     <button id="jfs" style="display:none;position:absolute;top:20px;right:130px;z-index:10;padding:8px 14px;font-size:11px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);color:#fff;text-transform:uppercase">&#9974; FS</button>
     <button id="jPlayStop" style="position:absolute;top:20px;right:185px;z-index:10;padding:8px 12px;font-size:13px;cursor:pointer;background:rgba(29,158,117,.12);border:1px solid rgba(29,158,117,.35);border-radius:var(--r);color:#1D9E75" title="Play / Pause media">&#9654;&#10074;&#10074;</button>
     <button id="jPickBtn" style="position:absolute;top:20px;right:240px;z-index:10;padding:8px 12px;font-size:13px;cursor:pointer;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:var(--r);color:rgba(255,255,255,.5)" title="Pick next song (Q)">&#9654;</button>
@@ -1380,6 +1422,14 @@ document.addEventListener("keydown",function(e){
     if(e.key==="F11"){e.preventDefault();jamFullscreen();return;}
     return;
   }
+  /* Jam setup menu open: Esc or M closes it, typing and dropdowns go to the menu, other keys still play */
+  if(jamOn&&JSET.isOpen()){
+    var _tg=e.target,_tn=_tg&&_tg.tagName,_typing=(_tn==="INPUT"&&_tg.id!=="cap"&&!/^(range|checkbox|radio|button|color)$/i.test(_tg.type))||_tn==="TEXTAREA"||_tn==="SELECT"||(_tg&&_tg.isContentEditable);
+    if(e.key==="Escape"){e.preventDefault();e.stopPropagation();JSET.close();return;}
+    if(_typing)return;
+    if(e.code==="KeyM"&&!e.repeat){e.preventDefault();e.stopPropagation();JSET.close();return;}
+    if(e.key==="F5"||e.key==="*"||e.code==="NumpadMultiply"||e.code==="NumpadDivide")setTimeout(JSET.renderViz,0);
+  } else if(jamOn&&e.code==="KeyM"&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();e.stopPropagation();JSET.open();return;}
   if(jamOn){e.preventDefault();e.stopPropagation();handleKeyDown(e.code,e.key);return;}
   if(!jamOn&&(e.target.tagName==="SELECT"||e.target.tagName==="INPUT")&&e.target.id!=="cap")return;
   if(e.key===" "||e.key==="ArrowUp"||e.key==="ArrowDown"||e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="Tab"||e.key==="Shift"||e.key==="Control"||e.code==="CapsLock"||e.code==="KeyZ"||e.code==="KeyV"||e.code==="KeyD"||e.code==="KeyE"||e.code==="KeyF"||e.code==="KeyQ"||e.code==="KeyT"||e.code==="KeyL"||e.code==="KeyN"||e.code==="KeyP"||e.code==="Digit3"||e.key==="F11"||e.code==="F1"||e.code==="F2"||e.code==="F3"||e.code==="F4"||e.code==="F5"||e.code==="Insert"||e.code==="Minus"||e.code==="Equal"||e.code==="Numpad0"||e.code==="Delete"||e.code==="PageUp"||e.code==="PageDown"||e.code==="Backquote"||(e.code.indexOf("Numpad")===0&&e.code!=="NumpadEnter"))e.preventDefault();
@@ -1659,7 +1709,7 @@ function buildJInstPick(){var sel=document.getElementById("jInstSel");if(!sel)re
   }
 function enterJam(){initAudio();jamOn=true;document.getElementById("app").classList.add("jx");document.getElementById("jm").classList.add("on");document.getElementById("jmV").style.display="block";if(LOCAL.currentFile){/* Local MP4 — use video element as background */LOCAL.syncToJam();var _jtb0=document.getElementById("jtb");if(_jtb0)_jtb0.style.display="block";}else{/* YouTube/Invidious — use iframe */var _jv=document.getElementById("jmVid"),_jf=document.getElementById("jmF");if(_jv){_jv.pause();_jv.src="";_jv.style.display="none";}if(_jf)_jf.style.display="block";var src=YT.status().vid?"http":"";if(src&&src.indexOf("http")===0){syncJamVideo();var _jtb1=document.getElementById("jtb");if(_jtb1)_jtb1.style.display="block";}else{var _jtb2=document.getElementById("jtb");if(_jtb2)_jtb2.style.display="none";}}jCanvas=document.getElementById("jcv");jCtx=jCanvas.getContext("2d");setTimeout(function(){resizeJam();updJInfo();buildJMini();buildJInstPick();updJamPresetLbl();renderJamHkStrip();if(jAnim)cancelAnimationFrame(jAnim);jAnim=requestAnimationFrame(jamLoop);},30);}
 function jamFullscreen(){try{var jel=document.getElementById("jm");if(document.fullscreenElement||document.webkitFullscreenElement){if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();}else{if(jel.requestFullscreen)jel.requestFullscreen();else if(jel.webkitRequestFullscreen)jel.webkitRequestFullscreen();}}catch(e){}}
-function exitJam(){jamOn=false;closeJamPicker();LOCAL.stopJam();document.getElementById("app").classList.remove("jx");document.getElementById("jm").classList.remove("on");YT.fromJam();if(jAnim){cancelAnimationFrame(jAnim);jAnim=null;}if(jLoopAnim){cancelAnimationFrame(jLoopAnim);jLoopAnim=null;}try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
+function exitJam(){jamOn=false;document.body.classList.remove("jset");closeJamPicker();LOCAL.stopJam();document.getElementById("app").classList.remove("jx");document.getElementById("jm").classList.remove("on");YT.fromJam();if(jAnim){cancelAnimationFrame(jAnim);jAnim=null;}if(jLoopAnim){cancelAnimationFrame(jLoopAnim);jLoopAnim=null;}try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
 document.addEventListener("fullscreenchange",function(){var btn=document.getElementById("jfs");if(btn)btn.textContent=document.fullscreenElement?"\u2715 FS":"\u26F6 FS";});
 document.addEventListener("webkitfullscreenchange",function(){var btn=document.getElementById("jfs");if(btn)btn.textContent=document.webkitFullscreenElement?"\u2715 FS":"\u26F6 FS";});
 function toggleSplit(){var ifr=document.getElementById("jmF");var on=(ifr.style.opacity!=="0");ifr.style.opacity=on?"0":"0.72";var btn=document.getElementById("jtb");if(btn)btn.style.color=on?"rgba(255,255,255,.35)":"rgba(255,255,255,.75)";}
@@ -4021,7 +4071,8 @@ var SEC_MAP={
   inst:["sec-inst"],
   presets:["sec-presets"],
   music:["sec-music","sec-music-2"],
-  record:["sec-record"]
+  record:["sec-record"],
+  visuals:["sec-visuals"]
 };
 window.setSection=function(sec){
   document.querySelectorAll(".app-section").forEach(function(el){el.classList.remove("active");});
@@ -4030,6 +4081,54 @@ window.setSection=function(sec){
   var nav=document.querySelector('[data-sec="'+sec+'"]');if(nav)nav.classList.add("active");
   var mc=document.getElementById("main-content");if(mc)mc.scrollTop=0;
 };
+
+/* ── Jam setup menu ──
+   The whole main app (instruments, key and scale, presets and effects, music, recording) opens as a
+   drawer on the left of jam mode, plus a Visuals tab. Nothing is moved in the page, so a playing video
+   keeps playing. Notes still play while it's open; typing in a box or using a dropdown goes to the box. */
+var JSET=(function(){
+  var lastSec="play";
+  function isOpen(){return document.body.classList.contains("jset");}
+  function open(sec){
+    if(!jamOn)return;
+    document.body.classList.add("jset");
+    setSection(sec||lastSec);
+    renderViz();
+  }
+  function close(){
+    if(!isOpen())return;
+    var act=document.querySelector(".nav-item.active");if(act&&act.dataset.sec)lastSec=act.dataset.sec;
+    document.body.classList.remove("jset");
+    var ae=document.activeElement;if(ae&&ae!==document.body&&ae.blur)ae.blur();
+  }
+  function toggle(sec){isOpen()?close():open(sec);}
+  function renderViz(){
+    if(typeof VIZFX==="undefined")return;
+    var modes=VIZFX.getModes(),cur=VIZFX.getCur(),alt=VIZFX.getAlt(cur);
+    var mb=document.getElementById("vizModes"),ab=document.getElementById("vizAlts"),nw=document.getElementById("vizNow");
+    if(!mb)return;
+    nw.textContent=VIZFX.getName();
+    mb.innerHTML="";
+    modes.forEach(function(m,i){
+      var b=document.createElement("button");b.textContent=m.name;b.title=m.name;if(i===cur)b.className="on";
+      b.onclick=function(){VIZFX.setAlt(i,-1);renderViz();};mb.appendChild(b);
+    });
+    ab.innerHTML="";
+    var names=[modes[cur].baseName||"Original"].concat(VIZFX.getAltNames(cur));
+    names.forEach(function(n,k){
+      var a=k-1,b=document.createElement("button");b.textContent=n;if(a===alt)b.className="on";
+      b.onclick=function(){VIZFX.setAlt(cur,a);renderViz();};ab.appendChild(b);
+    });
+  }
+  document.getElementById("jSetupBtn").onclick=function(e){e.stopPropagation();open();};
+  document.getElementById("jSetClose").onclick=function(){close();};
+  document.getElementById("vizRandBtn").onclick=function(){VIZFX.random();renderViz();};
+  document.getElementById("vizStampBtn").onclick=function(){close();if(typeof openVizStampPicker==="function")openVizStampPicker();};
+  /* keep the Visuals tab in step when the visual changes from the jam buttons or hotkeys */
+  ["jVizCycBtn","jVizRandBtn","jVizAltBtn"].forEach(function(id){var b=document.getElementById(id);if(b)b.addEventListener("click",function(){setTimeout(renderViz,0);});});
+  return {open:open,close:close,toggle:toggle,isOpen:isOpen,renderViz:renderViz};
+})();
+window.JSET=JSET;
 
 /* ── Instrument Search ── */
 /* Search box and collection picker filter the list together. renderInst() rebuilds the whole list
