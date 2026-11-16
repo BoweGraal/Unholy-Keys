@@ -19,6 +19,10 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #side-actions{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--bg4)}
 #side-actions .jbtn,#side-actions .mbtn{padding:7px 0;font-size:11px;flex:1;text-align:center}
 #side-nav{flex:1;overflow-y:auto;padding:8px}
+#side-name{padding:8px 12px 10px;border-bottom:1px solid var(--bg4);font-size:10px;color:var(--tx3)}
+#side-name input{width:100%;box-sizing:border-box;margin-top:4px;background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);padding:7px 10px;border-radius:var(--r);font-size:12px;font-weight:600;outline:none}
+#side-name input:focus{border-color:var(--pk)}
+body.jset #app.jx #side-name{display:none}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);cursor:pointer;color:var(--tx2);font-size:13px;font-weight:600;transition:all .12s;user-select:none;margin-bottom:2px}
 .nav-item:hover{background:var(--bg3);color:var(--tx)}
 .nav-item.active{background:linear-gradient(135deg,var(--pk),var(--pu));color:#fff}
@@ -122,18 +126,16 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #streamRow .btn{padding:4px 10px;font-size:11px}
 #streamRow .use{color:var(--tx3);margin-left:auto}
 #streamRow .tip{flex-basis:100%;color:var(--tx3);font-size:11px}
-#jAud{display:none;position:absolute;right:20px;bottom:20px;width:300px;z-index:12;background:rgba(8,8,18,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;color:#eee;cursor:default;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+#jAud{display:none;position:absolute;right:20px;bottom:20px;width:400px;z-index:12;background:rgba(8,8,18,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;color:#eee;cursor:default;transition:width .2s}
 #jAud.on{display:block}
+#jAud.big{width:min(680px,52vw)}
 #jAudH{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.65);cursor:pointer;user-select:none}
 #jAudH .dot{width:8px;height:8px;border-radius:50%;background:#E24B4A;animation:pls 1s infinite;flex-shrink:0}
 #jAudH .n{margin-left:auto;color:#fff}
-#jAudH .mm{width:16px;text-align:center;color:rgba(255,255,255,.5)}
-#jAudCv{display:block;width:300px;height:120px}
-#jAudChat{padding:6px 10px 8px;font-size:12px;line-height:1.4;height:96px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
-#jAudChat div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:opacity .4s}
-#jAudChat b{font-weight:700;margin-right:5px}
-#jAudChat .empty{color:rgba(255,255,255,.35);font-style:italic;white-space:normal}
-#jAud.min #jAudCv,#jAud.min #jAudChat{display:none}
+#jAudH .mm{width:18px;text-align:center;color:rgba(255,255,255,.55);font-size:13px}
+#jAudH .mm:hover{color:#fff}
+#jAudCv{display:block;width:100%;aspect-ratio:5/3}
+#jAud.min #jAudCv{display:none}
 #jm.cursor-show #jAud,#jm.picker-open #jAud{cursor:default}
 #jInstPick{position:absolute;top:16px;left:20px;z-index:20;display:flex;flex-direction:column;gap:4px}
 #jInstPick select{background:rgba(0,0,0,.5);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:var(--r);padding:6px 10px;font-size:12px;font-weight:600;outline:none;cursor:pointer}
@@ -275,6 +277,7 @@ body.jset .nav-item.jam-only{display:flex}
       <button class="jbtn" id="bjam">Jam</button>
       <button class="jbtn" id="bLive" style="background:linear-gradient(135deg,#D354A0,#FF4444)">Live</button>
     </div>
+    <div id="side-name"><label for="stageName">Stage name</label><input type="text" id="stageName" maxlength="24" placeholder="Shown to your audience" autocomplete="off" spellcheck="false"></div>
     <div id="side-nav">
       <div class="nav-item active" data-sec="play" onclick="setSection('play')"><span class="nav-icon">&#9835;</span>Play</div>
       <div class="nav-item" data-sec="inst" onclick="setSection('inst')"><span class="nav-icon">&#127928;</span>Instruments</div>
@@ -541,7 +544,7 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="jm">
-  <div id="jAud" title="Your live audience. Click the header to shrink it."><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudMin">&#8211;</span></div><canvas id="jAudCv" width="600" height="240"></canvas><div id="jAudChat"><div class="empty">Chat from the venue shows up here</div></div></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
   <div id="jmR"><canvas id="jcv"></canvas><div id="jnd"></div>
     <button id="jx" style="display:none">ESC Exit</button>
     <button id="jSetupBtn" title="Set up anything: instruments, key, presets and effects, music, visuals (M)">&#9776; Setup <span class="hk">M</span></button>
@@ -3682,6 +3685,18 @@ function resolveWsUrl(){
 }
 var LIVE_URL=resolveWsUrl();
 var liveWs=null,liveOn=false;
+/* stage name: shown under your character in the venue; remembered on this browser */
+function stageName(){var el=document.getElementById("stageName");return ((el&&el.value)||"").trim().slice(0,24)||"Performer";}
+(function(){
+  var el=document.getElementById("stageName");if(!el)return;
+  try{el.value=localStorage.getItem("uk_stage_name")||"";}catch(e){}
+  var t=null;
+  el.addEventListener("input",function(){
+    try{localStorage.setItem("uk_stage_name",el.value.trim());}catch(e){}
+    clearTimeout(t);t=setTimeout(function(){liveSend({type:"perf-name",name:stageName()});},400);
+  });
+  el.addEventListener("keydown",function(e){if(e.key==="Enter")el.blur();});
+})();
 function liveSend(msg){if(liveOn&&liveWs&&liveWs.readyState===1)try{liveWs.send(JSON.stringify(msg));}catch(e){}}
 function goLive(){
   if(liveOn){endLive();return;}
@@ -3699,7 +3714,7 @@ function goLive(){
   try{liveWs=new WebSocket(LIVE_URL);}catch(e){liveFail();return;}
   btn.textContent="Connecting";
   liveWs.onopen=function(){
-    liveWs.send(JSON.stringify({type:"create-room"}));
+    liveWs.send(JSON.stringify({type:"create-room",name:stageName()}));
   };
   liveWs.onmessage=function(e){
     var msg;try{msg=JSON.parse(e.data);}catch(x){return;}
@@ -3718,7 +3733,7 @@ function goLive(){
       document.getElementById("liveViewers").textContent=msg.count+" viewer"+(msg.count!==1?"s":"");
       AUD.count=msg.count;
     }
-    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat")audEvent(msg);
+    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
   };
   liveWs.onclose=function(){if(liveOn)endLive();else liveFail();};
@@ -3762,61 +3777,118 @@ YT.onPlay=function(vid,title){
 /* Keep the audience in step: send play/pause the moment they happen, and the current
    position every few seconds while playing (the audience page corrects any drift). */
 /* ── Live audience panel (jam mode, bottom right) ──
-   A small copy of the venue: everyone in the room as a dot where they are standing,
-   and the latest chat. Shown in jam mode while you are live. Click the header to shrink it. */
-var AUD={people:{},chat:[],count:0,min:false};
-try{AUD.min=localStorage.getItem("uk_jaud_min")==="1";}catch(e){}
-function audReset(){AUD.people={};AUD.chat=[];AUD.count=0;renderAudChat();}
+   A live copy of the venue: everyone in the room where they're standing, with their name under them,
+   dancing when they dance, and what they say in a speech bubble over their head.
+   Shown in jam mode while you're live. ⤢ makes it bigger, – shrinks it to the header. */
+var AUD={people:{},count:0,min:false,big:false};
+try{AUD.min=localStorage.getItem("uk_jaud_min")==="1";AUD.big=localStorage.getItem("uk_jaud_big")==="1";}catch(e){}
+var AUD_SAY_MS=7000;
+function audColor(c,d){return /^#[0-9a-fA-F]{6}$/.test(c)?c:d;}
+function audReset(){AUD.people={};AUD.count=0;}
 function audEvent(msg){
   var id=msg.id||msg.viewerId;
-  if(msg.type==="viewer-join"&&id){AUD.people[id]={name:String(msg.name||"").slice(0,24),color:/^#[0-9a-fA-F]{6}$/.test(msg.color)?msg.color:"#888888",x:+msg.x||.5,y:+msg.y||.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0};}
-  else if(msg.type==="pos"&&id){var p=AUD.people[id];if(!p)p=AUD.people[id]={name:String(msg.name||""),color:"#888888",x:+msg.x||.5,y:+msg.y||.5,dx:.5,dy:.5,said:0};p.x=+msg.x||p.x;p.y=+msg.y||p.y;}
+  if(msg.type==="viewer-join"&&id){AUD.people[id]={name:String(msg.name||"").slice(0,24),color:audColor(msg.color,"#888888"),x:+msg.x||.5,y:+msg.y||.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};}
+  else if(msg.type==="pos"&&id){var p=AUD.people[id];if(!p)p=AUD.people[id]={name:String(msg.name||""),color:"#888888",x:.5,y:.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};p.x=+msg.x||p.x;p.y=+msg.y||p.y;}
   else if(msg.type==="viewer-leave"&&id){delete AUD.people[id];}
   else if(msg.type==="dance"&&id){if(AUD.people[id])AUD.people[id].dance=Math.max(0,Math.min(3,+msg.style||0));}
-  else if(msg.type==="chat"){
-    if(id&&AUD.people[id])AUD.people[id].said=Date.now();
-    AUD.chat.push({name:String(msg.name||"?").slice(0,24),color:/^#[0-9a-fA-F]{6}$/.test(msg.color)?msg.color:"#cccccc",text:String(msg.text||"").slice(0,300),t:Date.now()});
-    if(AUD.chat.length>40)AUD.chat.shift();
-    renderAudChat();
-  }
+  else if(msg.type==="chat"&&id&&AUD.people[id]){var q=AUD.people[id];q.said=Date.now();q.text=String(msg.text||"").slice(0,140);if(msg.color)q.color=audColor(msg.color,q.color);}
 }
-function renderAudChat(){
-  var c=document.getElementById("jAudChat");if(!c)return;c.textContent="";
-  if(!AUD.chat.length){var e=document.createElement("div");e.className="empty";e.textContent="Chat from the venue shows up here";c.appendChild(e);return;}
-  var last=AUD.chat.slice(-5);
-  last.forEach(function(m,i){var d=document.createElement("div");var b=document.createElement("b");b.style.color=m.color;b.textContent=m.name;d.appendChild(b);d.appendChild(document.createTextNode(m.text));d.title=m.name+": "+m.text;d.style.opacity=String(.45+.55*(i+1)/last.length);c.appendChild(d);});
+/* word-wrap into at most `max` lines of width w */
+function audWrap(g,text,w,max){
+  var words=text.split(/\s+/),out=[],line="";
+  for(var i=0;i<words.length;i++){
+    var t=line?line+" "+words[i]:words[i];
+    if(g.measureText(t).width<=w||!line){line=t;}else{out.push(line);line=words[i];}
+    if(out.length===max)break;
+  }
+  if(out.length<max&&line)out.push(line);
+  var last=out.length-1,used=out.join(" ").length;
+  if(used<text.length||g.measureText(out[last]).width>w){var l=out[last];while(l.length>1&&g.measureText(l+"…").width>w)l=l.slice(0,-1);out[last]=l+"…";}
+  return out;
+}
+function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk){
+  /* small version of the venue character: head, body, arms, legs; name under the feet */
+  var dT=now*0.009+seed,bob=0,armL=-.2,armR=.2,leg=0,legL=0,legR=0;
+  /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
+  if(walk!=null&&!dance){var ws=Math.sin(walk);legL=ws*2.6*sc;legR=-legL;armL=-.2-ws*.7;armR=.2-ws*.7;bob=-Math.abs(Math.cos(walk))*1.6*sc;}
+  if(dance===1){bob=-Math.abs(Math.sin(dT))*5*sc;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;leg=Math.sin(dT*2)*1.5*sc;}
+  else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*1.5*sc;x+=Math.sin(dT)*3*sc;var sw=Math.sin(dT);armL=1.9+sw*.9;armR=-1.9+sw*.9;}
+  else if(dance===3){bob=-Math.pow(Math.abs(Math.sin(dT)),3)*8*sc;armL=1.5+Math.abs(Math.sin(dT))*1.1;armR=-armL;leg=Math.abs(Math.sin(dT))*2*sc;}
+  var hr=5*sc,bw=9*sc,bh=11*sc,lh=6*sc,top=y+bob;
+  if(glow){var gl=g.createRadialGradient(x,top,3,x,top,30*sc);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,top,30*sc,0,6.3);g.fill();}
+  g.fillStyle=color;
+  /* legs: pivot at the hip so a stride swings them */
+  g.save();g.translate(x-bw/2+2.3*sc,top+bh/2);g.rotate(legL*.12);g.fillRect(-1.3*sc-leg,0,2.6*sc,lh);g.restore();
+  g.save();g.translate(x+bw/2-2.3*sc,top+bh/2);g.rotate(legR*.12);g.fillRect(-1.3*sc+leg,0,2.6*sc,lh);g.restore();
+  g.fillRect(x-bw/2,top-bh/2,bw,bh);
+  g.save();g.translate(x-bw/2,top-bh/2+1.5*sc);g.rotate(armL);g.fillRect(-2.4*sc,0,2.4*sc,8*sc);g.restore();
+  g.save();g.translate(x+bw/2,top-bh/2+1.5*sc);g.rotate(armR);g.fillRect(0,0,2.4*sc,8*sc);g.restore();
+  g.beginPath();g.arc(x,top-bh/2-hr+1,hr,0,6.3);g.fill();
+  g.fillStyle="rgba(0,0,0,.55)";g.fillRect(x-2.2*sc,top-bh/2-hr,1.3*sc,1.3*sc);g.fillRect(x+.9*sc,top-bh/2-hr,1.3*sc,1.3*sc);
+  if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+9*sc,top-bh/2-hr*2-ph*14);g.globalAlpha=1;}
+  /* name under the feet, steady while dancing */
+  g.font="600 "+Math.round(10.5*Math.min(sc,1.4))+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="top";
+  var ny=y+bh/2+lh+3;g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(name,x,ny);g.fillStyle=nameColor||"rgba(255,255,255,.9)";g.fillText(name,x,ny);g.textBaseline="alphabetic";
+  return top-bh/2-hr*2;   /* top of the head, for the speech bubble */
+}
+function audBubble(g,x,headY,text,color,alpha,W){
+  g.font="12px system-ui,sans-serif";
+  var maxW=Math.min(170,W*.42),lines=audWrap(g,text,maxW-14,2),tw=0;
+  lines.forEach(function(l){tw=Math.max(tw,g.measureText(l).width);});
+  var bw=tw+14,bh=lines.length*15+8,bx=Math.max(3,Math.min(W-bw-3,x-bw/2)),by=Math.max(3,headY-bh-9);
+  g.globalAlpha=alpha;
+  g.fillStyle="rgba(250,250,255,.95)";g.strokeStyle=color;g.lineWidth=1.5;
+  g.beginPath();if(g.roundRect)g.roundRect(bx,by,bw,bh,7);else g.rect(bx,by,bw,bh);g.fill();g.stroke();
+  /* tail toward the speaker */
+  var tx=Math.max(bx+8,Math.min(bx+bw-8,x));g.beginPath();g.moveTo(tx-5,by+bh-.5);g.lineTo(tx+5,by+bh-.5);g.lineTo(tx,by+bh+6);g.closePath();g.fillStyle="rgba(250,250,255,.95)";g.fill();
+  g.fillStyle="#15131f";g.textAlign="left";g.textBaseline="top";
+  lines.forEach(function(l,i){g.fillText(l,bx+7,by+5+i*15);});
+  g.textBaseline="alphabetic";g.globalAlpha=1;
 }
 function drawAud(){
   var box=document.getElementById("jAud");if(!box)return;
   var show=jamOn&&liveOn;
   if(show!==box.classList.contains("on"))box.classList.toggle("on",show);
-  box.classList.toggle("min",AUD.min);
+  box.classList.toggle("min",AUD.min);box.classList.toggle("big",AUD.big);
   if(!show)return;
-  document.getElementById("jAudRoom").textContent="Live \u00b7 "+(document.getElementById("liveCode").textContent||"");
+  document.getElementById("jAudRoom").textContent="Live · "+(document.getElementById("liveCode").textContent||"");
   var ids=Object.keys(AUD.people);
   var n=Math.max(AUD.count,ids.length);document.getElementById("jAudN").textContent=n+" viewer"+(n!==1?"s":"");
   if(AUD.min)return;
-  var cv=document.getElementById("jAudCv"),g=cv.getContext("2d"),W=cv.width,H=cv.height,sy=H/0.85;
+  var cv=document.getElementById("jAudCv"),dpr=Math.min(2,window.devicePixelRatio||1);
+  var W=cv.clientWidth||400,H=cv.clientHeight||240;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+  var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
+  var sy=H/0.82,sc=Math.max(1,Math.min(1.6,W/420));
   g.clearRect(0,0,W,H);
   /* stage (venue y 0-0.30) and floor (0.30-0.78), same layout as venue.html */
   var st=g.createLinearGradient(0,0,0,.30*sy);st.addColorStop(0,"#2a1638");st.addColorStop(1,"#1a0f24");g.fillStyle=st;g.fillRect(0,0,W,.30*sy);
   g.fillStyle="#0c0c14";g.fillRect(0,.30*sy,W,H-.30*sy);
-  g.fillStyle="rgba(211,84,160,.55)";g.fillRect(0,.30*sy-3,W,3);
-  /* you, on stage; glows while a note is sounding */
-  var px=W/2,py=.17*sy,on=!!activeVoice;
-  if(on){var gl=g.createRadialGradient(px,py,4,px,py,40);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(px,py,40,0,6.3);g.fill();}
-  g.fillStyle="#D354A0";g.beginPath();g.arc(px,py-6,9,0,6.3);g.fill();g.fillRect(px-8,py+3,16,14);
-  /* audience */
+  g.fillStyle="rgba(211,84,160,.55)";g.fillRect(0,.30*sy-2,W,2);
   var now=Date.now();
-  ids.forEach(function(id){var p=AUD.people[id];p.dx+=(p.x-p.dx)*.25;p.dy+=(p.y-p.dy)*.25;
-    var x=p.dx*W,y=Math.min(H-6,p.dy*sy);
-    if(p.dance){y-=Math.abs(Math.sin(now*.009+(p.name.length||0)))*7;g.fillStyle=p.color;g.font="bold 14px system-ui,sans-serif";g.textAlign="center";g.fillText("\u266A",x+11,y-10);}
-    if(now-p.said<4000){g.strokeStyle="rgba(255,255,255,"+(1-(now-p.said)/4000)+")";g.lineWidth=2;g.beginPath();g.arc(x,y,12,0,6.3);g.stroke();}
-    g.fillStyle=p.color;g.beginPath();g.arc(x,y,7,0,6.3);g.fill();g.strokeStyle="rgba(0,0,0,.6)";g.lineWidth=1.5;g.stroke();});
-  if(!ids.length){g.fillStyle="rgba(255,255,255,.35)";g.font="22px system-ui,sans-serif";g.textAlign="center";g.fillText("Waiting for the audience\u2026",W/2,.6*sy);}
+  /* you, on stage; glows while a note is sounding */
+  audPerson(g,W/2,.15*sy,"#D354A0",(typeof stageName==="function"?stageName():"You"),sc*1.25,0,0,!!activeVoice,now,"#F5C518");
+  /* audience, back to front so nearer people overlap farther ones */
+  ids.sort(function(a,b){return AUD.people[a].dy-AUD.people[b].dy;});
+  var heads=[];
+  ids.forEach(function(id){var p=AUD.people[id];
+    /* glide toward where they are, and advance the stride by distance covered so steps match speed */
+    var mx=(p.x-p.dx)*.18,my=(p.y-p.dy)*.18;p.dx+=mx;p.dy+=my;
+    var step=Math.hypot(mx*W,my*sy);
+    if(step>.15){p.walk=(p.walk||0)+Math.min(.5,step*.22+.12);p.walkUntil=now+120;}
+    var walking=now<(p.walkUntil||0);
+    var x=p.dx*W,y=Math.min(H-24,p.dy*sy);
+    heads.push([p,x,audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null)]);});
+  /* speech bubbles on top of everyone; oldest first so the newest is on top */
+  heads.filter(function(h){return h[0].text&&now-h[0].said<AUD_SAY_MS;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
+    var age=now-h[0].said,al=age>AUD_SAY_MS-1200?(AUD_SAY_MS-age)/1200:1;
+    audBubble(g,h[1],h[2],h[0].text,h[0].color,al,W);
+  });
+  if(!ids.length){g.fillStyle="rgba(255,255,255,.35)";g.font="15px system-ui,sans-serif";g.textAlign="center";g.fillText("Waiting for the audience…",W/2,.58*sy);}
 }
-setInterval(drawAud,80);
+setInterval(drawAud,50);
 document.getElementById("jAudH").onclick=function(){AUD.min=!AUD.min;try{localStorage.setItem("uk_jaud_min",AUD.min?"1":"0");}catch(e){}document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";drawAud();};
+document.getElementById("jAudBig").onclick=function(e){e.stopPropagation();AUD.big=!AUD.big;if(AUD.min){AUD.min=false;document.getElementById("jAudMin").innerHTML="&#8211;";}try{localStorage.setItem("uk_jaud_big",AUD.big?"1":"0");localStorage.setItem("uk_jaud_min","0");}catch(x){}drawAud();};
 document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
 /* ── Live sound + visuals stream ──
    When you go live, Chrome asks to share this tab. Its sound (your instruments, effects and
