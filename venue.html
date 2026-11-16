@@ -51,6 +51,21 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 @keyframes tapPulse{0%,100%{opacity:1}50%{opacity:.65}}
 
 /* Chat panel */
+/* ── Walk / talk / dance controls (bottom left, above the chat) ── */
+#moveCtl{position:fixed;left:14px;bottom:212px;z-index:22;display:flex;align-items:flex-end;gap:10px;user-select:none;-webkit-user-select:none;touch-action:none}
+#dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:4px}
+#dpad button,#actBtns button{font:700 18px/1 system-ui,sans-serif;color:#fff;background:rgba(20,18,32,.78);border:1px solid rgba(127,119,221,.45);border-radius:12px;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#dpad button.held,#dpad button:active{background:rgba(211,84,160,.55);border-color:#D354A0}
+#dpad [data-d=up]{grid-column:2;grid-row:1}
+#dpad [data-d=left]{grid-column:1;grid-row:2}
+#dpad [data-d=right]{grid-column:3;grid-row:2}
+#dpad [data-d=down]{grid-column:2;grid-row:3}
+#actBtns{display:flex;flex-direction:column;gap:6px}
+#actBtns button{font-size:14px;padding:11px 14px;min-width:104px;text-align:left}
+#danceBtn.on{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:transparent}
+#talkBtn.on{border-color:#D354A0;color:#D354A0}
+#moveHint{position:fixed;left:14px;bottom:384px;z-index:22;font:600 11px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.4);pointer-events:none}
+@media (max-width:520px){#dpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px)}#actBtns button{min-width:92px;padding:10px 12px}#moveHint{display:none}}
 #chatPanel{position:fixed;bottom:0;left:0;right:0;height:200px;z-index:20;
   background:rgba(10,10,15,.88);border-top:1px solid rgba(127,119,221,.2);
   display:flex;flex-direction:column}
@@ -107,6 +122,19 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   <div id="hudTR">Viewers: <span id="hudCount">0</span></div>
   <div id="hudBR"></div>
   <div id="perfLeft">Performer has left the stage</div>
+  <div id="moveHint">Arrows or WASD to walk &middot; Enter to talk &middot; Space to dance</div>
+  <div id="moveCtl">
+    <div id="dpad">
+      <button data-d="up" aria-label="Walk up">&#9650;</button>
+      <button data-d="left" aria-label="Walk left">&#9664;</button>
+      <button data-d="right" aria-label="Walk right">&#9654;</button>
+      <button data-d="down" aria-label="Walk down">&#9660;</button>
+    </div>
+    <div id="actBtns">
+      <button id="talkBtn" title="Say something (Enter)">&#128172; Talk</button>
+      <button id="danceBtn" title="Dance (Space)">&#128131; Dance</button>
+    </div>
+  </div>
   <div id="chatPanel">
     <div id="chatMsgs"></div>
     <div id="chatInput">
@@ -1048,10 +1076,16 @@ function wsSend(obj){
   if(ws&&wsReady)ws.send(JSON.stringify(obj));
 }
 
+var posTimer=null,pendingPos=null;
 function sendPos(x,y){
   var now=Date.now();
-  if(now-lastPosSend<100)return;
-  lastPosSend=now;
+  if(now-lastPosSend<100){
+    /* too soon: send the latest position once the gap is up, so where you stop is where others see you */
+    pendingPos=[x,y];
+    if(!posTimer)posTimer=setTimeout(function(){posTimer=null;if(pendingPos){var p=pendingPos;pendingPos=null;sendPos(p[0],p[1]);}},100-(now-lastPosSend)+5);
+    return;
+  }
+  lastPosSend=now;pendingPos=null;
   wsSend({type:"pos",x:x,y:y});
 }
 
@@ -1070,9 +1104,11 @@ function handleMsg(msg){
         var vx=safeNum(v.x,0.5),vy=safeNum(v.y,FLOOR_TOP+0.1);
         viewers[v.id]={name:safeText(v.name,24),x:vx,y:vy,
           tx:vx,ty:vy,color:safeColor(v.color),
-          bubbleText:null,bubbleTime:0};
+          bubbleText:null,bubbleTime:0,dance:danceStyle(v.dance)};
       });
     }
+    /* after a reconnect, carry on dancing */
+    if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
     if(msg.performer){
       performer.name=msg.performer.name||"Performer";
     }
@@ -1105,6 +1141,9 @@ function handleMsg(msg){
       delete viewers[msg.id];
     }
     updViewerCount();
+  }
+  else if(t==="dance"){
+    if(viewers[msg.id])viewers[msg.id].dance=danceStyle(msg.style);
   }
   else if(t==="pos"){
     if(viewers[msg.id]){
@@ -1195,6 +1234,7 @@ function sendChat(){
   var txt=inp.value.trim();
   if(!txt)return;
   inp.value="";
+  inp.blur();
   wsSend({type:"chat",text:txt});
   addChat(myName,txt,myColor);
   /* own bubble */
@@ -1203,6 +1243,75 @@ function sendChat(){
     viewers[myId].bubbleTime=Date.now();
   }
 }
+
+/* ============================================================
+   WALK, TALK, DANCE
+   Hold the on-screen arrows (or arrow keys / WASD) to walk around the floor.
+   Talk opens the chat box; Dance toggles a dance everyone in the venue sees.
+   ============================================================ */
+var held={up:false,down:false,left:false,right:false},myDance=0,lastMoveT=0;
+function danceStyle(v){v=Math.floor(+v||0);return v>=1&&v<=3?v:0;}
+function floorMaxY(){
+  var cp=document.getElementById("chatPanel"),top=cp?cp.getBoundingClientRect().top:H;
+  return Math.min(FLOOR_BOTTOM-0.02,(top-14)/H);
+}
+function anyHeld(){return held.up||held.down||held.left||held.right;}
+function moveTick(){
+  var now=performance.now(),dt=Math.min(0.05,(now-(lastMoveT||now))/1000);lastMoveT=now;
+  if(anyHeld()&&myId&&viewers[myId]){
+    var me=viewers[myId],dx=(held.right?1:0)-(held.left?1:0),dy=(held.down?1:0)-(held.up?1:0);
+    if(dx&&dy){dx*=0.7071;dy*=0.7071;}
+    /* about 3 seconds to cross the room; vertical speed matched in pixels */
+    var sp=0.33*dt;
+    me.tx=Math.max(0.03,Math.min(0.97,me.tx+dx*sp));
+    me.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),me.ty+dy*sp*(W/H)));
+    /* keep the avatar close behind the target so walking feels direct */
+    me.x+=(me.tx-me.x)*0.35;me.y+=(me.ty-me.y)*0.35;
+    sendPos(me.tx,me.ty);
+  }
+  requestAnimationFrame(moveTick);
+}
+requestAnimationFrame(moveTick);
+function setHeld(d,on){
+  held[d]=on;
+  var b=document.querySelector('#dpad [data-d="'+d+'"]');if(b)b.classList.toggle("held",on);
+}
+Array.prototype.forEach.call(document.querySelectorAll("#dpad button"),function(b){
+  var d=b.getAttribute("data-d");
+  b.addEventListener("pointerdown",function(e){e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(x){}setHeld(d,true);});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){b.addEventListener(ev,function(){setHeld(d,false);});});
+  b.addEventListener("contextmenu",function(e){e.preventDefault();});
+});
+function setDance(style){
+  myDance=danceStyle(style);
+  var b=document.getElementById("danceBtn");
+  b.classList.toggle("on",!!myDance);
+  b.innerHTML=myDance?"&#128131; Stop":"&#128131; Dance";
+  if(myId&&viewers[myId])viewers[myId].dance=myDance;
+  wsSend({type:"dance",style:myDance});
+}
+/* each new dance picks one of three moves */
+function toggleDance(){setDance(myDance?0:1+Math.floor(Math.random()*3));}
+document.getElementById("danceBtn").addEventListener("click",function(e){e.currentTarget.blur();toggleDance();});
+function openTalk(){var inp=document.getElementById("chatText");inp.focus();}
+document.getElementById("talkBtn").addEventListener("click",function(e){e.preventDefault();openTalk();});
+var chatInp=document.getElementById("chatText");
+chatInp.addEventListener("focus",function(){document.getElementById("talkBtn").classList.add("on");held={up:false,down:false,left:false,right:false};Array.prototype.forEach.call(document.querySelectorAll("#dpad button"),function(b){b.classList.remove("held");});});
+chatInp.addEventListener("blur",function(){document.getElementById("talkBtn").classList.remove("on");});
+chatInp.addEventListener("keydown",function(e){if(e.key==="Escape"){chatInp.blur();}});
+var KEYDIR={ArrowUp:"up",KeyW:"up",ArrowDown:"down",KeyS:"down",ArrowLeft:"left",KeyA:"left",ArrowRight:"right",KeyD:"right"};
+document.addEventListener("keydown",function(e){
+  if(!document.getElementById("venue").classList.contains("on"))return;
+  var tg=e.target,tn=tg&&tg.tagName;
+  if(tn==="INPUT"||tn==="TEXTAREA"||tn==="SELECT")return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  var d=KEYDIR[e.code];
+  if(d){e.preventDefault();setHeld(d,true);return;}
+  if(e.key==="Enter"||e.code==="KeyT"){e.preventDefault();openTalk();return;}
+  if(e.code==="Space"){e.preventDefault();if(!e.repeat)toggleDance();return;}
+});
+document.addEventListener("keyup",function(e){var d=KEYDIR[e.code];if(d)setHeld(d,false);});
+window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){setHeld(d,false);});});
 
 /* ============================================================
    VIDEO SYNC
@@ -1451,10 +1560,12 @@ function drawParticles(){
 /* ============================================================
    DRAWING: AVATAR SPRITE
    ============================================================ */
-function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving){
+function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed){
   var s=scale||1;
   var bw=16*s, bh=24*s;
   var cx=x, cy=y;
+  /* dance timing: faster while the performer is playing; seed keeps dancers out of lockstep */
+  var dT=Date.now()*(isPerformerPlaying?0.0105:0.0075)+(seed||0);
 
   /* Glow for performer when playing */
   if(isPerf&&isPlaying){
@@ -1475,6 +1586,9 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving){
   if(moving){
     bob=Math.sin(Date.now()*0.012)*2*s;
   }
+  if(dance===1)bob=-Math.abs(Math.sin(dT))*6*s;            /* bounce */
+  else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*2*s;cx+=Math.sin(dT)*4*s;} /* sway */
+  else if(dance===3)bob=-Math.pow(Math.abs(Math.sin(dT)),3)*11*s; /* jump */
 
   var headR=6*s;
   var bodyW=10*s, bodyH=10*s;
@@ -1483,6 +1597,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving){
 
   /* Legs */
   var legSpread=moving?Math.sin(Date.now()*0.01)*3*s:0;
+  if(dance)legSpread=dance===3?Math.abs(Math.sin(dT))*3*s:Math.sin(dT*2)*2.5*s;
   ctx.fillStyle=darken(color,0.4);
   ctx.fillRect(cx-4*s+legSpread,cy+bodyH*0.3+bob,legW,legH);
   ctx.fillRect(cx+1*s-legSpread,cy+bodyH*0.3+bob,legW,legH);
@@ -1496,18 +1611,23 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving){
   if(isPerf&&isPlaying){
     armAngle=Math.sin(Date.now()*0.015)*0.4;
   }
+  /* dancing arms: angles in radians from hanging down; ~2.8 is straight up */
+  var armL=-0.2+armAngle,armR=0.2-armAngle;
+  if(dance===1){armL=2.7+Math.sin(dT*2)*0.35;armR=-2.7-Math.sin(dT*2)*0.35;}
+  else if(dance===2){var sw=Math.sin(dT);armL=1.9+sw*0.9;armR=-1.9+sw*0.9;}
+  else if(dance===3){armL=1.5+Math.abs(Math.sin(dT))*1.1;armR=-1.5-Math.abs(Math.sin(dT))*1.1;}
   ctx.save();
   ctx.fillStyle=darken(color,0.2);
   /* Left arm */
   ctx.save();
   ctx.translate(cx-bodyW/2,cy-bodyH*0.3+bob);
-  ctx.rotate(-0.2+armAngle);
+  ctx.rotate(armL);
   ctx.fillRect(-armW,0,armW,armH);
   ctx.restore();
   /* Right arm */
   ctx.save();
   ctx.translate(cx+bodyW/2,cy-bodyH*0.3+bob);
-  ctx.rotate(0.2-armAngle);
+  ctx.rotate(armR);
   ctx.fillRect(0,0,armW,armH);
   ctx.restore();
   ctx.restore();
@@ -1743,7 +1863,20 @@ function renderLoop(){
     v.y+=dy*0.08;
 
     var vx=v.x*W, vy=v.y*H;
-    drawAvatar(vx,vy,v.color,v.name,2,false,false,moving);
+    if(v.seed===undefined)v.seed=(ids[i].charCodeAt(0)||0)%7+(v.name.length%5);
+    drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed);
+    if(v.dance){
+      /* a music note floats up from each dancer */
+      var ph=((now/1100)+v.seed*0.37)%1;
+      ctx.globalAlpha=Math.sin(ph*Math.PI)*0.85;
+      ctx.fillStyle=v.color;ctx.font="bold 16px system-ui,sans-serif";ctx.textAlign="center";
+      ctx.fillText(ph<0.5?"\u266A":"\u266B",vx+14+Math.sin(ph*6)*4,vy-58-ph*28);
+      ctx.globalAlpha=1;
+    }
+    if(ids[i]===myId){
+      /* mark which one is you */
+      ctx.fillStyle="rgba(255,255,255,.75)";ctx.beginPath();ctx.moveTo(vx-5,vy+26);ctx.lineTo(vx+5,vy+26);ctx.lineTo(vx,vy+20);ctx.closePath();ctx.fill();
+    }
 
     /* Speech bubble */
     if(v.bubbleText&&(now-v.bubbleTime)<4000){
