@@ -109,7 +109,7 @@ function broadcast(room, msg, exclude) {
 function viewerList(room) {
   var r = rooms[room]; if (!r) return [];
   var out = [];
-  r.viewers.forEach(function(v, id) { out.push({ id: id, name: v.name, x: v.x, y: v.y, color: v.color }); });
+  r.viewers.forEach(function(v, id) { out.push({ id: id, name: v.name, x: v.x, y: v.y, color: v.color, dance: v.dance || 0 }); });
   return out;
 }
 
@@ -193,7 +193,7 @@ wss.on("connection", function(ws) {
       return;
     }
 
-    /* ── Viewer broadcasts: chat and position only ── */
+    /* ── Viewer broadcasts: chat, position and dancing only ── */
     if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
       if (msg.type === "chat") {
         var text = str(msg.text, 300);
@@ -207,6 +207,15 @@ wss.on("connection", function(ws) {
         var v = rooms[ws.room].viewers.get(ws.viewerId);
         if (v) { v.x = x; v.y = y; }
         broadcast(ws.room, { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y }, ws);
+        return;
+      }
+      if (msg.type === "dance") {
+        // 0 = stopped, 1-3 = dance style
+        var style = Math.max(0, Math.min(3, Math.floor(+msg.style || 0)));
+        if (!allow(ws, "dance", 6, 2)) return;
+        var dv = rooms[ws.room].viewers.get(ws.viewerId);
+        if (dv) dv.dance = style;
+        broadcast(ws.room, { type: "dance", id: ws.viewerId, style: style }, ws);
         return;
       }
       return; // anything else from a viewer is dropped (it used to be relayed to the whole room as-is)

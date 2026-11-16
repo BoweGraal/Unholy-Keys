@@ -1,7 +1,7 @@
 /*  Unholy Keys: fake audience for testing.
 
     Connects a crowd of fake audience members to your live room. They wander
-    around the venue, chat now and then, and report what they hear from the
+    around the venue, dance, chat now and then, and report what they hear from the
     performer, so you can test a show without other people or other computers.
 
     Usage (from the server folder):
@@ -30,6 +30,7 @@ var CHAT = ["this slaps", "LETS GO", "encore!", "what instrument is that?", "tur
 var COLORS = ["#D354A0", "#1D9E75", "#E0A030", "#5F9EA0", "#8A6BD1", "#E05050", "#3CB371", "#DB7093"];
 
 var stats = { connected: 0, joined: 0, failed: 0, notes: 0, inst: null, key: null, video: null, chatsIn: 0, chatsOut: 0, lastError: null, };
+var dancing = 0;
 var bots = [];
 var stopping = false;
 
@@ -61,6 +62,16 @@ function makeBot(i) {
         bot.y = clampY(bot.y + (Math.random() - 0.5) * 0.06);
         send(bot, { type: "pos", x: bot.x, y: bot.y });
       }, 400 + Math.random() * 600));
+      // start or stop dancing now and then
+      bot.dance = 0;
+      bot.timers.push(setInterval(function() {
+        if (Math.random() < 0.4) {
+          var next = bot.dance ? 0 : 1 + Math.floor(Math.random() * 3);
+          dancing += (next ? 1 : 0) - (bot.dance ? 1 : 0);
+          bot.dance = next;
+          send(bot, { type: "dance", style: next });
+        }
+      }, 7000 + Math.random() * 8000));
       // chat now and then
       bot.timers.push(setInterval(function() {
         if (Math.random() < 0.35) { send(bot, { type: "chat", text: rand(CHAT) }); stats.chatsOut++; }
@@ -92,7 +103,7 @@ function report() {
   if (stats.failed) line += ", " + stats.failed + " refused";
   line += " | notes heard: " + stats.notes + " | instrument: " + (stats.inst || "-") + " | key: " + (stats.key || "-");
   if (stats.video) line += " | video: " + stats.video;
-  line += " | chat sent: " + stats.chatsOut;
+  line += " | dancing: " + dancing + " | chat sent: " + stats.chatsOut;
   console.log(line);
   if (stats.lastError && !stats.joined) {
     console.log("        last error: " + stats.lastError);

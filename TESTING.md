@@ -8,7 +8,7 @@ The kit has three parts, all in the `server` folder:
 |---|---|
 | `npm start` | Runs the relay server, and serves the performer and audience pages at `http://localhost:8080` |
 | `npm run check` | Tests a server the way a show uses it: opens a room, joins it, sends notes and chat, times each step, and checks the instrument sample hosts |
-| `npm run crowd -- CODE 20` | Sends 20 fake audience members into your room. They walk around, chat, and report what they hear |
+| `npm run crowd -- CODE 20` | Sends 20 fake audience members into your room. They walk around, dance, chat, and report what they hear |
 
 ---
 
@@ -54,7 +54,7 @@ To check Node is installed, `node -v` should print `v18` or higher.
    ```
    Replace `ABC123` with your room code. Every 5 seconds it prints a status line:
    ```
-   [crowd] 20/20 in the room | notes heard: 37 | instrument: tron flute | key: G Blues | chat sent: 4
+   [crowd] 20/20 in the room | notes heard: 37 | instrument: tron flute | key: G Blues | dancing: 6 | chat sent: 4
    ```
 
 5. **Play, and confirm each of these:**
@@ -62,7 +62,8 @@ To check Node is installed, `node -v` should print `v18` or higher.
    | Check | Where to look |
    |---|---|
    | Viewer count goes up as the crowd joins | Next to the LIVE button on the performer page |
-   | Fake viewers walk around and chat | Your audience window |
+   | Fake viewers walk around, dance and chat | Your audience window, and the audience panel in jam mode |
+   | You can walk with the arrows (bottom left, or arrow keys / WASD), talk (Enter) and dance (Space) | Your audience window |
    | Notes you play sound in the audience window | Your audience window (click it once first so the browser allows sound) |
    | `notes heard` goes up as you play | Crowd terminal |
    | Switching instrument or key shows up | Crowd terminal and the audience page's corner display |
