@@ -3806,16 +3806,20 @@ function audWrap(g,text,w,max){
   if(used<text.length||g.measureText(out[last]).width>w){var l=out[last];while(l.length>1&&g.measureText(l+"…").width>w)l=l.slice(0,-1);out[last]=l+"…";}
   return out;
 }
-function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor){
+function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk){
   /* small version of the venue character: head, body, arms, legs; name under the feet */
-  var dT=now*0.009+seed,bob=0,armL=-.2,armR=.2,leg=0;
+  var dT=now*0.009+seed,bob=0,armL=-.2,armR=.2,leg=0,legL=0,legR=0;
+  /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
+  if(walk!=null&&!dance){var ws=Math.sin(walk);legL=ws*2.6*sc;legR=-legL;armL=-.2-ws*.7;armR=.2-ws*.7;bob=-Math.abs(Math.cos(walk))*1.6*sc;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*5*sc;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;leg=Math.sin(dT*2)*1.5*sc;}
   else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*1.5*sc;x+=Math.sin(dT)*3*sc;var sw=Math.sin(dT);armL=1.9+sw*.9;armR=-1.9+sw*.9;}
   else if(dance===3){bob=-Math.pow(Math.abs(Math.sin(dT)),3)*8*sc;armL=1.5+Math.abs(Math.sin(dT))*1.1;armR=-armL;leg=Math.abs(Math.sin(dT))*2*sc;}
   var hr=5*sc,bw=9*sc,bh=11*sc,lh=6*sc,top=y+bob;
   if(glow){var gl=g.createRadialGradient(x,top,3,x,top,30*sc);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,top,30*sc,0,6.3);g.fill();}
   g.fillStyle=color;
-  g.fillRect(x-bw/2+1*sc-leg,top+bh/2,2.6*sc,lh);g.fillRect(x+bw/2-3.6*sc+leg,top+bh/2,2.6*sc,lh);
+  /* legs: pivot at the hip so a stride swings them */
+  g.save();g.translate(x-bw/2+2.3*sc,top+bh/2);g.rotate(legL*.12);g.fillRect(-1.3*sc-leg,0,2.6*sc,lh);g.restore();
+  g.save();g.translate(x+bw/2-2.3*sc,top+bh/2);g.rotate(legR*.12);g.fillRect(-1.3*sc+leg,0,2.6*sc,lh);g.restore();
   g.fillRect(x-bw/2,top-bh/2,bw,bh);
   g.save();g.translate(x-bw/2,top-bh/2+1.5*sc);g.rotate(armL);g.fillRect(-2.4*sc,0,2.4*sc,8*sc);g.restore();
   g.save();g.translate(x+bw/2,top-bh/2+1.5*sc);g.rotate(armR);g.fillRect(0,0,2.4*sc,8*sc);g.restore();
@@ -3867,9 +3871,14 @@ function drawAud(){
   /* audience, back to front so nearer people overlap farther ones */
   ids.sort(function(a,b){return AUD.people[a].dy-AUD.people[b].dy;});
   var heads=[];
-  ids.forEach(function(id){var p=AUD.people[id];p.dx+=(p.x-p.dx)*.25;p.dy+=(p.y-p.dy)*.25;
+  ids.forEach(function(id){var p=AUD.people[id];
+    /* glide toward where they are, and advance the stride by distance covered so steps match speed */
+    var mx=(p.x-p.dx)*.18,my=(p.y-p.dy)*.18;p.dx+=mx;p.dy+=my;
+    var step=Math.hypot(mx*W,my*sy);
+    if(step>.15){p.walk=(p.walk||0)+Math.min(.5,step*.22+.12);p.walkUntil=now+120;}
+    var walking=now<(p.walkUntil||0);
     var x=p.dx*W,y=Math.min(H-24,p.dy*sy);
-    heads.push([p,x,audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now)]);});
+    heads.push([p,x,audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null)]);});
   /* speech bubbles on top of everyone; oldest first so the newest is on top */
   heads.filter(function(h){return h[0].text&&now-h[0].said<AUD_SAY_MS;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
     var age=now-h[0].said,al=age>AUD_SAY_MS-1200?(AUD_SAY_MS-age)/1200:1;
