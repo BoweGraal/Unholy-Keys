@@ -65,7 +65,7 @@ function liveVideo(r) {
     v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
   return v;
 }
-var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1 };
+var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1 };
 
 /* ── Live sound/visual stream ──
    The performer sends binary packets: byte 0 is the kind (1 = audio, 2 = visuals), the rest is
@@ -139,7 +139,7 @@ wss.on("connection", function(ws) {
     if (msg.type === "create-room") {
       if (ws.role) return;                       // one role per connection
       var code = genCode();                      // never a client-chosen code: that let anyone take over a live room
-      rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null };
+      rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, performerName: str(msg.name, 24) || "Performer" };
       ws.room = code;
       ws.role = "performer";
       send(ws, { type: "room-created", room: code });
@@ -171,7 +171,8 @@ wss.on("connection", function(ws) {
         viewers: viewerList(roomCode),
         performerState: r.state,
         video: liveVideo(r),
-        stream: r.stream || null
+        stream: r.stream || null,
+        performer: { name: r.performerName || "Performer" }
       });
 
       // Notify everyone else
@@ -189,6 +190,11 @@ wss.on("connection", function(ws) {
       if (msg.type === "state") rooms[ws.room].state = msg;
       if (msg.type === "video") { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); }
       if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
+      if (msg.type === "perf-name") {
+        rooms[ws.room].performerName = str(msg.name, 24) || "Performer";
+        broadcast(ws.room, { type: "perf-name", name: rooms[ws.room].performerName }, ws);
+        return;
+      }
       broadcast(ws.room, msg, ws);
       return;
     }

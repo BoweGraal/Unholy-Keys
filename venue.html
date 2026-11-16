@@ -1110,7 +1110,7 @@ function handleMsg(msg){
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
     if(msg.performer){
-      performer.name=msg.performer.name||"Performer";
+      performer.name=safeText(msg.performer.name,24)||"Performer";
     }
     if(msg.inst)activeInst=msg.inst;
     /* Restore performer state if joining mid-session */
@@ -1141,6 +1141,9 @@ function handleMsg(msg){
       delete viewers[msg.id];
     }
     updViewerCount();
+  }
+  else if(t==="perf-name"){
+    performer.name=safeText(msg.name,24)||"Performer";
   }
   else if(t==="dance"){
     if(viewers[msg.id])viewers[msg.id].dance=danceStyle(msg.style);
@@ -1560,7 +1563,7 @@ function drawParticles(){
 /* ============================================================
    DRAWING: AVATAR SPRITE
    ============================================================ */
-function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed){
+function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe){
   var s=scale||1;
   var bw=16*s, bh=24*s;
   var cx=x, cy=y;
@@ -1643,11 +1646,15 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed){
   ctx.fillRect(cx-3*s,cy-bodyH/2-headR+2*s+bob-1*s,2*s,2*s);
   ctx.fillRect(cx+1*s,cy-bodyH/2-headR+2*s+bob-1*s,2*s,2*s);
 
-  /* Name label */
-  ctx.font="bold "+Math.round(11*s)+"px 'Segoe UI',system-ui,sans-serif";
-  ctx.textAlign="center";
-  ctx.fillStyle="rgba(255,255,255,0.85)";
-  ctx.fillText(name,cx,cy-bodyH/2-headR*2-2*s+bob);
+  /* Name label, under the feet (stays put while dancing); yours is gold */
+  var fs=Math.min(18,Math.round(11*s));
+  ctx.font="bold "+fs+"px 'Segoe UI',system-ui,sans-serif";
+  ctx.textAlign="center";ctx.textBaseline="top";
+  var ny=cy+bodyH*0.3+legH+4;
+  ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,0.65)";ctx.strokeText(name,x,ny);
+  ctx.fillStyle=isMe?"#F5C518":"rgba(255,255,255,0.88)";
+  ctx.fillText(name,x,ny);
+  ctx.textBaseline="alphabetic";
 }
 
 function darken(hex,amt){
@@ -1864,7 +1871,7 @@ function renderLoop(){
 
     var vx=v.x*W, vy=v.y*H;
     if(v.seed===undefined)v.seed=(ids[i].charCodeAt(0)||0)%7+(v.name.length%5);
-    drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed);
+    drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed,ids[i]===myId);
     if(v.dance){
       /* a music note floats up from each dancer */
       var ph=((now/1100)+v.seed*0.37)%1;
@@ -1873,16 +1880,12 @@ function renderLoop(){
       ctx.fillText(ph<0.5?"\u266A":"\u266B",vx+14+Math.sin(ph*6)*4,vy-58-ph*28);
       ctx.globalAlpha=1;
     }
-    if(ids[i]===myId){
-      /* mark which one is you */
-      ctx.fillStyle="rgba(255,255,255,.75)";ctx.beginPath();ctx.moveTo(vx-5,vy+26);ctx.lineTo(vx+5,vy+26);ctx.lineTo(vx,vy+20);ctx.closePath();ctx.fill();
-    }
 
     /* Speech bubble */
     if(v.bubbleText&&(now-v.bubbleTime)<4000){
       var bAlpha=Math.max(0,1-(now-v.bubbleTime)/4000);
       ctx.globalAlpha=bAlpha;
-      drawBubble(vx,vy-30,v.bubbleText);
+      drawBubble(vx,vy-14,v.bubbleText);
       ctx.globalAlpha=1;
     }
   }
