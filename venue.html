@@ -38,7 +38,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 /* VENUE (after join) */
 #venue{display:none;position:fixed;inset:0;overflow:hidden;background:#000}
 #venue.on{display:block}
-#mainCanvas{position:absolute;inset:0}
+#mainCanvas{position:absolute;inset:0;touch-action:none}
 
 /* Big Screen overlay */
 #bigScreen{position:absolute;top:2%;left:25%;width:50%;height:0;padding-bottom:28%;
@@ -1144,7 +1144,10 @@ function initCanvas(){
   ctx=canvas.getContext("2d");
   resize();
   window.addEventListener("resize",resize);
-  canvas.addEventListener("click",onCanvasClick);
+  canvas.addEventListener("pointerdown",onFloorDown);
+  canvas.addEventListener("pointermove",function(e){if(GAME.floorDrag(e.pointerId,floorPt(e)))e.preventDefault();});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){canvas.addEventListener(ev,function(e){GAME.floorRelease(e.pointerId);});});
+  canvas.addEventListener("contextmenu",function(e){e.preventDefault();});
 }
 
 function resize(){
@@ -1154,22 +1157,19 @@ function resize(){
   canvas.height=H;
 }
 
-function onCanvasClick(e){
-  var rect=canvas.getBoundingClientRect();
-  var cx=e.clientX-rect.left;
-  var cy=e.clientY-rect.top;
-  var nx=cx/W;
-  var ny=cy/H;
-  /* Only allow movement on the floor area */
-  if(ny<FLOOR_TOP||ny>FLOOR_BOTTOM)return;
-  /* Clamp x */
-  nx=Math.max(0.03,Math.min(0.97,nx));
-  ny=Math.max(FLOOR_TOP+0.02,Math.min(FLOOR_BOTTOM-0.02,ny));
-  if(myId&&viewers[myId]){
-    viewers[myId].tx=nx;
-    viewers[myId].ty=ny;
-    sendPos(nx,ny);
-  }
+function floorPt(e){var r=canvas.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
+var walkMark=null;
+/* a tap or click on the venue: grab one of your limbs if you're free dancing and it's on you, otherwise walk there */
+function onFloorDown(e){
+  var p=floorPt(e);
+  if(GAME.floorGrab(e.pointerId,p)){e.preventDefault();try{canvas.setPointerCapture(e.pointerId);}catch(x){}return;}
+  if(!myId||!viewers[myId])return;
+  var ny=p[1]/H;
+  if(ny<FLOOR_TOP-0.12)return;                  /* well up on the stage: not a place to walk to */
+  var nx=Math.max(0.03,Math.min(0.97,p[0]/W));
+  ny=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),ny));
+  viewers[myId].walk=[nx,ny];
+  walkMark={x:nx*W,y:ny*H,t:performance.now()};
 }
 
 /* ============================================================
@@ -1549,6 +1549,16 @@ function floorMaxY(){
 function anyHeld(){return held.up||held.down||held.left||held.right;}
 function moveTick(){
   var now=performance.now(),dt=Math.min(0.05,(now-(lastMoveT||now))/1000);lastMoveT=now;
+  var mw=myId&&viewers[myId];
+  if(mw&&mw.walk&&anyHeld())mw.walk=null;          /* the arrows take over */
+  if(mw&&mw.walk){
+    /* walking to where you tapped, at the same pace as the arrows */
+    var wx=mw.walk[0]-mw.tx,wy=(mw.walk[1]-mw.ty)*(H/W),wd=Math.hypot(wx,wy),st=0.33*dt;
+    if(wd<=st){mw.tx=mw.walk[0];mw.ty=mw.walk[1];mw.walk=null;}
+    else{mw.tx+=wx/wd*st;mw.ty+=wy/wd*st*(W/H);}
+    mw.x+=(mw.tx-mw.x)*0.35;mw.y+=(mw.ty-mw.y)*0.35;
+    sendPos(mw.tx,mw.ty);
+  }
   if(anyHeld()&&myId&&viewers[myId]){
     var me=viewers[myId],dx=(held.right?1:0)-(held.left?1:0),dy=(held.down?1:0)-(held.up?1:0);
     if(dx&&dy){dx*=0.7071;dy*=0.7071;}
@@ -1728,16 +1738,53 @@ var GAME=(function(){
   function spot(n){n=(n+1)*2654435761>>>0;var a=(n^(n>>>15))*2246822519>>>0,b=(a^(a>>>13))*3266489917>>>0;return [(a>>>8)/16777216,(b>>>8)/16777216];}
   /* the beat grid to draw with: the round's chart tempo, or the live detector */
   function grid(){var b=BEAT.get();if(rnd&&rnd.chart)return{bpm:rnd.chart.bpm,period:60000/rnd.chart.bpm,t0:b.t0,gen:0,known:true,live:true};return b;}
+  /* The song clock the steps ride on. The raw song position (from the live sound) can jump when the
+     sound stalls on a weak connection or catches up, and the timing trim nudges it too. Steps follow a
+     steadied copy instead: small differences are eased out by running the clock a little fast or slow,
+     so arrows never snap; only a big jump that lasts is taken in one go (the steps are then re-laid). */
+  var clkOff=null,clkT=0,clkBad=0;
+  function songClock(now){
+    var raw=ROUND.pos(),e;
+    if(clkOff===null){clkOff=raw-now;clkT=now;clkBad=0;return raw;}
+    var dt=Math.min(100,Math.max(0,now-clkT));clkT=now;
+    e=(raw-now)-clkOff;
+    if(Math.abs(e)>1500){
+      clkBad+=dt;
+      if(clkBad>900){clkOff=raw-now;clkBad=0;relay(raw);}
+    }else{
+      clkBad=0;
+      var lim=dt*0.25;                                 /* at most a quarter faster or slower than real time */
+      clkOff+=Math.max(-lim,Math.min(lim,e*0.08));
+    }
+    return now+clkOff;
+  }
+  /* the song really did jump: drop the steps still to come and pick up from where it is now */
+  function relay(pos){
+    notes=notes.filter(function(n){return n.j||n.holding||n.sliding;});
+    var st=rnd.chart.steps;rndIdx=0;
+    while(rndIdx<st.length&&st[rndIdx][0]<pos-150)rndIdx++;
+    clkJumps++;
+  }
+  var clkJumps=0,swoopEnd=-1e9;
   function feedRound(now,bt){
-    var pos=ROUND.pos(),st=rnd.chart.steps,ahead=travel(bt.period)+700,i;
+    var pos=songClock(now),st=rnd.chart.steps,ahead=travel(bt.period)+700,i;
     if(!rnd.synced){while(rndIdx<st.length&&st[rndIdx][0]<pos-150)rndIdx++;rnd.synced=true;}    /* joined part-way: skip what's gone */
     while(rndIdx<st.length&&st[rndIdx][0]<pos+ahead){
       var s=st[rndIdx];
+      if(mode==="aim"){
+        /* the target game: one target per step; a hold becomes a swoop, and nothing else comes up while you follow it */
+        if(s[0]<swoopEnd+120){rndIdx++;continue;}
+        var lane0=0;for(var b0=0;b0<4;b0++)if(s[1]&(1<<b0)){lane0=b0;break;}
+        var h0=spot(rndIdx*4+lane0),sw=s[2]>0?Math.max(bt.period*0.9,Math.min(2400,+s[2])):0;
+        var nn={ms:s[0],lane:lane0,x:0.14+h0[0]*0.72,y:0.12+h0[1]*0.76,t:0,j:"",jt:0,hold:sw};
+        if(sw){swoopPath(nn,spot(rndIdx*4+lane0+97));swoopEnd=s[0]+sw;}
+        notes.push(nn);rndIdx++;continue;
+      }
       for(var b=0;b<4;b++)if(s[1]&(1<<b)){var h=spot(rndIdx*4+b);notes.push({ms:s[0],lane:b,x:0.14+h[0]*0.72,y:0.12+h[1]*0.76,t:0,j:"",jt:0,hold:mode==="step"&&s[2]>0?+s[2]:0});}
       rndIdx++;
     }
-    /* each step is due when the song, as heard here, reaches it */
-    for(i=0;i<notes.length;i++)if(notes[i].ms!==undefined&&!notes[i].j)notes[i].t=now+(notes[i].ms-pos);
+    /* each step is due when the song, as heard here, reaches it (kept for the ones already hit, so they stay put) */
+    for(i=0;i<notes.length;i++)if(notes[i].ms!==undefined&&(!notes[i].j||notes[i].holding||notes[i].sliding))notes[i].t=now+(notes[i].ms-pos);
     /* inside one of the song's big moments? (the border burns and hits score double) */
     var pk=rnd.chart.peaks||[],inside=false;
     for(i=0;i<pk.length;i++)if(pos>=pk[i][0]&&pos<pk[i][1]){inside=true;break;}
@@ -1761,25 +1808,76 @@ var GAME=(function(){
   }
   function setPose(p,hit){pose=p.slice();applyToMe(hit);}
 
-  /* ---------- free dance ---------- */
-  /* where the puppet's joints and handles are on the pad */
-  function rig(){
-    var cx=CW/2,cy=CH*0.47,u=Math.min(CW/36,CH/44),bw=11*u,bh=13*u;
-    var J=[[cx-bw/2,cy-bh*0.32],[cx+bw/2,cy-bh*0.32],[cx-bw*0.27,cy+bh/2],[cx+bw*0.27,cy+bh/2]],L=[10.5*u,10.5*u,10*u,10*u];
-    var Hn=J.map(function(j,i){return [j[0]-Math.sin(pose[i])*L[i],j[1]+Math.cos(pose[i])*L[i]];});
-    return{cx:cx,cy:cy,u:u,bw:bw,bh:bh,J:J,L:L,H:Hn};
-  }
+  /* ---------- free dance ----------
+     You dance right on the floor (or centre stage on your spotlight turn), where you can still see the
+     stage. Grab a hand or foot on your own character and drag it; tap anywhere else on the floor to walk there. */
+  function freeS(){return DEVICE.kind==='pc'?3:4;}   /* bigger on touch screens, so the hands and feet are easy to grab */
   function ptr(e){var r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
-  function dragTo(i,p){
-    var r=rig(),a=Math.atan2(-(p[0]-r.J[i][0]),p[1]-r.J[i][1]);
-    if(i>=2)a=Math.max(-LEGMAX,Math.min(LEGMAX,a));
-    pose[i]=a;keyT[i]=null;applyToMe();sendPose();
-  }
   function limbKey(i,on){
     if(mode!=="free")return;
     keyHeld[i]=on;keyT[i]=on?RAISED[i]:REST[i];
   }
-  function drawFree(now){
+  /* where your dancing self is drawn right now */
+  function freeSpot(){
+    var f=ROUND.featured();
+    if(f&&f.id===myId)return{x:W/2,y:(STAGE_TOP+STAGE_BOTTOM)/2*H+20,s:3};
+    var m=me();if(!m)return null;
+    return{x:m.x*W,y:m.y*H,s:freeS()};
+  }
+  function floorRig(){
+    var sp=freeSpot();if(!sp)return null;
+    var J=limbJoints(sp.x,sp.y,sp.s,-Math.pow(1-BEAT.phase(performance.now()),2)*3*sp.s);
+    var Hd=J.map(function(j,i){var L=LIMB_LEN[i]*sp.s;return [j[0]-Math.sin(pose[i])*L,j[1]+Math.cos(pose[i])*L];});
+    return{sp:sp,J:J,H:Hd};
+  }
+  function floorHandles(){var r=floorRig();return r?r.H.map(function(h){return [Math.round(h[0]),Math.round(h[1])];}):null;}
+  /* a finger went down on the floor: if it's on your character, grab the hand or foot it's nearest */
+  function floorGrab(pid,p){
+    if(mode!=="free")return false;
+    var r=floorRig();if(!r)return false;
+    var sp=r.sp,reach=sp.s*14+26;
+    if(Math.abs(p[0]-sp.x)>reach||p[1]<sp.y-sp.s*20-20||p[1]>sp.y+sp.s*12+26)return false;
+    var taken={},i,bi=-1,bd=1e9;for(var k in grab)taken[grab[k]]=1;
+    for(i=0;i<4;i++){if(taken[i])continue;var d=Math.hypot(p[0]-r.H[i][0],p[1]-r.H[i][1]);if(d<bd){bd=d;bi=i;}}
+    /* not right on a hand or foot: above the waist is an arm, below a leg, on the side you touched */
+    if(bd>Math.max(22,sp.s*6)){
+      var arm=p[1]<sp.y+sp.s*1.5,left=p[0]<sp.x,want=arm?(left?0:1):(left?2:3);
+      if(!taken[want])bi=want;
+    }
+    if(bi<0)return false;
+    grab[pid]=bi;floorDrag(pid,p);return true;
+  }
+  function floorDrag(pid,p){
+    var i=grab[pid];if(i===undefined||mode!=="free")return false;
+    var r=floorRig();if(!r)return true;
+    var a=Math.atan2(-(p[0]-r.J[i][0]),p[1]-r.J[i][1]);
+    if(i>=2)a=Math.max(-LEGMAX,Math.min(LEGMAX,a));
+    pose[i]=a;keyT[i]=null;applyToMe();sendPose();
+    return true;
+  }
+  function floorRelease(pid){var had=grab[pid]!==undefined;delete grab[pid];return had;}
+  /* the handles on your character, drawn on the venue */
+  function drawHandles(c){
+    if(mode!=="free")return;
+    var r=floorRig();if(!r)return;
+    var m=me(),col=m?m.color:"#7F77DD",rad=Math.max(7,r.sp.s*2.4),keys=["D","K","F","J"],pc=!("ontouchstart" in window);
+    c.save();
+    for(var i=0;i<4;i++){
+      var held=keyHeld[i];for(var k in grab)if(grab[k]===i)held=true;
+      c.beginPath();c.arc(r.H[i][0],r.H[i][1],rad,0,6.3);
+      c.fillStyle=held?"#fff":"rgba(255,255,255,.2)";c.fill();c.lineWidth=2;c.strokeStyle=held?col:"rgba(255,255,255,.8)";c.stroke();
+      if(pc){c.fillStyle=held?"#15131f":"rgba(255,255,255,.9)";c.font="700 "+Math.round(rad*1.1)+"px system-ui,sans-serif";c.textAlign="center";c.textBaseline="middle";c.fillText(keys[i],r.H[i][0],r.H[i][1]+1);}
+    }
+    /* a tip over your head for the first few seconds */
+    var age=performance.now()-startT;
+    if(age<7000&&!Object.keys(grab).length){
+      c.globalAlpha=Math.min(1,(7000-age)/600);c.font="800 14px system-ui,sans-serif";c.textAlign="center";c.textBaseline="bottom";
+      var tip="Drag my hands & feet!",tw=c.measureText(tip).width,tx=Math.max(tw/2+8,Math.min(W-tw/2-8,r.sp.x)),ty=r.sp.y-r.sp.s*19;
+      c.lineWidth=4;c.strokeStyle="rgba(0,0,0,.75)";c.strokeText(tip,tx,ty);c.fillStyle="#F5C518";c.fillText(tip,tx,ty);
+    }
+    c.restore();
+  }
+  function freeTick(){
     /* limbs moved by keys glide to where they're going */
     var moved=false;
     for(var i=0;i<4;i++)if(keyT[i]!==null){
@@ -1787,24 +1885,6 @@ var GAME=(function(){
       if(Math.abs(d)<0.02){pose[i]=keyT[i];if(!keyHeld[i])keyT[i]=null;}
     }
     if(moved){applyToMe();sendPose();}
-    var r=rig(),m=me(),col=m?m.color:"#7F77DD",bob=-Math.pow(1-BEAT.phase(now),2)*r.u*0.9;
-    g.clearRect(0,0,CW,CH);
-    g.lineCap="round";
-    /* legs, then body, arms and head */
-    for(i=2;i<4;i++){g.strokeStyle=darken(col,0.4);g.lineWidth=r.u*3.2;g.beginPath();g.moveTo(r.J[i][0],r.J[i][1]+bob);g.lineTo(r.H[i][0],r.H[i][1]);g.stroke();}
-    g.fillStyle=col;roundRect(g,r.cx-r.bw/2,r.cy-r.bh/2+bob,r.bw,r.bh,r.u*1.5);g.fill();
-    for(i=0;i<2;i++){g.strokeStyle=darken(col,0.2);g.lineWidth=r.u*3;g.beginPath();g.moveTo(r.J[i][0],r.J[i][1]+bob);g.lineTo(r.H[i][0],r.H[i][1]);g.stroke();}
-    g.fillStyle=lighten(col,0.3);g.beginPath();g.arc(r.cx,r.cy-r.bh/2-r.u*5+bob,r.u*6,0,6.3);g.fill();
-    g.fillStyle="#000";g.fillRect(r.cx-r.u*3,r.cy-r.bh/2-r.u*6+bob,r.u*2,r.u*2);g.fillRect(r.cx+r.u,r.cy-r.bh/2-r.u*6+bob,r.u*2,r.u*2);
-    /* handles to grab, labelled with their keys */
-    var keys=["D","K","F","J"];
-    for(i=0;i<4;i++){
-      var held=keyHeld[i];for(var k in grab)if(grab[k]===i)held=true;
-      g.beginPath();g.arc(r.H[i][0],r.H[i][1],r.u*3.4,0,6.3);
-      g.fillStyle=held?"#fff":"rgba(255,255,255,.16)";g.fill();g.lineWidth=2;g.strokeStyle=held?col:"rgba(255,255,255,.75)";g.stroke();
-      g.fillStyle=held?"#15131f":"rgba(255,255,255,.85)";g.font="700 "+Math.round(r.u*3.2)+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(keys[i],r.H[i][0],r.H[i][1]+1);
-    }
-    g.textBaseline="alphabetic";
   }
 
   /* ---------- step dance ---------- */
@@ -1812,11 +1892,16 @@ var GAME=(function(){
   function makeNotes(now,bt){
     if(rnd&&rnd.chart){feedRound(now,bt);return;}
     /* free play: no new steps until the music has a beat to follow (talking, a quiet intro, silence) */
-    if(!bt.known||!bt.live){waiting=true;lastSlot=Math.max(lastSlot,now+600);return;}
+    if(!bt.known||!bt.live){
+      /* the beat dropped out (talking, a break): arrows still on their way fade away, without counting as misses */
+      if(!waiting)for(var wi=0;wi<notes.length;wi++){var wn=notes[wi];if(!wn.j&&!wn.holding&&!wn.sliding&&wn.t>now+350){wn.j="GONE";wn.jt=now;}}
+      waiting=true;lastSlot=Math.max(lastSlot,now+600);return;
+    }
     if(waiting){waiting=false;lastSlot=now+travel(bt.period)*0.6;}
     var half=bt.period/2;
     if(bt.gen!==lastGen){            /* the tempo jumped: clear what hasn't arrived yet and start a fresh grid */
-      lastGen=bt.gen;notes=notes.filter(function(n){return n.j||n.t<now+350;});
+      var vis=now+travel(bt.period);                                 /* keep the ones already on screen */
+      lastGen=bt.gen;notes=notes.filter(function(n){return n.j||n.holding||n.sliding||n.t<vis;});
       lastSlot=Math.max(now+900,notes.length?notes[notes.length-1].t:0);
     }
     var until=now+travel(bt.period)+half,k=Math.ceil((lastSlot+half*0.6-bt.t0)/half);
@@ -1826,7 +1911,7 @@ var GAME=(function(){
       if(t<startT+1500)continue;
       var onBeat=((k%2)+2)%2===0,p;
       /* on the beat most of the time; off-beat steps join in as your combo grows (fewer at fast tempos) */
-      if(mode==="aim"){if(!onBeat&&(bt.bpm>110||combo<10))continue;p=onBeat?(bt.bpm>150?0.6:0.8):0.3;}
+      if(mode==="aim"){if(t<swoopEnd+120)continue;if(!onBeat&&(bt.bpm>110||combo<10))continue;p=onBeat?(bt.bpm>150?0.6:0.8):0.3;}
       else if(onBeat)p=bt.bpm>150?0.7:0.86;
       else p=bt.bpm>150?(combo>=25?0.12:0):bt.bpm<95?(combo>=4?0.42:0.15):(combo>=8?0.26:0);
       /* louder music, more steps: quiet passages thin out, loud ones fill in the off-beats */
@@ -1842,7 +1927,12 @@ var GAME=(function(){
       var tx,ty2,tries=0;do{tx=0.14+Math.random()*0.72;ty2=0.12+Math.random()*0.76;tries++;}while(tries<8&&Math.hypot(tx-prevX,ty2-prevY)<0.3);
       prevX=tx;prevY=ty2;
       if(!hold&&t<freeHoldEnd&&lane===freeHoldLane)lane=(lane+1+Math.floor(Math.random()*3))%4;   /* keep the held arrow clear */
-      notes.push({t:t,lane:lane,x:tx,y:ty2,j:"",jt:0,hold:hold});
+      var nn={t:t,lane:lane,x:tx,y:ty2,j:"",jt:0,hold:hold};
+      /* target game: now and then a swoop to follow, once you've got going */
+      if(mode==="aim"&&onBeat&&combo>=4&&t-lastFreeHold>bt.period*6&&Math.random()<0.22){
+        nn.hold=Math.min(2400,bt.period*(bt.bpm>140?3:2));lastFreeHold=t;swoopPath(nn,[Math.random(),Math.random()]);swoopEnd=t+nn.hold;
+      }
+      notes.push(nn);
     }
   }
   function press(dir){
@@ -1870,14 +1960,14 @@ var GAME=(function(){
     }
   }
   function holdDone(n,now){
-    n.holding=false;n.j="OK";n.jt=now;combo++;hits++;if(combo>best)best=combo;
+    n.holding=false;n.sliding=false;n.j="OK";n.jt=now;combo++;hits++;if(combo>best)best=combo;
     score+=Math.round((40+Math.round(n.hold/100)*5)*(1+Math.floor(combo/10)*0.1)*(onFire?2:1));
     judge="OK!";judgeT=now;judgeCol="#3CCB8A";foot();applyToMe(true);sendPose(true);
   }
-  function holdFail(n,now){
-    n.holding=false;n.j="LETGO";n.jt=now;misses++;letGos++;
+  function holdFail(n,now,why){
+    n.holding=false;n.sliding=false;n.j="LETGO";n.jt=now;misses++;letGos++;
     if(combo>0){combo=0;setPose(REST);sendPose(true);}
-    judge="LET GO";judgeT=now;judgeCol="#E05050";foot();
+    judge=why||"LET GO";judgeT=now;judgeCol="#E05050";foot();
   }
   function grade(n,bd,now){
     for(var i=0;i<HIT.length;i++)if(bd<=HIT[i][0]){
@@ -1891,12 +1981,13 @@ var GAME=(function(){
     for(var hi=0;hi<notes.length;hi++){var hn=notes[hi];if(hn.holding){if(!laneDown[hn.lane]&&now<hn.t+hn.hold-120)holdFail(hn,now);else if(now>=hn.t+hn.hold)holdDone(hn,now);}}
     /* anything that got past unhit is a miss, and a miss ends the combo */
     var missed=false;
-    for(var i=0;i<notes.length;i++){var n=notes[i];if(!n.j&&!n.holding&&!n.headJ&&now-n.t>HIT[2][0]){n.j="MISS";n.jt=now;misses++;missed=true;}}
+    if(mode==="aim")followSwoops(now);
+    for(var i=0;i<notes.length;i++){var n=notes[i];if(!n.j&&!n.holding&&!n.sliding&&!n.headJ&&now-n.t>HIT[2][0]){n.j="MISS";n.jt=now;misses++;missed=true;}}
     if(missed){
       if(combo>0){combo=0;setPose(REST);sendPose(true);}
       judge="MISS";judgeT=now;judgeCol="#E05050";foot();
     }
-    notes=notes.filter(function(n){return n.holding||now-(n.t+(n.hold||0))<700;});
+    notes=notes.filter(function(n){return n.holding||n.sliding||now-(n.t+(n.hold||0))<700;});
   }
   /* Big moments: flames along the edges of the game, fading in and out, while hits score double */
   var onFire=false,fireT=-1e9;
@@ -1935,21 +2026,53 @@ var GAME=(function(){
   }
   function judgeText(now,y){
     var ja=1-(now-judgeT)/520;
-    if(judge&&ja>0){g.globalAlpha=ja;g.fillStyle=judgeCol;g.font="800 "+Math.round(CW*0.105)+"px system-ui,sans-serif";g.textAlign="center";g.fillText(judge+(combo>=3&&judge!=="MISS"&&judge!=="EARLY"?"  ×"+combo:""),CW/2,y-(1-ja)*6);g.globalAlpha=1;}
+    if(judge&&ja>0){g.globalAlpha=ja;g.fillStyle=judgeCol;g.font="800 "+Math.round(CW*0.105)+"px system-ui,sans-serif";g.textAlign="center";g.fillText(judge+(combo>=3&&judgeCol!=="#E05050"&&judge!=="EARLY"?"  ×"+combo:""),CW/2,y-(1-ja)*6);g.globalAlpha=1;}
   }
 
   /* ---------- target dance ---------- */
   function aimLead(per){return Math.max(850,Math.min(1300,per*2));}
+  /* ---------- swoops: start on the target as its ring closes, then follow the ball along the path to the end ---------- */
+  function swoopPath(n,h){
+    var L=Math.max(0.3,Math.min(0.6,0.26+n.hold/4500)),best=null;
+    for(var k=0;k<12;k++){
+      var a=(h[0]+k*0.618)*Math.PI*2,x2=n.x+Math.cos(a)*L,y2=n.y+Math.sin(a)*L;
+      if(x2<0.12||x2>0.88||y2<0.12||y2>0.88)continue;
+      best=[x2,y2];break;
+    }
+    if(!best){best=[1-n.x,1-n.y];if(Math.hypot(best[0]-n.x,best[1]-n.y)<0.2)best=[n.x<0.5?0.85:0.15,n.y];}
+    var mx=(n.x+best[0])/2,my=(n.y+best[1])/2,dx=best[0]-n.x,dy=best[1]-n.y,bend=(h[1]<0.5?-1:1)*(0.25+h[1]*0.5);
+    n.x2=best[0];n.y2=best[1];
+    n.cx=Math.max(0.06,Math.min(0.94,mx-dy*bend));n.cy=Math.max(0.06,Math.min(0.94,my+dx*bend));
+  }
+  /* a point u (0 to 1) along a swoop, in pixels */
+  function swAt(n,u){var v=1-u;return [(v*v*n.x+2*v*u*n.cx+u*u*n.x2)*CW,(v*v*n.y+2*v*u*n.cy+u*u*n.y2)*CH];}
+  function swU(n,now){return Math.max(0,Math.min(1,(now-n.t)/n.hold));}
+  var finger={};       /* where each finger (or the mouse) is on the pad */
+  function followR(){return aimR()*2.3;}
+  /* each frame: is the finger still on the ball? */
+  function followSwoops(now){
+    for(var i=0;i<notes.length;i++){var n=notes[i];if(!n.sliding)continue;
+      var f=finger[n.pid],b=swAt(n,swU(n,now));
+      if(f&&Math.hypot(f[0]-b[0],f[1]-b[1])<=followR())n.okT=now;
+      if(now>=n.t+n.hold){if(now-n.okT<260)holdDone(n,now);else holdFail(n,now,"SLIPPED");continue;}
+      if(now-n.okT>260)holdFail(n,now,"SLIPPED");                 /* off the path too long */
+    }
+  }
+  function aimUp(pid){
+    var now=performance.now();delete finger[pid];
+    for(var i=0;i<notes.length;i++){var n=notes[i];if(n.sliding&&n.pid===pid){if(now<n.t+n.hold-160)holdFail(n,now,"LET GO");else holdDone(n,now);}}
+  }
   function aimR(){return Math.min(CW,CH)*0.105;}
-  function tapAim(p){
+  function tapAim(p,pid){
     var now=performance.now(),R=aimR()*1.4,bestN=null,bt=1e9,lead=aimLead(grid().period);
     /* of the targets under the finger, take the one due soonest */
-    for(var i=0;i<notes.length;i++){var n=notes[i];if(n.j||now<n.t-lead)continue;
+    for(var i=0;i<notes.length;i++){var n=notes[i];if(n.j||n.sliding||n.headJ||now<n.t-lead)continue;
       if(Math.hypot(p[0]-n.x*CW,p[1]-n.y*CH)<=R&&n.t<bt){bt=n.t;bestN=n;}}
     if(!bestN)return;
     var bd=Math.abs(bestN.t-now);
     if(bd>HIT[2][0]){if(now<bestN.t){judge="EARLY";judgeT=now;judgeCol="rgba(255,255,255,.6)";}return;}   /* too early: wait for the ring */
     grade(bestN,bd,now);
+    if(bestN.hold>0&&bestN.x2!==undefined){bestN.sliding=true;bestN.j="";bestN.headJ=judge;bestN.pid=pid;bestN.okT=now;finger[pid]=p;}
     /* reach for it: the nearest hand or foot points at the target */
     var dx=bestN.x-0.5,dy=bestN.y-0.47,np=REST.slice(),a=Math.atan2(-dx,dy);
     if(dy<0.08)np[dx<0?0:1]=a;else{np[dx<0?2:3]=Math.max(-LEGMAX,Math.min(LEGMAX,a));np[dx<0?0:1]=dx<0?1.3:-1.3;}
@@ -1966,6 +2089,8 @@ var GAME=(function(){
     /* later targets underneath, the next one due on top */
     for(i=notes.length-1;i>=0;i--){
       var n=notes[i],x=n.x*CW,y=n.y*CH,col=LCOL[n.lane],left=n.t-now;
+      if(n.j==="GONE"){var ga=1-(now-n.jt)/350;if(ga>0){g.globalAlpha=ga*0.6;g.fillStyle=col;g.beginPath();g.arc(x,y,R,0,6.3);g.fill();g.globalAlpha=1;}continue;}
+      if(n.x2!==undefined&&drawSwoop(n,now,lead,R))continue;
       if(n.j&&n.j!=="MISS"){var a=1-(now-n.jt)/240;if(a<=0)continue;g.globalAlpha=a;g.strokeStyle=col;g.lineWidth=4;g.beginPath();g.arc(x,y,R*(1+(1-a)*1.1),0,6.3);g.stroke();g.globalAlpha=1;continue;}
       if(n.j==="MISS"){var am=1-(now-n.jt)/300;if(am<=0)continue;g.globalAlpha=am*0.5;g.fillStyle="#555";g.beginPath();g.arc(x,y,R,0,6.3);g.fill();g.globalAlpha=1;continue;}
       if(left>lead)continue;
@@ -1979,6 +2104,40 @@ var GAME=(function(){
       g.globalAlpha=1;
     }
     judgeText(now,CH*0.09+10);
+  }
+  /* a swoop: the path, the start target with its closing ring, the end, and the ball to follow. true = drawn */
+  function drawSwoop(n,now,lead,R){
+    var left=n.t-now,col=LCOL[n.lane],u0=n.sliding?swU(n,now):0,k,i,pt,a;
+    if(n.j==="OK"){a=1-(now-n.jt)/300;if(a<=0)return true;var e=swAt(n,1);g.globalAlpha=a;g.strokeStyle=col;g.lineWidth=4;g.beginPath();g.arc(e[0],e[1],R*(1+(1-a)*1.2),0,6.3);g.stroke();g.globalAlpha=1;return true;}
+    var gone=n.j==="MISS"||n.j==="LETGO";
+    if(gone){a=1-(now-n.jt)/400;if(a<=0)return true;}
+    else if(left>lead)return true;
+    a=gone?a*0.35:Math.min(1,(lead-left)/180);
+    g.save();g.globalAlpha=a;g.lineCap="round";g.lineJoin="round";
+    /* the track still to go */
+    g.beginPath();for(i=0;i<=24;i++){pt=swAt(n,u0+(1-u0)*i/24);if(i)g.lineTo(pt[0],pt[1]);else g.moveTo(pt[0],pt[1]);}
+    g.strokeStyle=gone?"#555":"rgba(255,255,255,.85)";g.lineWidth=R*1.55+4;g.stroke();
+    g.strokeStyle=gone?"#333":col;g.globalAlpha=a*(gone?1:0.55);g.lineWidth=R*1.55;g.stroke();g.globalAlpha=a;
+    /* chevrons pointing the way */
+    if(!gone){g.strokeStyle="rgba(255,255,255,.85)";g.lineWidth=Math.max(2.5,R*0.16);for(i=1;i<6;i++){var uu=i/6;if(uu<u0+0.05)continue;var p1=swAt(n,uu-0.02),p2=swAt(n,Math.min(1,uu+0.02)),an=Math.atan2(p2[1]-p1[1],p2[0]-p1[0]),pm=swAt(n,uu);g.save();g.translate(pm[0],pm[1]);g.rotate(an);g.beginPath();g.moveTo(-R*0.2,-R*0.32);g.lineTo(R*0.16,0);g.lineTo(-R*0.2,R*0.32);g.stroke();g.restore();}}
+    /* the end */
+    var en=swAt(n,1);g.strokeStyle="#fff";g.lineWidth=2.5;g.beginPath();g.arc(en[0],en[1],R*0.8,0,6.3);g.stroke();
+    g.fillStyle=gone?"#444":col;g.beginPath();g.arc(en[0],en[1],R*0.32,0,6.3);g.fill();
+    if(n.sliding){
+      /* the ball, with the ring your finger has to stay inside */
+      var b=swAt(n,u0),f=finger[n.pid],on=f&&Math.hypot(f[0]-b[0],f[1]-b[1])<=followR();
+      g.strokeStyle=on?"rgba(255,255,255,.9)":"rgba(255,90,90,.9)";g.lineWidth=3;g.beginPath();g.arc(b[0],b[1],followR()*0.8,0,6.3);g.stroke();
+      g.fillStyle=col;g.beginPath();g.arc(b[0],b[1],R,0,6.3);g.fill();g.strokeStyle="#fff";g.lineWidth=3;g.stroke();
+    }else{
+      /* the start: a target like any other, with a ring closing on it */
+      var x=n.x*CW,y=n.y*CH;k=Math.max(0,left/lead);
+      g.fillStyle=gone?"#555":col;g.beginPath();g.arc(x,y,R,0,6.3);g.fill();
+      g.strokeStyle="#fff";g.lineWidth=2;g.stroke();
+      if(!gone){g.fillStyle="rgba(0,0,0,.35)";g.beginPath();g.arc(x,y,R*0.45,0,6.3);g.fill();
+        g.strokeStyle="rgba(255,255,255,.9)";g.lineWidth=2.5;g.beginPath();g.arc(x,y,R*(1+k*2.1),0,6.3);g.stroke();}
+    }
+    g.restore();
+    return true;
   }
   function arrow(x,y,sz,rot,fill,stroke,lw){
     g.save();g.translate(x,y);g.rotate(rot);
@@ -2021,6 +2180,7 @@ var GAME=(function(){
     for(i=0;i<notes.length;i++){
       n=notes[i];var x=CW*(n.lane+0.5)/4,y=ty+(n.t-now)/tv*span;
       if(n.holding)continue;
+      if(n.j==="GONE"){var ga=1-(now-n.jt)/350;if(ga>0&&y>-sz&&y<CH+sz){g.globalAlpha=ga;arrow(x,y,sz,LROT[n.lane],LCOL[n.lane],"rgba(0,0,0,.55)",2);g.globalAlpha=1;}continue;}
       if(n.j==="LETGO"){if(y>-sz&&y<CH+sz){g.globalAlpha=0.3;arrow(x,Math.max(ty,y),sz,LROT[n.lane],"#555","#333",2);g.globalAlpha=1;}continue;}
       if(n.j&&n.j!=="MISS"){
         var a=1-(now-n.jt)/220;if(a<=0)continue;
@@ -2077,8 +2237,9 @@ var GAME=(function(){
   function tick(){
     if(!mode){raf=0;return;}
     var now=performance.now();
+    if(mode==="free"){freeTick();raf=requestAnimationFrame(tick);return;}
     size();
-    if(mode==="free")drawFree(now);else if(mode==="aim")drawAim(now);else drawStep(now);
+    if(mode==="aim")drawAim(now);else drawStep(now);
     drawMe();
     if(now-lastFit>400){lastFit=now;DEVICE.fit();}
     bpmText(now);
@@ -2087,17 +2248,18 @@ var GAME=(function(){
   function start(m,round){
     if(m!=="free"&&m!=="step"&&m!=="aim")return;
     if(mode)stop(true);
-    rnd=round||null;rndIdx=0;sentScore=-1;onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false];lastFreeHold=-1e9;freeHoldEnd=-1e9;
+    rnd=round||null;rndIdx=0;sentScore=-1;clkOff=null;clkJumps=0;swoopEnd=-1e9;finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false];lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
     mode=m;myDance=m==="free"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
     pose=REST.slice();combo=0;keyT=[null,null,null,null];keyHeld=[false,false,false,false];grab={};
     notes=[];score=0;best=0;hits=0;misses=0;judge="";lastGen=-1;lastSlot=0;startT=performance.now();
-    document.body.classList.add("gaming");document.body.classList.toggle("gaming-step",m==="step");document.body.classList.toggle("gaming-free",m==="free");
-    document.getElementById("gamePanel").classList.add("on");
+    /* free dance happens on the floor itself; the other two games open their pad in the middle */
+    document.body.classList.toggle("gaming",m!=="free");document.body.classList.toggle("gaming-step",m==="step");document.body.classList.toggle("gaming-free",m==="free");
+    document.getElementById("gamePanel").classList.toggle("on",m!=="free");
     lastFit=0;DEVICE.fit();
     document.getElementById("gameTitle").textContent=m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":"⬆️ Step dance";
-    document.getElementById("moveHint").textContent=m==="free"?"Drag the hands and feet, or tap D F J K · arrow keys walk · Space to stop":m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
+    document.getElementById("moveHint").textContent=m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
     var mm=me();if(mm)mm.dance=myDance;
@@ -2135,26 +2297,21 @@ var GAME=(function(){
     e.preventDefault();
     var p=ptr(e);
     if(mode==="step"){var ln=LANES[Math.max(0,Math.min(3,Math.floor(p[0]/CW*4)))];laneOf[e.pointerId]=ln;try{pad.setPointerCapture(e.pointerId);}catch(x){}press(ln);return;}
-    if(mode==="aim"){tapAim(p);return;}
-    if(mode!=="free")return;
-    /* grab whichever hand or foot is nearest that another finger isn't already holding */
-    var r=rig(),bi=-1,bd=1e9,taken={};for(var k in grab)taken[grab[k]]=1;
-    for(var i=0;i<4;i++){if(taken[i])continue;var d=Math.hypot(p[0]-r.H[i][0],p[1]-r.H[i][1]);if(d<bd){bd=d;bi=i;}}
-    if(bi<0)return;
-    grab[e.pointerId]=bi;try{pad.setPointerCapture(e.pointerId);}catch(x){}
-    dragTo(bi,p);
+    if(mode==="aim"){finger[e.pointerId]=p;try{pad.setPointerCapture(e.pointerId);}catch(x){}tapAim(p,e.pointerId);return;}
   });
-  pad.addEventListener("pointermove",function(e){if(mode==="free"&&grab[e.pointerId]!==undefined){e.preventDefault();dragTo(grab[e.pointerId],ptr(e));}});
+  pad.addEventListener("pointermove",function(e){if(mode==="aim"&&finger[e.pointerId]){finger[e.pointerId]=ptr(e);return;}});
   var laneOf={};
-  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){pad.addEventListener(ev,function(e){delete grab[e.pointerId];if(laneOf[e.pointerId]){release(laneOf[e.pointerId]);delete laneOf[e.pointerId];}});});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){pad.addEventListener(ev,function(e){if(mode==="aim"&&finger[e.pointerId])aimUp(e.pointerId);delete grab[e.pointerId];if(laneOf[e.pointerId]){release(laneOf[e.pointerId]);delete laneOf[e.pointerId];}});});
   pad.addEventListener("contextmenu",function(e){e.preventDefault();});
   window.addEventListener("blur",function(){for(var i=0;i<4;i++)if(keyHeld[i])limbKey(i,false);});
   window.ukDance=function(){
     var now=performance.now();
     return{mode:mode,letGo:letGos,round:!!rnd,chartSteps:rnd&&rnd.chart?rnd.chart.steps.length:0,bigMoments:rnd&&rnd.chart&&rnd.chart.peaks?rnd.chart.peaks.map(function(p){return [Math.round(p[0]/100)/10,Math.round(p[1]/100)/10];}):[],onFire:onFire,songPos:rnd?Math.round(ROUND.pos()):null,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
-      upcoming:notes.filter(function(n){return !n.j&&!n.holding&&!n.headJ;}).map(function(n){var o={dir:LANES[n.lane],inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};if(n.hold>0)o.holdMs=Math.round(n.hold);return o;}),holding:notes.filter(function(n){return n.holding;}).map(function(n){return{dir:LANES[n.lane],leftMs:Math.round(n.t+n.hold-now)};})};
+      upcoming:notes.filter(function(n){return !n.j&&!n.holding&&!n.headJ;}).map(function(n){var o={dir:LANES[n.lane],inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};if(n.hold>0)o.holdMs=Math.round(n.hold);if(n.x2!==undefined){o.swoop=true;o.cx=Math.round(n.cx*CW);o.cy=Math.round(n.cy*CH);o.x2=Math.round(n.x2*CW);o.y2=Math.round(n.y2*CH);}return o;}),holding:notes.filter(function(n){return n.holding;}).map(function(n){return{dir:LANES[n.lane],leftMs:Math.round(n.t+n.hold-now)};}),
+      following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
+      handles:mode==="free"?floorHandles():null,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{start:start,stop:stop,toggle:toggle,press:press,release:release,limbKey:limbKey,menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
+  return{start:start,stop:stop,toggle:toggle,press:press,release:release,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
 })();
 
 /* ============================================================
@@ -2256,9 +2413,12 @@ var ROUND=(function(){
   function active(){return !!rd&&rd.phase==="play";}
   function pos(){
     if(!rd)return -1e9;
-    var p=(rd.ts0!==null&&rd.ts0!==undefined)?SP.songPos(rd.ts0):null;
-    if(p===null)p=performance.now()-playPerf;             /* no live sound here: go by when the round said the song began */
-    return p+corr;
+    var p=(rd.ts0!==null&&rd.ts0!==undefined)?SP.songPos(rd.ts0):null,now=performance.now();
+    if(p!==null){rd.liveP=p;rd.liveT=now;}
+    /* the live sound dropped out for a moment: carry on from where it was, rather than jump to another clock */
+    else if(rd.liveT&&now-rd.liveT<15000)p=rd.liveP+(now-rd.liveT);
+    if(p===null)p=now-playPerf;                           /* no live sound here: go by when the round said the song began */
+    return p+corr+(window.ukPosShift||0);                 /* ukPosShift: for testing how the steps ride out a timing jump */
   }
   /* trim the timing so the chart's beats sit on the beats this device is actually hearing */
   function align(){
@@ -3171,6 +3331,10 @@ function drawCentreSpot(x,y,k,feat){
   ctx.restore();
 }
 function hexA(c,a){var m=/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(c||"");return m?"rgba("+parseInt(m[1],16)+","+parseInt(m[2],16)+","+parseInt(m[3],16)+","+a+")":"rgba(255,255,255,"+a+")";}
+/* a dancer drawn at (x,y), scale s, lifted by bob: where the shoulders and hips are, and how long each limb is
+   (in units of s). Must match drawAvatar below. Order: left arm, right arm, left leg, right leg. */
+function limbJoints(x,y,s,bob){return [[x-5*s,y-3*s+bob],[x+5*s,y-3*s+bob],[x-2.5*s,y+3*s+bob],[x+2.5*s,y+3*s+bob]];}
+var LIMB_LEN=[8,8,7,7];
 function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge){
   var s=scale||1;
   var bw=16*s, bh=24*s;
@@ -3489,7 +3653,7 @@ function renderLoop(){
   /* the featured dancer, big, centre stage (their moves are live) */
   if(feat&&viewers[feat.id]){
     var fv=viewers[feat.id],fk=Math.min(1,feat.into/300,feat.left/300);
-    var fp=fv.poseCur||fv.pose||(GAME.REST);
+    var fp=feat.id===myId&&GAME.mode==="free"?GAME.pose:(fv.poseCur||fv.pose||(GAME.REST));
     ctx.save();ctx.globalAlpha=Math.max(0.15,fk);
     drawAvatar(W/2,perfPy,fv.color,"\u2605 "+fv.name,3,false,false,false,4,fv.seed||0,feat.id===myId,fp,now-(fv.hitT||0));
     ctx.restore();
@@ -3500,6 +3664,7 @@ function renderLoop(){
   /* Audience avatars - lerp positions */
   var now=Date.now();
   var ids=Object.keys(viewers);
+  if(myId&&viewers[myId]){ids=ids.filter(function(k){return k!==myId;});ids.push(myId);}     /* you're drawn last, on top */
   for(var i=0;i<ids.length;i++){
     var v=viewers[ids[i]];
     /* Lerp */
@@ -3526,7 +3691,8 @@ function renderLoop(){
     if(combo>=10&&!bigMe)STREAK.draw(ctx,vx,vy,2,combo,now,v.seed||0);
     var onStage=feat&&feat.id===ids[i];
     if(feat&&!onStage){ctx.save();ctx.globalAlpha=0.55;}
-    if(!bigMe&&!onStage)drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed,ids[i]===myId,vp,now-(v.hitT||0));
+    var freeMe=ids[i]===myId&&GAME.mode==="free";
+    if(!bigMe&&!onStage)drawAvatar(vx,vy,v.color,v.name,freeMe?GAME.freeS():2,false,false,moving,v.dance,v.seed,ids[i]===myId,freeMe?GAME.pose:vp,now-(v.hitT||0));
     if(feat&&!onStage)ctx.restore();
     if(v.msT&&!bigMe&&now-v.msT<1700)STREAK.pop(ctx,vx,vy-50,v.msN,now-v.msT,1);
     else if(v.dance===5&&v.combo>=3&&!bigMe){
@@ -3551,6 +3717,10 @@ function renderLoop(){
       ctx.globalAlpha=1;
     }
   }
+
+  /* where you tapped to walk to */
+  if(walkMark){var wa=1-(performance.now()-walkMark.t)/600;if(wa>0){ctx.save();ctx.globalAlpha=wa*0.8;ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(walkMark.x,walkMark.y,10+(1-wa)*14,(10+(1-wa)*14)*0.45,0,0,6.3);ctx.stroke();ctx.restore();}else walkMark=null;}
+  GAME.drawHandles(ctx);
 
   requestAnimationFrame(renderLoop);
 }
