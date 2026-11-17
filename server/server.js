@@ -125,7 +125,13 @@ function cleanChart(c) {
   }
   for (i = 0; i < c.beats.length; i++) { var b = intIn(c.beats[i], 0, 3600000, -1); if (b < 0) return null; beats.push(b); }
   var bpm = +c.bpm; if (!isFinite(bpm) || bpm < 30 || bpm > 300) return null;
-  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows };
+  var peaks = [];
+  if (Array.isArray(c.peaks)) for (i = 0; i < c.peaks.length && peaks.length < 100; i++) {
+    var pk = c.peaks[i]; if (!Array.isArray(pk)) continue;
+    var p0 = intIn(pk[0], 0, 3600000, -1), p1 = intIn(pk[1], 0, 3600000, -1);
+    if (p0 >= 0 && p1 > p0) peaks.push([p0, p1]);
+  }
+  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks };
 }
 function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
