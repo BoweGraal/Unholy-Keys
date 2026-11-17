@@ -75,6 +75,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #danceMenu kbd{float:right;margin-left:10px;font:600 10px system-ui,sans-serif;opacity:.55;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:1px 5px}
 #gamePanel{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:222px;z-index:23;width:300px;background:rgba(12,10,22,.9);border:1px solid rgba(127,119,221,.5);border-radius:14px;overflow:visible;user-select:none;-webkit-user-select:none;touch-action:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #gamePanel.on{display:block}
+#gamePanel.onfire{border-color:#FF8A3D;box-shadow:0 0 0 1px rgba(255,138,61,.6),0 0 28px rgba(255,100,20,.55),0 0 60px rgba(255,60,0,.25);animation:fireGlow .5s ease-in-out infinite alternate}
+@keyframes fireGlow{from{box-shadow:0 0 0 1px rgba(255,138,61,.6),0 0 22px rgba(255,100,20,.45),0 0 50px rgba(255,60,0,.2)}to{box-shadow:0 0 0 1px rgba(255,170,60,.8),0 0 34px rgba(255,120,30,.65),0 0 70px rgba(255,60,0,.3)}}
 #gameHdr{display:flex;align-items:center;gap:8px;white-space:nowrap;padding:8px 8px 8px 12px;font:700 13px system-ui,sans-serif;color:#fff}
 #gameBpm{margin-left:auto;font:600 11px system-ui,sans-serif;color:rgba(255,255,255,.6)}
 #gameClose{font:700 13px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.1);border:0;border-radius:8px;width:28px;height:28px;cursor:pointer}
@@ -1727,9 +1729,10 @@ var GAME=(function(){
     }
     /* each step is due when the song, as heard here, reaches it */
     for(i=0;i<notes.length;i++)if(notes[i].ms!==undefined&&!notes[i].j)notes[i].t=now+(notes[i].ms-pos);
-    /* a big moment starting: flash it so dancers know the hard part is coming */
-    var pk=rnd.chart.peaks||[];
-    for(i=0;i<pk.length;i++){var lead=pk[i][0]-pos;if(lead<=600&&lead>-400&&rnd.flashed!==i){rnd.flashed=i;bigT=now;}}
+    /* inside one of the song's big moments? (the border burns and hits score double) */
+    var pk=rnd.chart.peaks||[],inside=false;
+    for(i=0;i<pk.length;i++)if(pos>=pk[i][0]&&pos<pk[i][1]){inside=true;break;}
+    if(inside!==onFire){onFire=inside;fireT=now;foot();document.getElementById("gamePanel").classList.toggle("onfire",onFire);}
   }
   function report(final){
     if(!rnd||mode==="free"||score===sentScore)return;
@@ -1859,7 +1862,7 @@ var GAME=(function(){
   }
   function holdDone(n,now){
     n.holding=false;n.j="OK";n.jt=now;combo++;hits++;if(combo>best)best=combo;
-    score+=Math.round((40+Math.round(n.hold/100)*5)*(1+Math.floor(combo/10)*0.1));
+    score+=Math.round((40+Math.round(n.hold/100)*5)*(1+Math.floor(combo/10)*0.1)*(onFire?2:1));
     judge="OK!";judgeT=now;judgeCol="#3CCB8A";foot();applyToMe(true);sendPose(true);
   }
   function holdFail(n,now){
@@ -1870,7 +1873,7 @@ var GAME=(function(){
   function grade(n,bd,now){
     for(var i=0;i<HIT.length;i++)if(bd<=HIT[i][0]){
       n.j=HIT[i][1];n.jt=now;combo++;hits++;if(combo>best)best=combo;
-      score+=Math.round(HIT[i][2]*(1+Math.floor(combo/10)*0.1));
+      score+=Math.round(HIT[i][2]*(1+Math.floor(combo/10)*0.1)*(onFire?2:1));   /* big moments score double */
       judge=HIT[i][1];judgeT=now;judgeCol=HIT[i][3];return;
     }
   }
@@ -1886,17 +1889,36 @@ var GAME=(function(){
     }
     notes=notes.filter(function(n){return n.holding||now-(n.t+(n.hold||0))<700;});
   }
-  /* the BIG MOMENT banner, separate from PERFECT/GREAT so a hit doesn't wipe it */
-  var bigT=-1e9;
-  function bigText(now){
-    var a=now-bigT;if(a<0||a>1600)return;
-    var al=a<120?a/120:a>1100?1-(a-1100)/500:1,sc=a<160?1.3-0.3*a/160:1;
-    g.save();g.globalAlpha=Math.max(0,al);g.font="900 "+Math.round(CW*0.1*sc)+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="middle";
-    g.lineWidth=5;g.strokeStyle="rgba(0,0,0,.75)";g.strokeText("\uD83D\uDD25 BIG MOMENT",CW/2,CH*0.42);
-    g.fillStyle="#FF8A3D";g.fillText("\uD83D\uDD25 BIG MOMENT",CW/2,CH*0.42);g.restore();
+  /* Big moments: flames along the edges of the game, fading in and out, while hits score double */
+  var onFire=false,fireT=-1e9;
+  function fireBorder(now){
+    var k=onFire?Math.min(1,(now-fireT)/350):Math.max(0,1-(now-fireT)/400);if(k<=0)return;
+    g.save();g.globalCompositeOperation="lighter";
+    var t=now*0.001,i,h;
+    /* flame height: a few waves of different speeds and sizes, so each tongue licks up on its own */
+    function lick(i,e){var a=Math.sin(t*6.1+i*0.83+e),b=Math.sin(t*3.7-i*0.41+e*1.7),c=Math.sin(t*9.3+i*1.9+e*0.6);return Math.max(0.15,0.55+0.3*a+0.2*b+0.12*c);}
+    function tongue(x,y,dx,dy,len,w,core,a){       /* from the edge point (x,y) inward along (dx,dy) */
+      var tipx=x+dx*len+(-dy)*Math.sin(t*5+x*0.05+y*0.05)*w*0.6,tipy=y+dy*len+dx*Math.sin(t*5+x*0.05+y*0.05)*w*0.6,nx=-dy,ny=dx;
+      var gr=g.createLinearGradient(x,y,x+dx*len,y+dy*len);
+      if(core){gr.addColorStop(0,"rgba(255,245,200,"+(0.9*a)+")");gr.addColorStop(0.5,"rgba(255,200,80,"+(0.5*a)+")");gr.addColorStop(1,"rgba(255,160,40,0)");}
+      else{gr.addColorStop(0,"rgba(255,80,10,"+(0.75*a)+")");gr.addColorStop(0.55,"rgba(255,130,30,"+(0.45*a)+")");gr.addColorStop(1,"rgba(255,90,20,0)");}
+      g.fillStyle=gr;g.beginPath();g.moveTo(x+nx*w,y+ny*w);
+      g.bezierCurveTo(x+nx*w*1.1+dx*len*0.35,y+ny*w*1.1+dy*len*0.35,x+nx*w*0.3+dx*len*0.75,y+ny*w*0.3+dy*len*0.75,tipx,tipy);
+      g.bezierCurveTo(x-nx*w*0.3+dx*len*0.75,y-ny*w*0.3+dy*len*0.75,x-nx*w*1.1+dx*len*0.35,y-ny*w*1.1+dy*len*0.35,x-nx*w,y-ny*w);
+      g.closePath();g.fill();
+    }
+    /* bottom: tall overlapping flames with a hot core; sides: shorter, licking upward; top: a faint glow */
+    var stepB=14;
+    for(i=0;i*stepB<=CW+stepB;i++){h=lick(i,0);var x=i*stepB+Math.sin(i*2.3)*4;tongue(x,CH+2,0,-1,(16+40*h)*k,stepB*0.95,false,k);tongue(x,CH+2,0,-1,(8+20*h)*k,stepB*0.45,true,k);}
+    var stepS=16;
+    for(i=0;i*stepS<=CH;i++){var up=1-i*stepS/CH*0.6,y=CH-i*stepS;h=lick(i,2);tongue(-2,y,1,-0.35,(10+22*h)*k*up,stepS*0.8,false,k*0.9);tongue(-2,y,1,-0.35,(5+10*h)*k*up,stepS*0.35,true,k*0.8);
+      h=lick(i,5);tongue(CW+2,y,-1,-0.35,(10+22*h)*k*up,stepS*0.8,false,k*0.9);tongue(CW+2,y,-1,-0.35,(5+10*h)*k*up,stepS*0.35,true,k*0.8);}
+    for(i=0;i*stepB<=CW;i++){h=lick(i,8);tongue(i*stepB,-2,0,1,(4+8*h)*k,stepB*0.8,false,k*0.5);}
+    /* embers drifting up */
+    for(i=0;i<16;i++){var ph=(t*0.55+i/16)%1,ex=(((i*0.618)%1)+Math.sin(t*1.3+i)*0.03)*CW,ey=CH-ph*CH*0.95;g.globalAlpha=(1-ph)*0.85*k;g.fillStyle=i%3?"#FFB040":"#FFE6A0";g.beginPath();g.arc(ex,ey,1.7*(1-ph*0.5),0,6.3);g.fill();}
+    g.restore();
   }
   function judgeText(now,y){
-    bigText(now);
     var ja=1-(now-judgeT)/520;
     if(judge&&ja>0){g.globalAlpha=ja;g.fillStyle=judgeCol;g.font="800 "+Math.round(CW*0.105)+"px system-ui,sans-serif";g.textAlign="center";g.fillText(judge+(combo>=3&&judge!=="MISS"&&judge!=="EARLY"?"  ×"+combo:""),CW/2,y-(1-ja)*6);g.globalAlpha=1;}
   }
@@ -1922,6 +1944,7 @@ var GAME=(function(){
     var bt=grid(),lead=aimLead(bt.period),R=aimR(),i;
     makeNotes(now,bt);expire(now);
     g.clearRect(0,0,CW,CH);
+    fireBorder(now);
     /* the pad pulses faintly on each beat */
     var pl=Math.pow(1-BEAT.phase(now),3);g.strokeStyle="rgba(127,119,221,"+(0.12+0.3*pl)+")";g.lineWidth=2;g.strokeRect(3,3,CW-6,CH-6);
     if(combo>=5){g.fillStyle="rgba(255,255,255,.07)";g.font="800 "+Math.round(CW*0.42)+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(combo,CW/2,CH*0.5);g.textBaseline="alphabetic";}
@@ -1954,6 +1977,7 @@ var GAME=(function(){
     makeNotes(now,bt);
     expire(now);var n;
     g.clearRect(0,0,CW,CH);
+    fireBorder(now);
     /* lanes */
     for(i=0;i<4;i++){
       var lx=CW*(i+0.5)/4,fl=Math.max(0,1-(now-flash[i])/160);
@@ -1997,7 +2021,7 @@ var GAME=(function(){
   function foot(){
     var f=document.getElementById("gameFoot");if(!f)return;
     report();
-    if(mode==="step"||mode==="aim")f.textContent="Score "+score.toLocaleString()+" · Combo "+combo+" · Best "+best;
+    if(mode==="step"||mode==="aim")f.textContent=(onFire?"\uD83D\uDD25 \u00d72 \u00b7 ":"")+"Score "+score.toLocaleString()+" · Combo "+combo+" · Best "+best;
     else if(mode==="free")f.textContent=("ontouchstart" in window)?"Drag the hands and feet":"Drag the hands and feet, or tap D F J K";
   }
   var lastBpmTxt=0;
@@ -2048,7 +2072,7 @@ var GAME=(function(){
   function start(m,round){
     if(m!=="free"&&m!=="step"&&m!=="aim")return;
     if(mode)stop(true);
-    rnd=round||null;rndIdx=0;sentScore=-1;laneDown=[false,false,false,false];lastFreeHold=-1e9;freeHoldEnd=-1e9;
+    rnd=round||null;rndIdx=0;sentScore=-1;onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false];lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
     mode=m;myDance=m==="free"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
@@ -2112,7 +2136,7 @@ var GAME=(function(){
   window.addEventListener("blur",function(){for(var i=0;i<4;i++)if(keyHeld[i])limbKey(i,false);});
   window.ukDance=function(){
     var now=performance.now();
-    return{mode:mode,letGo:letGos,round:!!rnd,chartSteps:rnd&&rnd.chart?rnd.chart.steps.length:0,bigMoments:rnd&&rnd.chart&&rnd.chart.peaks?rnd.chart.peaks.map(function(p){return [Math.round(p[0]/100)/10,Math.round(p[1]/100)/10];}):[],bigMomentShowing:now-bigT<1600,songPos:rnd?Math.round(ROUND.pos()):null,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
+    return{mode:mode,letGo:letGos,round:!!rnd,chartSteps:rnd&&rnd.chart?rnd.chart.steps.length:0,bigMoments:rnd&&rnd.chart&&rnd.chart.peaks?rnd.chart.peaks.map(function(p){return [Math.round(p[0]/100)/10,Math.round(p[1]/100)/10];}):[],onFire:onFire,songPos:rnd?Math.round(ROUND.pos()):null,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
       upcoming:notes.filter(function(n){return !n.j&&!n.holding&&!n.headJ;}).map(function(n){var o={dir:LANES[n.lane],inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};if(n.hold>0)o.holdMs=Math.round(n.hold);return o;}),holding:notes.filter(function(n){return n.holding;}).map(function(n){return{dir:LANES[n.lane],leftMs:Math.round(n.t+n.hold-now)};})};
   };
   return{start:start,stop:stop,toggle:toggle,press:press,release:release,limbKey:limbKey,menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};

@@ -200,7 +200,7 @@ In the console on the audience page, `ukDevice()` shows what it decided the devi
 - **Free play:** the occasional two-beat hold once you have a combo going.
 - **Easy:** no holds in rounds.
 
-**Steps follow the song's intensity.** Rounds and practice map how intense every part of the song is: loudness, brightness, how busy the hits are, and whether that part comes back like a chorus. Calm parts get sparse, easy steps; energetic parts add off-beats and doubles; the song's big moments get runs and doubles at every bar start, with a 🔥 BIG MOMENT banner as one begins. Talking or beatless intros get no steps.
+**Steps follow the song's intensity.** Rounds and practice map how intense every part of the song is: loudness, brightness, how busy the hits are, and whether that part comes back like a chorus. Calm parts get sparse, easy steps; energetic parts add off-beats and doubles; the song's big moments get runs and doubles at every bar start, and while one is on, the game's border is on fire and every hit scores double (🔥 ×2 next to the score). Talking or beatless intros get no steps.
 
 **Streak power-ups.** In the Step and Target games a long combo charges the dancer up, and everyone sees it, including you on the audience panel:
 - **10:** white-blue charging aura
