@@ -37,6 +37,7 @@ var stopping = false;
 var NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 function keyName(r) { r = +r; return isFinite(r) ? NOTE_NAMES[((r % 12) + 12) % 12] : String(r); }
 function rand(a) { return a[Math.floor(Math.random() * a.length)]; }
+function rnd(a, b) { return Math.round(a + Math.random() * (b - a)); }
 function clamp(v) { return Math.max(0.05, Math.min(0.95, v)); }
 function clampY(v) { return Math.max(0.34, Math.min(0.74, v)); } // stay on the venue floor, off the stage
 
@@ -51,8 +52,11 @@ function makeBot(i) {
   ws.on("message", function(raw) {
     var m; try { m = JSON.parse(raw); } catch (e) { return; }
     if (m.type === "error") { stats.failed++; stats.lastError = m.msg; ws.close(); return; }
+    if (m.type === "round") { botRound(bot, m); if (bot.first) stats.round = m.phase === "result" ? "round " + m.n + " won by " + (m.ranking && m.ranking[0] ? m.ranking[0].name : "nobody") : m.phase === "off" ? null : "round " + m.n + " " + m.phase; return; }
     if (m.type === "room-state") {
       stats.joined++;
+      bot.id = m.yourId; bot.skill = 0.35 + Math.random() * 0.6;
+      if (m.round) botRound(bot, m.round);
       if (m.performerState && m.performerState.eng) stats.inst = m.performerState.eng;
       if (m.performerState && m.performerState.scale) stats.key = keyName(m.performerState.root) + " " + m.performerState.scale;
       if (m.video && m.video.title) stats.video = m.video.title;
@@ -65,13 +69,23 @@ function makeBot(i) {
       // start or stop dancing now and then
       bot.dance = 0;
       bot.timers.push(setInterval(function() {
+        if (bot.inRound) return;
         if (Math.random() < 0.4) {
-          var next = bot.dance ? 0 : 1 + Math.floor(Math.random() * 3);
+          var next = bot.dance ? 0 : 1 + Math.floor(Math.random() * 5);   // 4 = free dance, 5 = step game
           dancing += (next ? 1 : 0) - (bot.dance ? 1 : 0);
           bot.dance = next;
           send(bot, { type: "dance", style: next });
+          bot.combo = 0;
         }
       }, 7000 + Math.random() * 8000));
+      // bots in a dance game strike a new pose twice a second, like someone hitting steps at 120 BPM
+      bot.timers.push(setInterval(function() {
+        if (bot.dance < 4) return;
+        var poses = [[210, 35, 85, 0], [-35, -210, 0, -85], [255, -255, 10, -10], [120, -120, 75, -75]];
+        var a = bot.dance === 5 ? rand(poses) : [rnd(-60, 300), rnd(-300, 60), rnd(-90, 90), rnd(-90, 90)];
+        bot.combo = bot.dance === 5 ? (Math.random() < 0.08 ? 0 : (bot.combo || 0) + 1) : 0;
+        send(bot, { type: "pose", a: a, c: bot.combo });
+      }, 500));
       // chat now and then
       bot.timers.push(setInterval(function() {
         if (Math.random() < 0.35) { send(bot, { type: "chat", text: rand(CHAT) }); stats.chatsOut++; }
@@ -91,10 +105,29 @@ function makeBot(i) {
   });
   ws.on("error", function(e) { stats.lastError = e.message; });
   ws.on("close", function() {
-    bot.timers.forEach(clearInterval);
+    bot.timers.forEach(clearInterval); clearInterval(bot.scoreTimer);
     if (!stopping && bot.first && stats.joined) { console.log("\nLost the connection to the server. Stopping."); stop(); }
   });
   return bot;
+}
+/* Dance rounds: bots join in, score according to a random skill, and vote in free-dance rounds. */
+function botRound(bot, m) {
+  if (m.phase === "play" && !bot.inRound) {
+    bot.inRound = true; bot.roundScore = 0; bot.combo = 0;
+    var arrows = m.chart && m.chart.steps ? m.chart.steps.length : 0, dur = m.chart && m.chart.dur ? m.chart.dur : 180000;
+    bot.rate = arrows ? arrows * 80 * bot.skill / (dur / 2000) : 160 * bot.skill;   // points per 2 seconds
+    dancing += bot.dance ? 0 : 1; bot.dance = m.mode === "free" ? 4 : 5;
+    send(bot, { type: "dance", style: bot.dance });
+    clearInterval(bot.scoreTimer);
+    if (m.mode !== "free") bot.scoreTimer = setInterval(function() { bot.roundScore += Math.round(bot.rate * (0.6 + Math.random() * 0.8)); send(bot, { type: "score", s: bot.roundScore }); }, 2000);
+  } else if (m.phase === "vote" && Array.isArray(m.dancers)) {
+    var others = m.dancers.filter(function(d) { return d.id !== bot.id; });
+    if (others.length) setTimeout(function() { send(bot, { type: "vote", id: rand(others).id }); }, 800 + Math.random() * 5000);
+  }
+  if (m.phase !== "play" && m.phase !== "countdown" && bot.inRound) {
+    bot.inRound = false; clearInterval(bot.scoreTimer);
+    if (bot.dance) { dancing--; bot.dance = 0; send(bot, { type: "dance", style: 0 }); }
+  }
 }
 function send(bot, msg) { if (bot.ws.readyState === 1) bot.ws.send(JSON.stringify(msg)); }
 
@@ -103,6 +136,7 @@ function report() {
   if (stats.failed) line += ", " + stats.failed + " refused";
   line += " | notes heard: " + stats.notes + " | instrument: " + (stats.inst || "-") + " | key: " + (stats.key || "-");
   if (stats.video) line += " | video: " + stats.video;
+  if (stats.round) line += " | " + stats.round;
   line += " | dancing: " + dancing + " | chat sent: " + stats.chatsOut;
   console.log(line);
   if (stats.lastError && !stats.joined) {

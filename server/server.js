@@ -106,10 +106,133 @@ function broadcast(room, msg, exclude) {
   });
 }
 
+/* ── Dance rounds ──
+   The performer starts a round for a song. Everyone gets the same step chart, then a countdown, then
+   the song. Step and target rounds: each dancer's page reports its score and the highest wins.
+   Free dance rounds: when the song ends everyone votes for a dancer (the performer's vote counts
+   double). Placings earn show points (10, 7, 5, 3, then 1 for taking part) that add up all show. */
+var ROUND_POINTS = [10, 7, 5, 3];
+var VOTE_MS = +process.env.VOTE_MS || 20000;
+function intIn(v, lo, hi, def) { v = Math.floor(+v); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : def; }
+function cleanChart(c) {
+  if (!c || !Array.isArray(c.steps) || !Array.isArray(c.beats) || c.steps.length > 8000 || c.beats.length > 6000) return null;
+  var steps = [], beats = [], arrows = 0, i;
+  for (i = 0; i < c.steps.length; i++) {
+    var st = c.steps[i]; if (!Array.isArray(st)) return null;
+    var ms = intIn(st[0], 0, 3600000, -1), mask = intIn(st[1], 1, 15, 0);
+    if (ms < 0 || !mask) return null;
+    steps.push([ms, mask]); arrows += (mask & 1) + (mask >> 1 & 1) + (mask >> 2 & 1) + (mask >> 3 & 1);
+  }
+  for (i = 0; i < c.beats.length; i++) { var b = intIn(c.beats[i], 0, 3600000, -1); if (b < 0) return null; beats.push(b); }
+  var bpm = +c.bpm; if (!isFinite(bpm) || bpm < 30 || bpm > 300) return null;
+  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows };
+}
+function roundPublic(r) {
+  var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
+  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart };
+  if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
+  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = Date.now() - rd.playAt; }
+  if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
+  return o;
+}
+function totalsList(r) {
+  var out = []; for (var k in r.totals) out.push(r.totals[k]);
+  out.sort(function(a, b) { return b.pts - a.pts || b.wins - a.wins; });
+  return out.slice(0, 10);
+}
+function roundStop(r) { var rd = r.round; if (!rd) return; clearInterval(rd.tick); clearTimeout(rd.timer); rd.tick = rd.timer = null; }
+function roundStandings(code) {
+  var r = rooms[code]; if (!r || !r.round) return;
+  var list = [];
+  r.viewers.forEach(function(v, id) { if (v.roundScore > 0) list.push({ id: id, name: v.name, color: v.color, score: v.roundScore }); });
+  list.sort(function(a, b) { return b.score - a.score; });
+  broadcast(code, { type: "round-scores", n: r.round.n, top: list.slice(0, 5), players: list.length });
+}
+function roundFinish(code) {
+  var r = rooms[code]; if (!r || !r.round) return;
+  var rd = r.round; roundStop(r);
+  if (rd.phase === "result" || rd.phase === "off") return;
+  var list = [];
+  if (rd.mode === "free") {
+    var tally = {};
+    rd.votes.forEach(function(v) { tally[v.id] = (tally[v.id] || 0) + v.w; });
+    rd.dancers.forEach(function(d) { list.push({ id: d.id, name: d.name, color: d.color, score: tally[d.id] || 0 }); });
+  } else {
+    r.viewers.forEach(function(v, id) { if (v.roundScore > 0) list.push({ id: id, name: v.name, color: v.color, score: v.roundScore }); });
+  }
+  list.sort(function(a, b) { return b.score - a.score; });
+  /* equal scores share a placing; a free-dance dancer nobody voted for still gets the taking-part point */
+  for (var i = 0; i < list.length; i++) {
+    var place = (i > 0 && list[i].score === list[i - 1].score) ? list[i - 1].place : i;
+    list[i].place = place;
+    list[i].pts = (rd.mode === "free" && list[i].score === 0) ? 1 : (ROUND_POINTS[place] || 1);
+    var key = list[i].name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: list[i].name, color: list[i].color, pts: 0, wins: 0 });
+    t.pts += list[i].pts; t.color = list[i].color;
+    if (place === 0 && list[i].score > 0) t.wins++;
+  }
+  rd.phase = "result";
+  broadcast(code, { type: "round", phase: "result", n: rd.n, mode: rd.mode, title: rd.title, players: list.length,
+    ranking: list.slice(0, 10).map(function(x) { return { id: x.id, name: x.name, color: x.color, score: x.score, pts: x.pts, place: x.place + 1 }; }),
+    totals: totalsList(r) });
+}
+function roundMessage(ws, msg) {
+  var code = ws.room, r = rooms[code], rd = r.round;
+  if (msg.type === "round-start") {
+    var mode = msg.mode === "aim" || msg.mode === "free" ? msg.mode : "step";
+    roundStop(r);
+    r.roundN = (r.roundN || 0) + 1;
+    var ms = intIn(msg.countdown, 3000, 60000, 10000);
+    rd = r.round = { n: r.roundN, mode: mode, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+      startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
+    r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
+    broadcast(code, roundPublic(r));
+    return;
+  }
+  if (!rd) return;
+  if (msg.type === "round-play") {
+    if (rd.phase !== "countdown" && rd.phase !== "play") return;
+    var ts0 = +msg.ts0; rd.ts0 = isFinite(ts0) && msg.ts0 !== null ? ts0 : null;
+    rd.playAt = Date.now() - intIn(msg.pos, 0, 3600000, 0);
+    var first = rd.phase !== "play"; rd.phase = "play";
+    broadcast(code, roundPublic(r));
+    if (first && rd.mode !== "free") rd.tick = setInterval(function() { roundStandings(code); }, 3000);
+    return;
+  }
+  if (msg.type === "round-end") {
+    if (rd.phase === "result" || rd.phase === "off" || rd.phase === "vote" || rd.phase === "tally") return;
+    roundStop(r);
+    if (msg.cancel || rd.phase === "countdown") { rd.phase = "off"; broadcast(code, { type: "round", phase: "off", n: rd.n }); return; }
+    if (rd.mode === "free") {
+      rd.dancers = [];
+      r.viewers.forEach(function(v, id) { if (v.danced) rd.dancers.push({ id: id, name: v.name, color: v.color }); });
+      if (rd.dancers.length < 2) { roundFinish(code); return; }          /* nobody to choose between */
+      rd.phase = "vote"; rd.voteEnd = Date.now() + VOTE_MS;
+      broadcast(code, roundPublic(r));
+      rd.timer = setTimeout(function() { roundFinish(code); }, VOTE_MS);
+    } else {
+      rd.phase = "tally";                                                 /* a moment for final scores to arrive */
+      broadcast(code, { type: "round", phase: "tally", n: rd.n });
+      rd.timer = setTimeout(function() { roundFinish(code); }, 1500);
+    }
+    return;
+  }
+  if (msg.type === "round-vote") castVote(ws, "performer", msg.id, 2);
+}
+function castVote(ws, voter, target, weight) {
+  var r = rooms[ws.room], rd = r && r.round;
+  if (!rd || rd.phase !== "vote" || typeof target !== "string" || target === voter) return;
+  if (!rd.dancers.some(function(d) { return d.id === target; })) return;
+  rd.votes.set(voter, { id: target, w: weight });
+  if (r.performer) send(r.performer, { type: "round-votes", n: rd.n, cast: rd.votes.size, of: r.viewers.size + 1 });
+  if (rd.votes.size >= r.viewers.size + 1) roundFinish(ws.room);        /* everyone has voted: no need to wait */
+}
+
 function viewerList(room) {
   var r = rooms[room]; if (!r) return [];
   var out = [];
-  r.viewers.forEach(function(v, id) { out.push({ id: id, name: v.name, x: v.x, y: v.y, color: v.color, dance: v.dance || 0 }); });
+  r.viewers.forEach(function(v, id) { var o = { id: id, name: v.name, x: v.x, y: v.y, color: v.color, dance: v.dance || 0 };
+    if (v.pose && v.dance >= 4) { o.pose = v.pose; o.combo = v.combo || 0; }
+    out.push(o); });
   return out;
 }
 
@@ -139,7 +262,7 @@ wss.on("connection", function(ws) {
     if (msg.type === "create-room") {
       if (ws.role) return;                       // one role per connection
       var code = genCode();                      // never a client-chosen code: that let anyone take over a live room
-      rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, performerName: str(msg.name, 24) || "Performer" };
+      rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer" };
       ws.room = code;
       ws.role = "performer";
       send(ws, { type: "room-created", room: code });
@@ -172,7 +295,9 @@ wss.on("connection", function(ws) {
         performerState: r.state,
         video: liveVideo(r),
         stream: r.stream || null,
-        performer: { name: r.performerName || "Performer" }
+        performer: { name: r.performerName || "Performer" },
+        round: roundPublic(r),
+        totals: totalsList(r)
       });
 
       // Notify everyone else
@@ -186,6 +311,7 @@ wss.on("connection", function(ws) {
 
     /* ── Performer broadcasts ── */
     if (ws.role === "performer" && ws.room && rooms[ws.room]) {
+      if (msg.type === "round-start" || msg.type === "round-play" || msg.type === "round-end" || msg.type === "round-vote") { roundMessage(ws, msg); return; }
       if (!PERFORMER_TYPES[msg.type]) return;
       if (msg.type === "state") rooms[ws.room].state = msg;
       if (msg.type === "video") { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); }
@@ -199,7 +325,7 @@ wss.on("connection", function(ws) {
       return;
     }
 
-    /* ── Viewer broadcasts: chat, position and dancing only ── */
+    /* ── Viewer messages: chat, position, dancing, dance poses, round scores and votes only ── */
     if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
       if (msg.type === "chat") {
         var text = str(msg.text, 300);
@@ -216,14 +342,39 @@ wss.on("connection", function(ws) {
         return;
       }
       if (msg.type === "dance") {
-        // 0 = stopped, 1-3 = dance style
-        var style = Math.max(0, Math.min(3, Math.floor(+msg.style || 0)));
+        // 0 = stopped, 1-3 = canned dances, 4 = free dance, 5 = step game
+        var style = Math.max(0, Math.min(5, Math.floor(+msg.style || 0)));
         if (!allow(ws, "dance", 6, 2)) return;
         var dv = rooms[ws.room].viewers.get(ws.viewerId);
-        if (dv) dv.dance = style;
+        if (dv) { dv.dance = style; if (style < 4) dv.pose = null; }
         broadcast(ws.room, { type: "dance", id: ws.viewerId, style: style }, ws);
         return;
       }
+      if (msg.type === "pose") {
+        // limb angles for the dance games: [left arm, right arm, left leg, right leg] in hundredths of a radian,
+        // plus the step-game combo. Everything is clamped; nothing else in the message is passed on.
+        if (!Array.isArray(msg.a) || msg.a.length !== 4 || !allow(ws, "pose", 14, 12)) return;
+        var a = [];
+        for (var pi = 0; pi < 4; pi++) {
+          var n = Math.round(+msg.a[pi]);
+          if (!isFinite(n)) return;
+          a.push(Math.max(-320, Math.min(320, n)));
+        }
+        var combo = Math.max(0, Math.min(9999, Math.floor(+msg.c || 0)));
+        var pv = rooms[ws.room].viewers.get(ws.viewerId);
+        if (pv) { pv.pose = a; pv.combo = combo; var prd = rooms[ws.room].round; if (prd && prd.phase === "play") pv.danced = true; }
+        broadcast(ws.room, { type: "pose", id: ws.viewerId, a: a, c: combo }, ws);
+        return;
+      }
+      if (msg.type === "score") {
+        // a dancer's own running score for the current step or target round
+        var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
+        if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
+        var arrows = srd.chart ? srd.chart.arrows : 20000;
+        sv.roundScore = intIn(msg.s, 0, Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+        return;
+      }
+      if (msg.type === "vote") { castVote(ws, ws.viewerId, msg.id, 1); return; }
       return; // anything else from a viewer is dropped (it used to be relayed to the whole room as-is)
     }
   });
@@ -233,6 +384,7 @@ wss.on("connection", function(ws) {
     if (ws.role === "performer" && rooms[ws.room] && rooms[ws.room].performer === ws) {
       broadcast(ws.room, { type: "performer-left" });
       console.log("Performer left, closing room", ws.room);
+      roundStop(rooms[ws.room]);
       delete rooms[ws.room];
     }
     if (ws.role === "viewer" && rooms[ws.room]) {

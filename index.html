@@ -265,9 +265,34 @@ body.jset .nav-item.jam-only{display:flex}
 #vizAlts{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
 #vizAlts button.on{background:rgba(245,197,24,.16);border-color:rgba(245,197,24,.6);color:#F5C518}
 #vizNow{font-size:15px;font-weight:700;color:#fff;margin:2px 0 12px}
+
+/* ── Dance rounds: settings panel and the floating round status ── */
+#roundPanel label{font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:6px}
+#roundPanel select{background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);border-radius:var(--r);padding:5px 8px;font-size:12px}
+#rdStatus{margin:10px 0;font-size:12px;color:var(--tx2);line-height:1.5}
+#rdBoard{margin-top:10px;font-size:12px}
+#rdBoard .row,#rdFloat .row{display:flex;gap:10px;padding:2px 0;align-items:baseline}
+#rdBoard .row .n,#rdFloat .row .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+#rdBoard .row .p,#rdFloat .row .p{width:30px;color:var(--tx3);font-weight:700}
+#rdBoard .row .g,#rdFloat .row .g{color:#3CCB8A;font-weight:700}
+#rdFloat{display:none;position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:10003;width:min(440px,90vw);box-sizing:border-box;padding:10px 16px;text-align:center;background:rgba(14,11,26,.93);border:1px solid rgba(211,84,160,.55);border-radius:14px;color:#fff;font-size:13px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,.6);cursor:default}
+#rdFloat.on{display:block}
+#rdFloat .h{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#D354A0}
+#rdFloat .t{font-size:16px;font-weight:700;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rdFloat .big{font-size:52px;font-weight:800;line-height:1.1;color:#F5C518}
+#rdFloat .sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:3px;line-height:1.4}
+#rdFloat .win{font-size:18px;font-weight:800;color:#F5C518;margin:6px 0}
+#rdFloat .rows{text-align:left;margin-top:6px}
+#rdFloat .votes{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0 2px}
+#rdFloat button{font-size:13px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);border:2px solid rgba(127,119,221,.6);border-radius:10px;padding:7px 12px;cursor:pointer}
+#rdFloat button:hover{background:rgba(255,255,255,.18)}
+#rdFloat button.on{background:linear-gradient(135deg,#D354A0,#7F77DD)}
+#rdFloat .bar{height:4px;border-radius:2px;background:rgba(255,255,255,.12);margin-top:8px;overflow:hidden}
+#rdFloat .bar i{display:block;height:100%;background:linear-gradient(90deg,#D354A0,#7F77DD);width:0}
 </style>
 </head>
 <body>
+<div id="rdFloat"></div>
 <div id="app">
   <div id="sidebar">
     <div id="side-hdr"><div class="logo"><b>Unholy</b> Keys</div><div class="logo-s">v4.0 — Arrow key instrument</div></div>
@@ -417,6 +442,21 @@ body.jset .nav-item.jam-only{display:flex}
         <button id="mixAutoBtn" class="btn" style="padding:5px 14px;font-size:12px;background:var(--pu);border-color:var(--pu);color:#fff;margin-bottom:14px" title="Play backing track for ~1s then click — auto-sets keys to front-and-center level">&#10024; Auto-Align</button>
       </div>
       <div style="font-size:11px;color:var(--tx3);margin-top:2px">Play your track for ~1s &#8594; click <b>Auto-Align</b> to match keys volume to the song&#39;s vocal range (front &amp; center, not dominating).</div>
+  </div>
+  <div class="sl">Dance rounds <span class="bdg" style="background:var(--bg3);color:var(--tx3)">live shows</span></div>
+  <div class="pnl" id="roundPanel">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+      <label>When I play a backing track <select id="rdMode"><option value="off">no round</option><option value="step">Step dance round</option><option value="aim">Target dance round</option><option value="free">Free dance round (audience votes)</option></select></label>
+      <label>Countdown <select id="rdSecs"><option value="5">5 s</option><option value="10">10 s</option><option value="15">15 s</option><option value="20">20 s</option><option value="30">30 s</option></select></label>
+      <label>Steps <select id="rdLevel"><option value="0.7">Easy</option><option value="1">Normal</option><option value="1.3">Hard</option></select></label>
+    </div>
+    <div id="rdStatus">Go live, choose a round type, then play a song from Backing Tracks. The song is checked for its beat and loud parts, everyone gets a countdown, and the song starts when it reaches zero.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" id="rdNow" title="For YouTube, or your own playing: starts a round on whatever is sounding now. Steps follow the beat each dancer's device hears.">Start a round now</button>
+      <button class="btn" id="rdEnd" disabled title="Ends the round and counts the scores">End round</button>
+      <button class="btn" id="rdCancel" disabled title="Stops the round with no points">Cancel round</button>
+    </div>
+    <div id="rdBoard"></div>
   </div>
   <div class="sl">Local Library <span id="localCountLbl" style="font-size:10px;font-weight:400;color:var(--tx3)">— pick a folder of MP4s</span></div>
   <div class="pnl">
@@ -3018,8 +3058,10 @@ var BACKING=(function(){
     var row=document.getElementById("backingSavedRow");if(row)row.style.display=savedLists.length?"block":"none";
   }
 
-  function _play(f){
+  function _play(f,fromRound){
     initAudio();
+    /* live with dance rounds on: check the song, count everyone in, then start it */
+    if(!fromRound&&typeof ROUNDS!=="undefined"&&ROUNDS.intercept(f,function(){_play(f,true);}))return;
     currentFile=f;
     if(backingAudio){backingAudio.src=f.url;backingAudio.play().catch(function(){});}
     var lbl=document.getElementById("backingCurLbl");if(lbl){lbl.textContent="♫ "+f.name;lbl.style.display="block";}
@@ -3733,8 +3775,10 @@ function goLive(){
       document.getElementById("liveViewers").textContent=msg.count+" viewer"+(msg.count!==1?"s":"");
       AUD.count=msg.count;
     }
-    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance")audEvent(msg);
+    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
+    if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes")ROUNDS.onMsg(msg);
+    if(msg.type==="room-created")ROUNDS.buttons();
   };
   liveWs.onclose=function(){if(liveOn)endLive();else liveFail();};
   liveWs.onerror=function(){liveFail();};
@@ -3742,6 +3786,7 @@ function goLive(){
 function endLive(){
   STREAM.stop();
   liveOn=false;
+  ROUNDS.reset();
   if(liveWs)try{liveWs.close();}catch(e){}
   liveWs=null;
   document.getElementById("livePnl").style.display="none";
@@ -3790,7 +3835,12 @@ function audEvent(msg){
   if(msg.type==="viewer-join"&&id){AUD.people[id]={name:String(msg.name||"").slice(0,24),color:audColor(msg.color,"#888888"),x:+msg.x||.5,y:+msg.y||.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};}
   else if(msg.type==="pos"&&id){var p=AUD.people[id];if(!p)p=AUD.people[id]={name:String(msg.name||""),color:"#888888",x:.5,y:.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};p.x=+msg.x||p.x;p.y=+msg.y||p.y;}
   else if(msg.type==="viewer-leave"&&id){delete AUD.people[id];}
-  else if(msg.type==="dance"&&id){if(AUD.people[id])AUD.people[id].dance=Math.max(0,Math.min(3,+msg.style||0));}
+  else if(msg.type==="dance"&&id){if(AUD.people[id]){var dp=AUD.people[id];dp.dance=Math.max(0,Math.min(5,Math.floor(+msg.style||0)));if(dp.dance<4){dp.pose=null;dp.poseCur=null;dp.combo=0;}}}
+  else if(msg.type==="pose"&&id&&AUD.people[id]&&Array.isArray(msg.a)&&msg.a.length===4){
+    /* dance games: limb angles [left arm, right arm, left leg, right leg] in hundredths of a radian, plus the combo */
+    var pp=AUD.people[id],pa=[];for(var pi=0;pi<4;pi++){var pn=+msg.a[pi];if(!isFinite(pn))return;pa.push(Math.max(-3.2,Math.min(3.2,pn/100)));}
+    pp.pose=pa;pp.combo=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pp.hitT=Date.now();
+  }
   else if(msg.type==="chat"&&id&&AUD.people[id]){var q=AUD.people[id];q.said=Date.now();q.text=String(msg.text||"").slice(0,140);if(msg.color)q.color=audColor(msg.color,q.color);}
 }
 /* word-wrap into at most `max` lines of width w */
@@ -3806,7 +3856,7 @@ function audWrap(g,text,w,max){
   if(used<text.length||g.measureText(out[last]).width>w){var l=out[last];while(l.length>1&&g.measureText(l+"…").width>w)l=l.slice(0,-1);out[last]=l+"…";}
   return out;
 }
-function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk){
+function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge){
   /* small version of the venue character: head, body, arms, legs; name under the feet */
   var dT=now*0.009+seed,bob=0,armL=-.2,armR=.2,leg=0,legL=0,legR=0;
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
@@ -3814,12 +3864,18 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk){
   if(dance===1){bob=-Math.abs(Math.sin(dT))*5*sc;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;leg=Math.sin(dT*2)*1.5*sc;}
   else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*1.5*sc;x+=Math.sin(dT)*3*sc;var sw=Math.sin(dT);armL=1.9+sw*.9;armR=-1.9+sw*.9;}
   else if(dance===3){bob=-Math.pow(Math.abs(Math.sin(dT)),3)*8*sc;armL=1.5+Math.abs(Math.sin(dT))*1.1;armR=-armL;leg=Math.abs(Math.sin(dT))*2*sc;}
+  var legRotL=legL*.12,legRotR=legR*.12;
+  if(dance>=4){
+    /* dance games: limbs go where the dancer put them, with a hop each time a move lands */
+    var ps=pose||[.15,-.15,.12,-.12];armL=ps[0];armR=ps[1];legRotL=ps[2];legRotR=ps[3];
+    if(hitAge<220)bob=-(1-hitAge/220)*5*sc;
+  }
   var hr=5*sc,bw=9*sc,bh=11*sc,lh=6*sc,top=y+bob;
   if(glow){var gl=g.createRadialGradient(x,top,3,x,top,30*sc);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,top,30*sc,0,6.3);g.fill();}
   g.fillStyle=color;
   /* legs: pivot at the hip so a stride swings them */
-  g.save();g.translate(x-bw/2+2.3*sc,top+bh/2);g.rotate(legL*.12);g.fillRect(-1.3*sc-leg,0,2.6*sc,lh);g.restore();
-  g.save();g.translate(x+bw/2-2.3*sc,top+bh/2);g.rotate(legR*.12);g.fillRect(-1.3*sc+leg,0,2.6*sc,lh);g.restore();
+  g.save();g.translate(x-bw/2+2.3*sc,top+bh/2);g.rotate(legRotL);g.fillRect(-1.3*sc-leg,0,2.6*sc,lh);g.restore();
+  g.save();g.translate(x+bw/2-2.3*sc,top+bh/2);g.rotate(legRotR);g.fillRect(-1.3*sc+leg,0,2.6*sc,lh);g.restore();
   g.fillRect(x-bw/2,top-bh/2,bw,bh);
   g.save();g.translate(x-bw/2,top-bh/2+1.5*sc);g.rotate(armL);g.fillRect(-2.4*sc,0,2.4*sc,8*sc);g.restore();
   g.save();g.translate(x+bw/2,top-bh/2+1.5*sc);g.rotate(armR);g.fillRect(0,0,2.4*sc,8*sc);g.restore();
@@ -3878,7 +3934,11 @@ function drawAud(){
     if(step>.15){p.walk=(p.walk||0)+Math.min(.5,step*.22+.12);p.walkUntil=now+120;}
     var walking=now<(p.walkUntil||0);
     var x=p.dx*W,y=Math.min(H-24,p.dy*sy);
-    heads.push([p,x,audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null)]);});
+    var pz=null;
+    if(p.dance>=4&&p.pose){if(!p.poseCur)p.poseCur=p.pose.slice();for(var q=0;q<4;q++)p.poseCur[q]+=(p.pose[q]-p.poseCur[q])*.4;pz=p.poseCur;}
+    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0));
+    if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
+    heads.push([p,x,headY]);});
   /* speech bubbles on top of everyone; oldest first so the newest is on top */
   heads.filter(function(h){return h[0].text&&now-h[0].said<AUD_SAY_MS;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
     var age=now-h[0].said,al=age>AUD_SAY_MS-1200?(AUD_SAY_MS-age)/1200:1;
@@ -3890,6 +3950,309 @@ setInterval(drawAud,50);
 document.getElementById("jAudH").onclick=function(){AUD.min=!AUD.min;try{localStorage.setItem("uk_jaud_min",AUD.min?"1":"0");}catch(e){}document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";drawAud();};
 document.getElementById("jAudBig").onclick=function(e){e.stopPropagation();AUD.big=!AUD.big;if(AUD.min){AUD.min=false;document.getElementById("jAudMin").innerHTML="&#8211;";}try{localStorage.setItem("uk_jaud_big",AUD.big?"1":"0");localStorage.setItem("uk_jaud_min","0");}catch(x){}drawAud();};
 document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
+/* ── Song analyzer: builds one step chart for a whole song ──
+   Used for dance rounds, so every dancer gets the same steps. Given the decoded song it finds:
+     - the tempo, and the time of every beat (following the song if it speeds up or slows down);
+     - how loud each part is, compared with the rest of the song;
+     - where the drum hits and note starts are.
+   Then it writes the steps: few in quiet parts, one per beat in normal parts, extra off-beat steps
+   and double arrows in the loudest parts, and always on a real hit in the music where there is one.
+   Result: {bpm, dur, beats:[ms], steps:[[ms, lanes]]}; lanes is a bit mask, 1=left 2=down 4=up 8=right. */
+var CHART=(function(){
+  var FPS=100,NFFT=1024,LAG=14;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
+  function fft(re,im){
+    var n=re.length,i,j=0,k,m;
+    for(i=1;i<n;i++){var bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){var t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
+    for(m=2;m<=n;m<<=1){
+      var ang=-2*Math.PI/m,wr=Math.cos(ang),wi=Math.sin(ang);
+      for(i=0;i<n;i+=m){var cr=1,ci=0;for(k=0;k<m/2;k++){
+        var a=i+k,b=a+m/2,xr=re[b]*cr-im[b]*ci,xi=re[b]*ci+im[b]*cr;
+        re[b]=re[a]-xr;im[b]=im[a]-xi;re[a]+=xr;im[a]+=xi;
+        var nr=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=nr;}}
+    }
+  }
+  function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;var t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+  function pct(arr,p){var s=Array.prototype.slice.call(arr).sort(function(a,b){return a-b;});return s.length?s[Math.min(s.length-1,Math.floor(p*s.length))]:0;}
+
+  /* Step 1: for every 10 ms of the song, how much new sound started (env) and how loud it is (rms).
+     Done a slice at a time; onProgress(0..1) is called between slices so the page stays responsive. */
+  function envelope(x,sr,onProgress,done){
+    var hop=sr/FPS,N=Math.max(0,Math.floor((x.length-NFFT)/hop)),env=new Float32Array(N),rms=new Float32Array(N);
+    var win=new Float32Array(NFFT),re=new Float32Array(NFFT),im=new Float32Array(NFFT),prev=new Float32Array(NFFT/2),i=0,k;
+    for(k=0;k<NFFT;k++)win[k]=0.5-0.5*Math.cos(2*Math.PI*k/(NFFT-1));
+    var lowBins=Math.max(2,Math.round(190/(sr/NFFT))),topBin=Math.min(NFFT/2,Math.round(8000/(sr/NFFT)));
+    function slice(){
+      var end=Math.min(N,i+1500);
+      for(;i<end;i++){
+        var o=Math.floor(i*hop),e=0;
+        for(k=0;k<NFFT;k++){var v=x[o+k];re[k]=v*win[k];im[k]=0;e+=v*v;}
+        rms[i]=Math.sqrt(e/NFFT);
+        fft(re,im);
+        var f=0;
+        for(k=1;k<topBin;k++){var l=Math.log(1+1000*Math.sqrt(re[k]*re[k]+im[k]*im[k])/NFFT*4),d=l-prev[k];if(d>0)f+=d*(k<=lowBins?3:1);prev[k]=l;}
+        env[i]=f;
+      }
+      if(i<N){if(onProgress){onProgress(i/N);setTimeout(slice,0);}else slice();}
+      else done(env,rms);
+    }
+    slice();
+  }
+  /* keep only what stands out from the surrounding second, scaled so a typical hit is about 1 */
+  function standOut(env){
+    var N=env.length,e=new Float32Array(N),acc=0,half=50,i;
+    for(i=0;i<N;i++){acc+=env[i];if(i>=2*half)acc-=env[i-2*half];var v=env[i]-acc/Math.min(i+1,2*half)*1.1;e[i]=v>0?v:0;}
+    var sd=0;for(i=0;i<N;i++)sd+=e[i]*e[i];sd=Math.sqrt(sd/Math.max(1,N))||1;
+    for(i=0;i<N;i++)e[i]/=sd;
+    return e;
+  }
+  /* Step 2: the tempo. Tries 70-180 BPM in half-BPM steps on four 12-second excerpts and adds up the scores. */
+  function tempo(e){
+    var N=e.length,W=12*FPS,starts=[0.15,0.35,0.55,0.75].map(function(p){return Math.max(0,Math.min(N-W,Math.floor(p*N)));});
+    if(N<W)starts=[0],W=N;
+    var best=0,bestBpm=120;
+    for(var bpm=70;bpm<=180;bpm+=0.5){
+      var per=60/bpm*FPS,tot=0;
+      for(var s=0;s<starts.length;s++){
+        var top=0,o=starts[s];
+        for(var ph=0;ph<per;ph++){
+          var sum=0,k=0,off=0,ko=0,x,xi;
+          for(x=ph;x<W-1;x+=per){xi=o+(x|0);sum+=e[xi];k++;}
+          for(x=ph+per/2;x<W-1;x+=per){xi=o+(x|0);off+=e[xi];ko++;}
+          var sc=sum/k-(ko?0.35*off/ko:0);if(sc>top)top=sc;
+        }
+        tot+=top;
+      }
+      var pr=Math.log(bpm/120)/Math.LN2/0.55;tot*=Math.exp(-0.5*pr*pr);
+      if(tot>best){best=tot;bestBpm=bpm;}
+    }
+    return bestBpm;
+  }
+  /* Step 3: the beats. Picks the chain of moments that lands on the most hits while staying close to
+     one beat apart, so it follows a song that drifts in tempo (dynamic programming, after Ellis 2007). */
+  function beats(e,bpm){
+    var N=e.length,per=60/bpm*FPS,score=new Float32Array(N),back=new Int32Array(N),tight=6,i,j;
+    var lo=Math.round(per*0.5),hi=Math.round(per*2);
+    for(i=0;i<N;i++){
+      var bs=-1e9,bj=-1;
+      for(j=Math.max(0,i-hi);j<=i-lo;j++){var lg=Math.log((i-j)/per),v=score[j]-tight*lg*lg;if(v>bs){bs=v;bj=j;}}
+      score[i]=e[i]+(bj>=0&&bs>0?bs:0);back[i]=bj>=0&&bs>0?bj:-1;
+    }
+    /* start from the best-scoring moment in the last beat's worth of song, and walk back */
+    var end=N-1;for(i=Math.max(0,N-Math.round(per));i<N;i++)if(score[i]>score[end])end=i;
+    var out=[];for(i=end;i>=0;i=back[i]){out.push(i);if(back[i]<0)break;}
+    out.reverse();
+    /* carry the beat back to the start of the song at the same spacing (a quiet intro has nothing to lock onto) */
+    var first=out[0],gap=out.length>4?(out[4]-out[0])/4:per;
+    for(var t=first-gap;t>=0;t-=gap)out.unshift(Math.round(t));
+    return out;
+  }
+  function near(e,c,r){var m=0;for(var i=Math.max(0,c-r);i<=Math.min(e.length-1,c+r);i++)if(e[i]>m)m=e[i];return m;}
+  /* Step 4: the steps. level: 0.6 easier, 1 normal, 1.4 harder. */
+  function steps(e,rms,bt,bpm,level,seed){
+    var nb=bt.length,loud=new Float32Array(nb),i;
+    for(i=0;i<nb;i++){var a=bt[i],b=i+1<nb?bt[i+1]:a+50,s=0,n=0;for(var k=a;k<b&&k<rms.length;k++){s+=rms[k]*rms[k];n++;}loud[i]=10*Math.log10((n?s/n:0)+1e-9);}
+    /* smooth over about two bars, then place each beat between the song's quiet and loud ends */
+    var sm=new Float32Array(nb);for(i=0;i<nb;i++){var s2=0,n2=0;for(var q=Math.max(0,i-4);q<=Math.min(nb-1,i+4);q++){s2+=loud[q];n2++;}sm[i]=s2/n2;}
+    var lo=pct(sm,0.1),hi=pct(sm,0.92);if(hi-lo<3){lo=hi-3;}
+    var silent=Math.max(-60,hi-36),hit=pct(e,0.97)||1,r=rng(seed||1),out=[],prev=-1,prev2=-1,fast=bpm>150;
+    function lane(){var l;do{l=Math.floor(r()*4);}while(l===prev&&l===prev2);prev2=prev;prev=l;return l;}
+    for(i=0;i<nb;i++){
+      var t=bt[i]*10;if(i<4||t<2500)continue;                       /* lead-in: let people hear the song first */
+      if(loud[i]<silent&&sm[i]<silent+6)continue;                    /* silence: nothing to dance to */
+      var I=Math.max(0,Math.min(1,(sm[i]-lo)/(hi-lo)))*level,on=near(e,bt[i],3)/hit,mask=0;
+      if(I<0.3){if(i%2===0||on>0.6)mask=1<<lane();}                 /* quiet: every other beat */
+      else mask=1<<lane();                                           /* normal and up: every beat */
+      if(mask&&I>0.9&&on>0.55&&i%4===0&&!fast){var l2;do{l2=Math.floor(r()*4);}while((1<<l2)===mask);mask|=1<<l2;}   /* loudest: double arrows on strong hits */
+      if(mask)out.push([Math.round(t),mask]);
+      /* off-beat steps where the music has a hit between beats and the song is loud enough */
+      if(i+1<nb){
+        var h=Math.round((bt[i]+bt[i+1])/2),hs=near(e,h,2)/hit;
+        if(!fast&&((I>0.6&&hs>0.45)||(I>0.85&&hs>0.25)))out.push([h*10,1<<lane()]);
+        else if(fast&&I>1.05&&hs>0.5)out.push([h*10,1<<lane()]);
+      }
+    }
+    return out;
+  }
+  /* The whole job. buffer is a decoded AudioBuffer (or {sampleRate,length,numberOfChannels,getChannelData}).
+     opts: {level, seed, onProgress(0..1)}; cb(chart). */
+  function analyse(buffer,opts,cb){
+    opts=opts||{};
+    var sr=buffer.sampleRate,n=buffer.length,ch=buffer.numberOfChannels,x=new Float32Array(n),c,i;
+    for(c=0;c<ch;c++){var d=buffer.getChannelData(c);for(i=0;i<n;i++)x[i]+=d[i]/ch;}
+    envelope(x,sr,opts.onProgress,function(env,rms){
+      var e=standOut(env),bpm=tempo(e),bt=beats(e,bpm);
+      /* The tempo the beats actually came out at (the first guess can be off by a simple ratio such as
+         2:3, and the beat finder still lands on the real beats). If it differs, find the beats again
+         with the corrected tempo so the spacing is held properly. */
+      for(var pass=0;pass<2;pass++){
+        var gaps=[];for(i=1;i<bt.length;i++)gaps.push(bt[i]-bt[i-1]);
+        var med=pct(gaps,0.5),sum=0,cnt=0;
+        for(i=0;i<gaps.length;i++)if(Math.abs(gaps[i]/med-1)<0.15){sum+=gaps[i];cnt++;}
+        var real=cnt?60*FPS/(sum/cnt):bpm,changed=Math.abs(real/bpm-1)>0.04;
+        bpm=real;if(!changed)break;
+        bt=beats(e,bpm);
+      }
+      var st=steps(e,rms,bt,bpm,opts.level||1,opts.seed||(n%100000+Math.round(bpm*10)));
+      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return [q[0]+LAG,q[1]];})});
+    });
+  }
+  return{analyse:analyse};
+})();
+
+/* ── Dance rounds (performer side) ──
+   With a round type chosen in the Music tab and the show live, playing a backing track runs a round:
+   the song is analysed (tempo, beats, loud and quiet parts) into one step chart for everyone, the
+   audience gets a countdown, and the song starts at zero. When it ends the scores are counted, or
+   for Free dance everyone votes and your vote counts double. "Start a round now" does the same for
+   whatever is already sounding (YouTube, or you playing), with steps made live on each device. */
+var ROUNDS=(function(){
+  var cfg={mode:"off",secs:10,level:1},cur=null,job=0,cdT=null,syncT=null,uiT=null,hideT=null,totals=[],myVote="",votes=null,top=null;
+  var NAMES={step:"Step dance",aim:"Target dance",free:"Free dance"},ORD=["1st","2nd","3rd"];
+  try{var sv=JSON.parse(localStorage.getItem("uk_rounds")||"{}");if(NAMES[sv.mode]||sv.mode==="off")cfg.mode=sv.mode;if(sv.secs>=5&&sv.secs<=30)cfg.secs=+sv.secs;if(sv.level>=0.5&&sv.level<=1.5)cfg.level=+sv.level;}catch(e){}
+  function ord(n){return ORD[n-1]||n+"th";}
+  function $(id){return document.getElementById(id);}
+  function mk(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
+  function save(){try{localStorage.setItem("uk_rounds",JSON.stringify(cfg));}catch(e){}}
+  function status(t){var e=$("rdStatus");if(e)e.textContent=t;}
+  function float(nodes){var b=$("rdFloat");b.textContent="";nodes.forEach(function(n){if(n)b.appendChild(n);});b.className="on";clearTimeout(hideT);hideT=null;}
+  function hideFloat(){var b=$("rdFloat");b.className="";b.textContent="";}
+  function buttons(){var on=!!cur;$("rdEnd").disabled=!cur||cur.phase!=="play";$("rdCancel").disabled=!on||cur.phase==="vote"||cur.phase==="tally";$("rdNow").disabled=on||!liveOn;}
+  function head(extra){return mk("div","h","Round"+(cur&&cur.n?" "+cur.n:"")+" · "+(NAMES[cur.mode]||"Dance")+(extra?" · "+extra:""));}
+  function decode(ab){var OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;return new OC(1,2,44100).decodeAudioData(ab);}
+
+  /* called when a backing track is about to play; returns true if a round is taking over the start */
+  function intercept(f,go){
+    if(cfg.mode==="off"||!liveOn)return false;
+    begin(f.name||"Song",f,go);return true;
+  }
+  function begin(title,f,go){
+    var my=++job;
+    hookAudio();
+    if(cur)finish(false,true);
+    if(backingAudio&&f)backingAudio.pause();
+    cur={n:0,mode:cfg.mode==="off"?"step":cfg.mode,title:String(title).replace(/\.(mp3|wav|flac|ogg|m4a|aac)$/i,"").slice(0,80),phase:"analyse",go:go,endAt:0,file:!!f};
+    top=null;votes=null;myVote="";buttons();
+    if(!f||cur.mode==="free"){send(null,my);return;}
+    var bar=mk("div","bar"),fill=mk("i");bar.appendChild(fill);
+    float([head(),mk("div","t",cur.title),mk("div","sub","Finding the beat and the loud parts…"),bar]);
+    status("Checking “"+cur.title+"” for its beat and loud parts…");
+    var src=f.file&&f.file.arrayBuffer?f.file.arrayBuffer():fetch(f.url).then(function(r){return r.arrayBuffer();});
+    src.then(decode).then(function(buf){
+      if(my!==job)return;
+      if(buf.duration>900)throw new Error("too long to check");
+      CHART.analyse(buf,{level:cfg.level,onProgress:function(p){if(my===job)fill.style.width=Math.round(p*100)+"%";}},function(chart){if(my===job)send(chart,my);});
+    }).catch(function(e){
+      console.warn("[Unholy Keys] could not analyse the song, using live detection:",e&&e.message);
+      if(my===job)send(null,my,true);
+    });
+  }
+  function send(chart,my,failed){
+    if(my!==job||!cur)return;
+    cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cfg.secs*1000;
+    liveSend({type:"round-start",mode:cur.mode,title:cur.title,countdown:cfg.secs*1000,chart:chart});
+    status(cur.mode==="free"?"Free dance round: counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps. Counting everyone in.":(failed?"Couldn’t read that file, so steps will follow the beat live. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
+    clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cfg.secs*1000);
+    clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();
+  }
+  function play(){
+    if(!cur)return;
+    cur.phase="play";
+    if(cur.go)cur.go();
+    sync();
+    /* tell the room again as the song settles in, and regularly after (covers pausing and skipping around) */
+    clearInterval(syncT);var n=0;syncT=setInterval(function(){n++;if(n===1||n===3||n%10===0)sync();},1500);
+    draw();buttons();
+    status("Round "+(cur.n||"")+" is on: “"+cur.title+"”."+(cur.file?" It ends when the song does.":" Press End round when the song finishes."));
+  }
+  function sync(){
+    if(!cur||cur.phase!=="play")return;
+    var pos=cur.file&&backingAudio?backingAudio.currentTime*1000:performance.now()-cur.endAt,ts=STREAM.nowTs();
+    liveSend({type:"round-play",ts0:ts===null?null:ts-pos*1000,pos:Math.max(0,Math.round(pos))});
+  }
+  function finish(cancel,quiet){
+    if(!cur)return;
+    clearTimeout(cdT);clearInterval(syncT);cdT=syncT=null;
+    var was=cur.phase;
+    liveSend({type:"round-end",cancel:!!cancel||was==="analyse"||was==="countdown"});
+    if(cancel||was==="analyse"||was==="countdown"){cur=null;clearInterval(uiT);if(!quiet){hideFloat();status("Round cancelled.");}}
+    buttons();
+  }
+  function draw(){
+    if(!cur)return;
+    if(cur.phase==="countdown"){
+      var left=Math.max(0,Math.ceil((cur.endAt-performance.now())/1000));
+      float([head(),mk("div","t",cur.title),mk("div","big",String(left)),mk("div","sub",cur.file?"The song starts at zero.":"The round starts at zero.")]);
+    }else if(cur.phase==="play"){
+      var line=cur.mode==="free"?"Everyone votes when the song ends. Your vote counts double.":top&&top.top.length?"Leading: "+top.top.slice(0,3).map(function(x,i){return ord(i+1)+" "+x.name+" "+x.score.toLocaleString();}).join("  ·  ")+"  ·  "+top.players+" dancing":"Waiting for the first scores…";
+      float([head(cur.title),mk("div","sub",line)]);
+    }else if(cur.phase==="vote"){
+      var left2=Math.max(0,Math.ceil((cur.endAt-performance.now())/1000)),row=mk("div","votes");
+      (cur.dancers||[]).forEach(function(d){
+        var b=mk("button",myVote===d.id?"on":"",d.name);b.style.borderColor=d.color;
+        b.onclick=function(e){e.stopPropagation();myVote=d.id;liveSend({type:"round-vote",id:d.id});draw();};
+        row.appendChild(b);
+      });
+      float([mk("div","h","Round "+cur.n+" · Pick the best dancer (your vote counts double)"),row,mk("div","sub",(votes?votes.cast+" of "+votes.of+" voted · ":"")+left2+" s left")]);
+    }
+  }
+  function board(){
+    var b=$("rdBoard");if(!b)return;b.textContent="";
+    if(!totals.length)return;
+    b.appendChild(mk("div","sl","Show standings"));
+    totals.forEach(function(t,i){var r=mk("div","row");r.appendChild(mk("span","p",ord(i+1)));r.appendChild(mk("span","n",t.name));r.appendChild(mk("span","",t.wins?t.wins+" win"+(t.wins===1?"":"s"):""));r.appendChild(mk("span","g",t.pts+" pts"));b.appendChild(r);});
+  }
+  function txt(v,n){return String(v==null?"":v).slice(0,n);}
+  function onMsg(m){
+    if(m.type==="round-scores"){if(cur&&cur.phase==="play"){top={top:(m.top||[]).slice(0,5).map(function(x){return{name:txt(x.name,24),score:Math.floor(+x.score||0)};}),players:Math.floor(+m.players||0)};draw();}return;}
+    if(m.type==="round-votes"){votes={cast:Math.floor(+m.cast||0),of:Math.floor(+m.of||0)};draw();return;}
+    if(m.type!=="round")return;
+    if(m.phase==="countdown"&&cur){cur.n=+m.n||0;draw();}
+    else if(m.phase==="tally"&&cur){cur.phase="tally";clearInterval(syncT);float([head(cur.title),mk("div","sub","Counting the scores…")]);buttons();}
+    else if(m.phase==="vote"&&cur){
+      cur.phase="vote";clearInterval(syncT);cur.endAt=performance.now()+(+m.ms||0);
+      cur.dancers=(m.dancers||[]).slice(0,60).map(function(d){return{id:txt(d.id,16),name:txt(d.name,24),color:/^#[0-9a-fA-F]{3,8}$/.test(d.color)?d.color:"#7F77DD"};});
+      draw();buttons();status("Voting is open. Pick your favourite dancer.");
+    }
+    else if(m.phase==="result"){
+      totals=(m.totals||[]).slice(0,10).map(function(t){return{name:txt(t.name,24),pts:Math.floor(+t.pts||0),wins:Math.floor(+t.wins||0)};});
+      var rk=(m.ranking||[]).slice(0,10).map(function(r){return{name:txt(r.name,24),score:Math.floor(+r.score||0),pts:Math.floor(+r.pts||0),place:Math.floor(+r.place||1)};});
+      var free=m.mode==="free",nodes=[mk("div","h","Round "+(+m.n||"")+" result · "+txt(m.title,80))];
+      function sc(r){return free?r.score+" vote"+(r.score===1?"":"s"):r.score.toLocaleString();}
+      if(!rk.length)nodes.push(mk("div","sub","Nobody danced this round."));
+      else{
+        nodes.push(mk("div","win","🏆 "+rk[0].name+" · "+sc(rk[0])));
+        var rows=mk("div","rows");rk.slice(0,5).forEach(function(r){var e=mk("div","row");e.appendChild(mk("span","p",ord(r.place)));e.appendChild(mk("span","n",r.name));e.appendChild(mk("span","",sc(r)));e.appendChild(mk("span","g","+"+r.pts));rows.appendChild(e);});nodes.push(rows);
+        if(totals.length)nodes.push(mk("div","sub","Show leader: "+totals[0].name+" with "+totals[0].pts+" points"));
+        if(typeof showJamToast==="function")showJamToast("Round "+m.n+": "+rk[0].name+" wins");
+      }
+      cur=null;clearInterval(uiT);clearInterval(syncT);
+      float(nodes);$("rdFloat").onclick=function(){hideFloat();};hideT=setTimeout(hideFloat,12000);
+      board();buttons();status(rk.length?"Round "+m.n+" went to "+rk[0].name+". Play another song for the next round.":"Nobody danced that round.");
+    }
+    else if(m.phase==="off"){if(cur&&cur.n===m.n){cur=null;clearInterval(uiT);hideFloat();buttons();}}
+  }
+  /* going off air ends everything */
+  function reset(){job++;clearTimeout(cdT);clearInterval(syncT);clearInterval(uiT);cur=null;totals=[];hideFloat();board();buttons();status("Go live, choose a round type, then play a song from Backing Tracks.");}
+  function init(){
+    var m=$("rdMode"),sc=$("rdSecs"),lv=$("rdLevel");if(!m)return;
+    m.value=cfg.mode;sc.value=String(cfg.secs);lv.value=String(cfg.level);
+    if(lv.selectedIndex<0)lv.value="1";if(sc.selectedIndex<0)sc.value="10";
+    m.onchange=function(){cfg.mode=m.value;save();};sc.onchange=function(){cfg.secs=+sc.value;save();};lv.onchange=function(){cfg.level=+lv.value;save();};
+    $("rdNow").onclick=function(){if(!liveOn){status("Go live first: rounds need an audience.");return;}begin("Round",null,null);};
+    $("rdEnd").onclick=function(){finish(false);};
+    $("rdCancel").onclick=function(){finish(true);};
+    buttons();
+  }
+  /* the song player exists once sound has started: listen for the song ending, starting and being skipped around */
+  var hooked=false;
+  function hookAudio(){
+    if(hooked||!backingAudio)return;hooked=true;
+    backingAudio.addEventListener("ended",function(){if(cur&&cur.file&&cur.phase==="play")finish(false);});
+    ["playing","seeked"].forEach(function(ev){backingAudio.addEventListener(ev,function(){if(cur&&cur.file)sync();});});
+  }
+  return{intercept:intercept,onMsg:onMsg,reset:reset,init:init,buttons:buttons,get current(){return cur;}};
+})();
+ROUNDS.init();
 /* ── Live sound + visuals stream ──
    When you go live, Chrome asks to share this tab. Its sound (your instruments, effects and
    whatever backing track or video is playing) is encoded as Opus and sent through the relay
@@ -3898,7 +4261,7 @@ document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
    Packet layout: byte 0 kind (1 audio, 2 visuals), byte 1 flags (1 = keyframe),
    bytes 2-9 timestamp in microseconds (float64), then the encoded data. */
 var STREAM=(function(){
-  var st={read:0,dropped:0,audioSent:0,visualSent:0},cap=null,aEnc=null,vEnc=null,reader=null,vTimer=null,active=false,visualsOn=true,sentBytes=0,serverBytes=0,viewers=0,cfg=null,vCanvas=null,vCtx=null,lastKey=0,err="",tipShown=false;
+  var tsOff=null,st={read:0,dropped:0,audioSent:0,visualSent:0},cap=null,aEnc=null,vEnc=null,reader=null,vTimer=null,active=false,visualsOn=true,sentBytes=0,serverBytes=0,viewers=0,cfg=null,vCanvas=null,vCtx=null,lastKey=0,err="",tipShown=false;
   var VW=480,VH=270,VFPS=10,VBITRATE=150000,ABITRATE=96000;
   try{visualsOn=localStorage.getItem("uk_stream_vis")!=="0";}catch(e){}
   function supported(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia&&window.AudioEncoder&&window.MediaStreamTrackProcessor);}
@@ -3916,11 +4279,14 @@ var STREAM=(function(){
   }
   function startAudio(track){
     /* a 2 s queue: if the page is busy for a moment (jam visuals, a big redraw) the sound waits instead of being dropped */
+    tsOff=null;
     var proc=new MediaStreamTrackProcessor({track:track,maxBufferSize:200});reader=proc.readable.getReader();
     aEnc=new AudioEncoder({output:function(chunk){sendBin(1,0,chunk.timestamp,chunk);},error:function(e){err="Sound encoder stopped: "+(e&&e.message||e);stop();}});
     (function pump(){reader.read().then(function(r){
       if(r.done||!aEnc){if(r.value)r.value.close();return;}
       var d=r.value;st.read++;
+      /* how the stream's clock relates to the page's: the least-delayed piece of sound sets it */
+      var _o=performance.now()*1000-d.timestamp;tsOff=(tsOff===null||_o<tsOff)?_o:tsOff+Math.min(50,(_o-tsOff)*0.002);
       try{
         if(aEnc.state==="unconfigured"){cfg={codec:"opus",sampleRate:d.sampleRate,numberOfChannels:Math.min(2,d.numberOfChannels),bitrate:ABITRATE};aEnc.configure(cfg);announce();}
         if(d.numberOfChannels===cfg.numberOfChannels&&aEnc.encodeQueueSize<200)aEnc.encode(d);else st.dropped++;
@@ -3992,7 +4358,9 @@ var STREAM=(function(){
   }
   /* For troubleshooting: type ukStreamStats() in the browser console */
   window.ukStreamStats=function(){return {sharing:active,visualsOn:visualsOn,inJam:!!jamOn,audioFramesRead:st.read,audioFramesDropped:st.dropped,audioPacketsSent:st.audioSent,visualPacketsSent:st.visualSent,serverDataUsedMB:Math.round(serverBytes/1e5)/10,uploadBacklogKB:liveWs?Math.round(liveWs.bufferedAmount/1024):0};};
-  return{start:start,stop:stop,announce:announce,render:render,get active(){return active;},
+  /* the stream time of the sound leaving this page right now (null when not sharing sound) */
+  function nowTs(){return active&&tsOff!==null?performance.now()*1000-tsOff:null;}
+  return{start:start,stop:stop,announce:announce,render:render,nowTs:nowTs,get active(){return active;},
     stats:function(m){serverBytes=+m.bytesOut||0;viewers=+m.viewers||0;if(active)render();}};
 })();
 function videoMsg(){
