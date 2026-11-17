@@ -522,15 +522,21 @@ body.jset .nav-item.jam-only{display:flex}
     <div id="ytPL" style="display:none;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span id="plT" style="font-size:12px;font-weight:600;color:var(--tx)">Setlist</span><div style="display:flex;gap:6px"><button onclick="YT.prev()" class="btn" style="padding:3px 10px;font-size:11px">Prev</button><button onclick="YT.next()" class="btn" style="padding:3px 10px;font-size:11px">Next</button><button onclick="YT.clearPL()" class="btn" style="padding:3px 10px;font-size:11px">Clear</button></div></div><div id="plBox" style="max-height:120px;overflow-y:auto"></div></div>
     <div id="ytW" style="display:none"><div style="position:relative;padding-bottom:56.25%;height:0;border-radius:var(--r);overflow:hidden;background:#000"><iframe id="ytF" style="position:absolute;inset:0;width:100%;height:100%;border:none" allowfullscreen allow="autoplay"></iframe></div><div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><span style="font-size:11px;color:var(--tx2)">Speed:</span><button class="btn" onclick="YT.speed(.5)" style="padding:3px 8px;font-size:11px">.5x</button><button class="btn" onclick="YT.speed(.75)" style="padding:3px 8px;font-size:11px">.75x</button><button class="btn on" onclick="YT.speed(1)" style="padding:3px 8px;font-size:11px">1x</button><button class="btn" onclick="YT.speed(1.25)" style="padding:3px 8px;font-size:11px">1.25x</button><span style="font-size:11px;color:var(--tx2);margin-left:12px">Vol:</span><input type="range" id="ytVol" min="0" max="100" value="100" step="5" style="width:80px;vertical-align:middle" oninput="YT.setVol(+this.value)"><span id="ytVolLbl" style="font-size:11px;color:var(--tx3);min-width:30px">100%</span><span id="ytNP" style="font-size:11px;color:var(--tx3);margin-left:8px"></span></div></div>
   </div>
-  <div class="sl">Backing Tracks <span id="backingCountLbl" style="font-size:10px;font-weight:400;color:var(--tx3)">— pick a folder of audio files</span></div>
-  <div class="pnl">
+  <div class="sl">Backing Tracks <span id="backingCountLbl" style="font-size:10px;font-weight:400;color:var(--tx3)">— pick a folder of songs or music videos</span></div>
+  <div class="pnl" id="backingPnl">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
       <button id="backingPickBtn" class="btn" style="background:var(--sk);border-color:var(--sk);color:#fff;flex-shrink:0">&#128193; Pick Folder</button>
-      <span style="font-size:11px;color:var(--tx3)">Name files <b>Artist - Song.mp3</b> &middot; MP3, WAV, FLAC, OGG &middot; works offline</span>
+      <button id="backingFilesBtn" class="btn" style="flex-shrink:0" title="Add songs or videos one by one, or a few at a time">&#43; Add files</button>
+      <span style="font-size:11px;color:var(--tx3)">or drop files or folders here &middot; name files <b>Artist - Song.mp3</b> &middot; music (MP3, WAV, FLAC, OGG, M4A) or music videos (MP4, WebM, MOV): you see the video, the audience only hears it</span>
     </div>
     <input type="text" id="backingSearch" placeholder="Filter by artist or song..." style="display:none;width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);padding:7px 10px;border-radius:var(--r);font-size:12px;outline:none;margin-bottom:8px">
     <div id="backingLib" style="max-height:200px;overflow-y:auto;margin-bottom:6px"><div style="padding:6px 0;font-size:12px;color:var(--tx3)">No folder loaded yet.</div></div>
     <div id="backingCurLbl" style="display:none;font-size:11px;color:var(--sk);padding:4px 0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+    <div id="btVidBox" style="display:none;margin:6px 0 4px">
+      <video id="btVid" muted playsinline style="width:100%;max-height:300px;background:#000;border-radius:var(--r);display:block"></video>
+      <div style="font-size:11px;color:var(--tx3);margin-top:4px">&#127916; Only you see this video. Your audience hears the sound and sees the jam visuals.</div>
+      <span id="btVidName" style="display:none"></span>
+    </div>
     <div id="backingPL" style="display:none;margin-top:4px;border-top:1px solid var(--bg4);padding-top:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <span id="backingPLT" style="font-size:12px;font-weight:600;color:var(--tx)">Audio Setlist</span>
@@ -597,7 +603,7 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="jm">
-  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
   <div id="jmR"><canvas id="jcv"></canvas><div id="jnd"></div>
     <button id="jx" style="display:none">ESC Exit</button>
     <button id="jSetupBtn" title="Set up anything: instruments, key, presets and effects, music, visuals (M)">&#9776; Setup <span class="hk">M</span></button>
@@ -1779,7 +1785,7 @@ function buildJInstPick(){var sel=document.getElementById("jInstSel");if(!sel)re
   var jps=document.getElementById("jPresetSel");
   if(jps){jps.innerHTML='<option value="">\u25B6 Song Preset...</option>';PRESETS.list().forEach(function(p,i){var o=document.createElement("option");o.value=i;o.textContent=p.name;jps.appendChild(o);});}
   }
-function enterJam(){initAudio();jamOn=true;document.getElementById("app").classList.add("jx");document.getElementById("jm").classList.add("on");document.getElementById("jmV").style.display="block";if(LOCAL.currentFile){/* Local MP4 — use video element as background */LOCAL.syncToJam();var _jtb0=document.getElementById("jtb");if(_jtb0)_jtb0.style.display="block";}else{/* YouTube/Invidious — use iframe */var _jv=document.getElementById("jmVid"),_jf=document.getElementById("jmF");if(_jv){_jv.pause();_jv.src="";_jv.style.display="none";}if(_jf)_jf.style.display="block";var src=YT.status().vid?"http":"";if(src&&src.indexOf("http")===0){syncJamVideo();var _jtb1=document.getElementById("jtb");if(_jtb1)_jtb1.style.display="block";}else{var _jtb2=document.getElementById("jtb");if(_jtb2)_jtb2.style.display="none";}}jCanvas=document.getElementById("jcv");jCtx=jCanvas.getContext("2d");setTimeout(function(){resizeJam();updJInfo();buildJMini();buildJInstPick();updJamPresetLbl();renderJamHkStrip();if(jAnim)cancelAnimationFrame(jAnim);jAnim=requestAnimationFrame(jamLoop);},30);}
+function enterJam(){initAudio();jamOn=true;setTimeout(function(){if(typeof BVID!=="undefined"&&BVID.playing)BVID.layer();},0);document.getElementById("app").classList.add("jx");document.getElementById("jm").classList.add("on");document.getElementById("jmV").style.display="block";if(LOCAL.currentFile){/* Local MP4 — use video element as background */LOCAL.syncToJam();var _jtb0=document.getElementById("jtb");if(_jtb0)_jtb0.style.display="block";}else{/* YouTube/Invidious — use iframe */var _jv=document.getElementById("jmVid"),_jf=document.getElementById("jmF");if(_jv){_jv.pause();_jv.src="";_jv.style.display="none";}if(_jf)_jf.style.display="block";var src=YT.status().vid?"http":"";if(src&&src.indexOf("http")===0){syncJamVideo();var _jtb1=document.getElementById("jtb");if(_jtb1)_jtb1.style.display="block";}else{var _jtb2=document.getElementById("jtb");if(_jtb2)_jtb2.style.display="none";}}jCanvas=document.getElementById("jcv");jCtx=jCanvas.getContext("2d");setTimeout(function(){resizeJam();updJInfo();buildJMini();buildJInstPick();updJamPresetLbl();renderJamHkStrip();if(jAnim)cancelAnimationFrame(jAnim);jAnim=requestAnimationFrame(jamLoop);},30);}
 function jamFullscreen(){try{var jel=document.getElementById("jm");if(document.fullscreenElement||document.webkitFullscreenElement){if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();}else{if(jel.requestFullscreen)jel.requestFullscreen();else if(jel.webkitRequestFullscreen)jel.webkitRequestFullscreen();}}catch(e){}}
 function exitJam(){jamOn=false;document.body.classList.remove("jset");closeJamPicker();LOCAL.stopJam();document.getElementById("app").classList.remove("jx");document.getElementById("jm").classList.remove("on");YT.fromJam();if(jAnim){cancelAnimationFrame(jAnim);jAnim=null;}if(jLoopAnim){cancelAnimationFrame(jLoopAnim);jLoopAnim=null;}try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
 document.addEventListener("fullscreenchange",function(){var btn=document.getElementById("jfs");if(btn)btn.textContent=document.fullscreenElement?"\u2715 FS":"\u26F6 FS";});
@@ -2600,6 +2606,7 @@ var LOCAL=(function(){
     currentFile=f;
     var jvid=document.getElementById("jmVid"),jifr=document.getElementById("jmF");
     if(jvid){jvid.src=f.url;jvid.style.display="block";}
+    var bv=document.getElementById("jmBV");if(bv){bv.pause();bv.style.display="none";}
     if(jifr){jifr.src="";jifr.style.display="none";}
     if(jamOn){document.getElementById("jmV").style.display="block";if(jvid)jvid.play().catch(function(){});}
     var np=document.getElementById("ytNP");if(np)np.textContent="🎵 "+f.name;
@@ -3023,7 +3030,7 @@ var BACKING=(function(){
   }
 
   function _parseName(fn){
-    var base=fn.replace(/\.(mp3|wav|flac|ogg|m4a|aac)$/i,"");
+    var base=fn.replace(/\.(mp3|wav|flac|ogg|m4a|aac|opus|mp4|m4v|webm|mov|mkv)$/i,"");
     /* Check if the last " - " segment is a key sig (e.g. "G Major" or "G Major.E Major") */
     var keyData=null,cleanBase=base;
     var lastDash=base.lastIndexOf(" - ");
@@ -3043,6 +3050,25 @@ var BACKING=(function(){
     return r;
   }
 
+  function ff_isVid(f){return !!f.video;}
+  /* add files to the library: from the folder picker (replace), from the file picker or a drop (add) */
+  function _addFiles(files,replace){
+    if(replace){lib.forEach(function(f){if(f.url)try{URL.revokeObjectURL(f.url);}catch(e){}});lib=[];}
+    var have={};lib.forEach(function(f){have[f.filename]=1;});
+    var n=0;
+    Array.from(files||[]).filter(function(f){return /\.(mp3|wav|flac|ogg|m4a|aac|opus|mp4|m4v|webm|mov|mkv)$/i.test(f.name);}).forEach(function(f){
+      if(have[f.name])return;have[f.name]=1;n++;
+      var p=_parseName(f.name),dn=p.artist?(p.artist+" — "+p.song):p.song;
+      lib.push({filename:f.name,name:dn,artist:p.artist,song:p.song,keyData:p.keyData,file:f,url:URL.createObjectURL(f),video:/\.(mp4|m4v|webm|mov|mkv)$/i.test(f.name)});
+    });
+    lib.sort(function(a,b){return a.filename.localeCompare(b.filename);});
+    var nv=lib.filter(function(f){return f.video;}).length;
+    var lbl=document.getElementById("backingCountLbl");if(lbl)lbl.textContent="— "+lib.length+" track"+(lib.length===1?"":"s")+" loaded"+(nv?" ("+nv+" video"+(nv===1?"":"s")+")":"");
+    var si=document.getElementById("backingSearch");if(si)si.style.display=lib.length?"":"none";
+    _renderLib();_renderPlaylist();
+    if(typeof DANCEPR!=="undefined"&&DANCEPR.isOpen)DANCEPR.send();   /* refresh the dance practice song list */
+    return n;
+  }
   function _renderLib(q){
     var box=document.getElementById("backingLib");if(!box)return;box.innerHTML="";
     var shown=lib;
@@ -3056,7 +3082,7 @@ var BACKING=(function(){
       var lbl=f.artist
         ?"<span style='font-size:11px;color:var(--tx3)'>"+_esc(f.artist)+"</span> <span style='color:var(--tx3)'>&#8212;</span> <span style='font-size:12px;font-weight:600;color:var(--tx)'>"+_esc(f.song)+"</span>"
         :"<span style='font-size:12px;font-weight:600;color:var(--tx)'>"+_esc(f.name)+"</span>";
-      el.innerHTML='<div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lbl+"</div>"
+      el.innerHTML=(ff_isVid(f)?'<span title="Music video: you see the picture, the audience hears the sound" style="flex-shrink:0">&#127916;</span>':'')+'<div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lbl+"</div>"
         +'<div class="btn" style="padding:2px 7px;font-size:10px;flex-shrink:0" data-add="1">+</div>';
       (function(ff){el.onclick=function(e){if(e.target.getAttribute("data-add")){_addToPlaylist(ff.filename);return;}_play(ff);};})(f);
       box.appendChild(el);
@@ -3090,6 +3116,7 @@ var BACKING=(function(){
     if(!fromRound&&typeof ROUNDS!=="undefined"&&ROUNDS.intercept(f,function(){_play(f,true);}))return;
     currentFile=f;
     if(backingAudio){backingAudio.src=f.url;backingAudio.play().catch(function(){});}
+    BVID.show(f.video?f.url:null,f.name);
     var lbl=document.getElementById("backingCurLbl");if(lbl){lbl.textContent="♫ "+f.name;lbl.style.display="block";}
     /* Auto-apply key signature encoded in filename */
     if(f.keyData&&f.keyData.primary){
@@ -3132,23 +3159,21 @@ var BACKING=(function(){
     get currentFile(){return currentFile;},
     hasPlaylist:function(){return playlist.length>0;},
     stop:function(){if(backingAudio)backingAudio.pause();},
-    clearCurrent:function(){currentFile=null;if(backingAudio){backingAudio.pause();backingAudio.src="";}},
+    clearCurrent:function(){currentFile=null;if(backingAudio){backingAudio.pause();backingAudio.src="";}BVID.show(null);},
     pick:function(){
       var inp=document.createElement("input");
-      inp.type="file";inp.multiple=true;inp.accept="audio/mpeg,audio/wav,audio/flac,audio/ogg,.mp3,.wav,.flac,.ogg,.m4a,.aac";
+      inp.type="file";inp.multiple=true;
       inp.setAttribute("webkitdirectory","");
-      inp.onchange=function(){
-        lib.forEach(function(f){if(f.url)try{URL.revokeObjectURL(f.url);}catch(e){}});
-        lib=[];
-        var files=Array.from(inp.files||[]).filter(function(f){return/\.(mp3|wav|flac|ogg|m4a|aac)$/i.test(f.name);}).sort(function(a,b){return a.name.localeCompare(b.name);});
-        files.forEach(function(f){var p=_parseName(f.name);var dn=p.artist?(p.artist+" — "+p.song):p.song;lib.push({filename:f.name,name:dn,artist:p.artist,song:p.song,keyData:p.keyData,file:f,url:URL.createObjectURL(f)});});
-        var lbl=document.getElementById("backingCountLbl");if(lbl)lbl.textContent="— "+lib.length+" track"+(lib.length===1?"":"s")+" loaded";
-        var si=document.getElementById("backingSearch");if(si)si.style.display=lib.length?"":"none";
-        _renderLib();_renderPlaylist();
-        if(typeof DANCEPR!=="undefined"&&DANCEPR.isOpen)DANCEPR.send();   /* refresh the dance practice song list */
-      };
+      inp.onchange=function(){_addFiles(inp.files,true);};
       inp.click();
     },
+    pickFiles:function(){
+      var inp=document.createElement("input");
+      inp.type="file";inp.multiple=true;inp.accept="audio/*,video/*,.mp3,.wav,.flac,.ogg,.m4a,.aac,.opus,.mp4,.m4v,.webm,.mov,.mkv";
+      inp.onchange=function(){_addFiles(inp.files,false);};
+      inp.click();
+    },
+    addFiles:function(files){return _addFiles(files,false);},
     filter:function(q){_renderLib(q);},
     next:function(){if(!playlist.length)return;_playByIdx((playIdx+1)%playlist.length);},
     prev:function(){if(!playlist.length)return;_playByIdx((playIdx-1+playlist.length)%playlist.length);},
@@ -4374,6 +4399,50 @@ var ROUNDS=(function(){
   }
   return{intercept:intercept,onMsg:onMsg,reset:reset,init:init,buttons:buttons,get current(){return cur;}};
 })();
+
+/* ── Music videos in Backing Tracks ──
+   A video file in Backing Tracks (MP4, WebM, MOV, M4V, MKV) plays its sound through the normal backing
+   track player, so the volume, the live stream, dance rounds and everything else treat it like any
+   song. The picture is only for you: a muted copy plays in the Music tab, and behind the visuals in
+   jam mode, kept in step with the sound. The audience hears the music and sees the jam visuals,
+   never the video. Good for karaoke videos. */
+var BVID=(function(){
+  var url=null,timer=null;
+  function els(){return [document.getElementById("btVid"),document.getElementById("jmBV")].filter(Boolean);}
+  function show(u,name){
+    url=u||null;
+    var box=document.getElementById("btVidBox");
+    els().forEach(function(v){
+      if(url){if(v.getAttribute("src")!==url){v.src=url;}v.muted=true;}
+      else{v.pause();v.removeAttribute("src");try{v.load();}catch(e){}}
+    });
+    if(box)box.style.display=url?"block":"none";
+    var lbl=document.getElementById("btVidName");if(lbl)lbl.textContent=name||"";
+    layer();
+    clearInterval(timer);timer=url?setInterval(sync,250):null;
+    if(url)sync();
+  }
+  /* jam mode: the video sits behind the visuals, where YouTube and the local video library show */
+  function layer(){
+    var jv=document.getElementById("jmBV"),others=document.getElementById("jmVid"),fr=document.getElementById("jmF");if(!jv)return;
+    jv.style.display=url?"block":"none";
+    if(url){if(others){others.pause();others.style.display="none";}if(fr)fr.style.display="none";if(jamOn)document.getElementById("jmV").style.display="block";}
+  }
+  /* keep the pictures on the sound: same play/pause, same speed, and jump back in line if they drift */
+  function sync(){
+    var a=backingAudio;if(!url||!a)return;
+    els().forEach(function(v){
+      if(!v.offsetParent&&v.id!=="jmBV")return;           /* not on screen: let it rest */
+      if(a.paused||a.ended){if(!v.paused)v.pause();}
+      else{
+        if(v.paused)v.play().catch(function(){});
+        if(Math.abs(v.playbackRate-a.playbackRate)>0.01)v.playbackRate=a.playbackRate;
+        if(isFinite(a.currentTime)&&Math.abs(v.currentTime-a.currentTime)>0.18)v.currentTime=a.currentTime;
+      }
+    });
+  }
+  return{show:show,sync:sync,layer:layer,get playing(){return !!url;}};
+})();
 ROUNDS.init();
 /* ── Dance practice (the Dance button) ──
    Opens the audience page in practice mode over the whole app: your Backing Tracks list, a choice of
@@ -4603,6 +4672,32 @@ initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updMod
   var _lDl=document.getElementById("localDelBtn");if(_lDl)_lDl.onclick=function(){LOCAL.deleteSaved();};
   /* ── BACKING library buttons ── */
   var _bPk=document.getElementById("backingPickBtn");if(_bPk)_bPk.onclick=function(){BACKING.pick();};
+  var _bFl=document.getElementById("backingFilesBtn");if(_bFl)_bFl.onclick=function(){BACKING.pickFiles();};
+  /* drop songs, videos or whole folders onto Backing Tracks */
+  (function(){
+    var pnl=document.getElementById("backingPnl");if(!pnl)return;
+    function walk(entry,out,done){
+      if(!entry){done();return;}
+      if(entry.isFile){entry.file(function(f){out.push(f);done();},function(){done();});return;}
+      if(entry.isDirectory){
+        var rd=entry.createReader(),all=[];
+        (function more(){rd.readEntries(function(es){if(!es.length){var left=all.length;if(!left){done();return;}all.forEach(function(e){walk(e,out,function(){if(--left===0)done();});});return;}all=all.concat(Array.from(es));more();},function(){done();});})();
+        return;
+      }
+      done();
+    }
+    ["dragenter","dragover"].forEach(function(ev){pnl.addEventListener(ev,function(e){e.preventDefault();pnl.style.outline="2px dashed var(--sk)";pnl.style.outlineOffset="-4px";});});
+    ["dragleave","drop"].forEach(function(ev){pnl.addEventListener(ev,function(e){if(ev==="dragleave"&&pnl.contains(e.relatedTarget))return;pnl.style.outline="";});});
+    pnl.addEventListener("drop",function(e){
+      e.preventDefault();
+      var items=e.dataTransfer&&e.dataTransfer.items,out=[];
+      if(items&&items.length&&items[0].webkitGetAsEntry){
+        var entries=Array.from(items).map(function(it){return it.webkitGetAsEntry&&it.webkitGetAsEntry();}).filter(Boolean),left=entries.length;
+        if(!left){var n0=BACKING.addFiles(e.dataTransfer.files);showJamToast(n0?"Added "+n0+" track"+(n0===1?"":"s"):"No songs or videos in that drop",n0?"#3CCB8A":"#E05050");return;}
+        entries.forEach(function(en){walk(en,out,function(){if(--left===0){var n=BACKING.addFiles(out);showJamToast(n?"Added "+n+" track"+(n===1?"":"s"):"No songs or videos in that drop",n?"#3CCB8A":"#E05050");}});});
+      }else{var n=BACKING.addFiles(e.dataTransfer.files);showJamToast(n?"Added "+n+" track"+(n===1?"":"s"):"No songs or videos in that drop",n?"#3CCB8A":"#E05050");}
+    });
+  })();
   var _bSr=document.getElementById("backingSearch");if(_bSr)_bSr.oninput=function(){BACKING.filter(this.value);};
   var _bPr=document.getElementById("backingPrevBtn");if(_bPr)_bPr.onclick=function(){BACKING.prev();};
   var _bNx=document.getElementById("backingNextBtn");if(_bNx)_bNx.onclick=function(){BACKING.next();};

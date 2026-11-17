@@ -159,6 +159,18 @@ Steps are kept in time by the live sound itself, so rounds need **Share sound** 
 
 In the console on the audience page, `ukDevice()` shows what it decided the device is.
 
+**Music videos (karaoke).** Backing Tracks takes music videos as well as songs: MP4, WebM, MOV, M4V and MKV, from a folder, from **Add files**, or dragged onto the panel (files or whole folders). A video's sound plays like any backing track, so the audience hears it, the volume slider works and dance rounds can use it. The picture is only for you: it shows in the Music tab and behind the visuals in jam mode. The audience sees the jam visuals, never the video. MKV files only work if Chrome can play them; MP4 is the safe choice.
+
+**Streak power-ups.** In the Step and Target games a long combo charges the dancer up, and everyone sees it, including you on the audience panel:
+- **10:** white-blue charging aura
+- **25:** gold
+- **50:** fire
+- **100:** purple with lightning
+
+At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over the dancer's head.
+
+**Hotkey pop-ups.** Every hotkey shows what it did in big letters, in jam mode and the normal view. Swapping key shows the new key and whether it's the main or alt key. Tab does nothing now; Sustain is **X**.
+
 **Dance games and tempo.** The audience page listens to the music it is playing and works out the tempo, which sets the pace of the Step and Target games. It needs a few seconds of music with a clear beat. With no beat it uses 120 BPM, and the game says so. In the console on the audience page, `ukBeat()` shows the tempo it found and how sure it is, and `ukDance()` shows the current game, score and upcoming steps.
 
 **Diagnostics.** On either page, open the console (F12) and type `ukStreamStats()`. On the performer page it shows frames captured, dropped and sent. On the venue it shows packets received and decoded, how often the sound buffer ran dry (`rebuffers`), and the last error.
