@@ -104,6 +104,33 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #roundBox .rb-btn{font:700 14px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.08);border:2px solid rgba(127,119,221,.6);border-radius:10px;padding:9px 14px;cursor:pointer;margin-top:6px}
 #roundBox .rb-btn:hover{background:rgba(255,255,255,.18)}
 #roundBox .rb-btn.on{background:linear-gradient(135deg,#D354A0,#7F77DD)}
+/* ── Practice mode (venue.html?practice) ── */
+.join-practice{display:block;text-align:center;margin-top:14px;font-size:12px;color:rgba(255,255,255,.5)}
+.join-practice a{color:#D354A0}
+#prBar{display:none;position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:25;width:min(560px,94vw);box-sizing:border-box;padding:10px 14px;background:rgba(14,11,26,.93);border:1px solid rgba(245,197,24,.45);border-radius:14px;color:#fff;font:500 12px system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+body.practice #prBar{display:block}
+body.practice.pr-busy #prBar{display:none}
+#prBar .h{font:700 11px system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:#F5C518;margin-bottom:8px}
+#prBar .r{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#prGames button{flex:1 1 0;padding:10px 8px;font-size:13px}
+#prGames button.on{background:linear-gradient(135deg,rgba(211,84,160,.75),rgba(127,119,221,.75));border-color:transparent}
+#prList option{background:#1a1626}
+/* practice has no chat: the controls drop to the bottom of the screen */
+body.practice #chatPanel,body.practice #talkBtn,body.practice #hudTL{display:none}
+body.practice #moveCtl{bottom:18px}
+body.practice #moveHint{bottom:190px}
+body.practice #hudBR{bottom:18px}
+body.practice #gamePanel{bottom:120px}
+body.embed #prBar{top:12px}
+body.embed #roundBox{top:12px}
+body.practice:not(.pr-busy) #roundBox{top:180px}
+@media (max-width:520px){body.practice #gamePanel{bottom:18px}}
+#prBar select,#prBar button,#prBar label.f{font:600 12px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(127,119,221,.55);border-radius:8px;padding:6px 10px;cursor:pointer}
+#prBar #prGo{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:transparent}
+#prBar #prGo:disabled{opacity:.45;cursor:default}
+#prBar .song{flex:1 1 100%;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#prBar .note{margin-top:6px;color:rgba(255,255,255,.5);font-size:11px;line-height:1.4}
+#prBar input[type=file]{display:none}
 #chatPanel{position:fixed;bottom:0;left:0;right:0;height:200px;z-index:20;
   background:rgba(10,10,15,.88);border-top:1px solid rgba(127,119,221,.2);
   display:flex;flex-direction:column}
@@ -150,6 +177,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
     <button id="enterBtn">Enter Venue</button>
     <div id="joinErr" style="font-size:12px;color:#D85A30;display:none"></div>
   </div>
+  <div class="join-practice">No show on? <a href="?practice">Practise the dance games on your own</a></div>
 </div>
 
 <!-- VENUE -->
@@ -179,6 +207,28 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
     </div>
   </div>
   <div id="roundBox"></div>
+  <div id="prBar">
+    <div class="h">Dance practice · pick a mini game and a song</div>
+    <div class="r" id="prGames">
+      <button data-m="step" class="on">&#11014;&#65039; Step dance</button>
+      <button data-m="aim">&#127919; Target dance</button>
+      <button data-m="free">&#128378; Free dance</button>
+    </div>
+    <div class="r" style="margin-top:8px">
+      <select id="prList" style="flex:1 1 220px;min-width:0"><option value="">Pick a song…</option></select>
+      <label class="f" id="prFileLbl">&#127925; Song from computer<input type="file" id="prFile" accept="audio/*,.mp3,.wav,.flac,.ogg,.m4a,.aac"></label>
+      <button id="prFolder" style="display:none">&#128193; Pick Backing Tracks folder</button>
+    </div>
+    <div class="r" style="margin-top:8px">
+      <select id="prMode" style="display:none"><option value="step">Step dance</option><option value="aim">Target dance</option><option value="free">Free dance (vote)</option></select>
+      <select id="prSecs"><option value="5">5 s countdown</option><option value="10">10 s countdown</option><option value="20">20 s countdown</option><option value="30">30 s countdown</option></select>
+      <select id="prLevel"><option value="0.7">Easy</option><option value="1" selected>Normal</option><option value="1.3">Hard</option></select>
+      <select id="prBots"><option value="0">No other dancers</option><option value="3" selected>3 practice dancers</option><option value="8">8 practice dancers</option></select>
+      <button id="prGo" disabled>Start round</button>
+      <div class="song" id="prSong">Pick a song from your computer to start.</div>
+    </div>
+    <div class="note" id="prNote">Arrow keys or the pad step, D F J K or drag in free dance, Space or the X sits a round out. Points add up across practice rounds until you close the page.</div>
+  </div>
   <div id="gamePanel">
     <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameBpm"></span><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
     <canvas id="gameCv"></canvas>
@@ -1005,6 +1055,7 @@ AVATAR_COLORS.forEach(function(c,i){
   colorPicksEl.appendChild(d);
 });
 
+if(/[?&]practice\b/.test(location.search))setTimeout(function(){PRACTICE.enter();},0);
 document.getElementById("enterBtn").addEventListener("click",function(){
   var name=document.getElementById("inName").value.trim();
   var room=document.getElementById("inRoom").value.trim();
@@ -1447,7 +1498,7 @@ var held={up:false,down:false,left:false,right:false},myDance=0,lastMoveT=0;
 function danceStyle(v){v=Math.floor(+v||0);return v>=1&&v<=5?v:0;}
 function safePose(a){if(!Array.isArray(a)||a.length!==4)return null;var o=[];for(var i=0;i<4;i++){var n=+a[i];if(!isFinite(n))return null;o.push(Math.max(-3.2,Math.min(3.2,n/100)));}return o;}
 function floorMaxY(){
-  var cp=document.getElementById("chatPanel"),top=cp?cp.getBoundingClientRect().top:H;
+  var cp=document.getElementById("chatPanel"),top=cp&&getComputedStyle(cp).display!=="none"?cp.getBoundingClientRect().top:H-160;
   return Math.min(FLOOR_BOTTOM-0.02,(top-14)/H);
 }
 function anyHeld(){return held.up||held.down||held.left||held.right;}
@@ -1508,7 +1559,7 @@ document.addEventListener("keydown",function(e){
   if(d){e.preventDefault();setHeld(d,true);return;}
   if(e.key==="Enter"||e.code==="KeyT"){e.preventDefault();openTalk();return;}
   if(e.code==="Space"){e.preventDefault();if(!e.repeat)GAME.toggle();return;}
-  if(e.key==="Escape"&&GAME.mode){e.preventDefault();GAME.stop();return;}
+  if(e.key==="Escape"&&GAME.mode){e.preventDefault();GAME.stop();if(ROUND.active())ROUND.sitOut();return;}
 });
 var LIMBKEY={KeyD:0,KeyK:1,KeyF:2,KeyJ:3};   /* left arm, right arm, left leg, right leg */
 document.addEventListener("keyup",function(e){var d=KEYDIR[e.code];if(d)setHeld(d,false);var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
@@ -1809,7 +1860,7 @@ var GAME=(function(){
     mode="";myDance=0;
     document.body.classList.remove("gaming","gaming-step");
     document.getElementById("gamePanel").classList.remove("on");
-    document.getElementById("moveHint").innerHTML="Arrows or WASD to walk &middot; Enter to talk &middot; Space to dance";
+    document.getElementById("moveHint").innerHTML=PRACTICE.on?"Arrows or WASD to walk &middot; Space to dance":"Arrows or WASD to walk &middot; Enter to talk &middot; Space to dance";
     var b=document.getElementById("danceBtn");b.classList.remove("on");b.innerHTML="&#128131; Dance";
     var mm=me();if(mm){mm.dance=0;mm.pose=null;mm.combo=0;}
     if(!quiet)wsSend({type:"dance",style:0});
@@ -1925,7 +1976,7 @@ var ROUND=(function(){
     (rd.dancers||[]).forEach(function(d){
       if(d.id===myId)return;
       var b=mk("button","rb-btn"+(myVote===d.id?" on":""),d.name);b.style.borderColor=safeColor(d.color);
-      b.onclick=function(){myVote=d.id;wsSend({type:"vote",id:d.id});drawVote();};
+      b.onclick=function(){myVote=d.id;if(PRACTICE.on)PRACTICE.vote(d.id);else wsSend({type:"vote",id:d.id});drawVote();};
       row.appendChild(b);
     });
     show([mk("div","rb-head","Round "+rd.n+" · Vote for the best dancer"),row.childNodes.length?row:mk("div","rb-sub","You were the only other dancer. Waiting for the votes."),
@@ -2014,6 +2065,356 @@ var ROUND=(function(){
   function scores(m){if(rd&&m.n===rd.n&&active()){top={top:Array.isArray(m.top)?m.top.slice(0,5).map(function(x){return{id:String(x.id),name:safeText(x.name,24),score:Math.max(0,Math.floor(+x.score||0))};}):[],players:Math.max(0,Math.floor(+m.players||0))};drawPlay();}}
   window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),beatOffset:lastD===null?null:Math.round(lastD),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat}:{round:null,totals:totals};};
   return{onMsg:onMsg,scores:scores,setTotals:setTotals,pos:pos,active:active,join:join,sitOut:sitOut,reset:reset,myTotal:myTotal,get mode(){return rd?rd.mode:"";}};
+})();
+
+/* ── Song analyzer: builds one step chart for a whole song ──
+   Used for dance rounds, so every dancer gets the same steps. Given the decoded song it finds:
+     - the tempo, and the time of every beat (following the song if it speeds up or slows down);
+     - how loud each part is, compared with the rest of the song;
+     - where the drum hits and note starts are.
+   Then it writes the steps: few in quiet parts, one per beat in normal parts, extra off-beat steps
+   and double arrows in the loudest parts, and always on a real hit in the music where there is one.
+   Result: {bpm, dur, beats:[ms], steps:[[ms, lanes]]}; lanes is a bit mask, 1=left 2=down 4=up 8=right. */
+var CHART=(function(){
+  var FPS=100,NFFT=1024,LAG=14;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
+  function fft(re,im){
+    var n=re.length,i,j=0,k,m;
+    for(i=1;i<n;i++){var bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){var t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
+    for(m=2;m<=n;m<<=1){
+      var ang=-2*Math.PI/m,wr=Math.cos(ang),wi=Math.sin(ang);
+      for(i=0;i<n;i+=m){var cr=1,ci=0;for(k=0;k<m/2;k++){
+        var a=i+k,b=a+m/2,xr=re[b]*cr-im[b]*ci,xi=re[b]*ci+im[b]*cr;
+        re[b]=re[a]-xr;im[b]=im[a]-xi;re[a]+=xr;im[a]+=xi;
+        var nr=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=nr;}}
+    }
+  }
+  function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;var t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+  function pct(arr,p){var s=Array.prototype.slice.call(arr).sort(function(a,b){return a-b;});return s.length?s[Math.min(s.length-1,Math.floor(p*s.length))]:0;}
+
+  /* Step 1: for every 10 ms of the song, how much new sound started (env) and how loud it is (rms).
+     Done a slice at a time; onProgress(0..1) is called between slices so the page stays responsive. */
+  function envelope(x,sr,onProgress,done){
+    var hop=sr/FPS,N=Math.max(0,Math.floor((x.length-NFFT)/hop)),env=new Float32Array(N),rms=new Float32Array(N);
+    var win=new Float32Array(NFFT),re=new Float32Array(NFFT),im=new Float32Array(NFFT),prev=new Float32Array(NFFT/2),i=0,k;
+    for(k=0;k<NFFT;k++)win[k]=0.5-0.5*Math.cos(2*Math.PI*k/(NFFT-1));
+    var lowBins=Math.max(2,Math.round(190/(sr/NFFT))),topBin=Math.min(NFFT/2,Math.round(8000/(sr/NFFT)));
+    function slice(){
+      var end=Math.min(N,i+1500);
+      for(;i<end;i++){
+        var o=Math.floor(i*hop),e=0;
+        for(k=0;k<NFFT;k++){var v=x[o+k];re[k]=v*win[k];im[k]=0;e+=v*v;}
+        rms[i]=Math.sqrt(e/NFFT);
+        fft(re,im);
+        var f=0;
+        for(k=1;k<topBin;k++){var l=Math.log(1+1000*Math.sqrt(re[k]*re[k]+im[k]*im[k])/NFFT*4),d=l-prev[k];if(d>0)f+=d*(k<=lowBins?3:1);prev[k]=l;}
+        env[i]=f;
+      }
+      if(i<N){if(onProgress){onProgress(i/N);setTimeout(slice,0);}else slice();}
+      else done(env,rms);
+    }
+    slice();
+  }
+  /* keep only what stands out from the surrounding second, scaled so a typical hit is about 1 */
+  function standOut(env){
+    var N=env.length,e=new Float32Array(N),acc=0,half=50,i;
+    for(i=0;i<N;i++){acc+=env[i];if(i>=2*half)acc-=env[i-2*half];var v=env[i]-acc/Math.min(i+1,2*half)*1.1;e[i]=v>0?v:0;}
+    var sd=0;for(i=0;i<N;i++)sd+=e[i]*e[i];sd=Math.sqrt(sd/Math.max(1,N))||1;
+    for(i=0;i<N;i++)e[i]/=sd;
+    return e;
+  }
+  /* Step 2: the tempo. Tries 70-180 BPM in half-BPM steps on four 12-second excerpts and adds up the scores. */
+  function tempo(e){
+    var N=e.length,W=12*FPS,starts=[0.15,0.35,0.55,0.75].map(function(p){return Math.max(0,Math.min(N-W,Math.floor(p*N)));});
+    if(N<W)starts=[0],W=N;
+    var best=0,bestBpm=120;
+    for(var bpm=70;bpm<=180;bpm+=0.5){
+      var per=60/bpm*FPS,tot=0;
+      for(var s=0;s<starts.length;s++){
+        var top=0,o=starts[s];
+        for(var ph=0;ph<per;ph++){
+          var sum=0,k=0,off=0,ko=0,x,xi;
+          for(x=ph;x<W-1;x+=per){xi=o+(x|0);sum+=e[xi];k++;}
+          for(x=ph+per/2;x<W-1;x+=per){xi=o+(x|0);off+=e[xi];ko++;}
+          var sc=sum/k-(ko?0.35*off/ko:0);if(sc>top)top=sc;
+        }
+        tot+=top;
+      }
+      var pr=Math.log(bpm/120)/Math.LN2/0.55;tot*=Math.exp(-0.5*pr*pr);
+      if(tot>best){best=tot;bestBpm=bpm;}
+    }
+    return bestBpm;
+  }
+  /* Step 3: the beats. Picks the chain of moments that lands on the most hits while staying close to
+     one beat apart, so it follows a song that drifts in tempo (dynamic programming, after Ellis 2007). */
+  function beats(e,bpm){
+    var N=e.length,per=60/bpm*FPS,score=new Float32Array(N),back=new Int32Array(N),tight=6,i,j;
+    var lo=Math.round(per*0.5),hi=Math.round(per*2);
+    for(i=0;i<N;i++){
+      var bs=-1e9,bj=-1;
+      for(j=Math.max(0,i-hi);j<=i-lo;j++){var lg=Math.log((i-j)/per),v=score[j]-tight*lg*lg;if(v>bs){bs=v;bj=j;}}
+      score[i]=e[i]+(bj>=0&&bs>0?bs:0);back[i]=bj>=0&&bs>0?bj:-1;
+    }
+    /* start from the best-scoring moment in the last beat's worth of song, and walk back */
+    var end=N-1;for(i=Math.max(0,N-Math.round(per));i<N;i++)if(score[i]>score[end])end=i;
+    var out=[];for(i=end;i>=0;i=back[i]){out.push(i);if(back[i]<0)break;}
+    out.reverse();
+    /* carry the beat back to the start of the song at the same spacing (a quiet intro has nothing to lock onto) */
+    var first=out[0],gap=out.length>4?(out[4]-out[0])/4:per;
+    for(var t=first-gap;t>=0;t-=gap)out.unshift(Math.round(t));
+    return out;
+  }
+  function near(e,c,r){var m=0;for(var i=Math.max(0,c-r);i<=Math.min(e.length-1,c+r);i++)if(e[i]>m)m=e[i];return m;}
+  /* Step 4: the steps. level: 0.6 easier, 1 normal, 1.4 harder. */
+  function steps(e,rms,bt,bpm,level,seed){
+    var nb=bt.length,loud=new Float32Array(nb),i;
+    for(i=0;i<nb;i++){var a=bt[i],b=i+1<nb?bt[i+1]:a+50,s=0,n=0;for(var k=a;k<b&&k<rms.length;k++){s+=rms[k]*rms[k];n++;}loud[i]=10*Math.log10((n?s/n:0)+1e-9);}
+    /* smooth over about two bars, then place each beat between the song's quiet and loud ends */
+    var sm=new Float32Array(nb);for(i=0;i<nb;i++){var s2=0,n2=0;for(var q=Math.max(0,i-4);q<=Math.min(nb-1,i+4);q++){s2+=loud[q];n2++;}sm[i]=s2/n2;}
+    var lo=pct(sm,0.1),hi=pct(sm,0.92);if(hi-lo<3){lo=hi-3;}
+    var silent=Math.max(-60,hi-36),hit=pct(e,0.97)||1,r=rng(seed||1),out=[],prev=-1,prev2=-1,fast=bpm>150;
+    function lane(){var l;do{l=Math.floor(r()*4);}while(l===prev&&l===prev2);prev2=prev;prev=l;return l;}
+    for(i=0;i<nb;i++){
+      var t=bt[i]*10;if(i<4||t<2500)continue;                       /* lead-in: let people hear the song first */
+      if(loud[i]<silent&&sm[i]<silent+6)continue;                    /* silence: nothing to dance to */
+      var I=Math.max(0,Math.min(1,(sm[i]-lo)/(hi-lo)))*level,on=near(e,bt[i],3)/hit,mask=0;
+      if(I<0.3){if(i%2===0||on>0.6)mask=1<<lane();}                 /* quiet: every other beat */
+      else mask=1<<lane();                                           /* normal and up: every beat */
+      if(mask&&I>0.9&&on>0.55&&i%4===0&&!fast){var l2;do{l2=Math.floor(r()*4);}while((1<<l2)===mask);mask|=1<<l2;}   /* loudest: double arrows on strong hits */
+      if(mask)out.push([Math.round(t),mask]);
+      /* off-beat steps where the music has a hit between beats and the song is loud enough */
+      if(i+1<nb){
+        var h=Math.round((bt[i]+bt[i+1])/2),hs=near(e,h,2)/hit;
+        if(!fast&&((I>0.6&&hs>0.45)||(I>0.85&&hs>0.25)))out.push([h*10,1<<lane()]);
+        else if(fast&&I>1.05&&hs>0.5)out.push([h*10,1<<lane()]);
+      }
+    }
+    return out;
+  }
+  /* The whole job. buffer is a decoded AudioBuffer (or {sampleRate,length,numberOfChannels,getChannelData}).
+     opts: {level, seed, onProgress(0..1)}; cb(chart). */
+  function analyse(buffer,opts,cb){
+    opts=opts||{};
+    var sr=buffer.sampleRate,n=buffer.length,ch=buffer.numberOfChannels,x=new Float32Array(n),c,i;
+    for(c=0;c<ch;c++){var d=buffer.getChannelData(c);for(i=0;i<n;i++)x[i]+=d[i]/ch;}
+    envelope(x,sr,opts.onProgress,function(env,rms){
+      var e=standOut(env),bpm=tempo(e),bt=beats(e,bpm);
+      /* The tempo the beats actually came out at (the first guess can be off by a simple ratio such as
+         2:3, and the beat finder still lands on the real beats). If it differs, find the beats again
+         with the corrected tempo so the spacing is held properly. */
+      for(var pass=0;pass<2;pass++){
+        var gaps=[];for(i=1;i<bt.length;i++)gaps.push(bt[i]-bt[i-1]);
+        var med=pct(gaps,0.5),sum=0,cnt=0;
+        for(i=0;i<gaps.length;i++)if(Math.abs(gaps[i]/med-1)<0.15){sum+=gaps[i];cnt++;}
+        var real=cnt?60*FPS/(sum/cnt):bpm,changed=Math.abs(real/bpm-1)>0.04;
+        bpm=real;if(!changed)break;
+        bt=beats(e,bpm);
+      }
+      var st=steps(e,rms,bt,bpm,opts.level||1,opts.seed||(n%100000+Math.round(bpm*10)));
+      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return [q[0]+LAG,q[1]];})});
+    });
+  }
+  return{analyse:analyse};
+})();
+
+/* ============================================================
+   PRACTICE MODE (venue.html?practice)
+   The whole dance-round experience on your own, with no show and no server: choose a song from your
+   computer (or the performer page sends the one it has selected), and it is analysed, counted in,
+   played here, and scored against a few practice dancers who play at random skill levels. In a free
+   dance round they vote too. Results and the running standings work exactly as in a show.
+   ============================================================ */
+var PRACTICE=(function(){
+  var on=/[?&]practice\b/.test(location.search),file=null,title="",buf=null,src=null,gain=null,n=0,bots=[],totals={},job=0;
+  var scoreT=null,voteT=null,startT=null,playAt=0,chart=null,mode="step";
+  var BOTN=["Rook","Moth","Vex","Juno","Kestrel","Nyx","Pike","Sable","Wren","Ash"],BOTC=["#1D9E75","#E0A030","#8A6BD1","#E05050","#5F9EA0","#3CB371","#DB7093","#5FB4F0"];
+  function $(id){return document.getElementById(id);}
+  function note(t){$("prNote").textContent=t;}
+  function enter(){
+    myName=safeText(($("inName").value||"").trim(),24)||"You";
+    myId="me";roomCode="PRACTICE";
+    document.body.classList.add("practice");
+    document.getElementById("moveHint").innerHTML="Arrows or WASD to walk &middot; Space to dance";
+    document.getElementById("joinScreen").classList.add("hidden");
+    document.getElementById("venue").classList.add("on");
+    document.getElementById("hudRoom").textContent="Practice";
+    if(!venueStarted){venueStarted=true;initAudio();initCanvas();requestAnimationFrame(renderLoop);}
+    performer.name="Practice";
+    viewers={me:{name:myName,x:0.5,y:0.55,tx:0.5,ty:0.55,color:myColor,bubbleText:null,bubbleTime:0,dance:0}};
+    updViewerCount();
+    try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.level)$("prLevel").value=String(sv.level);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
+    ["prMode","prSecs","prLevel","prBots"].forEach(function(id){$(id).onchange=save;});
+    if(/[?&]embed\b/.test(location.search))document.body.classList.add("embed");
+    showGame();
+    Array.prototype.forEach.call(document.querySelectorAll("#prGames button"),function(b){b.onclick=function(){b.blur();$("prMode").value=b.getAttribute("data-m");showGame();save();};});
+    $("prList").onchange=function(){var t=lib[+this.value];if(this.value!==""&&t)setSong(t.file,t.name);};
+    $("prFolder").onclick=function(){try{window.parent.postMessage({uk:"practice-pick"},location.origin);}catch(e){}};
+    $("prFile").onchange=function(){if(this.files&&this.files[0]){setSong(this.files[0],this.files[0].name);$("prList").value="";}};
+    $("prGo").onclick=function(){start();};
+    /* opened from the performer page: ask it for the song and settings */
+    var host=window.parent!==window?window.parent:window.opener;
+    if(host){try{host.postMessage({uk:"practice-ready"},location.origin);}catch(e){}}
+  }
+  var lib=[];
+  function showGame(){var m=$("prMode").value;Array.prototype.forEach.call(document.querySelectorAll("#prGames button"),function(b){b.classList.toggle("on",b.getAttribute("data-m")===m);});}
+  /* the performer page's Backing Tracks, sent over when practice opens */
+  function setLib(tracks,selected){
+    lib=(tracks||[]).filter(function(t){return t&&t.file;}).slice(0,2000);
+    var sel=$("prList");sel.textContent="";
+    var o0=document.createElement("option");o0.value="";o0.textContent=lib.length?"Pick a song from your Backing Tracks ("+lib.length+")…":"No Backing Tracks loaded";sel.appendChild(o0);
+    var pick=-1;
+    lib.forEach(function(t,i){var o=document.createElement("option");o.value=String(i);o.textContent=safeText(t.name,90);sel.appendChild(o);if(selected&&t.name===selected)pick=i;});
+    $("prFolder").style.display=document.body.classList.contains("embed")?"":"none";
+    $("prFolder").textContent=lib.length?"📁 Change folder":"📁 Pick Backing Tracks folder";
+    if(pick<0&&!file&&lib.length)pick=0;
+    if(pick>=0){sel.value=String(pick);setSong(lib[pick].file,lib[pick].name);}
+  }
+  function save(){try{localStorage.setItem("uk_practice",JSON.stringify({mode:$("prMode").value,secs:+$("prSecs").value,level:+$("prLevel").value,bots:+$("prBots").value}));}catch(e){}}
+  window.addEventListener("message",function(e){
+    if(!on||e.origin!==location.origin||!e.data)return;
+    var d=e.data;
+    if(d.uk==="practice-stop"){stopAll();return;}
+    if(d.uk==="practice-lib"){if(d.mode&&/^(step|aim|free)$/.test(d.mode)){$("prMode").value=d.mode;showGame();}if(d.secs)$("prSecs").value=String(d.secs);if(d.level)$("prLevel").value=String(d.level);setLib(d.tracks,d.selected);return;}
+    if(d.uk!=="practice-song")return;
+    if(d.mode&&/^(step|aim|free)$/.test(d.mode))$("prMode").value=d.mode;
+    if(d.secs)$("prSecs").value=String(d.secs);
+    if(d.level)$("prLevel").value=String(d.level);
+    if(d.file)setSong(d.file,d.title||d.file.name);
+  });
+  function setSong(f,name){
+    file=f;buf=null;title=String(name||"Song").replace(/\.(mp3|wav|flac|ogg|m4a|aac)$/i,"").slice(0,80);
+    $("prSong").textContent="♫ "+title;$("prGo").disabled=false;
+  }
+  function decode(){
+    if(buf)return Promise.resolve(buf);
+    return file.arrayBuffer().then(function(ab){return Tone.getContext().rawContext.decodeAudioData(ab);}).then(function(b){buf=b;return b;});
+  }
+  /* practice dancers: stand on the floor, dance, and score at their own skill level */
+  function makeBots(k){
+    bots.forEach(function(b){delete viewers[b.id];});bots=[];
+    for(var i=0;i<k;i++){
+      /* spread across the floor, leaving the middle for you */
+      var id="bot"+i,side=i%2?1:-1,slot=Math.floor(i/2),per=Math.ceil(k/2),x=0.5+side*(0.14+0.32*(slot+0.5)/per),y=0.42+Math.random()*0.22;
+      bots.push({id:id,name:BOTN[i%BOTN.length],color:BOTC[i%BOTC.length],skill:0.3+Math.random()*0.65,score:0,combo:0});
+      viewers[id]={name:BOTN[i%BOTN.length],x:x,y:y,tx:x,ty:y,color:BOTC[i%BOTC.length],bubbleText:null,bubbleTime:0,dance:0};
+    }
+    updViewerCount();
+  }
+  var POSES=[[2.1,0.35,0.85,0],[-0.35,-2.1,0,-0.85],[2.55,-2.55,0.1,-0.1],[1.2,-1.2,0.75,-0.75]];
+  function botTick(perStep){
+    bots.forEach(function(b){
+      var v=viewers[b.id];if(!v)return;
+      if(mode==="free"){v.pose=[Math.random()*3-0.6,-(Math.random()*3-0.6),Math.random()*1.8-0.9,Math.random()*1.8-0.9];return;}
+      if(Math.random()<b.skill){b.combo++;b.score+=Math.round(perStep*(0.6+b.skill*0.4)*(1+Math.floor(b.combo/10)*0.1));}else b.combo=0;
+      v.pose=POSES[Math.floor(Math.random()*4)];v.combo=b.combo;v.hitT=Date.now();
+    });
+  }
+  function standings(){
+    var list=bots.map(function(b){return{id:b.id,name:b.name,score:b.score};});
+    if(GAME.mode)list.push({id:"me",name:myName,score:GAME.score});
+    list.sort(function(a,b){return b.score-a.score;});
+    ROUND.scores({n:n,top:list.slice(0,5),players:list.length});
+  }
+  function start(){
+    if(!file)return;
+    var my=++job;
+    initAudio();save();
+    try{Tone.start();Tone.getContext().rawContext.resume();}catch(e){}
+    mode=$("prMode").value;var secs=+$("prSecs").value,level=+$("prLevel").value;
+    stopSong();makeBots(+$("prBots").value);
+    document.body.classList.add("pr-busy");
+    n++;
+    var go=function(c){
+      if(my!==job)return;
+      chart=c;
+      ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,title:title,chart:c,ms:secs*1000});
+      startT=setTimeout(function(){if(my===job)playSong(my);},secs*1000);
+    };
+    ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,title:title,chart:null,ms:secs*1000+60000});
+    decode().then(function(b){
+      if(my!==job)return;
+      if(mode==="free"){go(null);return;}
+      CHART.analyse(b,{level:level},function(c){go(c);});
+    }).catch(function(e){
+      document.body.classList.remove("pr-busy");ROUND.onMsg({type:"round",phase:"off",n:n});
+      note("Couldn’t open that file ("+(e&&e.message||"unknown format")+"). Try an MP3 or WAV.");
+    });
+  }
+  function playSong(my){
+    var c=Tone.getContext().rawContext;
+    if(!gain){gain=c.createGain();gain.gain.value=0.9;gain.connect(c.destination);BEAT.tap(gain);}
+    src=c.createBufferSource();src.buffer=buf;src.connect(gain);
+    var at=c.currentTime+0.1;src.start(at);
+    src.onended=function(){if(my===job&&src)endRound(my);};
+    /* the song's first moment reaches the ears at "at" plus the speaker delay */
+    var lagMs=(at-c.currentTime+(c.outputLatency||0))*1000;
+    playAt=performance.now()+lagMs;
+    viewers.me.dance=0;bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=mode==="free"?4:5;});
+    ROUND.onMsg({type:"round",phase:"play",n:n,ts0:null,pos:-lagMs});
+    /* practice dancers move on every beat and score as they go */
+    var per=chart?60000/chart.bpm:500,perStep=chart&&chart.steps.length?(80*chart.steps.length)/Math.max(1,chart.steps.length):80;
+    clearInterval(scoreT);var k=0;
+    scoreT=setInterval(function(){if(my!==job)return;botTick(perStep);if(++k%Math.max(1,Math.round(3000/per))===0)standings();},per);
+  }
+  function stopSong(){if(src){try{src.onended=null;src.stop();}catch(e){}src=null;}clearInterval(scoreT);clearTimeout(startT);clearTimeout(voteT);}
+  function endRound(my){
+    stopSong();
+    var mine=GAME.mode?GAME.score:0,danced=!!GAME.mode;
+    if(GAME.mode)GAME.stop();
+    bots.forEach(function(b){if(viewers[b.id]){viewers[b.id].dance=0;viewers[b.id].pose=null;}});
+    if(mode==="free"){
+      var dancers=bots.map(function(b){return{id:b.id,name:b.name,color:b.color};});
+      if(danced)dancers.push({id:"me",name:myName,color:myColor});
+      if(dancers.length<2){result(my,[]);return;}
+      ROUND.onMsg({type:"round",phase:"vote",n:n,ms:15000,dancers:dancers});
+      /* practice dancers vote at random (never for themselves); you vote with the buttons */
+      var votes={};
+      bots.forEach(function(b){var opts=dancers.filter(function(d){return d.id!==b.id;});var pick=opts[Math.floor(Math.random()*opts.length)];votes[pick.id]=(votes[pick.id]||0)+1;});
+      voteWait(my,dancers,votes,Date.now()+15000);
+    }else{
+      var list=bots.map(function(b){return{id:b.id,name:b.name,score:b.score};});
+      if(danced||mine)list.push({id:"me",name:myName,score:mine});
+      result(my,list.filter(function(x){return x.score>0;}));
+    }
+  }
+  /* finish the vote when you've voted (counted once, like everyone else) or after 15 seconds */
+  var myVote=null;
+  function voteWait(my,dancers,votes,until){
+    if(my!==job)return;
+    if(myVote||Date.now()>until){
+      if(myVote)votes[myVote]=(votes[myVote]||0)+1;myVote=null;
+      result(my,dancers.map(function(d){return{id:d.id,name:d.name,score:votes[d.id]||0};}),true);
+      return;
+    }
+    voteT=setTimeout(function(){voteWait(my,dancers,votes,until);},200);
+  }
+  function result(my,list,free){
+    if(my!==job)return;
+    list.sort(function(a,b){return b.score-a.score;});
+    var PTS=[10,7,5,3],ranking=[];
+    list.forEach(function(x,i){
+      var place=i>0&&x.score===list[i-1].score?ranking[i-1].place:i+1;
+      var pts=free&&x.score===0?1:(PTS[place-1]||1);
+      ranking.push({id:x.id,name:x.name,score:x.score,pts:pts,place:place});
+      var t=totals[x.name]||(totals[x.name]={name:x.name,pts:0,wins:0});t.pts+=pts;if(place===1&&x.score>0)t.wins++;
+    });
+    var tl=Object.keys(totals).map(function(k){return totals[k];}).sort(function(a,b){return b.pts-a.pts||b.wins-a.wins;});
+    ROUND.onMsg({type:"round",phase:"result",n:n,ranking:ranking.slice(0,10),totals:tl.slice(0,10)});
+    document.body.classList.remove("pr-busy");
+    note("Round "+n+" done. Change anything and start another, or pick a new song. Points keep adding up until you close this page.");
+  }
+  /* closing the practice screen: stop the song and any round */
+  function stopAll(){job++;stopSong();if(GAME.mode)GAME.stop();ROUND.reset();document.body.classList.remove("pr-busy");bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=0;});}
+  /* the vote buttons send {type:"vote"}; in practice that's caught here */
+  function vote(id){myVote=id;}
+  /* ending early: the X, or Space, during a practice round is just sitting out, as in a show. Esc stops the round. */
+  /* Esc: out of the game first, then stops the round, then (inside the performer page) closes practice */
+  document.addEventListener("keydown",function(e){
+    if(!on||e.key!=="Escape"||e.defaultPrevented||GAME.mode||GAME.menuOpen())return;   /* one Esc does one thing */
+    if(document.body.classList.contains("pr-busy")){stopAll();note("Round stopped.");return;}
+    if(window.parent!==window){try{window.parent.postMessage({uk:"practice-close"},location.origin);}catch(x){}}
+  });
+  window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
+  return{get on(){return on;},enter:enter,vote:vote};
 })();
 
 /* ============================================================
