@@ -121,7 +121,8 @@ function cleanChart(c) {
     var st = c.steps[i]; if (!Array.isArray(st)) return null;
     var ms = intIn(st[0], 0, 3600000, -1), mask = intIn(st[1], 1, 15, 0);
     if (ms < 0 || !mask) return null;
-    steps.push([ms, mask]); arrows += (mask & 1) + (mask >> 1 & 1) + (mask >> 2 & 1) + (mask >> 3 & 1);
+    var hold = st.length > 2 ? intIn(st[2], 0, 10000, 0) : 0;   // a hold arrow: held for this many ms
+    steps.push(hold ? [ms, mask, hold] : [ms, mask]); arrows += (mask & 1) + (mask >> 1 & 1) + (mask >> 2 & 1) + (mask >> 3 & 1);
   }
   for (i = 0; i < c.beats.length; i++) { var b = intIn(c.beats[i], 0, 3600000, -1); if (b < 0) return null; beats.push(b); }
   var bpm = +c.bpm; if (!isFinite(bpm) || bpm < 30 || bpm > 300) return null;

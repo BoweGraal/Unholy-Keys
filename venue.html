@@ -1560,10 +1560,10 @@ Array.prototype.forEach.call(document.querySelectorAll("#dpad button"),function(
   var d=b.getAttribute("data-d");
   b.addEventListener("pointerdown",function(e){
     e.preventDefault();
-    if(GAME.mode==="step"){GAME.press(d);b.classList.add("held");setTimeout(function(){b.classList.remove("held");},110);return;}
+    if(GAME.mode==="step"){GAME.press(d);b.classList.add("held");try{b.setPointerCapture(e.pointerId);}catch(x){}b._step=true;return;}
     try{b.setPointerCapture(e.pointerId);}catch(x){}setHeld(d,true);
   });
-  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){b.addEventListener(ev,function(){setHeld(d,false);});});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){b.addEventListener(ev,function(){if(b._step){b._step=false;b.classList.remove("held");GAME.release(d);return;}setHeld(d,false);});});
   b.addEventListener("contextmenu",function(e){e.preventDefault();});
 });
 function openTalk(){var inp=document.getElementById("chatText");inp.focus();}
@@ -1584,7 +1584,8 @@ document.addEventListener("keydown",function(e){
     if(pick){e.preventDefault();if(!ROUND.active())GAME.start(pick);return;}
     if(e.key==="Escape"){e.preventDefault();GAME.closeMenu();return;}
   }
-  if(GAME.mode==="step"&&d){e.preventDefault();if(!e.repeat)GAME.press(d);return;}          /* arrows are dance steps */
+  if(GAME.mode==="step"&&d&&e.code.indexOf("Arrow")===0){e.preventDefault();if(!e.repeat)GAME.press(d);return;}   /* arrows are dance steps */
+  if(GAME.mode==="step"&&d){e.preventDefault();if(!e.repeat)GAME.press(d);return;}
   if(GAME.mode==="free"){
     var lk=LIMBKEY[e.code];
     if(lk!==undefined){e.preventDefault();if(!e.repeat)GAME.limbKey(lk,true);return;}
@@ -1596,7 +1597,7 @@ document.addEventListener("keydown",function(e){
   if(e.key==="Escape"&&GAME.mode){e.preventDefault();GAME.stop();if(ROUND.active())ROUND.sitOut();return;}
 });
 var LIMBKEY={KeyD:0,KeyK:1,KeyF:2,KeyJ:3};   /* left arm, right arm, left leg, right leg */
-document.addEventListener("keyup",function(e){var d=KEYDIR[e.code];if(d)setHeld(d,false);var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
+document.addEventListener("keyup",function(e){var d=KEYDIR[e.code];if(d){setHeld(d,false);if(GAME.mode==="step")GAME.release(d);}var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
 window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){setHeld(d,false);});});
 
 /* ============================================================
@@ -1709,7 +1710,7 @@ var GAME=(function(){
   /* step game */
   var LANES=["left","down","up","right"],LCOL=["#D354A0","#5FB4F0","#F5C518","#3CCB8A"],LROT=[Math.PI,Math.PI/2,-Math.PI/2,0];
   var STEP_POSE={left:[2.1,0.35,0.85,0],right:[-0.35,-2.1,0,-0.85],up:[2.55,-2.55,0.1,-0.1],down:[1.2,-1.2,0.75,-0.75]};
-  var waiting=false,notes=[],score=0,best=0,hits=0,misses=0,judge="",judgeT=0,judgeCol="#fff",flash=[0,0,0,0],lastSlot=0,lastGen=-1,prevLane=-1,prevLane2=-1,prevX=0.5,prevY=0.5,startT=0;
+  var letGos=0,lastFreeHold=-1e9,freeHoldLane=-1,freeHoldEnd=-1e9,laneDown=[false,false,false,false],waiting=false,notes=[],score=0,best=0,hits=0,misses=0,judge="",judgeT=0,judgeCol="#fff",flash=[0,0,0,0],lastSlot=0,lastGen=-1,prevLane=-1,prevLane2=-1,prevX=0.5,prevY=0.5,startT=0;
   var HIT=[[60,"PERFECT",100,"#F5C518"],[120,"GREAT",60,"#3CCB8A"],[180,"GOOD",30,"#5FB4F0"]];
   /* in a dance round: the chart everyone shares, how far through it we are, and score reporting */
   var rnd=null,rndIdx=0,sentScore=-1,scoreTimer=null;
@@ -1721,7 +1722,7 @@ var GAME=(function(){
     if(!rnd.synced){while(rndIdx<st.length&&st[rndIdx][0]<pos-150)rndIdx++;rnd.synced=true;}    /* joined part-way: skip what's gone */
     while(rndIdx<st.length&&st[rndIdx][0]<pos+ahead){
       var s=st[rndIdx];
-      for(var b=0;b<4;b++)if(s[1]&(1<<b)){var h=spot(rndIdx*4+b);notes.push({ms:s[0],lane:b,x:0.14+h[0]*0.72,y:0.12+h[1]*0.76,t:0,j:"",jt:0});}
+      for(var b=0;b<4;b++)if(s[1]&(1<<b)){var h=spot(rndIdx*4+b);notes.push({ms:s[0],lane:b,x:0.14+h[0]*0.72,y:0.12+h[1]*0.76,t:0,j:"",jt:0,hold:mode==="step"&&s[2]>0?+s[2]:0});}
       rndIdx++;
     }
     /* each step is due when the song, as heard here, reaches it */
@@ -1822,10 +1823,14 @@ var GAME=(function(){
       if(Math.random()>p)continue;
       var lane;do{lane=Math.floor(Math.random()*4);}while(lane===prevLane&&lane===prevLane2);
       prevLane2=prevLane;prevLane=lane;
+      /* free play: now and then a hold of two beats, once you've got a combo going */
+      var hold=0;
+      if(mode==="step"&&onBeat&&combo>=6&&t-lastFreeHold>bt.period*10&&Math.random()<0.18){hold=bt.period*1.85;lastFreeHold=t;freeHoldLane=lane;freeHoldEnd=t+hold;}
       /* target game: a spot on the pad, not too close to the one before */
       var tx,ty2,tries=0;do{tx=0.14+Math.random()*0.72;ty2=0.12+Math.random()*0.76;tries++;}while(tries<8&&Math.hypot(tx-prevX,ty2-prevY)<0.3);
       prevX=tx;prevY=ty2;
-      notes.push({t:t,lane:lane,x:tx,y:ty2,j:"",jt:0});
+      if(!hold&&t<freeHoldEnd&&lane===freeHoldLane)lane=(lane+1+Math.floor(Math.random()*3))%4;   /* keep the held arrow clear */
+      notes.push({t:t,lane:lane,x:tx,y:ty2,j:"",jt:0,hold:hold});
     }
   }
   function press(dir){
@@ -1833,11 +1838,34 @@ var GAME=(function(){
     var lane=LANES.indexOf(dir);if(lane<0)return;
     var now=performance.now(),bestN=null,bd=1e9;
     for(var i=0;i<notes.length;i++){var n=notes[i];if(n.j||n.lane!==lane)continue;var d=Math.abs(n.t-now);if(d<bd){bd=d;bestN=n;}}
-    flash[lane]=now;
+    flash[lane]=now;laneDown[lane]=true;
     if(!bestN||bd>HIT[2][0])return;                 /* nothing close enough: no penalty for a stray tap */
     grade(bestN,bd,now);
+    if(bestN.hold>0){bestN.holding=true;bestN.j="";bestN.headJ=judge;}          /* a hold: keep it down until the tail ends */
     setPose(STEP_POSE[dir],true);sendPose(true);
     foot();
+  }
+  /* an arrow key, pad button or lane let go */
+  function release(dir){
+    var lane=LANES.indexOf(dir);if(lane<0)return;
+    laneDown[lane]=false;
+    var now=performance.now();
+    for(var i=0;i<notes.length;i++){var n=notes[i];
+      if(n.holding&&n.lane===lane){
+        if(now<n.t+n.hold-120)holdFail(n,now);          /* let go too early */
+        else holdDone(n,now);                            /* close enough to the end */
+      }
+    }
+  }
+  function holdDone(n,now){
+    n.holding=false;n.j="OK";n.jt=now;combo++;hits++;if(combo>best)best=combo;
+    score+=Math.round((40+Math.round(n.hold/100)*5)*(1+Math.floor(combo/10)*0.1));
+    judge="OK!";judgeT=now;judgeCol="#3CCB8A";foot();applyToMe(true);sendPose(true);
+  }
+  function holdFail(n,now){
+    n.holding=false;n.j="LETGO";n.jt=now;misses++;letGos++;
+    if(combo>0){combo=0;setPose(REST);sendPose(true);}
+    judge="LET GO";judgeT=now;judgeCol="#E05050";foot();
   }
   function grade(n,bd,now){
     for(var i=0;i<HIT.length;i++)if(bd<=HIT[i][0]){
@@ -1847,14 +1875,16 @@ var GAME=(function(){
     }
   }
   function expire(now){
+    /* holds still down at the end of their tail are done */
+    for(var hi=0;hi<notes.length;hi++){var hn=notes[hi];if(hn.holding){if(!laneDown[hn.lane]&&now<hn.t+hn.hold-120)holdFail(hn,now);else if(now>=hn.t+hn.hold)holdDone(hn,now);}}
     /* anything that got past unhit is a miss, and a miss ends the combo */
     var missed=false;
-    for(var i=0;i<notes.length;i++){var n=notes[i];if(!n.j&&now-n.t>HIT[2][0]){n.j="MISS";n.jt=now;misses++;missed=true;}}
+    for(var i=0;i<notes.length;i++){var n=notes[i];if(!n.j&&!n.holding&&!n.headJ&&now-n.t>HIT[2][0]){n.j="MISS";n.jt=now;misses++;missed=true;}}
     if(missed){
       if(combo>0){combo=0;setPose(REST);sendPose(true);}
       judge="MISS";judgeT=now;judgeCol="#E05050";foot();
     }
-    notes=notes.filter(function(n){return now-n.t<700;});
+    notes=notes.filter(function(n){return n.holding||now-(n.t+(n.hold||0))<700;});
   }
   /* the BIG MOMENT banner, separate from PERFECT/GREAT so a hit doesn't wipe it */
   var bigT=-1e9;
@@ -1934,8 +1964,25 @@ var GAME=(function(){
     /* big faint combo behind the arrows */
     if(combo>=5){g.fillStyle="rgba(255,255,255,.07)";g.font="800 "+Math.round(CW*0.42)+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(combo,CW/2,CH*0.6);g.textBaseline="alphabetic";}
     /* arrows rise from the bottom and should be hit as they reach the outlines */
+    var span=CH-ty+sz;
+    /* hold tails first, under the arrow heads */
     for(i=0;i<notes.length;i++){
-      n=notes[i];var x=CW*(n.lane+0.5)/4,y=ty+(n.t-now)/tv*(CH-ty+sz);
+      n=notes[i];if(!(n.hold>0))continue;
+      var hx=CW*(n.lane+0.5)/4,headY=n.holding?ty:ty+(n.t-now)/tv*span,endY=ty+(n.t+n.hold-now)/tv*span;
+      if(n.j==="OK"||endY<=headY)continue;
+      var gone=n.j==="MISS"||n.j==="LETGO",tw=sz*0.9;
+      var grd=g.createLinearGradient(0,headY,0,endY);
+      grd.addColorStop(0,gone?"rgba(90,90,90,.45)":n.holding?LCOL[n.lane]:LCOL[n.lane]+"bb");grd.addColorStop(1,gone?"rgba(90,90,90,.15)":LCOL[n.lane]+"55");
+      g.fillStyle=grd;g.beginPath();
+      if(g.roundRect)g.roundRect(hx-tw/2,headY,tw,Math.min(CH+20,endY)-headY,tw/2);else g.rect(hx-tw/2,headY,tw,Math.min(CH+20,endY)-headY);
+      g.fill();
+      if(n.holding){g.save();g.globalCompositeOperation="lighter";g.fillStyle="rgba(255,255,255,"+(0.18+0.12*Math.sin(now*0.03))+")";g.fill();g.restore();
+        arrow(hx,ty,sz*1.08,LROT[n.lane],LCOL[n.lane],"#fff",3);}
+    }
+    for(i=0;i<notes.length;i++){
+      n=notes[i];var x=CW*(n.lane+0.5)/4,y=ty+(n.t-now)/tv*span;
+      if(n.holding)continue;
+      if(n.j==="LETGO"){if(y>-sz&&y<CH+sz){g.globalAlpha=0.3;arrow(x,Math.max(ty,y),sz,LROT[n.lane],"#555","#333",2);g.globalAlpha=1;}continue;}
       if(n.j&&n.j!=="MISS"){
         var a=1-(now-n.jt)/220;if(a<=0)continue;
         g.globalAlpha=a;arrow(x,ty,sz*(1+(1-a)*0.9),LROT[n.lane],null,LCOL[n.lane],3);g.globalAlpha=1;continue;
@@ -2001,7 +2048,7 @@ var GAME=(function(){
   function start(m,round){
     if(m!=="free"&&m!=="step"&&m!=="aim")return;
     if(mode)stop(true);
-    rnd=round||null;rndIdx=0;sentScore=-1;
+    rnd=round||null;rndIdx=0;sentScore=-1;laneDown=[false,false,false,false];lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
     mode=m;myDance=m==="free"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
@@ -2048,7 +2095,7 @@ var GAME=(function(){
   pad.addEventListener("pointerdown",function(e){
     e.preventDefault();
     var p=ptr(e);
-    if(mode==="step"){press(LANES[Math.max(0,Math.min(3,Math.floor(p[0]/CW*4)))]);return;}
+    if(mode==="step"){var ln=LANES[Math.max(0,Math.min(3,Math.floor(p[0]/CW*4)))];laneOf[e.pointerId]=ln;try{pad.setPointerCapture(e.pointerId);}catch(x){}press(ln);return;}
     if(mode==="aim"){tapAim(p);return;}
     if(mode!=="free")return;
     /* grab whichever hand or foot is nearest that another finger isn't already holding */
@@ -2059,15 +2106,16 @@ var GAME=(function(){
     dragTo(bi,p);
   });
   pad.addEventListener("pointermove",function(e){if(mode==="free"&&grab[e.pointerId]!==undefined){e.preventDefault();dragTo(grab[e.pointerId],ptr(e));}});
-  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){pad.addEventListener(ev,function(e){delete grab[e.pointerId];});});
+  var laneOf={};
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){pad.addEventListener(ev,function(e){delete grab[e.pointerId];if(laneOf[e.pointerId]){release(laneOf[e.pointerId]);delete laneOf[e.pointerId];}});});
   pad.addEventListener("contextmenu",function(e){e.preventDefault();});
   window.addEventListener("blur",function(){for(var i=0;i<4;i++)if(keyHeld[i])limbKey(i,false);});
   window.ukDance=function(){
     var now=performance.now();
-    return{mode:mode,round:!!rnd,chartSteps:rnd&&rnd.chart?rnd.chart.steps.length:0,bigMoments:rnd&&rnd.chart&&rnd.chart.peaks?rnd.chart.peaks.map(function(p){return [Math.round(p[0]/100)/10,Math.round(p[1]/100)/10];}):[],bigMomentShowing:now-bigT<1600,songPos:rnd?Math.round(ROUND.pos()):null,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
-      upcoming:notes.filter(function(n){return !n.j;}).map(function(n){return{dir:LANES[n.lane],inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};})};
+    return{mode:mode,letGo:letGos,round:!!rnd,chartSteps:rnd&&rnd.chart?rnd.chart.steps.length:0,bigMoments:rnd&&rnd.chart&&rnd.chart.peaks?rnd.chart.peaks.map(function(p){return [Math.round(p[0]/100)/10,Math.round(p[1]/100)/10];}):[],bigMomentShowing:now-bigT<1600,songPos:rnd?Math.round(ROUND.pos()):null,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
+      upcoming:notes.filter(function(n){return !n.j&&!n.holding&&!n.headJ;}).map(function(n){var o={dir:LANES[n.lane],inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};if(n.hold>0)o.holdMs=Math.round(n.hold);return o;}),holding:notes.filter(function(n){return n.holding;}).map(function(n){return{dir:LANES[n.lane],leftMs:Math.round(n.t+n.hold-now)};})};
   };
-  return{start:start,stop:stop,toggle:toggle,press:press,limbKey:limbKey,menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
+  return{start:start,stop:stop,toggle:toggle,press:press,release:release,limbKey:limbKey,menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
 })();
 
 /* ============================================================
@@ -2289,8 +2337,9 @@ var ROUND=(function(){
    Then it writes the steps, only where the music has a steady beat (a spoken intro or a free-time
    opening gets none): few in quiet parts, one per beat in normal parts, extra off-beat steps
    and double arrows in the loudest parts, and always on a real hit in the music where there is one.
-   Result: {bpm, dur, beats:[ms], steps:[[ms, lanes]], peaks:[[startMs,endMs]]}; lanes is a bit mask,
-   1=left 2=down 4=up 8=right; peaks are the big moments, where the steps get hardest. */
+   Result: {bpm, dur, beats:[ms], steps:[[ms, lanes] or [ms, lane, holdMs]], peaks:[[startMs,endMs]]};
+   lanes is a bit mask, 1=left 2=down 4=up 8=right; a third number makes it a hold arrow (one lane, held
+   for that many ms); peaks are the big moments, where the steps get hardest. */
 var CHART=(function(){
   var FPS=100,NFFT=1024,LAG=14,PULSE=0.55;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
   function fft(re,im){
@@ -2433,7 +2482,7 @@ var CHART=(function(){
       if(up){if(start<0)start=i;gap=0;}
       else if(start>=0){gap++;if(gap>4||i===nb){var end=i-gap;if(end-start+1>=8)peaks.push([start,end]);start=-1;gap=0;}}
     }
-    return{E:E,loud:loud,peaks:peaks};
+    return{E:E,loud:loud,peaks:peaks,chroma:ch};
   }
   /* Step 5: the steps. level: 0.7 easier, 1 normal, 1.3 harder.
      calm parts:      every other beat, small moves between neighbouring arrows
@@ -2444,25 +2493,41 @@ var CHART=(function(){
      with a cap on arrows per second so it stays playable (lower for fast songs). */
   var RUNS=[[0,1,3,2],[3,2,0,1],[0,2,3,1],[3,1,0,2],[0,1,2,3],[3,2,1,0],[1,0,2,3],[2,3,1,0]];
   function steps(e,rms,ft,bt,bpm,level,seed){
-    var nb=bt.length,ii=intensity(e,rms,ft,bt),E=ii.E,loud=ii.loud,i;
+    var nb=bt.length,ii=intensity(e,rms,ft,bt),E=ii.E,loud=ii.loud,CHR=ii.chroma,i;
+    /* Holds: an arrow with a tail, held down until the tail ends. They go where the music holds a sound:
+       the harmony stays the same and the volume stays up for the next 2 (or 4) beats. */
+    function cosb(a,b){var d=0,x=0,y=0;for(var q=0;q<12;q++){d+=a[q]*b[q];x+=a[q]*a[q];y+=b[q]*b[q];}return x>0&&y>0?d/Math.sqrt(x*y):0;}
+    function holds(i,k){
+      if(i+k>=nb)return false;
+      var sum=0;
+      for(var j=1;j<=k;j++){var c=cosb(CHR[i],CHR[i+j]);if(c<0.8||loud[i+j]<loud[i]-5)return false;sum+=c;}
+      return sum/k>=0.88;                                             /* the same chord or note, near enough, all the way */
+    }
+    var heldLane=-1,heldUntil=-1,lastHoldBeat=-99,holdQuiet=false;
     var inPeak=new Uint8Array(nb);ii.peaks.forEach(function(p){for(var z=p[0];z<=p[1];z++)inPeak[z]=1;});
     var lmax=pct(loud,0.92),silent=Math.max(-60,lmax-36),hit=pct(e,0.97)||1,r=rng(seed||1),out=[],prev=-1,prev2=-1,fast=bpm>150,groove=false;
     var cap=(fast?3.6:5.2)*Math.max(0.75,Math.min(1.3,level)),recent=[],run=null,runAt=0;
     function lane(tier){
+      var l,tries=0;
+      do{l=pick(tier);tries++;}while(l===heldLane&&tries<8);         /* never on the arrow that's being held */
+      if(l===heldLane)l=(l+1)%4;
+      prev2=prev;prev=l;return l;
+    }
+    function pick(tier){
       var l;
       if(tier===3){                                                   /* big moments: flowing runs across the pad */
         if(!run||runAt>=run.length){run=RUNS[Math.floor(r()*RUNS.length)];runAt=0;}
         l=run[runAt++];if(l===prev&&l===prev2)l=(l+2)%4;
       }else if(tier===0&&prev>=0){l=Math.max(0,Math.min(3,prev+(r()<0.5?-1:1)));if(r()<0.25)l=prev;}   /* calm: neighbouring arrows */
       else{do{l=Math.floor(r()*4);}while(l===prev&&l===prev2);}
-      prev2=prev;prev=l;return l;
+      return l;
     }
     function room(t,n){while(recent.length&&recent[0]<t-1000)recent.shift();return recent.length+n<=cap;}
     function bits(m){return (m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1);}
     /* the cap limits the extras: a step on the beat is always placed (a double that doesn't fit
        becomes a single), off-beat steps only go in when there's room */
-    function add(t,mask,first,onBeat){var n=bits(mask);if(!room(t,n)){if(!onBeat)return false;if(n>1){mask=1<<first;n=1;}}for(var z=0;z<n;z++)recent.push(t);out.push([Math.round(t),mask]);return true;}
-    function two(first,tier){var l2;do{l2=Math.floor(r()*4);}while(l2===first||(tier<3&&Math.abs(l2-first)===2&&r()<0.5));return (1<<first)|(1<<l2);}
+    function add(t,mask,first,onBeat,hold){var n=bits(mask);if(!room(t,n)){if(!onBeat)return false;if(n>1){mask=1<<first;n=1;}}for(var z=0;z<n;z++)recent.push(t);out.push(hold?[Math.round(t),mask,Math.round(hold)]:[Math.round(t),mask]);return true;}
+    function two(first,tier){var l2,g=0;do{l2=Math.floor(r()*4);g++;}while((l2===first||l2===heldLane||(tier<3&&Math.abs(l2-first)===2&&r()<0.5))&&g<20);if(l2===first||l2===heldLane)return 1<<first;return (1<<first)|(1<<l2);}
     for(i=0;i<nb;i++){
       var t=bt[i]*10;if(i<4||t<2500)continue;                       /* lead-in: let people hear the song first */
       if(loud[i]<silent)continue;                                     /* silence: nothing to dance to */
@@ -2470,7 +2535,20 @@ var CHART=(function(){
       var on=near(e,bt[i],3)/hit;
       if(!groove){if(on<0.3)continue;groove=true;}                    /* after a stretch with no beat, start again on a real hit */
       var D=E[i]*level+(inPeak[i]?0.25:0),tier=D<0.3?0:D<0.6?1:D<0.85||!inPeak[i]?2:3,bar=i%4===0;
-      if(tier===2&&D>=0.85&&!inPeak[i])tier=2;
+      if(heldLane>=0&&i>=heldUntil)heldLane=-1;                       /* the hold has ended */
+      /* during a hold in a calm or normal part, just hold; busier parts keep other arrows coming */
+      if(heldLane>=0&&holdQuiet)continue;
+      /* start a hold? on the beat, where the music holds, not too often, not on the very first beats back */
+      if(heldLane<0&&i-lastHoldBeat>=(tier>=2?8:12)&&(bar||i%2===0)&&level>=0.7){
+        var k=bpm<=110?2:(bpm>150?4:(tier>=2?2:4));
+        var len=i+k<nb?(bt[i+k]-bt[i])*10*0.92:0,perMs=60000/bpm;     /* ends just before the next step there */
+        if(len>=perMs*1.5&&len<=perMs*4.2&&holds(i,k)&&on>0.25){
+          var hl=lane(tier);
+          if(add(t,1<<hl,hl,true,len)){heldLane=hl;heldUntil=i+k;lastHoldBeat=i;holdQuiet=tier<=1;
+            if(i+1<nb&&tier>=2){var h0=Math.round((bt[i]+bt[i+1])/2),hs0=near(e,h0,2)/hit;if(!fast&&tier===3&&hs0>0.25&&room(h0*10,1)){var lo0=lane(tier);add(h0*10,1<<lo0,lo0,false);}}
+            continue;}
+        }
+      }
       /* on the beat */
       if(tier>0||i%2===0||on>0.6){
         var l=lane(tier),mask=1<<l;
@@ -2507,7 +2585,7 @@ var CHART=(function(){
         bt=beats(e,bpm);
       }
       var res=steps(e,rms,ft,bt,bpm,opts.level||1,opts.seed||(n%100000+Math.round(bpm*10))),st=res.steps;
-      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return [q[0]+LAG,q[1]];}),peaks:res.peaks});
+      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks});
     });
   }
   return{analyse:analyse};

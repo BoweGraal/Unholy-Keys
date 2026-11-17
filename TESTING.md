@@ -189,7 +189,18 @@ Steps are kept in time by the live sound itself, so rounds need **Share sound** 
 
 In the console on the audience page, `ukDevice()` shows what it decided the device is.
 
+**Mobile player.** The Mobile button turns the page into a one-hand player for phones: slide up and down the bar on the right to play, and tap the mode box to switch Impact, Sustain and so on. The page tells iPhones it plays music, so it isn't muted by the silent switch. While an instrument is still downloading, notes play a soft stand-in sound, and the bottom of the screen says it's loading.
+
 **Music videos (karaoke).** Backing Tracks takes music videos as well as songs: MP4, WebM, MOV, M4V and MKV, from a folder, from **Add files**, or dragged onto the panel (files or whole folders). A video's sound plays like any backing track, so the audience hears it, the volume slider works and dance rounds can use it. The picture is only for you: it shows in the Music tab and behind the visuals in jam mode. The audience sees the jam visuals, never the video. MKV files only work if Chrome can play them; MP4 is the safe choice.
+
+**Hold arrows (Step dance).** Some arrows have a tail: hit the arrow and keep it held (key, pad button or finger on the lane) until the tail ends. Let go early and it counts as a miss and ends your combo; hold to the end for an **OK!** and bonus points.
+- **Where they go:** on notes the music holds, like a long chord or sustained note.
+- **Calm parts:** just the hold.
+- **Busier parts and big moments:** other arrows keep coming while you hold, but never on the held arrow.
+- **Free play:** the occasional two-beat hold once you have a combo going.
+- **Easy:** no holds in rounds.
+
+**Steps follow the song's intensity.** Rounds and practice map how intense every part of the song is: loudness, brightness, how busy the hits are, and whether that part comes back like a chorus. Calm parts get sparse, easy steps; energetic parts add off-beats and doubles; the song's big moments get runs and doubles at every bar start, with a 🔥 BIG MOMENT banner as one begins. Talking or beatless intros get no steps.
 
 **Streak power-ups.** In the Step and Target games a long combo charges the dancer up, and everyone sees it, including you on the audience panel:
 - **10:** white-blue charging aura
