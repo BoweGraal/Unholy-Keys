@@ -66,6 +66,22 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #talkBtn.on{border-color:#D354A0;color:#D354A0}
 #moveHint{position:fixed;left:14px;bottom:384px;z-index:22;font:600 11px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.4);pointer-events:none}
 @media (max-width:520px){#dpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px)}#actBtns button{min-width:92px;padding:10px 12px}#moveHint{display:none}}
+/* ── Dance games: the choice menu and the game pad ── */
+#actBtns{position:relative}
+#danceMenu{display:none;position:absolute;left:0;bottom:100%;margin-bottom:8px;flex-direction:column;gap:6px;z-index:24}
+#danceMenu.on{display:flex}
+#danceMenu button{white-space:nowrap;min-width:168px;background:rgba(28,22,48,.96);border-color:rgba(211,84,160,.6)}
+#danceMenu button:hover{background:linear-gradient(135deg,rgba(211,84,160,.6),rgba(127,119,221,.6))}
+#danceMenu kbd{float:right;margin-left:10px;font:600 10px system-ui,sans-serif;opacity:.55;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:1px 5px}
+#gamePanel{display:none;position:fixed;right:14px;bottom:330px;z-index:23;width:250px;background:rgba(12,10,22,.9);border:1px solid rgba(127,119,221,.5);border-radius:14px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#gamePanel.on{display:block}
+#gameHdr{display:flex;align-items:center;gap:8px;white-space:nowrap;padding:8px 8px 8px 12px;font:700 13px system-ui,sans-serif;color:#fff}
+#gameBpm{margin-left:auto;font:600 11px system-ui,sans-serif;color:rgba(255,255,255,.6)}
+#gameClose{font:700 13px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.1);border:0;border-radius:8px;width:28px;height:28px;cursor:pointer}
+#gameClose:hover{background:rgba(224,80,80,.6)}
+#gameCv{display:block;width:100%;height:clamp(210px,calc(100vh - 500px),320px);touch-action:none;cursor:pointer}
+#gameFoot{padding:6px 10px 9px;font:600 11px system-ui,sans-serif;color:rgba(255,255,255,.6);text-align:center}
+@media (max-width:520px){#gamePanel{right:8px;bottom:208px;width:200px}#gameCv{height:clamp(200px,calc(100vh - 560px),270px)}body.gaming #actBtns,body.gaming #hudBR{display:none}}
 #chatPanel{position:fixed;bottom:0;left:0;right:0;height:200px;z-index:20;
   background:rgba(10,10,15,.88);border-top:1px solid rgba(127,119,221,.2);
   display:flex;flex-direction:column}
@@ -133,7 +149,17 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
     <div id="actBtns">
       <button id="talkBtn" title="Say something (Enter)">&#128172; Talk</button>
       <button id="danceBtn" title="Dance (Space)">&#128131; Dance</button>
+      <div id="danceMenu">
+        <button data-g="free" title="Move your character's arms and legs yourself">&#128378; Free dance <kbd>1</kbd></button>
+        <button data-g="step" title="Hit the arrows in time with the music">&#11014;&#65039; Step dance <kbd>2</kbd></button>
+        <button data-g="aim" title="Click the targets in time with the music">&#127919; Target dance <kbd>3</kbd></button>
+      </div>
     </div>
+  </div>
+  <div id="gamePanel">
+    <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameBpm"></span><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
+    <canvas id="gameCv"></canvas>
+    <div id="gameFoot"></div>
   </div>
   <div id="chatPanel">
     <div id="chatMsgs"></div>
@@ -1105,7 +1131,7 @@ function handleMsg(msg){
         var vx=safeNum(v.x,0.5),vy=safeNum(v.y,FLOOR_TOP+0.1);
         viewers[v.id]={name:safeText(v.name,24),x:vx,y:vy,
           tx:vx,ty:vy,color:safeColor(v.color),
-          bubbleText:null,bubbleTime:0,dance:danceStyle(v.dance)};
+          bubbleText:null,bubbleTime:0,dance:danceStyle(v.dance),pose:safePose(v.pose),combo:Math.max(0,Math.min(9999,Math.floor(+v.combo||0)))};
       });
     }
     /* after a reconnect, carry on dancing */
@@ -1145,6 +1171,10 @@ function handleMsg(msg){
   }
   else if(t==="perf-name"){
     performer.name=safeText(msg.name,24)||"Performer";
+  }
+  else if(t==="pose"){
+    var pv=viewers[msg.id],pp=safePose(msg.a);
+    if(pv&&pp&&msg.id!==myId){pv.pose=pp;pv.combo=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pv.hitT=Date.now();}
   }
   else if(t==="dance"){
     if(viewers[msg.id])viewers[msg.id].dance=danceStyle(msg.style);
@@ -1263,7 +1293,7 @@ function sendChat(){
    ============================================================ */
 var BEAT=(function(){
   var an=null,buf=null,prev=null,T=[],V=[],timer=null,lastRun=0,off=0;
-  var est={bpm:0,t0:0,conf:0,at:0},cand=0,candN=0,gen=0,runs=0,lastConf=0,lastRaw=0;
+  var est={bpm:0,t0:0,conf:0,at:0},cand=0,candN=0,phCand=0,phN=0,gen=0,runs=0,lastConf=0,lastRaw=0;
   var STEP=0.01,WIN=8,MINWIN=4,LO=70,HI=180;
   function actx(){return Tone.getContext().rawContext;}
   function ensure(){
@@ -1340,6 +1370,15 @@ var BEAT=(function(){
       var bpmN=est.bpm+(bestBpm-est.bpm)*0.3,perS=60/bpmN;
       var d=(beatT-est.t0)%perS;if(d>perS/2)d-=perS;if(d<-perS/2)d+=perS;
       var anchor=est.t0+Math.round((tEnd-est.t0)/perS)*perS;   /* carry the grid forward to now */
+      if(Math.abs(d)>perS*0.18){
+        /* the beat seems to sit somewhere quite different: don't drift toward it (that leaves the grid
+           between two answers); jump only if the same new position wins three times running */
+        var dd=d-phCand;if(phN&&Math.abs(dd)<perS*0.1)phN++;else{phCand=d;phN=1;}
+        if(phN>=3){set(bpmN,anchor+d,conf,tEnd);gen++;phN=0;}
+        else set(bpmN,anchor,est.conf,est.at);
+        cand=0;candN=0;return;
+      }
+      phN=0;
       set(bpmN,anchor+d*0.35,conf,tEnd);
       cand=0;candN=0;return;
     }
@@ -1370,7 +1409,8 @@ var BEAT=(function(){
    Talk opens the chat box; Dance toggles a dance everyone in the venue sees.
    ============================================================ */
 var held={up:false,down:false,left:false,right:false},myDance=0,lastMoveT=0;
-function danceStyle(v){v=Math.floor(+v||0);return v>=1&&v<=3?v:0;}
+function danceStyle(v){v=Math.floor(+v||0);return v>=1&&v<=5?v:0;}
+function safePose(a){if(!Array.isArray(a)||a.length!==4)return null;var o=[];for(var i=0;i<4;i++){var n=+a[i];if(!isFinite(n))return null;o.push(Math.max(-3.2,Math.min(3.2,n/100)));}return o;}
 function floorMaxY(){
   var cp=document.getElementById("chatPanel"),top=cp?cp.getBoundingClientRect().top:H;
   return Math.min(FLOOR_BOTTOM-0.02,(top-14)/H);
@@ -1398,21 +1438,14 @@ function setHeld(d,on){
 }
 Array.prototype.forEach.call(document.querySelectorAll("#dpad button"),function(b){
   var d=b.getAttribute("data-d");
-  b.addEventListener("pointerdown",function(e){e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(x){}setHeld(d,true);});
+  b.addEventListener("pointerdown",function(e){
+    e.preventDefault();
+    if(GAME.mode==="step"){GAME.press(d);b.classList.add("held");setTimeout(function(){b.classList.remove("held");},110);return;}
+    try{b.setPointerCapture(e.pointerId);}catch(x){}setHeld(d,true);
+  });
   ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){b.addEventListener(ev,function(){setHeld(d,false);});});
   b.addEventListener("contextmenu",function(e){e.preventDefault();});
 });
-function setDance(style){
-  myDance=danceStyle(style);
-  var b=document.getElementById("danceBtn");
-  b.classList.toggle("on",!!myDance);
-  b.innerHTML=myDance?"&#128131; Stop":"&#128131; Dance";
-  if(myId&&viewers[myId])viewers[myId].dance=myDance;
-  wsSend({type:"dance",style:myDance});
-}
-/* each new dance picks one of three moves */
-function toggleDance(){setDance(myDance?0:1+Math.floor(Math.random()*3));}
-document.getElementById("danceBtn").addEventListener("click",function(e){e.currentTarget.blur();toggleDance();});
 function openTalk(){var inp=document.getElementById("chatText");inp.focus();}
 document.getElementById("talkBtn").addEventListener("click",function(e){e.preventDefault();openTalk();});
 var chatInp=document.getElementById("chatText");
@@ -1426,12 +1459,331 @@ document.addEventListener("keydown",function(e){
   if(tn==="INPUT"||tn==="TEXTAREA"||tn==="SELECT")return;
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   var d=KEYDIR[e.code];
+  if(GAME.menuOpen()){
+    var pick={Digit1:"free",Digit2:"step",Digit3:"aim",Numpad1:"free",Numpad2:"step",Numpad3:"aim"}[e.code];
+    if(pick){e.preventDefault();GAME.start(pick);return;}
+    if(e.key==="Escape"){e.preventDefault();GAME.closeMenu();return;}
+  }
+  if(GAME.mode==="step"&&d){e.preventDefault();if(!e.repeat)GAME.press(d);return;}          /* arrows are dance steps */
+  if(GAME.mode==="free"){
+    var lk=LIMBKEY[e.code];
+    if(lk!==undefined){e.preventDefault();if(!e.repeat)GAME.limbKey(lk,true);return;}
+    if(d&&e.code.indexOf("Arrow")!==0)return;                                                  /* letters are limbs here; the arrow keys still walk */
+  }
   if(d){e.preventDefault();setHeld(d,true);return;}
   if(e.key==="Enter"||e.code==="KeyT"){e.preventDefault();openTalk();return;}
-  if(e.code==="Space"){e.preventDefault();if(!e.repeat)toggleDance();return;}
+  if(e.code==="Space"){e.preventDefault();if(!e.repeat)GAME.toggle();return;}
+  if(e.key==="Escape"&&GAME.mode){e.preventDefault();GAME.stop();return;}
 });
-document.addEventListener("keyup",function(e){var d=KEYDIR[e.code];if(d)setHeld(d,false);});
+var LIMBKEY={KeyD:0,KeyK:1,KeyF:2,KeyJ:3};   /* left arm, right arm, left leg, right leg */
+document.addEventListener("keyup",function(e){var d=KEYDIR[e.code];if(d)setHeld(d,false);var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
 window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){setHeld(d,false);});});
+
+/* ============================================================
+   DANCE GAMES
+   Dance opens a choice of two games. Everyone in the venue sees your character move.
+     Free dance: drag the hands and feet of the big puppet (one finger each), or use D F J K.
+     Step dance: arrows rise up the lanes in time with the music (tempo comes from BEAT above);
+                 hit each one as it reaches the top with the arrow pad or the arrow keys.
+     Target dance: like an aim trainer. Targets pop up on the pad on the beat; click or tap each
+                 one as its ring closes on it.
+   Limb angles are radians from hanging straight down: [left arm, right arm, left leg, right leg].
+   For troubleshooting: type ukDance() in the browser console.
+   ============================================================ */
+var GAME=(function(){
+  var REST=[0.15,-0.15,0.12,-0.12],RAISED=[2.6,-2.6,0.9,-0.9],LEGMAX=1.15;
+  var mode="",cv=null,g=null,CW=0,CH=0,raf=0;
+  var pose=REST.slice(),keyT=[null,null,null,null],keyHeld=[false,false,false,false],grab={},combo=0;
+  var lastSend=0,sendTimer=null,lastSent="";
+  /* step game */
+  var LANES=["left","down","up","right"],LCOL=["#D354A0","#5FB4F0","#F5C518","#3CCB8A"],LROT=[Math.PI,Math.PI/2,-Math.PI/2,0];
+  var STEP_POSE={left:[2.1,0.35,0.85,0],right:[-0.35,-2.1,0,-0.85],up:[2.55,-2.55,0.1,-0.1],down:[1.2,-1.2,0.75,-0.75]};
+  var notes=[],score=0,best=0,hits=0,misses=0,judge="",judgeT=0,judgeCol="#fff",flash=[0,0,0,0],lastSlot=0,lastGen=-1,prevLane=-1,prevLane2=-1,prevX=0.5,prevY=0.5,startT=0;
+  var HIT=[[60,"PERFECT",100,"#F5C518"],[120,"GREAT",60,"#3CCB8A"],[180,"GOOD",30,"#5FB4F0"]];
+
+  function me(){return (myId&&viewers[myId])||null;}
+  function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;if(hit)m.hitT=Date.now();}
+  function sendPose(force){
+    var now=Date.now(),msg=pose.map(function(a){return Math.round(a*100);});
+    var key=msg.join(",")+"|"+combo;
+    if(key===lastSent&&!force)return;
+    if(now-lastSend<90&&!force){if(!sendTimer)sendTimer=setTimeout(function(){sendTimer=null;sendPose();},95-(now-lastSend));return;}
+    lastSend=now;lastSent=key;
+    wsSend({type:"pose",a:msg,c:combo});
+  }
+  function setPose(p,hit){pose=p.slice();applyToMe(hit);}
+
+  /* ---------- free dance ---------- */
+  /* where the puppet's joints and handles are on the pad */
+  function rig(){
+    var cx=CW/2,cy=CH*0.47,u=Math.min(CW/36,CH/44),bw=11*u,bh=13*u;
+    var J=[[cx-bw/2,cy-bh*0.32],[cx+bw/2,cy-bh*0.32],[cx-bw*0.27,cy+bh/2],[cx+bw*0.27,cy+bh/2]],L=[10.5*u,10.5*u,10*u,10*u];
+    var Hn=J.map(function(j,i){return [j[0]-Math.sin(pose[i])*L[i],j[1]+Math.cos(pose[i])*L[i]];});
+    return{cx:cx,cy:cy,u:u,bw:bw,bh:bh,J:J,L:L,H:Hn};
+  }
+  function ptr(e){var r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
+  function dragTo(i,p){
+    var r=rig(),a=Math.atan2(-(p[0]-r.J[i][0]),p[1]-r.J[i][1]);
+    if(i>=2)a=Math.max(-LEGMAX,Math.min(LEGMAX,a));
+    pose[i]=a;keyT[i]=null;applyToMe();sendPose();
+  }
+  function limbKey(i,on){
+    if(mode!=="free")return;
+    keyHeld[i]=on;keyT[i]=on?RAISED[i]:REST[i];
+  }
+  function drawFree(now){
+    /* limbs moved by keys glide to where they're going */
+    var moved=false;
+    for(var i=0;i<4;i++)if(keyT[i]!==null){
+      var d=keyT[i]-pose[i];pose[i]+=d*0.32;moved=true;
+      if(Math.abs(d)<0.02){pose[i]=keyT[i];if(!keyHeld[i])keyT[i]=null;}
+    }
+    if(moved){applyToMe();sendPose();}
+    var r=rig(),m=me(),col=m?m.color:"#7F77DD",bob=-Math.pow(1-BEAT.phase(now),2)*r.u*0.9;
+    g.clearRect(0,0,CW,CH);
+    g.lineCap="round";
+    /* legs, then body, arms and head */
+    for(i=2;i<4;i++){g.strokeStyle=darken(col,0.4);g.lineWidth=r.u*3.2;g.beginPath();g.moveTo(r.J[i][0],r.J[i][1]+bob);g.lineTo(r.H[i][0],r.H[i][1]);g.stroke();}
+    g.fillStyle=col;roundRect(g,r.cx-r.bw/2,r.cy-r.bh/2+bob,r.bw,r.bh,r.u*1.5);g.fill();
+    for(i=0;i<2;i++){g.strokeStyle=darken(col,0.2);g.lineWidth=r.u*3;g.beginPath();g.moveTo(r.J[i][0],r.J[i][1]+bob);g.lineTo(r.H[i][0],r.H[i][1]);g.stroke();}
+    g.fillStyle=lighten(col,0.3);g.beginPath();g.arc(r.cx,r.cy-r.bh/2-r.u*5+bob,r.u*6,0,6.3);g.fill();
+    g.fillStyle="#000";g.fillRect(r.cx-r.u*3,r.cy-r.bh/2-r.u*6+bob,r.u*2,r.u*2);g.fillRect(r.cx+r.u,r.cy-r.bh/2-r.u*6+bob,r.u*2,r.u*2);
+    /* handles to grab, labelled with their keys */
+    var keys=["D","K","F","J"];
+    for(i=0;i<4;i++){
+      var held=keyHeld[i];for(var k in grab)if(grab[k]===i)held=true;
+      g.beginPath();g.arc(r.H[i][0],r.H[i][1],r.u*3.4,0,6.3);
+      g.fillStyle=held?"#fff":"rgba(255,255,255,.16)";g.fill();g.lineWidth=2;g.strokeStyle=held?col:"rgba(255,255,255,.75)";g.stroke();
+      g.fillStyle=held?"#15131f":"rgba(255,255,255,.85)";g.font="700 "+Math.round(r.u*3.2)+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(keys[i],r.H[i][0],r.H[i][1]+1);
+    }
+    g.textBaseline="alphabetic";
+  }
+
+  /* ---------- step dance ---------- */
+  function travel(per){return Math.max(1400,Math.min(2300,per*3.5));}
+  function makeNotes(now,bt){
+    var half=bt.period/2;
+    if(bt.gen!==lastGen){            /* the tempo jumped: clear what hasn't arrived yet and start a fresh grid */
+      lastGen=bt.gen;notes=notes.filter(function(n){return n.j||n.t<now+350;});
+      lastSlot=Math.max(now+900,notes.length?notes[notes.length-1].t:0);
+    }
+    var until=now+travel(bt.period)+half,k=Math.ceil((lastSlot+half*0.6-bt.t0)/half);
+    for(;;k++){
+      var t=bt.t0+k*half;if(t>until)break;
+      lastSlot=t;
+      if(t<startT+1500)continue;
+      var onBeat=((k%2)+2)%2===0,p;
+      /* on the beat most of the time; off-beat steps join in as your combo grows (fewer at fast tempos) */
+      if(mode==="aim"){if(!onBeat&&(bt.bpm>110||combo<10))continue;p=onBeat?(bt.bpm>150?0.6:0.8):0.3;}
+      else if(onBeat)p=bt.bpm>150?0.7:0.86;
+      else p=bt.bpm>150?(combo>=25?0.12:0):bt.bpm<95?(combo>=4?0.42:0.15):(combo>=8?0.26:0);
+      if(Math.random()>p)continue;
+      var lane;do{lane=Math.floor(Math.random()*4);}while(lane===prevLane&&lane===prevLane2);
+      prevLane2=prevLane;prevLane=lane;
+      /* target game: a spot on the pad, not too close to the one before */
+      var tx,ty2,tries=0;do{tx=0.14+Math.random()*0.72;ty2=0.12+Math.random()*0.76;tries++;}while(tries<8&&Math.hypot(tx-prevX,ty2-prevY)<0.3);
+      prevX=tx;prevY=ty2;
+      notes.push({t:t,lane:lane,x:tx,y:ty2,j:"",jt:0});
+    }
+  }
+  function press(dir){
+    if(mode!=="step")return;
+    var lane=LANES.indexOf(dir);if(lane<0)return;
+    var now=performance.now(),bestN=null,bd=1e9;
+    for(var i=0;i<notes.length;i++){var n=notes[i];if(n.j||n.lane!==lane)continue;var d=Math.abs(n.t-now);if(d<bd){bd=d;bestN=n;}}
+    flash[lane]=now;
+    if(!bestN||bd>HIT[2][0])return;                 /* nothing close enough: no penalty for a stray tap */
+    grade(bestN,bd,now);
+    setPose(STEP_POSE[dir],true);sendPose(true);
+    foot();
+  }
+  function grade(n,bd,now){
+    for(var i=0;i<HIT.length;i++)if(bd<=HIT[i][0]){
+      n.j=HIT[i][1];n.jt=now;combo++;hits++;if(combo>best)best=combo;
+      score+=Math.round(HIT[i][2]*(1+Math.floor(combo/10)*0.1));
+      judge=HIT[i][1];judgeT=now;judgeCol=HIT[i][3];return;
+    }
+  }
+  function expire(now){
+    /* anything that got past unhit is a miss, and a miss ends the combo */
+    var missed=false;
+    for(var i=0;i<notes.length;i++){var n=notes[i];if(!n.j&&now-n.t>HIT[2][0]){n.j="MISS";n.jt=now;misses++;missed=true;}}
+    if(missed){
+      if(combo>0){combo=0;setPose(REST);sendPose(true);}
+      judge="MISS";judgeT=now;judgeCol="#E05050";foot();
+    }
+    notes=notes.filter(function(n){return now-n.t<700;});
+  }
+  function judgeText(now,y){
+    var ja=1-(now-judgeT)/520;
+    if(judge&&ja>0){g.globalAlpha=ja;g.fillStyle=judgeCol;g.font="800 "+Math.round(CW*0.105)+"px system-ui,sans-serif";g.textAlign="center";g.fillText(judge+(combo>=3&&judge!=="MISS"&&judge!=="EARLY"?"  ×"+combo:""),CW/2,y-(1-ja)*6);g.globalAlpha=1;}
+  }
+
+  /* ---------- target dance ---------- */
+  function aimLead(per){return Math.max(850,Math.min(1300,per*2));}
+  function aimR(){return Math.min(CW,CH)*0.105;}
+  function tapAim(p){
+    var now=performance.now(),R=aimR()*1.4,bestN=null,bt=1e9,lead=aimLead(BEAT.get().period);
+    /* of the targets under the finger, take the one due soonest */
+    for(var i=0;i<notes.length;i++){var n=notes[i];if(n.j||now<n.t-lead)continue;
+      if(Math.hypot(p[0]-n.x*CW,p[1]-n.y*CH)<=R&&n.t<bt){bt=n.t;bestN=n;}}
+    if(!bestN)return;
+    var bd=Math.abs(bestN.t-now);
+    if(bd>HIT[2][0]){if(now<bestN.t){judge="EARLY";judgeT=now;judgeCol="rgba(255,255,255,.6)";}return;}   /* too early: wait for the ring */
+    grade(bestN,bd,now);
+    /* reach for it: the nearest hand or foot points at the target */
+    var dx=bestN.x-0.5,dy=bestN.y-0.47,np=REST.slice(),a=Math.atan2(-dx,dy);
+    if(dy<0.08)np[dx<0?0:1]=a;else{np[dx<0?2:3]=Math.max(-LEGMAX,Math.min(LEGMAX,a));np[dx<0?0:1]=dx<0?1.3:-1.3;}
+    setPose(np,true);sendPose(true);foot();
+  }
+  function drawAim(now){
+    var bt=BEAT.get(),lead=aimLead(bt.period),R=aimR(),i;
+    makeNotes(now,bt);expire(now);
+    g.clearRect(0,0,CW,CH);
+    /* the pad pulses faintly on each beat */
+    var pl=Math.pow(1-BEAT.phase(now),3);g.strokeStyle="rgba(127,119,221,"+(0.12+0.3*pl)+")";g.lineWidth=2;g.strokeRect(3,3,CW-6,CH-6);
+    if(combo>=5){g.fillStyle="rgba(255,255,255,.07)";g.font="800 "+Math.round(CW*0.42)+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(combo,CW/2,CH*0.5);g.textBaseline="alphabetic";}
+    /* later targets underneath, the next one due on top */
+    for(i=notes.length-1;i>=0;i--){
+      var n=notes[i],x=n.x*CW,y=n.y*CH,col=LCOL[n.lane],left=n.t-now;
+      if(n.j&&n.j!=="MISS"){var a=1-(now-n.jt)/240;if(a<=0)continue;g.globalAlpha=a;g.strokeStyle=col;g.lineWidth=4;g.beginPath();g.arc(x,y,R*(1+(1-a)*1.1),0,6.3);g.stroke();g.globalAlpha=1;continue;}
+      if(n.j==="MISS"){var am=1-(now-n.jt)/300;if(am<=0)continue;g.globalAlpha=am*0.5;g.fillStyle="#555";g.beginPath();g.arc(x,y,R,0,6.3);g.fill();g.globalAlpha=1;continue;}
+      if(left>lead)continue;
+      var k=Math.max(0,left/lead),ap=Math.min(1,(lead-left)/180);
+      g.globalAlpha=ap;
+      g.fillStyle=col;g.beginPath();g.arc(x,y,R,0,6.3);g.fill();
+      g.fillStyle="rgba(0,0,0,.35)";g.beginPath();g.arc(x,y,R*0.45,0,6.3);g.fill();
+      g.strokeStyle="#fff";g.lineWidth=2;g.beginPath();g.arc(x,y,R,0,6.3);g.stroke();
+      /* the ring closes in: hit when it meets the target */
+      g.strokeStyle="rgba(255,255,255,.9)";g.lineWidth=2.5;g.beginPath();g.arc(x,y,R*(1+k*2.1),0,6.3);g.stroke();
+      g.globalAlpha=1;
+    }
+    judgeText(now,CH*0.09+10);
+  }
+  function arrow(x,y,sz,rot,fill,stroke,lw){
+    g.save();g.translate(x,y);g.rotate(rot);
+    g.beginPath();g.moveTo(sz,0);g.lineTo(0,-sz);g.lineTo(0,-sz*0.42);g.lineTo(-sz,-sz*0.42);g.lineTo(-sz,sz*0.42);g.lineTo(0,sz*0.42);g.lineTo(0,sz);g.closePath();
+    if(fill){g.fillStyle=fill;g.fill();}
+    if(stroke){g.lineWidth=lw||2;g.strokeStyle=stroke;g.lineJoin="round";g.stroke();}
+    g.restore();
+  }
+  function drawStep(now){
+    var bt=BEAT.get(),tv=travel(bt.period),ty=CH*0.13,sz=Math.min(CW/11,22),i;
+    makeNotes(now,bt);
+    expire(now);var n;
+    g.clearRect(0,0,CW,CH);
+    /* lanes */
+    for(i=0;i<4;i++){
+      var lx=CW*(i+0.5)/4,fl=Math.max(0,1-(now-flash[i])/160);
+      if(fl>0){g.fillStyle="rgba(255,255,255,"+(0.10*fl)+")";g.fillRect(CW*i/4,0,CW/4,CH);}
+      var pulse=1+0.14*Math.pow(1-BEAT.phase(now),3);
+      arrow(lx,ty,sz*pulse,LROT[i],fl>0?"rgba(255,255,255,"+(0.35*fl)+")":null,"rgba(255,255,255,.55)",2);
+    }
+    /* big faint combo behind the arrows */
+    if(combo>=5){g.fillStyle="rgba(255,255,255,.07)";g.font="800 "+Math.round(CW*0.42)+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(combo,CW/2,CH*0.6);g.textBaseline="alphabetic";}
+    /* arrows rise from the bottom and should be hit as they reach the outlines */
+    for(i=0;i<notes.length;i++){
+      n=notes[i];var x=CW*(n.lane+0.5)/4,y=ty+(n.t-now)/tv*(CH-ty+sz);
+      if(n.j&&n.j!=="MISS"){
+        var a=1-(now-n.jt)/220;if(a<=0)continue;
+        g.globalAlpha=a;arrow(x,ty,sz*(1+(1-a)*0.9),LROT[n.lane],null,LCOL[n.lane],3);g.globalAlpha=1;continue;
+      }
+      if(y<-sz||y>CH+sz)continue;
+      if(n.j==="MISS"){g.globalAlpha=0.3;arrow(x,y,sz,LROT[n.lane],"#555","#333",2);g.globalAlpha=1;}
+      else arrow(x,y,sz,LROT[n.lane],LCOL[n.lane],"rgba(0,0,0,.55)",2);
+    }
+    /* PERFECT / GREAT / GOOD / MISS */
+    judgeText(now,ty+sz*2.5);
+  }
+  function foot(){
+    var f=document.getElementById("gameFoot");if(!f)return;
+    if(mode==="step"||mode==="aim")f.textContent="Score "+score.toLocaleString()+" · Combo "+combo+" · Best "+best;
+    else if(mode==="free")f.textContent=("ontouchstart" in window)?"Drag the hands and feet":"Drag the hands and feet, or tap D F J K";
+  }
+  var lastBpmTxt=0;
+  function bpmText(now){
+    if(now-lastBpmTxt<500)return;lastBpmTxt=now;
+    var bt=BEAT.get(),el=document.getElementById("gameBpm");
+    el.textContent=bt.known?Math.round(bt.bpm)+" BPM"+(bt.live?"":" (holding)"):"listening… 120 BPM";
+    el.title=bt.known?(bt.live?"Following the music":"No clear beat right now; keeping the last tempo"):"No beat found yet; using 120 BPM until the music has one";
+  }
+  function size(){
+    var dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;
+    if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+    CW=w;CH=h;g.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function tick(){
+    if(!mode){raf=0;return;}
+    var now=performance.now();
+    size();
+    if(mode==="free")drawFree(now);else if(mode==="aim")drawAim(now);else drawStep(now);
+    bpmText(now);
+    raf=requestAnimationFrame(tick);
+  }
+  function start(m){
+    if(m!=="free"&&m!=="step"&&m!=="aim")return;
+    if(mode)stop(true);
+    initAudio();
+    mode=m;myDance=m==="free"?4:5;
+    cv=document.getElementById("gameCv");g=cv.getContext("2d");
+    pose=REST.slice();combo=0;keyT=[null,null,null,null];keyHeld=[false,false,false,false];grab={};
+    notes=[];score=0;best=0;hits=0;misses=0;judge="";lastGen=-1;lastSlot=0;startT=performance.now();
+    document.body.classList.add("gaming");document.body.classList.toggle("gaming-step",m==="step");
+    document.getElementById("gamePanel").classList.add("on");
+    document.getElementById("gameTitle").textContent=m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":"⬆️ Step dance";
+    document.getElementById("moveHint").textContent=m==="free"?"Drag the hands and feet, or tap D F J K · arrow keys walk · Space to stop":m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
+    var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
+    closeMenu();foot();
+    var mm=me();if(mm)mm.dance=myDance;
+    wsSend({type:"dance",style:myDance});
+    applyToMe();sendPose(true);
+    Object.keys(held).forEach(function(d){setHeld(d,false);});
+    if(!raf)raf=requestAnimationFrame(tick);
+  }
+  function stop(quiet){
+    if(!mode)return;
+    mode="";myDance=0;
+    document.body.classList.remove("gaming","gaming-step");
+    document.getElementById("gamePanel").classList.remove("on");
+    document.getElementById("moveHint").innerHTML="Arrows or WASD to walk &middot; Enter to talk &middot; Space to dance";
+    var b=document.getElementById("danceBtn");b.classList.remove("on");b.innerHTML="&#128131; Dance";
+    var mm=me();if(mm){mm.dance=0;mm.pose=null;mm.combo=0;}
+    if(!quiet)wsSend({type:"dance",style:0});
+  }
+  function menuOpen(){return document.getElementById("danceMenu").classList.contains("on");}
+  function openMenu(){document.getElementById("danceMenu").classList.add("on");}
+  function closeMenu(){document.getElementById("danceMenu").classList.remove("on");}
+  /* the Dance button and Space: stop if dancing, otherwise show the two choices */
+  function toggle(){if(mode)stop();else if(menuOpen())closeMenu();else openMenu();}
+
+  document.getElementById("danceBtn").addEventListener("click",function(e){e.currentTarget.blur();toggle();});
+  Array.prototype.forEach.call(document.querySelectorAll("#danceMenu button"),function(b){b.addEventListener("click",function(){b.blur();start(b.getAttribute("data-g"));});});
+  document.getElementById("gameClose").addEventListener("click",function(){stop();});
+  var pad=document.getElementById("gameCv");
+  pad.addEventListener("pointerdown",function(e){
+    e.preventDefault();
+    var p=ptr(e);
+    if(mode==="step"){press(LANES[Math.max(0,Math.min(3,Math.floor(p[0]/CW*4)))]);return;}
+    if(mode==="aim"){tapAim(p);return;}
+    if(mode!=="free")return;
+    /* grab whichever hand or foot is nearest that another finger isn't already holding */
+    var r=rig(),bi=-1,bd=1e9,taken={};for(var k in grab)taken[grab[k]]=1;
+    for(var i=0;i<4;i++){if(taken[i])continue;var d=Math.hypot(p[0]-r.H[i][0],p[1]-r.H[i][1]);if(d<bd){bd=d;bi=i;}}
+    if(bi<0)return;
+    grab[e.pointerId]=bi;try{pad.setPointerCapture(e.pointerId);}catch(x){}
+    dragTo(bi,p);
+  });
+  pad.addEventListener("pointermove",function(e){if(mode==="free"&&grab[e.pointerId]!==undefined){e.preventDefault();dragTo(grab[e.pointerId],ptr(e));}});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){pad.addEventListener(ev,function(e){delete grab[e.pointerId];});});
+  pad.addEventListener("contextmenu",function(e){e.preventDefault();});
+  window.addEventListener("blur",function(){for(var i=0;i<4;i++)if(keyHeld[i])limbKey(i,false);});
+  window.ukDance=function(){
+    var now=performance.now();
+    return{mode:mode,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
+      upcoming:notes.filter(function(n){return !n.j;}).map(function(n){return{dir:LANES[n.lane],inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};})};
+  };
+  return{start:start,stop:stop,toggle:toggle,press:press,limbKey:limbKey,menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},REST:REST};
+})();
 
 /* ============================================================
    VIDEO SYNC
@@ -1620,6 +1972,7 @@ function updViewerCount(){
   document.getElementById("hudCount").textContent=c;
 }
 
+setInterval(function(){if(document.getElementById("venue").classList.contains("on"))updHudBR();},2000);
 function updHudBR(){
   var ins=findInst(activeInst);
   var instName=ins?ins.l:activeInst;
@@ -1628,6 +1981,7 @@ function updHudBR(){
   if(perfKey)lines.push("Key: "+perfKey);
   if(perfScale)lines.push("Scale: "+perfScale);
   if(perfMode)lines.push("Mode: "+perfMode);
+  var bt=BEAT.get();if(bt.known&&bt.live)lines.push("Tempo: "+Math.round(bt.bpm)+" BPM");
   if(typeof SP!=="undefined"&&SP.announced)lines.push(SP.canSound()?"Sound: live from the performer":"Sound: simplified (update your browser for the full mix)");
   var hud=document.getElementById("hudBR");hud.textContent="";
   lines.forEach(function(l,i){if(i)hud.appendChild(document.createElement("br"));hud.appendChild(document.createTextNode(safeText(l,80)));});
@@ -1680,7 +2034,7 @@ function drawParticles(){
 /* ============================================================
    DRAWING: AVATAR SPRITE
    ============================================================ */
-function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe){
+function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge){
   var s=scale||1;
   var bw=16*s, bh=24*s;
   var cx=x, cy=y;
@@ -1709,6 +2063,13 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
   if(dance===1)bob=-Math.abs(Math.sin(dT))*6*s;            /* bounce */
   else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*2*s;cx+=Math.sin(dT)*4*s;} /* sway */
   else if(dance===3)bob=-Math.pow(Math.abs(Math.sin(dT)),3)*11*s; /* jump */
+  else if(dance>=4){
+    /* dance games: a hop on every beat of the music, and a bigger one when a step lands */
+    if(!pose)pose=GAME.REST;
+    bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
+    if(hitAge<220)bob-=(1-hitAge/220)*5*s;
+  }
+  else pose=null;
 
   var headR=6*s;
   var bodyW=10*s, bodyH=10*s;
@@ -1719,8 +2080,14 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
   var legSpread=moving?Math.sin(Date.now()*0.01)*3*s:0;
   if(dance)legSpread=dance===3?Math.abs(Math.sin(dT))*3*s:Math.sin(dT*2)*2.5*s;
   ctx.fillStyle=darken(color,0.4);
+  if(pose){
+    /* posed legs swing from the hip */
+    ctx.save();ctx.translate(cx-2.5*s,cy+bodyH*0.3+bob);ctx.rotate(pose[2]);ctx.fillRect(-legW/2,0,legW,legH+1*s);ctx.restore();
+    ctx.save();ctx.translate(cx+2.5*s,cy+bodyH*0.3+bob);ctx.rotate(pose[3]);ctx.fillRect(-legW/2,0,legW,legH+1*s);ctx.restore();
+  }else{
   ctx.fillRect(cx-4*s+legSpread,cy+bodyH*0.3+bob,legW,legH);
   ctx.fillRect(cx+1*s-legSpread,cy+bodyH*0.3+bob,legW,legH);
+  }
 
   /* Body */
   ctx.fillStyle=color;
@@ -1737,6 +2104,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
   if(dance===1){armL=2.7+Math.sin(dT*2)*0.35;armR=-2.7-Math.sin(dT*2)*0.35;}
   else if(dance===2){var sw=Math.sin(dT);armL=1.9+sw*0.9;armR=-1.9+sw*0.9;}
   else if(dance===3){armL=1.5+Math.abs(Math.sin(dT))*1.1;armR=-1.5-Math.abs(Math.sin(dT))*1.1;}
+  if(pose){armL=pose[0];armR=pose[1];}
   ctx.save();
   ctx.fillStyle=darken(color,0.2);
   /* Left arm */
@@ -1989,7 +2357,20 @@ function renderLoop(){
 
     var vx=v.x*W, vy=v.y*H;
     if(v.seed===undefined)v.seed=(ids[i].charCodeAt(0)||0)%7+(v.name.length%5);
-    drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed,ids[i]===myId);
+    /* limbs glide toward the latest pose so remote dancers move smoothly between updates */
+    var vp=null;
+    if(v.dance>=4){
+      var tp=v.pose||GAME.REST;
+      if(!v.poseCur)v.poseCur=tp.slice();
+      for(var pi=0;pi<4;pi++)v.poseCur[pi]+=(tp[pi]-v.poseCur[pi])*0.4;
+      vp=v.poseCur;
+    }else v.poseCur=null;
+    drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed,ids[i]===myId,vp,now-(v.hitT||0));
+    if(v.dance===5&&v.combo>=3){
+      /* step and target game combo over the dancer's head */
+      ctx.font="800 15px system-ui,sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.7)";
+      ctx.strokeText("\u00d7"+v.combo,vx,vy-44);ctx.fillStyle=v.combo>=25?"#F5C518":"#fff";ctx.fillText("\u00d7"+v.combo,vx,vy-44);
+    }
     if(v.dance){
       /* a music note floats up from each dancer */
       var ph=((now/1100)+v.seed*0.37)%1;

@@ -64,6 +64,8 @@ To check Node is installed, `node -v` should print `v18` or higher.
    | Viewer count goes up as the crowd joins | Next to the LIVE button on the performer page |
    | Fake viewers walk around, dance and chat | Your audience window, and the audience panel in jam mode |
    | You can walk with the arrows (bottom left, or arrow keys / WASD), talk (Enter) and dance (Space) | Your audience window |
+   | Dance offers Free dance, Step dance and Target dance; the game shows the tempo it found | Your audience window, with music playing |
+   | Fake viewers in a game strike poses and show a combo over their heads | Your audience window, and the audience panel in jam mode |
    | Notes you play sound in the audience window | Your audience window (click it once first so the browser allows sound) |
    | `notes heard` goes up as you play | Crowd terminal |
    | Switching instrument or key shows up | Crowd terminal and the audience page's corner display |
@@ -134,6 +136,8 @@ When you click **LIVE**, Chrome asks to share a tab. Pick **this tab** and keep 
 
 **Data use.** Render's free plan includes about 5 GB of outbound data a month. Sound alone is roughly 45 MB per viewer per hour; with visuals, roughly 110 MB. That's about 20 viewers for 6 hours of sound only, or 2 hours with visuals. The live panel shows the running total for the current show.
 
+**Dance games and tempo.** The audience page listens to the music it is playing and works out the tempo, which sets the pace of the Step and Target games. It needs a few seconds of music with a clear beat. With no beat it uses 120 BPM, and the game says so. In the console on the audience page, `ukBeat()` shows the tempo it found and how sure it is, and `ukDance()` shows the current game, score and upcoming steps.
+
 **Diagnostics.** On either page, open the console (F12) and type `ukStreamStats()`. On the performer page it shows frames captured, dropped and sent. On the venue it shows packets received and decoded, how often the sound buffer ran dry (`rebuffers`), and the last error.
 
 ---
@@ -156,6 +160,8 @@ When you click **LIVE**, Chrome asks to share a tab. Pick **this tab** and keep 
 | Venue says "Sound: simplified" | That phone or browser is too old for the live sound | Update the browser (iPhone: iOS 26 or later) |
 | Live sound is choppy | Slow connection on either end | Turn **Visuals** off; check `ukStreamStats()` on the venue for `rebuffers` |
 | A sample host check fails | That sample site is down or blocked on your network | Instruments from that collection won't load. Try another network to tell which |
+| Step or Target game says "listening… 120 BPM" | No clear beat found yet | Wait a few seconds after the music starts. Music with no drums or steady pulse may never lock on |
+| Arrows feel early or late against the music | Bluetooth speakers or headphones add delay the page can't measure | Use wired or built-in sound for the games |
 
 ---
 

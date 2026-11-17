@@ -3733,7 +3733,7 @@ function goLive(){
       document.getElementById("liveViewers").textContent=msg.count+" viewer"+(msg.count!==1?"s":"");
       AUD.count=msg.count;
     }
-    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance")audEvent(msg);
+    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
   };
   liveWs.onclose=function(){if(liveOn)endLive();else liveFail();};
@@ -3790,7 +3790,12 @@ function audEvent(msg){
   if(msg.type==="viewer-join"&&id){AUD.people[id]={name:String(msg.name||"").slice(0,24),color:audColor(msg.color,"#888888"),x:+msg.x||.5,y:+msg.y||.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};}
   else if(msg.type==="pos"&&id){var p=AUD.people[id];if(!p)p=AUD.people[id]={name:String(msg.name||""),color:"#888888",x:.5,y:.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};p.x=+msg.x||p.x;p.y=+msg.y||p.y;}
   else if(msg.type==="viewer-leave"&&id){delete AUD.people[id];}
-  else if(msg.type==="dance"&&id){if(AUD.people[id])AUD.people[id].dance=Math.max(0,Math.min(3,+msg.style||0));}
+  else if(msg.type==="dance"&&id){if(AUD.people[id]){var dp=AUD.people[id];dp.dance=Math.max(0,Math.min(5,Math.floor(+msg.style||0)));if(dp.dance<4){dp.pose=null;dp.poseCur=null;dp.combo=0;}}}
+  else if(msg.type==="pose"&&id&&AUD.people[id]&&Array.isArray(msg.a)&&msg.a.length===4){
+    /* dance games: limb angles [left arm, right arm, left leg, right leg] in hundredths of a radian, plus the combo */
+    var pp=AUD.people[id],pa=[];for(var pi=0;pi<4;pi++){var pn=+msg.a[pi];if(!isFinite(pn))return;pa.push(Math.max(-3.2,Math.min(3.2,pn/100)));}
+    pp.pose=pa;pp.combo=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pp.hitT=Date.now();
+  }
   else if(msg.type==="chat"&&id&&AUD.people[id]){var q=AUD.people[id];q.said=Date.now();q.text=String(msg.text||"").slice(0,140);if(msg.color)q.color=audColor(msg.color,q.color);}
 }
 /* word-wrap into at most `max` lines of width w */
@@ -3806,7 +3811,7 @@ function audWrap(g,text,w,max){
   if(used<text.length||g.measureText(out[last]).width>w){var l=out[last];while(l.length>1&&g.measureText(l+"…").width>w)l=l.slice(0,-1);out[last]=l+"…";}
   return out;
 }
-function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk){
+function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge){
   /* small version of the venue character: head, body, arms, legs; name under the feet */
   var dT=now*0.009+seed,bob=0,armL=-.2,armR=.2,leg=0,legL=0,legR=0;
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
@@ -3814,12 +3819,18 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk){
   if(dance===1){bob=-Math.abs(Math.sin(dT))*5*sc;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;leg=Math.sin(dT*2)*1.5*sc;}
   else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*1.5*sc;x+=Math.sin(dT)*3*sc;var sw=Math.sin(dT);armL=1.9+sw*.9;armR=-1.9+sw*.9;}
   else if(dance===3){bob=-Math.pow(Math.abs(Math.sin(dT)),3)*8*sc;armL=1.5+Math.abs(Math.sin(dT))*1.1;armR=-armL;leg=Math.abs(Math.sin(dT))*2*sc;}
+  var legRotL=legL*.12,legRotR=legR*.12;
+  if(dance>=4){
+    /* dance games: limbs go where the dancer put them, with a hop each time a move lands */
+    var ps=pose||[.15,-.15,.12,-.12];armL=ps[0];armR=ps[1];legRotL=ps[2];legRotR=ps[3];
+    if(hitAge<220)bob=-(1-hitAge/220)*5*sc;
+  }
   var hr=5*sc,bw=9*sc,bh=11*sc,lh=6*sc,top=y+bob;
   if(glow){var gl=g.createRadialGradient(x,top,3,x,top,30*sc);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,top,30*sc,0,6.3);g.fill();}
   g.fillStyle=color;
   /* legs: pivot at the hip so a stride swings them */
-  g.save();g.translate(x-bw/2+2.3*sc,top+bh/2);g.rotate(legL*.12);g.fillRect(-1.3*sc-leg,0,2.6*sc,lh);g.restore();
-  g.save();g.translate(x+bw/2-2.3*sc,top+bh/2);g.rotate(legR*.12);g.fillRect(-1.3*sc+leg,0,2.6*sc,lh);g.restore();
+  g.save();g.translate(x-bw/2+2.3*sc,top+bh/2);g.rotate(legRotL);g.fillRect(-1.3*sc-leg,0,2.6*sc,lh);g.restore();
+  g.save();g.translate(x+bw/2-2.3*sc,top+bh/2);g.rotate(legRotR);g.fillRect(-1.3*sc+leg,0,2.6*sc,lh);g.restore();
   g.fillRect(x-bw/2,top-bh/2,bw,bh);
   g.save();g.translate(x-bw/2,top-bh/2+1.5*sc);g.rotate(armL);g.fillRect(-2.4*sc,0,2.4*sc,8*sc);g.restore();
   g.save();g.translate(x+bw/2,top-bh/2+1.5*sc);g.rotate(armR);g.fillRect(0,0,2.4*sc,8*sc);g.restore();
@@ -3878,7 +3889,11 @@ function drawAud(){
     if(step>.15){p.walk=(p.walk||0)+Math.min(.5,step*.22+.12);p.walkUntil=now+120;}
     var walking=now<(p.walkUntil||0);
     var x=p.dx*W,y=Math.min(H-24,p.dy*sy);
-    heads.push([p,x,audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null)]);});
+    var pz=null;
+    if(p.dance>=4&&p.pose){if(!p.poseCur)p.poseCur=p.pose.slice();for(var q=0;q<4;q++)p.poseCur[q]+=(p.pose[q]-p.poseCur[q])*.4;pz=p.poseCur;}
+    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0));
+    if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
+    heads.push([p,x,headY]);});
   /* speech bubbles on top of everyone; oldest first so the newest is on top */
   heads.filter(function(h){return h[0].text&&now-h[0].said<AUD_SAY_MS;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
     var age=now-h[0].said,al=age>AUD_SAY_MS-1200?(AUD_SAY_MS-age)/1200:1;
