@@ -234,6 +234,13 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 
 **Steps stay put when the sound hiccups.** In a show, the steps follow the live sound. If the sound stalls or catches up on a weak connection, the arrows now slow down or speed up a little until they're back in time, instead of jumping or vanishing. Only a jump of more than 1.5 seconds that lasts re-lays the steps, once. If the beat drops out in free play (talking, a break), arrows still on their way fade out and don't count as misses.
 
+**Note highway.** A fourth dance game, based on the pixel-art mockup. Notes fall down seven coloured lanes onto a little keyboard. Play each one as it lands on its box: A S D F G H J on a computer, or tap its key or lane on a phone or tablet. Long bars are holds: keep the key down to the end.
+- Across the top: SCORE, a song progress line (in rounds), and a HYPE meter that fills as you hit notes and drops when you miss. The big combo number and PERFECT / GREAT / GOOD / MISS show in the middle.
+- Same timing, scoring, streak auras, fire-border bonus and holds as Step dance.
+- Where to find it: the Dance menu (or Space then 4), the Note highway button in dance practice, and "Note highway round" in the performer's round menu.
+- In a round, everyone gets the same notes. They're worked out from the song's step chart, so runs in the song become runs along the keys, and two arrows at once become a chord.
+- While it's on, the letter keys play notes rather than walking you; the arrow keys still walk.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |
