@@ -225,6 +225,15 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 
 ---
 
+**Free dance on the floor.** Free dance no longer opens a game window. Your character stays on the dance floor (a bit bigger on phones and tablets), where you can see the stage, with a handle on each hand and foot.
+- Drag a handle to move that limb. Two fingers move two limbs at once. On a computer, D, K, F and J still raise them.
+- Tap or click anywhere else on the floor to walk there. The arrows still walk too.
+- On your spotlight turn, the handles move with you to the centre of the stage.
+
+**Swoops in Target dance.** Some targets come with a path. Tap the start as its ring closes, then keep your finger (or the mouse button) on the ball as it slides along the path to the end. The ring around the ball turns red when you're off it. Finishing scores a bonus. Letting go early, or staying off the ball for a quarter of a second, drops it and breaks your combo. Nothing else comes up while you're following a swoop. In a round, swoops come from the same long notes that are holds in Step dance.
+
+**Steps stay put when the sound hiccups.** In a show, the steps follow the live sound. If the sound stalls or catches up on a weak connection, the arrows now slow down or speed up a little until they're back in time, instead of jumping or vanishing. Only a jump of more than 1.5 seconds that lasts re-lays the steps, once. If the beat drops out in free play (talking, a break), arrows still on their way fade out and don't count as misses.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |
