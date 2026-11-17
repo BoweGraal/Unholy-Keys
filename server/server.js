@@ -284,10 +284,13 @@ function castVote(ws, voter, target, weight) {
   if (rd.votes.size >= r.viewers.size + 1) roundFinish(ws.room);        /* everyone has voted: no need to wait */
 }
 
+/* a character's look: 8 letters/digits (see art.js), or nothing */
+function look(s) { return typeof s === "string" && /^[0-9a-z]{8}$/.test(s) ? s : ""; }
+
 function viewerList(room) {
   var r = rooms[room]; if (!r) return [];
   var out = [];
-  r.viewers.forEach(function(v, id) { var o = { id: id, name: v.name, x: v.x, y: v.y, color: v.color, dance: v.dance || 0 };
+  r.viewers.forEach(function(v, id) { var o = { id: id, name: v.name, x: v.x, y: v.y, color: v.color, look: v.look || "", dance: v.dance || 0 };
     if (v.pose && v.dance >= 4) { o.pose = v.pose; o.combo = v.combo || 0; }
     out.push(o); });
   return out;
@@ -319,7 +322,7 @@ wss.on("connection", function(ws) {
     if (msg.type === "create-room") {
       if (ws.role) return;                       // one role per connection
       var code = genCode();                      // never a client-chosen code: that let anyone take over a live room
-      rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer" };
+      rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer", performerLook: look(msg.look) };
       ws.room = code;
       ws.role = "performer";
       send(ws, { type: "room-created", room: code });
@@ -340,9 +343,10 @@ wss.on("connection", function(ws) {
       ws.viewerId = id;
       ws.viewerName = str(msg.name, 24) || "Anonymous";
       ws.viewerColor = color(msg.color);
+      ws.viewerLook = look(msg.look);
       var startX = +(0.25 + Math.random() * 0.5).toFixed(3);   // 0.25–0.75 normalized
       var startY = +(0.35 + Math.random() * 0.30).toFixed(3); // 0.35–0.65 normalized
-      r.viewers.set(id, { ws: ws, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor });
+      r.viewers.set(id, { ws: ws, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor, look: ws.viewerLook });
 
       // Send room state to new viewer
       send(ws, {
@@ -352,13 +356,13 @@ wss.on("connection", function(ws) {
         performerState: r.state,
         video: liveVideo(r),
         stream: r.stream || null,
-        performer: { name: r.performerName || "Performer" },
+        performer: { name: r.performerName || "Performer", look: r.performerLook || "" },
         round: roundPublic(r),
         totals: totalsList(r)
       });
 
       // Notify everyone else
-      broadcast(roomCode, { type: "viewer-join", id: id, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor }, ws);
+      broadcast(roomCode, { type: "viewer-join", id: id, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor, look: ws.viewerLook }, ws);
 
       // Tell performer viewer count
       if (r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
@@ -375,7 +379,8 @@ wss.on("connection", function(ws) {
       if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
       if (msg.type === "perf-name") {
         rooms[ws.room].performerName = str(msg.name, 24) || "Performer";
-        broadcast(ws.room, { type: "perf-name", name: rooms[ws.room].performerName }, ws);
+        if (look(msg.look)) rooms[ws.room].performerLook = look(msg.look);
+        broadcast(ws.room, { type: "perf-name", name: rooms[ws.room].performerName, look: rooms[ws.room].performerLook || "" }, ws);
         return;
       }
       broadcast(ws.room, msg, ws);
