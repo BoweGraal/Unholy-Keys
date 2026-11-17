@@ -145,7 +145,9 @@ When you click **LIVE**, Chrome asks to share a tab. Pick **this tab** and keep 
 
 **Start a round now** runs a round on whatever is already sounding (YouTube, or you playing). There is no file to check, so each dancer's steps come from the live tempo detector and are not identical. Press **End round** when the song finishes.
 
-To try it alone: go live, run `npm run crowd -- CODE 12`, pick a round type and play a song. The fake viewers join the round, score, and vote. In the console on the audience page, `ukRound()` shows the round, the song position and how much the timing was trimmed.
+**Practice without going live.** The **Dance** button under Mobile / Jam / Live opens dance practice over the app. Pick a mini game, pick a song from your Backing Tracks (or any file on your computer), choose a countdown, difficulty and how many practice dancers, then **Start round**. It's the same round the audience gets: the song is analysed, counted in, played, scored, and the standings add up across practice rounds. Practice dancers score at random skill levels and vote in free dance rounds. Nothing is sent to the server. Esc steps back one level at a time (out of the game, then out of the round, then closes practice). The audience page has the same thing: the link under the join box, or `venue.html?practice`.
+
+To try a round with a fake crowd: go live, run `npm run crowd -- CODE 12`, pick a round type and play a song. The fake viewers join the round, score, and vote. In the console on the audience page, `ukRound()` shows the round, the song position and how much the timing was trimmed.
 
 Steps are kept in time by the live sound itself, so rounds need **Share sound** on. Points are kept by name for the length of the show; two people with the same name share a total, and ending the show clears it.
 
