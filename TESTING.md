@@ -8,6 +8,7 @@ The kit has three parts, all in the `server` folder:
 |---|---|
 | `npm start` | Runs the relay server, and serves the performer and audience pages at `http://localhost:8080` |
 | `npm run check` | Tests a server the way a show uses it: opens a room, joins it, sends notes and chat, times each step, and checks the instrument sample hosts |
+| `npm run home` | Hosts a show from your own computer through a free secure tunnel, and prints the links (or double-click **Home Show.bat**) |
 | `npm run crowd -- CODE 20` | Sends 20 fake audience members into your room. They walk around, dance, chat, take part in dance rounds, and report what they hear |
 
 ---
@@ -121,6 +122,35 @@ How the pages pick a server, first match wins:
 1. A `?ws=` address (or one remembered from an earlier `?ws=`)
 2. The server the page was loaded from, when that's the relay server itself (`http://localhost:8080`, or your Railway/Render address)
 3. `WS_URL` in the page
+
+---
+
+## Part 3: Host a show from your own computer (free)
+
+Your computer runs the server for the show, and Cloudflare's free tunnel gives it a secure address, so viewers never see your home address and nothing changes on your router. Your settings, presets and setlists stay where they are, because you keep using the normal site.
+
+**How many viewers:** each viewer takes about 0.27 Mbps of your **upload** with sound and jam visuals. Keep about a third of your upload spare. At 40 Mbps upload that's roughly 100 viewers.
+
+**One-time setup** (after the Windows setup at the top of this page):
+1. Open a terminal and run:
+   ```
+   winget install --id Cloudflare.cloudflared
+   ```
+   Close the terminal when it finishes.
+2. Get the latest code (GitHub Desktop: **Fetch origin**, then **Pull**; or download the ZIP again).
+
+**Every show:**
+1. In the `server` folder, double-click **Home Show.bat** (or run `npm run home`). The first time, it installs the server.
+2. Wait for the box that says **Your home show is ready**, usually 5–15 seconds. Your performer page opens by itself, and the audience link is already copied: paste it wherever you invite people.
+3. Click **LIVE** as usual and give out the room code.
+4. **Keep that window open** for the whole show. Closing it ends the show for everyone.
+
+**Good to know:**
+- The links change every time you start it, so send the new audience link each show.
+- The home address is used for that visit only. Next time you open the site normally, it goes back to the Render server by itself, so nothing to undo.
+- Avoid big uploads in the house during a show (cloud backups, someone else streaming).
+- If it says cloudflared isn't installed, close the window, open a new one and try again. Windows only finds newly installed programs in new windows.
+- Cloudflare's quick tunnels are free and need no account, but they're meant for this kind of temporary use and come with no guarantees. For a fixed address that never changes, you'd need a free Cloudflare account and your own domain. Ask Claude if you want that.
 
 ---
 
