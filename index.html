@@ -4106,11 +4106,12 @@ document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
      - the tempo, and the time of every beat (following the song if it speeds up or slows down);
      - how loud each part is, compared with the rest of the song;
      - where the drum hits and note starts are.
-   Then it writes the steps: few in quiet parts, one per beat in normal parts, extra off-beat steps
+   Then it writes the steps, only where the music has a steady beat (a spoken intro or a free-time
+   opening gets none): few in quiet parts, one per beat in normal parts, extra off-beat steps
    and double arrows in the loudest parts, and always on a real hit in the music where there is one.
    Result: {bpm, dur, beats:[ms], steps:[[ms, lanes]]}; lanes is a bit mask, 1=left 2=down 4=up 8=right. */
 var CHART=(function(){
-  var FPS=100,NFFT=1024,LAG=14;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
+  var FPS=100,NFFT=1024,LAG=14,PULSE=0.55;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
   function fft(re,im){
     var n=re.length,i,j=0,k,m;
     for(i=1;i<n;i++){var bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){var t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
@@ -4197,6 +4198,24 @@ var CHART=(function(){
     for(var t=first-gap;t>=0;t-=gap)out.unshift(Math.round(t));
     return out;
   }
+  /* How steady the pulse is around beat i: the envelope compared with itself one, two and four beats
+     later (a beat, half a bar, a bar) over about eight beats either side; the best match counts.
+     1 = the same hits repeat exactly, 0 = nothing repeats. Music with a beat scores high; talking,
+     free-time intros and ambient pads score low. */
+  function pulse(e,bt,i){
+    var nb=bt.length,a=bt[Math.max(0,i-8)],b=bt[Math.min(nb-1,i+8)],best=0,gaps=[];
+    for(var q=Math.max(1,i-4);q<=Math.min(nb-1,i+4);q++)gaps.push(bt[q]-bt[q-1]);
+    var P=pct(gaps,0.5);if(!(P>0))return 0;
+    [1,2,4].forEach(function(k){
+      var C=Math.round(P*k);if(b-a<C+2*P)return;
+      for(var L=C-2;L<=C+2;L++){
+        var xy=0,xx=0,yy=0;
+        for(var t=a;t+L<b&&t+L<e.length;t++){var u=e[t],v=e[t+L];xy+=u*v;xx+=u*u;yy+=v*v;}
+        var r=xx>0&&yy>0?xy/Math.sqrt(xx*yy):0;if(r>best)best=r;
+      }
+    });
+    return best;
+  }
   function near(e,c,r){var m=0;for(var i=Math.max(0,c-r);i<=Math.min(e.length-1,c+r);i++)if(e[i]>m)m=e[i];return m;}
   /* Step 4: the steps. level: 0.6 easier, 1 normal, 1.4 harder. */
   function steps(e,rms,bt,bpm,level,seed){
@@ -4205,11 +4224,14 @@ var CHART=(function(){
     /* smooth over about two bars, then place each beat between the song's quiet and loud ends */
     var sm=new Float32Array(nb);for(i=0;i<nb;i++){var s2=0,n2=0;for(var q=Math.max(0,i-4);q<=Math.min(nb-1,i+4);q++){s2+=loud[q];n2++;}sm[i]=s2/n2;}
     var lo=pct(sm,0.1),hi=pct(sm,0.92);if(hi-lo<3){lo=hi-3;}
-    var silent=Math.max(-60,hi-36),hit=pct(e,0.97)||1,r=rng(seed||1),out=[],prev=-1,prev2=-1,fast=bpm>150;
+    var silent=Math.max(-60,hi-36),hit=pct(e,0.97)||1,r=rng(seed||1),out=[],prev=-1,prev2=-1,fast=bpm>150,groove=false;
     function lane(){var l;do{l=Math.floor(r()*4);}while(l===prev&&l===prev2);prev2=prev;prev=l;return l;}
     for(i=0;i<nb;i++){
       var t=bt[i]*10;if(i<4||t<2500)continue;                       /* lead-in: let people hear the song first */
       if(loud[i]<silent&&sm[i]<silent+6)continue;                    /* silence: nothing to dance to */
+      if(pulse(e,bt,i)<PULSE){groove=false;continue;}                 /* talking, a free-time intro, ambient pads: no steady beat, no steps */
+      var hitHere=near(e,bt[i],3)/hit;
+      if(!groove){if(hitHere<0.3)continue;groove=true;}               /* after a stretch with no beat, start again on a real hit */
       var I=Math.max(0,Math.min(1,(sm[i]-lo)/(hi-lo)))*level,on=near(e,bt[i],3)/hit,mask=0;
       if(I<0.3){if(i%2===0||on>0.6)mask=1<<lane();}                 /* quiet: every other beat */
       else mask=1<<lane();                                           /* normal and up: every beat */

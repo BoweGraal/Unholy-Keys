@@ -1390,7 +1390,7 @@ function sendChat(){
    ============================================================ */
 var BEAT=(function(){
   var an=null,buf=null,prev=null,T=[],V=[],timer=null,lastRun=0,off=0;
-  var lvl=-100,lvHi=-100,lvLo=0,est={bpm:0,t0:0,conf:0,at:0},cand=0,candN=0,phCand=0,phN=0,gen=0,runs=0,lastConf=0,lastRaw=0;
+  var firstCand=0,lastRep=0,lvl=-100,lvHi=-100,lvLo=0,est={bpm:0,t0:0,conf:0,at:0},cand=0,candN=0,phCand=0,phN=0,gen=0,runs=0,lastConf=0,lastRaw=0;
   var STEP=0.01,WIN=8,MINWIN=4,LO=70,HI=180;
   function actx(){return Tone.getContext().rawContext;}
   function ensure(){
@@ -1463,8 +1463,23 @@ var BEAT=(function(){
     var conf=sum>0?best/(sum/n):0;
     lastConf=conf;lastRaw=bestBpm;
     if(conf<1.5)return;
+    /* does the sound actually repeat every beat, half bar or bar? Talking and free-time intros don't,
+       even when a tempo happens to score well, so they aren't followed as a beat */
+    var per0=60/bestBpm/STEP,rep=0;
+    [1,2,4].forEach(function(k){
+      var C=Math.round(per0*k);if(N<C+2*per0)return;
+      for(var L=C-2;L<=C+2;L++){var xy=0,xx=0,yy=0;for(var t=0;t+L<N;t++){xy+=e[t]*e[t+L];xx+=e[t]*e[t];yy+=e[t+L]*e[t+L];}var rr=xx>0&&yy>0?xy/Math.sqrt(xx*yy):0;if(rr>rep)rep=rr;}
+    });
+    lastRep=rep;
+    if(rep<0.55){if(!est.bpm)firstCand=0;return;}
     var beatT=t0+bestPh*STEP;       /* one beat's time on the audio clock */
-    if(!est.bpm){set(bestBpm,beatT,conf,tEnd);gen++;return;}
+    /* the first lock needs two readings in a row that agree (a second of music), so a lucky moment
+       in talking or noise doesn't start the steps */
+    if(!est.bpm){
+      if(firstCand&&Math.abs(bestBpm/firstCand-1)<0.04){set(bestBpm,beatT,conf,tEnd);gen++;firstCand=0;}
+      else firstCand=bestBpm;
+      return;
+    }
     var ratio=bestBpm/est.bpm;
     /* double or half of the tempo already being followed is the same music: stay put */
     if(Math.abs(ratio-2)<0.08||Math.abs(ratio-0.5)<0.03){est.at=tEnd;est.conf=conf;cand=0;candN=0;return;}
@@ -1502,7 +1517,7 @@ var BEAT=(function(){
   }
   /* how far through the current beat we are, 0 to 1 */
   function phase(now){var g=get(),p=((now-g.t0)/g.period)%1;return p<0?p+1:p;}
-  window.ukBeat=function(){var g=get();return{bpm:Math.round(g.bpm*10)/10,live:g.live,known:g.known,beatPhase:Math.round(phase(performance.now())*100)/100,intensity:Math.round(level()*100)/100,confidence:Math.round(lastConf*100)/100,latestReading:lastRaw,analyses:runs,listening:!!an};};
+  window.ukBeat=function(){var g=get();return{bpm:Math.round(g.bpm*10)/10,live:g.live,known:g.known,beatPhase:Math.round(phase(performance.now())*100)/100,intensity:Math.round(level()*100)/100,confidence:Math.round(lastConf*100)/100,steadiness:Math.round(lastRep*100)/100,latestReading:lastRaw,analyses:runs,listening:!!an};};
   /* how intense the music is right now, 0 (the quiet parts) to 1 (the loud parts); 0.5 until it has heard a range */
   function level(){if(lvHi-lvLo<6)return 0.5;return Math.max(0,Math.min(1,(lvl-lvLo)/(lvHi-lvLo)));}
   return{tap:tap,get:get,phase:phase,level:level};
@@ -1694,7 +1709,7 @@ var GAME=(function(){
   /* step game */
   var LANES=["left","down","up","right"],LCOL=["#D354A0","#5FB4F0","#F5C518","#3CCB8A"],LROT=[Math.PI,Math.PI/2,-Math.PI/2,0];
   var STEP_POSE={left:[2.1,0.35,0.85,0],right:[-0.35,-2.1,0,-0.85],up:[2.55,-2.55,0.1,-0.1],down:[1.2,-1.2,0.75,-0.75]};
-  var notes=[],score=0,best=0,hits=0,misses=0,judge="",judgeT=0,judgeCol="#fff",flash=[0,0,0,0],lastSlot=0,lastGen=-1,prevLane=-1,prevLane2=-1,prevX=0.5,prevY=0.5,startT=0;
+  var waiting=false,notes=[],score=0,best=0,hits=0,misses=0,judge="",judgeT=0,judgeCol="#fff",flash=[0,0,0,0],lastSlot=0,lastGen=-1,prevLane=-1,prevLane2=-1,prevX=0.5,prevY=0.5,startT=0;
   var HIT=[[60,"PERFECT",100,"#F5C518"],[120,"GREAT",60,"#3CCB8A"],[180,"GOOD",30,"#5FB4F0"]];
   /* in a dance round: the chart everyone shares, how far through it we are, and score reporting */
   var rnd=null,rndIdx=0,sentScore=-1,scoreTimer=null;
@@ -1780,6 +1795,9 @@ var GAME=(function(){
   function travel(per){return Math.max(1400,Math.min(2300,per*3.5));}
   function makeNotes(now,bt){
     if(rnd&&rnd.chart){feedRound(now,bt);return;}
+    /* free play: no new steps until the music has a beat to follow (talking, a quiet intro, silence) */
+    if(!bt.known||!bt.live){waiting=true;lastSlot=Math.max(lastSlot,now+600);return;}
+    if(waiting){waiting=false;lastSlot=now+travel(bt.period)*0.6;}
     var half=bt.period/2;
     if(bt.gen!==lastGen){            /* the tempo jumped: clear what hasn't arrived yet and start a fresh grid */
       lastGen=bt.gen;notes=notes.filter(function(n){return n.j||n.t<now+350;});
@@ -1927,7 +1945,7 @@ var GAME=(function(){
     if(now-lastBpmTxt<500)return;lastBpmTxt=now;
     var bt=BEAT.get(),el=document.getElementById("gameBpm");
     if(rnd&&rnd.chart){el.textContent=Math.round(rnd.chart.bpm)+" BPM";el.title="This round's steps were made from the song itself, the same for everyone";return;}
-    el.textContent=bt.known?Math.round(bt.bpm)+" BPM"+(bt.live?"":" (holding)"):"listening… 120 BPM";
+    el.textContent=bt.known?Math.round(bt.bpm)+" BPM"+(bt.live?"":" \u00b7 waiting for the beat"):"listening for the beat\u2026";
     el.title=bt.known?(bt.live?"Following the music":"No clear beat right now; keeping the last tempo"):"No beat found yet; using 120 BPM until the music has one";
   }
   var meCv=null,meG=null,lastFit=0;
@@ -2214,7 +2232,7 @@ var ROUND=(function(){
         corr=0;bi=0;sat=false;myVote="";top=null;
         if(GAME.mode)GAME.stop();                           /* free-play ends; the round takes over */
         GAME.closeMenu();
-      }
+      }else if(ph==="countdown"&&m.chart&&!rd.chart){rd.chart=cleanChart(m.chart);}   /* the steps can arrive after the countdown has started */
       clearInterval(timer);timer=setInterval(tickUI,250);
     }
     if(!rd||rd.n!==m.n)return;
@@ -2253,11 +2271,12 @@ var ROUND=(function(){
      - the tempo, and the time of every beat (following the song if it speeds up or slows down);
      - how loud each part is, compared with the rest of the song;
      - where the drum hits and note starts are.
-   Then it writes the steps: few in quiet parts, one per beat in normal parts, extra off-beat steps
+   Then it writes the steps, only where the music has a steady beat (a spoken intro or a free-time
+   opening gets none): few in quiet parts, one per beat in normal parts, extra off-beat steps
    and double arrows in the loudest parts, and always on a real hit in the music where there is one.
    Result: {bpm, dur, beats:[ms], steps:[[ms, lanes]]}; lanes is a bit mask, 1=left 2=down 4=up 8=right. */
 var CHART=(function(){
-  var FPS=100,NFFT=1024,LAG=14;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
+  var FPS=100,NFFT=1024,LAG=14,PULSE=0.55;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
   function fft(re,im){
     var n=re.length,i,j=0,k,m;
     for(i=1;i<n;i++){var bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){var t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
@@ -2344,6 +2363,24 @@ var CHART=(function(){
     for(var t=first-gap;t>=0;t-=gap)out.unshift(Math.round(t));
     return out;
   }
+  /* How steady the pulse is around beat i: the envelope compared with itself one, two and four beats
+     later (a beat, half a bar, a bar) over about eight beats either side; the best match counts.
+     1 = the same hits repeat exactly, 0 = nothing repeats. Music with a beat scores high; talking,
+     free-time intros and ambient pads score low. */
+  function pulse(e,bt,i){
+    var nb=bt.length,a=bt[Math.max(0,i-8)],b=bt[Math.min(nb-1,i+8)],best=0,gaps=[];
+    for(var q=Math.max(1,i-4);q<=Math.min(nb-1,i+4);q++)gaps.push(bt[q]-bt[q-1]);
+    var P=pct(gaps,0.5);if(!(P>0))return 0;
+    [1,2,4].forEach(function(k){
+      var C=Math.round(P*k);if(b-a<C+2*P)return;
+      for(var L=C-2;L<=C+2;L++){
+        var xy=0,xx=0,yy=0;
+        for(var t=a;t+L<b&&t+L<e.length;t++){var u=e[t],v=e[t+L];xy+=u*v;xx+=u*u;yy+=v*v;}
+        var r=xx>0&&yy>0?xy/Math.sqrt(xx*yy):0;if(r>best)best=r;
+      }
+    });
+    return best;
+  }
   function near(e,c,r){var m=0;for(var i=Math.max(0,c-r);i<=Math.min(e.length-1,c+r);i++)if(e[i]>m)m=e[i];return m;}
   /* Step 4: the steps. level: 0.6 easier, 1 normal, 1.4 harder. */
   function steps(e,rms,bt,bpm,level,seed){
@@ -2352,11 +2389,14 @@ var CHART=(function(){
     /* smooth over about two bars, then place each beat between the song's quiet and loud ends */
     var sm=new Float32Array(nb);for(i=0;i<nb;i++){var s2=0,n2=0;for(var q=Math.max(0,i-4);q<=Math.min(nb-1,i+4);q++){s2+=loud[q];n2++;}sm[i]=s2/n2;}
     var lo=pct(sm,0.1),hi=pct(sm,0.92);if(hi-lo<3){lo=hi-3;}
-    var silent=Math.max(-60,hi-36),hit=pct(e,0.97)||1,r=rng(seed||1),out=[],prev=-1,prev2=-1,fast=bpm>150;
+    var silent=Math.max(-60,hi-36),hit=pct(e,0.97)||1,r=rng(seed||1),out=[],prev=-1,prev2=-1,fast=bpm>150,groove=false;
     function lane(){var l;do{l=Math.floor(r()*4);}while(l===prev&&l===prev2);prev2=prev;prev=l;return l;}
     for(i=0;i<nb;i++){
       var t=bt[i]*10;if(i<4||t<2500)continue;                       /* lead-in: let people hear the song first */
       if(loud[i]<silent&&sm[i]<silent+6)continue;                    /* silence: nothing to dance to */
+      if(pulse(e,bt,i)<PULSE){groove=false;continue;}                 /* talking, a free-time intro, ambient pads: no steady beat, no steps */
+      var hitHere=near(e,bt[i],3)/hit;
+      if(!groove){if(hitHere<0.3)continue;groove=true;}               /* after a stretch with no beat, start again on a real hit */
       var I=Math.max(0,Math.min(1,(sm[i]-lo)/(hi-lo)))*level,on=near(e,bt[i],3)/hit,mask=0;
       if(I<0.3){if(i%2===0||on>0.6)mask=1<<lane();}                 /* quiet: every other beat */
       else mask=1<<lane();                                           /* normal and up: every beat */
