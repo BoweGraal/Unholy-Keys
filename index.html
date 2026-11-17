@@ -1381,7 +1381,10 @@ function mirrorMap(n){if(n.length<NC)return n;var r=[];for(var g=0;g<6;g++){var 
 function buildLayout(){var iv=SCALES[S.scale],all=scaleNotes(S.root,iv,S.oct,Math.max(NC,iv.length*5));var n=all.slice(0,NC);var L={};REGS.forEach(function(mod,mi){DIRS.forEach(function(dir,di){L[mod+"-"+dir]=n[mi*4+di]||60;});});return L;}
 var layout=buildLayout();
 
-function initAudio(){if(started)return;started=true;Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);rev=new Tone.Reverb({decay:FXS.rv.decay,wet:S.fxR}).connect(masterVol);
+function initAudio(){if(started)return;started=true;
+  /* iPhone: without this, web audio follows the ringer switch and is silent when the phone is on silent */
+  try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
+  Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);rev=new Tone.Reverb({decay:FXS.rv.decay,wet:S.fxR}).connect(masterVol);
   /* ── Native Tone.js pedal board: cho → AutoWah → Delay → Tremolo → BitCrusher → rev ── */
   pdCrush=new Tone.BitCrusher({bits:FXS.crush.bits,wet:S.pdCrush}).connect(rev);
   pdTre=new Tone.Tremolo({frequency:FXS.tre.frequency,depth:FXS.tre.depth,wet:S.pdTre}).start().connect(pdCrush);
@@ -1448,7 +1451,13 @@ function loadSamp(id){if(samplers[id]||loading[id])return;var ins=findInst(id);i
   if(ins.direct){loadDirect(id,ins,.5,function(sp){sampReady(id,ins,sp);},function(){sampFail(id);});setTimeout(function(){if(loading[id]&&!samplers[id])sampFail(id);},45000);return;}
   var urls={};var ext=ins.ext||".mp3";Object.keys(ins.n).forEach(function(k){urls[k]=ins.n[k]+ext;});var folder=ins.base||id;var baseUrl=ins.sbase||(SBASE+folder+"/");var sp=new Tone.Sampler({urls:urls,baseUrl:baseUrl,release:.5,onload:function(){sampReady(id,ins,sp);},onerror:function(e){dbg(id+" ERROR: "+(e&&e.message?e.message:e||"unknown"));sampFail(id);}});setTimeout(function(){if(loading[id]){delete loading[id];renderInst();updBdg();}},15000);}
 
-function mkVoice(noteName){if(!audioReady)return null;var ins=findInst(S.eng);if(!ins)return null;if(ins.t==="samp"){var sp=samplers[ins.id];if(!sp)return null;
+/* While a sampled instrument is still downloading, play a soft stand-in so touching or pressing does
+   something straight away (on a phone on mobile data the download can take a while). */
+function standInVoice(noteName){
+  var s=new Tone.Synth({oscillator:{type:"triangle"},envelope:{attack:.02,decay:.3,sustain:.5,release:.3}});s.volume.value=-6;s.connect(dist);
+  return{atk:function(){s.triggerAttack(noteName);},rel:function(){try{s.triggerRelease();}catch(e){}setTimeout(function(){try{s.dispose();}catch(e){}},1200);},ar:function(dur){s.triggerAttackRelease(noteName,dur);setTimeout(function(){try{s.dispose();}catch(e){}},1500);},kill:function(){try{s.dispose();}catch(e){}},setEnv:function(){},standIn:true};
+}
+function mkVoice(noteName){if(!audioReady)return null;var ins=findInst(S.eng);if(!ins)return null;if(ins.t==="samp"){var sp=samplers[ins.id];if(!sp){if(!loading[ins.id])loadSamp(ins.id);mbLoading(ins);return standInVoice(noteName);}
   var _retrigTm=null,_alive=false;
   var XFADE=0.55;/* seconds — matches release:.5 on sampler with a tiny buffer */
   function _getBufDur(){try{if(sp._activeSources){var d=0;sp._activeSources.forEach(function(arr){arr.forEach(function(src){if(src.buffer&&src.buffer.duration>d)d=src.buffer.duration;});});if(d>0)return d;}}catch(e){}return 3;}
@@ -1465,7 +1474,7 @@ function mkVoice(noteName){if(!audioReady)return null;var ins=findInst(S.eng);if
 function silenceNote(){if(activeImpactIv){clearInterval(activeImpactIv);activeImpactIv=null;}if(REC.recording)REC._noteOff();if(activeVoice){var v=activeVoice;activeVoice=null;try{v.rel();}catch(e){}/* always clean up the voice itself; deciding by the current instrument leaked the synth after an instrument switch mid-note */setTimeout(function(){try{v.kill();}catch(e){}},500);}for(var i=0;i<activeChordVoices.length;i++){var cv=activeChordVoices[i];try{cv.rel();}catch(e){}(function(xv){setTimeout(function(){try{xv.kill();}catch(e){}},500);})(cv);}activeChordVoices=[];if(activeHarmVoice){var hv=activeHarmVoice;activeHarmVoice=null;try{hv.rel();}catch(e){}setTimeout(function(){try{hv.kill();}catch(e){}},500);}if(activeNoteKey){var el=document.getElementById("c-"+activeNoteKey);var nk=activeNoteKey;activeNoteKey=null;if(el){el.classList.remove("on");el.style.background="";el.style.borderColor=(RCLR[modKey(nk)]||"#7F77DD")+"44";}}updJamKeys();mbUpdNote(null,null);}
 
 var playGen=0;
-function playNote(nk,midi){if(!audioReady)return;silenceNote();var noteName=Tone.Frequency(midi,"midi").toNote();masterVol.volume.value=Tone.gainToDb(S.vol*getPowerVol());activeNoteKey=nk;var v=mkVoice(noteName);if(!v){activeNoteKey=null;return;}if(S.mode==="impact"){v.ar("32n");activeVoice=v;var myGen=++playGen;activeImpactIv=setInterval(function(){if(playGen!==myGen){clearInterval(activeImpactIv);return;}var ins=findInst(S.eng);if(ins&&ins.t==="samp"){var sp=samplers[ins.id];if(sp)sp.triggerAttackRelease(noteName,"32n");}else{var old=activeVoice;if(old){try{old.kill();}catch(e){}}var nv=mkVoice(noteName);if(!nv)return;nv.ar("32n");activeVoice=nv;}},60000/S.tempo);}else if(S.mode==="staccato"){v.setEnv({attack:.005,decay:.08,sustain:0,release:.05});v.ar("16n");activeVoice=v;}else if(S.mode==="legato"){applyPowerEnv(v);v.atk();activeVoice=v;}else{applyPowerEnv(v);v.atk();activeVoice=v;}if(mods.c){var shape=CHORD_SHAPES[chordShape]||[0,4,7];for(var ci=1;ci<shape.length;ci++){(function(offset,delay){var cn=Tone.Frequency(midi+offset,"midi").toNote();if(strumOn&&delay>0){setTimeout(function(){var cv=mkVoice(cn);if(!cv)return;activeChordVoices.push(cv);if(S.mode==="staccato"){cv.ar("16n");}else if(S.mode==="impact"){cv.ar("32n");}else{cv.atk();}},delay);}else{var cv=mkVoice(cn);if(cv){activeChordVoices.push(cv);if(S.mode==="staccato"){cv.ar("16n");}else if(S.mode==="impact"){cv.ar("32n");}else{cv.atk();}}}})(shape[ci],strumOn?ci*strumSpeed:0);}}if(harmOn){var hOff=HARM_INTERVALS[harmInterval]||7;var hn=Tone.Frequency(midi+hOff,"midi").toNote();var hv=mkVoice(hn);if(hv){activeHarmVoice=hv;if(S.mode==="staccato"){hv.ar("16n");}else if(S.mode==="impact"){hv.ar("32n");}else{hv.atk();}}}var el=document.getElementById("c-"+nk);if(el){var clr=RCLR[modKey(nk)]||"#7F77DD";el.classList.add("on");el.style.background=clr;el.style.borderColor=clr;}updJamKeys();  hist.push({midi:midi,time:Date.now(),key:nk});if(hist.length>200)hist.shift();drawHist();if(jamOn)onJNote(nk,midi);if(REC.recording)REC._noteOn(midi,nk,S.eng);mbUpdNote(nk,midi);}
+function playNote(nk,midi){if(!audioReady)return;silenceNote();var noteName=Tone.Frequency(midi,"midi").toNote();masterVol.volume.value=Tone.gainToDb(S.vol*getPowerVol());activeNoteKey=nk;var v=mkVoice(noteName);if(!v){activeNoteKey=null;return;}if(S.mode==="impact"){v.ar("32n");activeVoice=v;var myGen=++playGen;activeImpactIv=setInterval(function(){if(playGen!==myGen){clearInterval(activeImpactIv);return;}var ins=findInst(S.eng);if(ins&&ins.t==="samp"&&samplers[ins.id]){samplers[ins.id].triggerAttackRelease(noteName,"32n");}else{var old=activeVoice;if(old){try{old.kill();}catch(e){}}var nv=mkVoice(noteName);if(!nv)return;nv.ar("32n");activeVoice=nv;}},60000/S.tempo);}else if(S.mode==="staccato"){v.setEnv({attack:.005,decay:.08,sustain:0,release:.05});v.ar("16n");activeVoice=v;}else if(S.mode==="legato"){applyPowerEnv(v);v.atk();activeVoice=v;}else{applyPowerEnv(v);v.atk();activeVoice=v;}if(mods.c){var shape=CHORD_SHAPES[chordShape]||[0,4,7];for(var ci=1;ci<shape.length;ci++){(function(offset,delay){var cn=Tone.Frequency(midi+offset,"midi").toNote();if(strumOn&&delay>0){setTimeout(function(){var cv=mkVoice(cn);if(!cv)return;activeChordVoices.push(cv);if(S.mode==="staccato"){cv.ar("16n");}else if(S.mode==="impact"){cv.ar("32n");}else{cv.atk();}},delay);}else{var cv=mkVoice(cn);if(cv){activeChordVoices.push(cv);if(S.mode==="staccato"){cv.ar("16n");}else if(S.mode==="impact"){cv.ar("32n");}else{cv.atk();}}}})(shape[ci],strumOn?ci*strumSpeed:0);}}if(harmOn){var hOff=HARM_INTERVALS[harmInterval]||7;var hn=Tone.Frequency(midi+hOff,"midi").toNote();var hv=mkVoice(hn);if(hv){activeHarmVoice=hv;if(S.mode==="staccato"){hv.ar("16n");}else if(S.mode==="impact"){hv.ar("32n");}else{hv.atk();}}}var el=document.getElementById("c-"+nk);if(el){var clr=RCLR[modKey(nk)]||"#7F77DD";el.classList.add("on");el.style.background=clr;el.style.borderColor=clr;}updJamKeys();  hist.push({midi:midi,time:Date.now(),key:nk});if(hist.length>200)hist.shift();drawHist();if(jamOn)onJNote(nk,midi);if(REC.recording)REC._noteOn(midi,nk,S.eng);mbUpdNote(nk,midi);}
 
 function refreshNote(){if(arrowStack.length===0){silenceNote();return;}var dir=arrowStack[arrowStack.length-1];var nk=getMod()+"-"+dir;var midi=layout[nk];if(nk===activeNoteKey)return;if(midi!==undefined)playNote(nk,midi);else silenceNote();}
 
@@ -1764,6 +1773,12 @@ function mbYtoReg(y){if(y<0.333)return"space+d";if(y<0.667)return"space";return"
 function mbUpdSliderUI(y){var thumb=document.getElementById("mb-slider-thumb"),fill=document.getElementById("mb-slider-fill"),track=document.getElementById("mb-slider"),h=track.clientHeight||500,thumbY=Math.round(y*h);thumb.style.top=thumbY+"px";var dir=mbYtoDir(y);var icons={up:"\u25B2",right:"\u25B6",left:"\u25C0",down:"\u25BC"};thumb.textContent=icons[dir]||"\u00B7";fill.style.top="0px";fill.style.height=thumbY+"px";var reg=mbYtoReg(y);var badge=document.getElementById("mb-reg-badge");badge.textContent=RLBL[reg];badge.style.color=RCLR[reg];badge.style.borderColor=RCLR[reg]+"44";}
 function mbSetSliderFromTouch(clientY){var track=document.getElementById("mb-slider"),r=track.getBoundingClientRect(),y=Math.max(0,Math.min(1,(clientY-r.top)/r.height));mbSlider.y=y;var dir=mbYtoDir(y),reg=mbYtoReg(y);mbSlider.dir=dir;mbSlider.octOffset=reg;mbUpdSliderUI(y);arrowStack=[];if(dir)arrowStack=[dir];mods.space=(reg==="space"||reg==="space+d");mods.d=(reg==="d"||reg==="space+d");updModInd();refreshNote();}
 function mbReleaseSlider(){if(!mbSlider.active)return;mbSlider.active=false;arrowStack=[];mods.space=false;mods.d=false;silenceNote();updModInd();}
+var mbLoadT=null;
+function mbLoading(ins){
+  if(!mobileOn)return;var d=document.getElementById("mb-inst-disp");if(!d)return;
+  d.textContent="Loading "+ins.l+"\u2026 (stand-in sound)";d.style.color="var(--am, #E0A030)";
+  clearInterval(mbLoadT);mbLoadT=setInterval(function(){if(samplers[ins.id]||!mobileOn){clearInterval(mbLoadT);mbLoadT=null;var cur=findInst(S.eng);d.textContent=cur?cur.l:"";d.style.color="";}},500);
+}
 function mbUpdNote(nk,midi){if(!mobileOn)return;var nd=document.getElementById("mb-noteDisp"),fd=document.getElementById("mb-freqDisp");if(!nk||midi===null||midi===undefined){nd.textContent="\u2014";fd.textContent="Slide to play";nd.style.textShadow="none";nd.style.color="#fff";return;}var mod=modKey(nk),clr=RCLR[mod]||"#7F77DD";nd.textContent=m2n(midi);nd.style.color=clr;nd.style.textShadow="0 0 40px "+clr+",0 0 80px "+clr;fd.textContent=Math.round(m2f(midi))+" Hz";}
 function mbUpdMode(){var mode=MODES.filter(function(m){return m.id===S.mode;})[0]||MODES[0];var icon=document.getElementById("mb-mode-icon"),lbl=document.getElementById("mb-mode-lbl"),tap=document.getElementById("mb-mode-tap");if(icon)icon.textContent=mode.icon;if(lbl)lbl.textContent=mode.l;if(tap){tap.className=(S.mode==="impact"||S.mode==="staccato")?"impact-mode":"sustain-mode";tap.id="mb-mode-tap";}var md=document.getElementById("mb-modeDisp");if(md){var clr=S.mode==="impact"?"var(--pk)":S.mode==="sustain"?"var(--tl)":S.mode==="staccato"?"var(--co)":"var(--pu)";md.textContent=mode.l;md.style.color=clr;md.style.borderColor=clr+"33";md.style.background=clr+"11";}}
 var mbModeOrder=["impact","sustain","staccato","legato"];
@@ -3834,7 +3849,7 @@ function goLive(){
     }
     if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
-    if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes")ROUNDS.onMsg(msg);
+    if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight")ROUNDS.onMsg(msg);
     if(msg.type==="room-created")ROUNDS.buttons();
   };
   liveWs.onclose=function(){if(liveOn)endLive();else liveFail();};
@@ -4106,11 +4121,16 @@ document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
      - the tempo, and the time of every beat (following the song if it speeds up or slows down);
      - how loud each part is, compared with the rest of the song;
      - where the drum hits and note starts are.
-   Then it writes the steps: few in quiet parts, one per beat in normal parts, extra off-beat steps
+   It also maps how intense every beat is (loudness, brightness, how busy the hits are, and whether
+   that part of the song comes back like a chorus) and finds the song's big moments.
+   Then it writes the steps, only where the music has a steady beat (a spoken intro or a free-time
+   opening gets none): few in quiet parts, one per beat in normal parts, extra off-beat steps
    and double arrows in the loudest parts, and always on a real hit in the music where there is one.
-   Result: {bpm, dur, beats:[ms], steps:[[ms, lanes]]}; lanes is a bit mask, 1=left 2=down 4=up 8=right. */
+   Result: {bpm, dur, beats:[ms], steps:[[ms, lanes] or [ms, lane, holdMs]], peaks:[[startMs,endMs]]};
+   lanes is a bit mask, 1=left 2=down 4=up 8=right; a third number makes it a hold arrow (one lane, held
+   for that many ms); peaks are the big moments, where the steps get hardest. */
 var CHART=(function(){
-  var FPS=100,NFFT=1024,LAG=14;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
+  var FPS=100,NFFT=1024,LAG=14,PULSE=0.55;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
   function fft(re,im){
     var n=re.length,i,j=0,k,m;
     for(i=1;i<n;i++){var bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){var t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
@@ -4128,10 +4148,14 @@ var CHART=(function(){
   /* Step 1: for every 10 ms of the song, how much new sound started (env) and how loud it is (rms).
      Done a slice at a time; onProgress(0..1) is called between slices so the page stays responsive. */
   function envelope(x,sr,onProgress,done){
-    var hop=sr/FPS,N=Math.max(0,Math.floor((x.length-NFFT)/hop)),env=new Float32Array(N),rms=new Float32Array(N);
+    var hop=sr/FPS,N=Math.max(0,Math.floor((x.length-NFFT)/hop)),env=new Float32Array(N),rms=new Float32Array(N),bright=new Float32Array(N),chroma=new Float32Array(N*12);
     var win=new Float32Array(NFFT),re=new Float32Array(NFFT),im=new Float32Array(NFFT),prev=new Float32Array(NFFT/2),i=0,k;
     for(k=0;k<NFFT;k++)win[k]=0.5-0.5*Math.cos(2*Math.PI*k/(NFFT-1));
     var lowBins=Math.max(2,Math.round(190/(sr/NFFT))),topBin=Math.min(NFFT/2,Math.round(8000/(sr/NFFT)));
+    /* brightness: share of energy above 2.5 kHz (cymbals, distortion, a band at full tilt);
+       chroma: energy per note name, 80 Hz to 2 kHz, for spotting the parts of the song that repeat */
+    var brightBin=Math.round(2500/(sr/NFFT)),pcOf=new Int8Array(NFFT/2).fill(-1);
+    for(k=Math.max(1,Math.round(80/(sr/NFFT)));k<Math.min(NFFT/2,Math.round(2000/(sr/NFFT)));k++){var fz=k*sr/NFFT;pcOf[k]=((Math.round(12*Math.log(fz/261.63)/Math.LN2)%12)+12)%12;}
     function slice(){
       var end=Math.min(N,i+1500);
       for(;i<end;i++){
@@ -4139,12 +4163,15 @@ var CHART=(function(){
         for(k=0;k<NFFT;k++){var v=x[o+k];re[k]=v*win[k];im[k]=0;e+=v*v;}
         rms[i]=Math.sqrt(e/NFFT);
         fft(re,im);
-        var f=0;
-        for(k=1;k<topBin;k++){var l=Math.log(1+1000*Math.sqrt(re[k]*re[k]+im[k]*im[k])/NFFT*4),d=l-prev[k];if(d>0)f+=d*(k<=lowBins?3:1);prev[k]=l;}
-        env[i]=f;
+        var f=0,tot=0,hiE=0,cb=i*12;
+        for(k=1;k<topBin;k++){
+          var p2=re[k]*re[k]+im[k]*im[k],l=Math.log(1+1000*Math.sqrt(p2)/NFFT*4),d=l-prev[k];if(d>0)f+=d*(k<=lowBins?3:1);prev[k]=l;
+          tot+=p2;if(k>=brightBin)hiE+=p2;if(pcOf[k]>=0)chroma[cb+pcOf[k]]+=p2;
+        }
+        env[i]=f;bright[i]=tot>0?hiE/tot:0;
       }
       if(i<N){if(onProgress){onProgress(i/N);setTimeout(slice,0);}else slice();}
-      else done(env,rms);
+      else done(env,rms,{bright:bright,chroma:chroma});
     }
     slice();
   }
@@ -4197,32 +4224,135 @@ var CHART=(function(){
     for(var t=first-gap;t>=0;t-=gap)out.unshift(Math.round(t));
     return out;
   }
+  /* How steady the pulse is around beat i: the envelope compared with itself one, two and four beats
+     later (a beat, half a bar, a bar) over about eight beats either side; the best match counts.
+     1 = the same hits repeat exactly, 0 = nothing repeats. Music with a beat scores high; talking,
+     free-time intros and ambient pads score low. */
+  function pulse(e,bt,i){
+    var nb=bt.length,a=bt[Math.max(0,i-8)],b=bt[Math.min(nb-1,i+8)],best=0,gaps=[];
+    for(var q=Math.max(1,i-4);q<=Math.min(nb-1,i+4);q++)gaps.push(bt[q]-bt[q-1]);
+    var P=pct(gaps,0.5);if(!(P>0))return 0;
+    [1,2,4].forEach(function(k){
+      var C=Math.round(P*k);if(b-a<C+2*P)return;
+      for(var L=C-2;L<=C+2;L++){
+        var xy=0,xx=0,yy=0;
+        for(var t=a;t+L<b&&t+L<e.length;t++){var u=e[t],v=e[t+L];xy+=u*v;xx+=u*u;yy+=v*v;}
+        var r=xx>0&&yy>0?xy/Math.sqrt(xx*yy):0;if(r>best)best=r;
+      }
+    });
+    return best;
+  }
   function near(e,c,r){var m=0;for(var i=Math.max(0,c-r);i<=Math.min(e.length-1,c+r);i++)if(e[i]>m)m=e[i];return m;}
-  /* Step 4: the steps. level: 0.6 easier, 1 normal, 1.4 harder. */
-  function steps(e,rms,bt,bpm,level,seed){
-    var nb=bt.length,loud=new Float32Array(nb),i;
-    for(i=0;i<nb;i++){var a=bt[i],b=i+1<nb?bt[i+1]:a+50,s=0,n=0;for(var k=a;k<b&&k<rms.length;k++){s+=rms[k]*rms[k];n++;}loud[i]=10*Math.log10((n?s/n:0)+1e-9);}
-    /* smooth over about two bars, then place each beat between the song's quiet and loud ends */
-    var sm=new Float32Array(nb);for(i=0;i<nb;i++){var s2=0,n2=0;for(var q=Math.max(0,i-4);q<=Math.min(nb-1,i+4);q++){s2+=loud[q];n2++;}sm[i]=s2/n2;}
-    var lo=pct(sm,0.1),hi=pct(sm,0.92);if(hi-lo<3){lo=hi-3;}
-    var silent=Math.max(-60,hi-36),hit=pct(e,0.97)||1,r=rng(seed||1),out=[],prev=-1,prev2=-1,fast=bpm>150;
-    function lane(){var l;do{l=Math.floor(r()*4);}while(l===prev&&l===prev2);prev2=prev;prev=l;return l;}
+  /* Step 4: how intense each beat is, 0 (the calmest part of this song) to 1 (its biggest moments).
+     Mixes loudness, brightness and how busy the hits are, smoothed over a couple of bars, and lifts
+     parts that come back again (choruses repeat; a one-off bridge doesn't). Also marks the "big
+     moments": stretches of at least two bars near the top of the song's range. */
+  function intensity(e,rms,ft,bt){
+    var nb=bt.length,loud=new Float32Array(nb),br=new Float32Array(nb),dn=new Float32Array(nb),ch=[],i,k,q;
+    for(i=0;i<nb;i++){
+      var a=bt[i],b=i+1<nb?bt[i+1]:a+50,s=0,sb=0,sd=0,n=0,c=new Float32Array(12);
+      for(k=a;k<b&&k<rms.length;k++){s+=rms[k]*rms[k];sb+=ft.bright[k];sd+=e[k];n++;for(q=0;q<12;q++)c[q]+=ft.chroma[k*12+q];}
+      loud[i]=10*Math.log10((n?s/n:0)+1e-9);br[i]=n?sb/n:0;dn[i]=n?sd/n:0;ch.push(c);
+    }
+    function norm(a){var lo=pct(a,0.1),hi=pct(a,0.95),o=new Float32Array(a.length);for(var z=0;z<a.length;z++)o[z]=hi>lo?Math.max(0,Math.min(1,(a[z]-lo)/(hi-lo))):0.5;return o;}
+    var nl=norm(loud),nbr=norm(br),nd=norm(dn),raw=new Float32Array(nb);
+    for(i=0;i<nb;i++)raw[i]=0.5*nl[i]+0.2*nbr[i]+0.3*nd[i];
+    /* parts that repeat: compare each bar's harmony with every other bar's */
+    var bars=Math.floor(nb/4),bv=[],repb=new Float32Array(Math.max(1,bars));
+    for(var B=0;B<bars;B++){var v=new Float32Array(12),m=0;for(i=B*4;i<B*4+4;i++)for(q=0;q<12;q++)v[q]+=ch[i][q];for(q=0;q<12;q++)m+=v[q]*v[q];m=Math.sqrt(m)||1;for(q=0;q<12;q++)v[q]/=m;bv.push(v);}
+    for(B=0;B<bars;B++){var cnt=0;for(var C=0;C<bars;C++){if(Math.abs(C-B)<2)continue;var dot=0;for(q=0;q<12;q++)dot+=bv[B][q]*bv[C][q];if(dot>0.93)cnt++;}repb[B]=Math.min(1,cnt/4);}
+    var sm=new Float32Array(nb);
+    for(i=0;i<nb;i++){var s2=0,n2=0;for(q=Math.max(0,i-4);q<=Math.min(nb-1,i+4);q++){s2+=raw[q];n2++;}var rp=repb[Math.min(bars-1,Math.floor(i/4))]||0;sm[i]=(s2/n2)*(0.85+0.3*rp);}
+    var E=norm(sm);
+    /* big moments: at least two bars in the top of the range (small dips of up to a bar are bridged) */
+    var peaks=[],start=-1,gap=0;
+    for(i=0;i<=nb;i++){
+      var up=i<nb&&E[i]>=0.72;
+      if(up){if(start<0)start=i;gap=0;}
+      else if(start>=0){gap++;if(gap>4||i===nb){var end=i-gap;if(end-start+1>=8)peaks.push([start,end]);start=-1;gap=0;}}
+    }
+    return{E:E,loud:loud,peaks:peaks,chroma:ch};
+  }
+  /* Step 5: the steps. level: 0.7 easier, 1 normal, 1.3 harder.
+     calm parts:      every other beat, small moves between neighbouring arrows
+     normal:          every beat
+     energetic:       plus off-beats where the music has them, a double on strong bar starts
+     big moments:     runs on the off-beats, doubles at every bar start and on crashes, flowing
+                      patterns across all four arrows
+     with a cap on arrows per second so it stays playable (lower for fast songs). */
+  var RUNS=[[0,1,3,2],[3,2,0,1],[0,2,3,1],[3,1,0,2],[0,1,2,3],[3,2,1,0],[1,0,2,3],[2,3,1,0]];
+  function steps(e,rms,ft,bt,bpm,level,seed){
+    var nb=bt.length,ii=intensity(e,rms,ft,bt),E=ii.E,loud=ii.loud,CHR=ii.chroma,i;
+    /* Holds: an arrow with a tail, held down until the tail ends. They go where the music holds a sound:
+       the harmony stays the same and the volume stays up for the next 2 (or 4) beats. */
+    function cosb(a,b){var d=0,x=0,y=0;for(var q=0;q<12;q++){d+=a[q]*b[q];x+=a[q]*a[q];y+=b[q]*b[q];}return x>0&&y>0?d/Math.sqrt(x*y):0;}
+    function holds(i,k){
+      if(i+k>=nb)return false;
+      var sum=0;
+      for(var j=1;j<=k;j++){var c=cosb(CHR[i],CHR[i+j]);if(c<0.8||loud[i+j]<loud[i]-5)return false;sum+=c;}
+      return sum/k>=0.88;                                             /* the same chord or note, near enough, all the way */
+    }
+    var heldLane=-1,heldUntil=-1,lastHoldBeat=-99,holdQuiet=false;
+    var inPeak=new Uint8Array(nb);ii.peaks.forEach(function(p){for(var z=p[0];z<=p[1];z++)inPeak[z]=1;});
+    var lmax=pct(loud,0.92),silent=Math.max(-60,lmax-36),hit=pct(e,0.97)||1,r=rng(seed||1),out=[],prev=-1,prev2=-1,fast=bpm>150,groove=false;
+    var cap=(fast?3.6:5.2)*Math.max(0.75,Math.min(1.3,level)),recent=[],run=null,runAt=0;
+    function lane(tier){
+      var l,tries=0;
+      do{l=pick(tier);tries++;}while(l===heldLane&&tries<8);         /* never on the arrow that's being held */
+      if(l===heldLane)l=(l+1)%4;
+      prev2=prev;prev=l;return l;
+    }
+    function pick(tier){
+      var l;
+      if(tier===3){                                                   /* big moments: flowing runs across the pad */
+        if(!run||runAt>=run.length){run=RUNS[Math.floor(r()*RUNS.length)];runAt=0;}
+        l=run[runAt++];if(l===prev&&l===prev2)l=(l+2)%4;
+      }else if(tier===0&&prev>=0){l=Math.max(0,Math.min(3,prev+(r()<0.5?-1:1)));if(r()<0.25)l=prev;}   /* calm: neighbouring arrows */
+      else{do{l=Math.floor(r()*4);}while(l===prev&&l===prev2);}
+      return l;
+    }
+    function room(t,n){while(recent.length&&recent[0]<t-1000)recent.shift();return recent.length+n<=cap;}
+    function bits(m){return (m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1);}
+    /* the cap limits the extras: a step on the beat is always placed (a double that doesn't fit
+       becomes a single), off-beat steps only go in when there's room */
+    function add(t,mask,first,onBeat,hold){var n=bits(mask);if(!room(t,n)){if(!onBeat)return false;if(n>1){mask=1<<first;n=1;}}for(var z=0;z<n;z++)recent.push(t);out.push(hold?[Math.round(t),mask,Math.round(hold)]:[Math.round(t),mask]);return true;}
+    function two(first,tier){var l2,g=0;do{l2=Math.floor(r()*4);g++;}while((l2===first||l2===heldLane||(tier<3&&Math.abs(l2-first)===2&&r()<0.5))&&g<20);if(l2===first||l2===heldLane)return 1<<first;return (1<<first)|(1<<l2);}
     for(i=0;i<nb;i++){
       var t=bt[i]*10;if(i<4||t<2500)continue;                       /* lead-in: let people hear the song first */
-      if(loud[i]<silent&&sm[i]<silent+6)continue;                    /* silence: nothing to dance to */
-      var I=Math.max(0,Math.min(1,(sm[i]-lo)/(hi-lo)))*level,on=near(e,bt[i],3)/hit,mask=0;
-      if(I<0.3){if(i%2===0||on>0.6)mask=1<<lane();}                 /* quiet: every other beat */
-      else mask=1<<lane();                                           /* normal and up: every beat */
-      if(mask&&I>0.9&&on>0.55&&i%4===0&&!fast){var l2;do{l2=Math.floor(r()*4);}while((1<<l2)===mask);mask|=1<<l2;}   /* loudest: double arrows on strong hits */
-      if(mask)out.push([Math.round(t),mask]);
-      /* off-beat steps where the music has a hit between beats and the song is loud enough */
-      if(i+1<nb){
-        var h=Math.round((bt[i]+bt[i+1])/2),hs=near(e,h,2)/hit;
-        if(!fast&&((I>0.6&&hs>0.45)||(I>0.85&&hs>0.25)))out.push([h*10,1<<lane()]);
-        else if(fast&&I>1.05&&hs>0.5)out.push([h*10,1<<lane()]);
+      if(loud[i]<silent)continue;                                     /* silence: nothing to dance to */
+      if(pulse(e,bt,i)<PULSE){groove=false;continue;}                 /* talking, a free-time intro, ambient pads: no steady beat, no steps */
+      var on=near(e,bt[i],3)/hit;
+      if(!groove){if(on<0.3)continue;groove=true;}                    /* after a stretch with no beat, start again on a real hit */
+      var D=E[i]*level+(inPeak[i]?0.25:0),tier=D<0.3?0:D<0.6?1:D<0.85||!inPeak[i]?2:3,bar=i%4===0;
+      if(heldLane>=0&&i>=heldUntil)heldLane=-1;                       /* the hold has ended */
+      /* during a hold in a calm or normal part, just hold; busier parts keep other arrows coming */
+      if(heldLane>=0&&holdQuiet)continue;
+      /* start a hold? on the beat, where the music holds, not too often, not on the very first beats back */
+      if(heldLane<0&&i-lastHoldBeat>=(tier>=2?8:12)&&(bar||i%2===0)&&level>=0.7){
+        var k=bpm<=110?2:(bpm>150?4:(tier>=2?2:4));
+        var len=i+k<nb?(bt[i+k]-bt[i])*10*0.92:0,perMs=60000/bpm;     /* ends just before the next step there */
+        if(len>=perMs*1.5&&len<=perMs*4.2&&holds(i,k)&&on>0.25){
+          var hl=lane(tier);
+          if(add(t,1<<hl,hl,true,len)){heldLane=hl;heldUntil=i+k;lastHoldBeat=i;holdQuiet=tier<=1;
+            if(i+1<nb&&tier>=2){var h0=Math.round((bt[i]+bt[i+1])/2),hs0=near(e,h0,2)/hit;if(!fast&&tier===3&&hs0>0.25&&room(h0*10,1)){var lo0=lane(tier);add(h0*10,1<<lo0,lo0,false);}}
+            continue;}
+        }
+      }
+      /* on the beat */
+      if(tier>0||i%2===0||on>0.6){
+        var l=lane(tier),mask=1<<l;
+        if((tier===3&&(bar||(on>0.8&&!fast)))||(tier===2&&bar&&on>0.55&&!fast))mask=two(l,tier);   /* doubles: bar starts, and crashes when there's time */
+        add(t,mask,l,true);
+      }
+      /* off the beat, where the music has a hit there */
+      if(i+1<nb&&tier>=1){
+        var h=Math.round((bt[i]+bt[i+1])/2),hs=near(e,h,2)/hit,want;
+        if(fast)want=tier===3&&hs>0.45&&i%2===0;
+        else want=tier===3?hs>0.2:tier===2?hs>0.35:hs>0.7;
+        if(want&&room(h*10,(i+1)%4===0&&tier===3?3:1)){var lo=lane(tier);add(h*10,1<<lo,lo,false);}   /* keep room for the double at the next bar start */
       }
     }
-    return out;
+    return{steps:out,peaks:ii.peaks.map(function(p){return [Math.round(bt[p[0]]*10+LAG),Math.round((p[1]+1<nb?bt[p[1]+1]:bt[p[1]]+50)*10+LAG)];})};
   }
   /* The whole job. buffer is a decoded AudioBuffer (or {sampleRate,length,numberOfChannels,getChannelData}).
      opts: {level, seed, onProgress(0..1)}; cb(chart). */
@@ -4230,7 +4360,7 @@ var CHART=(function(){
     opts=opts||{};
     var sr=buffer.sampleRate,n=buffer.length,ch=buffer.numberOfChannels,x=new Float32Array(n),c,i;
     for(c=0;c<ch;c++){var d=buffer.getChannelData(c);for(i=0;i<n;i++)x[i]+=d[i]/ch;}
-    envelope(x,sr,opts.onProgress,function(env,rms){
+    envelope(x,sr,opts.onProgress,function(env,rms,ft){
       var e=standOut(env),bpm=tempo(e),bt=beats(e,bpm);
       /* The tempo the beats actually came out at (the first guess can be off by a simple ratio such as
          2:3, and the beat finder still lands on the real beats). If it differs, find the beats again
@@ -4243,8 +4373,8 @@ var CHART=(function(){
         bpm=real;if(!changed)break;
         bt=beats(e,bpm);
       }
-      var st=steps(e,rms,bt,bpm,opts.level||1,opts.seed||(n%100000+Math.round(bpm*10)));
-      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return [q[0]+LAG,q[1]];})});
+      var res=steps(e,rms,ft,bt,bpm,opts.level||1,opts.seed||(n%100000+Math.round(bpm*10))),st=res.steps;
+      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks});
     });
   }
   return{analyse:analyse};
@@ -4283,7 +4413,7 @@ var ROUNDS=(function(){
     if(backingAudio&&f)backingAudio.pause();
     cur={n:0,mode:cfg.mode==="off"?"step":cfg.mode,title:String(title).replace(/\.(mp3|wav|flac|ogg|m4a|aac)$/i,"").slice(0,80),phase:"analyse",go:go,endAt:0,file:!!f};
     top=null;votes=null;myVote="";buttons();
-    if(!f||cur.mode==="free"){send(null,my);return;}
+    if(!f){send(null,my);return;}            /* free dance rounds are analysed too: the spotlight turns follow the bars */
     var bar=mk("div","bar"),fill=mk("i");bar.appendChild(fill);
     float([head(),mk("div","t",cur.title),mk("div","sub","Finding the beat and the loud parts…"),bar]);
     status("Checking “"+cur.title+"” for its beat and loud parts…");
@@ -4301,7 +4431,7 @@ var ROUNDS=(function(){
     if(my!==job||!cur)return;
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cfg.secs*1000;
     liveSend({type:"round-start",mode:cur.mode,title:cur.title,countdown:cfg.secs*1000,chart:chart});
-    status(cur.mode==="free"?"Free dance round: counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps. Counting everyone in.":(failed?"Couldn’t read that file, so steps will follow the beat live. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
+    status(cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file, so steps will follow the beat live. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cfg.secs*1000);
     clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();
   }
@@ -4334,7 +4464,7 @@ var ROUNDS=(function(){
       var left=Math.max(0,Math.ceil((cur.endAt-performance.now())/1000));
       float([head(),mk("div","t",cur.title),mk("div","big",String(left)),mk("div","sub",cur.file?"The song starts at zero.":"The round starts at zero.")]);
     }else if(cur.phase==="play"){
-      var line=cur.mode==="free"?"Everyone votes when the song ends. Your vote counts double.":top&&top.top.length?"Leading: "+top.top.slice(0,3).map(function(x,i){return ord(i+1)+" "+x.name+" "+x.score.toLocaleString();}).join("  ·  ")+"  ·  "+top.players+" dancing":"Waiting for the first scores…";
+      var line=cur.mode==="free"?spotLine():top&&top.top.length?"Leading: "+top.top.slice(0,3).map(function(x,i){return ord(i+1)+" "+x.name+" "+x.score.toLocaleString();}).join("  ·  ")+"  ·  "+top.players+" dancing":"Waiting for the first scores…";
       float([head(cur.title),mk("div","sub",line)]);
     }else if(cur.phase==="vote"){
       var left2=Math.max(0,Math.ceil((cur.endAt-performance.now())/1000)),row=mk("div","votes");
@@ -4346,6 +4476,14 @@ var ROUNDS=(function(){
       float([mk("div","h","Round "+cur.n+" · Pick the best dancer (your vote counts double)"),row,mk("div","sub",(votes?votes.cast+" of "+votes.of+" voted · ":"")+left2+" s left")]);
     }
   }
+  /* free dance: who has the spotlight now (song time from the backing track) */
+  function spotLine(){
+    var sp=cur&&cur.spot;if(!sp||!sp.length)return "Free dancing. The spotlight turns start later in the song; everyone votes at the end (your vote counts double).";
+    var pos=backingAudio&&cur.file?backingAudio.currentTime*1000:performance.now()-cur.endAt;
+    for(var i=0;i<sp.length;i++)if(pos>=sp[i].a&&pos<sp[i].b)return "\uD83D\uDD26 Spotlight: "+sp[i].name+" ("+(i+1)+" of "+sp.length+")";
+    if(pos<sp[0].a)return "Spotlight starts in "+Math.max(1,Math.ceil((sp[0].a-pos)/1000))+" s: "+sp.slice(0,Math.ceil(sp.length/2)).map(function(x){return x.name;}).join(", ");
+    return "Spotlight done. Voting when the song ends (your vote counts double).";
+  }
   function board(){
     var b=$("rdBoard");if(!b)return;b.textContent="";
     if(!totals.length)return;
@@ -4355,6 +4493,7 @@ var ROUNDS=(function(){
   function txt(v,n){return String(v==null?"":v).slice(0,n);}
   function onMsg(m){
     if(m.type==="round-scores"){if(cur&&cur.phase==="play"){top={top:(m.top||[]).slice(0,5).map(function(x){return{name:txt(x.name,24),score:Math.floor(+x.score||0)};}),players:Math.floor(+m.players||0)};draw();}return;}
+    if(m.type==="spotlight"){if(cur&&cur.phase==="play"){cur.spot=(m.turns||[]).slice(0,200).map(function(t){return{name:txt(t.name,24),a:+t.a||0,b:+t.b||0};});draw();}return;}
     if(m.type==="round-votes"){votes={cast:Math.floor(+m.cast||0),of:Math.floor(+m.of||0)};draw();return;}
     if(m.type!=="round")return;
     if(m.phase==="countdown"&&cur){cur.n=+m.n||0;draw();}
