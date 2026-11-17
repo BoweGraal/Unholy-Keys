@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="art.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -30,6 +31,17 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #side-name{padding:8px 12px 10px;border-bottom:1px solid var(--bg4);font-size:10px;color:var(--tx3)}
 #side-name input{width:100%;box-sizing:border-box;margin-top:4px;background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);padding:7px 10px;border-radius:var(--r);font-size:12px;font-weight:600;outline:none}
 #side-name input:focus{border-color:var(--pk)}
+#side-name .sn-row{display:flex;gap:8px;align-items:center;margin-top:4px}
+#side-name .sn-row input{margin-top:0}
+#perfLookCv{flex:0 0 auto;width:40px;height:48px;border-radius:6px;background:linear-gradient(#2a1f42,#161128);border:1px solid var(--bg4);cursor:pointer;image-rendering:pixelated}
+#perfLookBtn{margin-top:6px;width:100%;padding:5px 8px;border-radius:var(--r);border:1px solid var(--bg4);background:var(--bg3);color:var(--tx);font-size:11px;font-weight:600;cursor:pointer}
+#perfLookBtn:hover{border-color:var(--pk)}
+#perfMaker{display:none;position:fixed;inset:0;z-index:100000;background:rgba(5,4,10,.72);align-items:center;justify-content:center;padding:16px}
+#perfMaker.on{display:flex}
+#perfMaker .pm-box{background:#15121f;border:1px solid #2e2846;border-radius:12px;padding:18px;width:100%;max-width:520px;max-height:92vh;overflow:auto}
+#perfMaker .pm-h{font-size:15px;font-weight:700;margin-bottom:12px;color:#fff}
+#perfMaker .pm-f{display:flex;justify-content:flex-end;margin-top:14px}
+#perfMaker .pm-f button{padding:8px 22px;border-radius:8px;border:none;background:linear-gradient(135deg,#D354A0,#7F77DD);color:#fff;font-weight:700;cursor:pointer}
 body.jset #app.jx #side-name{display:none}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);cursor:pointer;color:var(--tx2);font-size:13px;font-weight:600;transition:all .12s;user-select:none;margin-bottom:2px}
 .nav-item:hover{background:var(--bg3);color:var(--tx)}
@@ -315,7 +327,10 @@ body.jset .nav-item.jam-only{display:flex}
       <button class="jbtn" id="bLive" style="background:linear-gradient(135deg,#D354A0,#FF4444)">Live</button>
       <button class="jbtn" id="bDance" title="Play the dance games yourself to a song from your Backing Tracks. Works without going live.">&#128131; Dance</button>
     </div>
-    <div id="side-name"><label for="stageName">Stage name</label><input type="text" id="stageName" maxlength="24" placeholder="Shown to your audience" autocomplete="off" spellcheck="false"></div>
+    <div id="side-name"><label for="stageName">Stage name</label>
+      <div class="sn-row"><canvas id="perfLookCv" width="40" height="48" title="Your character on stage: click to change"></canvas><input type="text" id="stageName" maxlength="24" placeholder="Shown to your audience" autocomplete="off" spellcheck="false"></div>
+      <button type="button" id="perfLookBtn">&#128085; Your character</button></div>
+    <div id="perfMaker" role="dialog" aria-label="Your character"><div class="pm-box"><div class="pm-h">Your character on stage</div><div id="perfMakerUi"></div><div class="pm-f"><button type="button" id="perfMakerDone">Done</button></div></div></div>
     <div id="side-nav">
       <div class="nav-item active" data-sec="play" onclick="setSection('play')"><span class="nav-icon">&#9835;</span>Play</div>
       <div class="nav-item" data-sec="inst" onclick="setSection('inst')"><span class="nav-icon">&#127928;</span>Instruments</div>
@@ -3801,13 +3816,43 @@ var LIVE_URL=resolveWsUrl();
 var liveWs=null,liveOn=false;
 /* stage name: shown under your character in the venue; remembered on this browser */
 function stageName(){var el=document.getElementById("stageName");return ((el&&el.value)||"").trim().slice(0,24)||"Performer";}
+/* your character on stage: remembered on this browser, shown to the audience, and in your audience panel */
+var perfLook=null;
+try{perfLook=ART.looks.unpack(localStorage.getItem("uk_perf_look"));}catch(e){}
+if(!perfLook)perfLook=ART.looks.random();
+function perfLookStr(){return ART.looks.pack(perfLook);}
+(function(){
+  var cv=document.getElementById("perfLookCv"),dlg=document.getElementById("perfMaker"),ui=null;
+  document.body.appendChild(dlg);          /* out of the sidebar, so it sits above everything */
+  function thumb(){if(!cv)return;var g=cv.getContext("2d");g.clearRect(0,0,40,48);ART.drawChar(g,20,26,1,perfLook,{});}
+  function open(){
+    dlg.classList.add("on");
+    ui=ART.maker(document.getElementById("perfMakerUi"),perfLook,function(L){
+      perfLook=L;thumb();
+      try{localStorage.setItem("uk_perf_look",perfLookStr());}catch(e){}
+      clearTimeout(open.t);open.t=setTimeout(function(){liveSend({type:"perf-name",name:stageName(),look:perfLookStr()});},300);
+    });
+  }
+  function close(){dlg.classList.remove("on");document.getElementById("perfMakerUi").innerHTML="";}
+  if(cv)cv.addEventListener("click",open);
+  document.getElementById("perfLookBtn").addEventListener("click",open);
+  document.getElementById("perfMakerDone").addEventListener("click",close);
+  dlg.addEventListener("click",function(e){if(e.target===dlg)close();});
+  /* while it's open, keys don't play notes or trigger hotkeys */
+  ["keydown","keyup"].forEach(function(ev){document.addEventListener(ev,function(e){
+    if(!dlg.classList.contains("on"))return;
+    if(ev==="keydown"&&e.key==="Escape"){e.preventDefault();close();}
+    if(e.key!=="Tab")e.stopImmediatePropagation();
+  },true);});
+  thumb();
+})();
 (function(){
   var el=document.getElementById("stageName");if(!el)return;
   try{el.value=localStorage.getItem("uk_stage_name")||"";}catch(e){}
   var t=null;
   el.addEventListener("input",function(){
     try{localStorage.setItem("uk_stage_name",el.value.trim());}catch(e){}
-    clearTimeout(t);t=setTimeout(function(){liveSend({type:"perf-name",name:stageName()});},400);
+    clearTimeout(t);t=setTimeout(function(){liveSend({type:"perf-name",name:stageName(),look:perfLookStr()});},400);
   });
   el.addEventListener("keydown",function(e){if(e.key==="Enter")el.blur();});
 })();
@@ -3828,7 +3873,7 @@ function goLive(){
   try{liveWs=new WebSocket(LIVE_URL);}catch(e){liveFail();return;}
   btn.textContent="Connecting";
   liveWs.onopen=function(){
-    liveWs.send(JSON.stringify({type:"create-room",name:stageName()}));
+    liveWs.send(JSON.stringify({type:"create-room",name:stageName(),look:perfLookStr()}));
   };
   liveWs.onmessage=function(e){
     var msg;try{msg=JSON.parse(e.data);}catch(x){return;}
@@ -3902,9 +3947,10 @@ try{AUD.min=localStorage.getItem("uk_jaud_min")==="1";AUD.big=localStorage.getIt
 var AUD_SAY_MS=7000;
 function audColor(c,d){return /^#[0-9a-fA-F]{6}$/.test(c)?c:d;}
 function audReset(){AUD.people={};AUD.count=0;}
+function audLook(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;name=String(name||"");for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return ART.looks.fromColor(audColor(color,"#888888"),h+1);}
 function audEvent(msg){
   var id=msg.id||msg.viewerId;
-  if(msg.type==="viewer-join"&&id){AUD.people[id]={name:String(msg.name||"").slice(0,24),color:audColor(msg.color,"#888888"),x:+msg.x||.5,y:+msg.y||.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};}
+  if(msg.type==="viewer-join"&&id){AUD.people[id]={look:audLook(msg.look,msg.color,msg.name),name:String(msg.name||"").slice(0,24),color:audColor(msg.color,"#888888"),x:+msg.x||.5,y:+msg.y||.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};}
   else if(msg.type==="pos"&&id){var p=AUD.people[id];if(!p)p=AUD.people[id]={name:String(msg.name||""),color:"#888888",x:.5,y:.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};p.x=+msg.x||p.x;p.y=+msg.y||p.y;}
   else if(msg.type==="viewer-leave"&&id){delete AUD.people[id];}
   else if(msg.type==="dance"&&id){if(AUD.people[id]){var dp=AUD.people[id];dp.dance=Math.max(0,Math.min(5,Math.floor(+msg.style||0)));if(dp.dance<4){dp.pose=null;dp.poseCur=null;dp.combo=0;}}}
@@ -4019,36 +4065,27 @@ var STREAK=(function(){
   return{draw:draw,pop:pop,track:track,level:level};
 })();
 
-function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge){
-  /* small version of the venue character: head, body, arms, legs; name under the feet */
-  var dT=now*0.009+seed,bob=0,armL=-.2,armR=.2,leg=0,legL=0,legR=0;
+function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys){
+  /* the venue's pixel character (art.js), small: name under the feet */
+  var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,p=Math.max(1,Math.round(sc));
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
-  if(walk!=null&&!dance){var ws=Math.sin(walk);legL=ws*2.6*sc;legR=-legL;armL=-.2-ws*.7;armR=.2-ws*.7;bob=-Math.abs(Math.cos(walk))*1.6*sc;}
-  if(dance===1){bob=-Math.abs(Math.sin(dT))*5*sc;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;leg=Math.sin(dT*2)*1.5*sc;}
-  else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*1.5*sc;x+=Math.sin(dT)*3*sc;var sw=Math.sin(dT);armL=1.9+sw*.9;armR=-1.9+sw*.9;}
-  else if(dance===3){bob=-Math.pow(Math.abs(Math.sin(dT)),3)*8*sc;armL=1.5+Math.abs(Math.sin(dT))*1.1;armR=-armL;leg=Math.abs(Math.sin(dT))*2*sc;}
-  var legRotL=legL*.12,legRotR=legR*.12;
+  if(walk!=null&&!dance){var ws=Math.sin(walk);legL=ws*.45;legR=-legL;armL=.15-ws*.6;armR=-.15-ws*.6;bob=-Math.abs(Math.cos(walk))*1.6*p;}
+  if(dance===1){bob=-Math.abs(Math.sin(dT))*5*p;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;legL=Math.sin(dT*2)*.25;legR=-legL;}
+  else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*1.5*p;x+=Math.sin(dT)*3*p;var sw=Math.sin(dT);armL=1.9+sw*.9;armR=-1.9+sw*.9;}
+  else if(dance===3){var jp=Math.abs(Math.sin(dT));bob=-Math.pow(jp,3)*8*p;armL=1.5+jp*1.1;armR=-armL;legL=jp*.5;legR=-legL;}
   if(dance>=4){
     /* dance games: limbs go where the dancer put them, with a hop each time a move lands */
-    var ps=pose||[.15,-.15,.12,-.12];armL=ps[0];armR=ps[1];legRotL=ps[2];legRotR=ps[3];
-    if(hitAge<220)bob=-(1-hitAge/220)*5*sc;
+    var ps=pose||[.15,-.15,.12,-.12];armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];
+    if(hitAge<220){bob=-(1-hitAge/220)*5*p;mouth=true;}
   }
-  var hr=5*sc,bw=9*sc,bh=11*sc,lh=6*sc,top=y+bob;
-  if(glow){var gl=g.createRadialGradient(x,top,3,x,top,30*sc);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,top,30*sc,0,6.3);g.fill();}
-  g.fillStyle=color;
-  /* legs: pivot at the hip so a stride swings them */
-  g.save();g.translate(x-bw/2+2.3*sc,top+bh/2);g.rotate(legRotL);g.fillRect(-1.3*sc-leg,0,2.6*sc,lh);g.restore();
-  g.save();g.translate(x+bw/2-2.3*sc,top+bh/2);g.rotate(legRotR);g.fillRect(-1.3*sc+leg,0,2.6*sc,lh);g.restore();
-  g.fillRect(x-bw/2,top-bh/2,bw,bh);
-  g.save();g.translate(x-bw/2,top-bh/2+1.5*sc);g.rotate(armL);g.fillRect(-2.4*sc,0,2.4*sc,8*sc);g.restore();
-  g.save();g.translate(x+bw/2,top-bh/2+1.5*sc);g.rotate(armR);g.fillRect(0,0,2.4*sc,8*sc);g.restore();
-  g.beginPath();g.arc(x,top-bh/2-hr+1,hr,0,6.3);g.fill();
-  g.fillStyle="rgba(0,0,0,.55)";g.fillRect(x-2.2*sc,top-bh/2-hr,1.3*sc,1.3*sc);g.fillRect(x+.9*sc,top-bh/2-hr,1.3*sc,1.3*sc);
-  if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+9*sc,top-bh/2-hr*2-ph*14);g.globalAlpha=1;}
+  if(atKeys){var pl=glow?Math.sin(now*0.02):0;armL=-.55+pl*.18;armR=.55+pl*.18;mouth=glow;}
+  if(glow){var gl=g.createRadialGradient(x,y-6*p,3,x,y-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,y-6*p,24*p,0,6.3);g.fill();}
+  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth});
+  if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+10*p,y-20*p-ph*14);g.globalAlpha=1;}
   /* name under the feet, steady while dancing */
   g.font="600 "+Math.round(10.5*Math.min(sc,1.4))+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="top";
-  var ny=y+bh/2+lh+3;g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(name,x,ny);g.fillStyle=nameColor||"rgba(255,255,255,.9)";g.fillText(name,x,ny);g.textBaseline="alphabetic";
-  return top-bh/2-hr*2;   /* top of the head, for the speech bubble */
+  var ny=y+12*p+(atKeys?6*p:3);g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(name,x,ny);g.fillStyle=nameColor||"rgba(255,255,255,.9)";g.fillText(name,x,ny);g.textBaseline="alphabetic";
+  return y-19*p+bob;   /* top of the head, for the speech bubble */
 }
 function audBubble(g,x,headY,text,color,alpha,W){
   g.font="12px system-ui,sans-serif";
@@ -4081,12 +4118,12 @@ function drawAud(){
   var sy=H/0.82,sc=Math.max(1,Math.min(1.6,W/420));
   g.clearRect(0,0,W,H);
   /* stage (venue y 0-0.30) and floor (0.30-0.78), same layout as venue.html */
-  var st=g.createLinearGradient(0,0,0,.30*sy);st.addColorStop(0,"#2a1638");st.addColorStop(1,"#1a0f24");g.fillStyle=st;g.fillRect(0,0,W,.30*sy);
-  g.fillStyle="#0c0c14";g.fillRect(0,.30*sy,W,H-.30*sy);
-  g.fillStyle="rgba(211,84,160,.55)";g.fillRect(0,.30*sy-2,W,2);
   var now=Date.now();
-  /* you, on stage; glows while a note is sounding */
-  audPerson(g,W/2,.15*sy,"#D354A0",(typeof stageName==="function"?stageName():"You"),sc*1.25,0,0,!!activeVoice,now,"#F5C518");
+  ART.scene(g,W,H,{stageBottom:.30*sy/H,floorBottom:Math.min(1,.78*sy/H)},{now:now,phase:(now%600)/600,level:activeVoice?0.7:0.3,playing:!!activeVoice,sign:false});
+  /* you, on stage at your keyboard; glows while a note is sounding */
+  var pp=Math.max(2,Math.round(sc*1.25)),py=.15*sy+8;
+  audPerson(g,W/2,py,"#D354A0",(typeof stageName==="function"?stageName():"You"),pp,0,0,!!activeVoice,now,"#F5C518",null,null,1e9,perfLook,true);
+  ART.keyboard(g,W/2,py+5*pp,pp,activeVoice?Math.floor(now/180)%7:-1,"#F5D03C");
   /* audience, back to front so nearer people overlap farther ones */
   ids.sort(function(a,b){return AUD.people[a].dy-AUD.people[b].dy;});
   var heads=[];
@@ -4101,7 +4138,8 @@ function drawAud(){
     if(p.dance>=4&&p.pose){if(!p.poseCur)p.poseCur=p.pose.slice();for(var q=0;q<4;q++)p.poseCur[q]+=(p.pose[q]-p.poseCur[q])*.4;pz=p.poseCur;}
     var cmb=p.dance>=4?(p.combo||0):0;STREAK.track(p,cmb);
     if(cmb>=10)STREAK.draw(g,x,y,sc*0.95,cmb,now,p.seed||0);
-    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0));
+    if(!p.look)p.look=audLook("",p.color,p.name);
+    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0),p.look);
     if(p.msT&&now-p.msT<1700)STREAK.pop(g,x,headY,p.msN,now-p.msT,Math.max(0.75,sc*0.7));
     else if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
     heads.push([p,x,headY]);});

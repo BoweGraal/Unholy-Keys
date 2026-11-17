@@ -220,12 +220,14 @@ var ART=(function(){
     function r(x,y,ww,hh,c){f.fillStyle=c;f.fillRect(x,y,ww,hh);}
     var now=st.now||Date.now(),ph=st.phase||0,beat=Math.pow(1-ph,2),lv=st.level===undefined?0.4:st.level,on=st.playing?1:0.5;
     /* the sign on the back wall */
+    if(st.sign!==false){
     var sign=st.sign||"UNHOLY KEYS",sp=1,sw=sign.length*6-1,sxx=Math.round(w/2-sw/2),syy=8;
     var glow=0.55+0.35*beat*on;
     f.globalAlpha=glow*0.35;r(sxx-2,syy-2,sw+4,11,"#D354A0");f.globalAlpha=1;
     var half=sign.indexOf(" ");
     pixText(f,sign.slice(0,half<0?sign.length:half),sxx,syy,sp,"#F5D03C","left","#3a1a10");
     if(half>0)pixText(f,sign.slice(half+1),sxx+(half+1)*6,syy,sp,"#E8505B","left","#3a1018");
+    }
     /* lights hanging from the truss, swinging their beams */
     var lights=[0.2,0.36,0.64,0.8],cols=["#F5D03C","#E8505B","#D354A0","#4A9BE8"];
     for(i=0;i<lights.length;i++){
