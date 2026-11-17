@@ -786,6 +786,7 @@ function initAudio(){
   masterVol=new Tone.Volume(-6).connect(lim);
   analyser=new Tone.Analyser("fft",256);
   masterVol.connect(analyser);
+  BEAT.tap(masterVol);                 /* tempo detector listens to locally played notes */
   rev=new Tone.Reverb({decay:2.5,wet:0.2}).connect(masterVol);
   dly=new Tone.FeedbackDelay({delayTime:"8n",feedback:.3,wet:0}).connect(rev);
   cho=new Tone.Chorus({frequency:1.5,delayTime:3.5,depth:.7,wet:0}).connect(dly);
@@ -1248,6 +1249,122 @@ function sendChat(){
 }
 
 /* ============================================================
+   LIVE TEMPO (BPM) DETECTION
+   Listens to what this device is actually playing (the performer's live sound, or the notes played
+   locally) and works out the tempo and where the beats fall, so the step game can line arrows up
+   with the music. How it works:
+     1. 50 times a second, measure how much louder each frequency band got (bass counts triple).
+        Sudden rises are drum hits and note starts.
+     2. Twice a second, take the last 8 seconds of that and try every tempo from 70 to 180 BPM in
+        half-BPM steps, at every possible beat position, and score how well the rises land on beats.
+     3. Follow the winner smoothly; switch to a different tempo only after it wins three times running.
+   With no clear beat it holds the last tempo, or 120 BPM if there was never one.
+   For troubleshooting: type ukBeat() in the browser console.
+   ============================================================ */
+var BEAT=(function(){
+  var an=null,buf=null,prev=null,T=[],V=[],timer=null,lastRun=0,off=0;
+  var est={bpm:0,t0:0,conf:0,at:0},cand=0,candN=0,gen=0,runs=0,lastConf=0,lastRaw=0;
+  var STEP=0.01,WIN=8,MINWIN=4,LO=70,HI=180;
+  function actx(){return Tone.getContext().rawContext;}
+  function ensure(){
+    if(an)return an;
+    an=actx().createAnalyser();an.fftSize=2048;an.smoothingTimeConstant=0;
+    buf=new Float32Array(an.frequencyBinCount);prev=new Float32Array(380);
+    timer=setInterval(tick,20);
+    return an;
+  }
+  /* feed a sound source into the detector (it is only listened to, not played again) */
+  function tap(node){try{node.connect(ensure());}catch(e){console.warn("[Unholy Keys] tempo detector could not listen:",e&&e.message);}}
+  function tick(){
+    var c=actx();if(c.state!=="running")return;
+    an.getFloatFrequencyData(buf);
+    var f=0;
+    for(var i=1;i<380;i++){
+      var m=Math.pow(10,buf[i]/20);if(!isFinite(m))m=0;
+      var l=Math.log(1+2000*m),d=l-prev[i];
+      if(d>0)f+=d*(i<=8?3:1);         /* bins 1-8 are below about 190 Hz: kick and bass */
+      prev[i]=l;
+    }
+    var t=c.currentTime;
+    T.push(t);V.push(f);
+    while(T.length&&T[0]<t-WIN-1){T.shift();V.shift();}
+    off=performance.now()-t*1000;
+    if(t-lastRun>=0.5){lastRun=t;analyse(t);}
+  }
+  function prior(bpm){var x=Math.log(bpm/120)/Math.LN2/0.55;return Math.exp(-0.5*x*x);}
+  function analyse(tEnd){
+    if(T.length<2||tEnd-T[0]<MINWIN)return;
+    var t0=Math.max(T[0],tEnd-WIN),N=Math.floor((tEnd-t0)/STEP),g=new Float32Array(N),j=0,i;
+    /* resample the rises onto an even 10 ms grid */
+    for(i=0;i<N;i++){
+      var t=t0+i*STEP;
+      while(j<T.length-2&&T[j+1]<t)j++;
+      var a=T[j],b=T[j+1],u=b>a?(t-a)/(b-a):0;u=u<0?0:u>1?1:u;
+      g[i]=V[j]+(V[j+1]-V[j])*u;
+    }
+    /* keep only what stands out from the last second's average */
+    var e=new Float32Array(N),acc=0,half=50,total=0;
+    for(i=0;i<N;i++){
+      acc+=g[i];if(i>=2*half)acc-=g[i-2*half];
+      var mean=acc/Math.min(i+1,2*half),v=g[i]-mean*1.1;
+      e[i]=v>0?v:0;total+=e[i];
+    }
+    runs++;
+    if(total/N<0.02){lastConf=0;return;}         /* silence, or a steady drone with nothing to count */
+    var best=0,bestBpm=0,bestPh=0,sum=0,n=0;
+    for(var bpm=LO;bpm<=HI;bpm+=0.5){
+      var per=60/bpm/STEP,top=0,topPh=0;
+      for(var ph=0;ph<per;ph++){
+        var s=0,k=0;
+        for(var x=ph;x<N-1;x+=per){var xi=x|0,fr=x-xi;s+=e[xi]+(e[xi+1]-e[xi])*fr;k++;}
+        /* what lands halfway between beats counts against: stops a half-speed or 1.5x tempo winning */
+        var o=0,ko=0;
+        for(x=ph+per/2;x<N-1;x+=per){xi=x|0;fr=x-xi;o+=e[xi]+(e[xi+1]-e[xi])*fr;ko++;}
+        var sc=s/k-(ko?0.35*o/ko:0);
+        if(sc>top){top=sc;topPh=ph;}
+      }
+      var w=top*prior(bpm);
+      sum+=w;n++;
+      if(w>best){best=w;bestBpm=bpm;bestPh=topPh;}
+    }
+    var conf=sum>0?best/(sum/n):0;
+    lastConf=conf;lastRaw=bestBpm;
+    if(conf<1.5)return;
+    var beatT=t0+bestPh*STEP;       /* one beat's time on the audio clock */
+    if(!est.bpm){set(bestBpm,beatT,conf,tEnd);gen++;return;}
+    var ratio=bestBpm/est.bpm;
+    /* double or half of the tempo already being followed is the same music: stay put */
+    if(Math.abs(ratio-2)<0.08||Math.abs(ratio-0.5)<0.03){est.at=tEnd;est.conf=conf;cand=0;candN=0;return;}
+    if(Math.abs(ratio-1)<0.04){
+      /* same tempo: ease toward the new reading, and nudge the beat position the short way round */
+      var bpmN=est.bpm+(bestBpm-est.bpm)*0.3,perS=60/bpmN;
+      var d=(beatT-est.t0)%perS;if(d>perS/2)d-=perS;if(d<-perS/2)d+=perS;
+      var anchor=est.t0+Math.round((tEnd-est.t0)/perS)*perS;   /* carry the grid forward to now */
+      set(bpmN,anchor+d*0.35,conf,tEnd);
+      cand=0;candN=0;return;
+    }
+    /* a different tempo: believe it once it has won three times in a row (1.5 s) */
+    if(cand&&Math.abs(bestBpm/cand-1)<0.04)candN++;else{cand=bestBpm;candN=1;}
+    if(candN>=3){set(bestBpm,beatT,conf,tEnd);gen++;cand=0;candN=0;}
+  }
+  function set(bpm,t0,conf,at){est.bpm=bpm;est.t0=t0;est.conf=conf;est.at=at;}
+  /* The current beat grid in page time (performance.now() milliseconds):
+     bpm, period = ms per beat, t0 = the time of one beat, live = heard a clear beat in the last 6 s,
+     known = has ever found a tempo, gen = goes up when the tempo jumps. */
+  function get(){
+    var c=null;try{c=actx();}catch(e){}
+    if(!est.bpm||!c)return{bpm:120,period:500,t0:0,live:false,known:false,gen:gen};
+    /* readings run about 30 ms behind the sound; the speakers run outputLatency behind the clock */
+    var lat=((c.outputLatency||0)-0.03)*1000;
+    return{bpm:est.bpm,period:60000/est.bpm,t0:est.t0*1000+off+lat,live:c.currentTime-est.at<6,known:true,gen:gen};
+  }
+  /* how far through the current beat we are, 0 to 1 */
+  function phase(now){var g=get(),p=((now-g.t0)/g.period)%1;return p<0?p+1:p;}
+  window.ukBeat=function(){var g=get();return{bpm:Math.round(g.bpm*10)/10,live:g.live,known:g.known,beatPhase:Math.round(phase(performance.now())*100)/100,confidence:Math.round(lastConf*100)/100,latestReading:lastRaw,analyses:runs,listening:!!an};};
+  return{tap:tap,get:get,phase:phase};
+})();
+
+/* ============================================================
    WALK, TALK, DANCE
    Hold the on-screen arrows (or arrow keys / WASD) to walk around the floor.
    Talk opens the chat box; Dance toggles a dance everyone in the venue sees.
@@ -1426,7 +1543,7 @@ var SP=(function(){
     try{
       st.audioDecoded++;
       var c=ctx();if(c.state!=="running"){st.lastError="audio is not unlocked ("+c.state+")";try{c.resume();}catch(x){}ad.close();return;}
-      if(!gain){gain=c.createGain();gain.connect(c.destination);}
+      if(!gain){gain=c.createGain();gain.connect(c.destination);BEAT.tap(gain);}   /* tempo detector listens to the live sound */
       var ch=ad.numberOfChannels,buf=c.createBuffer(ch,ad.numberOfFrames,ad.sampleRate);
       for(var i=0;i<ch;i++)ad.copyTo(buf.getChannelData(i),{planeIndex:i,format:"f32-planar"});
       var now=c.currentTime;

@@ -109,7 +109,9 @@ function broadcast(room, msg, exclude) {
 function viewerList(room) {
   var r = rooms[room]; if (!r) return [];
   var out = [];
-  r.viewers.forEach(function(v, id) { out.push({ id: id, name: v.name, x: v.x, y: v.y, color: v.color, dance: v.dance || 0 }); });
+  r.viewers.forEach(function(v, id) { var o = { id: id, name: v.name, x: v.x, y: v.y, color: v.color, dance: v.dance || 0 };
+    if (v.pose && v.dance >= 4) { o.pose = v.pose; o.combo = v.combo || 0; }
+    out.push(o); });
   return out;
 }
 
@@ -199,7 +201,7 @@ wss.on("connection", function(ws) {
       return;
     }
 
-    /* ── Viewer broadcasts: chat, position and dancing only ── */
+    /* ── Viewer broadcasts: chat, position, dancing and dance poses only ── */
     if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
       if (msg.type === "chat") {
         var text = str(msg.text, 300);
@@ -216,12 +218,28 @@ wss.on("connection", function(ws) {
         return;
       }
       if (msg.type === "dance") {
-        // 0 = stopped, 1-3 = dance style
-        var style = Math.max(0, Math.min(3, Math.floor(+msg.style || 0)));
+        // 0 = stopped, 1-3 = canned dances, 4 = free dance, 5 = step game
+        var style = Math.max(0, Math.min(5, Math.floor(+msg.style || 0)));
         if (!allow(ws, "dance", 6, 2)) return;
         var dv = rooms[ws.room].viewers.get(ws.viewerId);
-        if (dv) dv.dance = style;
+        if (dv) { dv.dance = style; if (style < 4) dv.pose = null; }
         broadcast(ws.room, { type: "dance", id: ws.viewerId, style: style }, ws);
+        return;
+      }
+      if (msg.type === "pose") {
+        // limb angles for the dance games: [left arm, right arm, left leg, right leg] in hundredths of a radian,
+        // plus the step-game combo. Everything is clamped; nothing else in the message is passed on.
+        if (!Array.isArray(msg.a) || msg.a.length !== 4 || !allow(ws, "pose", 14, 12)) return;
+        var a = [];
+        for (var pi = 0; pi < 4; pi++) {
+          var n = Math.round(+msg.a[pi]);
+          if (!isFinite(n)) return;
+          a.push(Math.max(-320, Math.min(320, n)));
+        }
+        var combo = Math.max(0, Math.min(9999, Math.floor(+msg.c || 0)));
+        var pv = rooms[ws.room].viewers.get(ws.viewerId);
+        if (pv) { pv.pose = a; pv.combo = combo; }
+        broadcast(ws.room, { type: "pose", id: ws.viewerId, a: a, c: combo }, ws);
         return;
       }
       return; // anything else from a viewer is dropped (it used to be relayed to the whole room as-is)
