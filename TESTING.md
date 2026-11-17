@@ -151,6 +151,14 @@ To try a round with a fake crowd: go live, run `npm run crowd -- CODE 12`, pick 
 
 Steps are kept in time by the live sound itself, so rounds need **Share sound** on. Points are kept by name for the length of the show; two people with the same name share a total, and ending the show clears it.
 
+**Dance games on phones, tablets and computers.** The game always sits in the middle of the screen, with a big version of your character dancing on top of it, and it's sized to the screen.
+- **Phones and tablets:** you play by tapping the game itself (the lanes, the targets, or dragging the puppet), so the walking pad and the chat step aside until you stop. Speech bubbles still show over heads.
+- **Computers:** the arrow keys and the pad still work, and the chat stays.
+- **Phone held sideways:** the leader banner hides while you play, to make room.
+- **During a show:** while you play, the performer steps to one side of the stage so the two of you don't overlap.
+
+In the console on the audience page, `ukDevice()` shows what it decided the device is.
+
 **Dance games and tempo.** The audience page listens to the music it is playing and works out the tempo, which sets the pace of the Step and Target games. It needs a few seconds of music with a clear beat. With no beat it uses 120 BPM, and the game says so. In the console on the audience page, `ukBeat()` shows the tempo it found and how sure it is, and `ukDance()` shows the current game, score and upcoming steps.
 
 **Diagnostics.** On either page, open the console (F12) and type `ukStreamStats()`. On the performer page it shows frames captured, dropped and sent. On the venue it shows packets received and decoded, how often the sound buffer ran dry (`rebuffers`), and the last error.
