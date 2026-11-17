@@ -202,6 +202,13 @@ In the console on the audience page, `ukDevice()` shows what it decided the devi
 
 **Steps follow the song's intensity.** Rounds and practice map how intense every part of the song is: loudness, brightness, how busy the hits are, and whether that part comes back like a chorus. Calm parts get sparse, easy steps; energetic parts add off-beats and doubles; the song's big moments get runs and doubles at every bar start, and while one is on, the game's border is on fire and every hit scores double (🔥 ×2 next to the score). Talking or beatless intros get no steps.
 
+**Free dance spotlight.** In a Free dance round everyone dances and walks around at first. About a third of the way into the song, everyone who has danced is locked in and shuffled. Later, each of them takes the centre of the stage under a spotlight, twice round, with their moves showing live. The performer steps aside while they're up.
+- **Timing:** turns start on a bar and last 1 to 4 bars, sized so both rounds finish before the last two bars. With a big crowd it goes round once.
+- **Your turn:** the banner says YOUR TURN and your game panel lights up gold.
+- **Then:** voting at the end, as before.
+- **Your Music tab** shows who has the spotlight.
+- **"Start a round now"** (no song length): 8-second turns, starting 15 seconds after the lock.
+
 **Streak power-ups.** In the Step and Target games a long combo charges the dancer up, and everyone sees it, including you on the audience panel:
 - **10:** white-blue charging aura
 - **25:** gold

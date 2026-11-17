@@ -3849,7 +3849,7 @@ function goLive(){
     }
     if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
-    if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes")ROUNDS.onMsg(msg);
+    if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight")ROUNDS.onMsg(msg);
     if(msg.type==="room-created")ROUNDS.buttons();
   };
   liveWs.onclose=function(){if(liveOn)endLive();else liveFail();};
@@ -4413,7 +4413,7 @@ var ROUNDS=(function(){
     if(backingAudio&&f)backingAudio.pause();
     cur={n:0,mode:cfg.mode==="off"?"step":cfg.mode,title:String(title).replace(/\.(mp3|wav|flac|ogg|m4a|aac)$/i,"").slice(0,80),phase:"analyse",go:go,endAt:0,file:!!f};
     top=null;votes=null;myVote="";buttons();
-    if(!f||cur.mode==="free"){send(null,my);return;}
+    if(!f){send(null,my);return;}            /* free dance rounds are analysed too: the spotlight turns follow the bars */
     var bar=mk("div","bar"),fill=mk("i");bar.appendChild(fill);
     float([head(),mk("div","t",cur.title),mk("div","sub","Finding the beat and the loud parts…"),bar]);
     status("Checking “"+cur.title+"” for its beat and loud parts…");
@@ -4431,7 +4431,7 @@ var ROUNDS=(function(){
     if(my!==job||!cur)return;
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cfg.secs*1000;
     liveSend({type:"round-start",mode:cur.mode,title:cur.title,countdown:cfg.secs*1000,chart:chart});
-    status(cur.mode==="free"?"Free dance round: counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file, so steps will follow the beat live. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
+    status(cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file, so steps will follow the beat live. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cfg.secs*1000);
     clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();
   }
@@ -4464,7 +4464,7 @@ var ROUNDS=(function(){
       var left=Math.max(0,Math.ceil((cur.endAt-performance.now())/1000));
       float([head(),mk("div","t",cur.title),mk("div","big",String(left)),mk("div","sub",cur.file?"The song starts at zero.":"The round starts at zero.")]);
     }else if(cur.phase==="play"){
-      var line=cur.mode==="free"?"Everyone votes when the song ends. Your vote counts double.":top&&top.top.length?"Leading: "+top.top.slice(0,3).map(function(x,i){return ord(i+1)+" "+x.name+" "+x.score.toLocaleString();}).join("  ·  ")+"  ·  "+top.players+" dancing":"Waiting for the first scores…";
+      var line=cur.mode==="free"?spotLine():top&&top.top.length?"Leading: "+top.top.slice(0,3).map(function(x,i){return ord(i+1)+" "+x.name+" "+x.score.toLocaleString();}).join("  ·  ")+"  ·  "+top.players+" dancing":"Waiting for the first scores…";
       float([head(cur.title),mk("div","sub",line)]);
     }else if(cur.phase==="vote"){
       var left2=Math.max(0,Math.ceil((cur.endAt-performance.now())/1000)),row=mk("div","votes");
@@ -4476,6 +4476,14 @@ var ROUNDS=(function(){
       float([mk("div","h","Round "+cur.n+" · Pick the best dancer (your vote counts double)"),row,mk("div","sub",(votes?votes.cast+" of "+votes.of+" voted · ":"")+left2+" s left")]);
     }
   }
+  /* free dance: who has the spotlight now (song time from the backing track) */
+  function spotLine(){
+    var sp=cur&&cur.spot;if(!sp||!sp.length)return "Free dancing. The spotlight turns start later in the song; everyone votes at the end (your vote counts double).";
+    var pos=backingAudio&&cur.file?backingAudio.currentTime*1000:performance.now()-cur.endAt;
+    for(var i=0;i<sp.length;i++)if(pos>=sp[i].a&&pos<sp[i].b)return "\uD83D\uDD26 Spotlight: "+sp[i].name+" ("+(i+1)+" of "+sp.length+")";
+    if(pos<sp[0].a)return "Spotlight starts in "+Math.max(1,Math.ceil((sp[0].a-pos)/1000))+" s: "+sp.slice(0,Math.ceil(sp.length/2)).map(function(x){return x.name;}).join(", ");
+    return "Spotlight done. Voting when the song ends (your vote counts double).";
+  }
   function board(){
     var b=$("rdBoard");if(!b)return;b.textContent="";
     if(!totals.length)return;
@@ -4485,6 +4493,7 @@ var ROUNDS=(function(){
   function txt(v,n){return String(v==null?"":v).slice(0,n);}
   function onMsg(m){
     if(m.type==="round-scores"){if(cur&&cur.phase==="play"){top={top:(m.top||[]).slice(0,5).map(function(x){return{name:txt(x.name,24),score:Math.floor(+x.score||0)};}),players:Math.floor(+m.players||0)};draw();}return;}
+    if(m.type==="spotlight"){if(cur&&cur.phase==="play"){cur.spot=(m.turns||[]).slice(0,200).map(function(t){return{name:txt(t.name,24),a:+t.a||0,b:+t.b||0};});draw();}return;}
     if(m.type==="round-votes"){votes={cast:Math.floor(+m.cast||0),of:Math.floor(+m.of||0)};draw();return;}
     if(m.type!=="round")return;
     if(m.phase==="countdown"&&cur){cur.n=+m.n||0;draw();}

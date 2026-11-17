@@ -75,6 +75,14 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #danceMenu kbd{float:right;margin-left:10px;font:600 10px system-ui,sans-serif;opacity:.55;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:1px 5px}
 #gamePanel{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:222px;z-index:23;width:300px;background:rgba(12,10,22,.9);border:1px solid rgba(127,119,221,.5);border-radius:14px;overflow:visible;user-select:none;-webkit-user-select:none;touch-action:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #gamePanel.on{display:block}
+#gamePanel.spotlit{border-color:#F5C518;box-shadow:0 0 0 2px rgba(245,197,24,.7),0 0 40px rgba(245,197,24,.5)}
+/* during the spotlight the banner slims down to one line at the very top, clear of the stage */
+#roundBox.spot{top:6px;padding:5px 14px;width:auto;max-width:min(560px,94vw);display:flex;align-items:baseline;gap:10px;justify-content:center;white-space:nowrap}
+#roundBox.spot .rb-head{font-size:10px}
+#roundBox.spot .rb-sub{margin-top:0;overflow:hidden;text-overflow:ellipsis}
+#roundBox.spot .rb-btn{margin-top:0;padding:4px 10px;font-size:12px}
+#roundBox.myturn{border-color:#F5C518;box-shadow:0 0 0 2px rgba(245,197,24,.6),0 8px 40px rgba(245,197,24,.35)}
+#roundBox.myturn .rb-sub{color:#F5C518;font-weight:800;font-size:15px}
 #gamePanel.onfire{border-color:#FF8A3D;box-shadow:0 0 0 1px rgba(255,138,61,.6),0 0 28px rgba(255,100,20,.55),0 0 60px rgba(255,60,0,.25);animation:fireGlow .5s ease-in-out infinite alternate}
 @keyframes fireGlow{from{box-shadow:0 0 0 1px rgba(255,138,61,.6),0 0 22px rgba(255,100,20,.45),0 0 50px rgba(255,60,0,.2)}to{box-shadow:0 0 0 1px rgba(255,170,60,.8),0 0 34px rgba(255,120,30,.65),0 0 70px rgba(255,60,0,.3)}}
 #gameHdr{display:flex;align-items:center;gap:8px;white-space:nowrap;padding:8px 8px 8px 12px;font:700 13px system-ui,sans-serif;color:#fff}
@@ -1271,6 +1279,7 @@ function handleMsg(msg){
   }
   else if(t==="round"){ROUND.onMsg(msg);}
   else if(t==="round-scores"){ROUND.scores(msg);}
+  else if(t==="spotlight"){ROUND.setSpot(msg.turns);}
   else if(t==="pose"){
     var pv=viewers[msg.id],pp=safePose(msg.a);
     if(pv&&pp&&msg.id!==myId){pv.pose=pp;pv.combo=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pv.hitT=Date.now();}
@@ -1893,29 +1902,35 @@ var GAME=(function(){
   var onFire=false,fireT=-1e9;
   function fireBorder(now){
     var k=onFire?Math.min(1,(now-fireT)/350):Math.max(0,1-(now-fireT)/400);if(k<=0)return;
-    g.save();g.globalCompositeOperation="lighter";
-    var t=now*0.001,i,h;
-    /* flame height: a few waves of different speeds and sizes, so each tongue licks up on its own */
+    g.save();g.globalCompositeOperation="lighter";g.globalAlpha=k;
+    var t=now*0.001,i,h,x,y;
+    /* flame height: a few waves of different speeds, so each tongue licks up on its own */
     function lick(i,e){var a=Math.sin(t*6.1+i*0.83+e),b=Math.sin(t*3.7-i*0.41+e*1.7),c=Math.sin(t*9.3+i*1.9+e*0.6);return Math.max(0.15,0.55+0.3*a+0.2*b+0.12*c);}
-    function tongue(x,y,dx,dy,len,w,core,a){       /* from the edge point (x,y) inward along (dx,dy) */
-      var tipx=x+dx*len+(-dy)*Math.sin(t*5+x*0.05+y*0.05)*w*0.6,tipy=y+dy*len+dx*Math.sin(t*5+x*0.05+y*0.05)*w*0.6,nx=-dy,ny=dx;
-      var gr=g.createLinearGradient(x,y,x+dx*len,y+dy*len);
-      if(core){gr.addColorStop(0,"rgba(255,245,200,"+(0.9*a)+")");gr.addColorStop(0.5,"rgba(255,200,80,"+(0.5*a)+")");gr.addColorStop(1,"rgba(255,160,40,0)");}
-      else{gr.addColorStop(0,"rgba(255,80,10,"+(0.75*a)+")");gr.addColorStop(0.55,"rgba(255,130,30,"+(0.45*a)+")");gr.addColorStop(1,"rgba(255,90,20,0)");}
-      g.fillStyle=gr;g.beginPath();g.moveTo(x+nx*w,y+ny*w);
+    /* one tongue as a path from the edge point (x,y) inward along (dx,dy); colour comes from the edge's gradient */
+    function tongue(x,y,dx,dy,len,w){
+      var sw=Math.sin(t*5+x*0.05+y*0.05)*w*0.6,tipx=x+dx*len-dy*sw,tipy=y+dy*len+dx*sw,nx=-dy,ny=dx;
+      g.moveTo(x+nx*w,y+ny*w);
       g.bezierCurveTo(x+nx*w*1.1+dx*len*0.35,y+ny*w*1.1+dy*len*0.35,x+nx*w*0.3+dx*len*0.75,y+ny*w*0.3+dy*len*0.75,tipx,tipy);
       g.bezierCurveTo(x-nx*w*0.3+dx*len*0.75,y-ny*w*0.3+dy*len*0.75,x-nx*w*1.1+dx*len*0.35,y-ny*w*1.1+dy*len*0.35,x-nx*w,y-ny*w);
-      g.closePath();g.fill();
     }
-    /* bottom: tall overlapping flames with a hot core; sides: shorter, licking upward; top: a faint glow */
-    var stepB=14;
-    for(i=0;i*stepB<=CW+stepB;i++){h=lick(i,0);var x=i*stepB+Math.sin(i*2.3)*4;tongue(x,CH+2,0,-1,(16+40*h)*k,stepB*0.95,false,k);tongue(x,CH+2,0,-1,(8+20*h)*k,stepB*0.45,true,k);}
-    var stepS=16;
-    for(i=0;i*stepS<=CH;i++){var up=1-i*stepS/CH*0.6,y=CH-i*stepS;h=lick(i,2);tongue(-2,y,1,-0.35,(10+22*h)*k*up,stepS*0.8,false,k*0.9);tongue(-2,y,1,-0.35,(5+10*h)*k*up,stepS*0.35,true,k*0.8);
-      h=lick(i,5);tongue(CW+2,y,-1,-0.35,(10+22*h)*k*up,stepS*0.8,false,k*0.9);tongue(CW+2,y,-1,-0.35,(5+10*h)*k*up,stepS*0.35,true,k*0.8);}
-    for(i=0;i*stepB<=CW;i++){h=lick(i,8);tongue(i*stepB,-2,0,1,(4+8*h)*k,stepB*0.8,false,k*0.5);}
+    function grad(x0,y0,x1,y1,core){var gr=g.createLinearGradient(x0,y0,x1,y1);
+      if(core){gr.addColorStop(0,"rgba(255,245,200,.9)");gr.addColorStop(0.5,"rgba(255,200,80,.5)");gr.addColorStop(1,"rgba(255,160,40,0)");}
+      else{gr.addColorStop(0,"rgba(255,80,10,.75)");gr.addColorStop(0.55,"rgba(255,130,30,.45)");gr.addColorStop(1,"rgba(255,90,20,0)");}return gr;}
+    var stepB=16,stepS=18,maxB=60*k,maxS=34*k;
+    /* bottom: tall flames, then their hot cores */
+    g.fillStyle=grad(0,CH,0,CH-maxB,false);g.beginPath();
+    for(i=0;i*stepB<=CW+stepB;i++){h=lick(i,0);x=i*stepB+Math.sin(i*2.3)*4;tongue(x,CH+2,0,-1,(16+42*h)*k,stepB*0.95);}g.fill();
+    g.fillStyle=grad(0,CH,0,CH-maxB*0.5,true);g.beginPath();
+    for(i=0;i*stepB<=CW+stepB;i++){h=lick(i,0);x=i*stepB+Math.sin(i*2.3)*4;tongue(x,CH+2,0,-1,(8+21*h)*k,stepB*0.42);}g.fill();
+    /* sides: shorter flames licking upward and inward */
+    g.fillStyle=grad(0,0,maxS,0,false);g.beginPath();for(i=0;i*stepS<=CH;i++){y=CH-i*stepS;h=lick(i,2);tongue(-2,y,1,-0.35,(10+22*h)*k*(1-i*stepS/CH*0.6),stepS*0.8);}g.fill();
+    g.fillStyle=grad(CW,0,CW-maxS,0,false);g.beginPath();for(i=0;i*stepS<=CH;i++){y=CH-i*stepS;h=lick(i,5);tongue(CW+2,y,-1,-0.35,(10+22*h)*k*(1-i*stepS/CH*0.6),stepS*0.8);}g.fill();
+    /* top: a faint lick */
+    g.fillStyle=grad(0,0,0,14*k,false);g.beginPath();for(i=0;i*stepB<=CW;i++){h=lick(i,8);tongue(i*stepB,-2,0,1,(4+8*h)*k,stepB*0.8);}g.fill();
     /* embers drifting up */
-    for(i=0;i<16;i++){var ph=(t*0.55+i/16)%1,ex=(((i*0.618)%1)+Math.sin(t*1.3+i)*0.03)*CW,ey=CH-ph*CH*0.95;g.globalAlpha=(1-ph)*0.85*k;g.fillStyle=i%3?"#FFB040":"#FFE6A0";g.beginPath();g.arc(ex,ey,1.7*(1-ph*0.5),0,6.3);g.fill();}
+    g.fillStyle="#FFB040";g.beginPath();
+    for(i=0;i<16;i++){var ph=(t*0.55+i/16)%1,ex=(((i*0.618)%1)+Math.sin(t*1.3+i)*0.03)*CW,ey=CH-ph*CH*0.95,rr=1.7*(1-ph*0.5);g.moveTo(ex+rr,ey);g.arc(ex,ey,rr,0,6.3);}
+    g.fill();
     g.restore();
   }
   function judgeText(now,y){
@@ -2188,6 +2203,40 @@ var DEVICE=(function(){
   return{fit:fit,detect:detect,get kind(){return kind;}};
 })();
 
+/* Spotlight plan for free dance rounds: who takes the centre stage when, in song time (ms).
+   dancers: [{id,name,color}] in turn order; chart: {dur, beats} or null; lockPos: song position now.
+   Turns start on bar starts and go round everyone twice before the last two bars of the song, each turn
+   1 to 4 bars long; if that doesn't fit, once round. Without a chart (no song length): 8 s turns, starting
+   15 s from now, twice round. Returns [{id,name,color,a,b}] or [] if there's nobody, or no room. */
+function spotPlan(dancers, chart, lockPos) {
+  if (!dancers || !dancers.length) return [];
+  var out = [], i, N = dancers.length;
+  if (!chart || !(chart.dur > 0) || !chart.beats || chart.beats.length < 16) {
+    var t = lockPos + 15000;
+    for (var r = 0; r < 2; r++) for (i = 0; i < N; i++) { out.push({ id: dancers[i].id, name: dancers[i].name, color: dancers[i].color, a: t, b: t + 8000 }); t += 8000; }
+    return out;
+  }
+  var beats = chart.beats, bars = [];
+  for (i = 0; i < beats.length; i += 4) bars.push(beats[i]);
+  var barMs = bars.length > 2 ? (bars[bars.length - 1] - bars[0]) / (bars.length - 1) : 2000;
+  var endBar = bars.length - 1;
+  while (endBar > 0 && bars[endBar] > chart.dur - 2 * barMs) endBar--;       /* leave the last two bars before voting */
+  var firstBar = 0; while (firstBar < bars.length && bars[firstBar] < lockPos + 4000) firstBar++;   /* a few seconds' notice */
+  var room = endBar - firstBar;
+  if (room < N) return [];
+  for (var rounds = 2; rounds >= 1; rounds--) {
+    var per = Math.min(4, Math.floor(room / (rounds * N)));
+    if (per >= 1) {
+      var b0 = endBar - per * rounds * N;
+      for (r = 0; r < rounds; r++) for (i = 0; i < N; i++) {
+        var s = b0 + (r * N + i) * per;
+        out.push({ id: dancers[i].id, name: dancers[i].name, color: dancers[i].color, a: Math.round(bars[s]), b: Math.round(bars[s + per] !== undefined ? bars[s + per] : bars[s] + per * barMs) });
+      }
+      return out;
+    }
+  }
+  return [];
+}
 /* ============================================================
    DANCE ROUNDS
    The performer starts a round for a song. Everyone sees a countdown and gets the same steps, made
@@ -2244,16 +2293,37 @@ var ROUND=(function(){
     show([head(),mk("div","rb-title",rd.title),mk("div","rb-big",left>0?String(left):"GO!"),
       mk("div","rb-sub",rd.mode==="free"?"Dance however you like. Everyone votes when the song ends.":"Everyone gets the same steps. Highest score wins the round.")],"count");
   }
+  /* free dance spotlight: the plan, and who's on now */
+  function setSpot(turns){
+    if(!rd)return;
+    rd.spot=Array.isArray(turns)?turns.slice(0,200).map(function(t){return{id:String(t.id),name:safeText(t.name,24),color:safeColor(t.color),a:+t.a||0,b:+t.b||0};}):null;
+    drawPlay();
+  }
+  function featured(){
+    if(!rd||rd.phase!=="play"||!rd.spot||!rd.spot.length)return null;
+    var p=pos(),sp=rd.spot;
+    for(var i=0;i<sp.length;i++)if(p>=sp[i].a&&p<sp[i].b)return{id:sp[i].id,name:sp[i].name,color:sp[i].color,i:i,of:sp.length,into:p-sp[i].a,left:sp[i].b-p,next:sp[i+1]||null};
+    return null;
+  }
+  /* is the spotlight part of the song on (a little before the first turn to a little after the last)? */
+  function spotOn(){if(!rd||rd.phase!=="play"||!rd.spot||!rd.spot.length)return 0;var p=pos(),a=rd.spot[0].a,b=rd.spot[rd.spot.length-1].b;if(p<a-2500||p>b+1500)return 0;return Math.max(0,Math.min(1,(p-(a-2500))/1500,(b+1500-p)/1500));}
   function drawPlay(){
-    var line;
-    if(rd.mode==="free")line="Dance! Voting opens when the song ends.";
+    var line,mine=false;
+    if(rd.mode==="free"){
+      var f=featured(),sp=rd.spot;
+      if(f){mine=f.id===myId;line=mine?"\u2B50 YOUR TURN in the spotlight! Show them your moves":"\uD83D\uDD26 "+f.name+" has the spotlight"+(f.next?(f.next.id===myId?"  \u00b7  you're next!":"  \u00b7  next: "+f.next.name):"");}
+      else if(sp&&sp.length&&pos()<sp[0].a){var sec=Math.ceil((sp[0].a-pos())/1000);var yours=sp.some(function(t){return t.id===myId;});line="Dance and walk around. Spotlight turns start in "+sec+" s"+(yours?" (you're in it)":"");}
+      else if(sp&&sp.length)line="Spotlight done. Voting opens when the song ends.";
+      else line="Dance and walk around. Everyone who dances gets a turn in the spotlight later in the song.";
+      document.getElementById("gamePanel").classList.toggle("spotlit",mine);
+    }
     else if(top&&top.top&&top.top.length){
       var t=top.top[0],mine=-1;for(var i=0;i<top.top.length;i++)if(top.top[i].id===myId)mine=i;
       line="Leading: "+t.name+" "+t.score.toLocaleString()+(mine>=0?"  ·  You: "+ord(mine+1):"")+"  ·  "+top.players+" dancing";
     }else line="Hit the steps: highest score wins.";
     var nodes=[mk("div","rb-head","Round "+rd.n+" · "+rd.title),mk("div","rb-sub",line)];
     if(sat){var j=mk("button","rb-btn","Join the round");j.onclick=function(){join();};nodes.push(j);}
-    show(nodes,"strip");
+    show(nodes,"strip"+(mine?" myturn":"")+(rd.mode==="free"&&spotOn()>0?" spot":""));
   }
   function drawVote(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000)),row=mk("div","rb-votes");
@@ -2299,6 +2369,7 @@ var ROUND=(function(){
   }
   function tickUI(){
     if(!rd)return;
+    if(rd.phase==="play"&&rd.mode==="free")drawPlay();
     if(rd.phase==="countdown")drawCountdown();
     else if(rd.phase==="vote")drawVote();
   }
@@ -2327,6 +2398,7 @@ var ROUND=(function(){
       rd.ts0=(typeof m.ts0==="number"&&isFinite(m.ts0))?m.ts0:null;
       playPerf=performance.now()-(+m.pos||0);
       rd.phase=ph;
+      if(m.spot)setSpot(m.spot);                                /* joined after the spotlight was planned */
       if(first){
         clearInterval(alignT);alignT=setInterval(align,500);
         if(!sat)GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart});
@@ -2343,12 +2415,12 @@ var ROUND=(function(){
     }
     else if(ph==="off"){if(GAME.mode)GAME.stop();end();hide();}
   }
-  function end(){rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
+  function end(){document.getElementById("gamePanel").classList.remove("spotlit");rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
   function reset(){if(rd&&GAME.mode)GAME.stop();end();hide();}
   function setTotals(t){totals=Array.isArray(t)?t.slice(0,10).map(function(x){return{name:safeText(x.name,24),pts:Math.max(0,Math.floor(+x.pts||0)),wins:Math.max(0,Math.floor(+x.wins||0))};}):[];}
   function scores(m){if(rd&&m.n===rd.n&&active()){top={top:Array.isArray(m.top)?m.top.slice(0,5).map(function(x){return{id:String(x.id),name:safeText(x.name,24),score:Math.max(0,Math.floor(+x.score||0))};}):[],players:Math.max(0,Math.floor(+m.players||0))};drawPlay();}}
-  window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),beatOffset:lastD===null?null:Math.round(lastD),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat}:{round:null,totals:totals};};
-  return{onMsg:onMsg,scores:scores,setTotals:setTotals,pos:pos,active:active,join:join,sitOut:sitOut,reset:reset,myTotal:myTotal,get mode(){return rd?rd.mode:"";}};
+  window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),beatOffset:lastD===null?null:Math.round(lastD),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat,spotlight:rd.spot||null,featured:featured()}:{round:null,totals:totals};};
+  return{onMsg:onMsg,setSpot:setSpot,featured:featured,spotOn:spotOn,chart:function(){return rd?rd.chart:null;},scores:scores,setTotals:setTotals,pos:pos,active:active,join:join,sitOut:sitOut,reset:reset,myTotal:myTotal,get mode(){return rd?rd.mode:"";}};
 })();
 
 /* ── Song analyzer: builds one step chart for a whole song ──
@@ -2624,7 +2696,7 @@ var CHART=(function(){
    ============================================================ */
 var PRACTICE=(function(){
   var on=/[?&]practice\b/.test(location.search),file=null,title="",buf=null,src=null,gain=null,n=0,bots=[],totals={},job=0;
-  var scoreT=null,voteT=null,startT=null,playAt=0,chart=null,mode="step";
+  var spotT=null,scoreT=null,voteT=null,startT=null,playAt=0,chart=null,mode="step";
   var BOTN=["Rook","Moth","Vex","Juno","Kestrel","Nyx","Pike","Sable","Wren","Ash"],BOTC=["#1D9E75","#E0A030","#8A6BD1","#E05050","#5F9EA0","#3CB371","#DB7093","#5FB4F0"];
   function $(id){return document.getElementById(id);}
   function note(t){$("prNote").textContent=t;}
@@ -2731,8 +2803,7 @@ var PRACTICE=(function(){
     ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,title:title,chart:null,ms:secs*1000+60000});
     decode().then(function(b){
       if(my!==job)return;
-      if(mode==="free"){go(null);return;}
-      CHART.analyse(b,{level:level},function(c){go(c);});
+      CHART.analyse(b,{level:level},function(c){go(c);});        /* free dance too: the spotlight turns follow the bars */
     }).catch(function(e){
       document.body.classList.remove("pr-busy");ROUND.onMsg({type:"round",phase:"off",n:n});
       note("Couldn’t open that file ("+(e&&e.message||"unknown format")+"). Try an MP3 or WAV.");
@@ -2749,12 +2820,23 @@ var PRACTICE=(function(){
     playAt=performance.now()+lagMs;
     viewers.me.dance=0;bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=mode==="free"?4:5;});
     ROUND.onMsg({type:"round",phase:"play",n:n,ts0:null,pos:-lagMs});
+    /* free dance: lock in the spotlight 35% of the way through (at least 20 s in), as the server does in a show */
+    if(mode==="free"&&chart){
+      var lockAt=Math.max(20000,chart.dur*0.35);
+      spotT=setTimeout(function(){
+        if(my!==job)return;
+        var list=bots.map(function(b){return{id:b.id,name:b.name,color:b.color};});
+        if(GAME.mode==="free")list.push({id:"me",name:myName,color:myColor});
+        for(var i=list.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=list[i];list[i]=list[j];list[j]=t;}
+        ROUND.setSpot(spotPlan(list,chart,ROUND.pos()));
+      },lockAt);
+    }
     /* practice dancers move on every beat and score as they go */
     var per=chart?60000/chart.bpm:500,perStep=chart&&chart.steps.length?(80*chart.steps.length)/Math.max(1,chart.steps.length):80;
     clearInterval(scoreT);var k=0;
     scoreT=setInterval(function(){if(my!==job)return;botTick(perStep);if(++k%Math.max(1,Math.round(3000/per))===0)standings();},per);
   }
-  function stopSong(){if(src){try{src.onended=null;src.stop();}catch(e){}src=null;}clearInterval(scoreT);clearTimeout(startT);clearTimeout(voteT);}
+  function stopSong(){if(src){try{src.onended=null;src.stop();}catch(e){}src=null;}clearInterval(scoreT);clearTimeout(startT);clearTimeout(voteT);clearTimeout(spotT);}
   function endRound(my){
     stopSong();
     var mine=GAME.mode?GAME.score:0,danced=!!GAME.mode;
@@ -3074,6 +3156,21 @@ function drawParticles(){
 /* ============================================================
    DRAWING: AVATAR SPRITE
    ============================================================ */
+/* the spotlight on the stage: a cone of light from above and a glowing disc to stand on */
+function drawCentreSpot(x,y,k,feat){
+  var col=feat?feat.color:"#FFFFFF",top=0,footY=y+40,w=90;
+  ctx.save();
+  ctx.globalAlpha=0.55*k;
+  var g=ctx.createLinearGradient(x,top,x,footY);g.addColorStop(0,"rgba(255,250,220,0.05)");g.addColorStop(1,"rgba(255,245,200,0.35)");
+  ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(x-18,top);ctx.lineTo(x+18,top);ctx.lineTo(x+w,footY);ctx.lineTo(x-w,footY);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=k;
+  var d=ctx.createRadialGradient(x,footY,4,x,footY,w);d.addColorStop(0,"rgba(255,250,220,.85)");d.addColorStop(0.5,hexA(col,0.45));d.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle=d;ctx.beginPath();ctx.ellipse(x,footY,w,16,0,0,Math.PI*2);ctx.fill();
+  /* little sparkles round the disc */
+  for(var i=0;i<10;i++){var a=Date.now()*0.0015+i*0.63,rx=x+Math.cos(a)*w*0.9,ry=footY+Math.sin(a)*14;ctx.globalAlpha=k*(0.4+0.6*Math.abs(Math.sin(a*2)));ctx.fillStyle="#FFF6D0";ctx.beginPath();ctx.arc(rx,ry,1.6,0,6.3);ctx.fill();}
+  ctx.restore();
+}
+function hexA(c,a){var m=/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(c||"");return m?"rgba("+parseInt(m[1],16)+","+parseInt(m[2],16)+","+parseInt(m[3],16)+","+a+")":"rgba(255,255,255,"+a+")";}
 function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge){
   var s=scale||1;
   var bw=16*s, bh=24*s;
@@ -3382,10 +3479,21 @@ function renderLoop(){
   if(document.body.classList.contains("gaming")&&meEl&&meEl.offsetWidth&&getComputedStyle(meEl).display!=="none"){
     var mr=meEl.getBoundingClientRect();side=Math.max(0,(mr.right-mr.left)/2+70)*-1;
   }
+  var feat=ROUND.featured(),spotK=ROUND.spotOn();
+  if(spotK>0)side=Math.min(side,-Math.min(W*0.28,170));             /* the spotlight needs the middle of the stage */
   perfShift+=(side-perfShift)*0.12;perfPx+=perfShift;
   var perfPy=(STAGE_TOP+STAGE_BOTTOM)/2*H+20;
+  if(spotK>0)drawCentreSpot(W/2,perfPy,spotK,feat);
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on))drawAvatar(perfPx,perfPy,performer.color,performer.name,3,true,isPerformerPlaying,false);   /* nobody on stage in practice */
 
+  /* the featured dancer, big, centre stage (their moves are live) */
+  if(feat&&viewers[feat.id]){
+    var fv=viewers[feat.id],fk=Math.min(1,feat.into/300,feat.left/300);
+    var fp=fv.poseCur||fv.pose||(GAME.REST);
+    ctx.save();ctx.globalAlpha=Math.max(0.15,fk);
+    drawAvatar(W/2,perfPy,fv.color,"\u2605 "+fv.name,3,false,false,false,4,fv.seed||0,feat.id===myId,fp,now-(fv.hitT||0));
+    ctx.restore();
+  }
   /* Note flash near performer */
   drawNoteFlash();
 
@@ -3416,7 +3524,10 @@ function renderLoop(){
     var combo=v.dance>=4?(v.combo||0):0;
     STREAK.track(v,combo);
     if(combo>=10&&!bigMe)STREAK.draw(ctx,vx,vy,2,combo,now,v.seed||0);
-    if(!bigMe)drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed,ids[i]===myId,vp,now-(v.hitT||0));
+    var onStage=feat&&feat.id===ids[i];
+    if(feat&&!onStage){ctx.save();ctx.globalAlpha=0.55;}
+    if(!bigMe&&!onStage)drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed,ids[i]===myId,vp,now-(v.hitT||0));
+    if(feat&&!onStage)ctx.restore();
     if(v.msT&&!bigMe&&now-v.msT<1700)STREAK.pop(ctx,vx,vy-50,v.msN,now-v.msT,1);
     else if(v.dance===5&&v.combo>=3&&!bigMe){
       /* step and target game combo over the dancer's head */
