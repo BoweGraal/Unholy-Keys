@@ -8,7 +8,7 @@ The kit has three parts, all in the `server` folder:
 |---|---|
 | `npm start` | Runs the relay server, and serves the performer and audience pages at `http://localhost:8080` |
 | `npm run check` | Tests a server the way a show uses it: opens a room, joins it, sends notes and chat, times each step, and checks the instrument sample hosts |
-| `npm run crowd -- CODE 20` | Sends 20 fake audience members into your room. They walk around, dance, chat, and report what they hear |
+| `npm run crowd -- CODE 20` | Sends 20 fake audience members into your room. They walk around, dance, chat, take part in dance rounds, and report what they hear |
 
 ---
 
@@ -135,6 +135,19 @@ When you click **LIVE**, Chrome asks to share a tab. Pick **this tab** and keep 
 - Play backing tracks from your local library rather than YouTube: the audience hears whatever you hear, ads included.
 
 **Data use.** Render's free plan includes about 5 GB of outbound data a month. Sound alone is roughly 45 MB per viewer per hour; with visuals, roughly 110 MB. That's about 20 viewers for 6 hours of sound only, or 2 hours with visuals. The live panel shows the running total for the current show.
+
+**Dance rounds.** In the **Music** tab, under **Dance rounds**, choose what happens when you play a backing track: a Step, Target or Free dance round. Then, while live, play a song from Backing Tracks:
+
+1. The song is checked for its tempo, beats and loud and quiet parts (a few seconds), and one set of steps is written for everyone.
+2. The audience gets a countdown (5 to 30 seconds, your choice). The song starts at zero.
+3. Step and Target rounds: the highest score when the song ends wins. Free dance rounds: everyone votes for 20 seconds, and your vote counts double.
+4. Placings earn show points: 10, 7, 5, 3, then 1 for taking part. The Music tab shows the standings.
+
+**Start a round now** runs a round on whatever is already sounding (YouTube, or you playing). There is no file to check, so each dancer's steps come from the live tempo detector and are not identical. Press **End round** when the song finishes.
+
+To try it alone: go live, run `npm run crowd -- CODE 12`, pick a round type and play a song. The fake viewers join the round, score, and vote. In the console on the audience page, `ukRound()` shows the round, the song position and how much the timing was trimmed.
+
+Steps are kept in time by the live sound itself, so rounds need **Share sound** on. Points are kept by name for the length of the show; two people with the same name share a total, and ending the show clears it.
 
 **Dance games and tempo.** The audience page listens to the music it is playing and works out the tempo, which sets the pace of the Step and Target games. It needs a few seconds of music with a clear beat. With no beat it uses 120 BPM, and the game says so. In the console on the audience page, `ukBeat()` shows the tempo it found and how sure it is, and `ukDance()` shows the current game, score and upcoming steps.
 

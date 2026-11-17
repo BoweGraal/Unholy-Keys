@@ -1864,7 +1864,7 @@ var GAME=(function(){
    The live tempo detector then trims the last few hundredths of a second.
    ============================================================ */
 var ROUND=(function(){
-  var rd=null,corr=0,playPerf=0,endAt=0,sat=false,totals=[],myVote="",timer=null,alignT=null,hideT=null,top=null,bi=0;
+  var rd=null,corr=0,lastD=null,playPerf=0,endAt=0,sat=false,totals=[],myVote="",timer=null,alignT=null,hideT=null,top=null,bi=0;
   var NAMES={step:"Step dance",aim:"Target dance",free:"Free dance"},ORD=["1st","2nd","3rd"];
   function ord(n){return ORD[n-1]||n+"th";}
   function box(){return document.getElementById("roundBox");}
@@ -1891,6 +1891,7 @@ var ROUND=(function(){
       for(var j=Math.max(0,i-2);j<=Math.min(b.length-1,i+3);j++)if(Math.abs(b[j]-pl)<Math.abs(b[bj]-pl))bj=j;
       d=b[bj]-pl;
     }else return;
+    lastD=d;
     if(Math.abs(d)>Math.min(g.period,cper)*0.3)return;     /* too far out to be a small timing error: leave it */
     corr=Math.max(-250,Math.min(250,corr+d*0.25));
   }
@@ -2011,7 +2012,7 @@ var ROUND=(function(){
   function reset(){if(rd&&GAME.mode)GAME.stop();end();hide();}
   function setTotals(t){totals=Array.isArray(t)?t.slice(0,10).map(function(x){return{name:safeText(x.name,24),pts:Math.max(0,Math.floor(+x.pts||0)),wins:Math.max(0,Math.floor(+x.wins||0))};}):[];}
   function scores(m){if(rd&&m.n===rd.n&&active()){top={top:Array.isArray(m.top)?m.top.slice(0,5).map(function(x){return{id:String(x.id),name:safeText(x.name,24),score:Math.max(0,Math.floor(+x.score||0))};}):[],players:Math.max(0,Math.floor(+m.players||0))};drawPlay();}}
-  window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat}:{round:null,totals:totals};};
+  window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),beatOffset:lastD===null?null:Math.round(lastD),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat}:{round:null,totals:totals};};
   return{onMsg:onMsg,scores:scores,setTotals:setTotals,pos:pos,active:active,join:join,sitOut:sitOut,reset:reset,myTotal:myTotal,get mode(){return rd?rd.mode:"";}};
 })();
 
