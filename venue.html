@@ -82,6 +82,28 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #gameCv{display:block;width:100%;height:clamp(210px,calc(100vh - 500px),320px);touch-action:none;cursor:pointer}
 #gameFoot{padding:6px 10px 9px;font:600 11px system-ui,sans-serif;color:rgba(255,255,255,.6);text-align:center}
 @media (max-width:520px){#gamePanel{right:8px;bottom:208px;width:200px}#gameCv{height:clamp(200px,calc(100vh - 560px),270px)}body.gaming #actBtns,body.gaming #hudBR{display:none}}
+/* ── Dance rounds: countdown, standings, voting and results (top centre) ── */
+#roundBox{display:none;position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:26;width:min(420px,92vw);box-sizing:border-box;padding:12px 16px;text-align:center;background:rgba(14,11,26,.93);border:1px solid rgba(211,84,160,.55);border-radius:14px;color:#fff;font-family:system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
+#roundBox.on{display:block}
+#roundBox.strip{padding:8px 14px;width:min(520px,92vw)}
+#roundBox.result{cursor:pointer}
+#roundBox .rb-head{font:700 12px system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:#D354A0}
+#roundBox .rb-head2{font:700 11px system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:12px}
+#roundBox .rb-title{font:700 17px system-ui,sans-serif;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#roundBox .rb-big{font:800 64px/1.1 system-ui,sans-serif;color:#F5C518;margin:4px 0}
+#roundBox .rb-sub{font:500 12px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.7);margin-top:4px}
+#roundBox .rb-win{font:800 20px system-ui,sans-serif;color:#F5C518;margin:8px 0 6px}
+#roundBox .rb-rows{margin-top:6px;text-align:left}
+#roundBox .rb-row{display:flex;gap:10px;align-items:baseline;padding:3px 6px;border-radius:6px;font:500 13px system-ui,sans-serif}
+#roundBox .rb-row.me{background:rgba(245,197,24,.14)}
+#roundBox .rb-row .p{width:30px;color:rgba(255,255,255,.55);font-weight:700}
+#roundBox .rb-row .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+#roundBox .rb-row .s{color:rgba(255,255,255,.7);font-variant-numeric:tabular-nums}
+#roundBox .rb-row .g{width:52px;text-align:right;color:#3CCB8A;font-weight:700;font-variant-numeric:tabular-nums}
+#roundBox .rb-votes{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0 4px}
+#roundBox .rb-btn{font:700 14px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.08);border:2px solid rgba(127,119,221,.6);border-radius:10px;padding:9px 14px;cursor:pointer;margin-top:6px}
+#roundBox .rb-btn:hover{background:rgba(255,255,255,.18)}
+#roundBox .rb-btn.on{background:linear-gradient(135deg,#D354A0,#7F77DD)}
 #chatPanel{position:fixed;bottom:0;left:0;right:0;height:200px;z-index:20;
   background:rgba(10,10,15,.88);border-top:1px solid rgba(127,119,221,.2);
   display:flex;flex-direction:column}
@@ -156,6 +178,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
       </div>
     </div>
   </div>
+  <div id="roundBox"></div>
   <div id="gamePanel">
     <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameBpm"></span><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
     <canvas id="gameCv"></canvas>
@@ -1134,6 +1157,8 @@ function handleMsg(msg){
           bubbleText:null,bubbleTime:0,dance:danceStyle(v.dance),pose:safePose(v.pose),combo:Math.max(0,Math.min(9999,Math.floor(+v.combo||0)))};
       });
     }
+    ROUND.setTotals(msg.totals);
+    if(msg.round)ROUND.onMsg(msg.round);else ROUND.reset();
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
     if(msg.performer){
@@ -1172,6 +1197,8 @@ function handleMsg(msg){
   else if(t==="perf-name"){
     performer.name=safeText(msg.name,24)||"Performer";
   }
+  else if(t==="round"){ROUND.onMsg(msg);}
+  else if(t==="round-scores"){ROUND.scores(msg);}
   else if(t==="pose"){
     var pv=viewers[msg.id],pp=safePose(msg.a);
     if(pv&&pp&&msg.id!==myId){pv.pose=pp;pv.combo=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pv.hitT=Date.now();}
@@ -1231,7 +1258,7 @@ function handleMsg(msg){
     setTimeout(function(){document.getElementById("perfLeft").style.display="none";},5000);
     silenceNote();
     isPerformerPlaying=false;
-    SP.reset();
+    SP.reset();ROUND.reset();
   }
 }
 
@@ -1293,7 +1320,7 @@ function sendChat(){
    ============================================================ */
 var BEAT=(function(){
   var an=null,buf=null,prev=null,T=[],V=[],timer=null,lastRun=0,off=0;
-  var est={bpm:0,t0:0,conf:0,at:0},cand=0,candN=0,phCand=0,phN=0,gen=0,runs=0,lastConf=0,lastRaw=0;
+  var lvl=-100,lvHi=-100,lvLo=0,est={bpm:0,t0:0,conf:0,at:0},cand=0,candN=0,phCand=0,phN=0,gen=0,runs=0,lastConf=0,lastRaw=0;
   var STEP=0.01,WIN=8,MINWIN=4,LO=70,HI=180;
   function actx(){return Tone.getContext().rawContext;}
   function ensure(){
@@ -1315,6 +1342,12 @@ var BEAT=(function(){
       if(d>0)f+=d*(i<=8?3:1);         /* bins 1-8 are below about 190 Hz: kick and bass */
       prev[i]=l;
     }
+    /* loudness: how this moment compares with the quietest and loudest the music has been lately */
+    var pw=0;for(i=1;i<380;i++){var mg=Math.pow(10,buf[i]/20);if(isFinite(mg))pw+=mg*mg;}
+    var db=10*Math.log10(pw+1e-12);
+    lvl+=(db-lvl)*0.04;                                   /* about half a second of smoothing */
+    if(lvl>lvHi)lvHi=lvl;else lvHi-=0.004;                /* the ends drift back in over a minute or so */
+    if(lvl<lvLo&&lvl>-90)lvLo=lvl;else lvLo+=0.004;
     var t=c.currentTime;
     T.push(t);V.push(f);
     while(T.length&&T[0]<t-WIN-1){T.shift();V.shift();}
@@ -1399,8 +1432,10 @@ var BEAT=(function(){
   }
   /* how far through the current beat we are, 0 to 1 */
   function phase(now){var g=get(),p=((now-g.t0)/g.period)%1;return p<0?p+1:p;}
-  window.ukBeat=function(){var g=get();return{bpm:Math.round(g.bpm*10)/10,live:g.live,known:g.known,beatPhase:Math.round(phase(performance.now())*100)/100,confidence:Math.round(lastConf*100)/100,latestReading:lastRaw,analyses:runs,listening:!!an};};
-  return{tap:tap,get:get,phase:phase};
+  window.ukBeat=function(){var g=get();return{bpm:Math.round(g.bpm*10)/10,live:g.live,known:g.known,beatPhase:Math.round(phase(performance.now())*100)/100,intensity:Math.round(level()*100)/100,confidence:Math.round(lastConf*100)/100,latestReading:lastRaw,analyses:runs,listening:!!an};};
+  /* how intense the music is right now, 0 (the quiet parts) to 1 (the loud parts); 0.5 until it has heard a range */
+  function level(){if(lvHi-lvLo<6)return 0.5;return Math.max(0,Math.min(1,(lvl-lvLo)/(lvHi-lvLo)));}
+  return{tap:tap,get:get,phase:phase,level:level};
 })();
 
 /* ============================================================
@@ -1461,7 +1496,7 @@ document.addEventListener("keydown",function(e){
   var d=KEYDIR[e.code];
   if(GAME.menuOpen()){
     var pick={Digit1:"free",Digit2:"step",Digit3:"aim",Numpad1:"free",Numpad2:"step",Numpad3:"aim"}[e.code];
-    if(pick){e.preventDefault();GAME.start(pick);return;}
+    if(pick){e.preventDefault();if(!ROUND.active())GAME.start(pick);return;}
     if(e.key==="Escape"){e.preventDefault();GAME.closeMenu();return;}
   }
   if(GAME.mode==="step"&&d){e.preventDefault();if(!e.repeat)GAME.press(d);return;}          /* arrows are dance steps */
@@ -1500,6 +1535,27 @@ var GAME=(function(){
   var STEP_POSE={left:[2.1,0.35,0.85,0],right:[-0.35,-2.1,0,-0.85],up:[2.55,-2.55,0.1,-0.1],down:[1.2,-1.2,0.75,-0.75]};
   var notes=[],score=0,best=0,hits=0,misses=0,judge="",judgeT=0,judgeCol="#fff",flash=[0,0,0,0],lastSlot=0,lastGen=-1,prevLane=-1,prevLane2=-1,prevX=0.5,prevY=0.5,startT=0;
   var HIT=[[60,"PERFECT",100,"#F5C518"],[120,"GREAT",60,"#3CCB8A"],[180,"GOOD",30,"#5FB4F0"]];
+  /* in a dance round: the chart everyone shares, how far through it we are, and score reporting */
+  var rnd=null,rndIdx=0,sentScore=-1,scoreTimer=null;
+  function spot(n){n=(n+1)*2654435761>>>0;var a=(n^(n>>>15))*2246822519>>>0,b=(a^(a>>>13))*3266489917>>>0;return [(a>>>8)/16777216,(b>>>8)/16777216];}
+  /* the beat grid to draw with: the round's chart tempo, or the live detector */
+  function grid(){var b=BEAT.get();if(rnd&&rnd.chart)return{bpm:rnd.chart.bpm,period:60000/rnd.chart.bpm,t0:b.t0,gen:0,known:true,live:true};return b;}
+  function feedRound(now,bt){
+    var pos=ROUND.pos(),st=rnd.chart.steps,ahead=travel(bt.period)+700,i;
+    if(!rnd.synced){while(rndIdx<st.length&&st[rndIdx][0]<pos-150)rndIdx++;rnd.synced=true;}    /* joined part-way: skip what's gone */
+    while(rndIdx<st.length&&st[rndIdx][0]<pos+ahead){
+      var s=st[rndIdx];
+      for(var b=0;b<4;b++)if(s[1]&(1<<b)){var h=spot(rndIdx*4+b);notes.push({ms:s[0],lane:b,x:0.14+h[0]*0.72,y:0.12+h[1]*0.76,t:0,j:"",jt:0});}
+      rndIdx++;
+    }
+    /* each step is due when the song, as heard here, reaches it */
+    for(i=0;i<notes.length;i++)if(notes[i].ms!==undefined&&!notes[i].j)notes[i].t=now+(notes[i].ms-pos);
+  }
+  function report(final){
+    if(!rnd||mode==="free"||score===sentScore)return;
+    if(final){clearTimeout(scoreTimer);scoreTimer=null;sentScore=score;wsSend({type:"score",s:score});return;}
+    if(!scoreTimer)scoreTimer=setTimeout(function(){scoreTimer=null;if(rnd&&score!==sentScore){sentScore=score;wsSend({type:"score",s:score});}},1500);
+  }
 
   function me(){return (myId&&viewers[myId])||null;}
   function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;if(hit)m.hitT=Date.now();}
@@ -1562,6 +1618,7 @@ var GAME=(function(){
   /* ---------- step dance ---------- */
   function travel(per){return Math.max(1400,Math.min(2300,per*3.5));}
   function makeNotes(now,bt){
+    if(rnd&&rnd.chart){feedRound(now,bt);return;}
     var half=bt.period/2;
     if(bt.gen!==lastGen){            /* the tempo jumped: clear what hasn't arrived yet and start a fresh grid */
       lastGen=bt.gen;notes=notes.filter(function(n){return n.j||n.t<now+350;});
@@ -1577,6 +1634,9 @@ var GAME=(function(){
       if(mode==="aim"){if(!onBeat&&(bt.bpm>110||combo<10))continue;p=onBeat?(bt.bpm>150?0.6:0.8):0.3;}
       else if(onBeat)p=bt.bpm>150?0.7:0.86;
       else p=bt.bpm>150?(combo>=25?0.12:0):bt.bpm<95?(combo>=4?0.42:0.15):(combo>=8?0.26:0);
+      /* louder music, more steps: quiet passages thin out, loud ones fill in the off-beats */
+      var I=BEAT.level();
+      if(onBeat)p*=0.5+0.6*I;else p=I<0.35?0:Math.min(0.7,p*(0.4+1.6*I)+(I>0.75&&bt.bpm<=150?0.2:0));
       if(Math.random()>p)continue;
       var lane;do{lane=Math.floor(Math.random()*4);}while(lane===prevLane&&lane===prevLane2);
       prevLane2=prevLane;prevLane=lane;
@@ -1623,7 +1683,7 @@ var GAME=(function(){
   function aimLead(per){return Math.max(850,Math.min(1300,per*2));}
   function aimR(){return Math.min(CW,CH)*0.105;}
   function tapAim(p){
-    var now=performance.now(),R=aimR()*1.4,bestN=null,bt=1e9,lead=aimLead(BEAT.get().period);
+    var now=performance.now(),R=aimR()*1.4,bestN=null,bt=1e9,lead=aimLead(grid().period);
     /* of the targets under the finger, take the one due soonest */
     for(var i=0;i<notes.length;i++){var n=notes[i];if(n.j||now<n.t-lead)continue;
       if(Math.hypot(p[0]-n.x*CW,p[1]-n.y*CH)<=R&&n.t<bt){bt=n.t;bestN=n;}}
@@ -1637,7 +1697,7 @@ var GAME=(function(){
     setPose(np,true);sendPose(true);foot();
   }
   function drawAim(now){
-    var bt=BEAT.get(),lead=aimLead(bt.period),R=aimR(),i;
+    var bt=grid(),lead=aimLead(bt.period),R=aimR(),i;
     makeNotes(now,bt);expire(now);
     g.clearRect(0,0,CW,CH);
     /* the pad pulses faintly on each beat */
@@ -1668,7 +1728,7 @@ var GAME=(function(){
     g.restore();
   }
   function drawStep(now){
-    var bt=BEAT.get(),tv=travel(bt.period),ty=CH*0.13,sz=Math.min(CW/11,22),i;
+    var bt=grid(),tv=travel(bt.period),ty=CH*0.13,sz=Math.min(CW/11,22),i;
     makeNotes(now,bt);
     expire(now);var n;
     g.clearRect(0,0,CW,CH);
@@ -1697,6 +1757,7 @@ var GAME=(function(){
   }
   function foot(){
     var f=document.getElementById("gameFoot");if(!f)return;
+    report();
     if(mode==="step"||mode==="aim")f.textContent="Score "+score.toLocaleString()+" · Combo "+combo+" · Best "+best;
     else if(mode==="free")f.textContent=("ontouchstart" in window)?"Drag the hands and feet":"Drag the hands and feet, or tap D F J K";
   }
@@ -1704,6 +1765,7 @@ var GAME=(function(){
   function bpmText(now){
     if(now-lastBpmTxt<500)return;lastBpmTxt=now;
     var bt=BEAT.get(),el=document.getElementById("gameBpm");
+    if(rnd&&rnd.chart){el.textContent=Math.round(rnd.chart.bpm)+" BPM";el.title="This round's steps were made from the song itself, the same for everyone";return;}
     el.textContent=bt.known?Math.round(bt.bpm)+" BPM"+(bt.live?"":" (holding)"):"listening… 120 BPM";
     el.title=bt.known?(bt.live?"Following the music":"No clear beat right now; keeping the last tempo"):"No beat found yet; using 120 BPM until the music has one";
   }
@@ -1720,9 +1782,10 @@ var GAME=(function(){
     bpmText(now);
     raf=requestAnimationFrame(tick);
   }
-  function start(m){
+  function start(m,round){
     if(m!=="free"&&m!=="step"&&m!=="aim")return;
     if(mode)stop(true);
+    rnd=round||null;rndIdx=0;sentScore=-1;
     initAudio();
     mode=m;myDance=m==="free"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
@@ -1742,6 +1805,7 @@ var GAME=(function(){
   }
   function stop(quiet){
     if(!mode)return;
+    report(true);rnd=null;
     mode="";myDance=0;
     document.body.classList.remove("gaming","gaming-step");
     document.getElementById("gamePanel").classList.remove("on");
@@ -1754,11 +1818,15 @@ var GAME=(function(){
   function openMenu(){document.getElementById("danceMenu").classList.add("on");}
   function closeMenu(){document.getElementById("danceMenu").classList.remove("on");}
   /* the Dance button and Space: stop if dancing, otherwise show the two choices */
-  function toggle(){if(mode)stop();else if(menuOpen())closeMenu();else openMenu();}
+  function toggle(){
+    if(mode){stop();if(ROUND.active())ROUND.sitOut();}
+    else if(ROUND.active())ROUND.join();          /* a round is on: Dance joins it */
+    else if(menuOpen())closeMenu();else openMenu();
+  }
 
   document.getElementById("danceBtn").addEventListener("click",function(e){e.currentTarget.blur();toggle();});
-  Array.prototype.forEach.call(document.querySelectorAll("#danceMenu button"),function(b){b.addEventListener("click",function(){b.blur();start(b.getAttribute("data-g"));});});
-  document.getElementById("gameClose").addEventListener("click",function(){stop();});
+  Array.prototype.forEach.call(document.querySelectorAll("#danceMenu button"),function(b){b.addEventListener("click",function(){b.blur();if(!ROUND.active())start(b.getAttribute("data-g"));});});
+  document.getElementById("gameClose").addEventListener("click",function(){stop();if(ROUND.active())ROUND.sitOut();});
   var pad=document.getElementById("gameCv");
   pad.addEventListener("pointerdown",function(e){
     e.preventDefault();
@@ -1779,10 +1847,172 @@ var GAME=(function(){
   window.addEventListener("blur",function(){for(var i=0;i<4;i++)if(keyHeld[i])limbKey(i,false);});
   window.ukDance=function(){
     var now=performance.now();
-    return{mode:mode,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
+    return{mode:mode,round:!!rnd,chartSteps:rnd&&rnd.chart?rnd.chart.steps.length:0,songPos:rnd?Math.round(ROUND.pos()):null,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
       upcoming:notes.filter(function(n){return !n.j;}).map(function(n){return{dir:LANES[n.lane],inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};})};
   };
-  return{start:start,stop:stop,toggle:toggle,press:press,limbKey:limbKey,menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},REST:REST};
+  return{start:start,stop:stop,toggle:toggle,press:press,limbKey:limbKey,menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
+})();
+
+/* ============================================================
+   DANCE ROUNDS
+   The performer starts a round for a song. Everyone sees a countdown and gets the same steps, made
+   from the song itself. When the song ends the highest score wins (Step and Target), or everyone
+   votes for the best dancer (Free dance; the performer's vote counts double). Placings earn show
+   points that add up for the whole show.
+   Keeping time: the round says at what moment of the performer's live sound the song started, and
+   the live sound player knows which moment it is playing, so steps follow the song as heard here.
+   The live tempo detector then trims the last few hundredths of a second.
+   ============================================================ */
+var ROUND=(function(){
+  var rd=null,corr=0,playPerf=0,endAt=0,sat=false,totals=[],myVote="",timer=null,alignT=null,hideT=null,top=null,bi=0;
+  var NAMES={step:"Step dance",aim:"Target dance",free:"Free dance"},ORD=["1st","2nd","3rd"];
+  function ord(n){return ORD[n-1]||n+"th";}
+  function box(){return document.getElementById("roundBox");}
+  function mk(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
+  function active(){return !!rd&&rd.phase==="play";}
+  function pos(){
+    if(!rd)return -1e9;
+    var p=(rd.ts0!==null&&rd.ts0!==undefined)?SP.songPos(rd.ts0):null;
+    if(p===null)p=performance.now()-playPerf;             /* no live sound here: go by when the round said the song began */
+    return p+corr;
+  }
+  /* trim the timing so the chart's beats sit on the beats this device is actually hearing */
+  function align(){
+    if(!active()||!rd.chart||!rd.chart.beats||rd.chart.beats.length<8)return;
+    var g=BEAT.get();if(!g.known||!g.live)return;
+    var b=rd.chart.beats,now=performance.now(),p=pos(),i=bi,d;
+    while(i<b.length-1&&b[i+1]<=p)i++;while(i>0&&b[i]>p)i--;bi=i;
+    if(i<1||i>=b.length-1)return;
+    var cper=b[i+1]-b[i],ratio=g.period/cper;
+    if(Math.abs(ratio-1)<0.05||Math.abs(ratio-0.5)<0.03){
+      d=((now+(b[i]-p))-g.t0)%g.period;if(d>g.period/2)d-=g.period;if(d<-g.period/2)d+=g.period;
+    }else if(Math.abs(ratio-2)<0.1){
+      var tl=g.t0+Math.round((now-g.t0)/g.period)*g.period,pl=p+(tl-now),bj=i;
+      for(var j=Math.max(0,i-2);j<=Math.min(b.length-1,i+3);j++)if(Math.abs(b[j]-pl)<Math.abs(b[bj]-pl))bj=j;
+      d=b[bj]-pl;
+    }else return;
+    if(Math.abs(d)>Math.min(g.period,cper)*0.3)return;     /* too far out to be a small timing error: leave it */
+    corr=Math.max(-250,Math.min(250,corr+d*0.25));
+  }
+  function myName(){return myId&&viewers[myId]?viewers[myId].name:"";}
+  function myTotal(){var n=myName().toLowerCase();for(var i=0;i<totals.length;i++)if(totals[i].name.toLowerCase()===n)return{pts:totals[i].pts,place:i+1};return null;}
+  function show(nodes,cls){
+    var b=box();b.textContent="";b.className="on "+(cls||"");
+    nodes.forEach(function(n){if(n)b.appendChild(n);});
+    clearTimeout(hideT);hideT=null;
+  }
+  function hide(){var b=box();b.className="";b.textContent="";}
+  function head(){return mk("div","rb-head","Round "+rd.n+" · "+(NAMES[rd.mode]||"Dance"));}
+  function drawCountdown(){
+    var left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
+    show([head(),mk("div","rb-title",rd.title),mk("div","rb-big",left>0?String(left):"GO!"),
+      mk("div","rb-sub",rd.mode==="free"?"Dance however you like. Everyone votes when the song ends.":"Everyone gets the same steps. Highest score wins the round.")],"count");
+  }
+  function drawPlay(){
+    var line;
+    if(rd.mode==="free")line="Dance! Voting opens when the song ends.";
+    else if(top&&top.top&&top.top.length){
+      var t=top.top[0],mine=-1;for(var i=0;i<top.top.length;i++)if(top.top[i].id===myId)mine=i;
+      line="Leading: "+t.name+" "+t.score.toLocaleString()+(mine>=0?"  ·  You: "+ord(mine+1):"")+"  ·  "+top.players+" dancing";
+    }else line="Hit the steps: highest score wins.";
+    var nodes=[mk("div","rb-head","Round "+rd.n+" · "+rd.title),mk("div","rb-sub",line)];
+    if(sat){var j=mk("button","rb-btn","Join the round");j.onclick=function(){join();};nodes.push(j);}
+    show(nodes,"strip");
+  }
+  function drawVote(){
+    var left=Math.max(0,Math.ceil((endAt-performance.now())/1000)),row=mk("div","rb-votes");
+    (rd.dancers||[]).forEach(function(d){
+      if(d.id===myId)return;
+      var b=mk("button","rb-btn"+(myVote===d.id?" on":""),d.name);b.style.borderColor=safeColor(d.color);
+      b.onclick=function(){myVote=d.id;wsSend({type:"vote",id:d.id});drawVote();};
+      row.appendChild(b);
+    });
+    show([mk("div","rb-head","Round "+rd.n+" · Vote for the best dancer"),row.childNodes.length?row:mk("div","rb-sub","You were the only other dancer. Waiting for the votes."),
+      mk("div","rb-sub",(myVote?"Voted. You can change it for ":"")+left+" s"+(myVote?"":" left"))],"vote");
+  }
+  function drawResult(m){
+    var nodes=[mk("div","rb-head","Round "+m.n+" result · "+m.title)];
+    if(!m.ranking||!m.ranking.length)nodes.push(mk("div","rb-sub","Nobody danced this round."));
+    else{
+      var w=m.ranking[0];
+      nodes.push(mk("div","rb-win","🏆 "+w.name+(m.mode==="free"?" · "+w.score+" vote"+(w.score===1?"":"s"):" · "+w.score.toLocaleString())));
+      var tb=mk("div","rb-rows");
+      m.ranking.slice(0,5).forEach(function(r){
+        var row=mk("div","rb-row"+(r.id===myId?" me":""));
+        row.appendChild(mk("span","p",ord(r.place)));row.appendChild(mk("span","n",r.name));
+        row.appendChild(mk("span","s",m.mode==="free"?r.score+" vote"+(r.score===1?"":"s"):r.score.toLocaleString()));row.appendChild(mk("span","g","+"+r.pts));
+        tb.appendChild(row);
+      });
+      nodes.push(tb);
+      var mine=null;m.ranking.forEach(function(r){if(r.id===myId)mine=r;});
+      if(mine&&mine.place>5)nodes.push(mk("div","rb-sub","You: "+ord(mine.place)+", +"+mine.pts));
+    }
+    if(totals.length){
+      nodes.push(mk("div","rb-head2","Show standings"));
+      var tt=mk("div","rb-rows"),me=myName().toLowerCase();
+      totals.slice(0,5).forEach(function(t,i){
+        var row=mk("div","rb-row"+(t.name.toLowerCase()===me?" me":""));
+        row.appendChild(mk("span","p",ord(i+1)));row.appendChild(mk("span","n",t.name));row.appendChild(mk("span","s",t.wins?t.wins+" win"+(t.wins===1?"":"s"):""));row.appendChild(mk("span","g",t.pts+" pts"));
+        tt.appendChild(row);
+      });
+      nodes.push(tt);
+    }
+    show(nodes,"result");
+    box().onclick=function(){hide();box().onclick=null;};
+    hideT=setTimeout(function(){hide();},14000);
+  }
+  function tickUI(){
+    if(!rd)return;
+    if(rd.phase==="countdown")drawCountdown();
+    else if(rd.phase==="vote")drawVote();
+  }
+  function join(){if(!active())return;sat=false;GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart});drawPlay();}
+  function sitOut(){sat=true;if(active())drawPlay();}
+  function cleanChart(c){
+    if(!c||!Array.isArray(c.steps)||!Array.isArray(c.beats)||!(c.bpm>=30&&c.bpm<=300))return null;
+    return c;
+  }
+  function onMsg(m){
+    if(!m||m.type!=="round")return;
+    var ph=m.phase;
+    if(ph==="countdown"||ph==="play"||ph==="vote"){
+      if(!rd||rd.n!==m.n){
+        rd={n:+m.n||0,mode:NAMES[m.mode]?m.mode:"step",title:safeText(m.title,80),chart:cleanChart(m.chart),ts0:null,phase:"",dancers:[]};
+        corr=0;bi=0;sat=false;myVote="";top=null;
+        if(GAME.mode)GAME.stop();                           /* free-play ends; the round takes over */
+        GAME.closeMenu();
+      }
+      clearInterval(timer);timer=setInterval(tickUI,250);
+    }
+    if(!rd||rd.n!==m.n)return;
+    if(ph==="countdown"){rd.phase=ph;endAt=performance.now()+(+m.ms||0);drawCountdown();}
+    else if(ph==="play"){
+      var first=rd.phase!=="play";
+      rd.ts0=(typeof m.ts0==="number"&&isFinite(m.ts0))?m.ts0:null;
+      playPerf=performance.now()-(+m.pos||0);
+      rd.phase=ph;
+      if(first){
+        clearInterval(alignT);alignT=setInterval(align,500);
+        if(!sat)GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart});
+        drawPlay();
+      }
+    }
+    else if(ph==="tally"){rd.phase=ph;if(GAME.mode)GAME.stop();show([head(),mk("div","rb-sub","Counting the scores…")],"strip");}
+    else if(ph==="vote"){rd.phase=ph;if(GAME.mode)GAME.stop();rd.dancers=Array.isArray(m.dancers)?m.dancers.slice(0,60).map(function(d){return{id:String(d.id),name:safeText(d.name,24),color:d.color};}):[];endAt=performance.now()+(+m.ms||0);drawVote();}
+    else if(ph==="result"){
+      if(GAME.mode)GAME.stop();
+      setTotals(m.totals);
+      var res={n:rd.n,mode:rd.mode,title:rd.title,ranking:Array.isArray(m.ranking)?m.ranking.slice(0,10).map(function(r){return{id:String(r.id),name:safeText(r.name,24),score:Math.max(0,Math.floor(+r.score||0)),pts:Math.max(0,Math.floor(+r.pts||0)),place:Math.max(1,Math.floor(+r.place||1))};}):[]};
+      end();drawResult(res);updHudBR();
+    }
+    else if(ph==="off"){if(GAME.mode)GAME.stop();end();hide();}
+  }
+  function end(){rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
+  function reset(){if(rd&&GAME.mode)GAME.stop();end();hide();}
+  function setTotals(t){totals=Array.isArray(t)?t.slice(0,10).map(function(x){return{name:safeText(x.name,24),pts:Math.max(0,Math.floor(+x.pts||0)),wins:Math.max(0,Math.floor(+x.wins||0))};}):[];}
+  function scores(m){if(rd&&m.n===rd.n&&active()){top={top:Array.isArray(m.top)?m.top.slice(0,5).map(function(x){return{id:String(x.id),name:safeText(x.name,24),score:Math.max(0,Math.floor(+x.score||0))};}):[],players:Math.max(0,Math.floor(+m.players||0))};drawPlay();}}
+  window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat}:{round:null,totals:totals};};
+  return{onMsg:onMsg,scores:scores,setTotals:setTotals,pos:pos,active:active,join:join,sitOut:sitOut,reset:reset,myTotal:myTotal,get mode(){return rd?rd.mode:"";}};
 })();
 
 /* ============================================================
@@ -1875,7 +2105,7 @@ function updTapHint(){
    ============================================================ */
 var SP=(function(){
   var cfgA=null,cfgV=null,adec=null,vdec=null,nextT=0,lastAudio=0,lastVideo=0,lastDecoded=0,gotKey=false,gain=null,announced=false;
-  var AHEAD=0.35,lastGrow=0,st={audioPackets:0,audioDecoded:0,visualPackets:0,visualFrames:0,rebuffers:0,lastError:""};
+  var map=null,AHEAD=0.35,lastGrow=0,st={audioPackets:0,audioDecoded:0,visualPackets:0,visualFrames:0,rebuffers:0,lastError:""};
   function canSound(){return !!(window.AudioDecoder&&window.EncodedAudioChunk);}
   function canVisuals(){return !!(window.VideoDecoder&&window.EncodedVideoChunk);}
   function ctx(){return Tone.getContext().rawContext;}
@@ -1904,6 +2134,7 @@ var SP=(function(){
         if(nextT&&nextT<now+0.02){st.rebuffers++;AHEAD=Math.min(1.0,AHEAD+0.1);lastGrow=Date.now();}
         nextT=now+AHEAD;
       }else if(Date.now()-lastGrow>30000&&AHEAD>0.35){AHEAD=Math.max(0.35,AHEAD-0.05);lastGrow=Date.now();}   /* smooth for a while: shrink back toward low delay */      /* (re)start the buffer after a gap or a pile-up */
+      map={ts:ad.timestamp,t:nextT};                         /* this piece of the performer's sound plays at this time here */
       var src=c.createBufferSource();src.buffer=buf;src.connect(gain);src.start(nextT);nextT+=buf.duration;
       lastDecoded=Date.now();
     }catch(e){}
@@ -1945,6 +2176,13 @@ var SP=(function(){
     try{if(vdec&&vdec.state!=="closed")vdec.close();}catch(e){}vdec=null;
     lastAudio=lastVideo=lastDecoded=0;updScreen();updHudBR();
   }
+  /* How far into a song we are hearing right now, in ms, given the stream time (ts0) at which the
+     performer's song started. null when the live sound isn't playing here. */
+  function songPos(ts0){
+    if(!map||!soundLive())return null;
+    var c=ctx(),heard=c.currentTime-(c.outputLatency||0);
+    return (map.ts+(heard-map.t)*1e6-ts0)/1000;
+  }
   function soundLive(){return Date.now()-lastDecoded<2000;}
   function visualsLive(){return gotKey&&Date.now()-lastVideo<2500;}
   function updScreen(){
@@ -1961,7 +2199,7 @@ var SP=(function(){
   setInterval(updScreen,500);
   /* For troubleshooting: type ukStreamStats() in the browser console */
   window.ukStreamStats=function(){var c=null;try{c=ctx();}catch(e){}return {soundLive:soundLive(),visualsLive:visualsLive(),audioConfig:cfgA,decoderState:adec?adec.state:"none",audioContext:c?c.state:"none",audioPackets:st.audioPackets,audioDecoded:st.audioDecoded,visualPackets:st.visualPackets,visualFrames:st.visualFrames,rebuffers:st.rebuffers,bufferSeconds:c?Math.max(0,Math.round((nextT-c.currentTime)*100)/100):0,bufferTarget:AHEAD,lastError:st.lastError};};
-  return{packet:packet,config:config,reset:reset,soundLive:soundLive,visualsLive:visualsLive,canSound:canSound,get announced(){return announced;}};
+  return{packet:packet,config:config,reset:reset,songPos:songPos,soundLive:soundLive,visualsLive:visualsLive,canSound:canSound,get announced(){return announced;}};
 })();
 
 /* ============================================================
@@ -1982,6 +2220,7 @@ function updHudBR(){
   if(perfScale)lines.push("Scale: "+perfScale);
   if(perfMode)lines.push("Mode: "+perfMode);
   var bt=BEAT.get();if(bt.known&&bt.live)lines.push("Tempo: "+Math.round(bt.bpm)+" BPM");
+  var mt=ROUND.myTotal();if(mt)lines.push("Show points: "+mt.pts+" ("+(["1st","2nd","3rd"][mt.place-1]||(mt.place+"th"))+")");
   if(typeof SP!=="undefined"&&SP.announced)lines.push(SP.canSound()?"Sound: live from the performer":"Sound: simplified (update your browser for the full mix)");
   var hud=document.getElementById("hudBR");hud.textContent="";
   lines.forEach(function(l,i){if(i)hud.appendChild(document.createElement("br"));hud.appendChild(document.createTextNode(safeText(l,80)));});
