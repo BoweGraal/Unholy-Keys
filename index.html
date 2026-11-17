@@ -3771,9 +3771,13 @@ function resolveWsUrl(){
   var q=null;try{q=new URLSearchParams(location.search).get("ws");}catch(e){}
   if(q){
     if(q==="reset"){try{localStorage.removeItem("uk_ws");}catch(e){}}
-    else if(/^wss?:\/\/[^\s]+$/.test(q)){try{localStorage.setItem("uk_ws",q);}catch(e){}return q;}
+    else if(/^wss?:\/\/[^\s]+$/.test(q)){
+      /* a home-show tunnel address changes every show, so it's used for this visit only and never remembered */
+      if(!/\.trycloudflare\.com(:\d+)?(\/|$)/i.test(q)){try{localStorage.setItem("uk_ws",q);}catch(e){}}
+      return q;
+    }
   }
-  try{var saved=localStorage.getItem("uk_ws");if(saved)return saved;}catch(e){}
+  try{var saved=localStorage.getItem("uk_ws");if(saved&&!/\.trycloudflare\.com/i.test(saved))return saved;}catch(e){}
   if((location.protocol==="http:"||location.protocol==="https:")&&!/\.github\.io$/.test(location.hostname))
     return (location.protocol==="https:"?"wss://":"ws://")+location.host;
   return WS_URL;
