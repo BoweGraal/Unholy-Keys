@@ -73,15 +73,31 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #danceMenu button{white-space:nowrap;min-width:168px;background:rgba(28,22,48,.96);border-color:rgba(211,84,160,.6)}
 #danceMenu button:hover{background:linear-gradient(135deg,rgba(211,84,160,.6),rgba(127,119,221,.6))}
 #danceMenu kbd{float:right;margin-left:10px;font:600 10px system-ui,sans-serif;opacity:.55;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:1px 5px}
-#gamePanel{display:none;position:fixed;right:14px;bottom:330px;z-index:23;width:250px;background:rgba(12,10,22,.9);border:1px solid rgba(127,119,221,.5);border-radius:14px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#gamePanel{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:222px;z-index:23;width:300px;background:rgba(12,10,22,.9);border:1px solid rgba(127,119,221,.5);border-radius:14px;overflow:visible;user-select:none;-webkit-user-select:none;touch-action:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #gamePanel.on{display:block}
 #gameHdr{display:flex;align-items:center;gap:8px;white-space:nowrap;padding:8px 8px 8px 12px;font:700 13px system-ui,sans-serif;color:#fff}
 #gameBpm{margin-left:auto;font:600 11px system-ui,sans-serif;color:rgba(255,255,255,.6)}
 #gameClose{font:700 13px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.1);border:0;border-radius:8px;width:28px;height:28px;cursor:pointer}
 #gameClose:hover{background:rgba(224,80,80,.6)}
-#gameCv{display:block;width:100%;height:clamp(210px,calc(100vh - 500px),320px);touch-action:none;cursor:pointer}
+#gameCv{display:block;width:100%;height:240px;touch-action:none;cursor:pointer}
+/* you, big, dancing on top of the game */
+#gameMe{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);width:180px;height:120px;pointer-events:none}
+/* ── Dance game sizes by device (body.dev-pc / dev-tablet / dev-phone, set by DEVICE below).
+   The game is always centred. The panel width and play area are set from the screen in DEVICE.fit(),
+   because they depend on how much room the chat and controls leave. On phones and tablets you play
+   by tapping the game itself, so the walking pad, chat and corner display step aside during a game. */
+body.dev-phone.gaming #moveCtl,body.dev-phone.gaming #moveHint,body.dev-phone.gaming #hudBR,body.dev-phone.gaming #chatPanel,
+body.dev-tablet.gaming #moveCtl,body.dev-tablet.gaming #moveHint,body.dev-tablet.gaming #chatPanel,
+body.dev-pc.narrow.gaming #moveCtl,body.dev-pc.narrow.gaming #moveHint{display:none}
+body.dev-phone #gameHdr{padding:6px 6px 6px 10px}
+body.dev-phone #gameClose{width:34px;height:34px;font-size:15px}
+body.dev-tablet #gameHdr{font-size:15px;padding:10px 10px 10px 14px}
+body.dev-tablet #gameClose{width:36px;height:36px}
+body.dev-tablet #gameFoot{font-size:13px}
+/* very short screens (a phone held sideways): the leader banner steps aside while you play */
+body.short.gaming #roundBox.strip{display:none}
+body.gaming-free #gameMe{display:none}
 #gameFoot{padding:6px 10px 9px;font:600 11px system-ui,sans-serif;color:rgba(255,255,255,.6);text-align:center}
-@media (max-width:520px){#gamePanel{right:8px;bottom:208px;width:200px}#gameCv{height:clamp(200px,calc(100vh - 560px),270px)}body.gaming #actBtns,body.gaming #hudBR{display:none}}
 /* ── Dance rounds: countdown, standings, voting and results (top centre) ── */
 #roundBox{display:none;position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:26;width:min(420px,92vw);box-sizing:border-box;padding:12px 16px;text-align:center;background:rgba(14,11,26,.93);border:1px solid rgba(211,84,160,.55);border-radius:14px;color:#fff;font-family:system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
 #roundBox.on{display:block}
@@ -120,11 +136,9 @@ body.practice #chatPanel,body.practice #talkBtn,body.practice #hudTL{display:non
 body.practice #moveCtl{bottom:18px}
 body.practice #moveHint{bottom:190px}
 body.practice #hudBR{bottom:18px}
-body.practice #gamePanel{bottom:120px}
 body.embed #prBar{top:12px}
 body.embed #roundBox{top:12px}
 body.practice:not(.pr-busy) #roundBox{top:180px}
-@media (max-width:520px){body.practice #gamePanel{bottom:18px}}
 #prBar select,#prBar button,#prBar label.f{font:600 12px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(127,119,221,.55);border-radius:8px;padding:6px 10px;cursor:pointer}
 #prBar #prGo{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:transparent}
 #prBar #prGo:disabled{opacity:.45;cursor:default}
@@ -231,6 +245,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
   </div>
   <div id="gamePanel">
     <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameBpm"></span><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
+    <canvas id="gameMe"></canvas>
     <canvas id="gameCv"></canvas>
     <div id="gameFoot"></div>
   </div>
@@ -1032,7 +1047,7 @@ var particles=[],chatMessages=[];
 var bubbles={}; /* viewerId -> {text, time} */
 
 /* Canvas */
-var canvas,ctx,W=0,H=0;
+var canvas,ctx,W=0,H=0,perfShift=0;
 var STAGE_TOP=0.0,STAGE_BOTTOM=0.30;
 var FLOOR_TOP=0.30,FLOOR_BOTTOM=0.78;
 
@@ -1566,6 +1581,97 @@ document.addEventListener("keyup",function(e){var d=KEYDIR[e.code];if(d)setHeld(
 window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){setHeld(d,false);});});
 
 /* ============================================================
+   STREAK POWER-UPS
+   A long combo in the step or target game charges the dancer up, like a fighter powering up:
+     10+  white-blue charging aura with sparks rising
+     25+  gold spiky aura
+     50+  fire
+     100+ purple, with lightning
+   Each milestone (10, 25, 50, 75, 100, 150, 200, then every 100) pops a big STREAK number over the
+   dancer's head. Everyone in the venue sees it, because the combo travels with each dance move.
+   ============================================================ */
+var STREAK=(function(){
+  var LV=[
+    {at:10,  c1:"rgba(160,230,255,",c2:"rgba(255,255,255,",spark:"#CFF4FF",h:1.0},
+    {at:25,  c1:"rgba(255,205,60,", c2:"rgba(255,250,200,",spark:"#FFE680",h:1.35},
+    {at:50,  c1:"rgba(255,90,20,",  c2:"rgba(255,200,60,", spark:"#FFB040",h:1.6},
+    {at:100, c1:"rgba(150,80,255,", c2:"rgba(210,190,255,",spark:"#C8B0FF",h:1.85}
+  ];
+  var MS=[10,25,50,75,100,150,200];for(var m0=300;m0<=10000;m0+=100)MS.push(m0);
+  function level(combo){var l=null;for(var i=0;i<LV.length;i++)if(combo>=LV[i].at)l=LV[i];return l;}
+  function milestone(prev,cur){var hit=0;for(var i=0;i<MS.length;i++)if(prev<MS[i]&&cur>=MS[i])hit=MS[i];return hit;}
+  /* smooth wobble over time, for the flicker */
+  function wob(a,t){return Math.sin(a*1.7+t*0.011)*0.5+Math.sin(a*3.1-t*0.017)*0.3+Math.sin(a*5.3+t*0.023)*0.2;}
+  /* the aura behind a character standing at (x,y) at scale s: draw it before the character */
+  function draw(g,x,y,s,combo,t,seed){
+    var L=level(combo);if(!L)return;
+    seed=seed||0;
+    var cx=x,cy=y-3*s,rw=13*s,rh=17*s*L.h,i,a,pts=40,grow=Math.min(1,(combo-L.at)/20)*0.15+1,sharp=L.at>=25;
+    g.save();g.globalCompositeOperation="lighter";
+    for(var layer=0;layer<2;layer++){
+      var k=layer?0.72:1,al=layer?0.55:0.3;
+      g.beginPath();
+      for(i=0;i<=pts;i++){
+        a=i/pts*Math.PI*2;
+        var up=Math.max(0,-Math.sin(a)),spike=(i%2?1:0.55),low=a>0&&a<Math.PI?0.55:1;
+        /* flames lick upward; from 25 the spikes are taller and sharper */
+        var r=(1+wob(a*3+seed,t)*0.18+up*(sharp?0.9:0.45)*spike*(0.75+0.25*Math.sin(t*0.02+i)))*grow*k;
+        var px=cx+Math.cos(a)*rw*r,py=cy+Math.sin(a)*rh*low*r;
+        if(i===0)g.moveTo(px,py);
+        else if(sharp&&i%2)g.lineTo(px,py);
+        else g.quadraticCurveTo(cx+Math.cos(a-0.08)*rw*r*1.05,cy+Math.sin(a-0.08)*rh*r*low,px,py);
+      }
+      g.closePath();
+      var gr=g.createRadialGradient(cx,cy,2*s,cx,cy-rh*0.2,rh*1.3);
+      gr.addColorStop(0,L.c2+al+")");gr.addColorStop(0.55,L.c1+al+")");gr.addColorStop(1,L.c1+"0)");
+      g.fillStyle=gr;g.fill();
+    }
+    /* sparks, or embers once it's on fire, rising off the dancer */
+    var n=L.at>=50?14:9;
+    for(i=0;i<n;i++){
+      var ph=((t/(L.at>=50?650:900))+i/n+seed*0.13)%1;
+      var sx=cx+Math.sin(i*12.9898+seed)*rw*0.9+Math.sin(t*0.004+i)*2*s,sy=cy+rh*0.55-ph*rh*2.2;
+      g.globalAlpha=(1-ph)*0.9;g.fillStyle=L.spark;
+      g.beginPath();g.arc(sx,sy,(L.at>=50?1.3:0.9)*s*(1-ph*0.5),0,6.3);g.fill();
+    }
+    g.globalAlpha=1;
+    /* lightning from 100 */
+    if(L.at>=100&&Math.floor(t/90+seed)%3!==0){
+      var r0=Math.floor(t/90)+seed*7;
+      g.strokeStyle="rgba(220,210,255,.95)";g.lineWidth=Math.max(1,0.6*s);g.beginPath();
+      for(var b=0;b<2;b++){
+        var bx=cx+(b?1:-1)*rw*(0.5+0.4*Math.abs(Math.sin(r0*1.3+b))),by=cy-rh*0.9;g.moveTo(bx,by);
+        for(var j=1;j<6;j++){bx+=Math.sin(r0*7.1+j*3.3+b)*3*s;by+=rh*0.32;g.lineTo(bx,by);}
+      }
+      g.stroke();
+    }
+    g.restore();
+  }
+  /* the STREAK pop-up over a head at (x,headY); age = ms since the milestone */
+  function pop(g,x,headY,n,age,s){
+    if(age>1700)return;
+    s=s||1;
+    var k=age<160?age/160:1,a=age>1200?1-(age-1200)/500:1,L=level(n)||LV[0];
+    var fs=Math.round((n>=100?20:n>=50?18:16)*s*(0.6+0.4*k)*(age<160?1.25-0.25*k:1));
+    g.save();g.globalAlpha=Math.max(0,a);
+    g.font="900 "+fs+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="bottom";
+    var y=headY-6-age*0.018*s,txt=(n>=50?"🔥 ":"⚡ ")+n+" STREAK!";
+    g.lineWidth=Math.max(3,fs*0.22);g.lineJoin="round";g.strokeStyle="rgba(0,0,0,.8)";g.strokeText(txt,x,y);
+    g.fillStyle=L.spark;g.fillText(txt,x,y);
+    g.restore();
+  }
+  /* note when someone's combo crosses a milestone (v = the character's record) */
+  function track(v,combo){
+    var prev=v.lastCombo||0;
+    if(combo<prev)prev=0;
+    var m=milestone(prev,combo);
+    if(m){v.msN=m;v.msT=Date.now();}
+    v.lastCombo=combo;
+  }
+  return{draw:draw,pop:pop,track:track,level:level};
+})();
+
+/* ============================================================
    DANCE GAMES
    Dance opens a choice of two games. Everyone in the venue sees your character move.
      Free dance: drag the hands and feet of the big puppet (one finger each), or use D F J K.
@@ -1820,6 +1926,28 @@ var GAME=(function(){
     el.textContent=bt.known?Math.round(bt.bpm)+" BPM"+(bt.live?"":" (holding)"):"listening… 120 BPM";
     el.title=bt.known?(bt.live?"Following the music":"No clear beat right now; keeping the last tempo"):"No beat found yet; using 120 BPM until the music has one";
   }
+  var meCv=null,meG=null,lastFit=0;
+  function drawMe(){
+    if(mode==="free")return;
+    meCv=meCv||document.getElementById("gameMe");if(!meCv||!meCv.offsetWidth)return;
+    meG=meG||meCv.getContext("2d");
+    var dpr=Math.min(2,window.devicePixelRatio||1),w=meCv.clientWidth,h=meCv.clientHeight;
+    if(meCv.width!==Math.round(w*dpr)||meCv.height!==Math.round(h*dpr)){meCv.width=Math.round(w*dpr);meCv.height=Math.round(h*dpr);}
+    meG.setTransform(dpr,0,0,dpr,0,0);meG.clearRect(0,0,w,h);
+    var m=me();if(!m)return;
+    var sc=Math.max(2,Math.min(5,h/52)),saved=ctx;     /* the top of the canvas is headroom: arms up, hops, auras, STREAK pop-ups */
+    /* the venue draws on its own canvas through "ctx": point it here for one character, then put it back */
+    ctx=meG;
+    try{
+      if(!m.poseCurBig)m.poseCurBig=pose.slice();
+      for(var i=0;i<4;i++)m.poseCurBig[i]+=(pose[i]-m.poseCurBig[i])*0.45;
+      var cyBig=h-sc*11-4,tn=Date.now();
+      STREAK.track(m,combo);
+      STREAK.draw(meG,w/2,cyBig,sc,combo,tn,0);
+      drawAvatar(w/2,cyBig,m.color,"",sc,false,false,false,5,0,true,m.poseCurBig,tn-(m.hitT||0));
+      if(m.msT&&tn-m.msT<1700)STREAK.pop(meG,w/2,Math.max(30,cyBig-sc*16),m.msN,tn-m.msT,Math.min(1.6,sc/3));
+    }finally{ctx=saved;}
+  }
   function size(){
     var dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;
     if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
@@ -1830,6 +1958,8 @@ var GAME=(function(){
     var now=performance.now();
     size();
     if(mode==="free")drawFree(now);else if(mode==="aim")drawAim(now);else drawStep(now);
+    drawMe();
+    if(now-lastFit>400){lastFit=now;DEVICE.fit();}
     bpmText(now);
     raf=requestAnimationFrame(tick);
   }
@@ -1842,8 +1972,9 @@ var GAME=(function(){
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
     pose=REST.slice();combo=0;keyT=[null,null,null,null];keyHeld=[false,false,false,false];grab={};
     notes=[];score=0;best=0;hits=0;misses=0;judge="";lastGen=-1;lastSlot=0;startT=performance.now();
-    document.body.classList.add("gaming");document.body.classList.toggle("gaming-step",m==="step");
+    document.body.classList.add("gaming");document.body.classList.toggle("gaming-step",m==="step");document.body.classList.toggle("gaming-free",m==="free");
     document.getElementById("gamePanel").classList.add("on");
+    lastFit=0;DEVICE.fit();
     document.getElementById("gameTitle").textContent=m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":"⬆️ Step dance";
     document.getElementById("moveHint").textContent=m==="free"?"Drag the hands and feet, or tap D F J K · arrow keys walk · Space to stop":m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
@@ -1858,7 +1989,7 @@ var GAME=(function(){
     if(!mode)return;
     report(true);rnd=null;
     mode="";myDance=0;
-    document.body.classList.remove("gaming","gaming-step");
+    document.body.classList.remove("gaming","gaming-step","gaming-free");
     document.getElementById("gamePanel").classList.remove("on");
     document.getElementById("moveHint").innerHTML=PRACTICE.on?"Arrows or WASD to walk &middot; Space to dance":"Arrows or WASD to walk &middot; Enter to talk &middot; Space to dance";
     var b=document.getElementById("danceBtn");b.classList.remove("on");b.innerHTML="&#128131; Dance";
@@ -1902,6 +2033,52 @@ var GAME=(function(){
       upcoming:notes.filter(function(n){return !n.j;}).map(function(n){return{dir:LANES[n.lane],inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};})};
   };
   return{start:start,stop:stop,toggle:toggle,press:press,limbKey:limbKey,menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
+})();
+
+/* ============================================================
+   DEVICE: phone, tablet or computer, and how big to make the dance game
+   Phones and tablets are told apart by their touch screen and size; anything with a mouse as its
+   main pointer counts as a computer. The game is sized to fill the room between the round banner at
+   the top and whatever stays at the bottom, always centred, with your character on top when it fits.
+   ============================================================ */
+var DEVICE=(function(){
+  var kind="pc";
+  function detect(){
+    var coarse=window.matchMedia&&matchMedia("(pointer: coarse)").matches,shortSide=Math.min(screen.width||innerWidth,screen.height||innerHeight);
+    kind=coarse?(shortSide<600?"phone":"tablet"):"pc";
+    var b=document.body.classList;
+    b.toggle("dev-phone",kind==="phone");b.toggle("dev-tablet",kind==="tablet");b.toggle("dev-pc",kind==="pc");
+    b.toggle("narrow",innerWidth<820);
+  }
+  var SIZE={pc:{me:120,maxH:380,meW:180},tablet:{me:150,maxH:560,meW:220},phone:{me:96,maxH:560,meW:150}};
+  function fit(){
+    var pnl=document.getElementById("gamePanel");if(!pnl||!pnl.classList.contains("on"))return;
+    var cv=document.getElementById("gameCv"),mec=document.getElementById("gameMe"),hdr=document.getElementById("gameHdr"),ft=document.getElementById("gameFoot");
+    var z=SIZE[kind],vh=innerHeight,vw=innerWidth;
+    /* what stays at the bottom: the chat on a computer at a show; nothing on touch screens or in practice */
+    var cp=document.getElementById("chatPanel"),chatH=cp&&getComputedStyle(cp).display!=="none"?cp.getBoundingClientRect().height:0;
+    var bottom=Math.round(chatH+(kind==="phone"?8:14));
+    var short=vh<480;document.body.classList.toggle("short",short);
+    var top=short?8:document.body.classList.contains("embed")?78:112;      /* below the round banner */
+    var chrome=(hdr?hdr.offsetHeight:44)+(ft?ft.offsetHeight:28)+2;
+    var avail=vh-bottom-top,meH=z.me;
+    if(document.body.classList.contains("gaming-free"))meH=0;
+    if(avail-chrome-meH<220)meH=Math.max(0,avail-chrome-220);              /* short screens: the character shrinks first */
+    if(meH<64)meH=0;
+    var h=Math.max(160,Math.min(z.maxH,avail-chrome-meH));
+    var w=kind==="phone"?Math.min(vw-16,440):kind==="tablet"?Math.min(vw-48,Math.max(440,Math.round(h*0.85)),600):Math.min(vw-32,Math.max(300,Math.min(400,Math.round(h*0.82))));
+    pnl.style.bottom=bottom+"px";pnl.style.width=w+"px";
+    cv.style.height=Math.round(h)+"px";
+    /* the canvas reaches higher than the space it takes in the layout, so the aura and pop-ups have room;
+       what pokes up is see-through except the effects */
+    mec.style.display=meH?"":"none";mec.style.height=Math.round(meH*1.55)+"px";mec.style.width=Math.min(vw,Math.round(z.meW*1.6))+"px";
+    mec.style.marginBottom=(-Math.round(meH*0.0))+"px";
+  }
+  detect();
+  window.addEventListener("resize",function(){detect();fit();});
+  window.addEventListener("orientationchange",function(){setTimeout(function(){detect();fit();},300);});
+  window.ukDevice=function(){return{kind:kind,narrow:innerWidth<820,screen:screen.width+"x"+screen.height,window:innerWidth+"x"+innerHeight,touch:window.matchMedia&&matchMedia("(pointer: coarse)").matches};};
+  return{fit:fit,detect:detect,get kind(){return kind;}};
 })();
 
 /* ============================================================
@@ -2281,7 +2458,7 @@ var PRACTICE=(function(){
     if(d.file)setSong(d.file,d.title||d.file.name);
   });
   function setSong(f,name){
-    file=f;buf=null;title=String(name||"Song").replace(/\.(mp3|wav|flac|ogg|m4a|aac)$/i,"").slice(0,80);
+    file=f;buf=null;title=String(name||"Song").replace(/\.(mp3|wav|flac|ogg|m4a|aac|opus|mp4|m4v|webm|mov|mkv)$/i,"").slice(0,80);
     $("prSong").textContent="♫ "+title;$("prGo").disabled=false;
   }
   function decode(){
@@ -2978,8 +3155,14 @@ function renderLoop(){
 
   /* Performer avatar */
   var perfPx=performer.x*W;
+  /* while your big character dances over the game, the performer steps to one side so you don't overlap */
+  var meEl=document.getElementById("gameMe"),side=0;
+  if(document.body.classList.contains("gaming")&&meEl&&meEl.offsetWidth&&getComputedStyle(meEl).display!=="none"){
+    var mr=meEl.getBoundingClientRect();side=Math.max(0,(mr.right-mr.left)/2+70)*-1;
+  }
+  perfShift+=(side-perfShift)*0.12;perfPx+=perfShift;
   var perfPy=(STAGE_TOP+STAGE_BOTTOM)/2*H+20;
-  drawAvatar(perfPx,perfPy,performer.color,performer.name,3,true,isPerformerPlaying,false);
+  if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on))drawAvatar(perfPx,perfPy,performer.color,performer.name,3,true,isPerformerPlaying,false);   /* nobody on stage in practice */
 
   /* Note flash near performer */
   drawNoteFlash();
@@ -3006,13 +3189,19 @@ function renderLoop(){
       for(var pi=0;pi<4;pi++)v.poseCur[pi]+=(tp[pi]-v.poseCur[pi])*0.4;
       vp=v.poseCur;
     }else v.poseCur=null;
-    drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed,ids[i]===myId,vp,now-(v.hitT||0));
-    if(v.dance===5&&v.combo>=3){
+    /* while the big you is dancing over the game, the small you on the floor sits out of sight */
+    var bigMe=ids[i]===myId&&document.body.classList.contains("gaming")&&!document.body.classList.contains("gaming-free")&&window.innerWidth>520;
+    var combo=v.dance>=4?(v.combo||0):0;
+    STREAK.track(v,combo);
+    if(combo>=10&&!bigMe)STREAK.draw(ctx,vx,vy,2,combo,now,v.seed||0);
+    if(!bigMe)drawAvatar(vx,vy,v.color,v.name,2,false,false,moving,v.dance,v.seed,ids[i]===myId,vp,now-(v.hitT||0));
+    if(v.msT&&!bigMe&&now-v.msT<1700)STREAK.pop(ctx,vx,vy-50,v.msN,now-v.msT,1);
+    else if(v.dance===5&&v.combo>=3&&!bigMe){
       /* step and target game combo over the dancer's head */
       ctx.font="800 15px system-ui,sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.7)";
       ctx.strokeText("\u00d7"+v.combo,vx,vy-44);ctx.fillStyle=v.combo>=25?"#F5C518":"#fff";ctx.fillText("\u00d7"+v.combo,vx,vy-44);
     }
-    if(v.dance){
+    if(v.dance&&!bigMe){
       /* a music note floats up from each dancer */
       var ph=((now/1100)+v.seed*0.37)%1;
       ctx.globalAlpha=Math.sin(ph*Math.PI)*0.85;
