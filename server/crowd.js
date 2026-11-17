@@ -25,6 +25,12 @@ if (!ROOM || !/^[A-Z0-9]{4,12}$/.test(ROOM)) {
   process.exit(1);
 }
 
+/* a random character look, packed the way art.js packs it: one character per option
+   (skin, hair, hair colour, top, top colour, bottoms, bottoms colour, extra) */
+function randomLook() {
+  return [6, 8, 10, 5, 12, 3, 12, 5].map(function(n, i) { var v = Math.floor(Math.random() * n); if (i === 7 && Math.random() < 0.6) v = 0; return "0123456789ab".charAt(v); }).join("");
+}
+
 var NAMES = ["Rook", "Moth", "Vex", "Juno", "Kestrel", "Nyx", "Pike", "Sable", "Wren", "Ash", "Cinder", "Hollow", "Lark", "Onyx", "Quill", "Rune", "Thorn", "Vale", "Zephyr", "Ember"];
 var CHAT = ["this slaps", "LETS GO", "encore!", "what instrument is that?", "turn it up", "🔥🔥🔥", "play the bassoon one", "vibes", "hi from the back", "unholy indeed", "do a key change", "👏👏", "how long is the set?", "that solo though"];
 var COLORS = ["#D354A0", "#1D9E75", "#E0A030", "#5F9EA0", "#8A6BD1", "#E05050", "#3CB371", "#DB7093"];
@@ -47,7 +53,7 @@ function makeBot(i) {
   bot.ws = ws;
   ws.on("open", function() {
     stats.connected++;
-    ws.send(JSON.stringify({ type: "join-room", room: ROOM, name: bot.name, color: rand(COLORS) }));
+    ws.send(JSON.stringify({ type: "join-room", room: ROOM, name: bot.name, color: rand(COLORS), look: randomLook() }));
   });
   ws.on("message", function(raw) {
     var m; try { m = JSON.parse(raw); } catch (e) { return; }
