@@ -241,6 +241,13 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - In a round, everyone gets the same notes. They're worked out from the song's step chart, so runs in the song become runs along the keys, and two arrows at once become a chord.
 - While it's on, the letter keys play notes rather than walking you; the arrow keys still walk.
 
+**Shell art (placeholder graphics).** Everything is pixel art drawn in code, in `art.js` (shared by both pages), until the real art arrives.
+- **Your character (audience):** the join screen has a character maker with a live preview: skin, hair style and colour, top and colour, bottoms and colour, and an extra (shades, headphones, cap, bandana). Tap the preview to see a dance move. "Surprise me" picks at random. It's remembered on that device.
+- **Your character (performer):** the small character next to your stage name, or the "Your character" button under it, opens the same maker. Changes reach the audience straight away during a show.
+- **Stage:** brick back wall with an UNHOLY KEYS sign, a lighting truss with swinging beams, speaker stacks and amps that pulse on the beat, and the performer standing at a keyboard whose keys light up with the notes.
+- **Dance floor:** dark tiles that light up in waves on the beat, behind a crowd barrier at the front of the stage.
+- **For the art team:** each look is 8 characters (one per option). The options and colours are listed at the top of `art.js` (`OPTS`). Body layout and limb angles are described above `drawChar`; the dance games depend on the shoulder and hip positions in `joints`.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |
