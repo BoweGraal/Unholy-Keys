@@ -3884,6 +3884,97 @@ function audWrap(g,text,w,max){
   if(used<text.length||g.measureText(out[last]).width>w){var l=out[last];while(l.length>1&&g.measureText(l+"…").width>w)l=l.slice(0,-1);out[last]=l+"…";}
   return out;
 }
+/* ============================================================
+   STREAK POWER-UPS
+   A long combo in the step or target game charges the dancer up, like a fighter powering up:
+     10+  white-blue charging aura with sparks rising
+     25+  gold spiky aura
+     50+  fire
+     100+ purple, with lightning
+   Each milestone (10, 25, 50, 75, 100, 150, 200, then every 100) pops a big STREAK number over the
+   dancer's head. (Same as on the audience page, drawn small on the audience panel.)
+   ============================================================ */
+var STREAK=(function(){
+  var LV=[
+    {at:10,  c1:"rgba(160,230,255,",c2:"rgba(255,255,255,",spark:"#CFF4FF",h:1.0},
+    {at:25,  c1:"rgba(255,205,60,", c2:"rgba(255,250,200,",spark:"#FFE680",h:1.35},
+    {at:50,  c1:"rgba(255,90,20,",  c2:"rgba(255,200,60,", spark:"#FFB040",h:1.6},
+    {at:100, c1:"rgba(150,80,255,", c2:"rgba(210,190,255,",spark:"#C8B0FF",h:1.85}
+  ];
+  var MS=[10,25,50,75,100,150,200];for(var m0=300;m0<=10000;m0+=100)MS.push(m0);
+  function level(combo){var l=null;for(var i=0;i<LV.length;i++)if(combo>=LV[i].at)l=LV[i];return l;}
+  function milestone(prev,cur){var hit=0;for(var i=0;i<MS.length;i++)if(prev<MS[i]&&cur>=MS[i])hit=MS[i];return hit;}
+  /* smooth wobble over time, for the flicker */
+  function wob(a,t){return Math.sin(a*1.7+t*0.011)*0.5+Math.sin(a*3.1-t*0.017)*0.3+Math.sin(a*5.3+t*0.023)*0.2;}
+  /* the aura behind a character standing at (x,y) at scale s: draw it before the character */
+  function draw(g,x,y,s,combo,t,seed){
+    var L=level(combo);if(!L)return;
+    seed=seed||0;
+    var cx=x,cy=y-3*s,rw=13*s,rh=17*s*L.h,i,a,pts=40,grow=Math.min(1,(combo-L.at)/20)*0.15+1,sharp=L.at>=25;
+    g.save();g.globalCompositeOperation="lighter";
+    for(var layer=0;layer<2;layer++){
+      var k=layer?0.72:1,al=layer?0.55:0.3;
+      g.beginPath();
+      for(i=0;i<=pts;i++){
+        a=i/pts*Math.PI*2;
+        var up=Math.max(0,-Math.sin(a)),spike=(i%2?1:0.55),low=a>0&&a<Math.PI?0.55:1;
+        /* flames lick upward; from 25 the spikes are taller and sharper */
+        var r=(1+wob(a*3+seed,t)*0.18+up*(sharp?0.9:0.45)*spike*(0.75+0.25*Math.sin(t*0.02+i)))*grow*k;
+        var px=cx+Math.cos(a)*rw*r,py=cy+Math.sin(a)*rh*low*r;
+        if(i===0)g.moveTo(px,py);
+        else if(sharp&&i%2)g.lineTo(px,py);
+        else g.quadraticCurveTo(cx+Math.cos(a-0.08)*rw*r*1.05,cy+Math.sin(a-0.08)*rh*r*low,px,py);
+      }
+      g.closePath();
+      var gr=g.createRadialGradient(cx,cy,2*s,cx,cy-rh*0.2,rh*1.3);
+      gr.addColorStop(0,L.c2+al+")");gr.addColorStop(0.55,L.c1+al+")");gr.addColorStop(1,L.c1+"0)");
+      g.fillStyle=gr;g.fill();
+    }
+    /* sparks, or embers once it's on fire, rising off the dancer */
+    var n=L.at>=50?14:9;
+    for(i=0;i<n;i++){
+      var ph=((t/(L.at>=50?650:900))+i/n+seed*0.13)%1;
+      var sx=cx+Math.sin(i*12.9898+seed)*rw*0.9+Math.sin(t*0.004+i)*2*s,sy=cy+rh*0.55-ph*rh*2.2;
+      g.globalAlpha=(1-ph)*0.9;g.fillStyle=L.spark;
+      g.beginPath();g.arc(sx,sy,(L.at>=50?1.3:0.9)*s*(1-ph*0.5),0,6.3);g.fill();
+    }
+    g.globalAlpha=1;
+    /* lightning from 100 */
+    if(L.at>=100&&Math.floor(t/90+seed)%3!==0){
+      var r0=Math.floor(t/90)+seed*7;
+      g.strokeStyle="rgba(220,210,255,.95)";g.lineWidth=Math.max(1,0.6*s);g.beginPath();
+      for(var b=0;b<2;b++){
+        var bx=cx+(b?1:-1)*rw*(0.5+0.4*Math.abs(Math.sin(r0*1.3+b))),by=cy-rh*0.9;g.moveTo(bx,by);
+        for(var j=1;j<6;j++){bx+=Math.sin(r0*7.1+j*3.3+b)*3*s;by+=rh*0.32;g.lineTo(bx,by);}
+      }
+      g.stroke();
+    }
+    g.restore();
+  }
+  /* the STREAK pop-up over a head at (x,headY); age = ms since the milestone */
+  function pop(g,x,headY,n,age,s){
+    if(age>1700)return;
+    s=s||1;
+    var k=age<160?age/160:1,a=age>1200?1-(age-1200)/500:1,L=level(n)||LV[0];
+    var fs=Math.round((n>=100?20:n>=50?18:16)*s*(0.6+0.4*k)*(age<160?1.25-0.25*k:1));
+    g.save();g.globalAlpha=Math.max(0,a);
+    g.font="900 "+fs+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="bottom";
+    var y=headY-6-age*0.018*s,txt=(n>=50?"🔥 ":"⚡ ")+n+" STREAK!";
+    g.lineWidth=Math.max(3,fs*0.22);g.lineJoin="round";g.strokeStyle="rgba(0,0,0,.8)";g.strokeText(txt,x,y);
+    g.fillStyle=L.spark;g.fillText(txt,x,y);
+    g.restore();
+  }
+  /* note when someone's combo crosses a milestone (v = the character's record) */
+  function track(v,combo){
+    var prev=v.lastCombo||0;
+    if(combo<prev)prev=0;
+    var m=milestone(prev,combo);
+    if(m){v.msN=m;v.msT=Date.now();}
+    v.lastCombo=combo;
+  }
+  return{draw:draw,pop:pop,track:track,level:level};
+})();
+
 function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge){
   /* small version of the venue character: head, body, arms, legs; name under the feet */
   var dT=now*0.009+seed,bob=0,armL=-.2,armR=.2,leg=0,legL=0,legR=0;
@@ -3964,8 +4055,11 @@ function drawAud(){
     var x=p.dx*W,y=Math.min(H-24,p.dy*sy);
     var pz=null;
     if(p.dance>=4&&p.pose){if(!p.poseCur)p.poseCur=p.pose.slice();for(var q=0;q<4;q++)p.poseCur[q]+=(p.pose[q]-p.poseCur[q])*.4;pz=p.poseCur;}
+    var cmb=p.dance>=4?(p.combo||0):0;STREAK.track(p,cmb);
+    if(cmb>=10)STREAK.draw(g,x,y,sc*0.95,cmb,now,p.seed||0);
     var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0));
-    if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
+    if(p.msT&&now-p.msT<1700)STREAK.pop(g,x,headY,p.msN,now-p.msT,Math.max(0.75,sc*0.7));
+    else if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
     heads.push([p,x,headY]);});
   /* speech bubbles on top of everyone; oldest first so the newest is on top */
   heads.filter(function(h){return h[0].text&&now-h[0].said<AUD_SAY_MS;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
