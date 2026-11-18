@@ -4070,15 +4070,17 @@ function renderLoop(){
   }
   var feat=ROUND.featured(),spotK=ROUND.spotOn(),bp=ROUND.pair();
   if(spotK>0)side=Math.min(side,-Math.min(W*0.28,170));             /* the spotlight needs the middle of the stage */
-  if(bp)side=Math.min(side,-Math.min(W*0.42,320));                  /* a battle match: the performer steps right aside */
+  if(bp)side=Math.min(side,-Math.min(W*0.45,440));                  /* a battle match: the performer steps right aside */
   perfShift+=(side-perfShift)*0.12;perfPx+=perfShift;
   var perfPy=(STAGE_TOP+STAGE_BOTTOM)/2*H+20;
   if(spotK>0)drawCentreSpot(W/2,perfPy,spotK,feat);
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){
+    var perfDim=bp&&W<640;if(perfDim){ctx.save();ctx.globalAlpha=0.35;}   /* small screens: the match needs the room */
     drawAvatar(perfPx,perfPy,performer.color,performer.name,3,true,isPerformerPlaying,false,0,0,false,null,1e9,performer.look);
     /* the keyboard in front of the performer, the key for the last note lit; the mic stand beside */
     var nAge=Date.now()-lastNoteTime,pc=((lastNoteMidi%12)+12)%12;
     ART.keyboard(ctx,perfPx,perfPy+5*3,3,isPerformerPlaying&&nAge<350?[0,0,1,1,2,3,3,4,4,5,5,6][pc]:-1,"hsl("+(pc*30)+",80%,60%)");
+    if(perfDim)ctx.restore();
   }   /* nobody on stage in practice */
 
   /* the featured dancer, big, centre stage (their moves are live) */
@@ -4121,7 +4123,7 @@ function renderLoop(){
     var bigMe=ids[i]===myId&&document.body.classList.contains("gaming")&&!document.body.classList.contains("gaming-free")&&window.innerWidth>520;
     var combo=v.dance>=4?(v.combo||0):0;
     STREAK.track(v,combo);
-    if(combo>=10&&!bigMe)STREAK.draw(ctx,vx,vy,2,combo,now,v.seed||0);
+    if(combo>=10&&!bigMe&&!(bp&&(bp.A.id===ids[i]||bp.B.id===ids[i]))&&!(feat&&feat.id===ids[i]))STREAK.draw(ctx,vx,vy,2,combo,now,v.seed||0);
     var onStage=(feat&&feat.id===ids[i])||(bp&&(bp.A.id===ids[i]||bp.B.id===ids[i]));
     if((feat||bp)&&!onStage){ctx.save();ctx.globalAlpha=0.55;}
     var freeMe=ids[i]===myId&&GAME.mode==="free";

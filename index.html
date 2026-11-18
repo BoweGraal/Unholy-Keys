@@ -477,6 +477,7 @@ body.jset .nav-item.jam-only{display:flex}
       <label>When I play a backing track <select id="rdMode"><option value="off">no round</option><option value="step">Step dance round</option><option value="aim">Target dance round</option><option value="keys">Note highway round</option><option value="free">Free dance round (audience votes)</option></select></label>
       <label>Countdown <select id="rdSecs"><option value="5">5 s</option><option value="10">10 s</option><option value="15">15 s</option><option value="20">20 s</option><option value="30">30 s</option></select></label>
       <label>Steps <select id="rdLevel"><option value="0.7">Easy</option><option value="1">Normal</option><option value="1.3">Hard</option></select></label>
+      <label title="Everyone dances; a little way in, the dancers are drawn into a knockout of quick 1 v 1s on the stage, one match at a time, with the final at the end of the song"><input type="checkbox" id="rdBattle"> &#9876; Battle (1 v 1s)</label>
     </div>
     <div id="rdStatus">Go live, choose a round type, then play a song from Backing Tracks. The song is checked for its beat and loud parts, everyone gets a countdown, and the song starts when it reaches zero.</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -3894,7 +3895,7 @@ function goLive(){
     }
     if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
-    if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight")ROUNDS.onMsg(msg);
+    if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
     if(msg.type==="room-created")ROUNDS.buttons();
   };
   liveWs.onclose=function(){if(liveOn)endLive();else liveFail();};
@@ -4425,9 +4426,9 @@ var CHART=(function(){
    for Free dance everyone votes and your vote counts double. "Start a round now" does the same for
    whatever is already sounding (YouTube, or you playing), with steps made live on each device. */
 var ROUNDS=(function(){
-  var cfg={mode:"off",secs:10,level:1},cur=null,job=0,cdT=null,syncT=null,uiT=null,hideT=null,totals=[],myVote="",votes=null,top=null;
+  var cfg={mode:"off",secs:10,level:1,battle:false},cur=null,job=0,cdT=null,syncT=null,uiT=null,hideT=null,totals=[],myVote="",votes=null,top=null;
   var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",free:"Free dance"},ORD=["1st","2nd","3rd"];
-  try{var sv=JSON.parse(localStorage.getItem("uk_rounds")||"{}");if(NAMES[sv.mode]||sv.mode==="off")cfg.mode=sv.mode;if(sv.secs>=5&&sv.secs<=30)cfg.secs=+sv.secs;if(sv.level>=0.5&&sv.level<=1.5)cfg.level=+sv.level;}catch(e){}
+  try{var sv=JSON.parse(localStorage.getItem("uk_rounds")||"{}");if(NAMES[sv.mode]||sv.mode==="off")cfg.mode=sv.mode;if(sv.secs>=5&&sv.secs<=30)cfg.secs=+sv.secs;if(sv.level>=0.5&&sv.level<=1.5)cfg.level=+sv.level;cfg.battle=!!sv.battle;}catch(e){}
   function ord(n){return ORD[n-1]||n+"th";}
   function $(id){return document.getElementById(id);}
   function mk(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
@@ -4436,7 +4437,7 @@ var ROUNDS=(function(){
   function float(nodes){var b=$("rdFloat");b.textContent="";nodes.forEach(function(n){if(n)b.appendChild(n);});b.className="on";clearTimeout(hideT);hideT=null;}
   function hideFloat(){var b=$("rdFloat");b.className="";b.textContent="";}
   function buttons(){var on=!!cur;$("rdEnd").disabled=!cur||cur.phase!=="play";$("rdCancel").disabled=!on||cur.phase==="vote"||cur.phase==="tally";$("rdNow").disabled=on||!liveOn;}
-  function head(extra){return mk("div","h","Round"+(cur&&cur.n?" "+cur.n:"")+" · "+(NAMES[cur.mode]||"Dance")+(extra?" · "+extra:""));}
+  function head(extra){return mk("div","h","Round"+(cur&&cur.n?" "+cur.n:"")+" · "+(cur.battle?"⚔ ":"")+(NAMES[cur.mode]||"Dance")+(cur.battle?" battle":"")+(extra?" · "+extra:""));}
   function decode(ab){var OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;return new OC(1,2,44100).decodeAudioData(ab);}
 
   /* called when a backing track is about to play; returns true if a round is taking over the start */
@@ -4449,7 +4450,7 @@ var ROUNDS=(function(){
     hookAudio();
     if(cur)finish(false,true);
     if(backingAudio&&f)backingAudio.pause();
-    cur={n:0,mode:cfg.mode==="off"?"step":cfg.mode,title:String(title).replace(/\.(mp3|wav|flac|ogg|m4a|aac)$/i,"").slice(0,80),phase:"analyse",go:go,endAt:0,file:!!f};
+    cur={n:0,battle:cfg.battle,mode:cfg.mode==="off"?"step":cfg.mode,title:String(title).replace(/\.(mp3|wav|flac|ogg|m4a|aac)$/i,"").slice(0,80),phase:"analyse",go:go,endAt:0,file:!!f};
     top=null;votes=null;myVote="";buttons();
     if(!f){send(null,my);return;}            /* free dance rounds are analysed too: the spotlight turns follow the bars */
     var bar=mk("div","bar"),fill=mk("i");bar.appendChild(fill);
@@ -4468,8 +4469,8 @@ var ROUNDS=(function(){
   function send(chart,my,failed){
     if(my!==job||!cur)return;
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cfg.secs*1000;
-    liveSend({type:"round-start",mode:cur.mode,title:cur.title,countdown:cfg.secs*1000,chart:chart});
-    status(cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file, so steps will follow the beat live. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
+    liveSend({type:"round-start",mode:cur.mode,battle:!!cur.battle,title:cur.title,countdown:cfg.secs*1000,chart:chart});
+    status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file, so steps will follow the beat live. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cfg.secs*1000);
     clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();
   }
@@ -4503,6 +4504,7 @@ var ROUNDS=(function(){
       var left=Math.max(0,Math.ceil((cur.endAt-performance.now())/1000));
       float([head(),mk("div","t",cur.title),mk("div","big",String(left)),mk("div","sub",cur.file?"The song starts at zero.":"The round starts at zero.")]);
     }else if(cur.phase==="play"){
+      if(cur.battle){var bl=battleLine();float([head(cur.title),mk("div","sub",bl.line)].concat(bl.extra));return;}
       var line=cur.mode==="free"?spotLine():top&&top.top.length?"Leading: "+top.top.slice(0,3).map(function(x,i){return ord(i+1)+" "+x.name+" "+x.score.toLocaleString();}).join("  ·  ")+"  ·  "+top.players+" dancing":"Waiting for the first scores…";
       float([head(cur.title),mk("div","sub",line)]);
     }else if(cur.phase==="vote"){
@@ -4523,6 +4525,25 @@ var ROUNDS=(function(){
     if(pos<sp[0].a)return "Spotlight starts in "+Math.max(1,Math.ceil((sp[0].a-pos)/1000))+" s: "+sp.slice(0,Math.ceil(sp.length/2)).map(function(x){return x.name;}).join(", ");
     return "Spotlight done. Voting when the song ends (your vote counts double).";
   }
+  /* battle rounds: the match on now (song time from the backing track), its score, and what's next */
+  function songPos(){return backingAudio&&cur.file?backingAudio.currentTime*1000:performance.now()-cur.endAt;}
+  function battleLine(){
+    var b=cur.b,extra=[];if(!b)return{line:cur.bNone?"Not enough dancers for a battle this time.":"Everyone's dancing. The bracket is drawn a little way into the song.",extra:extra};
+    var p=songPos(),E=function(i){return i>=0&&b.entrants[i]?b.entrants[i].name:"?";};
+    for(var i=0;i<b.slots.length;i++){var s=b.slots[i];
+      if(p>=s.start-2000&&p<s.end){
+        var tl=Math.max(0,Math.ceil((s.end-p)/1000)),free=cur.mode==="free";
+        if(free&&p>=s.start){
+          /* your vote counts double; change it any time during the match */
+          var row=mk("div","votes");[0,1].forEach(function(side){var bt=mk("button",cur.bv&&cur.bv[i]===side?"on":"",E(side?s.b:s.a));bt.onclick=function(e){e.stopPropagation();cur.bv=cur.bv||{};cur.bv[i]=side;liveSend({type:"round-bvote",side:side});draw();};row.appendChild(bt);});
+          extra.push(row);
+        }
+        return{line:(s.r===0?"🏆 FINAL: ":"⚔ "+s.label+": ")+E(s.a)+" vs "+E(s.b)+(p<s.start?" · starting…":" · "+(free?s.sa+" – "+s.sb+" votes":(s.sa||0).toLocaleString()+" – "+(s.sb||0).toLocaleString())+" · "+tl+" s"),extra:extra};
+      }
+      if(s.start>p)return{line:(cur.bres&&performance.now()-cur.bres.t<4500?cur.bres.text+" · ":"")+"Next: "+(s.r===0?"the final":s.label.toLowerCase())+", "+E(s.a)+" vs "+E(s.b)+" in "+Math.ceil((s.start-p)/1000)+" s",extra:extra};
+    }
+    return{line:(cur.bres?cur.bres.text+" · ":"")+"Battle over. Results when the song ends.",extra:extra};
+  }
   function board(){
     var b=$("rdBoard");if(!b)return;b.textContent="";
     if(!totals.length)return;
@@ -4534,6 +4555,15 @@ var ROUNDS=(function(){
     if(m.type==="round-scores"){if(cur&&cur.phase==="play"){top={top:(m.top||[]).slice(0,5).map(function(x){return{name:txt(x.name,24),score:Math.floor(+x.score||0)};}),players:Math.floor(+m.players||0)};draw();}return;}
     if(m.type==="spotlight"){if(cur&&cur.phase==="play"){cur.spot=(m.turns||[]).slice(0,200).map(function(t){return{name:txt(t.name,24),a:+t.a||0,b:+t.b||0};});draw();}return;}
     if(m.type==="round-votes"){votes={cast:Math.floor(+m.cast||0),of:Math.floor(+m.of||0)};draw();return;}
+    if(m.type==="battle"&&cur){
+      if(m.none){cur.bNone=true;draw();return;}
+      if(m.b&&Array.isArray(m.b.slots)){cur.b={entrants:(m.b.entrants||[]).slice(0,32).map(function(e){return{name:txt(e.name,24)};}),slots:m.b.slots.slice(0,40).map(function(x){return{r:x.r|0,label:txt(x.label,20),a:x.a|0,b:x.b|0,w:x.w|0,start:+x.start||0,end:+x.end||0,sa:+x.sa||0,sb:+x.sb||0};})};
+        if(m.done!==undefined){var d=cur.b.slots[m.done|0];if(d&&d.w>=0){var wn=cur.b.entrants[d.w===0?d.a:d.b],ls=cur.b.entrants[d.w===0?d.b:d.a];
+          cur.bres={t:performance.now(),text:d.r===0?"🏆 "+(wn?wn.name:"")+" wins the battle!":"⚔ "+(wn?wn.name:"")+" beats "+(ls?ls.name:"")};
+          if(typeof showJamToast==="function")showJamToast(cur.bres.text);}}}
+      draw();return;
+    }
+    if(m.type==="bscore"&&cur&&cur.b){var bs=cur.b.slots[m.m|0];if(bs){bs.sa=+m.sa||0;bs.sb=+m.sb||0;}return;}
     if(m.type!=="round")return;
     if(m.phase==="countdown"&&cur){cur.n=+m.n||0;draw();}
     else if(m.phase==="tally"&&cur){cur.phase="tally";clearInterval(syncT);float([head(cur.title),mk("div","sub","Counting the scores…")]);buttons();}
@@ -4546,7 +4576,7 @@ var ROUNDS=(function(){
       totals=(m.totals||[]).slice(0,10).map(function(t){return{name:txt(t.name,24),pts:Math.floor(+t.pts||0),wins:Math.floor(+t.wins||0)};});
       var rk=(m.ranking||[]).slice(0,10).map(function(r){return{name:txt(r.name,24),score:Math.floor(+r.score||0),pts:Math.floor(+r.pts||0),place:Math.floor(+r.place||1)};});
       var free=m.mode==="free",nodes=[mk("div","h","Round "+(+m.n||"")+" result · "+txt(m.title,80))];
-      function sc(r){return free?r.score+" vote"+(r.score===1?"":"s"):r.score.toLocaleString();}
+      function sc(r){return m.battle?r.score+" win"+(r.score===1?"":"s"):free?r.score+" vote"+(r.score===1?"":"s"):r.score.toLocaleString();}
       if(!rk.length)nodes.push(mk("div","sub","Nobody danced this round."));
       else{
         nodes.push(mk("div","win","🏆 "+rk[0].name+" · "+sc(rk[0])));
@@ -4566,7 +4596,8 @@ var ROUNDS=(function(){
     var m=$("rdMode"),sc=$("rdSecs"),lv=$("rdLevel");if(!m)return;
     m.value=cfg.mode;sc.value=String(cfg.secs);lv.value=String(cfg.level);
     if(lv.selectedIndex<0)lv.value="1";if(sc.selectedIndex<0)sc.value="10";
-    m.onchange=function(){cfg.mode=m.value;save();};sc.onchange=function(){cfg.secs=+sc.value;save();};lv.onchange=function(){cfg.level=+lv.value;save();};
+    m.onchange=function(){cfg.mode=m.value;save();};
+    var bt=$("rdBattle");if(bt){bt.checked=cfg.battle;bt.onchange=function(){cfg.battle=bt.checked;save();};}sc.onchange=function(){cfg.secs=+sc.value;save();};lv.onchange=function(){cfg.level=+lv.value;save();};
     $("rdNow").onclick=function(){if(!liveOn){status("Go live first: rounds need an audience.");return;}begin("Round",null,null);};
     $("rdEnd").onclick=function(){finish(false);};
     $("rdCancel").onclick=function(){finish(true);};
@@ -4647,7 +4678,7 @@ var DANCEPR=(function(){
   function send(){
     if(!fr||!fr.contentWindow)return;
     var cur=BACKING.currentFile,mode=(typeof ROUNDS!=="undefined"&&document.getElementById("rdMode"))?document.getElementById("rdMode").value:"step";
-    fr.contentWindow.postMessage({uk:"practice-lib",tracks:tracks(),selected:cur?cur.name:"",mode:mode==="off"?"":mode,secs:+(document.getElementById("rdSecs")||{}).value||0,level:+(document.getElementById("rdLevel")||{}).value||0},location.origin);
+    fr.contentWindow.postMessage({uk:"practice-lib",tracks:tracks(),selected:cur?cur.name:"",mode:mode==="off"?"":mode,kind:!!(document.getElementById("rdBattle")||{}).checked,secs:+(document.getElementById("rdSecs")||{}).value||0,level:+(document.getElementById("rdLevel")||{}).value||0},location.origin);
   }
   window.addEventListener("message",function(e){
     if(!fr||e.source!==fr.contentWindow||e.origin!==location.origin||!e.data)return;
