@@ -4072,7 +4072,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.31.0",SERVER_VERSION="";
+var PAGE_VERSION="1.31.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4100,13 +4100,13 @@ window.ukSelInst=function(id){selInst(id);return S.eng;};
 var _origPlayNote=playNote;
 playNote=function(nk,midi){
   _origPlayNote(nk,midi);
-  PFOLLOW.note(midi,true);PPLAY.midi=midi;PPLAY.on=true;PPLAY.t0=Date.now();PPLAY.n++;
+  PFOLLOW.note(midi,true);PPLAY.midi=midi;PPLAY.on=true;PPLAY.t0=Date.now();PPLAY.n++;jnrOn(nk,midi);
   liveSend({type:"note",midi:midi,on:true,inst:S.eng,mode:S.mode,nk:nk});
 };
 var _origSilence=silenceNote;
 silenceNote=function(){
   _origSilence();
-  PFOLLOW.note(0,false);if(PPLAY.on){PPLAY.on=false;PPLAY.off=Date.now();}
+  PFOLLOW.note(0,false);if(PPLAY.on){PPLAY.on=false;PPLAY.off=Date.now();}jnrOff();
   liveSend({type:"note",on:false});
 };
 /* Hook into selInst to broadcast instrument changes */
@@ -4325,28 +4325,30 @@ function drawAud(){
 /* The venue as your audience sees it: the stage, you at your keyboard, the effects and everyone in the crowd.
    Used small in the jam corner panel, and full screen in jam's stage view (opts.stage: a taller stage, with the
    Jumbotron at opts.jt {x,y,w,h,k}). */
-/* The note you're playing, big on the Jumbotron screen (rect x,y,w,h): the note name pops in on each new note
-   in its own colour, with a strip of piano keys along the bottom lighting the key. Fades after you let go. */
+/* The Jumbotron's note lines: every note you play is a thick bar that slides left across the screen, higher notes
+   higher up, in the colour of its key row; a held note keeps stretching. The range follows what you've been playing. */
+var JNR={notes:[],lo:55,hi:72};
+function jnrOn(nk,midi){var now=Date.now();JNR.notes.forEach(function(n){if(!n.t1)n.t1=now;});
+  JNR.notes.push({m:midi,t0:now,t1:0,c:RCLR[nk?modKey(nk):"none"]||"#7F77DD"});if(JNR.notes.length>60)JNR.notes.shift();}
+function jnrOff(){var now=Date.now();JNR.notes.forEach(function(n){if(!n.t1)n.t1=now;});}
 function jumboNote(g,x,y,w,h,now){
-  var on=PPLAY.on,age=now-PPLAY.t0,rel=on?0:now-PPLAY.off;
-  var a=on?1:Math.max(0,1-rel/1400);if(!PPLAY.n||a<=0.01)return;
-  var m=PPLAY.midi,pc=((m%12)+12)%12,oct=Math.floor(m/12)-1,hue=pc*30,col="hsl("+hue+",90%,62%)";
-  g.save();g.globalAlpha=a;
-  /* a soft dark backing so the name reads over any visuals */
-  g.fillStyle="rgba(0,0,0,.45)";g.fillRect(x,y,w,h);
-  /* the name: a little bigger for the first moment of each note */
-  var name=ROOTS[pc]+oct,kh=Math.round(h*0.2),pop=1+0.18*Math.max(0,1-age/180);
-  var p=Math.max(2,Math.floor(Math.min((h-kh)*0.5/7,w*0.8/(name.length*6))*pop));
-  ART.pixText(g,name,x+w/2,y+(h-kh)/2-p*3.5,p,col,"center","rgba(0,0,0,.7)");
-  /* glow ring that pulses out on each new note */
-  if(age<500){g.strokeStyle=col;g.globalAlpha=a*(1-age/500);g.lineWidth=Math.max(2,p/2);var r=p*6+age*w/1400;
-    g.beginPath();g.arc(x+w/2,y+(h-kh)/2,r,0,Math.PI*2);g.stroke();g.globalAlpha=a;}
-  /* two octaves of keys centred on the note's octave */
-  var lo=(oct+1)*12-(pc<6?12:0),wk=[0,2,4,5,7,9,11],nW=14,kw=w/nW,ky=y+h-kh;
-  for(var i=0;i<nW;i++){var mm=lo+Math.floor(i/7)*12+wk[i%7],hit=mm===m;
-    g.fillStyle=hit?col:"#eee";g.fillRect(Math.round(x+i*kw)+1,ky,Math.ceil(kw)-2,kh);}
-  for(var j=0;j<nW;j++){var bpc=wk[j%7];if(bpc===4||bpc===11)continue;var bm=lo+Math.floor(j/7)*12+bpc+1;
-    g.fillStyle=bm===m?col:"#111";g.fillRect(Math.round(x+(j+1)*kw-kw*0.3),ky,Math.round(kw*0.6),Math.round(kh*0.6));}
+  var WIN=3500,nowX=x+w*0.86,list=JNR.notes.filter(function(n){return (n.t1||now)>now-WIN;});
+  /* the pitch range: the notes on screen, at least an octave, eased so it doesn't jump */
+  var lo=1e9,hi=-1e9;list.forEach(function(n){lo=Math.min(lo,n.m);hi=Math.max(hi,n.m);});
+  if(list.length){if(hi-lo<12){var mid=(hi+lo)/2;lo=mid-6;hi=mid+6;}JNR.lo+=(lo-1-JNR.lo)*0.08;JNR.hi+=(hi+1-JNR.hi)*0.08;}
+  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
+  g.fillStyle="rgba(0,0,0,.72)";g.fillRect(x,y,w,h);
+  var span=Math.max(1,JNR.hi-JNR.lo),bh=Math.max(4,h*0.075,Math.min(h*0.13,h*0.86/span)),pad=h*0.08;
+  function Y(m){return y+pad+(1-(m-JNR.lo)/span)*(h-2*pad);}
+  /* faint lane lines on the C's, and the "now" line */
+  g.fillStyle="rgba(255,255,255,.07)";for(var m=Math.ceil(JNR.lo);m<=JNR.hi;m++)if(((m%12)+12)%12===0)g.fillRect(x,Math.round(Y(m)),w,1);
+  g.fillStyle="rgba(255,255,255,.25)";g.fillRect(Math.round(nowX),y,2,h);
+  var pxms=(nowX-x)/WIN;
+  list.forEach(function(n){var x1=nowX-(now-n.t0)*pxms,x2=nowX-(now-(n.t1||now))*pxms,yy=Y(n.m)-bh/2,ww=Math.max(bh,x2-x1),live=!n.t1;
+    g.globalAlpha=live?1:0.85;g.shadowColor=n.c;g.shadowBlur=live?bh*1.2:bh*0.5;g.fillStyle=n.c;
+    var r=Math.min(bh/2,ww/2);g.beginPath();g.moveTo(x1+r,yy);g.lineTo(x1+ww-r,yy);g.arc(x1+ww-r,yy+r,r,-Math.PI/2,Math.PI/2);g.lineTo(x1+r,yy+bh);g.arc(x1+r,yy+r,r,Math.PI/2,Math.PI*1.5);g.fill();
+    g.shadowBlur=0;g.globalAlpha=live?0.6:0.3;g.fillStyle="#fff";g.fillRect(x1+r*0.6,yy+bh*0.18,Math.max(0,ww-r*1.2),Math.max(1,bh*0.16));
+    if(live){var age=now-n.t0;if(age<400){g.globalAlpha=1-age/400;g.strokeStyle=n.c;g.lineWidth=Math.max(2,bh*0.18);g.beginPath();g.arc(nowX,yy+bh/2,bh*0.6+age/400*bh*1.4,0,Math.PI*2);g.stroke();}}});
   g.restore();
 }
 /* what the wall key panel shows: the modifier keys you're holding and the arrow that's sounding */
@@ -4357,6 +4359,7 @@ function keyPadState(now){
     modCols:{space:RCLR.space,d:RCLR.d,e:RCLR["space+e"],three:RCLR["space+3"]},age:now-JKP.t};
 }
 window.ukKeyPad=function(){return keyPadState(Date.now());};
+window.ukJumboLines=function(){return{n:JNR.notes.length,lo:Math.round(JNR.lo),hi:Math.round(JNR.hi),live:JNR.notes.some(function(n){return !n.t1;})};};
 var PCROWD={kind:"",t0:-1e9,lastT:0};
 function drawVenueTo(g,W,H,opts){
   var stage=!!(opts&&opts.stage),ids=Object.keys(AUD.people),now=Date.now(),sfx=STAGEFX.fx;

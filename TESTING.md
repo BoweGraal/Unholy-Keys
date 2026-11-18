@@ -398,3 +398,7 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - **Blown Bottle**: now a green bottle held under the lips (it was a pan flute).
 - **Bagpipe**: the bag breathes slightly instead of ballooning.
 - **Sections**: choir sounds (Choir Aahs, Voice Oohs, Synth Choir, Pad: Choir…), string sections (String Ensemble, Synth Strings, Tremolo Strings, Violins…), brass sections (Brass Section, Synth Brass…), Strings + Brass and Orchestra Hit bring 4 players on stage around the performer, who stays in the middle and keeps playing. Choir members sing without mics, hands together. Orchestral Harp stays solo. Same on the performer's stage view and for the audience.
+
+## Jumbotron note lines (v1.31.1)
+- The big note name and keyboard on the Jumbotron are gone. The Jumbotron now shows big note lines instead: each note is a thick bar sliding left, higher notes higher up, coloured by key row (same colours as the arrow pad). A held note keeps stretching and pulses at the "now" line on the right. The pitch range follows what you play.
+- Same in the Show preview and in the visuals stream the audience sees.
