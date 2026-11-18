@@ -300,7 +300,7 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - A held note keeps moving (the bow, the accordion's bellows, vibrato on the fret hand); letting go relaxes the hands.
 - To check: go live, open the venue, then change instruments and play, low notes and high notes.
 
-**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.6"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
+**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.7"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
 - Everything matching means you have the new build.
 - A red "Out of date: art.js …" line means your browser kept an old copy of a script. Hard refresh with Ctrl+Shift+R (Cmd+Shift+R on a Mac).
 - A red "Server is on v…" line means the server hasn't been redeployed yet (on Render: Manual Deploy, then Deploy latest commit).
@@ -333,7 +333,7 @@ The "Click to capture keys" box is gone. Keys play whenever the page has focus (
 
 **Room codes** are 4 letters now (no I, L or O, so they're easy to read out). The venue's code box takes 4 and capitalises as you type.
 
-**Leaving dance practice.** A "✕ Leave practice" button sits in the top-left corner the whole time you're practising. It takes you back to the join screen, which matters in the Home Screen app where there's no address bar.
+**Leaving dance practice.** A "✕ Leave practice" button sits in the top-left corner the whole time you're practicing. It takes you back to the join screen, which matters in the Home Screen app where there's no address bar.
 
 ## Troubleshooting
 
@@ -371,8 +371,8 @@ When something doesn't work, send Claude these three things:
 
 If the server itself crashed, also copy the last 20 lines of the `npm start` window (locally) or your host's **Logs** tab (deployed).
 
-## Venue join screen: fullscreen + practice (v1.30.6)
+## Venue join screen: fullscreen + practice (v1.30.7)
 - On a phone, open venue.html. Near the top, under "Live Venue", a big **🕺 Dance practice** button opens practice without a show.
-- The join screen scrolls, so Enter Venue and the link under it are always reachable, even with the keyboard up.
+- The join screen scrolls, so Enter Venue is always reachable, even with the keyboard up.
 - A ⛶ button sits top-left on every venue screen: join, show and practice. On PC/Android it toggles fullscreen. On iPhone Safari it explains Share → Add to Home Screen. It's hidden when you're already running from the Home Screen.
 - In practice, the fullscreen and Leave practice buttons sit side by side.
