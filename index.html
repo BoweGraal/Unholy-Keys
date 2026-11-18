@@ -158,6 +158,9 @@ body.jset #app.jx #side-name{display:none}
 /* jam stage view: the venue fills the screen; the video sits on the Jumbotron (placed by JAMSTAGE) */
 #jStage{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;image-rendering:pixelated}
 #jm.stage #jStage{display:block}
+/* stage view: the performer (and any section players) drawn on a layer above the video, so you stand in front of the Jumbotron */
+#jFront{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;image-rendering:pixelated}
+#jm.stage #jFront{display:block}
 #jm.stage #jcv{opacity:0}
 #jm.stage #jmV{z-index:3;transition:none}
 #jm.stage #jmV iframe,#jm.stage #jmV video{opacity:1!important}
@@ -683,7 +686,7 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="jm">
-  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
   <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
     <button id="jStageBtn" title="Stage view: your venue, with the video on a Jumbotron">&#127967; Stage</button>
     <button id="jFsBtn" title="Fullscreen (F11)">&#9974; Fullscreen</button>
@@ -4072,7 +4075,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.32.0",SERVER_VERSION="";
+var PAGE_VERSION="1.32.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4383,7 +4386,7 @@ function drawVenueTo(g,W,H,opts){
   var cAge=now-PCROWD.t0,crowd=cAge<ART.CROWD_MS&&PCROWD.kind?{kind:PCROWD.kind,age:cAge,target:{x:W/2,y:SB*H*0.25}}:null;
   /* you, on stage at your keyboard (at the front of the stage when the Jumbotron is down); glows while a note sounds */
   var pp=stage?Math.max(3,Math.round(H/260)):Math.max(2,Math.round(sc*1.25)),py=stage?SB*H-14*pp:.15*sy+8;
-  perfDraw(g,W/2,py,pp,now,crowd&&crowd.kind!=="lasers"&&crowd.kind!=="float"?crowd:null,alay,H,true);
+  perfDraw((opts&&opts.front)||g,W/2,py,pp,now,crowd&&crowd.kind!=="lasers"&&crowd.kind!=="float"?crowd:null,alay,H,true);
   /* audience, back to front so nearer people overlap farther ones */
   ids.sort(function(a,b){return AUD.people[a].dy-AUD.people[b].dy;});
   var heads=[];
@@ -4448,7 +4451,10 @@ var JAMSTAGE=(function(){
     /* (it starts below the jam toolbar so the toolbar's buttons stay clickable) */
     var drop=(1-(1-Math.pow(1-k,3)))*(y0+hh+60);
     var jt={x:Math.round(W/2-ww/2),y:Math.round(y0-drop),w:Math.round(ww),h:Math.round(hh),k:k},vid=videoOn();
-    drawVenueTo(g,W,H,{stage:true,jt:jt,video:vid});
+    /* with a video up, you're drawn on the layer above it (the video element sits over the stage canvas) */
+    var fc=$("jFront"),fg=null;
+    if(fc){if(fc.width!==cv.width||fc.height!==cv.height){fc.width=cv.width;fc.height=cv.height;}fg=fc.getContext("2d");fg.setTransform(1,0,0,1,0,0);fg.clearRect(0,0,fc.width,fc.height);fg.setTransform(dpr,0,0,dpr,0,0);fg.imageSmoothingEnabled=false;}
+    drawVenueTo(g,W,H,{stage:true,jt:jt,video:vid,front:vid&&k>0.02?fg:null});
     /* the video element sits exactly on the Jumbotron's screen */
     var v=$("jmV");
     if(v){var key=jt.x+","+jt.y+","+jt.w+","+jt.h+","+(vid&&k>0.02);

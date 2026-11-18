@@ -409,3 +409,7 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - When you stop, the step finishes and both feet come down. No sliding to a stop.
 - Other people move at a steady walking pace toward where they are instead of gliding and slowing down. Your own character goes exactly where you steer, with no lag.
 - Same on the performer's stage view of the crowd.
+
+## Performer in front of the Jumbotron (v1.32.1)
+- Jam → Stage view with a video playing (YouTube, a local video or a backing video): the performer, and any section players, stand in front of the video instead of behind it.
+- Venue with the Jumbotron down: the performer is drawn in front of the screen.
