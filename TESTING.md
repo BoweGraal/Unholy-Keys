@@ -276,6 +276,55 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - Under the dots are moves for that dance, such as Running man's Classic, Fast, Moonwalk and Arms pump, or Silly's Chicken, Sprinkler, YMCA, Floss and Macarena. On a computer, keys Z X C V B pick the moves.
 - Everyone sees your dance (venue and the performer's audience panel), drawn from the dance, the move and the two dots, so it looks the same everywhere.
 
+**Jumbotron, things that lower in, and crowd surprises (Show tab).**
+- **Jumbotron**: Auto, Down or Up. On Auto it lowers on its cables whenever a video plays (or your visuals are on) and goes back up when it stops; Down and Up hold it there. While it's down, the round box slims to a line at the top and you step forward so you're not hidden.
+- **Jam view** (also the **Stage** button at the top of jam mode): Classic is the jam screen as before. Stage puts jam on the venue stage, with your video (or visuals) on the Jumbotron and the crowd in front. Remembered on this browser.
+- **Lower in**: a Disco ball that drops over the front of the dance floor, and a Banner with your own text (up to 20 letters, numbers and ! ? ' . # * -). The banner moves aside when the Jumbotron is down.
+- **Moments**: Balloons and Confetti drop once each time you press them.
+- **Crowd**: Sparkle, Fire, Lasers (everyone shoots lasers from their hands at the stage) or Float. It hits everyone at once, you included, and lasts about 7 seconds.
+- **Follow my playing**: the lights follow your notes. The wash climbs the back wall and the lit row on the floor moves back with higher notes and drops with lower ones, and the colour follows the note. It works out your range as you play, so it uses the full height whatever octave you're in. It still works if someone in the audience has their sound off. Your preview shows it too (a made-up melody when you're not playing).
+- To check: go live, open the venue in another window, then try each one. Late arrivals should see the Jumbotron, disco ball, banner and follow lights as they are, but not balloons, confetti or crowd surprises that already finished.
+
+**Reactions (audience).** A row of buttons above the chat (a column on the right on phones): Jump, Hearts, Big heart, Applause and Whistle. Keys: Q E R Y U.
+- Everyone sees them on your character, and so does the performer in the audience panel and in jam's stage view. The panel's header counts the last 15 seconds of reactions.
+- Applause and whistles make a soft sound in the venue (quieter for other people's). Hearts and the big heart make a little chime. Nothing plays on the performer's page, so none of it goes out in the live sound.
+- Big heart: once every 4 seconds. Tapping fast is capped at a few a second.
+- The buttons and the joystick fade when you stand behind them.
+
+**Joystick.** The arrow pad is now a round joystick: press anywhere in the ring and drag. The further you pull, the faster you walk; let go and you stop. Arrow keys and WASD still work, and the knob shows the way you're going. In the step game, a firm push in a direction counts as a step.
+
+**Scenes (Show tab).** "Floating in space": the back wall opens onto stars, nebulae and planets, the floor turns see-through, and everyone floats and slowly turns. "Fill with water": water pours in from both corners and rises over the floor and up the stage in about 9 seconds. Anyone underwater swims, with bubbles and fish. Switch it off to drain it. People who arrive later see either scene as it is.
+
+**The performer's instrument.** Whatever instrument you pick is what your character holds and plays, in the venue, the audience panel, jam's stage view and the Show tab preview. There are 44 kinds of art covering all 376 instruments: grand, upright, electric piano, harpsichord, organ, pipe organ, synth, keytar, handheld chip console, accordion, acoustic, electric, metal and jazz guitar, bass, banjo, sitar, violin, cello, double bass, harp, trumpet, trombone, French horn, tuba, sax, flute, clarinet, bassoon, panpipes, ocarina, harmonica, bagpipes, mallets, glockenspiel, steel drum, kalimba, music box, drum, timpani, zither, voice (a mic), tubular bells and wine glasses.
+- The hands follow what you play. Guitars, basses and bowed strings: the fret hand goes to the right string and fret, the strum alternates down and up, and the bow turns round on each new note. Keyboards, mallets and harp: the key, bar or string for the note lights up. Trumpet: real valve fingering. Trombone: the slide moves. Woodwinds: more holes covered for lower notes. Singing: the free arm rises with the pitch.
+- A held note keeps moving (the bow, the accordion's bellows, vibrato on the fret hand); letting go relaxes the hands.
+- To check: go live, open the venue, then change instruments and play, low notes and high notes.
+
+**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.0"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
+- Everything matching means you have the new build.
+- A red "Out of date: art.js …" line means your browser kept an old copy of a script. Hard refresh with Ctrl+Shift+R (Cmd+Shift+R on a Mac).
+- A red "Server is on v…" line means the server hasn't been redeployed yet (on Render: Manual Deploy, then Deploy latest commit).
+- The number is set in five places, which should always match: `PAGE_VERSION` in index.html and venue.html, `VERSION` in art.js and instruments.js, and `VERSION` in server/server.js.
+
+The "Click to capture keys" box is gone. Keys play whenever the page has focus (click anywhere on it first).
+
+**Phone play screen (performer, Mobile button).** On the right, a circle in four quadrants (up, right, down, left): tap one to play it straight away, and slide round to switch note once you're past the line. On the left, five zones: hold one for a higher group of notes (zones 2 to 6, the same groups as Space, D, Space+D, Space+E and Space+3), and with no finger on a zone you get the root group. You can slide your thumb between zones while a note holds. Along the top: Oct − / Oct +, the instrument button (your 9 hotkey favourites, tap one to switch) and fullscreen. Tap the mode under the note to change how notes play.
+
+**Fullscreen.** There's a Fullscreen button at the top right of the main page, in jam mode's toolbar and in the phone screen. iPhones can't make a web page fullscreen, so on an iPhone the button explains how: Share, then Add to Home Screen, then open it from the home screen.
+
+**Home Screen app (iPhone).** If the venue gets squeezed into the top of the screen with empty space below (usually after the keyboard closes), it now fixes itself within half a second.
+
+**Charts.** Rap verses, where the vocals sit over a quiet beat, now get steps; songs no longer go empty partway through. On touch screens: never more than two presses at once (while an arrow is held, only single arrows), nothing faster than half beats or 280 ms, and steps sit on the beat.
+
+**Mosh pit round.** Pick "Mosh pit round" under Dance rounds on the performer page, or "Mosh pit" in dance practice. Three parts, timed to the song:
+- **Mosh pit** (most of the song): walk with the joystick or arrows and run into people. Bumping someone scores and shoves them. Drag round in circles on the floor to windmill your arms: each turn scores, more on the beat (two scoring turns a second at most). Everyone sees your arms.
+- **Wall of death** at the song's biggest drop (the chart now finds it): "WALL OF DEATH", and everyone goes to the side they're on, with a line down the middle and the count for each side. Then 3-2-1 on the beats, everyone charges the middle on the drop, and it's a tug of war for 10 seconds: tap the big pad as fast as you can (or click, or any key). The bar at the top shows both sides' totals live (the server adds them up), the flag on the rope leans toward whoever's ahead, and the winning side gets 800 points each. The losers get knocked back.
+- **Circle pit** during the song's other big moments: everyone runs round the ring by themselves. Push the joystick forward to sprint, back to slow down, in or out to change lanes. Laps and shoves score.
+- A song needs a clear drop with about 15 seconds after it for a wall of death. Without one you get the pit and circle pits. A round started without a song has a circle pit every 70 seconds or so.
+- Practice dancers mosh too: they wander the pit, take sides, pull in the tug of war and run the circle. Someone who moshes the whole song should beat them.
+
+**Note highway · 4 keys.** Four fat keys on D F J K (or the arrow keys), or tap the lanes. The notes follow the beat rather than the tune: beats 1 and 3 on the left hand and 2 and 4 on the right, like a kick and snare, switching between the inner and outer key each bar, with half beats on the other hand. Both outer keys together only on bar starts in the big moments, never more than two. It's in the dance menu (key 5), dance practice, and as a round type ("Note highway round (4 keys, on the beat)"), and it works in battles.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |

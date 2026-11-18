@@ -2,10 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script src="art.js"></script>
+<script src="instruments.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -56,7 +61,9 @@ body.jset #app.jx #side-name{display:none}
 .nav-item.active{background:linear-gradient(135deg,var(--pk),var(--pu));color:#fff}
 .nav-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0}
 #side-cap{padding:10px 12px;border-top:1px solid var(--bg4);font-size:10px;color:var(--tx3)}
-#side-cap input{width:100%;box-sizing:border-box;margin-top:4px;background:#0a0a0f;border:2px solid #D354A066;color:var(--pk);padding:8px 10px;border-radius:var(--r);font-family:monospace;font-size:12px;outline:none;caret-color:transparent}
+#side-cap input{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+#verTag{font:11px/1.4 ui-monospace,monospace;color:var(--tx3);user-select:all}
+#verTag b{color:#E8505B;font-weight:600}
 #main-content{flex:1;min-width:0;max-height:100vh;overflow-y:auto;padding:20px 24px}
 .app-section{display:none}
 .app-section.active{display:block}
@@ -148,6 +155,17 @@ body.jset #app.jx #side-name{display:none}
 #jmVL{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,transparent 18%,transparent 72%,rgba(0,0,0,.45) 100%);pointer-events:none}
 #jmR{position:absolute;inset:0;z-index:2;background:transparent;overflow:hidden}
 #jcv{position:absolute;top:0;left:0;pointer-events:none;opacity:0.55}
+/* jam stage view: the venue fills the screen; the video sits on the Jumbotron (placed by JAMSTAGE) */
+#jStage{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;image-rendering:pixelated}
+#jm.stage #jStage{display:block}
+#jm.stage #jcv{opacity:0}
+#jm.stage #jmV{z-index:3;transition:none}
+#jm.stage #jmV iframe,#jm.stage #jmV video{opacity:1!important}
+#jm.stage #jmVL{display:none}
+#jStageBtn{position:absolute;top:20px;right:505px;z-index:10;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(127,119,221,.14);border:1px solid rgba(127,119,221,.45);border-radius:var(--r);color:#cfc9ff}
+#jFsBtn{position:absolute;top:20px;right:610px;z-index:10;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);color:#ddd}
+#jFsBtn:hover{border-color:var(--pk);color:#fff}
+#jStageBtn.on{background:linear-gradient(135deg,#D354A0,#7F77DD);color:#fff;border-color:transparent}
 #jnd{display:none}
 #streamRow{margin-top:10px;padding-top:10px;border-top:1px solid #ff444422;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--tx2)}
 #streamRow .st{font-weight:600}
@@ -205,36 +223,55 @@ body.jset #app.jx #side-name{display:none}
 .jfk.play{background:rgba(29,158,117,.4);border-color:var(--tl);color:#fff}
 #mobileMode{display:none;position:fixed;inset:0;background:var(--bg);z-index:8000;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none}
 #mobileMode.on{display:flex}
-#mb-top{height:52px;background:var(--bg2);border-bottom:1px solid var(--bg4);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
-#mb-title{font-size:16px;font-weight:700}
-#mb-exit{padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:var(--r);color:var(--tx2)}
-#mb-play{flex:1;display:flex;min-height:0}
-#mb-note{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#mb-top{height:52px;background:var(--bg2);border-bottom:1px solid var(--bg4);display:flex;align-items:center;gap:8px;padding:0 12px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));flex-shrink:0}
+#mb-title{font-size:15px;font-weight:700;white-space:nowrap;margin-right:auto}
+#mobileMode button{font:600 13px system-ui,sans-serif;color:#fff;cursor:pointer;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+#mobileMode button:active{background:rgba(211,84,160,.45)}
+#mb-octUp{background:linear-gradient(135deg,#D354A0,#7F77DD)!important;border-color:transparent!important;font-size:14px!important;padding:8px 16px!important}
+#mb-octDn{padding:8px 10px!important;opacity:.85}
+#mb-octLbl{font:700 13px system-ui;color:var(--tx2);min-width:42px;text-align:center}
+#mb-instBtn{max-width:34vw;overflow:hidden;text-overflow:ellipsis}
+#mb-play{flex:1;display:flex;min-height:0;position:relative;gap:10px;padding:10px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+/* left: five hold zones; no finger down plays the root group */
+#mb-zones{width:min(24vw,170px);display:flex;flex-direction:column;gap:6px;flex-shrink:0;touch-action:none}
+.mb-z{flex:1;border-radius:14px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;touch-action:none;transition:background .06s,transform .06s}
+.mb-z b{font:800 20px system-ui;color:#fff;line-height:1}.mb-z span{font:600 10px system-ui;color:var(--tx3);text-align:center;line-height:1.2}
+.mb-z.on{transform:scale(.97)}
+#mb-note{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;min-width:0}
 #mb-canvas{position:absolute;inset:0;pointer-events:none}
-#mb-noteDisp{font-size:80px;font-weight:800;color:#fff;line-height:1;text-shadow:0 0 40px var(--pk),0 0 80px var(--pu);z-index:2;pointer-events:none}
-#mb-freqDisp{font-size:16px;color:var(--tx3);margin-top:6px;z-index:2;pointer-events:none}
-#mb-modeDisp{font-size:13px;font-weight:600;margin-top:8px;z-index:2;pointer-events:none;padding:3px 12px;border-radius:12px;background:rgba(255,255,255,.06)}
-#mb-right{width:88px;display:flex;flex-direction:column;background:var(--bg2);border-left:1px solid var(--bg4);flex-shrink:0}
-#mb-slider{flex:1;position:relative;overflow:hidden;touch-action:none}
-#mb-slider-track{position:absolute;left:50%;top:0;bottom:0;width:3px;transform:translateX(-50%);background:var(--bg4)}
-#mb-slider-fill{position:absolute;left:50%;width:3px;transform:translateX(-50%);background:linear-gradient(180deg,var(--pk),var(--pu));transition:top .04s,height .04s}
-#mb-slider-thumb{position:absolute;left:50%;width:52px;height:52px;border-radius:50%;transform:translate(-50%,-50%);background:var(--bg3);border:2px solid var(--pk);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 20px rgba(211,84,160,.4);transition:top .04s}
-#mb-slider-zones{position:absolute;inset:0;pointer-events:none}
-.mb-zone{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:10px;font-weight:600;letter-spacing:.5px;opacity:.35}
-#mb-zone-hi{background:rgba(211,84,160,.06)}
-#mb-zone-mid{background:rgba(127,119,221,.06)}
-#mb-zone-lo{background:rgba(29,158,117,.06)}
-#mb-mode-tap{height:90px;border-top:1px solid var(--bg4);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;touch-action:manipulation;position:relative;overflow:hidden}
-#mb-mode-tap.impact-mode{background:rgba(211,84,160,.12)}
-#mb-mode-tap.sustain-mode{background:rgba(29,158,117,.12)}
-.mb-mode-icon{font-size:22px}
-.mb-mode-lbl{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px}
-.mb-tap-ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.2);pointer-events:none;animation:tap-ripple .4s ease-out forwards}
-@keyframes tap-ripple{from{width:0;height:0;opacity:1;top:50%;left:50%;margin:-0px}to{width:100px;height:100px;opacity:0;top:50%;left:50%;margin:-50px}}
-#mb-bottom{height:50px;background:var(--bg2);border-top:1px solid var(--bg4);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0}
-#mb-reg-badge{padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg3);border:1px solid var(--bg4)}
+#mb-noteDisp{font-size:clamp(40px,10vw,80px);font-weight:800;color:#fff;line-height:1;text-shadow:0 0 40px var(--pk),0 0 80px var(--pu);z-index:2;pointer-events:none}
+#mb-freqDisp{font-size:14px;color:var(--tx3);margin-top:6px;z-index:2;pointer-events:none;text-align:center}
+#mb-modeDisp{font-size:13px;font-weight:600;margin-top:8px;z-index:2;padding:4px 12px;border-radius:12px;background:rgba(255,255,255,.06);cursor:pointer;touch-action:manipulation}
+/* right: the circle, four quadrants (up, right, down, left) */
+#mb-padWrap{display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#mb-pad{position:relative;width:var(--pad,260px);height:var(--pad,260px);border-radius:50%;background:radial-gradient(circle,#1c1830 0 22%,#15121F 60%);border:2px solid rgba(127,119,221,.5);touch-action:none;overflow:hidden;box-shadow:0 0 30px rgba(127,119,221,.15) inset}
+.mb-q{position:absolute;inset:0;clip-path:polygon(50% 50%,0 0,100% 0);display:flex;justify-content:center;transition:background .05s}
+.mb-q[data-d=right]{transform:rotate(90deg)}.mb-q[data-d=down]{transform:rotate(180deg)}.mb-q[data-d=left]{transform:rotate(270deg)}
+.mb-q.on{background:rgba(211,84,160,.35)}
+.mb-qlbl{position:absolute;font:800 18px system-ui;color:#fff;text-align:center;pointer-events:none;line-height:1.1}
+.mb-qlbl small{display:block;font:600 11px system-ui;color:var(--tx3)}
+#mb-pad .mb-x{position:absolute;left:50%;top:50%;width:142%;height:2px;background:rgba(255,255,255,.12);transform-origin:center;pointer-events:none}
+#mb-knob{position:absolute;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#D354A0 72%);box-shadow:0 0 16px rgba(211,84,160,.8);pointer-events:none;left:50%;top:50%;opacity:0;transition:opacity .1s}
+#mb-pad.held #mb-knob{opacity:1}
+/* the hotkey favourites */
+#mb-favs{display:none;position:absolute;inset:0;z-index:5;background:rgba(10,8,18,.92);align-items:center;justify-content:center;padding:20px}
+#mb-favs.on{display:flex}
+#mb-favGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:min(560px,100%)}
+#mb-favGrid button{padding:16px 8px!important;font-size:14px!important;border-radius:14px!important;display:flex;flex-direction:column;gap:4px;align-items:center;overflow:hidden;text-overflow:ellipsis}
+#mb-favGrid button small{font-size:11px;color:var(--tx3)}
+#mb-favGrid button.on{background:linear-gradient(135deg,#D354A0,#7F77DD)!important;border-color:transparent!important}
+#mb-favGrid button:disabled{opacity:.35}
+#mb-bottom{height:40px;background:var(--bg2);border-top:1px solid var(--bg4);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+#mb-reg-badge{padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg3);border:1px solid var(--bg4)}
 #mb-oct-disp{font-size:12px;color:var(--tx3)}
-#mb-inst-disp{font-size:12px;color:var(--tx2);margin-left:auto;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mb-hint{font-size:11px;color:var(--tx3);margin-left:auto;text-align:right}
+@media (orientation:portrait){#mb-play{display:grid;grid-template-columns:28vw 1fr;grid-template-rows:minmax(18vh,auto) 1fr}#mb-note{grid-column:1/3;grid-row:1}#mb-zones{width:auto;grid-column:1;grid-row:2}#mb-padWrap{min-width:0;grid-column:2;grid-row:2}#mb-pad{flex-shrink:0}#mb-title{display:none}#mb-top{gap:6px}#mb-octLbl{margin-right:auto}}
+/* a fullscreen button for the main page (top right) */
+#fsBtn{position:fixed;top:10px;right:12px;z-index:900;padding:6px 10px;font:600 12px system-ui;color:var(--tx2);background:var(--bg3);border:1px solid var(--bg4);border-radius:var(--r);cursor:pointer}
+#fsBtn:hover{color:#fff;border-color:var(--pk)}
+body.jset #fsBtn,#mobileMode.on~#fsBtn,body:has(#jm.on) #fsBtn{display:none}
+#fsTip{display:none;position:fixed;left:50%;top:60px;transform:translateX(-50%);z-index:9500;max-width:min(420px,90vw);background:#1c1830;border:1px solid var(--pk);color:#fff;font:13px/1.45 system-ui;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#fsTip.on{display:block}
 /* ── VIZFX HUD + Stamp Picker ── */
 #vizModeHud{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:20;pointer-events:none;font-size:11px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.25);text-transform:uppercase;transition:opacity .4s}
 #vizStampPicker{position:absolute;inset:0;z-index:60;background:rgba(0,0,0,.88);display:none;flex-direction:column;gap:0;overflow:hidden}
@@ -349,8 +386,8 @@ body.jset .nav-item.jam-only{display:flex}
       <div class="nav-item jam-only" data-sec="visuals" onclick="setSection('visuals')"><span class="nav-icon">&#10024;</span>Visuals</div>
     </div>
     <div id="side-cap">
-      Click to capture keys:
-      <input type="text" id="cap" placeholder="Click then play!" autocomplete="off" spellcheck="false">
+      <input type="text" id="cap" aria-hidden="true" tabindex="-1" autocomplete="off" spellcheck="false">
+      <div id="verTag" title="The version of Unholy Keys this page is running"></div>
     </div>
   </div>
   <div id="main-content">
@@ -483,7 +520,7 @@ body.jset .nav-item.jam-only{display:flex}
   <div class="sl">Dance rounds <span class="bdg" style="background:var(--bg3);color:var(--tx3)">live shows</span></div>
   <div class="pnl" id="roundPanel">
     <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-      <label>When I play a backing track <select id="rdMode"><option value="off">no round</option><option value="step">Step dance round</option><option value="aim">Target dance round</option><option value="keys">Note highway round</option><option value="free">Free dance round (audience votes)</option></select></label>
+      <label>When I play a backing track <select id="rdMode"><option value="off">no round</option><option value="step">Step dance round</option><option value="aim">Target dance round</option><option value="keys">Note highway round</option><option value="keys4">Note highway round (4 keys, on the beat)</option><option value="free">Free dance round (audience votes)</option><option value="mosh">Mosh pit round (wall of death at the drop)</option></select></label>
       <label>Countdown <select id="rdSecs"><option value="5">5 s</option><option value="10">10 s</option><option value="15">15 s</option><option value="20">20 s</option><option value="30">30 s</option></select></label>
       <label>Steps <select id="rdLevel"><option value="0.7">Easy</option><option value="1">Normal</option><option value="1.3">Hard</option></select></label>
       <label title="Everyone dances; a little way in, the dancers are drawn into a knockout of quick 1 v 1s on the stage, one match at a time, with the final at the end of the song"><input type="checkbox" id="rdBattle"> &#9876; Battle (1 v 1s)</label>
@@ -602,6 +639,13 @@ body.jset .nav-item.jam-only{display:flex}
     <div class="sx-row"><span class="sx-l">Lights</span><span class="sx-btns" data-k="lights"><button data-v="auto">Auto</button><button data-v="party">Party</button><button data-v="strobe">Strobe</button><button data-v="spot">Spotlight</button><button data-v="warm">Warm</button><button data-v="cool">Cool</button><button data-v="off">Off</button></span></div>
     <div class="sx-row"><span class="sx-l">Weather</span><span class="sx-btns" data-k="weather"><button data-v="none">Clear</button><button data-v="rain">&#127783; Rain</button><button data-v="storm">&#9928; Storm</button><button data-v="snow">&#10052; Snow</button></span></div>
     <div class="sx-row"><span class="sx-l">Fog</span><input type="range" min="0" max="100" data-k="fog"><span class="sx-l">Darkness</span><input type="range" min="0" max="100" data-k="dark"></div>
+    <div class="sx-row"><span class="sx-l">Follow</span><span class="sx-tog"><button data-k="follow" title="The lights climb and fall with where you're playing in your range, in the colour of the note">&#127929; Lights follow my playing</button></span></div>
+    <div class="sx-row"><span class="sx-l">Jumbotron</span><span class="sx-btns" data-k="jumbo"><button data-v="auto" title="Lowers while a video or your visuals are playing">Auto</button><button data-v="down">Down</button><button data-v="up">Up</button></span>
+      <span class="sx-l">Jam view</span><span class="sx-btns" id="jamViewBtns"><button data-jv="classic">Classic</button><button data-jv="stage" title="Your venue, with the video or your visuals on the Jumbotron">&#127967; Stage</button></span></div>
+    <div class="sx-row"><span class="sx-l">Lower in</span><span class="sx-tog"><button data-k="disco">&#129705; Disco ball</button><button data-k="banner">&#127987; Banner</button></span><input type="text" id="showBannerText" maxlength="20" placeholder="Banner text" style="width:150px;background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);border-radius:var(--r);padding:5px 8px;font-size:12px"></div>
+    <div class="sx-row"><span class="sx-l">Moments</span><span class="sx-btns" id="showMoments"><button data-m="balloonT">&#127880; Balloon drop</button><button data-m="confettiT">&#127882; Confetti</button></span></div>
+    <div class="sx-row"><span class="sx-l">Crowd</span><span class="sx-btns" id="showCrowd" title="Everyone in the crowd, for a few seconds"><button data-c="sparkle">&#10024; Sparkle</button><button data-c="fire">&#128293; On fire</button><button data-c="lasers">&#128302; Hand lasers</button><button data-c="float">&#127880; Float</button></span></div>
+    <div class="sx-row"><span class="sx-l">Scene</span><span class="sx-tog"><button data-k="space" title="The venue floats off into space: stars and planets behind the stage, and everyone drifts in zero gravity">&#129680; Floating in space</button><button data-k="water" title="Water pours in and fills the floor and stage; everyone swims. Switch off to drain it">&#127754; Fill with water</button></span></div>
     <div class="sx-row"><span class="sx-l">Extras</span><span class="sx-tog"><button data-k="lasers">&#128998; Lasers</button><button data-k="sunset">&#127749; Sunset</button><button data-k="fire">&#128293; Burning building</button><button data-k="fireworks">&#127879; Fireworks (auto)</button></span></div>
     <div class="sx-row"><button class="btn" id="showBurst" title="Launch a volley of fireworks now">&#127878; Launch fireworks</button><button class="btn" id="showReset">Reset all</button><span id="showNote"></span></div>
   </div>
@@ -640,7 +684,9 @@ body.jset .nav-item.jam-only{display:flex}
 </div>
 <div id="jm">
   <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
-  <div id="jmR"><canvas id="jcv"></canvas><div id="jnd"></div>
+  <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
+    <button id="jStageBtn" title="Stage view: your venue, with the video on a Jumbotron">&#127967; Stage</button>
+    <button id="jFsBtn" title="Fullscreen (F11)">&#9974; Fullscreen</button>
     <button id="jx" style="display:none">ESC Exit</button>
     <button id="jSetupBtn" title="Set up anything: instruments, key, presets and effects, music, visuals (M)">&#9776; Setup <span class="hk">M</span></button>
     <button id="jfs" style="display:none;position:absolute;top:20px;right:130px;z-index:10;padding:8px 14px;font-size:11px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);color:#fff;text-transform:uppercase">&#9974; FS</button>
@@ -729,10 +775,25 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="mobileMode">
-  <div id="mb-top"><div id="mb-title"><b>Unholy</b> Keys <span style="font-size:13px;color:var(--tx3);font-weight:400;margin-left:6px">Mobile</span></div><button id="mb-exit">&#10005; Exit</button></div>
-  <div id="mb-play"><div id="mb-note"><canvas id="mb-canvas"></canvas><div id="mb-noteDisp">&#8212;</div><div id="mb-freqDisp">Touch the slider</div><div id="mb-modeDisp" style="color:var(--pk)">Impact</div></div><div id="mb-right"><div id="mb-slider"><div id="mb-slider-track"></div><div id="mb-slider-fill"></div><div id="mb-slider-zones"><div class="mb-zone" id="mb-zone-hi" style="top:0;height:33.33%"><span>HI</span></div><div class="mb-zone" id="mb-zone-mid" style="top:33.33%;height:33.33%"><span>MID</span></div><div class="mb-zone" id="mb-zone-lo" style="top:66.67%;height:33.34%"><span>LO</span></div></div><div id="mb-slider-thumb">&#183;</div></div><div id="mb-mode-tap"><div class="mb-mode-icon" id="mb-mode-icon">&#9889;</div><div class="mb-mode-lbl" id="mb-mode-lbl">Impact</div><div style="font-size:9px;color:var(--tx3);margin-top:2px">TAP TO SWITCH</div></div></div></div>
-  <div id="mb-bottom"><div id="mb-reg-badge">Arrows only</div><div id="mb-oct-disp">Oct 4</div><div id="mb-inst-disp">Violin</div></div>
+  <div id="mb-top"><div id="mb-title"><b>Unholy</b> Keys</div>
+    <button id="mb-octDn" title="Down an octave">&#8722;</button><span id="mb-octLbl">Oct 4</span><button id="mb-octUp" title="Up an octave">Oct +</button>
+    <button id="mb-instBtn" title="Your 9 hotkey favourites">&#127931; Violin</button>
+    <button id="mb-fs" title="Fullscreen">&#9974;</button>
+    <button id="mb-exit">&#10005;</button></div>
+  <div id="mb-play">
+    <div id="mb-zones"></div>
+    <div id="mb-note"><canvas id="mb-canvas"></canvas><div id="mb-noteDisp">&#8212;</div><div id="mb-freqDisp">Tap the circle to play</div><div id="mb-modeDisp" title="Tap to switch how notes play">Impact</div></div>
+    <div id="mb-padWrap"><div id="mb-pad">
+      <div class="mb-q" data-d="up"></div><div class="mb-q" data-d="right"></div><div class="mb-q" data-d="down"></div><div class="mb-q" data-d="left"></div>
+      <i class="mb-x" style="transform:translate(-50%,-50%) rotate(45deg)"></i><i class="mb-x" style="transform:translate(-50%,-50%) rotate(-45deg)"></i>
+      <div class="mb-qlbl" id="mb-l-up"></div><div class="mb-qlbl" id="mb-l-right"></div><div class="mb-qlbl" id="mb-l-down"></div><div class="mb-qlbl" id="mb-l-left"></div>
+      <div id="mb-knob"></div></div></div>
+    <div id="mb-favs"><div id="mb-favGrid"></div></div>
+  </div>
+  <div id="mb-bottom"><div id="mb-reg-badge">Root</div><div id="mb-oct-disp">Oct 4</div><div id="mb-hint">Hold a zone on the left for higher notes</div></div>
 </div>
+<button id="fsBtn" title="Fullscreen (F11 in jam)">&#9974; Fullscreen</button>
+<div id="fsTip">On iPhone, Safari can't make a web page fullscreen. For a fullscreen app: tap <b>Share</b>, then <b>Add to Home Screen</b>, and open Unholy Keys from your home screen.</div>
 <script>
 (function(){
 "use strict";
@@ -1606,7 +1667,7 @@ function applyNatOct(id){
 function selInst(id){var ins=findInst(id);if(!ins)return;if(ins.t==="samp"&&!samplers[id]){initAudio();loadSamp(id);}S.eng=id;applyNatOct(id);
   var matched=false;for(var _i=0;_i<9;_i++){if(hkSlots[_i]===id){activeSlot=_i;matched=true;break;}}if(!matched)activeSlot=-1;
   renderInst();updBdg();updJInfo();renderHkGrid();
-  if(jamOn){renderJamHkStrip();var jSel=document.getElementById("jInstSel");if(jSel)jSel.value=id;showJamToast(ins.l,"#EF9F27");}document.getElementById("mb-inst-disp").textContent=ins.l;saveSession();}
+  if(jamOn){renderJamHkStrip();var jSel=document.getElementById("jInstSel");if(jSel)jSel.value=id;showJamToast(ins.l,"#EF9F27");}mbInstLabel();saveSession();}
 function updBdg(){var b=document.getElementById("iBdg"),ins=findInst(S.eng);if(!ins||!b)return;if(ins.t==="samp"){if(loading[ins.id]){b.style.cssText="background:#F5C51833;color:#F5C518";b.textContent="Loading "+ins.l+"...";}else if(samplers[ins.id]){b.style.cssText="background:#1D9E7533;color:#1D9E75";b.textContent=ins.l+" (VST)";}else{b.style.cssText="background:#F5C51833;color:#F5C518";b.textContent=ins.l;}}else{b.style.cssText="background:"+ins.catC+"33;color:"+ins.catC;b.textContent=ins.l;}}
 function updModInd(){var el=document.getElementById("modInd"),mod=getMod();if(!el)return;el.textContent=RLBL[mod];el.style.cssText="background:"+RCLR[mod]+"22;color:"+RCLR[mod];updJamHud();}
 function rebuild(){layout=buildLayout();renderGrid();buildJMini();renderRelKeys();}
@@ -1803,28 +1864,101 @@ function initHist(){hcv=document.getElementById("hcv");hcx=hcv.getContext("2d");
 function drawHist(){if(!hcx)return;var w=hcv.width/2,h=hcv.height/2;hcx.clearRect(0,0,w,h);if(!hist.length)return;var now=Date.now(),wm=10000,rc=[];for(var i=0;i<hist.length;i++)if(now-hist[i].time<wm)rc.push(hist[i]);if(!rc.length)return;var mn=999,mx=0;for(var i=0;i<rc.length;i++){if(rc[i].midi<mn)mn=rc[i].midi;if(rc[i].midi>mx)mx=rc[i].midi;}mn-=2;mx+=2;var rng=mx-mn||1;for(var i=0;i<rc.length;i++){var n=rc[i],x=((n.time-(now-wm))/wm)*w,y=h-((n.midi-mn)/rng)*h;hcx.globalAlpha=1-(now-n.time)/wm*.8;hcx.fillStyle=RCLR[modKey(n.key)]||"#7F77DD";hcx.beginPath();hcx.arc(x,y,3.5,0,Math.PI*2);hcx.fill();}hcx.globalAlpha=1;}
 setInterval(drawHist,60);
 
-var mbSlider={active:false,y:0,dir:null,octOffset:0};
-function mbYtoDir(y){if(y<0.25)return"up";if(y<0.50)return"right";if(y<0.75)return"left";return"down";}
-function mbYtoReg(y){if(y<0.333)return"space+d";if(y<0.667)return"space";return"none";}
-function mbUpdSliderUI(y){var thumb=document.getElementById("mb-slider-thumb"),fill=document.getElementById("mb-slider-fill"),track=document.getElementById("mb-slider"),h=track.clientHeight||500,thumbY=Math.round(y*h);thumb.style.top=thumbY+"px";var dir=mbYtoDir(y);var icons={up:"\u25B2",right:"\u25B6",left:"\u25C0",down:"\u25BC"};thumb.textContent=icons[dir]||"\u00B7";fill.style.top="0px";fill.style.height=thumbY+"px";var reg=mbYtoReg(y);var badge=document.getElementById("mb-reg-badge");badge.textContent=RLBL[reg];badge.style.color=RCLR[reg];badge.style.borderColor=RCLR[reg]+"44";}
-function mbSetSliderFromTouch(clientY){var track=document.getElementById("mb-slider"),r=track.getBoundingClientRect(),y=Math.max(0,Math.min(1,(clientY-r.top)/r.height));mbSlider.y=y;var dir=mbYtoDir(y),reg=mbYtoReg(y);mbSlider.dir=dir;mbSlider.octOffset=reg;mbUpdSliderUI(y);arrowStack=[];if(dir)arrowStack=[dir];mods.space=(reg==="space"||reg==="space+d");mods.d=(reg==="d"||reg==="space+d");updModInd();refreshNote();}
-function mbReleaseSlider(){if(!mbSlider.active)return;mbSlider.active=false;arrowStack=[];mods.space=false;mods.d=false;silenceNote();updModInd();}
 var mbLoadT=null;
 function mbLoading(ins){
-  if(!mobileOn)return;var d=document.getElementById("mb-inst-disp");if(!d)return;
+  if(!mobileOn)return;var d=document.getElementById("mb-hint");if(!d)return;
   d.textContent="Loading "+ins.l+"\u2026 (stand-in sound)";d.style.color="var(--am, #E0A030)";
-  clearInterval(mbLoadT);mbLoadT=setInterval(function(){if(samplers[ins.id]||!mobileOn){clearInterval(mbLoadT);mbLoadT=null;var cur=findInst(S.eng);d.textContent=cur?cur.l:"";d.style.color="";}},500);
+  clearInterval(mbLoadT);mbLoadT=setInterval(function(){if(samplers[ins.id]||!mobileOn){clearInterval(mbLoadT);mbLoadT=null;d.textContent="Hold a zone on the left for higher notes";d.style.color="";mbInstLabel();}},500);
 }
-function mbUpdNote(nk,midi){if(!mobileOn)return;var nd=document.getElementById("mb-noteDisp"),fd=document.getElementById("mb-freqDisp");if(!nk||midi===null||midi===undefined){nd.textContent="\u2014";fd.textContent="Slide to play";nd.style.textShadow="none";nd.style.color="#fff";return;}var mod=modKey(nk),clr=RCLR[mod]||"#7F77DD";nd.textContent=m2n(midi);nd.style.color=clr;nd.style.textShadow="0 0 40px "+clr+",0 0 80px "+clr;fd.textContent=Math.round(m2f(midi))+" Hz";}
+function mbUpdNote(nk,midi){if(!mobileOn)return;var nd=document.getElementById("mb-noteDisp"),fd=document.getElementById("mb-freqDisp");if(!nk||midi===null||midi===undefined){nd.textContent="\u2014";fd.textContent="Tap the circle to play";nd.style.textShadow="none";nd.style.color="#fff";return;}var mod=modKey(nk),clr=RCLR[mod]||"#7F77DD";nd.textContent=m2n(midi);nd.style.color=clr;nd.style.textShadow="0 0 40px "+clr+",0 0 80px "+clr;fd.textContent=Math.round(m2f(midi))+" Hz";}
 function mbUpdMode(){var mode=MODES.filter(function(m){return m.id===S.mode;})[0]||MODES[0];var icon=document.getElementById("mb-mode-icon"),lbl=document.getElementById("mb-mode-lbl"),tap=document.getElementById("mb-mode-tap");if(icon)icon.textContent=mode.icon;if(lbl)lbl.textContent=mode.l;if(tap){tap.className=(S.mode==="impact"||S.mode==="staccato")?"impact-mode":"sustain-mode";tap.id="mb-mode-tap";}var md=document.getElementById("mb-modeDisp");if(md){var clr=S.mode==="impact"?"var(--pk)":S.mode==="sustain"?"var(--tl)":S.mode==="staccato"?"var(--co)":"var(--pu)";md.textContent=mode.l;md.style.color=clr;md.style.borderColor=clr+"33";md.style.background=clr+"11";}}
 var mbModeOrder=["impact","sustain","staccato","legato"];
 function mbCycleMode(){var idx=mbModeOrder.indexOf(S.mode);S.mode=mbModeOrder[(idx+1)%mbModeOrder.length];renderModes();mbUpdMode();}
-function initMobileSlider(){var slider=document.getElementById("mb-slider");slider.addEventListener("touchstart",function(e){e.preventDefault();initAudio();mbSlider.active=true;mbSetSliderFromTouch(e.touches[0].clientY);},{passive:false});slider.addEventListener("touchmove",function(e){e.preventDefault();if(!mbSlider.active)return;mbSetSliderFromTouch(e.touches[0].clientY);},{passive:false});slider.addEventListener("touchend",function(e){e.preventDefault();mbReleaseSlider();},{passive:false});slider.addEventListener("touchcancel",function(){mbReleaseSlider();});slider.addEventListener("mousedown",function(e){initAudio();mbSlider.active=true;mbSetSliderFromTouch(e.clientY);e.preventDefault();});document.addEventListener("mousemove",function(e){if(mbSlider.active)mbSetSliderFromTouch(e.clientY);});document.addEventListener("mouseup",function(){if(mbSlider.active)mbReleaseSlider();});var tap=document.getElementById("mb-mode-tap");tap.addEventListener("touchstart",function(e){e.preventDefault();var rip=document.createElement("div");rip.className="mb-tap-ripple";tap.appendChild(rip);setTimeout(function(){if(rip.parentNode)rip.parentNode.removeChild(rip);},500);mbCycleMode();},{passive:false});tap.addEventListener("click",function(){mbCycleMode();});}
+/* ── Phone play screen ──
+   Right: a circle in four quadrants (up, right, down, left), like the arrow keys. Touching a quadrant plays it at
+   once; sliding round into the next one switches note as soon as you're past the line. Left: five zones; hold one
+   for a higher group of notes (the same groups as Space, D, Space+D, Space+E and Space+3 on a keyboard). No finger on
+   a zone plays the root group. Top: octave down / up, your 9 hotkey favourites, fullscreen. */
+var MB_ZONES=[{reg:"space+3",n:6},{reg:"space+e",n:5},{reg:"space+d",n:4},{reg:"d",n:3},{reg:"space",n:2}];
+var MB_ANG={right:0,down:Math.PI/2,left:Math.PI,up:-Math.PI/2};
+var mbZ={held:[]},mbP={id:null,dir:null};
+function mbReg(){return mbZ.held.length?mbZ.held[mbZ.held.length-1][1]:"none";}
+function mbApplyMods(){var r=mbReg();mods.space=r.indexOf("space")===0;mods.d=(r==="d"||r==="space+d");mods.e=(r==="space+e");mods.three=(r==="space+3");updModInd();mbPaint();if(mbP.dir)refreshNote();}
+function mbNoteName(reg,dir){var m=layout[reg+"-"+dir];return m===undefined?"":m2n(m);}
+function mbPaint(){
+  if(!mobileOn)return;var reg=mbReg(),clr=RCLR[reg]||"#7F77DD";
+  Array.prototype.forEach.call(document.querySelectorAll("#mb-zones .mb-z"),function(z){var zr=z.getAttribute("data-reg"),on=zr===reg,c=RCLR[zr]||"#7F77DD";
+    z.classList.toggle("on",on);z.style.borderColor=on?c:c+"44";z.style.background=on?c+"55":c+"12";
+    z.querySelector("span").textContent=DIRS.map(function(d){return mbNoteName(zr,d);}).join(" ");});
+  var pad=document.getElementById("mb-pad"),R=pad.clientWidth/2;
+  DIRS.forEach(function(d){var el=document.getElementById("mb-l-"+d),a=MB_ANG[d],r=R*0.62;el.innerHTML=mbNoteName(reg,d)+"<small>"+DARR[d]+"</small>";
+    el.style.left=(R+Math.cos(a)*r-el.offsetWidth/2)+"px";el.style.top=(R+Math.sin(a)*r-el.offsetHeight/2)+"px";el.style.color=mbP.dir===d?"#fff":clr;});
+  Array.prototype.forEach.call(document.querySelectorAll("#mb-pad .mb-q"),function(q){q.classList.toggle("on",q.getAttribute("data-d")===mbP.dir);q.style.background=q.getAttribute("data-d")===mbP.dir?clr+"66":"";});
+  var b=document.getElementById("mb-reg-badge");b.textContent=reg==="none"?"Root":"Zone "+(MB_ZONES.filter(function(z){return z.reg===reg;})[0]||{n:"?"}).n+" · "+RLBL[reg];b.style.color=clr;b.style.borderColor=clr+"44";
+  document.getElementById("mb-octLbl").textContent="Oct "+S.oct;document.getElementById("mb-oct-disp").textContent=ROOTS[S.root]+" "+S.scale;
+}
+function mbInstLabel(){var b=document.getElementById("mb-instBtn");if(!b)return;var ins=findInst(S.eng);b.innerHTML="&#127931; "+(ins?ins.l:"Instrument");}
+/* the quadrant for a point on the circle; once one is playing it only changes when you're well past the line */
+function mbDirAt(e){
+  var pad=document.getElementById("mb-pad"),r=pad.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),a=Math.atan2(dy,dx),R=r.width/2;
+  var knob=document.getElementById("mb-knob"),m=Math.min(1,Math.hypot(dx,dy)/R);knob.style.left=(50+Math.cos(a)*m*42)+"%";knob.style.top=(50+Math.sin(a)*m*42)+"%";
+  var cand=Math.abs(a)<=Math.PI/4?"right":a>Math.PI/4&&a<3*Math.PI/4?"down":a<-Math.PI/4&&a>-3*Math.PI/4?"up":"left";
+  if(!mbP.dir)return cand;
+  if(Math.hypot(dx,dy)<R*0.12)return mbP.dir;                                   /* in the middle: stay on the note */
+  var diff=Math.abs(Math.atan2(Math.sin(a-MB_ANG[mbP.dir]),Math.cos(a-MB_ANG[mbP.dir])));
+  return diff>Math.PI/4+0.14?cand:mbP.dir;                                       /* about 8 degrees past the line */
+}
+function mbPlayDir(d){if(d===mbP.dir)return;mbP.dir=d;arrowStack=d?[d]:[];refreshNote();mbPaint();}
+function mbFavs(open){
+  var f=document.getElementById("mb-favs");if(open===undefined)open=!f.classList.contains("on");f.classList.toggle("on",open);if(!open)return;
+  var gd=document.getElementById("mb-favGrid");gd.innerHTML="";
+  for(var i=0;i<9;i++){(function(i){var id=hkSlots[i],ins=id?findInst(id):null,b=document.createElement("button");b.innerHTML="<small>"+(i+1)+"</small>"+(ins?ins.l:"Empty");b.disabled=!ins;if(ins&&id===S.eng)b.className="on";
+    b.onclick=function(e){e.stopPropagation();handleNumpad(i+1);mbInstLabel();mbFavs(false);};gd.appendChild(b);})(i);}
+}
+function mbOct(d){var o=S.oct+d;if(o<1||o>7)return;S.oct=o;if(typeof rememberOct==="function")rememberOct();rebuild();saveSession();if(mbP.dir){activeNoteKey=null;refreshNote();}mbPaint();}
+function initMobileSlider(){
+  var zc=document.getElementById("mb-zones");
+  MB_ZONES.forEach(function(z){var d=document.createElement("div");d.className="mb-z";d.setAttribute("data-reg",z.reg);d.innerHTML="<b>"+z.n+"</b><span></span>";zc.appendChild(d);});
+  function zoneAt(e){var el=document.elementFromPoint(e.clientX,e.clientY);el=el&&el.closest?el.closest(".mb-z"):null;return el?el.getAttribute("data-reg"):null;}
+  zc.addEventListener("pointerdown",function(e){e.preventDefault();initAudio();var r=zoneAt(e);if(!r)return;try{zc.setPointerCapture(e.pointerId);}catch(x){}mbZ.held=mbZ.held.filter(function(h){return h[0]!==e.pointerId;});mbZ.held.push([e.pointerId,r]);mbApplyMods();});
+  zc.addEventListener("pointermove",function(e){var h=mbZ.held.filter(function(h){return h[0]===e.pointerId;})[0];if(!h)return;var r=zoneAt(e);if(r&&r!==h[1]){h[1]=r;mbApplyMods();}});      /* slide between zones */
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){zc.addEventListener(ev,function(e){var n=mbZ.held.length;mbZ.held=mbZ.held.filter(function(h){return h[0]!==e.pointerId;});if(mbZ.held.length!==n)mbApplyMods();});});
+  var pad=document.getElementById("mb-pad");
+  pad.addEventListener("pointerdown",function(e){e.preventDefault();initAudio();if(mbP.id!==null)return;mbP.id=e.pointerId;try{pad.setPointerCapture(e.pointerId);}catch(x){}pad.classList.add("held");mbP.dir=null;mbPlayDir(mbDirAt(e));});
+  pad.addEventListener("pointermove",function(e){if(e.pointerId!==mbP.id)return;mbPlayDir(mbDirAt(e));});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){pad.addEventListener(ev,function(e){if(e.pointerId!==mbP.id)return;mbP.id=null;pad.classList.remove("held");mbPlayDir(null);});});
+  [zc,pad].forEach(function(el){el.addEventListener("contextmenu",function(e){e.preventDefault();});});
+  document.getElementById("mb-octUp").onclick=function(){mbOct(1);};
+  document.getElementById("mb-octDn").onclick=function(){mbOct(-1);};
+  document.getElementById("mb-instBtn").onclick=function(){mbFavs();};
+  document.getElementById("mb-favs").onclick=function(){mbFavs(false);};
+  document.getElementById("mb-fs").onclick=function(){toggleFullscreen(document.documentElement);};
+  document.getElementById("mb-modeDisp").onclick=function(){mbCycleMode();};
+  window.addEventListener("resize",mbSize);
+  /* iPhone Home Screen apps: lay out again when the visible area changes (the keyboard closing), and undo any leftover scroll */
+  function mbVp(){mbSize();if(mobileOn&&(window.scrollY||document.documentElement.scrollTop))window.scrollTo(0,0);}
+  if(window.visualViewport)visualViewport.addEventListener("resize",mbVp);document.addEventListener("focusout",function(){setTimeout(mbVp,200);});
+  window.ukMobile=function(){return{reg:mbReg(),dir:mbP.dir,oct:S.oct,note:activeNoteKey,midi:activeNoteKey?layout[activeNoteKey]:null,favsOpen:document.getElementById("mb-favs").classList.contains("on"),inst:S.eng};};
+}
+/* the circle as big as the space allows */
+function mbSize(){if(!mobileOn)return;var play=document.getElementById("mb-play"),h=play.clientHeight-20,w=play.clientWidth,port=innerHeight>innerWidth;
+  var sz=port?Math.min(w*0.66,(h-innerHeight*0.18)*0.95):Math.min(h,w*0.42);document.getElementById("mb-pad").style.setProperty("--pad",Math.max(160,Math.round(sz))+"px");setTimeout(mbPaint,0);}
+/* fullscreen, on any page: iPhones can't make a web page fullscreen, so they get the Home Screen tip instead */
+function toggleFullscreen(el){
+  el=el||document.documentElement;
+  var fe=document.fullscreenElement||document.webkitFullscreenElement;
+  if(fe){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}return;}
+  var rq=el.requestFullscreen||el.webkitRequestFullscreen;
+  if(!rq){var tip=document.getElementById("fsTip");if(tip){tip.classList.add("on");clearTimeout(tip.t);tip.t=setTimeout(function(){tip.classList.remove("on");},9000);}return;}
+  try{var pr=rq.call(el);if(pr&&pr.catch)pr.catch(function(){});}catch(e){}
+}
+function fsLabel(){var on=!!(document.fullscreenElement||document.webkitFullscreenElement);["fsBtn","jFsBtn","mb-fs"].forEach(function(id){var b=document.getElementById(id);if(b)b.innerHTML=id==="mb-fs"?(on?"&#10697;":"&#9974;"):(on?"&#10005; Exit fullscreen":"&#9974; Fullscreen");});}
+document.addEventListener("fullscreenchange",fsLabel);document.addEventListener("webkitfullscreenchange",fsLabel);
 var mbCv=null,mbCx=null,mbAnim=null;
 function hexToRgba(hex,a){hex=hex.replace("#","");return"rgba("+parseInt(hex.substring(0,2),16)+","+parseInt(hex.substring(2,4),16)+","+parseInt(hex.substring(4,6),16)+","+a+")";}
 function mbStartCanvas(){mbCv=document.getElementById("mb-canvas");var par=mbCv.parentElement;mbCv.width=par.clientWidth;mbCv.height=par.clientHeight;mbCx=mbCv.getContext("2d");var mParts=[],lastKey=null;function loop(){mbAnim=requestAnimationFrame(loop);mbCx.clearRect(0,0,mbCv.width,mbCv.height);if(activeVoice&&activeNoteKey){var clr=RCLR[modKey(activeNoteKey)]||"#7F77DD";var cx=mbCv.width/2,cy=mbCv.height/2,t=Date.now()/1000;for(var i=0;i<3;i++){var ax=cx+Math.sin(t*.8+i*2.1)*cx*.5,ay=cy+Math.cos(t*.6+i*1.8)*cy*.4;var g=mbCx.createRadialGradient(ax,ay,0,ax,ay,120);g.addColorStop(0,hexToRgba(clr,0.08));g.addColorStop(1,"rgba(0,0,0,0)");mbCx.fillStyle=g;mbCx.fillRect(0,0,mbCv.width,mbCv.height);}if(lastKey!==activeNoteKey){for(var i=0;i<12;i++){var a=Math.random()*Math.PI*2,sp=1+Math.random()*3;mParts.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,dec:.02+Math.random()*.03,c:clr,sz:2+Math.random()*4});}lastKey=activeNoteKey;}}for(var i=mParts.length-1;i>=0;i--){var p=mParts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.04;p.life-=p.dec;if(p.life<=0){mParts.splice(i,1);continue;}mbCx.globalAlpha=p.life;mbCx.fillStyle=p.c;mbCx.beginPath();mbCx.arc(p.x,p.y,p.sz*p.life,0,Math.PI*2);mbCx.fill();}mbCx.globalAlpha=1;}loop();}
-function enterMobile(){initAudio();mobileOn=true;document.getElementById("mobileMode").classList.add("on");var ins=findInst(S.eng);document.getElementById("mb-inst-disp").textContent=ins?ins.l:"";document.getElementById("mb-oct-disp").textContent="Oct "+S.oct;mbUpdMode();setTimeout(function(){mbStartCanvas();},50);try{document.documentElement.requestFullscreen();}catch(e){}}
-function exitMobile(){mobileOn=false;document.getElementById("mobileMode").classList.remove("on");if(mbAnim){cancelAnimationFrame(mbAnim);mbAnim=null;}arrowStack=[];mods.space=false;mods.d=false;silenceNote();try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}}
+function enterMobile(){initAudio();mobileOn=true;document.getElementById("mobileMode").classList.add("on");mbInstLabel();mbUpdMode();setTimeout(function(){mbSize();mbStartCanvas();mbPaint();},50);toggleFullscreen(document.documentElement);var tip=document.getElementById("fsTip");if(tip)tip.classList.remove("on");}
+function exitMobile(){mobileOn=false;document.getElementById("mobileMode").classList.remove("on");mbFavs(false);if(mbAnim){cancelAnimationFrame(mbAnim);mbAnim=null;}arrowStack=[];mbZ.held=[];mbP.id=null;mbP.dir=null;mods.space=false;mods.d=false;mods.e=false;mods.three=false;silenceNote();updModInd();try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
 
 function syncJamVideo(){YT.toJam();}
 function buildJInstPick(){var sel=document.getElementById("jInstSel");if(!sel)return;sel.innerHTML="";CATS.forEach(function(cat){var grp=document.createElement("optgroup");grp.label=cat.l;cat.items.forEach(function(ins){var opt=document.createElement("option");opt.value=ins.id;opt.textContent=ins.l;if(ins.id===S.eng)opt.selected=true;grp.appendChild(opt);});sel.appendChild(grp);});
@@ -1837,7 +1971,7 @@ function buildJInstPick(){var sel=document.getElementById("jInstSel");if(!sel)re
   if(jps){jps.innerHTML='<option value="">\u25B6 Song Preset...</option>';PRESETS.list().forEach(function(p,i){var o=document.createElement("option");o.value=i;o.textContent=p.name;jps.appendChild(o);});}
   }
 function enterJam(){initAudio();jamOn=true;setTimeout(function(){if(typeof BVID!=="undefined"&&BVID.playing)BVID.layer();},0);document.getElementById("app").classList.add("jx");document.getElementById("jm").classList.add("on");document.getElementById("jmV").style.display="block";if(LOCAL.currentFile){/* Local MP4 — use video element as background */LOCAL.syncToJam();var _jtb0=document.getElementById("jtb");if(_jtb0)_jtb0.style.display="block";}else{/* YouTube/Invidious — use iframe */var _jv=document.getElementById("jmVid"),_jf=document.getElementById("jmF");if(_jv){_jv.pause();_jv.src="";_jv.style.display="none";}if(_jf)_jf.style.display="block";var src=YT.status().vid?"http":"";if(src&&src.indexOf("http")===0){syncJamVideo();var _jtb1=document.getElementById("jtb");if(_jtb1)_jtb1.style.display="block";}else{var _jtb2=document.getElementById("jtb");if(_jtb2)_jtb2.style.display="none";}}jCanvas=document.getElementById("jcv");jCtx=jCanvas.getContext("2d");setTimeout(function(){resizeJam();updJInfo();buildJMini();buildJInstPick();updJamPresetLbl();renderJamHkStrip();if(jAnim)cancelAnimationFrame(jAnim);jAnim=requestAnimationFrame(jamLoop);},30);}
-function jamFullscreen(){try{var jel=document.getElementById("jm");if(document.fullscreenElement||document.webkitFullscreenElement){if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();}else{if(jel.requestFullscreen)jel.requestFullscreen();else if(jel.webkitRequestFullscreen)jel.webkitRequestFullscreen();}}catch(e){}}
+function jamFullscreen(){toggleFullscreen(document.documentElement);}
 function exitJam(){jamOn=false;document.body.classList.remove("jset");closeJamPicker();LOCAL.stopJam();document.getElementById("app").classList.remove("jx");document.getElementById("jm").classList.remove("on");YT.fromJam();if(jAnim){cancelAnimationFrame(jAnim);jAnim=null;}if(jLoopAnim){cancelAnimationFrame(jLoopAnim);jLoopAnim=null;}try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
 document.addEventListener("fullscreenchange",function(){var btn=document.getElementById("jfs");if(btn)btn.textContent=document.fullscreenElement?"\u2715 FS":"\u26F6 FS";});
 document.addEventListener("webkitfullscreenchange",function(){var btn=document.getElementById("jfs");if(btn)btn.textContent=document.webkitFullscreenElement?"\u2715 FS":"\u26F6 FS";});
@@ -3898,7 +4032,7 @@ function goLive(){
   };
   liveWs.onmessage=function(e){
     var msg;try{msg=JSON.parse(e.data);}catch(x){return;}
-    if(msg.type==="room-created"){
+    if(msg.type==="room-created"){if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
       liveOn=true;
       document.getElementById("livePnl").style.display="block";
       document.getElementById("liveCode").textContent=msg.room;
@@ -3907,14 +4041,14 @@ function goLive(){
       document.getElementById("bLive").style.animation="pls 1s infinite";
       liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
       var vm=videoMsg();if(vm)liveSend(vm);               /* already playing something when going live */
-      SHOW.resend();                                      /* the show effects you've set up */
+      STAGEFX.resend();                                   /* the show effects you've set up */
       STREAM.announce();STREAM.render();
     }
     if(msg.type==="viewer-count"){
       document.getElementById("liveViewers").textContent=msg.count+" viewer"+(msg.count!==1?"s":"");
       AUD.count=msg.count;
     }
-    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose")audEvent(msg);
+    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose"||msg.type==="react")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
     if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
     if(msg.type==="room-created")ROUNDS.buttons();
@@ -3935,15 +4069,43 @@ function endLive(){
 document.getElementById("bLive").onclick=function(){goLive();};
 document.getElementById("liveStop").onclick=function(){endLive();};
 
+/* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
+/* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
+   and the server's version once you're live (so you can tell Render has the new build) */
+var PAGE_VERSION="1.30.0",SERVER_VERSION="";
+function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
+  if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
+  el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
+showVersion();
+var PFOLLOW=ART.follower();
+/* what you're playing, for your character with the instrument you've picked (instruments.js) */
+var PPLAY={midi:60,on:false,t0:0,off:0,n:0},PKIND={id:null,kind:"synth"};
+function perfKind(){var id=S.eng;if(PKIND.id!==id){var ins=findInst(id);PKIND.id=id;PKIND.kind=ART.INST.kindOf(id,ins&&ins.l);}return PKIND.kind;}
+/* you on stage holding your instrument: glows while a note sounds; the name under your feet.
+   demo: in the Show tab preview, a made-up tune plays when you're not playing */
+function perfDraw(g,x,y,p,now,crowd,lay,H,named,demo){
+  var st={midi:PPLAY.midi,on:PPLAY.on,t0:PPLAY.t0,off:PPLAY.off,now:now,n:PPLAY.n};
+  if(demo&&!PPLAY.on&&now-PPLAY.off>1500){var beat=Math.floor(now/420),ph=now%420;st={midi:[60,64,67,72,67,64,62,65][beat%8],on:ph<330,t0:now-ph,off:now-ph+330,now:now,n:beat};}
+  if(st.on){var gl=g.createRadialGradient(x,y-6*p,3,x,y-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.5)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,y-6*p,24*p,0,6.3);g.fill();}
+  ART.INST.draw(g,x,y,p,perfLook,perfKind(),st);
+  if(crowd){var cr=ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target);ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,2,cr.hands,crowd.target);}
+  if(lay)ART.envFx(g,lay,H,x,y,p,now,2);
+  if(named){var nm=(typeof stageName==="function"?stageName():"You");g.font="600 "+Math.round(10.5*Math.min(p,1.4))+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="top";var ny=y+12*p+6*p;g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(nm,x,ny);g.fillStyle="#F5C518";g.fillText(nm,x,ny);g.textBaseline="alphabetic";}
+}
+window.ukPerfKind=function(){return{id:S.eng,kind:perfKind(),playing:PPLAY.on,midi:PPLAY.midi};};
+window.ukInstKinds=function(){var by={};allInst.forEach(function(i){var k=ART.INST.kindOf(i.id,i.l);(by[k]=by[k]||[]).push(i.l);});return{n:allInst.length,by:by};};      /* for testing: which art each instrument gets */
+window.ukSelInst=function(id){selInst(id);return S.eng;};
 /* Hook into playNote to broadcast */
 var _origPlayNote=playNote;
 playNote=function(nk,midi){
   _origPlayNote(nk,midi);
+  PFOLLOW.note(midi,true);PPLAY.midi=midi;PPLAY.on=true;PPLAY.t0=Date.now();PPLAY.n++;
   liveSend({type:"note",midi:midi,on:true,inst:S.eng,mode:S.mode,nk:nk});
 };
 var _origSilence=silenceNote;
 silenceNote=function(){
   _origSilence();
+  PFOLLOW.note(0,false);if(PPLAY.on){PPLAY.on=false;PPLAY.off=Date.now();}
   liveSend({type:"note",on:false});
 };
 /* Hook into selInst to broadcast instrument changes */
@@ -3964,17 +4126,22 @@ YT.onPlay=function(vid,title){
    A live copy of the venue: everyone in the room where they're standing, with their name under them,
    dancing when they dance, and what they say in a speech bubble over their head.
    Shown in jam mode while you're live. ⤢ makes it bigger, – shrinks it to the header. */
-var AUD={people:{},count:0,min:false,big:false};
+var AUD={people:{},count:0,min:false,big:false,rx:[]};
 try{AUD.min=localStorage.getItem("uk_jaud_min")==="1";AUD.big=localStorage.getItem("uk_jaud_big")==="1";}catch(e){}
 var AUD_SAY_MS=7000;
+/* reactions in the last 15 s, for the panel header: " · ❤ 5 👏 3" */
+var AUD_RX_ICON={jump:"🙌",hearts:"❤️",bigheart:"💖",clap:"👏",whistle:"😙"};
+function audRxText(){var now=Date.now(),c={},out="";(AUD.rx||[]).forEach(function(r){if(now-r.t<15000)c[r.k]=(c[r.k]||0)+1;});ART.REACTS.forEach(function(k){if(c[k])out+=" "+AUD_RX_ICON[k]+" "+c[k];});return out?" ·"+out:"";}
+window.ukAudReacts=function(){var o={};Object.keys(AUD.people).forEach(function(id){var L=AUD.people[id].reacts;if(L&&L.length)o[AUD.people[id].name]=L.map(function(r){return r.k;});});return{people:o,header:document.getElementById("jAudN").textContent};};
 function audColor(c,d){return /^#[0-9a-fA-F]{6}$/.test(c)?c:d;}
-function audReset(){AUD.people={};AUD.count=0;}
+function audReset(){AUD.people={};AUD.count=0;AUD.rx=[];}
 function audLook(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;name=String(name||"");for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return ART.looks.fromColor(audColor(color,"#888888"),h+1);}
 function audEvent(msg){
   var id=msg.id||msg.viewerId;
   if(msg.type==="viewer-join"&&id){AUD.people[id]={look:audLook(msg.look,msg.color,msg.name),name:String(msg.name||"").slice(0,24),color:audColor(msg.color,"#888888"),x:+msg.x||.5,y:+msg.y||.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};}
   else if(msg.type==="pos"&&id){var p=AUD.people[id];if(!p)p=AUD.people[id]={name:String(msg.name||""),color:"#888888",x:.5,y:.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};p.x=+msg.x||p.x;p.y=+msg.y||p.y;}
   else if(msg.type==="viewer-leave"&&id){delete AUD.people[id];}
+  else if(msg.type==="react"&&id&&AUD.people[id]&&ART.REACTS.indexOf(msg.k)>=0){var rl=AUD.people[id].reacts||(AUD.people[id].reacts=[]);rl.push({k:msg.k,t:Date.now()});if(rl.length>8)rl.splice(0,rl.length-8);AUD.rx.push({k:msg.k,t:Date.now()});if(AUD.rx.length>200)AUD.rx.splice(0,AUD.rx.length-200);}
   else if(msg.type==="dance"&&id){if(AUD.people[id]){var dp=AUD.people[id];dp.dance=Math.max(0,Math.min(5,Math.floor(+msg.style||0)));if(dp.dance<4){dp.pose=null;dp.poseCur=null;dp.combo=0;}}}
   else if(msg.type==="pose"&&id&&AUD.people[id]&&Array.isArray(msg.a)&&msg.a.length===4){
     /* dance games: limb angles [left arm, right arm, left leg, right leg] in hundredths of a radian, plus the combo */
@@ -4090,7 +4257,8 @@ var STREAK=(function(){
   return{draw:draw,pop:pop,track:track,level:level};
 })();
 
-function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys,fd){
+var AUDX=null;
+function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys,fd,crowd){
   /* the venue's pixel character (art.js), small: name under the feet */
   var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,p=Math.max(1,Math.round(sc));
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
@@ -4106,8 +4274,18 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
   if(atKeys){var pl=glow?Math.sin(now*0.02):0;armL=-.55+pl*.18;armR=.55+pl*.18;mouth=glow;}
   var dxs=0,rot=0;
   if(fd){var rg=ART.dance(fd.s,fd.m,fd.c,now/500);armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*p;dxs=rg.dx*p;rot=rg.rot;mouth=rg.mouth;}
+  /* a crowd surprise: float up; hand lasers point both arms at the stage */
+  var cr=crowd&&crowd.kind?ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target):null;
+  if(cr){y+=cr.lift;if(cr.armL!==undefined){armL=cr.armL;armR=cr.armR;fd=null;}}
   if(glow){var gl=g.createRadialGradient(x,y-6*p,3,x,y-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,y-6*p,24*p,0,6.3);g.fill();}
+  /* a reaction takes over the pose; floating in space or swimming blends in (AUDX, set just before the call) */
+  var AX=AUDX,rpo=null,epo=null;AUDX=null;
+  if(AX){rpo=atKeys?null:ART.reactPose(AX.reacts,now,p);epo=AX.lay?ART.envPose(AX.lay,AX.H,x,y,p,now,seed||0):null;
+    if(rpo){bob+=rpo.lift||0;if(rpo.armL!==undefined)armL=rpo.armL;if(rpo.armR!==undefined)armR=rpo.armR;if(rpo.legL!==undefined)legL=rpo.legL;if(rpo.legR!==undefined)legR=rpo.legR;if(rpo.mouth)mouth=true;}
+    if(epo&&!atKeys){var ek=epo.k;bob+=epo.lift;rot=rot*(1-ek)+epo.rot;if(!rpo){armL=armL*(1-ek)+epo.armL*ek;armR=armR*(1-ek)+epo.armR*ek;}legL=legL*(1-ek)+epo.legL*ek;legR=legR*(1-ek)+epo.legR*ek;}}
   ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
+  if(cr)ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,seed||0,cr.hands,crowd.target);
+  if(AX){var ly=y+(rpo?rpo.lift:0)+(epo&&!atKeys?epo.lift:0);if(AX.reacts)ART.reactFx(g,AX.reacts,now,x,ly,p,seed||0);if(epo)ART.envFx(g,AX.lay,AX.H,x,ly,p,now,seed||0);}
   if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+10*p,y-20*p-ph*14);g.globalAlpha=1;}
   /* name under the feet, steady while dancing */
   g.font="600 "+Math.round(10.5*Math.min(sc,1.4))+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="top";
@@ -4130,28 +4308,43 @@ function audBubble(g,x,headY,text,color,alpha,W){
 }
 function drawAud(){
   var box=document.getElementById("jAud");if(!box)return;
-  var show=jamOn&&liveOn;
+  var show=jamOn&&liveOn&&!JAMSTAGE.on;                 /* the stage view shows the audience itself */
   if(show!==box.classList.contains("on"))box.classList.toggle("on",show);
   box.classList.toggle("min",AUD.min);box.classList.toggle("big",AUD.big);
   if(!show)return;
   document.getElementById("jAudRoom").textContent="Live · "+(document.getElementById("liveCode").textContent||"");
-  var ids=Object.keys(AUD.people);
-  var n=Math.max(AUD.count,ids.length);document.getElementById("jAudN").textContent=n+" viewer"+(n!==1?"s":"");
+  var n=Math.max(AUD.count,Object.keys(AUD.people).length);document.getElementById("jAudN").textContent=n+" viewer"+(n!==1?"s":"")+audRxText();
   if(AUD.min)return;
   var cv=document.getElementById("jAudCv"),dpr=Math.min(2,window.devicePixelRatio||1);
   var W=cv.clientWidth||400,H=cv.clientHeight||240;
   if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
   var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
-  var sy=H/0.82,sc=Math.max(1,Math.min(1.6,W/420));
+  drawVenueTo(g,W,H,null);
+}
+/* The venue as your audience sees it: the stage, you at your keyboard, the effects and everyone in the crowd.
+   Used small in the jam corner panel, and full screen in jam's stage view (opts.stage: a taller stage, with the
+   Jumbotron at opts.jt {x,y,w,h,k}). */
+var PCROWD={kind:"",t0:-1e9,lastT:0};
+function drawVenueTo(g,W,H,opts){
+  var stage=!!(opts&&opts.stage),ids=Object.keys(AUD.people),now=Date.now(),sfx=STAGEFX.fx;
+  var sy=H/0.82,sc=stage?Math.max(1.5,Math.min(3.5,W/520)):Math.max(1,Math.min(1.6,W/420));
+  /* where a venue height (0 top of the stage .. 0.30 front of the stage .. 0.78 back of the hall) lands here */
+  var SB=stage?0.44:0.30*sy/H,FB=stage?0.98:Math.min(1,.78*sy/H);
+  function Y(v){return v<=0.30?v/0.30*SB*H:(SB+(v-0.30)/0.48*(FB-SB))*H;}
   g.clearRect(0,0,W,H);
-  /* stage (venue y 0-0.30) and floor (0.30-0.78), same layout as venue.html */
-  var now=Date.now(),alay={stageBottom:.30*sy/H,floorBottom:Math.min(1,.78*sy/H)},sfx=SHOW.fx;
-  ART.scene(g,W,H,alay,{now:now,phase:(now%600)/600,level:activeVoice?0.7:0.3,playing:!!activeVoice,sign:false,lights:sfx.lights,fog:sfx.fog,spotX:W/2});
-  ART.fxBack(g,W,H,alay,sfx,{now:now});
-  /* you, on stage at your keyboard; glows while a note is sounding */
-  var pp=Math.max(2,Math.round(sc*1.25)),py=.15*sy+8;
-  audPerson(g,W/2,py,"#D354A0",(typeof stageName==="function"?stageName():"You"),pp,0,0,!!activeVoice,now,"#F5C518",null,null,1e9,perfLook,true);
-  ART.keyboard(g,W/2,py+5*pp,pp,activeVoice?Math.floor(now/180)%7:-1,"#F5D03C");
+  var alay={stageBottom:SB,floorBottom:FB},ph=(now%600)/600,fol=sfx.follow?PFOLLOW.read():null;
+  ART.scene(g,W,H,alay,{now:now,phase:ph,level:activeVoice?0.7:0.3,playing:!!activeVoice,sign:stage?"UNHOLY KEYS":false,lights:sfx.lights,fog:sfx.fog,spotX:W/2,follow:fol});
+  ART.fxBack(g,W,H,alay,sfx,{now:now,jumbo:!!(opts&&opts.jt&&opts.jt.k>0.5)});
+  /* the Jumbotron (stage view): its frame; the video sits on it, or your visuals are drawn into it */
+  if(opts&&opts.jt&&opts.jt.k>0.01){var jt=opts.jt,P=ART.sceneP(W,H);ART.jumboFrame(g,jt,P);
+    g.fillStyle="#000";g.fillRect(jt.x,jt.y,jt.w,jt.h);
+    if(!opts.video){var vc=document.getElementById("jcv");if(vc&&vc.width){try{g.drawImage(vc,jt.x,jt.y,jt.w,jt.h);}catch(e){}}}}
+  /* a crowd surprise set off from the Show tab */
+  if(sfx.crowd&&sfx.crowdT&&sfx.crowdT!==PCROWD.lastT){PCROWD.lastT=sfx.crowdT;PCROWD.kind=sfx.crowd;PCROWD.t0=now;}
+  var cAge=now-PCROWD.t0,crowd=cAge<ART.CROWD_MS&&PCROWD.kind?{kind:PCROWD.kind,age:cAge,target:{x:W/2,y:SB*H*0.25}}:null;
+  /* you, on stage at your keyboard (at the front of the stage when the Jumbotron is down); glows while a note sounds */
+  var pp=stage?Math.max(3,Math.round(H/260)):Math.max(2,Math.round(sc*1.25)),py=stage?SB*H-14*pp:.15*sy+8;
+  perfDraw(g,W/2,py,pp,now,crowd&&crowd.kind!=="lasers"&&crowd.kind!=="float"?crowd:null,alay,H,true);
   /* audience, back to front so nearer people overlap farther ones */
   ids.sort(function(a,b){return AUD.people[a].dy-AUD.people[b].dy;});
   var heads=[];
@@ -4161,25 +4354,74 @@ function drawAud(){
     var step=Math.hypot(mx*W,my*sy);
     if(step>.15){p.walk=(p.walk||0)+Math.min(.5,step*.22+.12);p.walkUntil=now+120;}
     var walking=now<(p.walkUntil||0);
-    var x=p.dx*W,y=Math.min(H-24,p.dy*sy);
+    var x=p.dx*W,y=Math.min(H-24,Y(p.dy));
     var pz=null;
     if(p.dance>=4&&p.pose){if(!p.poseCur)p.poseCur=p.pose.slice();for(var q=0;q<4;q++)p.poseCur[q]+=(p.pose[q]-p.poseCur[q])*.4;pz=p.poseCur;}
     var cmb=p.dance>=4?(p.combo||0):0;STREAK.track(p,cmb);
     if(cmb>=10)STREAK.draw(g,x,y,sc*0.95,cmb,now,p.seed||0);
     if(!p.look)p.look=audLook("",p.color,p.name);
-    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null);
+    var cw=crowd&&crowd.kind==="lasers"?{kind:"lasers",age:cAge,target:{x:W/2+Math.sin(now/650+(p.seed||0))*W*0.32,y:SB*H*0.25}}:crowd;
+    AUDX={reacts:p.reacts,lay:alay,H:H};
+    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null,cw);
     if(p.msT&&now-p.msT<1700)STREAK.pop(g,x,headY,p.msN,now-p.msT,Math.max(0.75,sc*0.7));
     else if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
     heads.push([p,x,headY]);});
-  ART.fxFront(g,W,H,alay,sfx,{now:now,phase:(now%600)/600,holes:[{x:W/2,y:.15*sy,r:Math.max(70,W*0.14)}]});
+  ART.fxFront(g,W,H,alay,sfx,{now:now,phase:ph,holes:[{x:W/2,y:py,r:Math.max(70,W*0.14)}]});
   /* speech bubbles on top of everyone; oldest first so the newest is on top */
   heads.filter(function(h){return h[0].text&&now-h[0].said<AUD_SAY_MS;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
     var age=now-h[0].said,al=age>AUD_SAY_MS-1200?(AUD_SAY_MS-age)/1200:1;
     audBubble(g,h[1],h[2],h[0].text,h[0].color,al,W);
   });
-  if(!ids.length){g.fillStyle="rgba(255,255,255,.35)";g.font="15px system-ui,sans-serif";g.textAlign="center";g.fillText("Waiting for the audience…",W/2,.58*sy);}
+  if(!ids.length&&!stage){g.fillStyle="rgba(255,255,255,.35)";g.font="15px system-ui,sans-serif";g.textAlign="center";g.fillText("Waiting for the audience…",W/2,.58*sy);}
 }
+
 setInterval(drawAud,50);
+/* ── Jam stage view ──
+   Jam mode can show your venue instead of the classic visuals: the stage, you at the keys, the effects and the
+   crowd, with a Jumbotron lowered over the stage carrying the video (YouTube, a music video, the video library)
+   or, with no video, your visuals. Switch with the 🏟 button in jam, or Jam view in the Show tab. */
+var JAMSTAGE=(function(){
+  var on=false,k=0,raf=0,cv=null,last="";
+  try{on=localStorage.getItem("uk_jamview")==="stage";}catch(e){}
+  function $(id){return document.getElementById(id);}
+  function paint(){
+    var b=$("jStageBtn");if(b){b.classList.toggle("on",on);b.title=on?"Back to the classic jam view":"Stage view: your venue, with the video on a Jumbotron";}
+    Array.prototype.forEach.call(document.querySelectorAll("#jamViewBtns button"),function(x){x.classList.toggle("on",(x.getAttribute("data-jv")==="stage")===on);});
+  }
+  function set(v){on=!!v;try{localStorage.setItem("uk_jamview",on?"stage":"classic");}catch(e){}paint();apply();if(typeof showJamToast==="function"&&jamOn)showJamToast(on?"🏟 Stage view":"Classic view","#7F77DD");}
+  function apply(){var jm=$("jm");if(!jm)return;var act=on&&jamOn;jm.classList.toggle("stage",act);if(act&&!raf)raf=requestAnimationFrame(frame);if(!act)restore();}
+  function restore(){var v=$("jmV");if(v&&last){v.style.left=v.style.width=v.style.right="";v.style.top="";v.style.bottom="";v.style.height="";v.style.transform="";last="";}}
+  /* is a video showing in jam (YouTube, the video library, or a music video)? */
+  function videoOn(){
+    var v=$("jmV");if(!v||v.style.display==="none")return false;
+    var bv=$("jmBV"),lv=$("jmVid"),fr=$("jmF");
+    return (bv&&bv.style.display==="block")||(lv&&lv.style.display==="block")||(!!fr&&fr.style.display!=="none"&&!!fr.getAttribute("src")&&fr.getAttribute("src")!=="about:blank");
+  }
+  function frame(){
+    raf=0;if(!(on&&jamOn))return;
+    if(!cv)cv=$("jStage");
+    var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
+    if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+    var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
+    var jumbo=STAGEFX.fx.jumbo||"auto",want=jumbo!=="up";k+=((want?1:0)-k)*0.05;
+    /* the Jumbotron hangs in the upper part of the stage; it drops in from above */
+    var SBH=0.44*H,hh=SBH*0.6,ww=Math.min(hh*16/9,W*0.5);hh=ww*9/16;
+    var y0=Math.round(SBH*0.07),drop=(1-(1-Math.pow(1-k,3)))*(y0+hh+60);
+    var jt={x:Math.round(W/2-ww/2),y:Math.round(y0-drop),w:Math.round(ww),h:Math.round(hh),k:k},vid=videoOn();
+    drawVenueTo(g,W,H,{stage:true,jt:jt,video:vid});
+    /* the video element sits exactly on the Jumbotron's screen */
+    var v=$("jmV");
+    if(v){var key=jt.x+","+jt.y+","+jt.w+","+jt.h+","+(vid&&k>0.02);
+      if(key!==last){last=key;v.style.left=jt.x+"px";v.style.top=jt.y+"px";v.style.width=jt.w+"px";v.style.height=jt.h+"px";v.style.right="auto";v.style.bottom="auto";v.style.visibility=vid&&k>0.02?"":"hidden";}}
+    raf=requestAnimationFrame(frame);
+  }
+  function init(){paint();var b=$("jStageBtn");if(b)b.onclick=function(e){e.stopPropagation();set(!on);};
+    Array.prototype.forEach.call(document.querySelectorAll("#jamViewBtns button"),function(x){x.onclick=function(){set(x.getAttribute("data-jv")==="stage");};});
+    setInterval(apply,500);}
+  window.ukJamStage=function(){return{on:on,active:!!($("jm")&&$("jm").classList.contains("stage")),k:Math.round(k*100)/100,video:videoOn()};};
+  return{init:init,set:set,apply:apply,get on(){return on;}};
+})();
+window.addEventListener("load",function(){JAMSTAGE.init();});
 document.getElementById("jAudH").onclick=function(){AUD.min=!AUD.min;try{localStorage.setItem("uk_jaud_min",AUD.min?"1":"0");}catch(e){}document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";drawAud();};
 document.getElementById("jAudBig").onclick=function(e){e.stopPropagation();AUD.big=!AUD.big;if(AUD.min){AUD.min=false;document.getElementById("jAudMin").innerHTML="&#8211;";}try{localStorage.setItem("uk_jaud_big",AUD.big?"1":"0");localStorage.setItem("uk_jaud_min","0");}catch(x){}drawAud();};
 document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
@@ -4384,12 +4626,18 @@ var CHART=(function(){
        becomes a single), off-beat steps only go in when there's room */
     function add(t,mask,first,onBeat,hold){var n=bits(mask);if(!room(t,n)){if(!onBeat)return false;if(n>1){mask=1<<first;n=1;}}for(var z=0;z<n;z++)recent.push(t);out.push(hold?[Math.round(t),mask,Math.round(hold)]:[Math.round(t),mask]);return true;}
     function two(first,tier){var l2,g=0;do{l2=Math.floor(r()*4);g++;}while((l2===first||l2===heldLane||(tier<3&&Math.abs(l2-first)===2&&r()<0.5))&&g<20);if(l2===first||l2===heldLane)return 1<<first;return (1<<first)|(1<<l2);}
+    /* Where the song has a steady beat. Between the first and last steady parts, a stretch where the beat goes
+       quiet under the vocals (a rap verse over a soft hi-hat) still gets steps, as long as the music is playing;
+       before the beat starts (a spoken intro) and after it ends (talking at the end) there are none. */
+    var pl=new Float32Array(nb),firstG=-1,lastG=-1;
+    for(i=0;i<nb;i++){pl[i]=loud[i]<silent?0:pulse(e,bt,i);if(pl[i]>=PULSE){if(firstG<0)firstG=i;lastG=i;}}
     for(i=0;i<nb;i++){
       var t=bt[i]*10;if(i<4||t<2500)continue;                       /* lead-in: let people hear the song first */
       if(loud[i]<silent)continue;                                     /* silence: nothing to dance to */
-      if(pulse(e,bt,i)<PULSE){groove=false;continue;}                 /* talking, a free-time intro, ambient pads: no steady beat, no steps */
+      var soft=false;
+      if(pl[i]<PULSE){if(firstG<0||i<firstG||i>lastG){groove=false;continue;}soft=true;}   /* talking, a free-time intro, ambient pads: no steady beat, no steps */
       var on=near(e,bt[i],3)/hit;
-      if(!groove){if(on<0.3)continue;groove=true;}                    /* after a stretch with no beat, start again on a real hit */
+      if(!groove){if(on<0.3&&!soft)continue;groove=true;}             /* after a stretch with no beat, start again on a real hit */
       var D=E[i]*level+(inPeak[i]?0.12:0),tier=D<0.3?0:D<0.6?1:D<0.85||!inPeak[i]?2:3,bar=i%4===0;
       if(heldLane>=0&&i>=heldUntil)heldLane=-1;                       /* the hold has ended */
       /* during a hold in a calm or normal part, just hold; busier parts keep other arrows coming */
@@ -4419,7 +4667,12 @@ var CHART=(function(){
         if(want&&room(h*10,(i+1)%4===0&&tier===3?3:1)){var lo=lane(tier);add(h*10,1<<lo,lo,false);}   /* keep room for the double at the next bar start */
       }
     }
-    return{steps:out,peaks:ii.peaks.map(function(p){return [Math.round(bt[p[0]]*10+LAG),Math.round((p[1]+1<nb?bt[p[1]+1]:bt[p[1]]+50)*10+LAG)];})};
+    /* The drop: the beat where the song comes in hardest. Loudness and intensity over the next 4 beats against the
+       8 before, kept away from the very start and end; the biggest jump wins. (The mosh pit's wall of death.) */
+    var drop=-1,dropRise=0,ds=Math.max(8,Math.round(nb*0.12)),de=nb-Math.max(12,Math.round(nb*0.06));
+    for(i=ds;i<de;i++){var a0=0,a1=0,e0=0,e1=0,q;for(q=1;q<=8;q++){a0+=loud[i-q];e0+=E[i-q];}for(q=0;q<4;q++){a1+=loud[i+q];e1+=E[i+q];}
+      var rise=(a1/4-a0/8)/6+(e1/4-e0/8)+(near(e,bt[i],3)/hit)*0.15;if(rise>dropRise){dropRise=rise;drop=i;}}
+    return{steps:out,drop:drop>=0&&dropRise>0.15?Math.round(bt[drop]*10+LAG):0,peaks:ii.peaks.map(function(p){return [Math.round(bt[p[0]]*10+LAG),Math.round((p[1]+1<nb?bt[p[1]+1]:bt[p[1]]+50)*10+LAG)];})};
   }
   /* The whole job. buffer is a decoded AudioBuffer (or {sampleRate,length,numberOfChannels,getChannelData}).
      opts: {level, seed, onProgress(0..1)}; cb(chart). */
@@ -4441,7 +4694,7 @@ var CHART=(function(){
         bt=beats(e,bpm);
       }
       var res=steps(e,rms,ft,bt,bpm,opts.level||1,opts.seed||(n%100000+Math.round(bpm*10))),st=res.steps;
-      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks});
+      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop});
     });
   }
   return{analyse:analyse};
@@ -4450,36 +4703,60 @@ var CHART=(function(){
 /* ── Show effects (performer side) ──
    Lights, fog, lasers, darkness, weather, sunset, a burning building and fireworks for the venue. Every change
    goes straight to the audience (and is remembered by the room for latecomers); the preview shows the look. */
-var SHOW=(function(){
+/* (named STAGEFX: SHOW is the setlist show drawer) */
+var STAGEFX=(function(){
   var fx=JSON.parse(JSON.stringify(ART.FX_DEFAULT)),raf=0,cv=null;
-  try{var sv=JSON.parse(localStorage.getItem("uk_showfx")||"null");if(sv)for(var k in fx)if(sv[k]!==undefined&&k!=="burst")fx[k]=sv[k];}catch(e){}
+  var ONESHOT={burst:1,balloonT:1,confettiT:1,crowdT:1,crowd:1};      /* moments: never replayed from last time */
+  try{var sv=JSON.parse(localStorage.getItem("uk_showfx")||"null");if(sv)for(var k in fx)if(sv[k]!==undefined&&!ONESHOT[k])fx[k]=sv[k];}catch(e){}
   function $(id){return document.getElementById(id);}
   function send(){liveSend({type:"show-fx",fx:fx});try{localStorage.setItem("uk_showfx",JSON.stringify(fx));}catch(e){}paint();
-    var on=[];if(fx.lights!=="auto")on.push(fx.lights+" lights");if(fx.weather!=="none")on.push(fx.weather);if(fx.fog)on.push("fog");if(fx.dark)on.push("dark");["lasers","sunset","fire","fireworks"].forEach(function(k){if(fx[k])on.push(k==="fire"?"fire":k);});
+    var on=[];if(fx.lights!=="auto")on.push(fx.lights+" lights");if(fx.weather!=="none")on.push(fx.weather);if(fx.fog)on.push("fog");if(fx.dark)on.push("dark");["lasers","sunset","fire","fireworks","disco","banner","follow","space","water"].forEach(function(k){if(fx[k])on.push(k==="fire"?"fire":k==="disco"?"disco ball":k==="follow"?"lights follow your playing":k==="space"?"floating in space":k==="water"?"underwater":k);});if(fx.jumbo!=="auto")on.push("Jumbotron "+fx.jumbo);
     $("showNote").textContent=(liveOn?"Live: ":"Not live yet: the audience sees this when you go live. ")+(on.length?on.join(", "):"plain stage");}
   function paint(){
     var p=$("showPnl");if(!p)return;
-    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns"),function(g){var k=g.getAttribute("data-k");Array.prototype.forEach.call(g.children,function(b){b.classList.toggle("on",b.getAttribute("data-v")===fx[k]);});});
+    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns[data-k]"),function(g){var k=g.getAttribute("data-k");Array.prototype.forEach.call(g.children,function(b){b.classList.toggle("on",b.getAttribute("data-v")===fx[k]);});});
     Array.prototype.forEach.call(p.querySelectorAll(".sx-tog button"),function(b){b.classList.toggle("on",!!fx[b.getAttribute("data-k")]);});
     Array.prototype.forEach.call(p.querySelectorAll("input[type=range]"),function(r){r.value=Math.round((fx[r.getAttribute("data-k")]||0)*100);});
   }
   /* the preview: the stage, the effects, a performer at the keys and a few dancers */
-  var dancers=[ART.looks.random(11),ART.looks.random(22),ART.looks.random(33),ART.looks.random(44)];
+  var dancers=[ART.looks.random(11),ART.looks.random(22),ART.looks.random(33),ART.looks.random(44)],pc={kind:"",t0:-1e9,lastT:0},jk=0;
   function frame(){
     raf=0;if(!cv||!cv.isConnected||!cv.offsetWidth)return;
     var g=cv.getContext("2d"),W=cv.width,H=cv.height,now=Date.now(),lay={stageBottom:0.36,floorBottom:0.97},ph=(now%500)/500;
     g.clearRect(0,0,W,H);
-    ART.scene(g,W,H,lay,{now:now,phase:ph,level:0.6,playing:true,lights:fx.lights,fog:fx.fog,spotX:W/2,sign:"UNHOLY KEYS"});
-    ART.fxBack(g,W,H,lay,fx,{now:now});
-    ART.drawChar(g,W/2,H*0.18+8,2,perfLook,{armL:-0.55,armR:0.55});ART.keyboard(g,W/2,H*0.18+18,2,Math.floor(now/200)%7,"#F5D03C");
-    for(var i=0;i<4;i++)ART.drawChar(g,W*(0.18+i*0.21),H*0.7,2,dancers[i],ART.dance([1,4,8,6][i],0,[0,0,0,0],now/500+i*0.3));
-    ART.fxFront(g,W,H,lay,fx,{now:now,phase:ph,holes:[{x:W/2,y:H*0.18,r:80}]});
+    /* follow-my-playing in the preview: your real notes, or a made-up melody if you're not playing */
+    var fol=null;if(fx.follow){fol=PFOLLOW.read();if(fol.a<0.05){var mh=0.5+0.45*Math.sin(now/700);fol={h:mh,hue:(Math.floor(now/350)%12)*30,a:1};}}
+    ART.scene(g,W,H,lay,{now:now,phase:ph,level:0.6,playing:true,lights:fx.lights,fog:fx.fog,spotX:W/2,sign:"UNHOLY KEYS",follow:fol});
+    /* the Jumbotron: lowers when it's set to Down (on Auto it comes down for videos, which the preview doesn't have) */
+    jk+=((fx.jumbo==="down"?1:0)-jk)*0.06;
+    ART.fxBack(g,W,H,lay,fx,{now:now,jumbo:jk>0.5});
+    if(jk>0.01){var jh=Math.round(H*lay.stageBottom*0.48),jw=Math.round(jh*16/9),jy0=Math.round(H*0.02),jdrop=Math.pow(1-jk,3)*(jy0+jh+40);
+      var jt={x:Math.round(W/2-jw/2),y:Math.round(jy0-jdrop),w:jw,h:jh,k:jk};ART.jumboFrame(g,jt,ART.sceneP(W,H));
+      var vc=$("jcv");g.fillStyle="#000";g.fillRect(jt.x,jt.y,jt.w,jt.h);
+      if(vc&&vc.width&&jamOn){try{g.drawImage(vc,jt.x,jt.y,jt.w,jt.h);}catch(e){}}
+      else{var bars=["#C0C0C0","#C0C000","#00C0C0","#00C000","#C000C0","#C00000","#0000C0"];for(var bi=0;bi<7;bi++){g.fillStyle=bars[bi];g.fillRect(jt.x+Math.round(bi*jt.w/7),jt.y,Math.ceil(jt.w/7),jt.h);}
+        g.fillStyle="rgba(0,0,0,.55)";g.fillRect(jt.x,jt.y+jt.h*0.4,jt.w,jt.h*0.2);g.fillStyle="#fff";g.font="bold "+Math.round(jt.h*0.13)+"px monospace";g.textAlign="center";g.textBaseline="middle";g.fillText("YOUR VIDEO",jt.x+jt.w/2,jt.y+jt.h/2);}}
+    var pyy=H*(0.18+0.12*Math.max(0,Math.min(1,(jk-0.3)/0.5)));
+    perfDraw(g,W/2,pyy+8,2,now,null,null,H,false,true);
+    if(fx.crowdT!==pc.lastT){pc.lastT=fx.crowdT;pc.kind=fx.crowd;pc.t0=now;}
+    var cAge=now-pc.t0;
+    for(var i=0;i<4;i++){var dx=W*(0.18+i*0.21),dy=H*0.7,ps=ART.dance([1,4,8,6][i],0,[0,0,0,0],now/500+i*0.3),tg={x:W/2+Math.sin(now/650+i)*W*0.3,y:H*0.08};
+      var cr=cAge<ART.CROWD_MS&&pc.kind?ART.crowdPose(pc.kind,cAge,dx,dy,2,tg):null;
+      if(cr){dy+=cr.lift;if(cr.armL!==undefined){ps.armL=cr.armL;ps.armR=cr.armR;}}
+      var ep=ART.envPose(lay,H,dx,dy,2,now,i);if(ep){dy+=ep.lift;ps.rot=ep.rot;ps.armL=ps.armL*(1-ep.k)+ep.armL*ep.k;ps.armR=ps.armR*(1-ep.k)+ep.armR*ep.k;ps.legL=ps.legL*(1-ep.k)+ep.legL*ep.k;ps.legR=ps.legR*(1-ep.k)+ep.legR*ep.k;}
+      ART.drawChar(g,dx,dy,2,dancers[i],ps);if(cr)ART.crowdFx(g,pc.kind,dx,dy,2,cAge,i,cr.hands,tg);if(ep)ART.envFx(g,lay,H,dx,dy,2,now,i);}
+    ART.fxFront(g,W,H,lay,fx,{now:now,phase:ph,holes:[{x:W/2,y:pyy,r:80}]});
     raf=requestAnimationFrame(frame);
   }
   function wake(){if(!raf)raf=requestAnimationFrame(frame);}
+  function flash(b){b.classList.add("on");setTimeout(function(){b.classList.remove("on");},700);}
   function init(){
     var p=$("showPnl");if(!p)return;cv=$("showPrev");
-    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns button"),function(b){b.onclick=function(){fx[b.parentNode.getAttribute("data-k")]=b.getAttribute("data-v");send();};});
+    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns[data-k] button"),function(b){b.onclick=function(){fx[b.parentNode.getAttribute("data-k")]=b.getAttribute("data-v");send();};});
+    /* moments: a balloon drop or confetti; crowd surprises for everyone */
+    Array.prototype.forEach.call(p.querySelectorAll("#showMoments button"),function(b){b.onclick=function(){fx[b.getAttribute("data-m")]=Date.now();send();flash(b);};});
+    Array.prototype.forEach.call(p.querySelectorAll("#showCrowd button"),function(b){b.onclick=function(){fx.crowd=b.getAttribute("data-c");fx.crowdT=Date.now();send();flash(b);};});
+    var bt=$("showBannerText");if(bt){bt.value=fx.bannerText||"UNHOLY KEYS";bt.oninput=function(){fx.bannerText=bt.value.toUpperCase().replace(/[^A-Z0-9 !?'.#*-]/g,"").slice(0,20)||"UNHOLY KEYS";clearTimeout(bt.t);bt.t=setTimeout(send,300);};}
     Array.prototype.forEach.call(p.querySelectorAll(".sx-tog button"),function(b){b.onclick=function(){var k=b.getAttribute("data-k");fx[k]=fx[k]?0:1;send();};});
     Array.prototype.forEach.call(p.querySelectorAll("input[type=range]"),function(r){r.oninput=function(){fx[r.getAttribute("data-k")]=(+r.value)/100;clearTimeout(r.t);r.t=setTimeout(send,120);paint();};});
     $("showBurst").onclick=function(){fx.burst=Date.now();send();};
@@ -4489,7 +4766,7 @@ var SHOW=(function(){
   }
   return{init:init,get fx(){return fx;},resend:function(){liveSend({type:"show-fx",fx:fx});}};
 })();
-window.addEventListener("load",function(){SHOW.init();});
+window.addEventListener("load",function(){STAGEFX.init();});
 
 /* ── Dance rounds (performer side) ──
    With a round type chosen in the Music tab and the show live, playing a backing track runs a round:
@@ -4499,7 +4776,7 @@ window.addEventListener("load",function(){SHOW.init();});
    whatever is already sounding (YouTube, or you playing), with steps made live on each device. */
 var ROUNDS=(function(){
   var cfg={mode:"off",secs:10,level:1,battle:false},cur=null,job=0,cdT=null,syncT=null,uiT=null,hideT=null,totals=[],myVote="",votes=null,top=null;
-  var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",free:"Free dance"},ORD=["1st","2nd","3rd"];
+  var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit"},ORD=["1st","2nd","3rd"];
   try{var sv=JSON.parse(localStorage.getItem("uk_rounds")||"{}");if(NAMES[sv.mode]||sv.mode==="off")cfg.mode=sv.mode;if(sv.secs>=5&&sv.secs<=30)cfg.secs=+sv.secs;if(sv.level>=0.5&&sv.level<=1.5)cfg.level=+sv.level;cfg.battle=!!sv.battle;}catch(e){}
   function ord(n){return ORD[n-1]||n+"th";}
   function $(id){return document.getElementById(id);}
@@ -4887,7 +5164,7 @@ rebuild=function(){
   liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
 };
 
-initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updModInd();initPowerSlider();initMobileSlider();initChordUI();renderHkGrid();renderRelKeys();setTimeout(initHist,100);YT.renderFavs();PRESETS.renderSel();SETLIST.renderListSel();LOCAL.initSel();BACKING.initSel();VIZFX.init();SHOW.init();loadSession();
+initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updModInd();initPowerSlider();initMobileSlider();document.getElementById("fsBtn").onclick=function(){toggleFullscreen(document.documentElement);};document.getElementById("jFsBtn").onclick=function(){toggleFullscreen(document.documentElement);};document.getElementById("fsTip").onclick=function(){this.classList.remove("on");};initChordUI();renderHkGrid();renderRelKeys();setTimeout(initHist,100);YT.renderFavs();PRESETS.renderSel();SETLIST.renderListSel();LOCAL.initSel();BACKING.initSel();VIZFX.init();SHOW.init();loadSession();
 /* ── Show Builder + Drawer wiring ── */
 (function(){
   var _showSel=document.getElementById("showSel");
