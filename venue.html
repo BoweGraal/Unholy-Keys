@@ -42,10 +42,25 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #mainCanvas{position:absolute;inset:0;touch-action:none}
 
 /* Big Screen overlay */
-#bigScreen{position:absolute;top:2%;left:25%;width:50%;height:0;padding-bottom:28%;
-  background:#000;border:3px solid #222;border-radius:4px;display:none;z-index:5;
-  box-shadow:0 0 30px rgba(211,84,160,.2),inset 0 0 10px rgba(0,0,0,.8)}
-#bigScreen.on{display:block}
+/* the Jumbotron: hangs on two cables above the stage and lowers when a video plays (or the performer lowers it).
+   Its place and size are set from the stage each frame (see jumboTick). */
+#bigScreen{position:absolute;left:35%;top:2%;width:30%;height:17%;background:#000;z-index:5;
+  border:6px solid #15121F;border-bottom-width:14px;border-radius:3px;
+  box-shadow:0 0 0 2px #2a2440,0 0 36px rgba(211,84,160,.28);
+  transform:translateY(calc(-100% - 60px));visibility:hidden;
+  transition:transform 1.8s cubic-bezier(.3,1.25,.5,1),visibility 0s linear 1.8s}
+#bigScreen.on{transform:none;visibility:visible;transition:transform 1.8s cubic-bezier(.3,1.25,.5,1),visibility 0s}
+#bigScreen::before,#bigScreen::after{content:"";position:absolute;bottom:calc(100% + 6px);width:3px;height:600px;
+  background:repeating-linear-gradient(#5a5078 0 4px,#3a3058 4px 8px)}
+#bigScreen::before{left:18%}#bigScreen::after{right:18%}
+#jtLeds{position:absolute;left:0;right:0;bottom:-11px;height:6px;display:flex;justify-content:space-around;pointer-events:none}
+#jtLeds i{width:5px;height:5px;border-radius:1px;background:#F5D03C;animation:jtLed 1s steps(2) infinite}
+#jtLeds i:nth-child(2n){background:#E8505B;animation-delay:.25s}#jtLeds i:nth-child(3n){background:#4A9BE8;animation-delay:.5s}
+@keyframes jtLed{50%{opacity:.25}}
+#jtLogo{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(#2a1440,#07060c);
+  font:900 clamp(12px,3.2vw,40px)/1 'Courier New',monospace;letter-spacing:.12em;color:#F5D03C;text-shadow:0 0 12px #D354A0;animation:jtGlow 1.4s ease-in-out infinite}
+#jtLogo b{color:#E8505B;margin-left:.4em}
+@keyframes jtGlow{50%{text-shadow:0 0 22px #D354A0,0 0 4px #fff}}
 #bigScreen iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 #streamCv{display:none;position:absolute;inset:0;width:100%;height:100%;background:#000}
 #tapHint{display:none;position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);white-space:nowrap;background:#D354A0;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:8px 12px;border-radius:14px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4);animation:tapPulse 1.6s ease-in-out infinite}
@@ -140,6 +155,11 @@ body.gaming-free #hudBR{display:none}
 #roundBox{display:none;position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:26;width:min(420px,92vw);box-sizing:border-box;padding:12px 16px;text-align:center;background:rgba(14,11,26,.93);border:1px solid rgba(211,84,160,.55);border-radius:14px;color:#fff;font-family:system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
 #roundBox.on{display:block}
 #roundBox.strip{padding:8px 14px;width:min(520px,92vw)}
+/* the Jumbotron or a banner is down: the round's line slims to the top edge so it doesn't cover them */
+body.jt-top #roundBox.strip{top:6px;padding:5px 14px;width:auto;max-width:min(560px,94vw);display:flex;align-items:baseline;gap:10px;justify-content:center;white-space:nowrap}
+body.jt-top #roundBox.strip .rb-head{font-size:10px}
+body.jt-top #roundBox.strip .rb-sub{margin-top:0;overflow:hidden;text-overflow:ellipsis}
+body.jt-top #roundBox.strip .rb-btn{margin-top:0;padding:4px 10px;font-size:12px}
 #roundBox.result{cursor:pointer}
 #roundBox .rb-head{font:700 12px system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:#D354A0}
 #roundBox .rb-head2{font:700 11px system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:12px}
@@ -235,7 +255,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
 <!-- VENUE -->
 <div id="venue">
   <canvas id="mainCanvas"></canvas>
-  <div id="bigScreen"><iframe id="ytFrame" allow="autoplay"></iframe><canvas id="streamCv" width="480" height="270"></canvas><div id="tapHint"></div></div>
+  <div id="bigScreen"><div id="jtLogo">UNHOLY<b>KEYS</b></div><iframe id="ytFrame" allow="autoplay"></iframe><canvas id="streamCv" width="480" height="270"></canvas><div id="tapHint"></div><div id="jtLeds"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
   <div id="hudTL">Room: <span id="hudRoom">---</span></div>
   <div id="hudTR">Viewers: <span id="hudCount">0</span></div>
   <div id="hudBR"></div>
@@ -1275,7 +1295,7 @@ function handleMsg(msg){
       });
     }
     ROUND.setTotals(msg.totals);
-    SHOWFX=msg.fx||null;
+    SHOWFX=msg.fx||null;primeFx(SHOWFX);
     if(msg.round)ROUND.onMsg(msg.round);else ROUND.reset();
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
@@ -3633,10 +3653,10 @@ function handleVideo(msg){
   var screen=document.getElementById("bigScreen");
   var frame=document.getElementById("ytFrame");
   if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};}
-  if(msg.action==="stop"){screen.classList.remove("on");vYT.clear();updTapHint();return;}
+  if(msg.action==="stop"){JT.video=false;vYT.clear();updTapHint();return;}
   var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
   if(!vid)return;
-  screen.classList.add("on");
+  JT.video=true;
   var playing=msg.action==="play";
   var target=Math.max(0,+msg.time||0)+(playing?0.2:0);   /* ~network delay */
   var rate=+msg.rate;if(!(rate>0&&rate<=4))rate=1;
@@ -3754,11 +3774,10 @@ var SP=(function(){
     var screen=document.getElementById("bigScreen"),cv=document.getElementById("streamCv"),fr=document.getElementById("ytFrame");
     if(!screen||!cv)return;
     var vis=visualsLive(),snd=soundLive();
-    if(snd&&typeof vYT!=="undefined"&&vYT&&vYT.vid){vYT.clear();}            /* the stream already carries the music */
+    if(snd&&typeof vYT!=="undefined"&&vYT&&vYT.vid){vYT.clear();JT.video=false;}   /* the stream already carries the music */
     cv.style.display=vis?"block":"none";
     if(fr)fr.style.visibility=vis?"hidden":"";
-    if(vis)screen.classList.add("on");
-    else if(snd)screen.classList.remove("on");
+    JT.visuals=vis;
     if(snd){var h=document.getElementById("tapHint");if(h)h.style.display="none";}
   }
   setInterval(updScreen,500);
@@ -4027,13 +4046,46 @@ function roundRect(c,x,y,w,h,r){
 var SHOWFX=null;
 window.ukShowFx=function(f){if(f!==undefined)SHOWFX=f;return SHOWFX;};
 /* the stage and the dance floor (art.js), moving with the beat and the performer's notes */
+/* ---------- the Jumbotron ----------
+   Down while a video or the performer's visuals are on (the performer can also keep it down or up). It hangs
+   over the back of the stage; while it's down the performer steps forward to the front of the stage. */
+var JT={video:false,visuals:false,k:0,rect:null,key:""};
+function jumboTick(){
+  var el=document.getElementById("bigScreen");if(!el)return;
+  var fx=SHOWFX||{},want=fx.jumbo==="down"||(fx.jumbo!=="up"&&(JT.video||JT.visuals));
+  if(want!==el.classList.contains("on"))el.classList.toggle("on",want);
+  document.getElementById("jtLogo").style.display=want&&!JT.video&&!JT.visuals?"flex":"none";
+  document.body.classList.toggle("jt-top",want||!!fx.banner);
+  var st=STAGE_TOP*H,sh=(STAGE_BOTTOM-STAGE_TOP)*H,hh=sh*0.42,ww=Math.min(hh*16/9,W*0.46);hh=ww*9/16;
+  var rc={x:Math.round(W/2-ww/2),y:Math.round(st+30),w:Math.round(ww),h:Math.round(hh)},key=rc.x+","+rc.y+","+rc.w+","+rc.h;
+  if(key!==JT.key){JT.key=key;el.style.left=rc.x+"px";el.style.top=rc.y+"px";el.style.width=rc.w+"px";el.style.height=rc.h+"px";}
+  JT.rect=rc;JT.k+=((want?1:0)-JT.k)*0.04;
+}
+/* ---------- lights following the performer's playing ----------
+   Where each note sits in the range they've been playing (low to high), smoothed, and its colour. */
+var FOLLOW={lo:48,hi:72,h:0.5,hue:0};
+function followState(){
+  var age=Date.now()-lastNoteTime,m=lastNoteMidi;
+  if(age<80){FOLLOW.lo=Math.min(FOLLOW.lo+0.02,m);FOLLOW.hi=Math.max(FOLLOW.hi-0.02,m);if(FOLLOW.hi-FOLLOW.lo<12){var mid=(FOLLOW.hi+FOLLOW.lo)/2;FOLLOW.lo=mid-6;FOLLOW.hi=mid+6;}}
+  var target=Math.max(0,Math.min(1,(m-FOLLOW.lo)/(FOLLOW.hi-FOLLOW.lo)));
+  FOLLOW.h+=(target-FOLLOW.h)*0.18;FOLLOW.hue=(((m%12)+12)%12)*30;
+  return{h:FOLLOW.h,hue:FOLLOW.hue,a:isPerformerPlaying||age<300?1:Math.max(0,1-(age-300)/1500)};
+}
+/* ---------- crowd surprises: everyone sparkles, catches fire, shoots lasers or floats, for a few seconds ---------- */
+var CROWD={kind:"",t0:-1e9,lastT:0};
+function crowdAge(){return CROWD.kind?performance.now()-CROWD.t0:1e9;}
+function crowdCheck(){var fx=SHOWFX;if(fx&&fx.crowd&&fx.crowdT&&fx.crowdT!==CROWD.lastT){CROWD.lastT=fx.crowdT;CROWD.kind=fx.crowd;CROWD.t0=performance.now();}}
+/* the effects already set off before you arrived don't replay for you */
+function primeFx(fx){if(!fx)return;CROWD.lastT=fx.crowdT||0;ART.primeFx(fx);}
+window.ukJumbo=function(){var e=document.getElementById("bigScreen");return{down:e.classList.contains("on"),video:JT.video,visuals:JT.visuals,rect:JT.rect,k:Math.round(JT.k*100)/100};};
+window.ukCrowd=function(){return{kind:CROWD.kind,ageMs:Math.round(crowdAge())};};
 function drawScene(){
   var nAge=Date.now()-lastNoteTime,fx=SHOWFX||{},lay={stageBottom:STAGE_BOTTOM,floorBottom:FLOOR_BOTTOM};
   ART.scene(ctx,W,H,lay,{
     now:Date.now(),phase:BEAT.phase(performance.now()),level:BEAT.level(),playing:isPerformerPlaying||(typeof PRACTICE!=="undefined"&&PRACTICE.on),
     hue:(((lastNoteMidi%12)+12)%12)*30,hueA:isPerformerPlaying&&nAge<1500?0.1*(1-nAge/1500):0,
-    lights:fx.lights,fog:fx.fog,spotX:performer.x*W+perfShift});
-  if(SHOWFX)ART.fxBack(ctx,W,H,lay,SHOWFX,{now:Date.now()});
+    lights:fx.lights,fog:fx.fog,spotX:performer.x*W+perfShift,follow:fx.follow?followState():null});
+  if(SHOWFX)ART.fxBack(ctx,W,H,lay,SHOWFX,{now:Date.now(),jumbo:JT.k>0.5});
 }
 /* in front of everything: fog, weather, lasers, darkness (light pools on the performer, the spotlights and you), fireworks */
 function drawFxFront(bp,feat,perfPx,perfPy){
@@ -4186,6 +4238,8 @@ function renderLoop(){
   if(bp)side=Math.min(side,-Math.min(W*0.45,440));                  /* a battle match: the performer steps right aside */
   perfShift+=(side-perfShift)*0.12;perfPx+=perfShift;
   var perfPy=(STAGE_TOP+STAGE_BOTTOM)/2*H+20;
+  jumboTick();crowdCheck();
+  if(JT.rect&&JT.k>0.01){var py2=Math.min(STAGE_BOTTOM*H-14*3,JT.rect.y+JT.rect.h+20+19*3);if(py2>perfPy)perfPy+=(py2-perfPy)*JT.k;}
   if(spotK>0)drawCentreSpot(W/2,perfPy,spotK,feat);
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){
     var perfDim=bp&&W<640;if(perfDim){ctx.save();ctx.globalAlpha=0.35;}   /* small screens: the match needs the room */
@@ -4193,6 +4247,7 @@ function renderLoop(){
     /* the keyboard in front of the performer, the key for the last note lit; the mic stand beside */
     var nAge=Date.now()-lastNoteTime,pc=((lastNoteMidi%12)+12)%12;
     ART.keyboard(ctx,perfPx,perfPy+5*3,3,isPerformerPlaying&&nAge<350?[0,0,1,1,2,3,3,4,4,5,5,6][pc]:-1,"hsl("+(pc*30)+",80%,60%)");
+    var pcAge=crowdAge();if(pcAge<ART.CROWD_MS&&CROWD.kind!=="lasers"&&CROWD.kind!=="float")ART.crowdFx(ctx,CROWD.kind,perfPx,perfPy,3,pcAge,3,null,null);
     if(perfDim)ctx.restore();
   }   /* nobody on stage in practice */
 
@@ -4241,7 +4296,18 @@ function renderLoop(){
     if((feat||bp)&&!onStage){ctx.save();ctx.globalAlpha=0.55;}
     var freeMe=ids[i]===myId&&GAME.mode==="free";
     if(!v.look)v.look=lookOf(null,v.color,v.name);
-    if(!bigMe&&!onStage)drawAvatar(vx,vy,v.color,v.name,freeMe?GAME.freeS():2,false,false,moving,v.dance,v.seed,ids[i]===myId,freeMe?GAME.pose:vp,now-(v.hitT||0),v.look,freeMe?GAME.fd:v.fd);
+    /* a crowd surprise: float up, or point both hands at the stage and fire lasers, sparkle or burn */
+    var cAge=crowdAge(),ck=cAge<ART.CROWD_MS?CROWD.kind:"",sc2=freeMe?GAME.freeS():2,dyy=vy+ART.crowdLift(ck,cAge,sc2),cp=freeMe?GAME.pose:vp,cdn=v.dance,cfd=freeMe?GAME.fd:v.fd,hands=null;
+    if(ck==="lasers"){
+      var JJ=limbJoints(vx,dyy,sc2,0),tg=v._tg={x:W/2+Math.sin(now/650+(v.seed||0))*W*0.32,y:STAGE_TOP*H+12};
+      var aL=Math.atan2(-(tg.x-JJ[0][0]),tg.y-JJ[0][1]),aR=Math.atan2(-(tg.x-JJ[1][0]),tg.y-JJ[1][1]);
+      cp=[aL,aR,0.12,-0.12];cdn=4;cfd=null;
+      hands=[[JJ[0][0]-Math.sin(aL)*9*sc2,JJ[0][1]+Math.cos(aL)*9*sc2],[JJ[1][0]-Math.sin(aR)*9*sc2,JJ[1][1]+Math.cos(aR)*9*sc2]];
+    }
+    if(!bigMe&&!onStage){
+      drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,moving,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
+      if(ck)ART.crowdFx(ctx,ck,vx,dyy,sc2,cAge,v.seed||0,hands,v._tg);
+    }
     if((feat||bp)&&!onStage)ctx.restore();
     if(v.msT&&!bigMe&&now-v.msT<1700)STREAK.pop(ctx,vx,vy-50,v.msN,now-v.msT,1);
     else if(v.dance===5&&v.combo>=3&&!bigMe){

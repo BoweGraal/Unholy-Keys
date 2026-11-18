@@ -366,12 +366,19 @@ function castVote(ws, voter, target, weight) {
 
 /* the show's effects, checked: anything unknown is dropped */
 var FX_LIGHTS = ["auto", "party", "strobe", "spot", "warm", "cool", "off"], FX_WEATHER = ["none", "rain", "storm", "snow"];
+var FX_CROWD = ["sparkle", "fire", "lasers", "float"];
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
   return { lights: FX_LIGHTS.indexOf(f.lights) >= 0 ? f.lights : "auto", fog: lvl(f.fog), lasers: f.lasers ? 1 : 0, dark: lvl(f.dark),
     weather: FX_WEATHER.indexOf(f.weather) >= 0 ? f.weather : "none", sunset: f.sunset ? 1 : 0, fire: f.fire ? 1 : 0, fireworks: f.fireworks ? 1 : 0,
-    burst: Math.max(0, Math.floor(+f.burst || 0)) % 1e13 };
+    burst: Math.max(0, Math.floor(+f.burst || 0)) % 1e13,
+    /* lights following the performer's playing; the Jumbotron (auto: down while a video plays); things that lower in */
+    follow: f.follow ? 1 : 0, jumbo: f.jumbo === "down" || f.jumbo === "up" ? f.jumbo : "auto", disco: f.disco ? 1 : 0, banner: f.banner ? 1 : 0,
+    bannerText: String(f.bannerText || "UNHOLY KEYS").toUpperCase().replace(/[^A-Z0-9 !?'.#*-]/g, "").slice(0, 20) || "UNHOLY KEYS",
+    /* one-shot moments: the time each was last set off (a balloon drop, a confetti blast, a crowd surprise) */
+    balloonT: Math.max(0, Math.floor(+f.balloonT || 0)) % 1e13, confettiT: Math.max(0, Math.floor(+f.confettiT || 0)) % 1e13,
+    crowd: FX_CROWD.indexOf(f.crowd) >= 0 ? f.crowd : "", crowdT: Math.max(0, Math.floor(+f.crowdT || 0)) % 1e13 };
 }
 /* a character's look: 8 letters/digits (see art.js), or nothing */
 function look(s) { return typeof s === "string" && /^[0-9a-z]{8}$/.test(s) ? s : ""; }
