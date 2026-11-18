@@ -300,6 +300,14 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - A held note keeps moving (the bow, the accordion's bellows, vibrato on the fret hand); letting go relaxes the hands.
 - To check: go live, open the venue, then change instruments and play, low notes and high notes.
 
+**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.28.1"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
+- Everything matching means you have the new build.
+- A red "Out of date: art.js …" line means your browser kept an old copy of a script. Hard refresh with Ctrl+Shift+R (Cmd+Shift+R on a Mac).
+- A red "Server is on v…" line means the server hasn't been redeployed yet (on Render: Manual Deploy, then Deploy latest commit).
+- The number is set in five places, which should always match: `PAGE_VERSION` in index.html and venue.html, `VERSION` in art.js and instruments.js, and `VERSION` in server/server.js.
+
+The "Click to capture keys" box is gone. Keys play whenever the page has focus (click anywhere on it first).
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |

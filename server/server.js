@@ -368,6 +368,8 @@ function castVote(ws, voter, target, weight) {
 var FX_LIGHTS = ["auto", "party", "strobe", "spot", "warm", "cool", "off"], FX_WEATHER = ["none", "rain", "storm", "snow"];
 var FX_CROWD = ["sparkle", "fire", "lasers", "float"];
 var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
+/* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
+var VERSION = "1.28.1";
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
@@ -424,7 +426,7 @@ wss.on("connection", function(ws) {
       rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer", performerLook: look(msg.look) };
       ws.room = code;
       ws.role = "performer";
-      send(ws, { type: "room-created", room: code });
+      send(ws, { type: "room-created", room: code, version: VERSION });
       console.log("Room created:", code);
       return;
     }
@@ -449,7 +451,7 @@ wss.on("connection", function(ws) {
 
       // Send room state to new viewer
       send(ws, {
-        type: "room-state",
+        type: "room-state", version: VERSION,
         yourId: id,
         viewers: viewerList(roomCode),
         performerState: r.state,
