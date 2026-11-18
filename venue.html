@@ -19,8 +19,15 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   min-height:100vh;overflow:hidden;-webkit-tap-highlight-color:transparent}
 
 /* JOIN SCREEN */
-#joinScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100vh;padding:20px;gap:20px}
+#joinScreen{display:flex;flex-direction:column;align-items:center;justify-content:safe center;
+  position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 20px calc(110px + env(safe-area-inset-bottom));gap:20px}   /* scrolls on short screens */
+.join-practice-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;font:700 15px system-ui,sans-serif;color:#fff;text-decoration:none;background:linear-gradient(135deg,rgba(211,84,160,.35),rgba(127,119,221,.35));border:1px solid rgba(211,84,160,.7);margin-top:-6px}
+.join-practice-btn:active{transform:scale(.97)}
+/* fullscreen, top left on every screen (iPhones get the Home Screen tip instead) */
+#vFsBtn{position:fixed;left:10px;top:10px;z-index:70;padding:7px 10px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#ddd;background:rgba(20,18,32,.85);border:1px solid rgba(127,119,221,.5);cursor:pointer}
+#vFsBtn:hover{color:#fff;border-color:#D354A0}
+#vFsTip{display:none;position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9500;width:min(420px,90vw);background:#1c1830;border:1px solid #D354A0;color:#fff;font:13px/1.45 system-ui;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#vFsTip.on{display:block}
 #joinScreen.hidden{display:none}
 .join-logo{font-size:42px;font-weight:700;letter-spacing:-1px;margin-bottom:4px}
 .join-logo b{color:var(--pk)}
@@ -219,7 +226,7 @@ body.jt-top #roundBox.strip .rb-btn{margin-top:0;padding:4px 10px;font-size:12px
 #roundBox .rb-btn:hover{background:rgba(255,255,255,.18)}
 #roundBox .rb-btn.on{background:linear-gradient(135deg,#D354A0,#7F77DD)}
 /* ── Practice mode (venue.html?practice) ── */
-#prExit{display:none;position:fixed;left:10px;top:10px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;text-decoration:none;background:rgba(20,18,32,.85);border:1px solid rgba(232,80,91,.6)}
+#prExit{display:none;position:fixed;left:62px;top:10px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;text-decoration:none;background:rgba(20,18,32,.85);border:1px solid rgba(232,80,91,.6)}
 body.practice #prExit{display:block}
 #prExit:hover{border-color:#E8505B;background:rgba(232,80,91,.3)}
 .join-practice{display:block;text-align:center;margin-top:14px;font-size:12px;color:rgba(255,255,255,.5)}
@@ -273,9 +280,12 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
 <body>
 
 <!-- JOIN SCREEN -->
+<button id="vFsBtn" title="Fullscreen">&#9974;</button>
+<div id="vFsTip">On iPhone, Safari can't make a web page fullscreen. For a fullscreen app: tap <b>Share</b>, then <b>Add to Home Screen</b>, and open it from your home screen.</div>
 <div id="joinScreen">
   <div class="join-logo"><b>Unholy</b> Keys</div>
   <div class="join-sub">Live Venue</div>
+  <a class="join-practice-btn" href="?practice">&#128378; Dance practice <small style="font-weight:500;opacity:.75">no show needed</small></a>
   <div class="join-box">
     <div>
       <label>Display Name</label>
@@ -1203,6 +1213,20 @@ document.getElementById("enterBtn").addEventListener("click",function(){
   roomCode=room.toUpperCase();
   enterVenue();
 });
+/* fullscreen on any screen; iPhones can't, so they get the Home Screen tip */
+(function(){
+  var b=document.getElementById("vFsBtn"),tip=document.getElementById("vFsTip");
+  function label(){var on=!!(document.fullscreenElement||document.webkitFullscreenElement);b.innerHTML=on?"&#10697;":"&#9974;";b.title=on?"Leave fullscreen":"Fullscreen";}
+  b.addEventListener("click",function(e){e.preventDefault();b.blur();var d=document,el=d.documentElement;
+    if(d.fullscreenElement||d.webkitFullscreenElement){try{(d.exitFullscreen||d.webkitExitFullscreen).call(d);}catch(x){}return;}
+    var rq=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(!rq){tip.classList.add("on");clearTimeout(tip.t);tip.t=setTimeout(function(){tip.classList.remove("on");},9000);return;}
+    try{var pr=rq.call(el);if(pr&&pr.catch)pr.catch(function(){});}catch(x){}});
+  tip.addEventListener("click",function(){tip.classList.remove("on");});
+  document.addEventListener("fullscreenchange",label);document.addEventListener("webkitfullscreenchange",label);
+  /* in the Home Screen app it's already fullscreen: no need for the button */
+  if(window.navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)){b.style.display="none";var px=document.getElementById("prExit");if(px)px.style.left="10px";}
+})();
 document.getElementById("inRoom").addEventListener("input",function(){var el=this,v=el.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,4);if(v!==el.value)el.value=v;});
 document.getElementById("inRoom").addEventListener("keydown",function(e){
   if(e.key==="Enter")document.getElementById("enterBtn").click();
@@ -4437,7 +4461,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.30.5",SERVER_VERSION="";
+var PAGE_VERSION="1.30.6",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
