@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script src="art.js"></script>
@@ -1219,6 +1223,19 @@ function initCanvas(){
   ctx=canvas.getContext("2d");
   resize();
   window.addEventListener("resize",resize);
+  /* iPhones (above all when opened from the Home Screen) don't always say when the screen size changes back, for
+     instance when the keyboard closes after chatting; the page then stays laid out for the smaller screen (the
+     game squeezed into the top, the floor cut off) and can be left scrolled up under the status bar. So check
+     the real size whenever the visible area changes, after typing, and twice a second, and lay out again. */
+  function vpCheck(){
+    if(window.innerWidth!==W||window.innerHeight!==H){try{window.dispatchEvent(new Event("resize"));}catch(e){resize();}}
+    if(window.scrollY||document.documentElement.scrollTop||document.body.scrollTop){window.scrollTo(0,0);document.body.scrollTop=0;}
+  }
+  if(window.visualViewport){visualViewport.addEventListener("resize",vpCheck);visualViewport.addEventListener("scroll",vpCheck);}
+  document.addEventListener("focusout",function(){setTimeout(vpCheck,150);setTimeout(vpCheck,600);});
+  window.addEventListener("pageshow",vpCheck);document.addEventListener("visibilitychange",function(){if(!document.hidden)setTimeout(vpCheck,100);});
+  setInterval(vpCheck,500);
+  window.ukVp=function(){return{W:W,H:H,inner:[innerWidth,innerHeight],scroll:window.scrollY};};
   canvas.addEventListener("pointerdown",onFloorDown);
   canvas.addEventListener("pointermove",function(e){if(GAME.floorDrag(e.pointerId,floorPt(e)))e.preventDefault();});
   ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){canvas.addEventListener(ev,function(e){GAME.floorRelease(e.pointerId);});});

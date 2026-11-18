@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -1935,6 +1935,9 @@ function initMobileSlider(){
   document.getElementById("mb-fs").onclick=function(){toggleFullscreen(document.documentElement);};
   document.getElementById("mb-modeDisp").onclick=function(){mbCycleMode();};
   window.addEventListener("resize",mbSize);
+  /* iPhone Home Screen apps: lay out again when the visible area changes (the keyboard closing), and undo any leftover scroll */
+  function mbVp(){mbSize();if(mobileOn&&(window.scrollY||document.documentElement.scrollTop))window.scrollTo(0,0);}
+  if(window.visualViewport)visualViewport.addEventListener("resize",mbVp);document.addEventListener("focusout",function(){setTimeout(mbVp,200);});
   window.ukMobile=function(){return{reg:mbReg(),dir:mbP.dir,oct:S.oct,note:activeNoteKey,midi:activeNoteKey?layout[activeNoteKey]:null,favsOpen:document.getElementById("mb-favs").classList.contains("on"),inst:S.eng};};
 }
 /* the circle as big as the space allows */
