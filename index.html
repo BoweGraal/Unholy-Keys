@@ -32,6 +32,14 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #side-name input{width:100%;box-sizing:border-box;margin-top:4px;background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);padding:7px 10px;border-radius:var(--r);font-size:12px;font-weight:600;outline:none}
 #side-name input:focus{border-color:var(--pk)}
 #side-name .sn-row{display:flex;gap:8px;align-items:center;margin-top:4px}
+#showPrev{width:100%;max-width:560px;height:auto;aspect-ratio:480/260;border-radius:8px;display:block;margin-bottom:12px;background:#0a0a0f;image-rendering:pixelated}
+#showPnl .sx-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+#showPnl .sx-l{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;min-width:64px}
+#showPnl .sx-btns,#showPnl .sx-tog{display:flex;gap:5px;flex-wrap:wrap}
+#showPnl .sx-btns button,#showPnl .sx-tog button{padding:5px 11px;border-radius:var(--r);border:1px solid var(--bg4);background:var(--bg3);color:var(--tx);font-size:12px;cursor:pointer}
+#showPnl button.on{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:transparent;color:#fff}
+#showPnl input[type=range]{width:130px}
+#showNote{font-size:11px;color:var(--tx3)}
 #side-name .sn-row input{margin-top:0}
 #perfLookCv{flex:0 0 auto;width:40px;height:48px;border-radius:6px;background:linear-gradient(#2a1f42,#161128);border:1px solid var(--bg4);cursor:pointer;image-rendering:pixelated}
 #perfLookBtn{margin-top:6px;width:100%;padding:5px 8px;border-radius:var(--r);border:1px solid var(--bg4);background:var(--bg3);color:var(--tx);font-size:11px;font-weight:600;cursor:pointer}
@@ -337,6 +345,7 @@ body.jset .nav-item.jam-only{display:flex}
       <div class="nav-item" data-sec="presets" onclick="setSection('presets')"><span class="nav-icon">&#128190;</span>Presets &amp; FX</div>
       <div class="nav-item" data-sec="music" onclick="setSection('music')"><span class="nav-icon">&#127925;</span>Music</div>
       <div class="nav-item" data-sec="record" onclick="setSection('record')"><span class="nav-icon">&#9210;</span>Record</div>
+      <div class="nav-item" data-sec="show" onclick="setSection('show')"><span class="nav-icon">&#127878;</span>Show</div>
       <div class="nav-item jam-only" data-sec="visuals" onclick="setSection('visuals')"><span class="nav-icon">&#10024;</span>Visuals</div>
     </div>
     <div id="side-cap">
@@ -585,6 +594,17 @@ body.jset .nav-item.jam-only{display:flex}
       <button class="btn" id="vizRandBtn">&#127922; Random</button>
       <button class="btn" id="vizStampBtn">FX stamps&#8230;</button>
     </div>
+  </div>
+  <div class="app-section" id="sec-show">
+  <div class="sl">Show effects <span class="bdg" style="background:var(--bg3);color:var(--tx3)">live shows</span></div>
+  <div class="pnl" id="showPnl">
+    <canvas id="showPrev" width="480" height="260"></canvas>
+    <div class="sx-row"><span class="sx-l">Lights</span><span class="sx-btns" data-k="lights"><button data-v="auto">Auto</button><button data-v="party">Party</button><button data-v="strobe">Strobe</button><button data-v="spot">Spotlight</button><button data-v="warm">Warm</button><button data-v="cool">Cool</button><button data-v="off">Off</button></span></div>
+    <div class="sx-row"><span class="sx-l">Weather</span><span class="sx-btns" data-k="weather"><button data-v="none">Clear</button><button data-v="rain">&#127783; Rain</button><button data-v="storm">&#9928; Storm</button><button data-v="snow">&#10052; Snow</button></span></div>
+    <div class="sx-row"><span class="sx-l">Fog</span><input type="range" min="0" max="100" data-k="fog"><span class="sx-l">Darkness</span><input type="range" min="0" max="100" data-k="dark"></div>
+    <div class="sx-row"><span class="sx-l">Extras</span><span class="sx-tog"><button data-k="lasers">&#128998; Lasers</button><button data-k="sunset">&#127749; Sunset</button><button data-k="fire">&#128293; Burning building</button><button data-k="fireworks">&#127879; Fireworks (auto)</button></span></div>
+    <div class="sx-row"><button class="btn" id="showBurst" title="Launch a volley of fireworks now">&#127878; Launch fireworks</button><button class="btn" id="showReset">Reset all</button><span id="showNote"></span></div>
+  </div>
   </div>
   <div class="app-section" id="sec-record">
   <div class="sl">Metronome</div>
@@ -3887,6 +3907,7 @@ function goLive(){
       document.getElementById("bLive").style.animation="pls 1s infinite";
       liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
       var vm=videoMsg();if(vm)liveSend(vm);               /* already playing something when going live */
+      SHOW.resend();                                      /* the show effects you've set up */
       STREAM.announce();STREAM.render();
     }
     if(msg.type==="viewer-count"){
@@ -3958,7 +3979,10 @@ function audEvent(msg){
   else if(msg.type==="pose"&&id&&AUD.people[id]&&Array.isArray(msg.a)&&msg.a.length===4){
     /* dance games: limb angles [left arm, right arm, left leg, right leg] in hundredths of a radian, plus the combo */
     var pp=AUD.people[id],pa=[];for(var pi=0;pi<4;pi++){var pn=+msg.a[pi];if(!isFinite(pn))return;pa.push(Math.max(-3.2,Math.min(3.2,pn/100)));}
-    pp.pose=pa;pp.combo=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pp.hitT=Date.now();
+    var nc=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));
+    /* free dance styles: the dance, its move and the two dots (drawn here the same way the venue draws them) */
+    var f=msg.fd;pp.fd=f&&f.s>=1&&f.s<=8&&Array.isArray(f.c)&&f.c.length===4?{s:f.s|0,m:f.m|0,c:f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v))/100:0;})}:null;
+    if(!pp.fd||nc>(pp.combo||0))pp.hitT=Date.now();pp.pose=pa;pp.combo=nc;
   }
   else if(msg.type==="chat"&&id&&AUD.people[id]){var q=AUD.people[id];q.said=Date.now();q.text=String(msg.text||"").slice(0,140);if(msg.color)q.color=audColor(msg.color,q.color);}
 }
@@ -4066,7 +4090,7 @@ var STREAK=(function(){
   return{draw:draw,pop:pop,track:track,level:level};
 })();
 
-function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys){
+function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys,fd){
   /* the venue's pixel character (art.js), small: name under the feet */
   var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,p=Math.max(1,Math.round(sc));
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
@@ -4080,8 +4104,10 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
     if(hitAge<220){bob=-(1-hitAge/220)*5*p;mouth=true;}
   }
   if(atKeys){var pl=glow?Math.sin(now*0.02):0;armL=-.55+pl*.18;armR=.55+pl*.18;mouth=glow;}
+  var dxs=0,rot=0;
+  if(fd){var rg=ART.dance(fd.s,fd.m,fd.c,now/500);armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*p;dxs=rg.dx*p;rot=rg.rot;mouth=rg.mouth;}
   if(glow){var gl=g.createRadialGradient(x,y-6*p,3,x,y-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,y-6*p,24*p,0,6.3);g.fill();}
-  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth});
+  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
   if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+10*p,y-20*p-ph*14);g.globalAlpha=1;}
   /* name under the feet, steady while dancing */
   g.font="600 "+Math.round(10.5*Math.min(sc,1.4))+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="top";
@@ -4119,8 +4145,9 @@ function drawAud(){
   var sy=H/0.82,sc=Math.max(1,Math.min(1.6,W/420));
   g.clearRect(0,0,W,H);
   /* stage (venue y 0-0.30) and floor (0.30-0.78), same layout as venue.html */
-  var now=Date.now();
-  ART.scene(g,W,H,{stageBottom:.30*sy/H,floorBottom:Math.min(1,.78*sy/H)},{now:now,phase:(now%600)/600,level:activeVoice?0.7:0.3,playing:!!activeVoice,sign:false});
+  var now=Date.now(),alay={stageBottom:.30*sy/H,floorBottom:Math.min(1,.78*sy/H)},sfx=SHOW.fx;
+  ART.scene(g,W,H,alay,{now:now,phase:(now%600)/600,level:activeVoice?0.7:0.3,playing:!!activeVoice,sign:false,lights:sfx.lights,fog:sfx.fog,spotX:W/2});
+  ART.fxBack(g,W,H,alay,sfx,{now:now});
   /* you, on stage at your keyboard; glows while a note is sounding */
   var pp=Math.max(2,Math.round(sc*1.25)),py=.15*sy+8;
   audPerson(g,W/2,py,"#D354A0",(typeof stageName==="function"?stageName():"You"),pp,0,0,!!activeVoice,now,"#F5C518",null,null,1e9,perfLook,true);
@@ -4140,10 +4167,11 @@ function drawAud(){
     var cmb=p.dance>=4?(p.combo||0):0;STREAK.track(p,cmb);
     if(cmb>=10)STREAK.draw(g,x,y,sc*0.95,cmb,now,p.seed||0);
     if(!p.look)p.look=audLook("",p.color,p.name);
-    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0),p.look);
+    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null);
     if(p.msT&&now-p.msT<1700)STREAK.pop(g,x,headY,p.msN,now-p.msT,Math.max(0.75,sc*0.7));
     else if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
     heads.push([p,x,headY]);});
+  ART.fxFront(g,W,H,alay,sfx,{now:now,phase:(now%600)/600,holes:[{x:W/2,y:.15*sy,r:Math.max(70,W*0.14)}]});
   /* speech bubbles on top of everyone; oldest first so the newest is on top */
   heads.filter(function(h){return h[0].text&&now-h[0].said<AUD_SAY_MS;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
     var age=now-h[0].said,al=age>AUD_SAY_MS-1200?(AUD_SAY_MS-age)/1200:1;
@@ -4418,6 +4446,50 @@ var CHART=(function(){
   }
   return{analyse:analyse};
 })();
+
+/* ── Show effects (performer side) ──
+   Lights, fog, lasers, darkness, weather, sunset, a burning building and fireworks for the venue. Every change
+   goes straight to the audience (and is remembered by the room for latecomers); the preview shows the look. */
+var SHOW=(function(){
+  var fx=JSON.parse(JSON.stringify(ART.FX_DEFAULT)),raf=0,cv=null;
+  try{var sv=JSON.parse(localStorage.getItem("uk_showfx")||"null");if(sv)for(var k in fx)if(sv[k]!==undefined&&k!=="burst")fx[k]=sv[k];}catch(e){}
+  function $(id){return document.getElementById(id);}
+  function send(){liveSend({type:"show-fx",fx:fx});try{localStorage.setItem("uk_showfx",JSON.stringify(fx));}catch(e){}paint();
+    var on=[];if(fx.lights!=="auto")on.push(fx.lights+" lights");if(fx.weather!=="none")on.push(fx.weather);if(fx.fog)on.push("fog");if(fx.dark)on.push("dark");["lasers","sunset","fire","fireworks"].forEach(function(k){if(fx[k])on.push(k==="fire"?"fire":k);});
+    $("showNote").textContent=(liveOn?"Live: ":"Not live yet: the audience sees this when you go live. ")+(on.length?on.join(", "):"plain stage");}
+  function paint(){
+    var p=$("showPnl");if(!p)return;
+    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns"),function(g){var k=g.getAttribute("data-k");Array.prototype.forEach.call(g.children,function(b){b.classList.toggle("on",b.getAttribute("data-v")===fx[k]);});});
+    Array.prototype.forEach.call(p.querySelectorAll(".sx-tog button"),function(b){b.classList.toggle("on",!!fx[b.getAttribute("data-k")]);});
+    Array.prototype.forEach.call(p.querySelectorAll("input[type=range]"),function(r){r.value=Math.round((fx[r.getAttribute("data-k")]||0)*100);});
+  }
+  /* the preview: the stage, the effects, a performer at the keys and a few dancers */
+  var dancers=[ART.looks.random(11),ART.looks.random(22),ART.looks.random(33),ART.looks.random(44)];
+  function frame(){
+    raf=0;if(!cv||!cv.isConnected||!cv.offsetWidth)return;
+    var g=cv.getContext("2d"),W=cv.width,H=cv.height,now=Date.now(),lay={stageBottom:0.36,floorBottom:0.97},ph=(now%500)/500;
+    g.clearRect(0,0,W,H);
+    ART.scene(g,W,H,lay,{now:now,phase:ph,level:0.6,playing:true,lights:fx.lights,fog:fx.fog,spotX:W/2,sign:"UNHOLY KEYS"});
+    ART.fxBack(g,W,H,lay,fx,{now:now});
+    ART.drawChar(g,W/2,H*0.18+8,2,perfLook,{armL:-0.55,armR:0.55});ART.keyboard(g,W/2,H*0.18+18,2,Math.floor(now/200)%7,"#F5D03C");
+    for(var i=0;i<4;i++)ART.drawChar(g,W*(0.18+i*0.21),H*0.7,2,dancers[i],ART.dance([1,4,8,6][i],0,[0,0,0,0],now/500+i*0.3));
+    ART.fxFront(g,W,H,lay,fx,{now:now,phase:ph,holes:[{x:W/2,y:H*0.18,r:80}]});
+    raf=requestAnimationFrame(frame);
+  }
+  function wake(){if(!raf)raf=requestAnimationFrame(frame);}
+  function init(){
+    var p=$("showPnl");if(!p)return;cv=$("showPrev");
+    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns button"),function(b){b.onclick=function(){fx[b.parentNode.getAttribute("data-k")]=b.getAttribute("data-v");send();};});
+    Array.prototype.forEach.call(p.querySelectorAll(".sx-tog button"),function(b){b.onclick=function(){var k=b.getAttribute("data-k");fx[k]=fx[k]?0:1;send();};});
+    Array.prototype.forEach.call(p.querySelectorAll("input[type=range]"),function(r){r.oninput=function(){fx[r.getAttribute("data-k")]=(+r.value)/100;clearTimeout(r.t);r.t=setTimeout(send,120);paint();};});
+    $("showBurst").onclick=function(){fx.burst=Date.now();send();};
+    $("showReset").onclick=function(){fx=JSON.parse(JSON.stringify(ART.FX_DEFAULT));send();};
+    paint();$("showNote").textContent="Changes go straight to the audience while you're live.";
+    setInterval(wake,1000);wake();
+  }
+  return{init:init,get fx(){return fx;},resend:function(){liveSend({type:"show-fx",fx:fx});}};
+})();
+window.addEventListener("load",function(){SHOW.init();});
 
 /* ── Dance rounds (performer side) ──
    With a round type chosen in the Music tab and the show live, playing a backing track runs a round:
@@ -4989,6 +5061,7 @@ var SEC_MAP={
   presets:["sec-presets"],
   music:["sec-music","sec-music-2"],
   record:["sec-record"],
+  show:["sec-show"],
   visuals:["sec-visuals"]
 };
 window.setSection=function(sec){
