@@ -139,9 +139,13 @@ var ART=(function(){
   function drawChar(g,x,y,p,L,st){
     st=st||{};if(!L)L=random(7);
     var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth};
-    var c=drawSprite(L,s),q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q;
+    var c=drawSprite(L,s),q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
-    g.drawImage(c,Math.round(x-OX*q),Math.round(y-OY*q+bob),CWD*q,CHT*q);
+    if(st.rot){
+      /* the whole body turned (the worm: lying on the floor), resting on the floor rather than floating */
+      g.save();g.translate(Math.round(x+dx),Math.round(y+8*q*Math.abs(Math.sin(st.rot))+bob));g.rotate(st.rot);
+      g.drawImage(c,-OX*q,-OY*q,CWD*q,CHT*q);g.restore();
+    }else g.drawImage(c,Math.round(x+dx-OX*q),Math.round(y-OY*q+bob),CWD*q,CHT*q);
     g.imageSmoothingEnabled=was;
   }
   /* where the shoulders and hips are on screen (for grabbing limbs), and limb lengths in art pixels */
@@ -228,13 +232,22 @@ var ART=(function(){
     pixText(f,sign.slice(0,half<0?sign.length:half),sxx,syy,sp,"#F5D03C","left","#3a1a10");
     if(half>0)pixText(f,sign.slice(half+1),sxx+(half+1)*6,syy,sp,"#E8505B","left","#3a1018");
     }
-    /* lights hanging from the truss, swinging their beams */
-    var lights=[0.2,0.36,0.64,0.8],cols=["#F5D03C","#E8505B","#D354A0","#4A9BE8"];
-    for(i=0;i<lights.length;i++){
-      var lx=Math.round(w*lights[i]),sw2=Math.sin(now*0.0007+i*1.7)*0.45,len=fb-6,al=0.05+0.06*beat*on+0.04*lv;
-      f.globalAlpha=al;f.fillStyle=cols[i];
+    /* lights hanging from the truss, swinging their beams. Modes (the performer picks): auto, party (fast,
+       colour-cycling), warm, cool, spot (one white beam on the performer), strobe (beams off; flashes in front),
+       off. Fog makes the beams show up more. */
+    var mode=st.lights||"auto",haze=1+(st.fog||0)*1.6,lights=[0.2,0.36,0.64,0.8],cols=["#F5D03C","#E8505B","#D354A0","#4A9BE8"];
+    if(mode==="warm")cols=["#F0A040","#E8505B","#F5D03C","#E86A30"];
+    if(mode==="cool")cols=["#4A9BE8","#4CC38A","#9B7FE0","#7FD8F0"];
+    var spd=mode==="party"?0.0021:mode==="warm"||mode==="cool"?0.00045:0.0007;
+    if(mode==="spot"){
+      var tx2=Math.round((st.spotX||W/2)/P),len2=sb-2;
+      f.globalAlpha=Math.min(0.5,(0.16+0.05*beat)*haze);f.fillStyle="#FFF6D8";
+      f.beginPath();f.moveTo(tx2-2,6);f.lineTo(tx2+2,6);f.lineTo(tx2+12,len2);f.lineTo(tx2-12,len2);f.closePath();f.fill();f.globalAlpha=1;
+    }else if(mode!=="off"&&mode!=="strobe")for(i=0;i<lights.length;i++){
+      var lx=Math.round(w*lights[i]),sw2=Math.sin(now*spd+i*1.7)*(mode==="party"?0.7:0.45),len=fb-6,al=Math.min(0.45,(0.05+0.06*beat*on+0.04*lv+(mode==="party"?0.04:0))*haze);
+      f.globalAlpha=al;f.fillStyle=mode==="party"?TILECOL[(i+Math.floor(now/400))%TILECOL.length]:cols[i];
       f.beginPath();f.moveTo(lx-1,6);f.lineTo(lx+2,6);f.lineTo(lx+Math.sin(sw2)*len+14,6+len);f.lineTo(lx+Math.sin(sw2)*len-14,6+len);f.closePath();f.fill();
-      f.globalAlpha=1;r(lx-1,5,3,2,"#1d1730");r(lx,7,1,1,cols[i]);
+      f.globalAlpha=1;r(lx-1,5,3,2,"#1d1730");r(lx,7,1,1,f.fillStyle);
     }
     /* the speakers thump on the beat */
     var k=beat*on*(0.5+lv);
@@ -345,6 +358,199 @@ var ART=(function(){
     return{get:function(){return JSON.parse(JSON.stringify(L));},set:function(nl){L=JSON.parse(JSON.stringify(nl));changed();}};
   }
 
-  return{maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  /* ---------------- free dance moves ----------------
+     dance(style, sub, c, bp): the pose for a dance at beat position bp (beats since a beat, fractional).
+     c = the two control dots [ax, ay, bx, by], each -1..1 (up is negative). Returns limb angles (radians,
+     0 = hanging down), bob and dx (art pixels; negative bob is up), rot (whole body, radians), mouth. Every
+     device works this out from the same style, sub-move and dots, so a dance looks the same to everyone. */
+  var DANCES=[
+    {name:"Freestyle",icon:"\uD83D\uDD7A",subs:[]},
+    {name:"Two-step",icon:"\uD83D\uDC63",subs:["Basic","Clap","Point","Shimmy"],help:"Left dot: step width and bounce. Right dot: arm swing."},
+    {name:"Hands on knees",icon:"\uD83E\uDDB5",subs:["Knock knees","Bounce","Low","Lean back"],help:"Left dot: how low and how wide. Right dot: lean."},
+    {name:"Shake it",icon:"\uD83C\uDF51",subs:["Wiggle","Drop it","Hands up","Fast"],help:"Left dot: sway and height. Right dot: lean and arms."},
+    {name:"Running man",icon:"\uD83C\uDFC3",subs:["Classic","Fast","Moonwalk","Arms pump"],help:"Left dot moves you: up and down, and slide. Right dot: knee lift and arms."},
+    {name:"Skank",icon:"\uD83C\uDFBA",subs:["Classic","Windmill","Pogo","Elbows"],help:"Left dot: knee height and travel. Right dot: punches."},
+    {name:"Robot",icon:"\uD83E\uDD16",subs:["Arms","Wave","Pop","Freeze"],help:"Each dot points an arm; it snaps like a robot."},
+    {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop","Hold"],help:"Slide your thumbs up and down: left lifts the chest, right lifts the hips."},
+    {name:"Silly",icon:"\uD83E\uDD2A",subs:["Chicken","Sprinkler","YMCA","Floss","Macarena"],help:"Left dot: size and speed. Right dot: bounce."}
+  ];
+  function clamp(v,a,b){return v<a?a:v>b?b:v;}
+  function dance(style,sub,c,bp){
+    c=c||[0,0,0,0];var ax=c[0],ay=c[1],bx=c[2],by=c[3],ph=((bp%1)+1)%1,b=Math.floor(bp),alt=b%2?1:-1,hop=Math.pow(1-ph,2),
+      s1=Math.sin(bp*Math.PI),s2=Math.sin(bp*Math.PI*2),o={armL:0.15,armR:-0.15,legL:0,legR:0,bob:0,dx:0,rot:0,mouth:false};
+    switch(style){
+    case 1:{ /* two-step: step side to side on the beat, bounce, arms swinging low */
+      var w=0.6+(ax+1)*0.5;o.dx=s1*5*w;o.bob=-hop*(1.5+Math.max(0,-ay)*3);
+      o.legL=0.1+Math.max(0,s1)*0.35*w;o.legR=-0.1+Math.min(0,s1)*0.35*w;
+      var sw=0.4+(bx+1)*0.4,up=Math.max(0,-by)*1.2;o.armL=0.3+up+s1*sw*0.5;o.armR=-0.3-up+s1*sw*0.5;
+      if(sub===1){var cl=hop>0.5;o.armL=cl?-0.9:0.9;o.armR=cl?0.9:-0.9;o.mouth=cl;}          /* clap in front */
+      if(sub===2){if(alt>0){o.armR=-2.2;o.armL=0.3;}else{o.armL=2.2;o.armR=-0.3;}}            /* point up, side to side */
+      if(sub===3){o.armL=1.5+Math.sin(bp*Math.PI*8)*0.3;o.armR=-1.5+Math.sin(bp*Math.PI*8)*0.3;}  /* shimmy */
+      break;}
+    case 2:{ /* hands on knees: squat, hands down on the knees, knees knocking in and out */
+      var low=1.5+(ay+1)*1.6,wide=0.5+(ax+1)*0.3,k=Math.abs(s2);
+      o.bob=low*1.6-hop*1.2;o.legL=wide*(sub===0?k:0.7);o.legR=-wide*(sub===0?k:0.7);
+      o.armL=-0.25+o.legL*0.3;o.armR=0.25+o.legR*0.3;o.rot=bx*0.18;
+      if(sub===1)o.bob=low*1.4-Math.abs(Math.sin(bp*Math.PI*2))*3;                             /* bounce */
+      if(sub===2){o.bob=low*2.6;o.legL=1.0;o.legR=-1.0;}                                         /* low */
+      if(sub===3){o.rot=-0.22+bx*0.1;o.armL=1.2;o.armR=-1.2;}                                    /* lean back */
+      break;}
+    case 3:{ /* shake it: hips swinging fast, hands on hips, leaning */
+      var amp=1+(ax+1)*1.2,sp=sub===3?4:2,sh=Math.sin(bp*Math.PI*sp);
+      o.dx=sh*amp;o.rot=bx*0.15+sh*0.06;o.bob=Math.max(0,ay)*4-hop;
+      o.armL=2.4;o.armR=-2.4;o.legL=0.15+sh*0.1;o.legR=-0.15+sh*0.1;
+      if(sub===1){o.bob=5+Math.abs(sh)*2;o.legL=0.8;o.legR=-0.8;}                                /* drop it */
+      if(sub===2){o.armL=2.8+sh*0.2;o.armR=-2.8+sh*0.2;}                                         /* hands up */
+      if(by<-0.4&&sub!==2){o.armL=2.7;o.armR=-2.7;}
+      break;}
+    case 4:{ /* running man: one leg forward, the other sliding back, swapping each beat; the left dot moves you */
+      var lift=0.5+Math.max(0,-by)*0.7+(sub===1?0.25:0),fast=sub===1?2:1,q=Math.sin(bp*Math.PI*fast);
+      o.legL=q*lift;o.legR=-q*lift*0.7;o.bob=ay*5-Math.abs(q)*2;o.dx=ax*8+(sub===2?-q*3:0);
+      var pump=0.5+(bx+1)*0.4+(sub===3?0.6:0);o.armL=0.4-q*pump;o.armR=-0.4-q*pump;
+      break;}
+    case 5:{ /* skank: knees up high in turn, punching forward with the opposite arm */
+      var kh=0.7+Math.max(0,-ay)*0.6,qq=Math.sin(bp*Math.PI);
+      o.legL=Math.max(0,qq)*kh;o.legR=Math.min(0,qq)*kh;o.bob=-Math.abs(qq)*3;o.dx=ax*4*s1;
+      var pu=1.2+Math.max(0,-by)*0.8+(bx+1)*0.2;o.armL=qq<0?pu:0.6;o.armR=qq>0?-pu:-0.6;
+      if(sub===1){o.armL=bp*Math.PI*2%(Math.PI*2);o.armR=-o.armL;}                               /* windmill */
+      if(sub===2){o.bob=-hop*8;o.legL=0.1;o.legR=-0.1;o.armL=2.6;o.armR=-2.6;}                    /* pogo */
+      if(sub===3){o.armL=1.6+qq*0.5;o.armR=-1.6+qq*0.5;}                                         /* elbows */
+      break;}
+    case 6:{ /* robot: each dot points an arm, snapped to 45 degree steps on the half beat */
+      var snap=function(v){return Math.round(v/(Math.PI/4))*(Math.PI/4);};
+      var aL=Math.hypot(ax,ay)>0.25?Math.atan2(-ax,ay):0.2,aR=Math.hypot(bx,by)>0.25?Math.atan2(-bx,by):-0.2;
+      o.armL=snap(aL);o.armR=snap(aR);o.bob=(Math.floor(bp*2)%2)?-1:0;o.legL=0.12;o.legR=-0.12;
+      if(sub===1){var st2=Math.floor(bp*2)%4;o.armL=[1.57,2.36,1.57,0.79][st2];o.armR=-[0.79,1.57,2.36,1.57][st2];}   /* wave */
+      if(sub===2&&ph<0.15){o.bob=-2;o.mouth=true;}                                                /* pop on the beat */
+      if(sub===3){o.bob=0;}
+      break;}
+    case 7:{ /* the worm: lying on the floor; the thumbs lift the chest (left) and the hips (right) */
+      var dir=sub===1?-1:1,chest=-ay,hips=-by;
+      if(sub===0||sub===1){var wv=Math.sin(bp*Math.PI*2);chest=chest*0.6+Math.max(0,wv)*0.6;hips=hips*0.6+Math.max(0,-wv)*0.6;o.dx=dir*Math.sin(bp*Math.PI)*3;}
+      if(sub===2){chest=hop;hips=hop;}                                                             /* flop */
+      o.rot=dir*(Math.PI/2)+dir*(hips-chest)*0.35;o.bob=-Math.max(chest,hips)*4;
+      o.armL=0.05;o.armR=-0.05;o.legL=0.04;o.legR=-0.04;
+      break;}
+    case 8:{ /* silly: the classics, one move per beat */
+      var size=0.7+(ax+1)*0.3,sp2=ay<-0.4?2:ay>0.4?0.5:1,bb=bp*sp2,bi=Math.floor(bb),pp=bb%1,bh=-Math.pow(1-pp,2)*(1+Math.max(0,-by)*4);
+      o.bob=bh;
+      if(sub===0){var flap=bi%4<2;o.armL=flap?1.2+Math.sin(bb*Math.PI*4)*0.6:0.4;o.armR=flap?-1.2-Math.sin(bb*Math.PI*4)*0.6:-0.4;o.legL=bi%4===2?0.5:0;o.legR=bi%4===3?-0.5:0;o.mouth=!flap;}   /* chicken */
+      else if(sub===1){var a8=(bi%8)/8*1.6-0.3;o.armL=1.57*size;o.armR=-(0.6+a8);o.dx=Math.sin(bb*Math.PI/4)*2;}                                     /* sprinkler */
+      else if(sub===2){var y=[[2.6,-2.6],[2.3,-2.9],[2.0,-0.6],[3.0,-3.0]][bi%4];o.armL=y[0];o.armR=y[1];o.mouth=pp<0.3;}                                 /* YMCA */
+      else if(sub===3){var fl=Math.sin(bb*Math.PI*2);o.armL=0.4+fl*0.5*size;o.armR=-0.4+fl*0.5*size;o.dx=-fl*1.5;}                                      /* floss */
+      else{var mc=bi%8;o.armL=mc<1?1.57:mc<2?1.57:mc<4?2.9:0.9;o.armR=mc<2?-1.57:mc<4?-2.9:-0.9;if(mc>=6){o.dx=Math.sin(bb*Math.PI*2)*2;}}               /* macarena */
+      break;}
+    }
+    o.armL=clamp(o.armL,-3.3,3.3);o.armR=clamp(o.armR,-3.3,3.3);o.legL=clamp(o.legL,-1.2,1.2);o.legR=clamp(o.legR,-1.2,1.2);
+    return o;
+  }
+
+  /* ---------------- show effects ----------------
+     The performer's show controls. fx = {lights, fog 0-1, lasers 0/1, dark 0-1, weather "none"|"rain"|"storm"|
+     "snow", sunset 0/1, fire 0/1, fireworks 0/1 (auto), burst (time of the last fireworks button press)}.
+     fxBack: behind the dancers (the sunset sky, the burning building). fxFront: in front of everything (fog,
+     weather, lasers, darkness with pools of light at holes [{x,y,r}], fireworks, lightning, strobe). */
+  var rocks=[],sparks=[],lastBurst=0,nextAuto=0,bolt=null,nextBolt=0;
+  function fxBack(g,W,H,lay,fx,st){
+    if(!fx)return;
+    var P=sceneP(W,H),sb=lay.stageBottom*H,now=st.now||Date.now(),i,x,y;
+    if(fx.sunset){
+      /* the back wall opens to a sunset sky: a low sun behind the stage */
+      var gr=g.createLinearGradient(0,0,0,sb);gr.addColorStop(0,"rgba(60,30,90,.85)");gr.addColorStop(0.45,"rgba(220,90,90,.75)");gr.addColorStop(0.8,"rgba(250,170,70,.8)");gr.addColorStop(1,"rgba(120,50,60,.85)");
+      g.fillStyle=gr;g.fillRect(0,P*6,W,sb-P*10);
+      var sx=W*0.5,sy=sb-P*12,sr=Math.min(W,H)*0.09;
+      g.fillStyle="rgba(255,210,90,.95)";for(y=-sr;y<=sr;y+=P)for(x=-sr;x<=sr;x+=P)if(x*x+y*y<=sr*sr&&sy+y<sb-P*6)g.fillRect(Math.round(sx+x),Math.round(sy+y),P,P);
+      g.fillStyle="rgba(255,240,180,.35)";for(i=0;i<5;i++)g.fillRect(sx-sr*1.4,sy-sr*0.6+i*P*3,sr*2.8,P);
+      /* a city skyline in silhouette */
+      g.fillStyle="rgba(30,15,40,.9)";var bx=0,bi=0;while(bx<W){var bw2=P*(8+((bi*37)%9)),bh2=P*(6+((bi*53)%14));g.fillRect(bx,sb-P*6-bh2,bw2-P,bh2);bx+=bw2;bi++;}
+    }
+    if(fx.fire){
+      /* a building ablaze behind the right side of the stage: windows glowing, flames on the roof, smoke */
+      var fw=Math.max(P*22,W*0.16),fx0=W*0.68,fh=Math.min(sb*0.62,P*44),fy=sb-P*5-fh;
+      g.fillStyle="#2a1a24";g.fillRect(fx0,fy,fw,fh);g.fillStyle="#1a0f16";g.fillRect(fx0+fw-P*2,fy,P*2,fh);
+      for(y=fy+P*3;y<fy+fh-P*4;y+=P*6)for(x=fx0+P*3;x<fx0+fw-P*4;x+=P*6){var fl=0.5+0.5*Math.sin(now*0.01+x*0.7+y*1.3);g.fillStyle=fl>0.55?"#F5A030":"#C8501E";g.fillRect(x,y,P*3,P*3);}
+      for(i=0;i<Math.ceil(fw/P);i++){var hh=(3+5*Math.abs(Math.sin(now*0.008+i*1.9))+3*Math.abs(Math.sin(now*0.013+i*0.7)))*P;
+        g.fillStyle="#E8505B";g.fillRect(fx0+i*P,fy-hh,P,hh);g.fillStyle="#F5D03C";g.fillRect(fx0+i*P,fy-hh*0.55,P,hh*0.55);}
+      g.fillStyle="rgba(40,30,40,.45)";for(i=0;i<6;i++){var ph=((now/3000)+i/6)%1;g.fillRect(fx0+fw*0.3+Math.sin(ph*6+i)*P*6-ph*P*14,fy-P*10-ph*sb*0.5,P*(6+ph*10),P*(4+ph*6));}
+    }
+  }
+  function px2(g,x,y,P,c){g.fillStyle=c;g.fillRect(Math.round(x/P)*P,Math.round(y/P)*P,P,P);}
+  function fxFront(g,W,H,lay,fx,st){
+    if(!fx)return;
+    var P=sceneP(W,H),sb=lay.stageBottom*H,fb=lay.floorBottom*H,now=st.now||Date.now(),t=now/1000,i,x,y,ph=st.phase||0,beat=Math.pow(1-ph,2);
+    /* fog rolling across the floor */
+    if(fx.fog>0){
+      g.save();
+      for(i=0;i<14;i++){var fxp=((t*0.03*(1+i%3)+i*0.137)%1.4-0.2)*W,fyp=sb+(fb-sb)*(0.25+0.7*((i*0.61)%1)),rr=W*0.12+(i%4)*W*0.03;
+        var gg=g.createRadialGradient(fxp,fyp,0,fxp,fyp,rr);gg.addColorStop(0,"rgba(200,195,230,"+(0.16*fx.fog)+")");gg.addColorStop(1,"rgba(200,195,230,0)");
+        g.fillStyle=gg;g.fillRect(fxp-rr,fyp-rr,rr*2,rr*2);}
+      g.restore();
+    }
+    /* rain or a storm: streaks falling at a slant, splashes on the floor */
+    if(fx.weather==="rain"||fx.weather==="storm"){
+      var n=fx.weather==="storm"?260:150,sl=fx.weather==="storm"?0.35:0.15;
+      g.fillStyle=fx.weather==="storm"?"rgba(170,190,230,.55)":"rgba(170,190,230,.45)";
+      for(i=0;i<n;i++){var sp=0.9+((i*7919)%100)/120,yy=((t*H*sp*1.1+i*(H/n)*7.3)%(H*1.1))-H*0.05,xx=((i*263.7)%W)+yy*sl;xx%=W;
+        g.fillRect(Math.round(xx),Math.round(yy),Math.max(1,P/2),P*3);}
+      g.fillStyle="rgba(200,215,255,.5)";
+      for(i=0;i<20;i++){var sp2=((t*2+i*0.37)%1),spx=((i*331.3)%W),spy=sb+(fb-sb)*((i*0.73)%1);if(sp2<0.3){var r2=sp2*12*P/3;g.fillRect(spx-r2,spy,r2*2,Math.max(1,P/2));}}
+    }
+    if(fx.weather==="snow"){
+      g.fillStyle="rgba(240,245,255,.9)";
+      for(i=0;i<140;i++){var sp3=0.3+((i*37)%10)/25,yy2=((t*H*sp3*0.18+i*(H/140)*9.1)%(H*1.05)),xx2=((i*197.3)%W)+Math.sin(t*0.8+i)*P*4;
+        var sz=i%5===0?P:Math.max(1,Math.round(P/2));g.fillRect(Math.round(xx2),Math.round(yy2),sz,sz);}
+    }
+    /* lasers fanning out from the stage over the crowd, sweeping with the music */
+    if(fx.lasers){
+      g.save();g.globalCompositeOperation="lighter";
+      var srcs=[[W*0.15,sb*0.25],[W*0.85,sb*0.25]],lc=["#E8505B","#4CC38A","#4A9BE8","#D354A0"];
+      srcs.forEach(function(sp4,si){
+        for(var k=0;k<5;k++){var a=Math.PI/2+Math.sin(t*0.9+k*0.6+si*2)*0.9+(si?0.25:-0.25),len=Math.max(W,H)*1.2;
+          g.strokeStyle=lc[(k+si+Math.floor(t*2))%lc.length];g.globalAlpha=0.35+0.4*beat;g.lineWidth=Math.max(1,P/2);
+          g.beginPath();g.moveTo(sp4[0],sp4[1]);g.lineTo(sp4[0]+Math.cos(a)*len,sp4[1]+Math.sin(a)*len);g.stroke();}
+        g.globalAlpha=1;g.fillStyle="#fff";g.fillRect(sp4[0]-P,sp4[1]-P,P*2,P*2);
+      });
+      g.restore();
+    }
+    /* darkness, with pools of light where the light falls (the performer, the spotlights, the fire) */
+    var dark=Math.max(fx.dark||0,fx.weather==="storm"?0.35:0);
+    if(dark>0){
+      var dc=darkCanvas(W,H),dg=dc.getContext("2d");
+      dg.globalCompositeOperation="source-over";dg.clearRect(0,0,W,H);dg.fillStyle="rgba(4,3,10,"+(dark*0.88)+")";dg.fillRect(0,0,W,H);
+      dg.globalCompositeOperation="destination-out";
+      var holes=(st.holes||[]).slice();
+      if(fx.fire)holes.push({x:W*0.68+Math.max(P*22,W*0.16)/2,y:sb*0.5,r:Math.max(W,H)*0.2});
+      holes.forEach(function(h){var rg=dg.createRadialGradient(h.x,h.y,0,h.x,h.y,h.r);rg.addColorStop(0,"rgba(0,0,0,.9)");rg.addColorStop(1,"rgba(0,0,0,0)");dg.fillStyle=rg;dg.fillRect(h.x-h.r,h.y-h.r,h.r*2,h.r*2);});
+      g.drawImage(dc,0,0);
+    }
+    /* embers off the fire, drifting over everything */
+    if(fx.fire){for(i=0;i<26;i++){var ep=((t*0.25+i*0.071)%1),ex=W*0.7+Math.sin(t+i*1.7)*W*0.18-ep*W*0.1,ey=sb*0.4-ep*sb*0.5+((i*13)%7)*P;
+      g.globalAlpha=1-ep;px2(g,ex,ey+ep*H*0.6,P,i%3?"#F5A030":"#F5D03C");}g.globalAlpha=1;}
+    /* fireworks: rockets climb from behind the stage and burst over it */
+    if(fx.burst&&fx.burst!==lastBurst){lastBurst=fx.burst;for(i=0;i<5;i++)rocks.push({x:W*(0.15+0.7*Math.random()),t0:now+i*220,top:sb*(0.08+Math.random()*0.35),c:TILECOL[Math.floor(Math.random()*TILECOL.length)]});}
+    if(fx.fireworks&&now>nextAuto){nextAuto=now+900+Math.random()*2200;rocks.push({x:W*(0.12+0.76*Math.random()),t0:now,top:sb*(0.08+Math.random()*0.4),c:TILECOL[Math.floor(Math.random()*TILECOL.length)]});}
+    var keep=[];
+    rocks.forEach(function(r){var a=(now-r.t0)/700;if(a<0){keep.push(r);return;}
+      if(a<1){var ry=sb-(sb-r.top)*Math.sin(a*Math.PI/2);px2(g,r.x,ry,P,"#FFF6D0");g.globalAlpha=0.5;px2(g,r.x,ry+P*2,P,r.c);g.globalAlpha=1;keep.push(r);}
+      else{for(var k=0;k<34;k++){var an=k/34*Math.PI*2,v=0.06+(k%3)*0.025;sparks.push({x:r.x,y:r.top,vx:Math.cos(an)*v,vy:Math.sin(an)*v,t0:now,c:k%4?r.c:"#FFF6D0"});}}});
+    rocks=keep;
+    var ks=[];
+    sparks.forEach(function(s2){var a2=now-s2.t0;if(a2>1300)return;var k2=1-a2/1300;
+      g.globalAlpha=k2;px2(g,s2.x+s2.vx*a2,s2.y+s2.vy*a2+a2*a2*0.00006,P,s2.c);ks.push(s2);});
+    g.globalAlpha=1;sparks=ks.slice(-900);
+    /* storm: lightning now and then, a white flash and a bolt */
+    if(fx.weather==="storm"){
+      if(now>nextBolt){nextBolt=now+2500+Math.random()*6000;var pts=[],bx2=W*(0.15+Math.random()*0.7),by2=0;while(by2<sb*0.9){pts.push([bx2,by2]);bx2+=(Math.random()-0.5)*P*10;by2+=P*(3+Math.random()*5);}bolt={t0:now,pts:pts};}
+      if(bolt){var ba=(now-bolt.t0)/350;if(ba<1){g.fillStyle="rgba(230,235,255,"+(0.35*(1-ba))+")";g.fillRect(0,0,W,H);
+        g.strokeStyle="rgba(255,255,255,"+(1-ba)+")";g.lineWidth=P;g.beginPath();bolt.pts.forEach(function(q,qi){if(qi)g.lineTo(q[0],q[1]);else g.moveTo(q[0],q[1]);});g.stroke();}}
+    }
+    /* strobe: white flashes on the beat */
+    if(fx.lights==="strobe"&&ph<0.08){g.fillStyle="rgba(255,255,255,"+(0.5*(1-ph/0.08))+")";g.fillRect(0,0,W,H);}
+  }
+  var dkc=null;function darkCanvas(W,H){if(!dkc)dkc=canv(W,H);if(dkc.width!==W||dkc.height!==H){dkc.width=W;dkc.height=H;}return dkc;}
+  /* the show's controls, with their defaults (also what the server accepts) */
+  var FX_DEFAULT={lights:"auto",fog:0,lasers:0,dark:0,weather:"none",sunset:0,fire:0,fireworks:0,burst:0};
+
+  return{fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
