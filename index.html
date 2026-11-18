@@ -4072,7 +4072,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.30.7",SERVER_VERSION="";
+var PAGE_VERSION="1.30.8",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4324,6 +4324,30 @@ function drawAud(){
 /* The venue as your audience sees it: the stage, you at your keyboard, the effects and everyone in the crowd.
    Used small in the jam corner panel, and full screen in jam's stage view (opts.stage: a taller stage, with the
    Jumbotron at opts.jt {x,y,w,h,k}). */
+/* The note you're playing, big on the Jumbotron screen (rect x,y,w,h): the note name pops in on each new note
+   in its own colour, with a strip of piano keys along the bottom lighting the key. Fades after you let go. */
+function jumboNote(g,x,y,w,h,now){
+  var on=PPLAY.on,age=now-PPLAY.t0,rel=on?0:now-PPLAY.off;
+  var a=on?1:Math.max(0,1-rel/1400);if(!PPLAY.n||a<=0.01)return;
+  var m=PPLAY.midi,pc=((m%12)+12)%12,oct=Math.floor(m/12)-1,hue=pc*30,col="hsl("+hue+",90%,62%)";
+  g.save();g.globalAlpha=a;
+  /* a soft dark backing so the name reads over any visuals */
+  g.fillStyle="rgba(0,0,0,.45)";g.fillRect(x,y,w,h);
+  /* the name: a little bigger for the first moment of each note */
+  var name=ROOTS[pc]+oct,kh=Math.round(h*0.2),pop=1+0.18*Math.max(0,1-age/180);
+  var p=Math.max(2,Math.floor(Math.min((h-kh)*0.5/7,w*0.8/(name.length*6))*pop));
+  ART.pixText(g,name,x+w/2,y+(h-kh)/2-p*3.5,p,col,"center","rgba(0,0,0,.7)");
+  /* glow ring that pulses out on each new note */
+  if(age<500){g.strokeStyle=col;g.globalAlpha=a*(1-age/500);g.lineWidth=Math.max(2,p/2);var r=p*6+age*w/1400;
+    g.beginPath();g.arc(x+w/2,y+(h-kh)/2,r,0,Math.PI*2);g.stroke();g.globalAlpha=a;}
+  /* two octaves of keys centred on the note's octave */
+  var lo=(oct+1)*12-(pc<6?12:0),wk=[0,2,4,5,7,9,11],nW=14,kw=w/nW,ky=y+h-kh;
+  for(var i=0;i<nW;i++){var mm=lo+Math.floor(i/7)*12+wk[i%7],hit=mm===m;
+    g.fillStyle=hit?col:"#eee";g.fillRect(Math.round(x+i*kw)+1,ky,Math.ceil(kw)-2,kh);}
+  for(var j=0;j<nW;j++){var bpc=wk[j%7];if(bpc===4||bpc===11)continue;var bm=lo+Math.floor(j/7)*12+bpc+1;
+    g.fillStyle=bm===m?col:"#111";g.fillRect(Math.round(x+(j+1)*kw-kw*0.3),ky,Math.round(kw*0.6),Math.round(kh*0.6));}
+  g.restore();
+}
 var PCROWD={kind:"",t0:-1e9,lastT:0};
 function drawVenueTo(g,W,H,opts){
   var stage=!!(opts&&opts.stage),ids=Object.keys(AUD.people),now=Date.now(),sfx=STAGEFX.fx;
@@ -4338,7 +4362,7 @@ function drawVenueTo(g,W,H,opts){
   /* the Jumbotron (stage view): its frame; the video sits on it, or your visuals are drawn into it */
   if(opts&&opts.jt&&opts.jt.k>0.01){var jt=opts.jt,P=ART.sceneP(W,H);ART.jumboFrame(g,jt,P);
     g.fillStyle="#000";g.fillRect(jt.x,jt.y,jt.w,jt.h);
-    if(!opts.video){var vc=document.getElementById("jcv");if(vc&&vc.width){try{g.drawImage(vc,jt.x,jt.y,jt.w,jt.h);}catch(e){}}}}
+    if(!opts.video){var vc=document.getElementById("jcv");if(vc&&vc.width){try{g.drawImage(vc,jt.x,jt.y,jt.w,jt.h);}catch(e){}}if(jt.k>0.5)jumboNote(g,jt.x,jt.y,jt.w,jt.h,now);}}
   /* a crowd surprise set off from the Show tab */
   if(sfx.crowd&&sfx.crowdT&&sfx.crowdT!==PCROWD.lastT){PCROWD.lastT=sfx.crowdT;PCROWD.kind=sfx.crowd;PCROWD.t0=now;}
   var cAge=now-PCROWD.t0,crowd=cAge<ART.CROWD_MS&&PCROWD.kind?{kind:PCROWD.kind,age:cAge,target:{x:W/2,y:SB*H*0.25}}:null;
@@ -4405,8 +4429,9 @@ var JAMSTAGE=(function(){
     var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
     var jumbo=STAGEFX.fx.jumbo||"auto",want=jumbo!=="up";k+=((want?1:0)-k)*0.05;
     /* the Jumbotron hangs in the upper part of the stage; it drops in from above */
-    var SBH=0.44*H,hh=SBH*0.6,ww=Math.min(hh*16/9,W*0.5);hh=ww*9/16;
-    var y0=Math.round(SBH*0.07),drop=(1-(1-Math.pow(1-k,3)))*(y0+hh+60);
+    var SBH=0.44*H,y0=Math.round(Math.max(SBH*0.07,58)),hh=Math.min(SBH*0.8,SBH*0.97-y0),ww=Math.min(hh*16/9,W*0.66);hh=ww*9/16;
+    /* (it starts below the jam toolbar so the toolbar's buttons stay clickable) */
+    var drop=(1-(1-Math.pow(1-k,3)))*(y0+hh+60);
     var jt={x:Math.round(W/2-ww/2),y:Math.round(y0-drop),w:Math.round(ww),h:Math.round(hh),k:k},vid=videoOn();
     drawVenueTo(g,W,H,{stage:true,jt:jt,video:vid});
     /* the video element sits exactly on the Jumbotron's screen */
@@ -4733,7 +4758,7 @@ var STAGEFX=(function(){
     if(jk>0.01){var jh=Math.round(H*lay.stageBottom*0.48),jw=Math.round(jh*16/9),jy0=Math.round(H*0.02),jdrop=Math.pow(1-jk,3)*(jy0+jh+40);
       var jt={x:Math.round(W/2-jw/2),y:Math.round(jy0-jdrop),w:jw,h:jh,k:jk};ART.jumboFrame(g,jt,ART.sceneP(W,H));
       var vc=$("jcv");g.fillStyle="#000";g.fillRect(jt.x,jt.y,jt.w,jt.h);
-      if(vc&&vc.width&&jamOn){try{g.drawImage(vc,jt.x,jt.y,jt.w,jt.h);}catch(e){}}
+      if(vc&&vc.width&&jamOn){try{g.drawImage(vc,jt.x,jt.y,jt.w,jt.h);}catch(e){}jumboNote(g,jt.x,jt.y,jt.w,jt.h,now);}
       else{var bars=["#C0C0C0","#C0C000","#00C0C0","#00C000","#C000C0","#C00000","#0000C0"];for(var bi=0;bi<7;bi++){g.fillStyle=bars[bi];g.fillRect(jt.x+Math.round(bi*jt.w/7),jt.y,Math.ceil(jt.w/7),jt.h);}
         g.fillStyle="rgba(0,0,0,.55)";g.fillRect(jt.x,jt.y+jt.h*0.4,jt.w,jt.h*0.2);g.fillStyle="#fff";g.font="bold "+Math.round(jt.h*0.13)+"px monospace";g.textAlign="center";g.textBaseline="middle";g.fillText("YOUR VIDEO",jt.x+jt.w/2,jt.y+jt.h/2);}}
     var pyy=H*(0.18+0.12*Math.max(0,Math.min(1,(jk-0.3)/0.5)));
@@ -5094,6 +5119,7 @@ var STREAM=(function(){
     if(!vEnc||vEnc.state!=="configured"||!visualsOn||!jamOn||!jCanvas||vEnc.encodeQueueSize>2)return;
     vCtx.fillStyle="#000";vCtx.fillRect(0,0,VW,VH);
     try{vCtx.drawImage(jCanvas,0,0,VW,VH);}catch(e){}
+    jumboNote(vCtx,0,0,VW,VH,Date.now());
     /* small caption: instrument and key */
     var ins=findInst(S.eng);vCtx.font="600 13px system-ui,sans-serif";vCtx.fillStyle="rgba(0,0,0,.45)";
     var cap=(ins?ins.l:"")+"  ·  "+ROOTS[S.root]+" "+S.scale;var w=vCtx.measureText(cap).width;
