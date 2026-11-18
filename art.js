@@ -470,7 +470,7 @@ var ART=(function(){
   /* the disco ball: lowers on its cable to above the dance floor, spins, and throws spots of light round the room */
   function discoBall(g,W,H,sb,fb,P,now){
     var k=easeOut(drop.disco);if(k<=0.001)return;
-    var R=Math.max(P*7,Math.min(W,H)*0.045),cx=W/2,cy=-R*2+(sb*0.62+R*2)*k,t=now/1000,i;
+    var R=Math.max(P*7,Math.min(W,H)*0.045),cx=W/2,cy=-R*2+(sb+R*1.3+R*2)*k,t=now/1000,i;      /* hangs over the front of the dance floor */
     g.fillStyle="#6a5c8a";g.fillRect(Math.round(cx-P/4),0,Math.max(1,Math.round(P/2)),Math.max(0,cy-R));
     var was=g.imageSmoothingEnabled;g.save();g.beginPath();g.arc(cx,cy,R,0,6.3);g.clip();
     g.fillStyle="#5d5670";g.fillRect(cx-R,cy-R,R*2,R*2);
@@ -504,19 +504,20 @@ var ART=(function(){
   var BCOL=["#E8505B","#F5D03C","#4CC38A","#4A9BE8","#9B7FE0","#D354A0","#F0A040"];
   function balloonsAndConfetti(g,W,H,sb,fb,P,fx,now){
     var i;
-    if(fx.balloonT&&fx.balloonT!==lastBalloon){lastBalloon=fx.balloonT;for(i=0;i<70;i++)balloons.push({x:Math.random()*W,y:-Math.random()*H*0.6-20,c:BCOL[i%BCOL.length],v:0.03+Math.random()*0.03,t0:now,ph:Math.random()*6,land:sb+(fb-sb)*(0.2+Math.random()*0.8)});}
-    if(fx.confettiT&&fx.confettiT!==lastConfetti){lastConfetti=fx.confettiT;for(i=0;i<260;i++){var side=i%2,an=-Math.PI/2+(side?-0.55:0.55)+(Math.random()-0.5)*0.9,v=0.5+Math.random()*0.7;
-      confetti.push({x:side?W*0.92:W*0.08,y:sb*0.85,vx:Math.cos(an)*v,vy:Math.sin(an)*v,t0:now,c:BCOL[i%BCOL.length],ph:Math.random()*6});}}
+    /* kept in fractions of the screen (x of W, y of H), so every canvas they're drawn on gets them in place */
+    if(fx.balloonT&&fx.balloonT!==lastBalloon){lastBalloon=fx.balloonT;for(i=0;i<70;i++)balloons.push({x:Math.random(),y:-Math.random()*0.6-0.03,c:BCOL[i%BCOL.length],v:0.00005+Math.random()*0.00005,t0:now,ph:Math.random()*6,land:0.2+Math.random()*0.8});}
+    if(fx.confettiT&&fx.confettiT!==lastConfetti){lastConfetti=fx.confettiT;for(i=0;i<260;i++){var side=i%2,an=-Math.PI/2+(side?-0.55:0.55)+(Math.random()-0.5)*0.9,v=0.0007+Math.random()*0.001;
+      confetti.push({x:side?0.92:0.08,y:-1,vx:Math.cos(an)*v,vy:Math.sin(an)*v,t0:now,c:BCOL[i%BCOL.length],ph:Math.random()*6});}}
     var bs=Math.max(P*3,Math.round(Math.min(W,H)*0.022)),kb=[];
     balloons.forEach(function(b){var a=now-b.t0;if(a>12000)return;
-      var y=Math.min(b.land,b.y+a*b.v),x=b.x+Math.sin(a*0.0015+b.ph)*P*3,fade=a>10500?1-(a-10500)/1500:1;
+      var land=sb+(fb-sb)*b.land,y=Math.min(land,(b.y+a*b.v)*H),x=b.x*W+Math.sin(a*0.0015+b.ph)*P*3,fade=a>10500?1-(a-10500)/1500:1;
       g.globalAlpha=fade;g.strokeStyle="rgba(255,255,255,.5)";g.lineWidth=1;g.beginPath();g.moveTo(x,y+bs);g.lineTo(x+Math.sin(a*0.003)*P,y+bs*2.2);g.stroke();
       g.fillStyle=b.c;g.beginPath();g.ellipse(x,y,bs*0.8,bs,0,0,6.3);g.fill();g.fillStyle="rgba(255,255,255,.55)";g.fillRect(Math.round(x-bs*0.4),Math.round(y-bs*0.55),Math.max(1,P),Math.max(1,P));
       kb.push(b);});
     balloons=kb;
     var kc=[];
     confetti.forEach(function(c){var a=now-c.t0;if(a>6000)return;
-      var x=c.x+c.vx*a*0.9+Math.sin(a*0.006+c.ph)*P*2,y=c.y+c.vy*a+a*a*0.00022;y=Math.min(y,fb-P);
+      var x=(c.x+c.vx*a*0.9)*W+Math.sin(a*0.006+c.ph)*P*2,y=sb*0.85+c.vy*a*H+a*a*0.00000035*H;y=Math.min(y,fb-P);
       g.globalAlpha=a>4500?1-(a-4500)/1500:1;g.fillStyle=c.c;var fl=Math.abs(Math.sin(a*0.012+c.ph));g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(P*fl)),Math.max(1,P));kc.push(c);});
     confetti=kc.slice(-1200);g.globalAlpha=1;
   }
@@ -669,6 +670,21 @@ var ART=(function(){
 
   /* someone arriving mid-show: the one-shot moments already set off are treated as seen, so they don't replay */
   function primeFx(fx){if(!fx)return;lastBurst=fx.burst||0;lastBalloon=fx.balloonT||0;lastConfetti=fx.confettiT||0;drop.disco=fx.disco?1:0;drop.banner=fx.banner?1:0;}
-  return{primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  /* lights following someone's playing: feed it notes (midi, and whether one is sounding); read() gives
+     {h: 0 low .. 1 high within the range they've been playing, hue (from the note), a (how recently)} */
+  function follower(){
+    var lo=48,hi=72,h=0.5,hue=0,last=-1e9,midi=60,on=false;
+    return{note:function(m,isOn){if(isOn){midi=m;last=Date.now();lo=Math.min(lo+0.02,m);hi=Math.max(hi-0.02,m);if(hi-lo<12){var md=(hi+lo)/2;lo=md-6;hi=md+6;}}on=!!isOn;},
+      read:function(){var age=Date.now()-last,tg=Math.max(0,Math.min(1,(midi-lo)/(hi-lo)));h+=(tg-h)*0.18;hue=(((midi%12)+12)%12)*30;return{h:h,hue:hue,a:on||age<300?1:Math.max(0,1-(age-300)/1500)};}};
+  }
+  /* how a crowd surprise changes one dancer at (x,y), art pixel p: how far they float up, and for hand lasers
+     where both arms point (at target) and where the hands are */
+  function crowdPose(kind,age,x,y,p,target){
+    var lift=crowdLift(kind,age,p);
+    if(kind!=="lasers"||crowdK(age)<=0||!target)return{lift:lift};
+    var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
+    return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
+  }
+  return{crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

@@ -148,6 +148,15 @@ body.jset #app.jx #side-name{display:none}
 #jmVL{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,transparent 18%,transparent 72%,rgba(0,0,0,.45) 100%);pointer-events:none}
 #jmR{position:absolute;inset:0;z-index:2;background:transparent;overflow:hidden}
 #jcv{position:absolute;top:0;left:0;pointer-events:none;opacity:0.55}
+/* jam stage view: the venue fills the screen; the video sits on the Jumbotron (placed by JAMSTAGE) */
+#jStage{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;image-rendering:pixelated}
+#jm.stage #jStage{display:block}
+#jm.stage #jcv{opacity:0}
+#jm.stage #jmV{z-index:3;transition:none}
+#jm.stage #jmV iframe,#jm.stage #jmV video{opacity:1!important}
+#jm.stage #jmVL{display:none}
+#jStageBtn{position:absolute;top:20px;right:505px;z-index:10;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(127,119,221,.14);border:1px solid rgba(127,119,221,.45);border-radius:var(--r);color:#cfc9ff}
+#jStageBtn.on{background:linear-gradient(135deg,#D354A0,#7F77DD);color:#fff;border-color:transparent}
 #jnd{display:none}
 #streamRow{margin-top:10px;padding-top:10px;border-top:1px solid #ff444422;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--tx2)}
 #streamRow .st{font-weight:600}
@@ -602,6 +611,12 @@ body.jset .nav-item.jam-only{display:flex}
     <div class="sx-row"><span class="sx-l">Lights</span><span class="sx-btns" data-k="lights"><button data-v="auto">Auto</button><button data-v="party">Party</button><button data-v="strobe">Strobe</button><button data-v="spot">Spotlight</button><button data-v="warm">Warm</button><button data-v="cool">Cool</button><button data-v="off">Off</button></span></div>
     <div class="sx-row"><span class="sx-l">Weather</span><span class="sx-btns" data-k="weather"><button data-v="none">Clear</button><button data-v="rain">&#127783; Rain</button><button data-v="storm">&#9928; Storm</button><button data-v="snow">&#10052; Snow</button></span></div>
     <div class="sx-row"><span class="sx-l">Fog</span><input type="range" min="0" max="100" data-k="fog"><span class="sx-l">Darkness</span><input type="range" min="0" max="100" data-k="dark"></div>
+    <div class="sx-row"><span class="sx-l">Follow</span><span class="sx-tog"><button data-k="follow" title="The lights climb and fall with where you're playing in your range, in the colour of the note">&#127929; Lights follow my playing</button></span></div>
+    <div class="sx-row"><span class="sx-l">Jumbotron</span><span class="sx-btns" data-k="jumbo"><button data-v="auto" title="Lowers while a video or your visuals are playing">Auto</button><button data-v="down">Down</button><button data-v="up">Up</button></span>
+      <span class="sx-l">Jam view</span><span class="sx-btns" id="jamViewBtns"><button data-jv="classic">Classic</button><button data-jv="stage" title="Your venue, with the video or your visuals on the Jumbotron">&#127967; Stage</button></span></div>
+    <div class="sx-row"><span class="sx-l">Lower in</span><span class="sx-tog"><button data-k="disco">&#129705; Disco ball</button><button data-k="banner">&#127987; Banner</button></span><input type="text" id="showBannerText" maxlength="20" placeholder="Banner text" style="width:150px;background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);border-radius:var(--r);padding:5px 8px;font-size:12px"></div>
+    <div class="sx-row"><span class="sx-l">Moments</span><span class="sx-btns" id="showMoments"><button data-m="balloonT">&#127880; Balloon drop</button><button data-m="confettiT">&#127882; Confetti</button></span></div>
+    <div class="sx-row"><span class="sx-l">Crowd</span><span class="sx-btns" id="showCrowd" title="Everyone in the crowd, for a few seconds"><button data-c="sparkle">&#10024; Sparkle</button><button data-c="fire">&#128293; On fire</button><button data-c="lasers">&#128302; Hand lasers</button><button data-c="float">&#127880; Float</button></span></div>
     <div class="sx-row"><span class="sx-l">Extras</span><span class="sx-tog"><button data-k="lasers">&#128998; Lasers</button><button data-k="sunset">&#127749; Sunset</button><button data-k="fire">&#128293; Burning building</button><button data-k="fireworks">&#127879; Fireworks (auto)</button></span></div>
     <div class="sx-row"><button class="btn" id="showBurst" title="Launch a volley of fireworks now">&#127878; Launch fireworks</button><button class="btn" id="showReset">Reset all</button><span id="showNote"></span></div>
   </div>
@@ -640,7 +655,8 @@ body.jset .nav-item.jam-only{display:flex}
 </div>
 <div id="jm">
   <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
-  <div id="jmR"><canvas id="jcv"></canvas><div id="jnd"></div>
+  <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
+    <button id="jStageBtn" title="Stage view: your venue, with the video on a Jumbotron">&#127967; Stage</button>
     <button id="jx" style="display:none">ESC Exit</button>
     <button id="jSetupBtn" title="Set up anything: instruments, key, presets and effects, music, visuals (M)">&#9776; Setup <span class="hk">M</span></button>
     <button id="jfs" style="display:none;position:absolute;top:20px;right:130px;z-index:10;padding:8px 14px;font-size:11px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);color:#fff;text-transform:uppercase">&#9974; FS</button>
@@ -3907,7 +3923,7 @@ function goLive(){
       document.getElementById("bLive").style.animation="pls 1s infinite";
       liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
       var vm=videoMsg();if(vm)liveSend(vm);               /* already playing something when going live */
-      SHOW.resend();                                      /* the show effects you've set up */
+      STAGEFX.resend();                                   /* the show effects you've set up */
       STREAM.announce();STREAM.render();
     }
     if(msg.type==="viewer-count"){
@@ -3935,15 +3951,19 @@ function endLive(){
 document.getElementById("bLive").onclick=function(){goLive();};
 document.getElementById("liveStop").onclick=function(){endLive();};
 
+/* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
+var PFOLLOW=ART.follower();
 /* Hook into playNote to broadcast */
 var _origPlayNote=playNote;
 playNote=function(nk,midi){
   _origPlayNote(nk,midi);
+  PFOLLOW.note(midi,true);
   liveSend({type:"note",midi:midi,on:true,inst:S.eng,mode:S.mode,nk:nk});
 };
 var _origSilence=silenceNote;
 silenceNote=function(){
   _origSilence();
+  PFOLLOW.note(0,false);
   liveSend({type:"note",on:false});
 };
 /* Hook into selInst to broadcast instrument changes */
@@ -4090,7 +4110,7 @@ var STREAK=(function(){
   return{draw:draw,pop:pop,track:track,level:level};
 })();
 
-function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys,fd){
+function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys,fd,crowd){
   /* the venue's pixel character (art.js), small: name under the feet */
   var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,p=Math.max(1,Math.round(sc));
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
@@ -4106,8 +4126,12 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
   if(atKeys){var pl=glow?Math.sin(now*0.02):0;armL=-.55+pl*.18;armR=.55+pl*.18;mouth=glow;}
   var dxs=0,rot=0;
   if(fd){var rg=ART.dance(fd.s,fd.m,fd.c,now/500);armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*p;dxs=rg.dx*p;rot=rg.rot;mouth=rg.mouth;}
+  /* a crowd surprise: float up; hand lasers point both arms at the stage */
+  var cr=crowd&&crowd.kind?ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target):null;
+  if(cr){y+=cr.lift;if(cr.armL!==undefined){armL=cr.armL;armR=cr.armR;fd=null;}}
   if(glow){var gl=g.createRadialGradient(x,y-6*p,3,x,y-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,y-6*p,24*p,0,6.3);g.fill();}
   ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
+  if(cr)ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,seed||0,cr.hands,crowd.target);
   if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+10*p,y-20*p-ph*14);g.globalAlpha=1;}
   /* name under the feet, steady while dancing */
   g.font="600 "+Math.round(10.5*Math.min(sc,1.4))+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="top";
@@ -4130,27 +4154,43 @@ function audBubble(g,x,headY,text,color,alpha,W){
 }
 function drawAud(){
   var box=document.getElementById("jAud");if(!box)return;
-  var show=jamOn&&liveOn;
+  var show=jamOn&&liveOn&&!JAMSTAGE.on;                 /* the stage view shows the audience itself */
   if(show!==box.classList.contains("on"))box.classList.toggle("on",show);
   box.classList.toggle("min",AUD.min);box.classList.toggle("big",AUD.big);
   if(!show)return;
   document.getElementById("jAudRoom").textContent="Live · "+(document.getElementById("liveCode").textContent||"");
-  var ids=Object.keys(AUD.people);
-  var n=Math.max(AUD.count,ids.length);document.getElementById("jAudN").textContent=n+" viewer"+(n!==1?"s":"");
+  var n=Math.max(AUD.count,Object.keys(AUD.people).length);document.getElementById("jAudN").textContent=n+" viewer"+(n!==1?"s":"");
   if(AUD.min)return;
   var cv=document.getElementById("jAudCv"),dpr=Math.min(2,window.devicePixelRatio||1);
   var W=cv.clientWidth||400,H=cv.clientHeight||240;
   if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
   var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
-  var sy=H/0.82,sc=Math.max(1,Math.min(1.6,W/420));
+  drawVenueTo(g,W,H,null);
+}
+/* The venue as your audience sees it: the stage, you at your keyboard, the effects and everyone in the crowd.
+   Used small in the jam corner panel, and full screen in jam's stage view (opts.stage: a taller stage, with the
+   Jumbotron at opts.jt {x,y,w,h,k}). */
+var PCROWD={kind:"",t0:-1e9,lastT:0};
+function drawVenueTo(g,W,H,opts){
+  var stage=!!(opts&&opts.stage),ids=Object.keys(AUD.people),now=Date.now(),sfx=STAGEFX.fx;
+  var sy=H/0.82,sc=stage?Math.max(1.5,Math.min(3.5,W/520)):Math.max(1,Math.min(1.6,W/420));
+  /* where a venue height (0 top of the stage .. 0.30 front of the stage .. 0.78 back of the hall) lands here */
+  var SB=stage?0.44:0.30*sy/H,FB=stage?0.98:Math.min(1,.78*sy/H);
+  function Y(v){return v<=0.30?v/0.30*SB*H:(SB+(v-0.30)/0.48*(FB-SB))*H;}
   g.clearRect(0,0,W,H);
-  /* stage (venue y 0-0.30) and floor (0.30-0.78), same layout as venue.html */
-  var now=Date.now(),alay={stageBottom:.30*sy/H,floorBottom:Math.min(1,.78*sy/H)},sfx=SHOW.fx;
-  ART.scene(g,W,H,alay,{now:now,phase:(now%600)/600,level:activeVoice?0.7:0.3,playing:!!activeVoice,sign:false,lights:sfx.lights,fog:sfx.fog,spotX:W/2});
-  ART.fxBack(g,W,H,alay,sfx,{now:now});
-  /* you, on stage at your keyboard; glows while a note is sounding */
-  var pp=Math.max(2,Math.round(sc*1.25)),py=.15*sy+8;
-  audPerson(g,W/2,py,"#D354A0",(typeof stageName==="function"?stageName():"You"),pp,0,0,!!activeVoice,now,"#F5C518",null,null,1e9,perfLook,true);
+  var alay={stageBottom:SB,floorBottom:FB},ph=(now%600)/600,fol=sfx.follow?PFOLLOW.read():null;
+  ART.scene(g,W,H,alay,{now:now,phase:ph,level:activeVoice?0.7:0.3,playing:!!activeVoice,sign:stage?"UNHOLY KEYS":false,lights:sfx.lights,fog:sfx.fog,spotX:W/2,follow:fol});
+  ART.fxBack(g,W,H,alay,sfx,{now:now,jumbo:!!(opts&&opts.jt&&opts.jt.k>0.5)});
+  /* the Jumbotron (stage view): its frame; the video sits on it, or your visuals are drawn into it */
+  if(opts&&opts.jt&&opts.jt.k>0.01){var jt=opts.jt,P=ART.sceneP(W,H);ART.jumboFrame(g,jt,P);
+    g.fillStyle="#000";g.fillRect(jt.x,jt.y,jt.w,jt.h);
+    if(!opts.video){var vc=document.getElementById("jcv");if(vc&&vc.width){try{g.drawImage(vc,jt.x,jt.y,jt.w,jt.h);}catch(e){}}}}
+  /* a crowd surprise set off from the Show tab */
+  if(sfx.crowd&&sfx.crowdT&&sfx.crowdT!==PCROWD.lastT){PCROWD.lastT=sfx.crowdT;PCROWD.kind=sfx.crowd;PCROWD.t0=now;}
+  var cAge=now-PCROWD.t0,crowd=cAge<ART.CROWD_MS&&PCROWD.kind?{kind:PCROWD.kind,age:cAge,target:{x:W/2,y:SB*H*0.25}}:null;
+  /* you, on stage at your keyboard (at the front of the stage when the Jumbotron is down); glows while a note sounds */
+  var pp=stage?Math.max(3,Math.round(H/260)):Math.max(2,Math.round(sc*1.25)),py=stage?SB*H-14*pp:.15*sy+8;
+  audPerson(g,W/2,py,"#D354A0",(typeof stageName==="function"?stageName():"You"),pp,0,0,!!activeVoice,now,"#F5C518",null,null,1e9,perfLook,true,null,crowd&&crowd.kind!=="lasers"&&crowd.kind!=="float"?crowd:null);
   ART.keyboard(g,W/2,py+5*pp,pp,activeVoice?Math.floor(now/180)%7:-1,"#F5D03C");
   /* audience, back to front so nearer people overlap farther ones */
   ids.sort(function(a,b){return AUD.people[a].dy-AUD.people[b].dy;});
@@ -4161,25 +4201,73 @@ function drawAud(){
     var step=Math.hypot(mx*W,my*sy);
     if(step>.15){p.walk=(p.walk||0)+Math.min(.5,step*.22+.12);p.walkUntil=now+120;}
     var walking=now<(p.walkUntil||0);
-    var x=p.dx*W,y=Math.min(H-24,p.dy*sy);
+    var x=p.dx*W,y=Math.min(H-24,Y(p.dy));
     var pz=null;
     if(p.dance>=4&&p.pose){if(!p.poseCur)p.poseCur=p.pose.slice();for(var q=0;q<4;q++)p.poseCur[q]+=(p.pose[q]-p.poseCur[q])*.4;pz=p.poseCur;}
     var cmb=p.dance>=4?(p.combo||0):0;STREAK.track(p,cmb);
     if(cmb>=10)STREAK.draw(g,x,y,sc*0.95,cmb,now,p.seed||0);
     if(!p.look)p.look=audLook("",p.color,p.name);
-    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null);
+    var cw=crowd&&crowd.kind==="lasers"?{kind:"lasers",age:cAge,target:{x:W/2+Math.sin(now/650+(p.seed||0))*W*0.32,y:SB*H*0.25}}:crowd;
+    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null,cw);
     if(p.msT&&now-p.msT<1700)STREAK.pop(g,x,headY,p.msN,now-p.msT,Math.max(0.75,sc*0.7));
     else if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
     heads.push([p,x,headY]);});
-  ART.fxFront(g,W,H,alay,sfx,{now:now,phase:(now%600)/600,holes:[{x:W/2,y:.15*sy,r:Math.max(70,W*0.14)}]});
+  ART.fxFront(g,W,H,alay,sfx,{now:now,phase:ph,holes:[{x:W/2,y:py,r:Math.max(70,W*0.14)}]});
   /* speech bubbles on top of everyone; oldest first so the newest is on top */
   heads.filter(function(h){return h[0].text&&now-h[0].said<AUD_SAY_MS;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
     var age=now-h[0].said,al=age>AUD_SAY_MS-1200?(AUD_SAY_MS-age)/1200:1;
     audBubble(g,h[1],h[2],h[0].text,h[0].color,al,W);
   });
-  if(!ids.length){g.fillStyle="rgba(255,255,255,.35)";g.font="15px system-ui,sans-serif";g.textAlign="center";g.fillText("Waiting for the audience…",W/2,.58*sy);}
+  if(!ids.length&&!stage){g.fillStyle="rgba(255,255,255,.35)";g.font="15px system-ui,sans-serif";g.textAlign="center";g.fillText("Waiting for the audience…",W/2,.58*sy);}
 }
+
 setInterval(drawAud,50);
+/* ── Jam stage view ──
+   Jam mode can show your venue instead of the classic visuals: the stage, you at the keys, the effects and the
+   crowd, with a Jumbotron lowered over the stage carrying the video (YouTube, a music video, the video library)
+   or, with no video, your visuals. Switch with the 🏟 button in jam, or Jam view in the Show tab. */
+var JAMSTAGE=(function(){
+  var on=false,k=0,raf=0,cv=null,last="";
+  try{on=localStorage.getItem("uk_jamview")==="stage";}catch(e){}
+  function $(id){return document.getElementById(id);}
+  function paint(){
+    var b=$("jStageBtn");if(b){b.classList.toggle("on",on);b.title=on?"Back to the classic jam view":"Stage view: your venue, with the video on a Jumbotron";}
+    Array.prototype.forEach.call(document.querySelectorAll("#jamViewBtns button"),function(x){x.classList.toggle("on",(x.getAttribute("data-jv")==="stage")===on);});
+  }
+  function set(v){on=!!v;try{localStorage.setItem("uk_jamview",on?"stage":"classic");}catch(e){}paint();apply();if(typeof showJamToast==="function"&&jamOn)showJamToast(on?"🏟 Stage view":"Classic view","#7F77DD");}
+  function apply(){var jm=$("jm");if(!jm)return;var act=on&&jamOn;jm.classList.toggle("stage",act);if(act&&!raf)raf=requestAnimationFrame(frame);if(!act)restore();}
+  function restore(){var v=$("jmV");if(v&&last){v.style.left=v.style.width=v.style.right="";v.style.top="";v.style.bottom="";v.style.height="";v.style.transform="";last="";}}
+  /* is a video showing in jam (YouTube, the video library, or a music video)? */
+  function videoOn(){
+    var v=$("jmV");if(!v||v.style.display==="none")return false;
+    var bv=$("jmBV"),lv=$("jmVid"),fr=$("jmF");
+    return (bv&&bv.style.display==="block")||(lv&&lv.style.display==="block")||(!!fr&&fr.style.display!=="none"&&!!fr.getAttribute("src")&&fr.getAttribute("src")!=="about:blank");
+  }
+  function frame(){
+    raf=0;if(!(on&&jamOn))return;
+    if(!cv)cv=$("jStage");
+    var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
+    if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+    var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
+    var jumbo=STAGEFX.fx.jumbo||"auto",want=jumbo!=="up";k+=((want?1:0)-k)*0.05;
+    /* the Jumbotron hangs in the upper part of the stage; it drops in from above */
+    var SBH=0.44*H,hh=SBH*0.6,ww=Math.min(hh*16/9,W*0.5);hh=ww*9/16;
+    var y0=Math.round(SBH*0.07),drop=(1-(1-Math.pow(1-k,3)))*(y0+hh+60);
+    var jt={x:Math.round(W/2-ww/2),y:Math.round(y0-drop),w:Math.round(ww),h:Math.round(hh),k:k},vid=videoOn();
+    drawVenueTo(g,W,H,{stage:true,jt:jt,video:vid});
+    /* the video element sits exactly on the Jumbotron's screen */
+    var v=$("jmV");
+    if(v){var key=jt.x+","+jt.y+","+jt.w+","+jt.h+","+(vid&&k>0.02);
+      if(key!==last){last=key;v.style.left=jt.x+"px";v.style.top=jt.y+"px";v.style.width=jt.w+"px";v.style.height=jt.h+"px";v.style.right="auto";v.style.bottom="auto";v.style.visibility=vid&&k>0.02?"":"hidden";}}
+    raf=requestAnimationFrame(frame);
+  }
+  function init(){paint();var b=$("jStageBtn");if(b)b.onclick=function(e){e.stopPropagation();set(!on);};
+    Array.prototype.forEach.call(document.querySelectorAll("#jamViewBtns button"),function(x){x.onclick=function(){set(x.getAttribute("data-jv")==="stage");};});
+    setInterval(apply,500);}
+  window.ukJamStage=function(){return{on:on,active:!!($("jm")&&$("jm").classList.contains("stage")),k:Math.round(k*100)/100,video:videoOn()};};
+  return{init:init,set:set,apply:apply,get on(){return on;}};
+})();
+window.addEventListener("load",function(){JAMSTAGE.init();});
 document.getElementById("jAudH").onclick=function(){AUD.min=!AUD.min;try{localStorage.setItem("uk_jaud_min",AUD.min?"1":"0");}catch(e){}document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";drawAud();};
 document.getElementById("jAudBig").onclick=function(e){e.stopPropagation();AUD.big=!AUD.big;if(AUD.min){AUD.min=false;document.getElementById("jAudMin").innerHTML="&#8211;";}try{localStorage.setItem("uk_jaud_big",AUD.big?"1":"0");localStorage.setItem("uk_jaud_min","0");}catch(x){}drawAud();};
 document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
@@ -4450,36 +4538,50 @@ var CHART=(function(){
 /* ── Show effects (performer side) ──
    Lights, fog, lasers, darkness, weather, sunset, a burning building and fireworks for the venue. Every change
    goes straight to the audience (and is remembered by the room for latecomers); the preview shows the look. */
-var SHOW=(function(){
+/* (named STAGEFX: SHOW is the setlist show drawer) */
+var STAGEFX=(function(){
   var fx=JSON.parse(JSON.stringify(ART.FX_DEFAULT)),raf=0,cv=null;
-  try{var sv=JSON.parse(localStorage.getItem("uk_showfx")||"null");if(sv)for(var k in fx)if(sv[k]!==undefined&&k!=="burst")fx[k]=sv[k];}catch(e){}
+  var ONESHOT={burst:1,balloonT:1,confettiT:1,crowdT:1,crowd:1};      /* moments: never replayed from last time */
+  try{var sv=JSON.parse(localStorage.getItem("uk_showfx")||"null");if(sv)for(var k in fx)if(sv[k]!==undefined&&!ONESHOT[k])fx[k]=sv[k];}catch(e){}
   function $(id){return document.getElementById(id);}
   function send(){liveSend({type:"show-fx",fx:fx});try{localStorage.setItem("uk_showfx",JSON.stringify(fx));}catch(e){}paint();
-    var on=[];if(fx.lights!=="auto")on.push(fx.lights+" lights");if(fx.weather!=="none")on.push(fx.weather);if(fx.fog)on.push("fog");if(fx.dark)on.push("dark");["lasers","sunset","fire","fireworks"].forEach(function(k){if(fx[k])on.push(k==="fire"?"fire":k);});
+    var on=[];if(fx.lights!=="auto")on.push(fx.lights+" lights");if(fx.weather!=="none")on.push(fx.weather);if(fx.fog)on.push("fog");if(fx.dark)on.push("dark");["lasers","sunset","fire","fireworks","disco","banner","follow"].forEach(function(k){if(fx[k])on.push(k==="fire"?"fire":k==="disco"?"disco ball":k==="follow"?"lights follow your playing":k);});if(fx.jumbo!=="auto")on.push("Jumbotron "+fx.jumbo);
     $("showNote").textContent=(liveOn?"Live: ":"Not live yet: the audience sees this when you go live. ")+(on.length?on.join(", "):"plain stage");}
   function paint(){
     var p=$("showPnl");if(!p)return;
-    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns"),function(g){var k=g.getAttribute("data-k");Array.prototype.forEach.call(g.children,function(b){b.classList.toggle("on",b.getAttribute("data-v")===fx[k]);});});
+    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns[data-k]"),function(g){var k=g.getAttribute("data-k");Array.prototype.forEach.call(g.children,function(b){b.classList.toggle("on",b.getAttribute("data-v")===fx[k]);});});
     Array.prototype.forEach.call(p.querySelectorAll(".sx-tog button"),function(b){b.classList.toggle("on",!!fx[b.getAttribute("data-k")]);});
     Array.prototype.forEach.call(p.querySelectorAll("input[type=range]"),function(r){r.value=Math.round((fx[r.getAttribute("data-k")]||0)*100);});
   }
   /* the preview: the stage, the effects, a performer at the keys and a few dancers */
-  var dancers=[ART.looks.random(11),ART.looks.random(22),ART.looks.random(33),ART.looks.random(44)];
+  var dancers=[ART.looks.random(11),ART.looks.random(22),ART.looks.random(33),ART.looks.random(44)],pc={kind:"",t0:-1e9,lastT:0};
   function frame(){
     raf=0;if(!cv||!cv.isConnected||!cv.offsetWidth)return;
     var g=cv.getContext("2d"),W=cv.width,H=cv.height,now=Date.now(),lay={stageBottom:0.36,floorBottom:0.97},ph=(now%500)/500;
     g.clearRect(0,0,W,H);
-    ART.scene(g,W,H,lay,{now:now,phase:ph,level:0.6,playing:true,lights:fx.lights,fog:fx.fog,spotX:W/2,sign:"UNHOLY KEYS"});
+    /* follow-my-playing in the preview: your real notes, or a made-up melody if you're not playing */
+    var fol=null;if(fx.follow){fol=PFOLLOW.read();if(fol.a<0.05){var mh=0.5+0.45*Math.sin(now/700);fol={h:mh,hue:(Math.floor(now/350)%12)*30,a:1};}}
+    ART.scene(g,W,H,lay,{now:now,phase:ph,level:0.6,playing:true,lights:fx.lights,fog:fx.fog,spotX:W/2,sign:"UNHOLY KEYS",follow:fol});
     ART.fxBack(g,W,H,lay,fx,{now:now});
     ART.drawChar(g,W/2,H*0.18+8,2,perfLook,{armL:-0.55,armR:0.55});ART.keyboard(g,W/2,H*0.18+18,2,Math.floor(now/200)%7,"#F5D03C");
-    for(var i=0;i<4;i++)ART.drawChar(g,W*(0.18+i*0.21),H*0.7,2,dancers[i],ART.dance([1,4,8,6][i],0,[0,0,0,0],now/500+i*0.3));
+    if(fx.crowdT!==pc.lastT){pc.lastT=fx.crowdT;pc.kind=fx.crowd;pc.t0=now;}
+    var cAge=now-pc.t0;
+    for(var i=0;i<4;i++){var dx=W*(0.18+i*0.21),dy=H*0.7,ps=ART.dance([1,4,8,6][i],0,[0,0,0,0],now/500+i*0.3),tg={x:W/2+Math.sin(now/650+i)*W*0.3,y:H*0.08};
+      var cr=cAge<ART.CROWD_MS&&pc.kind?ART.crowdPose(pc.kind,cAge,dx,dy,2,tg):null;
+      if(cr){dy+=cr.lift;if(cr.armL!==undefined){ps.armL=cr.armL;ps.armR=cr.armR;}}
+      ART.drawChar(g,dx,dy,2,dancers[i],ps);if(cr)ART.crowdFx(g,pc.kind,dx,dy,2,cAge,i,cr.hands,tg);}
     ART.fxFront(g,W,H,lay,fx,{now:now,phase:ph,holes:[{x:W/2,y:H*0.18,r:80}]});
     raf=requestAnimationFrame(frame);
   }
   function wake(){if(!raf)raf=requestAnimationFrame(frame);}
+  function flash(b){b.classList.add("on");setTimeout(function(){b.classList.remove("on");},700);}
   function init(){
     var p=$("showPnl");if(!p)return;cv=$("showPrev");
-    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns button"),function(b){b.onclick=function(){fx[b.parentNode.getAttribute("data-k")]=b.getAttribute("data-v");send();};});
+    Array.prototype.forEach.call(p.querySelectorAll(".sx-btns[data-k] button"),function(b){b.onclick=function(){fx[b.parentNode.getAttribute("data-k")]=b.getAttribute("data-v");send();};});
+    /* moments: a balloon drop or confetti; crowd surprises for everyone */
+    Array.prototype.forEach.call(p.querySelectorAll("#showMoments button"),function(b){b.onclick=function(){fx[b.getAttribute("data-m")]=Date.now();send();flash(b);};});
+    Array.prototype.forEach.call(p.querySelectorAll("#showCrowd button"),function(b){b.onclick=function(){fx.crowd=b.getAttribute("data-c");fx.crowdT=Date.now();send();flash(b);};});
+    var bt=$("showBannerText");if(bt){bt.value=fx.bannerText||"UNHOLY KEYS";bt.oninput=function(){fx.bannerText=bt.value.toUpperCase().replace(/[^A-Z0-9 !?'.#*-]/g,"").slice(0,20)||"UNHOLY KEYS";clearTimeout(bt.t);bt.t=setTimeout(send,300);};}
     Array.prototype.forEach.call(p.querySelectorAll(".sx-tog button"),function(b){b.onclick=function(){var k=b.getAttribute("data-k");fx[k]=fx[k]?0:1;send();};});
     Array.prototype.forEach.call(p.querySelectorAll("input[type=range]"),function(r){r.oninput=function(){fx[r.getAttribute("data-k")]=(+r.value)/100;clearTimeout(r.t);r.t=setTimeout(send,120);paint();};});
     $("showBurst").onclick=function(){fx.burst=Date.now();send();};
@@ -4489,7 +4591,7 @@ var SHOW=(function(){
   }
   return{init:init,get fx(){return fx;},resend:function(){liveSend({type:"show-fx",fx:fx});}};
 })();
-window.addEventListener("load",function(){SHOW.init();});
+window.addEventListener("load",function(){STAGEFX.init();});
 
 /* ── Dance rounds (performer side) ──
    With a round type chosen in the Music tab and the show live, playing a backing track runs a round:
