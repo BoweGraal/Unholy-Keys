@@ -398,5 +398,5 @@
     if(fx)fx();
     return {hands:hands,top:y-19*p+bob};
   }
-  ART.INST={kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.30.8"};
+  ART.INST={kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.30.9"};
 })();

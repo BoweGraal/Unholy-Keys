@@ -1447,10 +1447,11 @@ function handleMsg(msg){
   else if(t==="react"){if(msg.id!==myId&&viewers[msg.id])addReact(msg.id,String(msg.k));}
   else if(t==="note"){
     if(msg.on){
-      var _m=+msg.midi;if(isFinite(_m)&&_m>=0&&_m<=128){lastNoteMidi=_m;lastNoteTime=Date.now();isPerformerPlaying=true;PERF.n++;}   /* the lights follow the playing even with your sound off */
+      var _m=+msg.midi;if(isFinite(_m)&&_m>=0&&_m<=128){lastNoteMidi=_m;lastNoteTime=Date.now();isPerformerPlaying=true;PERF.n++;}
+      keyPadNote(msg.nk);   /* the lights follow the playing even with your sound off */
       playNoteFromEvent(msg.midi,msg.inst||activeInst,msg.mode||"sustain");
     }else{
-      silenceNote();
+      silenceNote();keyPadNote(null);
       if(isPerformerPlaying)PERF.off=Date.now();
       isPerformerPlaying=false;
     }
@@ -4458,7 +4459,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.30.8",SERVER_VERSION="";
+var PAGE_VERSION="1.30.9",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4621,7 +4622,24 @@ function drawScene(){
     hue:(((lastNoteMidi%12)+12)%12)*30,hueA:isPerformerPlaying&&nAge<1500?0.1*(1-nAge/1500):0,
     lights:fx.lights,fog:fx.fog,spotX:performer.x*W+perfShift,follow:fx.follow?followState():null});
   if(SHOWFX)ART.fxBack(ctx,W,H,lay,SHOWFX,{now:Date.now(),jumbo:JT.k>0.5});
+  /* the performer's key panel on the back wall, top left (not in practice: there's no performer) */
+  if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){var kp=ART.keyPadSpot(W,H,lay,JT.k>0.3&&JT.rect?JT.rect:null,KPAD_AVOID());if(kp)ART.keyPad(ctx,kp.x,kp.y,kp.p,KPAD.st());}
 }
+/* ---------- the performer's key panel ----------
+   Each note says which keys played it (nk: "space+d-up" = Space and D held, Up arrow); the panel on the wall
+   lights those keys until the note ends. */
+var KPCOL={none:"#7F77DD",d:"#D85A30",space:"#1D9E75","space+d":"#D4537E","space+e":"#EF9F27","space+3":"#5DCB42"};
+var KPAD={mod:"none",dir:null,t:0,st:function(){var m=KPAD.mod;
+  return{mods:{space:m.indexOf("space")===0,d:/(^|\+)d$/.test(m),e:/\+e$/.test(m),three:/\+3$/.test(m)},dir:KPAD.dir,col:KPCOL[m]||KPCOL.none,
+    modCols:{space:KPCOL.space,d:KPCOL.d,e:KPCOL["space+e"],three:KPCOL["space+3"]},age:Date.now()-KPAD.t};}};
+function keyPadNote(nk){
+  var mm=typeof nk==="string"&&nk.match(/^(none|d|space|space\+d|space\+e|space\+3)-(up|down|left|right)$/);
+  if(!mm){KPAD.dir=null;KPAD.mod="none";return;}
+  if(mm[2]!==KPAD.dir||mm[1]!==KPAD.mod)KPAD.t=Date.now();KPAD.mod=mm[1];KPAD.dir=mm[2];
+}
+/* keep the panel below the room label and fullscreen button in the corner */
+function KPAD_AVOID(){var e=document.getElementById("hudTL");if(!e||!e.offsetParent)return 48;var r=e.getBoundingClientRect();return Math.round(r.bottom+6);}
+window.ukKeyPad=function(){return KPAD.st();};
 /* in front of everything: fog, weather, lasers, darkness (light pools on the performer, the spotlights and you), fireworks */
 function drawFxFront(bp,feat,perfPx,perfPy){
   if(!SHOWFX)return;

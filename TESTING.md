@@ -382,3 +382,8 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - The Jumbotron is bigger in stage view and still sits below the jam toolbar, so the toolbar buttons stay clickable.
 - Audience: when your visuals stream to the venue, the same note readout is in the stream. The venue Jumbotron is bigger too.
 - Venue: the "Room:" label no longer sits under the ⛶ button.
+
+## Key panel on the wall (v1.30.9)
+- Jam → Stage view: a small panel hangs on the back wall, top left inside the truss pillar. It has SPACE D E 3 along the top and the arrow cross below, lit live as you press (the arrow takes the colour of the note row it plays).
+- Audience: the venue shows the same panel in the same spot. It lights the keys that played each note and goes dark when the note ends. On phones it sits in the corner under the Room label, clear of the Jumbotron.
+- It doesn't show in dance practice (there's no performer).

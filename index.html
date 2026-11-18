@@ -4072,7 +4072,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.30.8",SERVER_VERSION="";
+var PAGE_VERSION="1.30.9",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4348,6 +4348,14 @@ function jumboNote(g,x,y,w,h,now){
     g.fillStyle=bm===m?col:"#111";g.fillRect(Math.round(x+(j+1)*kw-kw*0.3),ky,Math.round(kw*0.6),Math.round(kh*0.6));}
   g.restore();
 }
+/* what the wall key panel shows: the modifier keys you're holding and the arrow that's sounding */
+var JKP={dir:null,t:0};
+function keyPadState(now){
+  var cur=arrowStack.length?arrowStack[arrowStack.length-1]:null;if(cur!==JKP.dir){JKP.dir=cur;JKP.t=now;}
+  return{mods:{space:mods.space,d:mods.d,e:mods.e,three:mods.three},dir:cur,col:RCLR[getMod()]||"#7F77DD",
+    modCols:{space:RCLR.space,d:RCLR.d,e:RCLR["space+e"],three:RCLR["space+3"]},age:now-JKP.t};
+}
+window.ukKeyPad=function(){return keyPadState(Date.now());};
 var PCROWD={kind:"",t0:-1e9,lastT:0};
 function drawVenueTo(g,W,H,opts){
   var stage=!!(opts&&opts.stage),ids=Object.keys(AUD.people),now=Date.now(),sfx=STAGEFX.fx;
@@ -4363,6 +4371,8 @@ function drawVenueTo(g,W,H,opts){
   if(opts&&opts.jt&&opts.jt.k>0.01){var jt=opts.jt,P=ART.sceneP(W,H);ART.jumboFrame(g,jt,P);
     g.fillStyle="#000";g.fillRect(jt.x,jt.y,jt.w,jt.h);
     if(!opts.video){var vc=document.getElementById("jcv");if(vc&&vc.width){try{g.drawImage(vc,jt.x,jt.y,jt.w,jt.h);}catch(e){}}if(jt.k>0.5)jumboNote(g,jt.x,jt.y,jt.w,jt.h,now);}}
+  /* stage view: your key panel on the back wall, top left, lit live as you press */
+  if(stage){var kp=ART.keyPadSpot(W,H,alay,opts.jt&&opts.jt.k>0.3?opts.jt:null,58);if(kp)ART.keyPad(g,kp.x,kp.y,kp.p,keyPadState(now));}
   /* a crowd surprise set off from the Show tab */
   if(sfx.crowd&&sfx.crowdT&&sfx.crowdT!==PCROWD.lastT){PCROWD.lastT=sfx.crowdT;PCROWD.kind=sfx.crowd;PCROWD.t0=now;}
   var cAge=now-PCROWD.t0,crowd=cAge<ART.CROWD_MS&&PCROWD.kind?{kind:PCROWD.kind,age:cAge,target:{x:W/2,y:SB*H*0.25}}:null;
