@@ -369,7 +369,7 @@ var FX_LIGHTS = ["auto", "party", "strobe", "spot", "warm", "cool", "off"], FX_W
 var FX_CROWD = ["sparkle", "fire", "lasers", "float"];
 var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.28.1";
+var VERSION = "1.29.0";
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
