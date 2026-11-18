@@ -555,6 +555,101 @@ var ART=(function(){
     g.restore();
   }
 
+
+  /* ---------------- reactions ----------------
+     Quick reactions anyone can send: "jump", "hearts", "bigheart", "clap" (applause), "whistle".
+     A dancer keeps a short list [{k, t}] (t = when, ms); reactPose changes the pose for the latest one,
+     reactFx draws them all over the dancer at feet (x, y), art pixel p. */
+  var REACTS=["jump","hearts","bigheart","clap","whistle"],REACT_MS={jump:1000,hearts:2400,bigheart:2600,clap:1900,whistle:1700};
+  var HEART=[".XX.XX.","XXXXXXX","XXXXXXX",".XXXXX.","..XXX..","...X..."],NOTE=["..XX","..XX","..X.","..X.","XXX.","XXX."];
+  function pixArt(g,rows,x,y,q,col,hi){for(var r=0;r<rows.length;r++)for(var c=0;c<rows[r].length;c++)if(rows[r][c]==="X"){g.fillStyle=hi&&r===1&&c===1?hi:col;g.fillRect(Math.round(x+c*q),Math.round(y+r*q),q,q);}}
+  function reactLive(list,now){var out=[];if(!list)return out;for(var i=0;i<list.length;i++){var a=now-list[i].t;if(a>=0&&a<REACT_MS[list[i].k])out.push({k:list[i].k,a:a});}return out;}
+  function reactPose(list,now,p){
+    var L=reactLive(list,now);if(!L.length)return null;var r=L[L.length-1],a=r.a,o={lift:0};
+    if(r.k==="jump"){var hop=(a%500)/500;o.lift=-Math.sin(hop*Math.PI)*p*11;o.armL=2.6;o.armR=-2.6;o.legL=-0.35*Math.sin(hop*Math.PI);o.legR=-o.legL;o.mouth=true;}
+    else if(r.k==="clap"){var cl=Math.abs(Math.sin(a*0.016));o.armL=-1.45+cl*0.45;o.armR=1.45-cl*0.45;o.mouth=true;}
+    else if(r.k==="whistle"){o.armR=-2.6+Math.sin(a*0.02)*0.35;o.armL=-0.15;o.mouth=true;}    /* one arm up, waving */
+    else if(r.k==="hearts"||r.k==="bigheart"){o.armL=-1.1;o.armR=1.1;}    /* hands on the heart */
+    return o;
+  }
+  function reactFx(g,list,now,x,y,p,seed){
+    var L=reactLive(list,now),i,head=y-p*21;if(!L.length)return;seed=seed||0;g.save();
+    L.forEach(function(r,ri){var a=r.a,k=a/REACT_MS[r.k];
+      if(r.k==="hearts"){for(i=0;i<5;i++){var hk=k*1.25-i*0.08;if(hk<0||hk>1)continue;var q=Math.max(1,Math.round(p*0.55));
+        g.globalAlpha=Math.min(1,(1-hk)*1.6);pixArt(g,HEART,x-3.5*q+Math.sin(hk*9+i*2+seed)*p*4+(i-2)*p*2.2,head-hk*p*26-q*3,q,i%2?"#FF5A8A":"#E8304B","#FFC0D0");}}
+      else if(r.k==="bigheart"){var pop=a<300?a/300*1.25:a<450?1.25-(a-300)/150*0.25:1,beat=a<1500?1+0.12*Math.max(0,Math.sin(a*0.012)):1,rise=a>1500?(a-1500)/1100:0;
+        var q2=Math.max(2,Math.round(p*1.6*pop*beat));g.globalAlpha=1-Math.max(0,rise);
+        pixArt(g,HEART,x-3.5*q2,head-q2*7-rise*p*30,q2,"#E8304B","#FFC0D0");
+        if(a<500){g.globalAlpha=1-a/500;g.fillStyle="#FFE0EA";for(i=0;i<8;i++){var an=i/8*6.283,rr=p*(6+a/500*14);g.fillRect(Math.round(x+Math.cos(an)*rr),Math.round(head-q2*3.5+Math.sin(an)*rr),Math.max(1,p),Math.max(1,p));}}}
+      else if(r.k==="clap"){var ph=(a*0.016/Math.PI)%1;if(ph<0.35){g.globalAlpha=1-ph/0.35;g.fillStyle="#FFF6D0";var cx=x,cy=y-p*13;
+          for(i=0;i<6;i++){var an2=i/6*6.283+0.3,r2=p*(5+ph*8);g.fillRect(Math.round(cx+Math.cos(an2)*r2),Math.round(cy+Math.sin(an2)*r2),Math.max(1,p*0.8),Math.max(1,p*0.8));}}}
+      else if(r.k==="whistle"){for(i=0;i<3;i++){var nk=k*1.2-i*0.18;if(nk<0||nk>1)continue;var q3=Math.max(1,Math.round(p*0.6));
+          g.globalAlpha=1-nk;pixArt(g,NOTE,x+p*5+nk*p*14,head+p*4-nk*p*14+Math.sin(nk*12)*p*2,q3,i%2?"#7FE0FF":"#F5D03C");}
+        if(a<700){g.globalAlpha=1-a/700;g.fillStyle="#fff";for(i=0;i<3;i++)g.fillRect(Math.round(x+p*4+i*p*1.5),Math.round(head+p*5-i*p),Math.max(1,p*0.7),Math.max(1,p*0.7));}}
+      else if(r.k==="jump"){var hp=(a%500)/500;if(hp<0.2||hp>0.95){g.globalAlpha=0.6;g.fillStyle="#cfc8e8";var d=hp<0.2?hp/0.2:0;g.fillRect(Math.round(x-p*5-d*p*3),Math.round(y+p*11),Math.max(1,p),Math.max(1,p));g.fillRect(Math.round(x+p*4+d*p*3),Math.round(y+p*11),Math.max(1,p),Math.max(1,p));}}
+    });
+    g.restore();
+  }
+
+  /* ---------------- scenes: space and water ----------------
+     env.space / env.water go 0..1 as they're switched on (water fills over ~9 s and drains over ~6 s). */
+  var env={space:0,water:0},envT=0;
+  function easeEnv(fx,now){var dt=Math.min(100,Math.max(0,now-(envT||now)));envT=now;
+    env.space+=Math.max(-dt/2000,Math.min(dt/2500,(fx&&fx.space?1:0)-env.space));env.water+=Math.max(-dt/6000,Math.min(dt/9000,(fx&&fx.water?1:0)-env.water));}
+  function smooth(k){return k*k*(3-2*k);}
+  /* where the water's surface is (canvas y), or null when there's no water */
+  function waterY(lay,H){if(env.water<=0.002)return null;var sb=lay.stageBottom*H,fb=lay.floorBottom*H,top=sb*0.18;return fb-(fb-top)*smooth(env.water);}
+  /* how being in space or under water changes a dancer at feet (x, y), art pixel p: {k, lift, rot, limbs, bubbles} or null */
+  function envPose(lay,H,x,y,p,now,seed){
+    var t=now/1000,wy=waterY(lay,H);seed=seed||0;
+    if(wy!==null){var dep=(y-p*8)-wy,k=Math.max(0,Math.min(1,dep/(p*8)));
+      if(k>0){var dir=seed%2?1:-1,st=t*3.2+seed;return{k:k,lift:Math.sin(t*1.6+seed)*p*2*k-p*4*k,rot:dir*1.2*k,armL:2.2+Math.sin(st)*1.0,armR:-(2.2+Math.sin(st+Math.PI)*1.0),legL:Math.sin(t*9+seed)*0.4,legR:-Math.sin(t*9+seed)*0.4,bubbles:true};}}
+    var ks=smooth(env.space);
+    if(ks>0.001){var ft=t*0.7+seed*1.3;return{k:ks,lift:-(p*7+Math.sin(ft)*p*4)*ks,rot:Math.sin(t*0.35+seed)*0.6*ks,armL:1.3+Math.sin(ft*1.3)*0.4,armR:-1.3-Math.sin(ft*1.1)*0.4,legL:0.3+Math.sin(ft)*0.2,legR:-0.3-Math.sin(ft*0.9)*0.2};}
+    return null;
+  }
+  /* bubbles rising from a swimmer's head */
+  function envFx(g,lay,H,x,y,p,now,seed){
+    var wy=waterY(lay,H);if(wy===null||y-p*14<wy)return;var t=now/1000;g.save();g.strokeStyle="rgba(220,240,255,.8)";g.lineWidth=Math.max(1,p/3);
+    for(var i=0;i<3;i++){var ph=((t*0.6+i/3+(seed||0)*0.13)%1),by=y-p*18-ph*p*30;if(by<wy)continue;g.globalAlpha=1-ph;var r=Math.max(1,p*(0.6+ph*0.7));g.beginPath();g.arc(x+Math.sin(ph*8+i)*p*2,by,r,0,6.3);g.stroke();}
+    g.restore();
+  }
+  function drawSpace(g,W,H,sb,fb,P,now){
+    var k=smooth(env.space);if(k<=0.002)return;var t=now/1000,i;g.save();
+    var gr=g.createLinearGradient(0,0,0,sb);gr.addColorStop(0,"#05030f");gr.addColorStop(1,"#120a2a");g.globalAlpha=k*0.96;g.fillStyle=gr;g.fillRect(0,0,W,sb);
+    /* nebula clouds */
+    [[0.22,0.35,"rgba(150,60,200,.35)"],[0.7,0.25,"rgba(40,120,220,.3)"],[0.5,0.6,"rgba(211,84,160,.22)"]].forEach(function(n){var cx=W*n[0],cy=sb*n[1],rr=Math.max(W,sb)*0.28;var rg=g.createRadialGradient(cx,cy,0,cx,cy,rr);rg.addColorStop(0,n[2]);rg.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=rg;g.fillRect(cx-rr,cy-rr,rr*2,rr*2);});
+    for(i=0;i<160;i++){var sx=((i*397.13)%1)*W,sy=((i*0.6180339*7.1)%1)*sb,tw=0.4+0.6*Math.abs(Math.sin(t*(0.8+(i%5)*0.3)+i));g.globalAlpha=k*tw;g.fillStyle=i%9===0?"#FFE9A0":i%7===0?"#A0D0FF":"#fff";var sz=i%11===0?P:Math.max(1,Math.round(P/2));g.fillRect(Math.round(sx),Math.round(sy),sz,sz);}
+    /* a ringed planet and a small blue one */
+    g.globalAlpha=k;var px=W*0.82,py=sb*0.32,pr=Math.max(P*6,Math.min(W,H)*0.06);
+    var pg=g.createRadialGradient(px-pr*0.4,py-pr*0.4,pr*0.1,px,py,pr);pg.addColorStop(0,"#F5C08A");pg.addColorStop(1,"#9a4a3a");g.fillStyle=pg;g.beginPath();g.arc(px,py,pr,0,6.3);g.fill();
+    g.strokeStyle="rgba(240,220,170,.8)";g.lineWidth=Math.max(1,P*0.8);g.beginPath();g.ellipse(px,py,pr*1.8,pr*0.45,-0.3,0,6.3);g.stroke();
+    var qx=W*0.14,qy=sb*0.22,qr=pr*0.45,qg=g.createRadialGradient(qx-qr*0.3,qy-qr*0.3,1,qx,qy,qr);qg.addColorStop(0,"#9fe0ff");qg.addColorStop(1,"#2a5aa0");g.fillStyle=qg;g.beginPath();g.arc(qx,qy,qr,0,6.3);g.fill();
+    /* now and then a shooting star */
+    var ss=(t/4)%1;if(ss<0.25){var a=ss/0.25,x0=W*(0.2+((Math.floor(t/4)*0.37)%0.6)),y0=sb*0.1;g.globalAlpha=k*(1-a);g.strokeStyle="#fff";g.lineWidth=Math.max(1,P/2);g.beginPath();g.moveTo(x0+a*W*0.3,y0+a*sb*0.3);g.lineTo(x0+a*W*0.3-P*12,y0+a*sb*0.3-P*12*sb/W);g.stroke();}
+    /* the dance floor turns into a see-through platform over the stars */
+    g.globalAlpha=k*0.45;g.fillStyle="#05030f";g.fillRect(0,sb,W,fb-sb);
+    for(i=0;i<70;i++){var fx2=((i*211.7)%1)*W,fy=sb+((i*0.7548)%1)*(fb-sb);g.globalAlpha=k*0.5*(0.4+0.6*Math.abs(Math.sin(t+i)));g.fillStyle="#fff";g.fillRect(Math.round(fx2),Math.round(fy),Math.max(1,Math.round(P/2)),Math.max(1,Math.round(P/2)));}
+    g.restore();
+  }
+  function drawWater(g,W,H,lay,P,now,want){
+    var sb=lay.stageBottom*H,wy=waterY(lay,H),t=now/1000,i;g.save();
+    /* while filling: water pouring in from both top corners */
+    if(want&&env.water<0.999){g.globalAlpha=0.75;for(var sd=0;sd<2;sd++){var x0=sd?W-P*10:P*4;g.fillStyle="rgba(90,170,240,.8)";g.fillRect(x0,P*6,P*6,(wy===null?lay.floorBottom*H:wy)-P*6);
+      g.fillStyle="rgba(220,240,255,.8)";for(i=0;i<8;i++){var yy=P*6+((t*H*0.8+i*H/8)%((wy===null?lay.floorBottom*H:wy)-P*6));g.fillRect(x0+P*(1+(i%3)*1.5),yy,P,P*3);}}}
+    if(wy===null){g.restore();return;}
+    var gr=g.createLinearGradient(0,wy,0,H);gr.addColorStop(0,"rgba(60,150,220,.38)");gr.addColorStop(1,"rgba(10,40,110,.6)");g.globalAlpha=1;g.fillStyle=gr;g.fillRect(0,wy,W,H-wy);
+    /* light rays through the water */
+    g.globalCompositeOperation="lighter";for(i=0;i<6;i++){var rx=((i*0.19+t*0.02)%1.2-0.1)*W;g.globalAlpha=0.06+0.04*Math.sin(t+i);g.fillStyle="#8fd0ff";g.beginPath();g.moveTo(rx,wy);g.lineTo(rx+W*0.05,wy);g.lineTo(rx+W*0.12,H);g.lineTo(rx+W*0.02,H);g.closePath();g.fill();}
+    g.globalCompositeOperation="source-over";
+    /* the surface: a wavy bright line */
+    g.globalAlpha=0.9;for(var x=0;x<W;x+=P){var wv=Math.round(Math.sin(x*0.02+t*2.2)*P*0.8+Math.sin(x*0.051-t*1.3)*P*0.6);g.fillStyle="rgba(200,235,255,.85)";g.fillRect(x,Math.round(wy+wv),P,Math.max(1,P/2));if((x/P+Math.floor(t*4))%9===0){g.fillStyle="#fff";g.fillRect(x,Math.round(wy+wv-P/2),P,Math.max(1,P/2));}}
+    /* bubbles from the floor, and fish once it's deep */
+    g.strokeStyle="rgba(220,240,255,.6)";g.lineWidth=Math.max(1,P/3);for(i=0;i<26;i++){var ph=((t*0.18+i*0.137)%1),by=H-(H-wy)*ph,bx=((i*173.3)%W)+Math.sin(ph*10+i)*P*2;if(by<wy+P)continue;g.globalAlpha=0.7*(1-ph*0.5);g.beginPath();g.arc(bx,by,Math.max(1,P*(0.4+(i%3)*0.3)),0,6.3);g.stroke();}
+    if(env.water>0.6){var FISH=["..XX..X","XXXXXXX","XXXX.XX","..XX..X"],FC=["#F5A030","#F5D03C","#E8505B","#4CC38A"];for(i=0;i<5;i++){var fp=((t*0.05*(1+i%3*0.4)+i*0.23)%1.3)-0.15,dir=i%2?1:-1,fxx=dir>0?fp*W:W-fp*W,fyy=wy+(H-wy)*(0.2+((i*0.37)%0.7));g.globalAlpha=Math.min(1,(env.water-0.6)/0.3)*0.9;
+      g.save();g.translate(fxx,fyy+Math.sin(t*2+i)*P*2);if(dir<0)g.scale(-1,1);var fq=Math.max(2,Math.round(P*1.6));pixArt(g,FISH,-3.5*fq,-2*fq,fq,FC[i%4]);g.restore();}}
+    g.restore();
+  }
   /* ---------------- show effects ----------------
      The performer's show controls. fx = {lights, fog 0-1, lasers 0/1, dark 0-1, weather "none"|"rain"|"storm"|
      "snow", sunset 0/1, fire 0/1, fireworks 0/1 (auto), burst (time of the last fireworks button press)}.
@@ -566,7 +661,8 @@ var ART=(function(){
     easeDrops(fx,(st&&st.now)||Date.now());
     banner(g,W,H,lay.stageBottom*H,sceneP(W,H),fx.bannerText,st&&st.jumbo);
     var P=sceneP(W,H),sb=lay.stageBottom*H,now=st.now||Date.now(),i,x,y;
-    if(fx.sunset){
+    easeEnv(fx,now);drawSpace(g,W,H,sb,lay.floorBottom*H,P,now);
+    if(fx.sunset&&env.space<0.99){
       /* the back wall opens to a sunset sky: a low sun behind the stage */
       var gr=g.createLinearGradient(0,0,0,sb);gr.addColorStop(0,"rgba(60,30,90,.85)");gr.addColorStop(0.45,"rgba(220,90,90,.75)");gr.addColorStop(0.8,"rgba(250,170,70,.8)");gr.addColorStop(1,"rgba(120,50,60,.85)");
       g.fillStyle=gr;g.fillRect(0,P*6,W,sb-P*10);
@@ -624,6 +720,8 @@ var ART=(function(){
       });
       g.restore();
     }
+    /* the stage filling with water */
+    drawWater(g,W,H,lay,P,now,!!fx.water);
     /* darkness, with pools of light where the light falls (the performer, the spotlights, the fire) */
     var dark=Math.max(fx.dark||0,fx.weather==="storm"?0.35:0);
     if(dark>0){
@@ -665,11 +763,11 @@ var ART=(function(){
   var dkc=null;function darkCanvas(W,H){if(!dkc)dkc=canv(W,H);if(dkc.width!==W||dkc.height!==H){dkc.width=W;dkc.height=H;}return dkc;}
   /* the show's controls, with their defaults (also what the server accepts) */
   var FX_DEFAULT={lights:"auto",fog:0,lasers:0,dark:0,weather:"none",sunset:0,fire:0,fireworks:0,burst:0,
-    follow:0,jumbo:"auto",disco:0,banner:0,bannerText:"UNHOLY KEYS",balloonT:0,confettiT:0,crowd:"",crowdT:0};
+    follow:0,jumbo:"auto",disco:0,banner:0,bannerText:"UNHOLY KEYS",balloonT:0,confettiT:0,crowd:"",crowdT:0,space:0,water:0};
   var CROWD_KINDS=["sparkle","fire","lasers","float"];
 
   /* someone arriving mid-show: the one-shot moments already set off are treated as seen, so they don't replay */
-  function primeFx(fx){if(!fx)return;lastBurst=fx.burst||0;lastBalloon=fx.balloonT||0;lastConfetti=fx.confettiT||0;drop.disco=fx.disco?1:0;drop.banner=fx.banner?1:0;}
+  function primeFx(fx){if(!fx)return;lastBurst=fx.burst||0;lastBalloon=fx.balloonT||0;lastConfetti=fx.confettiT||0;drop.disco=fx.disco?1:0;drop.banner=fx.banner?1:0;env.space=fx.space?1:0;env.water=fx.water?1:0;}
   /* lights following someone's playing: feed it notes (midi, and whether one is sounding); read() gives
      {h: 0 low .. 1 high within the range they've been playing, hue (from the note), a (how recently)} */
   function follower(){
@@ -685,6 +783,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

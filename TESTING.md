@@ -285,6 +285,21 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - **Follow my playing**: the lights follow your notes. The wash climbs the back wall and the lit row on the floor moves back with higher notes and drops with lower ones, and the colour follows the note. It works out your range as you play, so it uses the full height whatever octave you're in. It still works if someone in the audience has their sound off. Your preview shows it too (a made-up melody when you're not playing).
 - To check: go live, open the venue in another window, then try each one. Late arrivals should see the Jumbotron, disco ball, banner and follow lights as they are, but not balloons, confetti or crowd surprises that already finished.
 
+**Reactions (audience).** A row of buttons above the chat (a column on the right on phones): Jump, Hearts, Big heart, Applause and Whistle. Keys: Q E R Y U.
+- Everyone sees them on your character, and so does the performer in the audience panel and in jam's stage view. The panel's header counts the last 15 seconds of reactions.
+- Applause and whistles make a soft sound in the venue (quieter for other people's). Hearts and the big heart make a little chime. Nothing plays on the performer's page, so none of it goes out in the live sound.
+- Big heart: once every 4 seconds. Tapping fast is capped at a few a second.
+- The buttons and the joystick fade when you stand behind them.
+
+**Joystick.** The arrow pad is now a round joystick: press anywhere in the ring and drag. The further you pull, the faster you walk; let go and you stop. Arrow keys and WASD still work, and the knob shows the way you're going. In the step game, a firm push in a direction counts as a step.
+
+**Scenes (Show tab).** "Floating in space": the back wall opens onto stars, nebulae and planets, the floor turns see-through, and everyone floats and slowly turns. "Fill with water": water pours in from both corners and rises over the floor and up the stage in about 9 seconds. Anyone underwater swims, with bubbles and fish. Switch it off to drain it. People who arrive later see either scene as it is.
+
+**The performer's instrument.** Whatever instrument you pick is what your character holds and plays, in the venue, the audience panel, jam's stage view and the Show tab preview. There are 44 kinds of art covering all 376 instruments: grand, upright, electric piano, harpsichord, organ, pipe organ, synth, keytar, handheld chip console, accordion, acoustic, electric, metal and jazz guitar, bass, banjo, sitar, violin, cello, double bass, harp, trumpet, trombone, French horn, tuba, sax, flute, clarinet, bassoon, panpipes, ocarina, harmonica, bagpipes, mallets, glockenspiel, steel drum, kalimba, music box, drum, timpani, zither, voice (a mic), tubular bells and wine glasses.
+- The hands follow what you play. Guitars, basses and bowed strings: the fret hand goes to the right string and fret, the strum alternates down and up, and the bow turns round on each new note. Keyboards, mallets and harp: the key, bar or string for the note lights up. Trumpet: real valve fingering. Trombone: the slide moves. Woodwinds: more holes covered for lower notes. Singing: the free arm rises with the pitch.
+- A held note keeps moving (the bow, the accordion's bellows, vibrato on the fret hand); letting go relaxes the hands.
+- To check: go live, open the venue, then change instruments and play, low notes and high notes.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |
