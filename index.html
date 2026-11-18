@@ -4554,7 +4554,7 @@ var STAGEFX=(function(){
     Array.prototype.forEach.call(p.querySelectorAll("input[type=range]"),function(r){r.value=Math.round((fx[r.getAttribute("data-k")]||0)*100);});
   }
   /* the preview: the stage, the effects, a performer at the keys and a few dancers */
-  var dancers=[ART.looks.random(11),ART.looks.random(22),ART.looks.random(33),ART.looks.random(44)],pc={kind:"",t0:-1e9,lastT:0};
+  var dancers=[ART.looks.random(11),ART.looks.random(22),ART.looks.random(33),ART.looks.random(44)],pc={kind:"",t0:-1e9,lastT:0},jk=0;
   function frame(){
     raf=0;if(!cv||!cv.isConnected||!cv.offsetWidth)return;
     var g=cv.getContext("2d"),W=cv.width,H=cv.height,now=Date.now(),lay={stageBottom:0.36,floorBottom:0.97},ph=(now%500)/500;
@@ -4562,15 +4562,24 @@ var STAGEFX=(function(){
     /* follow-my-playing in the preview: your real notes, or a made-up melody if you're not playing */
     var fol=null;if(fx.follow){fol=PFOLLOW.read();if(fol.a<0.05){var mh=0.5+0.45*Math.sin(now/700);fol={h:mh,hue:(Math.floor(now/350)%12)*30,a:1};}}
     ART.scene(g,W,H,lay,{now:now,phase:ph,level:0.6,playing:true,lights:fx.lights,fog:fx.fog,spotX:W/2,sign:"UNHOLY KEYS",follow:fol});
-    ART.fxBack(g,W,H,lay,fx,{now:now});
-    ART.drawChar(g,W/2,H*0.18+8,2,perfLook,{armL:-0.55,armR:0.55});ART.keyboard(g,W/2,H*0.18+18,2,Math.floor(now/200)%7,"#F5D03C");
+    /* the Jumbotron: lowers when it's set to Down (on Auto it comes down for videos, which the preview doesn't have) */
+    jk+=((fx.jumbo==="down"?1:0)-jk)*0.06;
+    ART.fxBack(g,W,H,lay,fx,{now:now,jumbo:jk>0.5});
+    if(jk>0.01){var jh=Math.round(H*lay.stageBottom*0.48),jw=Math.round(jh*16/9),jy0=Math.round(H*0.02),jdrop=Math.pow(1-jk,3)*(jy0+jh+40);
+      var jt={x:Math.round(W/2-jw/2),y:Math.round(jy0-jdrop),w:jw,h:jh,k:jk};ART.jumboFrame(g,jt,ART.sceneP(W,H));
+      var vc=$("jcv");g.fillStyle="#000";g.fillRect(jt.x,jt.y,jt.w,jt.h);
+      if(vc&&vc.width&&jamOn){try{g.drawImage(vc,jt.x,jt.y,jt.w,jt.h);}catch(e){}}
+      else{var bars=["#C0C0C0","#C0C000","#00C0C0","#00C000","#C000C0","#C00000","#0000C0"];for(var bi=0;bi<7;bi++){g.fillStyle=bars[bi];g.fillRect(jt.x+Math.round(bi*jt.w/7),jt.y,Math.ceil(jt.w/7),jt.h);}
+        g.fillStyle="rgba(0,0,0,.55)";g.fillRect(jt.x,jt.y+jt.h*0.4,jt.w,jt.h*0.2);g.fillStyle="#fff";g.font="bold "+Math.round(jt.h*0.13)+"px monospace";g.textAlign="center";g.textBaseline="middle";g.fillText("YOUR VIDEO",jt.x+jt.w/2,jt.y+jt.h/2);}}
+    var pyy=H*(0.18+0.12*Math.max(0,Math.min(1,(jk-0.3)/0.5)));
+    ART.drawChar(g,W/2,pyy+8,2,perfLook,{armL:-0.55,armR:0.55});ART.keyboard(g,W/2,pyy+18,2,Math.floor(now/200)%7,"#F5D03C");
     if(fx.crowdT!==pc.lastT){pc.lastT=fx.crowdT;pc.kind=fx.crowd;pc.t0=now;}
     var cAge=now-pc.t0;
     for(var i=0;i<4;i++){var dx=W*(0.18+i*0.21),dy=H*0.7,ps=ART.dance([1,4,8,6][i],0,[0,0,0,0],now/500+i*0.3),tg={x:W/2+Math.sin(now/650+i)*W*0.3,y:H*0.08};
       var cr=cAge<ART.CROWD_MS&&pc.kind?ART.crowdPose(pc.kind,cAge,dx,dy,2,tg):null;
       if(cr){dy+=cr.lift;if(cr.armL!==undefined){ps.armL=cr.armL;ps.armR=cr.armR;}}
       ART.drawChar(g,dx,dy,2,dancers[i],ps);if(cr)ART.crowdFx(g,pc.kind,dx,dy,2,cAge,i,cr.hands,tg);}
-    ART.fxFront(g,W,H,lay,fx,{now:now,phase:ph,holes:[{x:W/2,y:H*0.18,r:80}]});
+    ART.fxFront(g,W,H,lay,fx,{now:now,phase:ph,holes:[{x:W/2,y:pyy,r:80}]});
     raf=requestAnimationFrame(frame);
   }
   function wake(){if(!raf)raf=requestAnimationFrame(frame);}
