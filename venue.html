@@ -82,6 +82,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #reactBar button{width:46px;height:46px;border-radius:50%;font-size:22px;line-height:1;color:#fff;background:rgba(20,18,32,.8);border:1px solid rgba(127,119,221,.45);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .08s}
 #reactBar button:active,#reactBar button.pop{transform:scale(1.18);background:rgba(211,84,160,.6);border-color:#D354A0}
 #reactBar button.cool{opacity:.4}
+#reactBar,#moveCtl{transition:opacity .25s}#reactBar.dim,#moveCtl.dim{opacity:.3}
 body.gaming-free #reactBar{bottom:214px}
 body.gaming:not(.gaming-free) #reactBar{display:none}
 body.practice #reactBar{display:none}
@@ -4449,6 +4450,8 @@ function renderLoop(){
   if(walkMark){var wa=1-(performance.now()-walkMark.t)/600;if(wa>0){ctx.save();ctx.globalAlpha=wa*0.8;ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(walkMark.x,walkMark.y,10+(1-wa)*14,(10+(1-wa)*14)*0.45,0,0,6.3);ctx.stroke();ctx.restore();}else walkMark=null;}
   drawFxFront(bp,feat,perfPx,perfPy);
   GAME.drawHandles(ctx);
+  /* standing behind the buttons: fade them so you can see yourself */
+  if(myId&&viewers[myId]){var mv=viewers[myId],mx=mv.x*W,my=mv.y*H;["reactBar","moveCtl"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.offsetWidth)return;var r=el.getBoundingClientRect(),hit=mx>r.left-14&&mx<r.right+14&&my>r.top-6&&my-46<r.bottom;el.classList.toggle("dim",hit);});}
 
   requestAnimationFrame(renderLoop);
 }
