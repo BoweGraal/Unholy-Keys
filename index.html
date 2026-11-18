@@ -4626,12 +4626,18 @@ var CHART=(function(){
        becomes a single), off-beat steps only go in when there's room */
     function add(t,mask,first,onBeat,hold){var n=bits(mask);if(!room(t,n)){if(!onBeat)return false;if(n>1){mask=1<<first;n=1;}}for(var z=0;z<n;z++)recent.push(t);out.push(hold?[Math.round(t),mask,Math.round(hold)]:[Math.round(t),mask]);return true;}
     function two(first,tier){var l2,g=0;do{l2=Math.floor(r()*4);g++;}while((l2===first||l2===heldLane||(tier<3&&Math.abs(l2-first)===2&&r()<0.5))&&g<20);if(l2===first||l2===heldLane)return 1<<first;return (1<<first)|(1<<l2);}
+    /* Where the song has a steady beat. Between the first and last steady parts, a stretch where the beat goes
+       quiet under the vocals (a rap verse over a soft hi-hat) still gets steps, as long as the music is playing;
+       before the beat starts (a spoken intro) and after it ends (talking at the end) there are none. */
+    var pl=new Float32Array(nb),firstG=-1,lastG=-1;
+    for(i=0;i<nb;i++){pl[i]=loud[i]<silent?0:pulse(e,bt,i);if(pl[i]>=PULSE){if(firstG<0)firstG=i;lastG=i;}}
     for(i=0;i<nb;i++){
       var t=bt[i]*10;if(i<4||t<2500)continue;                       /* lead-in: let people hear the song first */
       if(loud[i]<silent)continue;                                     /* silence: nothing to dance to */
-      if(pulse(e,bt,i)<PULSE){groove=false;continue;}                 /* talking, a free-time intro, ambient pads: no steady beat, no steps */
+      var soft=false;
+      if(pl[i]<PULSE){if(firstG<0||i<firstG||i>lastG){groove=false;continue;}soft=true;}   /* talking, a free-time intro, ambient pads: no steady beat, no steps */
       var on=near(e,bt[i],3)/hit;
-      if(!groove){if(on<0.3)continue;groove=true;}                    /* after a stretch with no beat, start again on a real hit */
+      if(!groove){if(on<0.3&&!soft)continue;groove=true;}             /* after a stretch with no beat, start again on a real hit */
       var D=E[i]*level+(inPeak[i]?0.12:0),tier=D<0.3?0:D<0.6?1:D<0.85||!inPeak[i]?2:3,bar=i%4===0;
       if(heldLane>=0&&i>=heldUntil)heldLane=-1;                       /* the hold has ended */
       /* during a hold in a calm or normal part, just hold; busier parts keep other arrows coming */
