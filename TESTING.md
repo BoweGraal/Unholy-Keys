@@ -316,6 +316,15 @@ The "Click to capture keys" box is gone. Keys play whenever the page has focus (
 
 **Charts.** Rap verses, where the vocals sit over a quiet beat, now get steps; songs no longer go empty partway through. On touch screens: never more than two presses at once (while an arrow is held, only single arrows), nothing faster than half beats or 280 ms, and steps sit on the beat.
 
+**Mosh pit round.** Pick "Mosh pit round" under Dance rounds on the performer page, or "Mosh pit" in dance practice. Three parts, timed to the song:
+- **Mosh pit** (most of the song): walk with the joystick or arrows and run into people. Bumping someone scores and shoves them. Drag round in circles on the floor to windmill your arms: each turn scores, more on the beat (two scoring turns a second at most). Everyone sees your arms.
+- **Wall of death** at the song's biggest drop (the chart now finds it): "WALL OF DEATH", and everyone goes to the side they're on, with a line down the middle and the count for each side. Then 3-2-1 on the beats, everyone charges the middle on the drop, and it's a tug of war for 10 seconds: tap the big pad as fast as you can (or click, or any key). The bar at the top shows both sides' totals live (the server adds them up), the flag on the rope leans toward whoever's ahead, and the winning side gets 800 points each. The losers get knocked back.
+- **Circle pit** during the song's other big moments: everyone runs round the ring by themselves. Push the joystick forward to sprint, back to slow down, in or out to change lanes. Laps and shoves score.
+- A song needs a clear drop with about 15 seconds after it for a wall of death. Without one you get the pit and circle pits. A round started without a song has a circle pit every 70 seconds or so.
+- Practice dancers mosh too: they wander the pit, take sides, pull in the tug of war and run the circle. Someone who moshes the whole song should beat them.
+
+**Note highway · 4 keys.** Four fat keys on D F J K (or the arrow keys), or tap the lanes. The notes follow the beat rather than the tune: beats 1 and 3 on the left hand and 2 and 4 on the right, like a kick and snare, switching between the inner and outer key each bar, with half beats on the other hand. Both outer keys together only on bar starts in the big moments, never more than two. It's in the dance menu (key 5), dance practice, and as a round type ("Note highway round (4 keys, on the beat)"), and it works in battles.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |
