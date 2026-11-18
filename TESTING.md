@@ -390,3 +390,11 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 
 ## Whistle (v1.30.10)
 - Pick MK Whistle (or any instrument with "whistle" in its name). The performer doesn't hold a flute any more. They stand with hands at their hips and pucker their lips, and music notes drift off from their mouth. Higher notes fly higher and lift the head slightly. Flute and piccolo still get the flute.
+
+## Instrument fixes and sections (v1.31.0)
+- **Bassoon** (and contrabassoon): held diagonally across the body, boot at the hip and bell up past the shoulder, with a silver bocal curving to the lips. One hand is low on the boot and one high on the wing.
+- **Contrabass**: the fretting hand stays between shoulder and body instead of reaching up by the head, and the bow crosses the body.
+- **Tuba**: held beside the performer with the bell up past the shoulder and the lead pipe to the lips. The character stays in view.
+- **Blown Bottle**: now a green bottle held under the lips (it was a pan flute).
+- **Bagpipe**: the bag breathes slightly instead of ballooning.
+- **Sections**: choir sounds (Choir Aahs, Voice Oohs, Synth Choir, Pad: Choir…), string sections (String Ensemble, Synth Strings, Tremolo Strings, Violins…), brass sections (Brass Section, Synth Brass…), Strings + Brass and Orchestra Hit bring 4 players on stage around the performer, who stays in the middle and keeps playing. Choir members sing without mics, hands together. Orchestral Harp stays solo. Same on the performer's stage view and for the audience.
