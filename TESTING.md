@@ -387,3 +387,6 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Jam → Stage view: a small panel hangs on the back wall, top left inside the truss pillar. It has SPACE D E 3 along the top and the arrow cross below, lit live as you press (the arrow takes the colour of the note row it plays).
 - Audience: the venue shows the same panel in the same spot. It lights the keys that played each note and goes dark when the note ends. On phones it sits in the corner under the Room label, clear of the Jumbotron.
 - It doesn't show in dance practice (there's no performer).
+
+## Whistle (v1.30.10)
+- Pick MK Whistle (or any instrument with "whistle" in its name). The performer doesn't hold a flute any more. They stand with hands at their hips and pucker their lips, and music notes drift off from their mouth. Higher notes fly higher and lift the head slightly. Flute and piccolo still get the flute.

@@ -14,7 +14,7 @@
   var KINDS=["grand","upright","organ","pipeorgan","synth","keytar","epiano","harpsichord","chip","accordion",
     "acoustic","electric","metal","jazzguitar","bass","banjo","sitar","shamisen","violin","cello","contrabass","harp",
     "trumpet","trombone","horn","tuba","sax","flute","clarinet","bassoon","panflute","ocarina","harmonica","bagpipe",
-    "mallets","glock","steeldrum","kalimba","musicbox","drum","timpani","zither","voice","bells","glasses"];
+    "mallets","glock","steeldrum","kalimba","musicbox","drum","timpani","zither","voice","whistle","bells","glasses"];
 
   /* ---- which art for which instrument ---- */
   var RULES=[
@@ -30,7 +30,7 @@
     [/contrabass|double.?bass|acoustic.?bass/,"contrabass"],[/cello/,"cello"],[/violin|viola|fiddle|tremolo|pizzicato|ensemble|strings/,"violin"],
     [/trombone/,"trombone"],[/tuba/,"tuba"],[/english.?horn|oboe|clarinet|recorder|shanai|shakuhachi/,"clarinet"],[/horn|french/,"horn"],
     [/bassoon/,"bassoon"],[/sax/,"sax"],[/trumpet|cornet|brass/,"trumpet"],
-    [/pan.?flute|blown.?bottle/,"panflute"],[/ocarina/,"ocarina"],[/flute|piccolo|whistle|chiff/,"flute"],
+    [/pan.?flute|blown.?bottle/,"panflute"],[/ocarina/,"ocarina"],[/whistl/,"whistle"],[/flute|piccolo|chiff/,"flute"],
     [/harmonica/,"harmonica"],[/bagpipe/,"bagpipe"],[/accordion|harmonium|bandoneon/,"accordion"],
     [/slap|finger.?bass|pick.?bass|fretless|bass.?guitar|bass-electric|bass.?di|mellow.?bass|mk-bass|\bbass\b(?!.*(synth|sub|lead))/,"bass"],
     [/metal|distortion|hard.?rock|pinch|charang/,"metal"],[/jazz/,"jazzguitar"],
@@ -379,6 +379,33 @@
       fx=function(){if(on)waves(g,zx,zy-2*p,p,-Math.PI/2,Math.max(0.3,1-age/900),"rgba(245,208,60,.8)");};
       break;}
 
+    /* ---------- whistle: no instrument, just whistling: hands on the hips, lips puckered, a little head lift on high
+       notes, and music notes drifting off from the lips ---------- */
+    case "whistle":{
+      var hiW=nrm(m,60,96),sway=Math.sin(t*2.2)*0.8*p,lift=on?-hiW*1.2*p:0;
+      pose.bob=bob+lift;J=ART.joints(x,y,p,pose.bob);
+      arms([x-8*p+sway,y+1*p+pose.bob],[x+8*p+sway,y+1*p+pose.bob]);
+      var lip=[x,y-7.5*p+pose.bob];
+      after=function(){
+        /* puckered lips: a small pink ring with a dark centre (closed, relaxed lips between notes) */
+        var r=function(ax,ay,ww,hh,cc){g.fillStyle=cc;g.fillRect(Math.round(lip[0]+ax*p),Math.round(lip[1]+ay*p),Math.ceil(ww*p),Math.ceil(hh*p));};
+        if(on||now-st.off<250){r(-1.5,-1.5,3,3,"#C9566C");r(-0.5,-0.5,1,1,"#3a1418");}
+      };
+      fx=function(){
+        if(!on&&now-st.off>900)return;
+        g.save();g.textAlign="center";g.font="bold "+Math.round(6.5*p)+"px system-ui";
+        /* a note pops off on each press, then one every 380 ms while held; higher notes fly higher */
+        var held=on?now-st.t0:Math.max(0,st.off-st.t0),k=Math.floor(held/380)+1,since=on?0:now-st.off;
+        for(var i=0;i<Math.min(k,4);i++){var a2=(now-st.t0-(k-1-i)*380)/900;if(a2<0||a2>1)continue;
+          var nx=lip[0]+(4+a2*12)*p,ny=lip[1]-(1+a2*(5+hiW*10))*p+Math.sin(a2*6+i)*1.2*p;
+          g.globalAlpha=Math.max(0,(1-a2))*(on?1:Math.max(0,1-since/900));
+          g.fillStyle="hsl("+(((m%12)+12)%12)*30+",85%,72%)";g.fillText((st.n+i)%2?"\u266A":"\u266B",nx,ny);}
+        /* a breath of air from the lips */
+        if(on&&age<400){g.globalAlpha=1-age/400;g.strokeStyle="rgba(255,255,255,.7)";g.lineWidth=Math.max(1,p*0.5);
+          for(var w=0;w<2;w++){g.beginPath();g.moveTo(lip[0]+(2+w*2)*p,lip[1]-w*p);g.lineTo(lip[0]+(4+w*2+age/80)*p,lip[1]-(w+0.5)*p);g.stroke();}}
+        g.restore();
+      };
+      break;}
     /* ---------- voice: mic in hand, the free arm rises with the note, mouth open while singing ---------- */
     case "voice":{
       c=piece("mic",4,9,function(r){r(0,0,4,4,"#8a8aa0");r(1,1,1,1,"#C8C8D8");r(1,4,2,5,"#2A2238");});
@@ -398,5 +425,5 @@
     if(fx)fx();
     return {hands:hands,top:y-19*p+bob};
   }
-  ART.INST={kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.30.9"};
+  ART.INST={kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.30.10"};
 })();
