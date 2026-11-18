@@ -367,6 +367,7 @@ function castVote(ws, voter, target, weight) {
 /* the show's effects, checked: anything unknown is dropped */
 var FX_LIGHTS = ["auto", "party", "strobe", "spot", "warm", "cool", "off"], FX_WEATHER = ["none", "rain", "storm", "snow"];
 var FX_CROWD = ["sparkle", "fire", "lasers", "float"];
+var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
@@ -378,7 +379,9 @@ function showFx(f) {
     bannerText: String(f.bannerText || "UNHOLY KEYS").toUpperCase().replace(/[^A-Z0-9 !?'.#*-]/g, "").slice(0, 20) || "UNHOLY KEYS",
     /* one-shot moments: the time each was last set off (a balloon drop, a confetti blast, a crowd surprise) */
     balloonT: Math.max(0, Math.floor(+f.balloonT || 0)) % 1e13, confettiT: Math.max(0, Math.floor(+f.confettiT || 0)) % 1e13,
-    crowd: FX_CROWD.indexOf(f.crowd) >= 0 ? f.crowd : "", crowdT: Math.max(0, Math.floor(+f.crowdT || 0)) % 1e13 };
+    crowd: FX_CROWD.indexOf(f.crowd) >= 0 ? f.crowd : "", crowdT: Math.max(0, Math.floor(+f.crowdT || 0)) % 1e13,
+    /* scenes: the venue floating in space (everyone drifts), the stage filling with water (everyone swims) */
+    space: f.space ? 1 : 0, water: f.water ? 1 : 0 };
 }
 /* a character's look: 8 letters/digits (see art.js), or nothing */
 function look(s) { return typeof s === "string" && /^[0-9a-z]{8}$/.test(s) ? s : ""; }
@@ -497,6 +500,13 @@ wss.on("connection", function(ws) {
         var text = str(msg.text, 300);
         if (!text || !allow(ws, "chat", 5, 1)) return;
         broadcast(ws.room, { type: "chat", id: ws.viewerId, viewerId: ws.viewerId, name: ws.viewerName, color: ws.viewerColor, text: text }, ws);
+        return;
+      }
+      if (msg.type === "react") {
+        /* a quick reaction everyone sees on this dancer: jump, hearts, a big heart, applause, a whistle */
+        if (REACTS.indexOf(msg.k) < 0) return;
+        if (!allow(ws, "react", 8, 3) || (msg.k === "bigheart" && !allow(ws, "bigheart", 1, 0.25))) return;
+        broadcast(ws.room, { type: "react", id: ws.viewerId, k: msg.k }, ws);
         return;
       }
       if (msg.type === "pos") {
