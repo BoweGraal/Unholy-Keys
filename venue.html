@@ -87,7 +87,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #reactBar button{width:46px;height:46px;border-radius:50%;font-size:22px;line-height:1;color:#fff;background:rgba(20,18,32,.8);border:1px solid rgba(127,119,221,.45);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .08s}
 #reactBar button:active,#reactBar button.pop{transform:scale(1.18);background:rgba(211,84,160,.6);border-color:#D354A0}
 #reactBar button.cool{opacity:.4}
-/* the mosh pit: a banner for each part, your score, a hint, and the big tap pad for the tug of war */
+/* the mosh pit: a banner for each part, your score, a hint, and the big tap pad for the push war */
 #moshUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
 #moshUI.on{display:block}
 #moshBanner{position:absolute;left:50%;top:22%;transform:translateX(-50%);font:900 clamp(26px,6vw,54px)/1 system-ui,sans-serif;color:#fff;text-shadow:0 0 18px #E8505B,0 3px 0 #000;white-space:nowrap;opacity:0}
@@ -101,6 +101,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #moshTap.hit{animation:moshHit .12s}
 @keyframes moshHit{50%{transform:scale(.97);background:radial-gradient(circle,rgba(245,208,60,.55),rgba(30,10,20,.85))}}
 body.mosh-tug #moshTap{display:flex}
+@media (min-width:700px){#moshTap{left:50%;right:auto;width:min(560px,60vw);transform:translateX(-50%);height:18vh;bottom:10px}#moshTap.hit{animation:none;filter:brightness(1.35)}}
 body.mosh-tug #reactBar,body.mosh-tug #moveCtl{display:none}
 body.gaming-mosh #moveHint{display:none}
 @media (max-width:520px){#moshScore{top:auto;bottom:150px;right:12px;font-size:22px;z-index:2}body.mosh-tug #moshScore{bottom:calc(38vh + 26px)}#moshHint{bottom:184px;left:auto;right:12px;transform:none;white-space:normal;max-width:60vw;text-align:right;font-size:11px}body.mosh-tug #moshHint{display:none}#moshBanner{top:30%}}
@@ -177,6 +178,9 @@ body.gaming-free #moveHint{display:none}
 #fdUI .fd-ring[data-i="1"] .fd-knob{background:radial-gradient(circle at 35% 35%,#fff,#7F77DD 70%);box-shadow:0 0 14px rgba(127,119,221,.8)}
 #fdUI .fd-help{position:absolute;left:50%;transform:translateX(-50%);bottom:190px;font:600 12px system-ui,sans-serif;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000;text-align:center;max-width:calc(100% - 190px)}
 #fdUI.free .fd-pads,#fdUI.free .fd-subs{display:none}
+#fdUI .fd-jump{pointer-events:auto;align-self:center;width:56px;height:56px;border-radius:50%;border:2px solid rgba(245,208,60,.6);background:rgba(20,18,32,.85);color:#F5D03C;font:800 20px/1 system-ui;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#fdUI .fd-jump small{font:700 9px system-ui;color:#fff;letter-spacing:.5px}
+#fdUI .fd-jump:active,#fdUI .fd-jump.pop{transform:scale(1.12);background:rgba(245,208,60,.35)}
 body.gaming-free #dpad{display:none}
 @media (max-width:520px){
   #fdUI .fd-col button{width:62px;font-size:10px;padding:5px 2px}#fdUI .fd-col button .i{font-size:18px}
@@ -215,6 +219,9 @@ body.jt-top #roundBox.strip .rb-btn{margin-top:0;padding:4px 10px;font-size:12px
 #roundBox .rb-btn:hover{background:rgba(255,255,255,.18)}
 #roundBox .rb-btn.on{background:linear-gradient(135deg,#D354A0,#7F77DD)}
 /* ── Practice mode (venue.html?practice) ── */
+#prExit{display:none;position:fixed;left:10px;top:10px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;text-decoration:none;background:rgba(20,18,32,.85);border:1px solid rgba(232,80,91,.6)}
+body.practice #prExit{display:block}
+#prExit:hover{border-color:#E8505B;background:rgba(232,80,91,.3)}
 .join-practice{display:block;text-align:center;margin-top:14px;font-size:12px;color:rgba(255,255,255,.5)}
 .join-practice a{color:#D354A0}
 #prBar{display:none;position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:25;width:min(560px,94vw);box-sizing:border-box;padding:10px 14px;background:rgba(14,11,26,.93);border:1px solid rgba(245,197,24,.45);border-radius:14px;color:#fff;font:500 12px system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
@@ -276,7 +283,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
     </div>
     <div>
       <label>Room Code</label>
-      <input type="text" id="inRoom" placeholder="Enter room code" maxlength="12" autocomplete="off">
+      <input type="text" id="inRoom" placeholder="4 letters" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase;letter-spacing:4px">
     </div>
     <div>
       <label>Your character</label>
@@ -300,7 +307,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
   <!-- free dance: dance buttons down both edges, the dance's own moves along the bottom, two control dots in the middle -->
   <div id="fdUI" aria-label="Free dance controls">
     <div class="fd-col fd-l"></div><div class="fd-col fd-r"></div>
-    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div></div>
+    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><button class="fd-jump" aria-label="Jump" title="Jump (Space)">&#10514;<small>Jump</small></button><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div></div>
     <div class="fd-help"></div>
     <div class="fd-subs"></div>
   </div>
@@ -326,8 +333,9 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
     <button data-r="clap" title="Applause (Y)" aria-label="Applause">&#128079;</button>
     <button data-r="whistle" title="Whistle (U)" aria-label="Whistle">&#128537;</button>
   </div>
-  <div id="moshUI"><div id="moshBanner">🤘 MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><button id="moshTap" aria-label="Tap as fast as you can"><b>TAP!</b><span id="moshTapN">0</span></button></div>
+  <div id="moshUI"><div id="moshBanner">🤘 MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
   <div id="roundBox"></div>
+  <a id="prExit" href="?" title="Leave practice and go back to joining a show">&#10005; Leave practice</a>
   <div id="prBar">
     <div class="h">Dance practice · pick a mini game and a song</div>
     <div class="r" id="prGames">
@@ -352,7 +360,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
       <button id="prGo" disabled>Start round</button>
       <div class="song" id="prSong">Pick a song from your computer to start.</div>
     </div>
-    <div class="note" id="prNote">Arrow keys or the pad step, D F J K or drag in free dance, Space or the X sits a round out. Points add up across practice rounds until you close the page.</div>
+    <div class="note" id="prNote">Arrow keys or the pad step, D F J K or drag in free dance, Esc or the X sits a round out. Points add up across practice rounds until you close the page.</div>
   </div>
   <div id="gamePanel">
     <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameBpm"></span><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
@@ -1195,6 +1203,7 @@ document.getElementById("enterBtn").addEventListener("click",function(){
   roomCode=room.toUpperCase();
   enterVenue();
 });
+document.getElementById("inRoom").addEventListener("input",function(){var el=this,v=el.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,4);if(v!==el.value)el.value=v;});
 document.getElementById("inRoom").addEventListener("keydown",function(e){
   if(e.key==="Enter")document.getElementById("enterBtn").click();
 });
@@ -1752,9 +1761,11 @@ document.addEventListener("keydown",function(e){
   if(GAME.mode==="step"&&d&&e.code.indexOf("Arrow")===0){e.preventDefault();if(!e.repeat)GAME.press(d);return;}   /* arrows are dance steps */
   if(GAME.mode==="step"&&d){e.preventDefault();if(!e.repeat)GAME.press(d);return;}
   if(GAME.mode==="free"){
+    if(e.code==="Space"){e.preventDefault();if(!e.repeat)react("jump");return;}               /* Space jumps (Esc stops) */
     /* 1-9 pick a dance; Z X C V B its moves */
     var dn=/^(Digit|Numpad)([1-9])$/.exec(e.code);if(dn){e.preventDefault();GAME.fdPick(+dn[2]-1);return;}
     var sk="KeyZ KeyX KeyC KeyV KeyB".split(" ").indexOf(e.code);if(sk>=0&&GAME.fStyle>0&&sk<ART.DANCES[GAME.fStyle].subs.length){e.preventDefault();GAME.fdSub(sk);return;}
+    if(GAME.fdKey(e.code,true)){e.preventDefault();return;}                                    /* a dance picked: WASD and the arrows move the two dots */
     var lk=LIMBKEY[e.code];
     if(lk!==undefined){e.preventDefault();if(!e.repeat)GAME.limbKey(lk,true);return;}
     if(d&&e.code.indexOf("Arrow")!==0)return;                                                  /* letters are limbs here; the arrow keys still walk */
@@ -1769,7 +1780,7 @@ document.addEventListener("keydown",function(e){
 var LIMBKEY={KeyD:0,KeyK:1,KeyF:2,KeyJ:3};   /* left arm, right arm, left leg, right leg */
 var HWKEY={KeyA:0,KeyS:1,KeyD:2,KeyF:3,KeyG:4,KeyH:5,KeyJ:6};   /* note highway lanes */
 var HW4KEY={KeyD:0,KeyF:1,KeyJ:2,KeyK:3,ArrowLeft:0,ArrowDown:1,ArrowUp:2,ArrowRight:3};   /* the 4-key highway */
-document.addEventListener("keyup",function(e){if(GAME.mode==="keys"&&GAME.four&&HW4KEY[e.code]!==undefined){GAME.releaseKey(HW4KEY[e.code]);return;}if(GAME.mode==="keys"&&!GAME.four&&HWKEY[e.code]!==undefined){GAME.releaseKey(HWKEY[e.code]);return;}var d=KEYDIR[e.code];if(d){setHeld(d,false);if(GAME.mode==="step")GAME.release(d);}var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
+document.addEventListener("keyup",function(e){if(GAME.fdKey(e.code,false))return;if(GAME.mode==="keys"&&GAME.four&&HW4KEY[e.code]!==undefined){GAME.releaseKey(HW4KEY[e.code]);return;}if(GAME.mode==="keys"&&!GAME.four&&HWKEY[e.code]!==undefined){GAME.releaseKey(HWKEY[e.code]);return;}var d=KEYDIR[e.code];if(d){setHeld(d,false);if(GAME.mode==="step")GAME.release(d);}var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
 window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){setHeld(d,false);});});
 
 
@@ -1943,7 +1954,7 @@ var GAME=(function(){
   var KEYS=["A","S","D","F","G","H","J"],KCOL=["#E8505B","#F0A040","#F5D03C","#4CC38A","#4A9BE8","#9B7FE0","#EDEDF5"];
   var KPOSE=["left","left","down","up","down","right","right"],hype=0.3,keyCur=3;
   /* the 4-key highway: four fat keys on D F J K (or the arrows), mapped for the rhythm */
-  var four=false,KEYS4=["D","F","J","K"],KCOL4=["#E8505B","#F5D03C","#4A9BE8","#4CC38A"],KPOSE4=["left","down","up","right"];
+  var four=false,KEYS4=["D","F","J","K"],KCOL4=["#2F7FE0","#3B8EF0","#2BB868","#22A85A"],KPOSE4=["left","down","up","right"];
   function KC(){return four?KCOL4:KCOL;}
   function NL(){return mode==="keys"?(four?4:7):4;}
   function laneName(l){return mode==="keys"?(four?KEYS4:KEYS)[l]:LANES[l];}
@@ -2144,7 +2155,8 @@ var GAME=(function(){
     if(fdBuilt)return;fdBuilt=true;
     var ui=document.getElementById("fdUI"),L=ui.querySelector(".fd-l"),R=ui.querySelector(".fd-r");
     function act(label,fn,title){var b=document.createElement("button");b.className="fd-act";b.innerHTML=label;b.title=title;b.onclick=function(e){e.stopPropagation();b.blur();fn();};return b;}
-    R.appendChild(act("&#10005; Stop",function(){stop();},"Stop dancing (Space)"));
+    R.appendChild(act("&#10005; Stop",function(){stop();},"Stop dancing (Esc)"));
+    var jb=ui.querySelector(".fd-jump");jb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();jb.blur();react("jump");jb.classList.add("pop");setTimeout(function(){jb.classList.remove("pop");},150);});
     R.appendChild(act("&#128172; Talk",function(){var t=document.getElementById("talkBtn");if(t)t.click();},"Say something (Enter)"));
     ART.DANCES.forEach(function(d,i){
       var b=document.createElement("button");b.setAttribute("data-s",i);b.title=d.name+(i?"  ("+(i+1)+")":"  (1)");
@@ -2160,7 +2172,10 @@ var GAME=(function(){
       ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){ring.addEventListener(ev,function(e){if(fHeld[i]===e.pointerId)fHeld[i]=null;});});
     });
   }
-  function fdPick(i){fStyle=i;fSub=0;fCtl=[0,0,0,0];if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
+  /* on a computer: WASD moves the left dot, the arrow keys the right one (the mouse can still drag either) */
+  var FKEYS={KeyW:[0,0,-1],KeyS:[0,0,1],KeyA:[0,-1,0],KeyD:[0,1,0],ArrowUp:[1,0,-1],ArrowDown:[1,0,1],ArrowLeft:[1,-1,0],ArrowRight:[1,1,0]},fkHeld={};
+  function fdKey(code,down){if(mode!=="free"||fStyle===0||!FKEYS[code])return false;if(down)fkHeld[code]=1;else delete fkHeld[code];return true;}
+  function fdPick(i){fStyle=i;fSub=0;fCtl=[0,0,0,0];fkHeld={};if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
   function fdSub(k){fSub=k;fdRender();applyToMe();sendPose(true);}
   function fdRender(){
     fdBuild();
@@ -2169,7 +2184,7 @@ var GAME=(function(){
     Array.prototype.forEach.call(ui.querySelectorAll(".fd-col button[data-s]"),function(b){b.classList.toggle("on",+b.getAttribute("data-s")===fStyle);});
     var sb=ui.querySelector(".fd-subs");sb.textContent="";
     d.subs.forEach(function(nm,k){var b=document.createElement("button");b.textContent=nm;b.className=k===fSub?"on":"";b.title=nm+"  ("+"ZXCVB".charAt(k)+")";b.onclick=function(e){e.stopPropagation();b.blur();fdSub(k);};sb.appendChild(b);});
-    ui.querySelector(".fd-help").textContent=fStyle?d.help:"Freestyle: drag your hands and feet, or tap the floor to walk. Pick a dance on the sides for more.";
+    ui.querySelector(".fd-help").textContent=fStyle?d.help+(DEVICE.kind==="pc"?"  WASD moves the left dot, the arrow keys the right one.":""):"Freestyle: drag your hands and feet, or tap the floor to walk. Pick a dance on the sides for more.";
     fdShow();
   }
   function fdShow(){
@@ -2179,7 +2194,9 @@ var GAME=(function(){
   /* let go of a dot and it drifts back to the middle */
   function fdSpring(){
     var moved=false;
-    for(var i=0;i<2;i++)if(fHeld[i]===null&&(fCtl[i*2]||fCtl[i*2+1])){fCtl[i*2]*=0.82;fCtl[i*2+1]*=0.82;if(Math.abs(fCtl[i*2])<0.02&&Math.abs(fCtl[i*2+1])<0.02){fCtl[i*2]=0;fCtl[i*2+1]=0;}moved=true;}
+    for(var i=0;i<2;i++){var kx=0,ky=0,kn=0;for(var kc in fkHeld){var kv=FKEYS[kc];if(kv&&kv[0]===i){kx+=kv[1];ky+=kv[2];kn++;}}
+      if(kn&&fHeld[i]===null){var km=Math.hypot(kx,ky)||1;kx/=km;ky/=km;if(!kx&&!ky){kx=0;ky=0;}fCtl[i*2]+=(kx*0.95-fCtl[i*2])*0.35;fCtl[i*2+1]+=(ky*0.95-fCtl[i*2+1])*0.35;moved=true;}}   /* held keys push the dot that way */
+    for(var i=0;i<2;i++)if(fHeld[i]===null&&!Object.keys(fkHeld).some(function(kc){return FKEYS[kc][0]===i;})&&(fCtl[i*2]||fCtl[i*2+1])){fCtl[i*2]*=0.82;fCtl[i*2+1]*=0.82;if(Math.abs(fCtl[i*2])<0.02&&Math.abs(fCtl[i*2+1])<0.02){fCtl[i*2]=0;fCtl[i*2+1]=0;}moved=true;}
     if(moved){fdShow();applyToMe();sendPose();}
   }
   /* ---------- free dance ----------
@@ -2584,6 +2601,54 @@ var GAME=(function(){
     judgeText(now,ty+sz*2.5);
   }
   /* ---------- note highway ---------- */
+  /* The 4-key highway as piano tiles: a board of white tiles in four columns whose rows scroll with the beat
+     (one row a beat). Each note is a big tile filling its column, blue on the left hand and green on the
+     right; hit it as its bottom edge reaches the bar at the bottom. Holds are tall tiles that shrink while
+     you hold. Hit tiles flash and fade; missed ones turn red. The whole column is the key. */
+  function drawTiles(now,bt,tv,top,px){
+    var L=4,lw=CW/L,labH=Math.round(Math.max(26,Math.min(46,CH*0.085))),hitY=CH-labH-px*2,span=hitY-top,i,n;
+    var rowH=bt.known?bt.period/tv*span:span/4,th=Math.max(px*8,Math.round(rowH*0.94));
+    /* white tiles: the column lines, and row lines on the beat rolling down */
+    g.fillStyle="#F4F4F8";g.fillRect(0,top,CW,CH-top);
+    for(i=0;i<L;i++){var fl=Math.max(0,1-(now-flash[i])/220);if(laneDown[i]||fl>0){g.fillStyle=hexA(KC()[i],0.16*Math.max(fl,laneDown[i]?1:0));g.fillRect(i*lw,top,lw,hitY-top);}}
+    g.fillStyle="#C9C9D6";
+    if(bt.known){var k0=Math.ceil((now-bt.t0)/bt.period)-1;for(var k=k0;;k++){var yb=hitY-(bt.t0+k*bt.period-now)/tv*span;if(yb<top)break;if(yb<=hitY)g.fillRect(0,Math.round(yb),CW,k%4===0?3:2);}}
+    for(i=1;i<L;i++)g.fillRect(Math.round(i*lw)-1,top,2,hitY-top);
+    /* the divider between the hands, like the cabinet's */
+    var mx=Math.round(CW/2);g.fillStyle="#2b2340";g.fillRect(mx-3,top,6,CH-top);g.fillStyle="#F5D03C";g.fillRect(mx-1,top,2,CH-top);
+    fireBorder(now);
+    function tile(x,y,w,h,col,a){
+      g.globalAlpha=a;g.fillStyle=col;g.fillRect(x,y,w,h);
+      g.fillStyle="rgba(255,255,255,.22)";g.fillRect(x,y,w,Math.max(2,px));               /* light top edge */
+      g.fillStyle="rgba(0,0,0,.22)";g.fillRect(x,y+h-Math.max(3,px*1.5),w,Math.max(3,px*1.5));   /* shadow along the bottom */
+      g.globalAlpha=1;
+    }
+    /* a tile is a beat tall, but never runs into the next one in its column */
+    var nextIn=[1e12,1e12,1e12,1e12],ord=notes.slice().sort(function(p,q){return q.t-p.t;});
+    for(i=0;i<ord.length;i++){n=ord[i];var room=(nextIn[n.lane]-(n.t+(n.hold>0?n.hold:0)))/tv*span-px*2;n._th=Math.max(px*5,Math.min(th,room));nextIn[n.lane]=n.t;}
+    for(i=0;i<notes.length;i++){
+      n=notes[i];var x=Math.round(n.lane*lw)+2,w=Math.round(lw)-4;if(n.lane===1||n.lane===2)w-=3;if(n.lane===2)x+=3;
+      var bot=hitY-(n.t-now)/tv*span,hgt=(n._th||th)+(n.hold>0?n.hold/tv*span:0),col=KC()[n.lane];
+      if(n.holding){var endY=hitY-(n.t+n.hold-now)/tv*span-th*0.4;var yy=Math.max(top,Math.round(endY));tile(x,yy,w,Math.round(hitY)-yy,col,1);
+        g.fillStyle="rgba(255,255,255,"+(0.18+0.14*Math.sin(now*0.03))+")";g.fillRect(x,yy,w,Math.round(hitY)-yy);continue;}
+      var y=Math.round(bot-hgt);if(bot<top||y>CH)continue;
+      var y0=Math.max(top,y),hh=Math.round(Math.min(bot,hitY+th))-y0;if(hh<=0)continue;
+      if(n.j==="GONE"){var ga=1-(now-n.jt)/350;if(ga>0)tile(x,y0,w,hh,col,ga*0.6);continue;}
+      if(n.j&&n.j!=="MISS"&&n.j!=="LETGO"){var a=1-(now-n.jt)/260;if(a<=0)continue;     /* hit: it flashes white and fades */
+        tile(x,y0,w,hh,"#DCDCE6",a);g.globalAlpha=a;g.fillStyle="#fff";var gr=Math.round((1-a)*px*6);g.fillRect(x-gr,Math.round(hitY)-px,w+gr*2,px*2);g.globalAlpha=1;continue;}
+      if(n.j==="MISS"||n.j==="LETGO"){tile(x,y0,w,hh,"#E8505B",0.75);continue;}
+      tile(x,y0,w,hh,col,1);
+    }
+    /* the bar you hit on, and the key labels under each column */
+    var pulse=Math.pow(1-BEAT.phase(now),3);g.fillStyle="rgba(232,80,91,"+(0.55+0.45*pulse)+")";g.fillRect(0,Math.round(hitY)-1,CW,3);
+    g.fillStyle="#1b1530";g.fillRect(0,CH-labH,CW,labH);
+    for(i=0;i<L;i++){var lx=Math.round(i*lw),lc=KC()[i],dn=laneDown[i];g.fillStyle=dn?lc:hexA(lc,0.28);g.fillRect(lx+3,CH-labH+3,Math.round(lw)-6,labH-6);
+      var lp=Math.max(2,Math.round(Math.min(lw/10,labH/12)));pixText(KEYS4[i],lx+lw/2,CH-labH/2-lp*3.5,lp,dn?"#fff":"#E9E4FF","center",0);}
+    /* the combo in big red figures at the top, and the call under it */
+    if(combo>=3){var cp=Math.max(3,Math.round(Math.min(CW/48,span/40)));pixText(String(combo),CW/2,top+span*0.06,cp,"#E8505B","center",0.95);}
+    var ja=1-(now-judgeT)/560;
+    if(judge&&ja>0){var jp=Math.max(2,Math.round(Math.min(CW/80,span/56)));g.globalAlpha=ja;pixText(judge.replace("!",""),CW/2,top+span*0.06+Math.max(3,Math.round(Math.min(CW/48,span/40)))*10-(1-ja)*px*3,jp,judgeCol==="#F5C518"?"#C89810":judgeCol,"center",1);g.globalAlpha=1;}
+  }
   function drawKeys(now){
     var bt=grid(),tv=travel(bt.period),i,n;
     makeNotes(now,bt);expire(now);
@@ -2594,6 +2659,7 @@ var GAME=(function(){
         boxH=Math.round(Math.max(12,CH*0.045)),
         hitY=CH-keyH-boxH-px*3,                                /* notes are hit as they reach the boxes */
         lw=CW/NL(),top=hudH+px*3,span=hitY-top,noteH=Math.max(px*4,Math.round(boxH*0.7));
+    if(four)drawTiles(now,bt,tv,top,px);else{
     /* the board: dark lanes with faint dividers, and beat lines rolling down */
     g.fillStyle="rgba(12,9,28,.92)";g.fillRect(0,top,CW,CH-top);
     g.fillStyle="rgba(255,255,255,.06)";for(i=1;i<NL();i++)g.fillRect(Math.round(i*lw),top,1,hitY-top);
@@ -2655,6 +2721,7 @@ var GAME=(function(){
     }
     for(i=0;i<(four?0:NL());i++){if(i===2||i===6)continue;           /* black keys sit between A-S, S-D, F-G, G-H, H-J (none on the 4 fat keys) */
       var bkx=Math.round((i+1)*lw-lw*0.18);g.fillStyle="#15121f";g.fillRect(bkx,ky,Math.round(lw*0.36),Math.round(keyH*0.5));}
+    }
     /* score, song progress and hype across the top */
     g.fillStyle="rgba(12,9,28,.96)";g.fillRect(0,0,CW,top);
     pixText("SCORE "+score,8,6,px,"#E9E4FF","left",0.8);
@@ -2748,7 +2815,7 @@ var GAME=(function(){
     lastFit=0;DEVICE.fit();
     document.getElementById("gameTitle").textContent=m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
     if(m==="free")setTimeout(fdRender,0);
-    document.getElementById("moveHint").textContent=m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
+    document.getElementById("moveHint").textContent=m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
     var mm=me();if(mm)mm.dance=myDance;
@@ -2802,7 +2869,7 @@ var GAME=(function(){
       following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
       handles:mode==="free"?floorHandles():null,fd:mode==="free"?fdState():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},REST:REST};
+  return{get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},REST:REST};
 })();
 /* ============================================================
    MOSH PIT ROUND
@@ -2810,7 +2877,7 @@ var GAME=(function(){
      pit          walk with the joystick or arrows and bump into people (running into someone scores and shoves
                   them); drag round in circles on the floor to windmill your arms (every turn scores)
      wall of death at the song's biggest drop (chart.drop): the crowd splits to the two sides, a 3-2-1 on the
-                  beats, everyone charges the middle on the drop, then a tug of war: tap the screen (or click,
+                  beats, everyone charges the middle on the drop and the two sides slam together, then a push war: tap the screen (or click,
                   or hit Space) as fast as you can. The server adds up each side; the side with more taps wins
                   a bonus for everyone on it
      circle pit   during the song's other big moments: everyone runs round a ring. Push the joystick forward
@@ -2855,9 +2922,11 @@ var MOSH=(function(){
   function stop(){on=false;document.body.classList.remove("gaming-mosh","mosh-tug");$("moshUI").classList.remove("on");swing=null;}
   function add(n,x,y,txt,col){if(!n)return;score+=n;GAME.moshPts(n);if(txt)pops.push({x:x,y:y,t:performance.now(),txt:txt+" +"+n,col:col||"#F5D03C"});hud();}
   function hud(){var h=$("moshScore");if(h)h.textContent=score.toLocaleString();}
-  /* the tug of war: everyone on a side lines up along the rope, in a spot from their id (the same on every screen) */
+  /* the push war: everyone on a side packs in behind the front line, in a spot from their id (the same on every screen) */
   function lineSpot(id){var h=0;id=String(id);for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))>>>0;return h%7;}
   function ropeY(){var f=fl();return (f.top+f.bot)/2;}
+  /* where the two sides meet: the side tapping faster drives it back into the other */
+  function front(){var a=tug.s[0],b=tug.s[1];return 0.5+(a+b>0?(a-b)/(a+b):0)*0.2;}
   /* ---- the floor ---- */
   function fl(){return{top:FLOOR_TOP+0.05,bot:floorMaxY()};}
   function circleCentre(){var f=fl();return{x:0.5,y:(f.top+f.bot)/2,ry:Math.max(0.06,(f.bot-f.top)/2-0.03)};}
@@ -2876,8 +2945,8 @@ var MOSH=(function(){
     /* where you go this part */
     if(phase==="split"||phase==="count"){var sx=team?0.84:0.16;toward(me,sx+(me.tx-sx)*0.0,Math.max(f.top,Math.min(f.bot,me.ty)),0.55,dt);me.tx=team?Math.max(0.56,me.tx):Math.min(0.44,me.tx);}
     else if(phase==="charge"){toward(me,team?0.545:0.455,me.ty,1.1,dt);}
-    else if(phase==="tug"){var lean=(tug.s[1]+tug.s[0])>0?(tug.s[1]-tug.s[0])/(tug.s[1]+tug.s[0]):0,rk=lineSpot(myId);
-      toward(me,0.5+(team?1:-1)*(0.05+rk*0.045)+lean*0.12+Math.sin(now/90)*0.002*(tug.mine?1:0),ropeY()+((rk%2)?0.012:-0.012),0.9,dt);}
+    else if(phase==="tug"){var rk=lineSpot(myId);   /* the push war: packed in behind the front line, shoving */
+      toward(me,front()+(team?1:-1)*(0.028+Math.floor(rk/3)*0.04)+Math.sin(now/60)*0.003*(tug.mine?1:0),ropeY()+((rk%3)-1)*0.035,0.9,dt);}
     else if(phase==="circle"){
       var c=circleCentre(),ex=me.tx-c.x,ey=(me.ty-c.y)/(c.ry/0.3),r=Math.hypot(ex,ey);
       if(!circ.inside){circ.phi=Math.atan2(ey,ex);circ.r=Math.max(0.1,Math.min(0.3,r||0.22));circ.inside=true;}
@@ -2914,16 +2983,16 @@ var MOSH=(function(){
     /* arms: windmill while you swing, otherwise thrash on the beat */
     var bp=GAME.beatPos(),bph=bp-Math.floor(bp);
     if(swing&&now-swing.t<250)GAME.moshPose([swAng,swAng-Math.PI,0.25*Math.sin(now/120),-0.25*Math.sin(now/120)]);
-    else if(phase==="tug")GAME.moshPose([-1.2+Math.sin(now/70)*0.25,1.2-Math.sin(now/70)*0.25,0.45,-0.45]);
+    else if(phase==="tug"){var sh=Math.sin(now/55)*0.12;GAME.moshPose(team?[1.55+sh,1.4+sh,0.15,-0.4]:[-1.4-sh,-1.55-sh,0.4,-0.15]);}   /* both arms out, shoving the other side; legs braced */
     else if(phase==="circle")GAME.moshPose([1.1+Math.sin(now/110)*0.5,-1.1+Math.sin(now/110)*0.5,Math.sin(now/90)*0.6,-Math.sin(now/90)*0.6]);
     else GAME.moshPose([2.3+Math.sin(bph*Math.PI*2)*0.5,-2.3-Math.sin(bph*Math.PI*2)*0.5,0.15,-0.15]);
-    /* the tug of war: send your taps a few times a second */
+    /* the push war: send your taps a few times a second */
     if(phase==="tug"&&tug.mine>tug.sent&&now-tug.send>200){var k=Math.min(6,tug.mine-tug.sent);tug.sent+=k;tug.send=now;if(PRACTICE.on)tug.s[team]+=k;else wsSend({type:"tug",side:team,k:k});}
     if(PRACTICE.on)botTick(dt,pos,now);
     hint();
   }
   function enter(ph,was,me){
-    var b=$("moshBanner"),t={pit:"🤘 MOSH PIT",split:"☠ WALL OF DEATH",count:"☠ WALL OF DEATH",charge:"GO!!!",tug:"TUG OF WAR! TAP!",result:"",circle:"🌀 CIRCLE PIT"}[ph];
+    var b=$("moshBanner"),t={pit:"🤘 MOSH PIT",split:"☠ WALL OF DEATH",count:"☠ WALL OF DEATH",charge:"GO!!!",tug:"PUSH WAR! TAP!",result:"",circle:"🌀 CIRCLE PIT"}[ph];
     if(ph==="split"&&team<0){team=me.tx<0.5?0:1;}
     if(ph==="tug"){document.body.classList.add("mosh-tug");}else document.body.classList.remove("mosh-tug");
     if(ph==="result")finishTug(me);
@@ -2933,12 +3002,13 @@ var MOSH=(function(){
   function finishTug(me){
     if(tug.res)return;var a=tug.s[0],bb=tug.s[1];tug.res={win:a===bb?-1:(bb>a?1:0)};
     var b=$("moshBanner");if(b){b.textContent=tug.res.win<0?"DEAD EVEN!":(tug.res.win?"RIGHT SIDE WINS!":"LEFT SIDE WINS!");b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
-    if(tug.res.win===team)add(800,me.tx*W,me.ty*H-60,"WALL WIN","#4CC38A");
+    if(tug.res.win===team){add(800,me.tx*W,me.ty*H-60,"WALL WIN","#4CC38A");vx+=(team?-1:1)*0.25;}   /* the winners shove through */
     else if(tug.res.win>=0){vx+=(team?1:-1)*0.6;}                                         /* the losers get knocked back */
+    Object.keys(bots).forEach(function(id){var bb=bots[id];if(bb.team<0||tug.res.win<0)return;bb.vx+=bb.team===tug.res.win?(bb.team?-0.25:0.25):(bb.team?0.6:-0.6);});
     if(PRACTICE.on&&tug.res.win>=0)PRACTICE.moshBonus(Object.keys(bots).filter(function(id){return bots[id].team===tug.res.win;}),800);
   }
   function hint(){var h=$("moshHint");if(!h)return;
-    h.textContent=phase==="tug"?"Tap anywhere as fast as you can!":phase==="split"||phase==="count"?"Pick a side… wait for the drop":phase==="charge"?"Charge!":phase==="circle"?"Push forward to sprint · in/out to change lanes · shove people":"Bump into people · drag circles on the floor to swing your arms";}
+    h.textContent=phase==="tug"?"Tap as fast as you can to push them back!":phase==="split"||phase==="count"?"Pick a side… wait for the drop":phase==="charge"?"Charge!":phase==="circle"?"Push forward to sprint · in/out to change lanes · shove people":"Bump into people · drag circles on the floor to swing your arms";}
   /* ---- swinging your arms: drag round in circles on the floor ---- */
   function down(e,p){swing={t:performance.now(),a:null,id:e.pointerId};move(e,p);return true;}
   function move(e,p){
@@ -2963,13 +3033,13 @@ var MOSH=(function(){
       if(phase==="pit")b.team=-1;
       if(phase==="split"||phase==="count"){toward(v,(b.team?0.84:0.16)+((k*0.37)%0.1-0.05),v.ty,0.5,dt);}
       else if(phase==="charge"){toward(v,b.team?0.55+((k*0.13)%0.06):0.45-((k*0.13)%0.06),v.ty,1,dt);}
-      else if(phase==="tug"){b.acc+=b.rate*dt;var n=Math.floor(b.acc);if(n>0&&b.team>=0){b.acc-=n;tug.s[b.team]+=n;}var lean=(tug.s[1]+tug.s[0])>0?(tug.s[1]-tug.s[0])/(tug.s[1]+tug.s[0]):0,rk=(k>>1)+1;
-        toward(v,0.5+(b.team?1:-1)*(0.05+rk*0.045)+lean*0.12,ropeY()+((rk%2)?0.012:-0.012),0.9,dt);}
+      else if(phase==="tug"){b.acc+=b.rate*dt;var n=Math.floor(b.acc);if(n>0&&b.team>=0){b.acc-=n;tug.s[b.team]+=n;}var rk=k+1;
+        toward(v,front()+(b.team?1:-1)*(0.028+Math.floor(rk/3)*0.04),ropeY()+((rk%3)-1)*0.035,0.9,dt);}
       else if(phase==="circle"){b.phi+=0.9*(0.22/b.r)*dt*(k%3===0?1.5:1);toward(v,c.x+Math.cos(b.phi)*b.r,c.y+Math.sin(b.phi)*b.r*(c.ry/0.3),0.7,dt);}
       else if(phase!=="result"){if(!b.goal||Math.hypot(b.goal[0]-v.tx,b.goal[1]-v.ty)<0.02||Math.random()<0.004)b.goal=[0.2+Math.random()*0.6,f.top+Math.random()*(f.bot-f.top)];toward(v,b.goal[0],b.goal[1],0.32,dt);}
       v.tx+=b.vx*dt;v.ty+=b.vy*dt;var dm=Math.pow(0.04,dt);b.vx*=dm;b.vy*=dm;
       v.tx=Math.max(0.03,Math.min(0.97,v.tx));v.ty=Math.max(f.top,Math.min(f.bot,v.ty));
-      v.dance=4;var sw=now/180+k;v.pose=phase==="tug"?[-1.2+Math.sin(now/70+k)*0.25,1.2,0.45,-0.45]:[sw%6.283,sw%6.283-Math.PI,0.2,-0.2];
+      v.dance=4;var sw=now/180+k,sh2=Math.sin(now/55+k)*0.12;v.pose=phase==="tug"?(b.team?[1.55+sh2,1.4+sh2,0.15,-0.4]:[-1.4-sh2,-1.55-sh2,0.4,-0.15]):[sw%6.283,sw%6.283-Math.PI,0.2,-0.2];
     });
   }
   /* ---- drawing on the floor ---- */
@@ -2985,13 +3055,14 @@ var MOSH=(function(){
       if(team>=0){g.font="700 15px system-ui";g.fillStyle="#F5D03C";g.fillText("You're on the "+(team?"RIGHT":"LEFT"),team?W*0.8:W*0.2,f.top*H+18);}
     }
     if(phase==="tug"||phase==="result"){
-      /* the rope across the middle, with the flag showing who's pulling ahead */
-      var a=tug.s[0],b=tug.s[1],lean=a+b>0?(b-a)/(a+b):0,ry=(f.top+f.bot)/2*H,fx=W/2+lean*W*0.12;
-      g.strokeStyle="#C8963C";g.lineWidth=5;g.beginPath();var ry2=ropeY()*H-12;for(var x=W*0.12;x<=W*0.88;x+=8){var yy=ry2+Math.sin(x*0.05+now/80)*2;if(x===W*0.12)g.moveTo(x,yy);else g.lineTo(x,yy);}g.stroke();ry=ry2;
-      g.fillStyle="#E8505B";g.fillRect(fx-3,ry-26,6,26);g.beginPath();g.moveTo(fx+3,ry-26);g.lineTo(fx+22,ry-19);g.lineTo(fx+3,ry-12);g.fill();
+      /* the clash: sparks and dust all along where the two sides meet */
+      var a=tug.s[0],b=tug.s[1],fx=front()*W,cy0=(ropeY()-0.07)*H,cy1=(ropeY()+0.05)*H;
+      if(phase==="tug"){if(Math.random()<0.5)puff(fx+(Math.random()-0.5)*16,cy0+Math.random()*(cy1-cy0));
+        g.strokeStyle="rgba(255,240,200,"+(0.5+0.4*Math.sin(now/40))+")";g.lineWidth=3;g.beginPath();for(var yy=cy0;yy<=cy1;yy+=8){var jx=fx+(((yy/8)|0)%2?5:-5)+Math.sin(now/30+yy)*2;if(yy===cy0)g.moveTo(jx,yy);else g.lineTo(jx,yy);}g.stroke();
+        g.font="900 18px system-ui";g.textAlign="center";g.fillStyle="#fff";g.strokeStyle="rgba(0,0,0,.7)";g.lineWidth=4;g.strokeText("◀ PUSH ▶",fx,cy0-14);g.fillText("◀ PUSH ▶",fx,cy0-14);}
       var bw=Math.min(W*0.7,520),bx=W/2-bw/2,by=f.top*H-34,share=a+b>0?a/(a+b):0.5;
       g.fillStyle="rgba(0,0,0,.6)";g.fillRect(bx-4,by-4,bw+8,26);g.fillStyle="#4A9BE8";g.fillRect(bx,by,bw*share,18);g.fillStyle="#E8505B";g.fillRect(bx+bw*share,by,bw*(1-share),18);
-      g.font="800 14px system-ui";g.fillStyle="#fff";g.textAlign="left";g.fillText("LEFT "+a,bx+6,by+14);g.textAlign="right";g.fillText(b+" RIGHT",bx+bw-6,by+14);
+      g.font="800 14px system-ui";g.fillStyle="#fff";g.textAlign="left";g.fillText("LEFT "+a+" ▶",bx+6,by+14);g.textAlign="right";g.fillText("◀ "+b+" RIGHT",bx+bw-6,by+14);
     }
     if(phase==="circle"){
       c=circleCentre();g.setLineDash([6,10]);g.lineDashOffset=-now/30;g.strokeStyle="rgba(76,195,138,.55)";g.lineWidth=3;
@@ -4366,7 +4437,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.30.0",SERVER_VERSION="";
+var PAGE_VERSION="1.30.5",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}

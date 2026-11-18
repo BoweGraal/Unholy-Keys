@@ -12,7 +12,7 @@
 (function(){
   if(typeof ART==="undefined")return;
   var KINDS=["grand","upright","organ","pipeorgan","synth","keytar","epiano","harpsichord","chip","accordion",
-    "acoustic","electric","metal","jazzguitar","bass","banjo","sitar","violin","cello","contrabass","harp",
+    "acoustic","electric","metal","jazzguitar","bass","banjo","sitar","shamisen","violin","cello","contrabass","harp",
     "trumpet","trombone","horn","tuba","sax","flute","clarinet","bassoon","panflute","ocarina","harmonica","bagpipe",
     "mallets","glock","steeldrum","kalimba","musicbox","drum","timpani","zither","voice","bells","glasses"];
 
@@ -25,7 +25,7 @@
     [/church|pipe.?organ|renaissance.?organ|calliope/,"pipeorgan"],[/organ/,"organ"],
     [/bass.?di\b/,"bass"],[/synth.?bass|sub.?bass/,"synth"],[/pad\b|\bpad:/,"synth"],
     [/timpani/,"timpani"],[/taiko|tom\b|melodic.?tom|synth.?drum|woodblock|orchestra.?hit|perc/,"drum"],
-    [/koto|dan.?tranh|dulcimer|psaltery|zither/,"zither"],[/sitar|shamisen/,"sitar"],[/banjo|strumstick|\blute\b(?!.*harpsichord)/,"banjo"],
+    [/koto|dan.?tranh|dulcimer|psaltery|zither/,"zither"],[/shamisen|sanshin/,"shamisen"],[/sitar/,"sitar"],[/banjo|strumstick|\blute\b(?!.*harpsichord)/,"banjo"],
     [/harpsichord|clavinet|clav\b/,"harpsichord"],[/harp/,"harp"],
     [/contrabass|double.?bass|acoustic.?bass/,"contrabass"],[/cello/,"cello"],[/violin|viola|fiddle|tremolo|pizzicato|ensemble|strings/,"violin"],
     [/trombone/,"trombone"],[/tuba/,"tuba"],[/english.?horn|oboe|clarinet|recorder|shanai|shakuhachi/,"clarinet"],[/horn|french/,"horn"],
@@ -76,7 +76,7 @@
   function at(x,y,p,ax,ay,rot,px,py){var dx=(px-ax)*p,dy=(py-ay)*p,c=Math.cos(rot||0),s=Math.sin(rot||0);return [x+dx*c-dy*s,y+dx*s+dy*c];}
   /* arm angle so the hand points at target t from shoulder j; and where the hand ends up */
   function aim(j,t){return Math.atan2(-(t[0]-j[0]),t[1]-j[1]);}
-  function handAt(j,a,p){return [j[0]-Math.sin(a)*8*p,j[1]+Math.cos(a)*8*p];}
+  function handAt(j,a,p,n){return [j[0]-Math.sin(a)*((n||9)-1)*p,j[1]+Math.cos(a)*((n||9)-1)*p];}
   function hand(g,h,p,skin){var q=Math.max(1,p),s=Math.round(3*q);g.fillStyle="#120D1E";g.fillRect(Math.round(h[0]-s/2-q),Math.round(h[1]-s/2-q),s+2*q,s+2*q);g.fillStyle=skin;g.fillRect(Math.round(h[0]-s/2),Math.round(h[1]-s/2),s,s);}
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function nrm(m,lo,hi){return clamp((m-lo)/(hi-lo),0,1);}
@@ -97,8 +97,10 @@
     var held=on?1:Math.max(0,1-rel/250),t=now/1000,flip=(st.n||0)%2?1:-1;
     var L=look||ART.looks.random(3),skin=ART.looks.SKIN[L.skin]||ART.looks.SKIN[1];
     var bob=-atk*1.5*p+(on?-Math.abs(Math.sin(t*4))*0.6*p:0);
-    var J=ART.joints(x,y,p,bob),pose={armL:0.15,armR:-0.15,legL:0,legR:0,bob:bob,mouth:false},back=null,front=null,hands=[],fx=null,iy=y+bob;
-    function arms(tl,tr){pose.armL=aim(J[0],tl);pose.armR=aim(J[1],tr);hands=[handAt(J[0],pose.armL,p),handAt(J[1],pose.armR,p)];}
+    var J=ART.joints(x,y,p,bob),pose={armL:0.15,armR:-0.15,legL:0,legR:0,bob:bob,mouth:false},back=null,front=null,hands=[],fx=null,iy=y+bob,behind=false,after=null;
+    /* point the arms at the two hand spots; an arm that doesn't need its full length is drawn shorter (reaching toward you), so the hand lands on the spot */
+    function reach(j,t){return Math.max(4,Math.min(9,Math.hypot(t[0]-j[0],t[1]-j[1])/p+1));}
+    function arms(tl,tr){pose.armL=aim(J[0],tl);pose.armR=aim(J[1],tr);pose.lenL=reach(J[0],tl);pose.lenR=reach(J[1],tr);hands=[handAt(J[0],pose.armL,p,pose.lenL),handAt(J[1],pose.armR,p,pose.lenR)];}
     var c,k2;
     switch(kind){
 
@@ -169,9 +171,9 @@
       break;}
 
     /* ---------- guitars, bass, banjo, sitar: strumming hand over the body, the other hand at the fret ---------- */
-    case "acoustic":case "electric":case "metal":case "jazzguitar":case "bass":case "banjo":case "sitar":{
-      var isBass=kind==="bass",tune=isBass?[28,33,38,43]:kind==="banjo"?[50,55,59,62]:kind==="sitar"?[48,53,60,65]:[40,45,50,55,59,64];
-      var ff=fretFor(m,tune),nS=tune.length,neckL=isBass?19:kind==="sitar"?21:16,bodyW=kind==="sitar"?13:isBass?12:13,gr=-0.62;
+    case "acoustic":case "electric":case "metal":case "jazzguitar":case "bass":case "banjo":case "sitar":case "shamisen":{
+      var isBass=kind==="bass",sham=kind==="shamisen",tune=isBass?[28,33,38,43]:kind==="banjo"?[50,55,59,62]:kind==="sitar"?[48,53,60,65]:sham?[48,53,60]:[40,45,50,55,59,64];
+      var ff=fretFor(m,tune),nS=tune.length,neckL=isBass?19:kind==="sitar"?21:sham?21:16,bodyW=kind==="sitar"?13:isBass?12:sham?10:13,gr=sham?-0.9:-0.62;
       var vib=on?Math.sin(now*0.09)*(1-Math.min(1,age/1500)):0;
       c=piece("gtr-"+kind+(on?ff.s+"_"+Math.round(vib*2):"x"),neckL+bodyW+4,bodyW+2,function(r,ln,disc){
         var bh=bodyW,cy2=Math.floor(bh/2)+1;
@@ -181,19 +183,31 @@
         else if(isBass){r(1,2,12,bh-3,"#4A9BE8");r(0,3,3,bh-5,"#4A9BE8");r(4,1,5,2,"#4A9BE8");r(7,cy2-1,2,3,"#15121F");}
         else if(kind==="banjo"){disc(7,cy2,6,"#8a5a2a");disc(7,cy2,5,"#EDEDF5");}
         else if(kind==="sitar"){disc(6,cy2,6,"#C8963C");disc(6,cy2,4,"#E8B868");}
+        else if(sham){r(0,1,bh,bh,"#4a2414");r(1,2,bh-2,bh-2,"#F2E8D0");r(1,2,bh-2,1,"#FFF8E8");r(2,bh-1,bh-4,1,"#D8CCB0");r(3,cy2,3,1,"#2a1810");r(bh-3,3,1,bh-4,"#E8505B");}   /* the drum: a wood frame, cream skin, the bridge, a red cord */
         /* the neck, frets, the headstock, and strings (the one sounding wobbles and glows) */
-        r(bodyW-1,cy2-2,neckL,4,"#5a3220");for(var f=1;f<13;f+=1){var fp=(1-Math.pow(2,-f/12))/0.5;if(f%2&&f>4)continue;r(bodyW-1+neckL-Math.round(neckL*fp*0.95),cy2-2,1,4,"#B8B0C8");}
-        r(bodyW-1+neckL,cy2-3,4,6,kind==="metal"?"#15121F":"#3a2010");
-        for(var s=0;s<Math.min(nS,4);s++){var sy=cy2-1.5+s*(3/Math.max(1,Math.min(nS,4)-1)),hot=on&&Math.round(ff.s*Math.min(nS,4)/nS)===s;
+        if(sham){r(bodyW-1,cy2-1,neckL,3,"#1a1210");r(bodyW-1,cy2-1,neckL,1,"#3a2a20");                                     /* a thin fretless neck */
+          r(bodyW-1+neckL,cy2-2,4,4,"#1a1210");r(bodyW+neckL,cy2-4,1,2,"#F2E8D0");r(bodyW+neckL+2,cy2+2,1,2,"#F2E8D0");r(bodyW+neckL+1,cy2-4,1,2,"#F2E8D0");}   /* the peg box, three ivory pegs */
+        else{r(bodyW-1,cy2-2,neckL,4,"#5a3220");for(var f=1;f<13;f+=1){var fp=(1-Math.pow(2,-f/12))/0.5;if(f%2&&f>4)continue;r(bodyW-1+neckL-Math.round(neckL*fp*0.95),cy2-2,1,4,"#B8B0C8");}
+        r(bodyW-1+neckL,cy2-3,4,6,kind==="metal"?"#15121F":"#3a2010");}
+        if(sham){for(var s3=0;s3<3;s3++){var hot3=on&&ff.s===s3;if(s3!==1&&!hot3)continue;r(3,cy2-1+s3+(hot3?Math.round(vib):0),bodyW+neckL-3,1,hot3?"#F5D03C":"#B8A888");}}   /* thin silk strings: the middle one, and the one sounding */
+        else for(var s=0;s<Math.min(nS,4);s++){var sy=cy2-1.5+s*(3/Math.max(1,Math.min(nS,4)-1)),hot=on&&Math.round(ff.s*Math.min(nS,4)/nS)===s;
           r(5,sy+(hot?Math.round(vib):0),bodyW+neckL-4,1,hot?"#F5D03C":"#E0DCE8");}
       });
       var gAnch=[x-1*p,y+3*p+bob],gW=neckL+bodyW+4,cy3=Math.floor(bodyW/2)+1;
       front=function(){blit(g,c,gAnch[0],gAnch[1],p,8,cy3,gr);};
       /* strum: the hand sweeps across the strings on each note, alternating down and up */
       var sweep=on?clamp(age/110,0,1):1,sOff=(flip>0?-3+6*sweep:3-6*sweep)*(on?1:0.2);
-      var strum=at(gAnch[0],gAnch[1],p,8,cy3,gr,isBass?11:9,cy3+sOff*0.6),fret=at(gAnch[0],gAnch[1],p,8,cy3,gr,bodyW-1+neckL-Math.min(1,ff.pos/0.5)*neckL*0.95+1,cy3+(on?0:-1));
+      var strum=at(gAnch[0],gAnch[1],p,8,cy3,gr,isBass?11:sham?6:9,cy3+sOff*0.6),fret=at(gAnch[0],gAnch[1],p,8,cy3,gr,bodyW-1+neckL-Math.min(1,ff.pos/0.5)*neckL*0.95+1,cy3+(on?0:-1));
       arms(strum,fret);
       pose.mouth=on&&age<350&&(kind==="metal");
+      if(sham){behind=true;after=function(){
+        /* the bachi: a fan-shaped plectrum, its wide blade striking the skin */
+        var h=hands[0],ba=gr-0.35,dx=Math.cos(ba),dy=Math.sin(ba),nx=-dy,ny=dx;          /* the blade points up along the neck, over the skin */
+        function P(a,b){return [h[0]+dx*a*p+nx*b*p,h[1]+dy*a*p+ny*b*p];}
+        var pts=[P(-2,-0.6),P(2,-0.8),P(6,-3),P(6.6,0),P(6,3),P(2,0.8),P(-2,0.6)];
+        g.fillStyle="#120D1E";g.beginPath();pts.forEach(function(q,i){if(i)g.lineTo(q[0],q[1]);else g.moveTo(q[0],q[1]);});g.closePath();g.lineWidth=Math.max(2,p*0.8);g.strokeStyle="#120D1E";g.stroke();
+        g.fillStyle="#F5E8C8";g.fill();g.fillStyle="#C8B890";var e1=P(5.4,-2.6),e2=P(5.4,2.6);g.beginPath();g.moveTo(e1[0],e1[1]);g.lineTo(P(6.6,0)[0],P(6.6,0)[1]);g.lineTo(e2[0],e2[1]);g.closePath();g.fill();
+        hand(g,h,p,skin);hand(g,hands[1],p,skin);}}
       fx=function(){if(on){var sh=at(gAnch[0],gAnch[1],p,8,cy3,gr,8,cy3);waves(g,sh[0]-3*p,sh[1]+2*p,p,Math.PI*0.8,Math.max(0.25,1-age/900),kind==="metal"?"rgba(232,80,91,.8)":"rgba(245,208,60,.75)");}};
       break;}
 
@@ -236,10 +250,16 @@
     case "trumpet":case "horn":case "tuba":case "trombone":{
       var vl=on?TRUMPET[((m%12)+12)%12]:0,mouth=[x,y-8*p+bob];pose.mouth=false;
       if(kind==="trumpet"){
-        c=piece("tpt"+vl,24,8,function(r){r(0,3,3,1,"#C8C8D8");r(3,3,12,2,"#F5C518");r(5,5,8,2,"#E0A810");for(var v=0;v<3;v++){var dn=vl&(1<<v);r(7+v*2,dn?1:0,1,dn?2:3,"#F5E8A0");r(7+v*2,3,1,4,"#C89810");}r(15,2,4,4,"#F5C518");r(19,0,5,8,"#F5D03C");r(22,1,2,6,"#C89810");});
-        var tr=-0.25+atk*-0.08;front=function(){blit(g,c,mouth[0],mouth[1],p,0,3,tr);};
-        var vh=at(mouth[0],mouth[1],p,0,3,tr,9,1+(vl?1:0)),sup=at(mouth[0],mouth[1],p,0,3,tr,10,6);arms(sup,vh);
-        fx=function(){var bl=at(mouth[0],mouth[1],p,0,3,tr,25,4);if(on)waves(g,bl[0],bl[1],p,tr,Math.max(0.4,1-age/900),"rgba(245,197,24,.85)");};
+        /* held level from the lips, bell out to the side: both hands under the valve casing, the left one wrapping it,
+           the right one's fingertips on the valve tops (pressed ones sit lower) */
+        c=piece("tpt"+vl,23,8,function(r){r(0,3,2,1,"#C8C8D8");r(2,3,6,1,"#F5C518");r(4,5,4,1,"#E0A810");r(3,4,1,2,"#E0A810");
+          r(7,2,6,5,"#E0A810");r(7,2,6,1,"#F5D03C");
+          for(var v=0;v<3;v++){var dn=vl&(1<<v);r(8+v*2,dn?1:0,1,dn?1:2,"#F5E8A0");r(8+v*2,2,1,5,"#C89810");}
+          r(13,3,4,2,"#F5C518");r(13,5,3,1,"#E0A810");r(17,2,2,4,"#F5C518");r(19,0,4,8,"#F5D03C");r(21,1,2,6,"#C89810");});
+        var mo2=[x,y-8.5*p+bob],tr=0.05-atk*0.05;front=function(){blit(g,c,mo2[0],mo2[1],p,0,3,tr);};
+        var vt=at(mo2[0],mo2[1],p,0,3,tr,11,7.5),lp=at(mo2[0],mo2[1],p,0,3,tr,7,8);arms(lp,vt);behind=true;
+        after=function(){for(var v=0;v<3;v++){var dn=vl&(1<<v),f=at(mo2[0],mo2[1],p,0,3,tr,8+v*2,dn?0:-1);g.fillStyle="#120D1E";g.fillRect(Math.round(f[0]-p*0.5)-1,Math.round(f[1])-1,Math.round(p)+2,Math.round(p)+2);g.fillStyle=skin;g.fillRect(Math.round(f[0]-p*0.5),Math.round(f[1]),Math.round(p),Math.round(p));}};
+        fx=function(){var bl=at(mo2[0],mo2[1],p,0,3,tr,24,4);if(on)waves(g,bl[0],bl[1],p,tr,Math.max(0.4,1-age/900),"rgba(245,197,24,.85)");};
       }else if(kind==="trombone"){
         var slide=on?Math.round((6-((m-40)%7+7)%7)*2.2):2;
         c=piece("tbn"+slide,34+slide,9,function(r){r(0,3,3,1,"#C8C8D8");r(3,2,13,1,"#F5C518");r(3,5,13,1,"#F5C518");r(14,0,1,8,"#E0A810");r(14,2,3+slide,1,"#C89810");r(14,5,3+slide,1,"#C89810");r(16+slide,2,14,1,"#F5D03C");r(16+slide,5,14,1,"#F5D03C");r(29+slide,2,2,4,"#F5D03C");r(14,2,2,4,"#E0A810");
@@ -267,7 +287,8 @@
       if(kind==="flute"){
         c=piece("flute"+(on?cl:"x"),30,3,function(r){r(0,0,30,2,"#D8D8E8");r(0,0,30,1,"#F5F5FF");r(2,0,2,1,"#15121F");for(var hh=0;hh<6;hh++)r(10+hh*3,0,2,1,on&&hh<cl?"#5a5670":"#15121F");});
         var fr=-0.06;front=function(){blit(g,c,mo[0]-3*p,mo[1]+1*p,p,3,1,fr);};
-        arms(at(mo[0]-3*p,mo[1]+1*p,p,3,1,fr,12,1),at(mo[0]-3*p,mo[1]+1*p,p,3,1,fr,22,1));
+        arms(at(mo[0]-3*p,mo[1]+1*p,p,3,1,fr,12,3),at(mo[0]-3*p,mo[1]+1*p,p,3,1,fr,22,3));behind=true;      /* hands under the flute, fingertips on the holes they cover */
+        after=function(){for(var hh=0;hh<6;hh++){if(!(on&&hh<cl)&&hh!==0&&hh!==3)continue;var f=at(mo[0]-3*p,mo[1]+1*p,p,3,1,fr,10.5+hh*3,-1);g.fillStyle="#120D1E";g.fillRect(Math.round(f[0]-p*0.5)-1,Math.round(f[1])-1,Math.round(p)+2,Math.round(p)+2);g.fillStyle=skin;g.fillRect(Math.round(f[0]-p*0.5),Math.round(f[1]),Math.round(p),Math.round(p));}};
         fx=function(){if(on){g.fillStyle="rgba(255,255,255,.6)";for(var i=0;i<3;i++){var ph=((now/300)+i/3)%1;g.fillRect(Math.round(mo[0]-(5+ph*6)*p),Math.round(mo[1]-ph*4*p),p,p);}}};
       }else if(kind==="panflute"){
         var tube=Math.round(nrm(m,55,91)*8);
@@ -370,10 +391,12 @@
     }
     if(back)back();
     ART.drawChar(g,x,y,p,L,pose);
+    if(behind)hands.forEach(function(h){hand(g,h,p,skin);});        /* hands under the instrument (a trumpet) */
     if(front)front();
-    hands.forEach(function(h){hand(g,h,p,skin);});
+    if(!behind)hands.forEach(function(h){hand(g,h,p,skin);});
+    if(after)after();
     if(fx)fx();
     return {hands:hands,top:y-19*p+bob};
   }
-  ART.INST={kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.30.0"};
+  ART.INST={kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.30.5"};
 })();

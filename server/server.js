@@ -84,9 +84,11 @@ function relayStream(ws, data) {
   });
 }
 
+/* a room code: four letters, leaving out ones easy to mix up (I, L, O); about 280,000 codes */
+var CODE_LETTERS = "ABCDEFGHJKMNPQRSTUVWXYZ";
 function genCode() {
   var code;
-  do { code = Math.random().toString(36).substring(2, 8).toUpperCase(); } while (code.length < 6 || rooms[code]);
+  do { code = ""; for (var i = 0; i < 4; i++) code += CODE_LETTERS[Math.floor(Math.random() * CODE_LETTERS.length)]; } while (rooms[code]);
   return code;
 }
 function genId() { return Math.random().toString(36).substring(2, 10); }
@@ -376,7 +378,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.30.0";
+var VERSION = "1.30.5";
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
