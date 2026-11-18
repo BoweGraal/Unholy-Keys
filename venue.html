@@ -107,7 +107,7 @@ body.dev-tablet #gameClose{width:36px;height:36px}
 body.dev-tablet #gameFoot{font-size:13px}
 /* very short screens (a phone held sideways): the leader banner steps aside while you play */
 body.short.gaming #roundBox.strip{display:none}
-body.gaming-free #gameMe{display:none}
+body.gaming-free #gameMe,body.battle-match #gameMe{display:none}
 #gameFoot{padding:6px 10px 9px;font:600 11px system-ui,sans-serif;color:rgba(255,255,255,.6);text-align:center}
 /* ── Dance rounds: countdown, standings, voting and results (top centre) ── */
 #roundBox{display:none;position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:26;width:min(420px,92vw);box-sizing:border-box;padding:12px 16px;text-align:center;background:rgba(14,11,26,.93);border:1px solid rgba(211,84,160,.55);border-radius:14px;color:#fff;font-family:system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
@@ -251,6 +251,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
       <select id="prSecs"><option value="5">5 s countdown</option><option value="10">10 s countdown</option><option value="20">20 s countdown</option><option value="30">30 s countdown</option></select>
       <select id="prLevel"><option value="0.7">Easy</option><option value="1" selected>Normal</option><option value="1.3">Hard</option></select>
       <select id="prBots"><option value="0">No other dancers</option><option value="3" selected>3 practice dancers</option><option value="8">8 practice dancers</option></select>
+      <select id="prKind" title="A normal round, or a battle: 1 v 1s on the stage, knockout style"><option value="">Normal round</option><option value="battle">&#9876; Battle (1 v 1s)</option></select>
       <button id="prGo" disabled>Start round</button>
       <div class="song" id="prSong">Pick a song from your computer to start.</div>
     </div>
@@ -1281,6 +1282,8 @@ function handleMsg(msg){
   else if(t==="round"){ROUND.onMsg(msg);}
   else if(t==="round-scores"){ROUND.scores(msg);}
   else if(t==="spotlight"){ROUND.setSpot(msg.turns);}
+  else if(t==="battle"){ROUND.setBattle(msg);}
+  else if(t==="bscore"){ROUND.bscore(msg);}
   else if(t==="pose"){
     var pv=viewers[msg.id],pp=safePose(msg.a);
     if(pv&&pp&&msg.id!==myId){pv.pose=pp;pv.combo=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pv.hitT=Date.now();}
@@ -1786,6 +1789,23 @@ var GAME=(function(){
     }
     return out;
   }
+  /* The notes of a round as the players see them (eased for the round's level, mapped to keys on the highway),
+     for drawing someone else's game screen in a battle: [{ms, lanes:[...], hold, x, y}]. Cached per chart. */
+  var bsCache={chart:null,key:"",out:null};
+  function boardSteps(chart,n,m){
+    if(!chart)return [];
+    var key=n+"|"+m;
+    if(bsCache.chart===chart&&bsCache.key===key)return bsCache.out;
+    var d=diffOf(n),c=easeChart(chart,d),km=m==="keys"?keyLanes(c,d):null,out=[];
+    for(var i=0;i<c.steps.length;i++){
+      var s=c.steps[i],lanes=[];
+      if(km)lanes=km[i]||[];else for(var b=0;b<4;b++)if(s[1]&(1<<b))lanes.push(b);
+      if(!lanes.length)continue;
+      var h=spot(i*4+lanes[0]);
+      out.push({ms:s[0],lanes:m==="aim"?[lanes[0]]:lanes,hold:+s[2]||0,x:0.14+h[0]*0.72,y:0.12+h[1]*0.76});
+    }
+    bsCache={chart:chart,key:key,out:out};return out;
+  }
   /* in a dance round: the chart everyone shares, how far through it we are, and score reporting */
   var rnd=null,rndIdx=0,sentScore=-1,scoreTimer=null;
   function spot(n){n=(n+1)*2654435761>>>0;var a=(n^(n>>>15))*2246822519>>>0,b=(a^(a>>>13))*3266489917>>>0;return [(a>>>8)/16777216,(b>>>8)/16777216];}
@@ -1824,6 +1844,7 @@ var GAME=(function(){
     if(!rnd.synced){while(rndIdx<st.length&&st[rndIdx][0]<pos-150)rndIdx++;rnd.synced=true;}    /* joined part-way: skip what's gone */
     while(rndIdx<st.length&&st[rndIdx][0]<pos+ahead){
       var s=st[rndIdx];
+      if(rnd.win&&(s[0]<rnd.win[0]||s[0]+(+s[2]||0)>rnd.win[1]-150)){rndIdx++;continue;}   /* a battle match: only its stretch of the song */
       if(mode==="aim"){
         /* the target game: one target per step; a hold becomes a swoop, and nothing else comes up while you follow it */
         if(s[0]<swoopEnd+120){rndIdx++;continue;}
@@ -1849,10 +1870,12 @@ var GAME=(function(){
     for(i=0;i<pk.length;i++)if(pos>=pk[i][0]&&pos<pk[i][1]){inside=true;break;}
     if(inside!==onFire){onFire=inside;fireT=now;foot();document.getElementById("gamePanel").classList.toggle("onfire",onFire);}
   }
+  /* scores go to the server; in a battle match, tagged with the match and sent more often (the room watches them live) */
+  function scoreMsg(){var o={type:"score",s:score};if(rnd&&rnd.m!==undefined)o.m=rnd.m;return o;}
   function report(final){
     if(!rnd||mode==="free"||score===sentScore)return;
-    if(final){clearTimeout(scoreTimer);scoreTimer=null;sentScore=score;wsSend({type:"score",s:score});return;}
-    if(!scoreTimer)scoreTimer=setTimeout(function(){scoreTimer=null;if(rnd&&score!==sentScore){sentScore=score;wsSend({type:"score",s:score});}},1500);
+    if(final){clearTimeout(scoreTimer);scoreTimer=null;sentScore=score;wsSend(scoreMsg());return;}
+    if(!scoreTimer)scoreTimer=setTimeout(function(){scoreTimer=null;if(rnd&&score!==sentScore){sentScore=score;wsSend(scoreMsg());}},rnd.m!==undefined?500:1500);
   }
 
   function me(){return (myId&&viewers[myId])||null;}
@@ -1878,8 +1901,9 @@ var GAME=(function(){
   }
   /* where your dancing self is drawn right now */
   function freeSpot(){
-    var f=ROUND.featured();
+    var f=ROUND.featured(),bp=ROUND.pair();
     if(f&&f.id===myId)return{x:W/2,y:(STAGE_TOP+STAGE_BOTTOM)/2*H+20,s:3};
+    if(bp&&(bp.A.id===myId||bp.B.id===myId))return{x:bp.A.id===myId?bp.xa:bp.xb,y:(STAGE_TOP+STAGE_BOTTOM)/2*H+20,s:3};
     var m=me();if(!m)return null;
     return{x:m.x*W,y:m.y*H,s:freeS()};
   }
@@ -2480,7 +2504,7 @@ var GAME=(function(){
       following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
       handles:mode==="free"?floorHandles():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
+  return{get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
 })();
 
 /* ============================================================
@@ -2574,6 +2598,103 @@ function spotPlan(dancers, chart, lockPos) {
    the live sound player knows which moment it is playing, so steps follow the song as heard here.
    The live tempo detector then trims the last few hundredths of a second.
    ============================================================ */
+/* (copied from server/battle.js: keep the two the same) */
+/* BATTLE: plan a knockout tournament of quick 1 v 1 matches inside one song.
+   The same code is copied into venue.html (practice mode runs the tournament itself); keep the two the same.
+
+   battlePlan(entrants, chart, lockPos)
+     entrants: [{id,name,color}], best seeds first. chart: {dur, beats} or null. lockPos: song position now (ms).
+     One match at a time, back to back, with a short gap; the final takes the song's finale (the last 15-30 s).
+     Earlier matches share the time between now and the final, 9 to 25 s each. If that's too tight, the lowest
+     seeds are left out until it fits. Not a power of two: the top seeds get a bye through the first round.
+     Without a song length: 18 s matches and a 25 s final, starting 5 s from now.
+     Returns {entrants, slots} or null. Each slot (a match):
+       {r: round from the end (0 = final, 1 = semifinal...), label, src: [a, b], a, b, w, start, end}
+       src entries are {e: entrant index} or {s: slot index} (the winner of that match);
+       a, b: entrant indices once known (-1 until then); w: 0 if a won, 1 if b won, -1 not played yet.
+   battleAdvance(plan): fills in a and b for matches whose earlier matches are decided.
+   battleLive(plan, pos, lead): the index of the match on at song position pos (lead ms early), or -1.
+   battleRanks(plan): [{e, place, wins}] best first: champion, finalist, then by the round they went out in. */
+var BATTLE = (function() {
+  var GAP = 2000, MIN = 9000, MAX = 25000;
+  function seeds(P) { var a = [1, 2]; while (a.length < P) { var n = a.length * 2 + 1, b = []; for (var i = 0; i < a.length; i++) b.push(a[i], n - a[i]); a = b; } return a; }
+  function label(r, R) { return r === 0 ? "Final" : r === 1 ? "Semifinal" : r === 2 ? "Quarterfinal" : "Round " + (R - r); }
+  function snap(t, beats) {
+    if (!beats || beats.length < 8) return Math.round(t);
+    var lo = 0, hi = beats.length - 1;
+    while (hi - lo > 1) { var m = (lo + hi) >> 1; if (beats[m] < t) lo = m; else hi = m; }
+    return Math.round(Math.abs(beats[lo] - t) < Math.abs(beats[hi] - t) ? beats[lo] : beats[hi]);
+  }
+  function build(ents, chart, lockPos) {
+    var N = ents.length, P = 1, R = 0, i;
+    while (P < N) { P *= 2; R++; }
+    var order = seeds(P), slots = [], cur = [];
+    for (i = 0; i < P; i += 2) {
+      var x = order[i] - 1, y = order[i + 1] - 1, sx = x < N ? { e: x } : null, sy = y < N ? { e: y } : null;
+      if (sx && sy) { slots.push({ r: R - 1, src: [sx, sy] }); cur.push({ s: slots.length - 1 }); }
+      else cur.push(sx || sy);
+    }
+    for (var r = R - 2; r >= 0; r--) {
+      var next = [];
+      for (i = 0; i < cur.length; i += 2) { slots.push({ r: r, src: [cur[i], cur[i + 1]] }); next.push({ s: slots.length - 1 }); }
+      cur = next;
+    }
+    var M = slots.length, dur = chart && chart.dur > 0 ? chart.dur : 0, beats = chart && chart.beats, t0 = lockPos + 5000;
+    if (dur) {
+      var end = dur - 1000, F = Math.max(15000, Math.min(30000, dur * 0.22));
+      if (M === 1) {
+        var s1 = Math.max(t0, end - F);
+        if (end - s1 < 10000) return null;
+        slots[0].start = snap(s1, beats); slots[0].end = Math.round(end);
+      } else {
+        var tF = end - F, L = ((tF - GAP) - t0 - (M - 2) * GAP) / (M - 1);
+        if (L < MIN) return null;
+        if (L > MAX) { L = MAX; t0 = tF - GAP - (M - 1) * L - (M - 2) * GAP; }
+        for (i = 0; i < M - 1; i++) { slots[i].start = snap(t0 + i * (L + GAP), beats); slots[i].end = snap(t0 + i * (L + GAP) + L, beats); }
+        slots[M - 1].start = snap(tF, beats); slots[M - 1].end = Math.round(end);
+      }
+    } else {
+      for (i = 0; i < M; i++) { var len = i === M - 1 ? 25000 : 18000; slots[i].start = Math.round(t0); slots[i].end = Math.round(t0 + len); t0 += len + GAP; }
+    }
+    for (i = 0; i < M; i++) { var s = slots[i]; s.label = label(s.r, R); s.a = -1; s.b = -1; s.w = -1; }
+    var plan = { entrants: ents, slots: slots };
+    advance(plan);
+    return plan;
+  }
+  function plan(entrants, chart, lockPos) {
+    if (!entrants || entrants.length < 2) return null;
+    for (var N = Math.min(entrants.length, 32); N >= 2; N--) { var p = build(entrants.slice(0, N), chart, lockPos); if (p) return p; }
+    return null;
+  }
+  function who(plan, src) { if (!src) return -1; if (src.e !== undefined) return src.e; var s = plan.slots[src.s]; return s && s.w >= 0 ? (s.w === 0 ? s.a : s.b) : -1; }
+  function advance(plan) { plan.slots.forEach(function(s) { if (s.a < 0) s.a = who(plan, s.src[0]); if (s.b < 0) s.b = who(plan, s.src[1]); }); }
+  function live(plan, pos, lead) {
+    if (!plan) return -1; lead = lead || 0;
+    for (var i = 0; i < plan.slots.length; i++) { var s = plan.slots[i]; if (pos >= s.start - lead && pos < s.end) return i; }
+    return -1;
+  }
+  function ranks(plan) {
+    var out = [], seen = {}, n = plan.entrants.length, wins = [], i, best = [];
+    for (i = 0; i < n; i++) { wins[i] = 0; best[i] = 99; }
+    plan.slots.forEach(function(s) {
+      if (s.w < 0) return;
+      var win = s.w === 0 ? s.a : s.b, lose = s.w === 0 ? s.b : s.a;
+      if (win >= 0) wins[win]++;
+      if (lose >= 0) best[lose] = Math.min(best[lose], s.r + 1);   /* went out in round r: placed behind everyone who went further */
+    });
+    var fin = plan.slots[plan.slots.length - 1];
+    if (fin && fin.w >= 0) best[fin.w === 0 ? fin.a : fin.b] = 0;
+    for (i = 0; i < n; i++) { if (best[i] === 99) best[i] = -1; out.push({ e: i, depth: best[i], wins: wins[i] }); }
+    /* still in it (not knocked out; the song ended early): ahead of those who went out, by wins */
+    out.sort(function(a, b) {
+      var da = a.depth < 0 ? -0.5 : a.depth, db = b.depth < 0 ? -0.5 : b.depth;
+      return da - db || b.wins - a.wins;
+    });
+    for (i = 0; i < out.length; i++) out[i].place = (i > 0 && (out[i].depth === out[i - 1].depth) && out[i].wins === out[i - 1].wins) ? out[i - 1].place : i;
+    return out;
+  }
+  return { plan: plan, advance: advance, live: live, ranks: ranks };
+})();
 var ROUND=(function(){
   var rd=null,corr=0,lastD=null,playPerf=0,endAt=0,sat=false,totals=[],myVote="",timer=null,alignT=null,hideT=null,top=null,bi=0;
   var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",free:"Free dance"},ORD=["1st","2nd","3rd"];
@@ -2618,17 +2739,83 @@ var ROUND=(function(){
   }
   function hide(){var b=box();b.className="";b.textContent="";}
   function lvl(){return rd.mode==="free"?"":" · "+GAME.DIFFS[GAME.diffOf(rd.n)];}
-  function head(){return mk("div","rb-head","Round "+rd.n+" · "+(NAMES[rd.mode]||"Dance")+lvl());}
+  function head(){return mk("div","rb-head","Round "+rd.n+" · "+(rd.isBattle?"⚔ ":"")+(NAMES[rd.mode]||"Dance")+(rd.isBattle?" battle":"")+lvl());}
   function drawCountdown(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
     show([head(),mk("div","rb-title",rd.title),mk("div","rb-big",left>0?String(left):"GO!"),
-      mk("div","rb-sub",rd.mode==="free"?"Dance however you like. Everyone votes when the song ends.":"Everyone gets the same steps. Highest score wins the round.")],"count");
+      mk("div","rb-sub",rd.isBattle?"Everyone dances; then it's 1 v 1s on the stage, knockout style, with the final at the end of the song."+(rd.mode==="free"?" The room votes each match.":" Highest score in each match goes through."):rd.mode==="free"?"Dance however you like. Everyone votes when the song ends.":"Everyone gets the same steps. Highest score wins the round.")],"count");
   }
   /* free dance spotlight: the plan, and who's on now */
   function setSpot(turns){
     if(!rd)return;
     rd.spot=Array.isArray(turns)?turns.slice(0,200).map(function(t){return{id:String(t.id),name:safeText(t.name,24),color:safeColor(t.color),a:+t.a||0,b:+t.b||0};}):null;
     drawPlay();
+  }
+  /* ---------- battle rounds ----------
+     The bracket comes from the server (or practice): one 1 v 1 at a time, at set points in the song. The two in
+     the match on now take centre stage and play the round's game; everyone else free dances and watches. */
+  var bres=null,bvoted={};
+  function setBattle(m){
+    if(!rd||+m.n!==rd.n)return;
+    if(m.none){rd.bNone=+m.dancers||0;drawPlay();return;}
+    var b=m.b;if(!b||!Array.isArray(b.entrants)||!Array.isArray(b.slots))return;
+    rd.b={entrants:b.entrants.slice(0,32).map(function(e){return{id:String(e.id),name:safeText(e.name,24),color:safeColor(e.color)};}),
+      slots:b.slots.slice(0,40).map(function(x){return{r:+x.r||0,label:safeText(x.label,20),a:x.a|0,b:x.b|0,w:x.w|0,start:+x.start||0,end:+x.end||0,sa:+x.sa||0,sb:+x.sb||0};})};
+    if(m.done!==undefined){var sd=rd.b.slots[m.done|0];if(sd&&sd.w>=0){var wn=ent(sd.w===0?sd.a:sd.b),ls=ent(sd.w===0?sd.b:sd.a);
+      if(wn){var you=wn.id===myId,lsn=ls?(ls.id===myId?"you":ls.name):"";
+        bres={t:performance.now(),k:m.done|0,text:sd.r===0?"🏆 "+(you?"You win the battle!":wn.name+" wins the battle!"):"⚔ "+(you?"You beat ":wn.name+" beats ")+lsn+(sd.r===1?(you?" and go to the final!":" and goes to the final"):""),me:you?1:ls&&ls.id===myId?-1:0};}}}
+    battleSync();drawPlay();
+  }
+  function bscore(m){if(rd&&rd.b&&+m.n===rd.n){var x=rd.b.slots[m.m|0];if(x){x.sa=+m.sa||0;x.sb=+m.sb||0;}}}
+  function ent(i){return rd&&rd.b&&i>=0&&rd.b.entrants[i]?rd.b.entrants[i]:null;}
+  function myEnt(){if(!rd||!rd.b)return -1;for(var i=0;i<rd.b.entrants.length;i++)if(rd.b.entrants[i].id===myId)return i;return -1;}
+  /* the match on centre stage now (from 2 s before it starts, so the two can step up), with where they stand */
+  function pair(){
+    if(!rd||!rd.isBattle||rd.phase!=="play"||!rd.b)return null;
+    var p=pos(),k=BATTLE.live(rd.b,p,2000);if(k<0)return null;
+    var x=rd.b.slots[k],A=ent(x.a),B=ent(x.b);if(!A||!B)return null;
+    var d=Math.min(W*0.17,130);
+    return{k:k,s:x,A:A,B:B,sa:x.sa,sb:x.sb,into:p-x.start,left:x.end-p,final:x.r===0,xa:W/2-d,xb:W/2+d,fade:Math.max(0,Math.min(1,(p-(x.start-2000))/900,(x.end-p)/500))};
+  }
+  /* keep your game in step with the bracket: your match = the round's game, otherwise free dance */
+  function battleSync(){
+    if(!rd||!rd.isBattle||rd.phase!=="play"||sat)return;
+    var p=pos(),k=rd.b?BATTLE.live(rd.b,p,1200):-1,x=k>=0?rd.b.slots[k]:null;
+    var mine=!!x&&x.w<0&&((ent(x.a)||{}).id===myId||(ent(x.b)||{}).id===myId);
+    if(mine&&rd.mode!=="free"){if(GAME.mode!==rd.mode||GAME.roundM!==k)GAME.start(rd.mode,{chart:rd.chart,n:rd.n,m:k,win:[x.start,x.end]});}
+    else if(GAME.mode!=="free")GAME.start("free",{chart:null,n:rd.n});
+    document.body.classList.toggle("battle-match",mine);
+  }
+  function battleLine(nodes){
+    var p=pos(),b=rd.b,pr=pair(),mine=false,line,me=myEnt();
+    if(!b){
+      if(rd.bNone!==undefined)line="Not enough dancers for a battle this time. Keep dancing!";
+      else{var dur=rd.chart&&rd.chart.dur>0?rd.chart.dur:0,lk=dur?Math.max(12000,dur*0.12):15000,sec=Math.ceil((lk-p)/1000);
+        line="⚔ Dance now to get into the battle"+(sec>0?". The bracket is drawn in "+sec+" s":". Drawing the bracket…");}
+    }else if(pr){
+      var tl=Math.max(0,Math.ceil(Math.min(pr.left,pr.s.end-pr.s.start)/1000)),pre=pr.into<0;
+      mine=pr.A.id===myId||pr.B.id===myId;
+      var opp=pr.A.id===myId?pr.B:pr.A,sc=rd.mode==="free"?pr.sa+" – "+pr.sb+" votes":pr.sa.toLocaleString()+" – "+pr.sb.toLocaleString();
+      if(mine)line=(pr.final?"🏆 THE FINAL! ":"⚔ YOUR MATCH! ")+"vs "+opp.name+(pre?" · get ready…":rd.mode==="free"?" · dance! The room is voting · "+tl+" s":" · play! "+sc+" · "+tl+" s");
+      else line=(pr.final?"🏆 FINAL SHOWDOWN":"⚔ "+pr.s.label)+": "+pr.A.name+" vs "+pr.B.name+(pre?" · starting…":" · "+sc+" · "+tl+" s");
+      if(!mine&&rd.mode==="free"&&!pre){
+        /* free dance battle: everyone else votes for who's dancing better (change your mind any time) */
+        var row=mk("div","rb-votes");
+        [pr.A,pr.B].forEach(function(e,side){var bt=mk("button","rb-btn"+(bvoted[pr.k]===side?" on":""),e.name);bt.style.borderColor=e.color;
+          bt.onclick=function(){bvoted[pr.k]=side;if(PRACTICE.on)PRACTICE.bvote(side);else wsSend({type:"bvote",side:side});drawPlay();};row.appendChild(bt);});
+        nodes.push(row);
+      }
+    }else{
+      var nx=null;for(var i=0;i<b.slots.length;i++)if(b.slots[i].start>p){nx=b.slots[i];break;}
+      if(bres&&performance.now()-bres.t<4500)line=bres.text+(bres.me===-1?" · You're out. Keep dancing!":bres.me===1&&nx?" · You go through!":"");
+      else if(nx){var na=ent(nx.a),nb=ent(nx.b),sec2=Math.ceil((nx.start-p)/1000),meIn=(na&&na.id===myId)||(nb&&nb.id===myId);
+        line=meIn?"⚔ You're up next vs "+((na&&na.id===myId?nb:na)||{name:"the winner"}).name+" in "+sec2+" s. Get ready!":(nx.r===0?"🏆 Final":"⚔ "+nx.label)+" next: "+(na?na.name:"?")+" vs "+(nb?nb.name:"?")+" in "+sec2+" s";}
+      else line="Battle over. Results when the song ends.";
+    }
+    /* knocked out: say so (unless it's being said above) */
+    if(me>=0&&!mine&&!(bres&&performance.now()-bres.t<4500)){for(var j=0;j<b.slots.length;j++){var q=b.slots[j];if(q.w>=0&&((q.w===0&&q.b===me)||(q.w===1&&q.a===me))){line+=" · You went out in the "+q.label.toLowerCase()+". Keep dancing!";break;}}}
+    if(b&&me<0&&!mine&&!pr)line+="";
+    return{line:line,mine:mine,pr:pr};
   }
   function featured(){
     if(!rd||rd.phase!=="play"||!rd.spot||!rd.spot.length)return null;
@@ -2639,8 +2826,9 @@ var ROUND=(function(){
   /* is the spotlight part of the song on (a little before the first turn to a little after the last)? */
   function spotOn(){if(!rd||rd.phase!=="play"||!rd.spot||!rd.spot.length)return 0;var p=pos(),a=rd.spot[0].a,b=rd.spot[rd.spot.length-1].b;if(p<a-2500||p>b+1500)return 0;return Math.max(0,Math.min(1,(p-(a-2500))/1500,(b+1500-p)/1500));}
   function drawPlay(){
-    var line,mine=false;
-    if(rd.mode==="free"){
+    var line,mine=false,extra=[],bpr=null;
+    if(rd.isBattle){var bl=battleLine(extra);line=bl.line;mine=bl.mine;bpr=bl.pr;document.getElementById("gamePanel").classList.toggle("spotlit",mine);}
+    else if(rd.mode==="free"){
       var f=featured(),sp=rd.spot;
       if(f){mine=f.id===myId;line=mine?"\u2B50 YOUR TURN in the spotlight! Show them your moves":"\uD83D\uDD26 "+f.name+" has the spotlight"+(f.next?(f.next.id===myId?"  \u00b7  you're next!":"  \u00b7  next: "+f.next.name):"");}
       else if(sp&&sp.length&&pos()<sp[0].a){var sec=Math.ceil((sp[0].a-pos())/1000);var yours=sp.some(function(t){return t.id===myId;});line="Dance and walk around. Spotlight turns start in "+sec+" s"+(yours?" (you're in it)":"");}
@@ -2652,9 +2840,9 @@ var ROUND=(function(){
       var t=top.top[0],mine=-1;for(var i=0;i<top.top.length;i++)if(top.top[i].id===myId)mine=i;
       line="Leading: "+t.name+" "+t.score.toLocaleString()+(mine>=0?"  ·  You: "+ord(mine+1):"")+"  ·  "+top.players+" dancing";
     }else line="Hit the steps: highest score wins.";
-    var nodes=[mk("div","rb-head","Round "+rd.n+" · "+rd.title+lvl()),mk("div","rb-sub",line)];
+    var nodes=[mk("div","rb-head","Round "+rd.n+" · "+(rd.isBattle?"⚔ ":"")+rd.title+lvl()),mk("div","rb-sub",line)].concat(extra);
     if(sat){var j=mk("button","rb-btn","Join the round");j.onclick=function(){join();};nodes.push(j);}
-    show(nodes,"strip"+(mine?" myturn":"")+(rd.mode==="free"&&spotOn()>0?" spot":""));
+    show(nodes,"strip"+(mine?" myturn":"")+((rd.mode==="free"&&spotOn()>0)||bpr?" spot":""));
   }
   function drawVote(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000)),row=mk("div","rb-votes");
@@ -2672,12 +2860,13 @@ var ROUND=(function(){
     if(!m.ranking||!m.ranking.length)nodes.push(mk("div","rb-sub","Nobody danced this round."));
     else{
       var w=m.ranking[0];
-      nodes.push(mk("div","rb-win","🏆 "+w.name+(m.mode==="free"?" · "+w.score+" vote"+(w.score===1?"":"s"):" · "+w.score.toLocaleString())));
+      var sct=function(r){return m.battle?r.score+" win"+(r.score===1?"":"s"):m.mode==="free"?r.score+" vote"+(r.score===1?"":"s"):r.score.toLocaleString();};
+      nodes.push(mk("div","rb-win","🏆 "+(m.battle&&w.id===myId?"You win the battle · ":w.name+(m.battle?" wins the battle · ":" · "))+sct(w)));
       var tb=mk("div","rb-rows");
       m.ranking.slice(0,5).forEach(function(r){
         var row=mk("div","rb-row"+(r.id===myId?" me":""));
         row.appendChild(mk("span","p",ord(r.place)));row.appendChild(mk("span","n",r.name));
-        row.appendChild(mk("span","s",m.mode==="free"?r.score+" vote"+(r.score===1?"":"s"):r.score.toLocaleString()));row.appendChild(mk("span","g","+"+r.pts));
+        row.appendChild(mk("span","s",sct(r)));row.appendChild(mk("span","g","+"+r.pts));
         tb.appendChild(row);
       });
       nodes.push(tb);
@@ -2700,11 +2889,12 @@ var ROUND=(function(){
   }
   function tickUI(){
     if(!rd)return;
-    if(rd.phase==="play"&&rd.mode==="free")drawPlay();
+    if(rd.phase==="play"&&rd.isBattle){battleSync();drawPlay();}
+    else if(rd.phase==="play"&&rd.mode==="free")drawPlay();
     if(rd.phase==="countdown")drawCountdown();
     else if(rd.phase==="vote")drawVote();
   }
-  function join(){if(!active())return;sat=false;GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n});drawPlay();}
+  function join(){if(!active())return;sat=false;if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n});drawPlay();}
   function sitOut(){sat=true;if(active())drawPlay();}
   function cleanChart(c){
     if(!c||!Array.isArray(c.steps)||!Array.isArray(c.beats)||!(c.bpm>=30&&c.bpm<=300))return null;
@@ -2715,8 +2905,8 @@ var ROUND=(function(){
     var ph=m.phase;
     if(ph==="countdown"||ph==="play"||ph==="vote"){
       if(!rd||rd.n!==m.n){
-        rd={n:+m.n||0,mode:NAMES[m.mode]?m.mode:"step",title:safeText(m.title,80),chart:cleanChart(m.chart),ts0:null,phase:"",dancers:[]};
-        corr=0;bi=0;sat=false;myVote="";top=null;
+        rd={n:+m.n||0,mode:NAMES[m.mode]?m.mode:"step",isBattle:!!m.battle,title:safeText(m.title,80),chart:cleanChart(m.chart),ts0:null,phase:"",dancers:[]};
+        corr=0;bi=0;sat=false;myVote="";top=null;bres=null;bvoted={};
         if(GAME.mode)GAME.stop();                           /* free-play ends; the round takes over */
         GAME.closeMenu();
       }else if(ph==="countdown"&&m.chart&&!rd.chart){rd.chart=cleanChart(m.chart);}   /* the steps can arrive after the countdown has started */
@@ -2730,9 +2920,10 @@ var ROUND=(function(){
       playPerf=performance.now()-(+m.pos||0);
       rd.phase=ph;
       if(m.spot)setSpot(m.spot);                                /* joined after the spotlight was planned */
+      if(m.b)setBattle({n:rd.n,b:m.b});                         /* joined after the bracket was drawn */
       if(first){
         clearInterval(alignT);alignT=setInterval(align,500);
-        if(!sat)GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n});
+        if(!sat){if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n});}
         drawPlay();
       }
     }
@@ -2741,17 +2932,17 @@ var ROUND=(function(){
     else if(ph==="result"){
       if(GAME.mode)GAME.stop();
       setTotals(m.totals);
-      var res={n:rd.n,mode:rd.mode,title:rd.title,ranking:Array.isArray(m.ranking)?m.ranking.slice(0,10).map(function(r){return{id:String(r.id),name:safeText(r.name,24),score:Math.max(0,Math.floor(+r.score||0)),pts:Math.max(0,Math.floor(+r.pts||0)),place:Math.max(1,Math.floor(+r.place||1))};}):[]};
+      var res={n:rd.n,mode:rd.mode,battle:!!(m.battle||rd.isBattle),title:rd.title,ranking:Array.isArray(m.ranking)?m.ranking.slice(0,10).map(function(r){return{id:String(r.id),name:safeText(r.name,24),score:Math.max(0,Math.floor(+r.score||0)),pts:Math.max(0,Math.floor(+r.pts||0)),place:Math.max(1,Math.floor(+r.place||1))};}):[]};
       end();drawResult(res);updHudBR();
     }
     else if(ph==="off"){if(GAME.mode)GAME.stop();end();hide();}
   }
-  function end(){document.getElementById("gamePanel").classList.remove("spotlit");rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
+  function end(){document.getElementById("gamePanel").classList.remove("spotlit");document.body.classList.remove("battle-match");rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
   function reset(){if(rd&&GAME.mode)GAME.stop();end();hide();}
   function setTotals(t){totals=Array.isArray(t)?t.slice(0,10).map(function(x){return{name:safeText(x.name,24),pts:Math.max(0,Math.floor(+x.pts||0)),wins:Math.max(0,Math.floor(+x.wins||0))};}):[];}
   function scores(m){if(rd&&m.n===rd.n&&active()){top={top:Array.isArray(m.top)?m.top.slice(0,5).map(function(x){return{id:String(x.id),name:safeText(x.name,24),score:Math.max(0,Math.floor(+x.score||0))};}):[],players:Math.max(0,Math.floor(+m.players||0))};drawPlay();}}
-  window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),beatOffset:lastD===null?null:Math.round(lastD),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat,spotlight:rd.spot||null,featured:featured()}:{round:null,totals:totals};};
-  return{onMsg:onMsg,setSpot:setSpot,featured:featured,spotOn:spotOn,chart:function(){return rd?rd.chart:null;},scores:scores,setTotals:setTotals,pos:pos,active:active,join:join,sitOut:sitOut,reset:reset,myTotal:myTotal,get mode(){return rd?rd.mode:"";}};
+  window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),beatOffset:lastD===null?null:Math.round(lastD),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat,spotlight:rd.spot||null,featured:featured(),battle:rd.isBattle?{bracket:rd.b||null,none:rd.bNone,onStage:(function(){var q=pair();return q?{match:q.k,label:q.s.label,a:q.A.name,b:q.B.name,sa:q.sa,sb:q.sb,leftMs:Math.round(q.left)}:null;})()}:null}:{round:null,totals:totals};};
+  return{onMsg:onMsg,setBattle:setBattle,bscore:bscore,pair:pair,get battle(){return rd&&rd.isBattle?rd.b||null:null;},get n(){return rd?rd.n:0;},setSpot:setSpot,featured:featured,spotOn:spotOn,chart:function(){return rd?rd.chart:null;},scores:scores,setTotals:setTotals,pos:pos,active:active,join:join,sitOut:sitOut,reset:reset,myTotal:myTotal,get mode(){return rd?rd.mode:"";}};
 })();
 
 /* ── Song analyzer: builds one step chart for a whole song ──
@@ -3027,7 +3218,7 @@ var CHART=(function(){
    ============================================================ */
 var PRACTICE=(function(){
   var on=/[?&]practice\b/.test(location.search),file=null,title="",buf=null,src=null,gain=null,n=0,bots=[],totals={},job=0;
-  var spotT=null,scoreT=null,voteT=null,startT=null,playAt=0,chart=null,mode="step";
+  var spotT=null,scoreT=null,voteT=null,startT=null,playAt=0,chart=null,mode="step",battle=false,plan=null,bTimers=[],myBVote=-1;
   var BOTN=["Rook","Moth","Vex","Juno","Kestrel","Nyx","Pike","Sable","Wren","Ash"],BOTC=["#1D9E75","#E0A030","#8A6BD1","#E05050","#5F9EA0","#3CB371","#DB7093","#5FB4F0"];
   function $(id){return document.getElementById(id);}
   function note(t){$("prNote").textContent=t;}
@@ -3043,8 +3234,8 @@ var PRACTICE=(function(){
     performer.name="Practice";
     viewers={me:{name:myName,x:0.5,y:0.55,tx:0.5,ty:0.55,color:myColor,look:myLook,bubbleText:null,bubbleTime:0,dance:0}};
     updViewerCount();
-    try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.level)$("prLevel").value=String(sv.level);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
-    ["prMode","prSecs","prLevel","prBots"].forEach(function(id){$(id).onchange=save;});
+    try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.kind)$("prKind").value=sv.kind;if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.level)$("prLevel").value=String(sv.level);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
+    ["prMode","prSecs","prLevel","prBots","prKind"].forEach(function(id){$(id).onchange=save;});
     if(/[?&]embed\b/.test(location.search))document.body.classList.add("embed");
     showGame();
     Array.prototype.forEach.call(document.querySelectorAll("#prGames button"),function(b){b.onclick=function(){b.blur();$("prMode").value=b.getAttribute("data-m");showGame();save();};});
@@ -3070,12 +3261,12 @@ var PRACTICE=(function(){
     if(pick<0&&!file&&lib.length)pick=0;
     if(pick>=0){sel.value=String(pick);setSong(lib[pick].file,lib[pick].name);}
   }
-  function save(){try{localStorage.setItem("uk_practice",JSON.stringify({mode:$("prMode").value,secs:+$("prSecs").value,level:+$("prLevel").value,bots:+$("prBots").value}));}catch(e){}}
+  function save(){try{localStorage.setItem("uk_practice",JSON.stringify({kind:$("prKind").value,mode:$("prMode").value,secs:+$("prSecs").value,level:+$("prLevel").value,bots:+$("prBots").value}));}catch(e){}}
   window.addEventListener("message",function(e){
     if(!on||e.origin!==location.origin||!e.data)return;
     var d=e.data;
     if(d.uk==="practice-stop"){stopAll();return;}
-    if(d.uk==="practice-lib"){if(d.mode&&/^(step|aim|free|keys)$/.test(d.mode)){$("prMode").value=d.mode;showGame();}if(d.secs)$("prSecs").value=String(d.secs);if(d.level)$("prLevel").value=String(d.level);setLib(d.tracks,d.selected);return;}
+    if(d.uk==="practice-lib"){if(d.kind!==undefined)$("prKind").value=d.kind?"battle":"";if(d.mode&&/^(step|aim|free|keys)$/.test(d.mode)){$("prMode").value=d.mode;showGame();}if(d.secs)$("prSecs").value=String(d.secs);if(d.level)$("prLevel").value=String(d.level);setLib(d.tracks,d.selected);return;}
     if(d.uk!=="practice-song")return;
     if(d.mode&&/^(step|aim|free|keys)$/.test(d.mode))$("prMode").value=d.mode;
     if(d.secs)$("prSecs").value=String(d.secs);
@@ -3121,17 +3312,17 @@ var PRACTICE=(function(){
     var my=++job;
     initAudio();save();
     try{Tone.start();Tone.getContext().rawContext.resume();}catch(e){}
-    mode=$("prMode").value;var secs=+$("prSecs").value,level=+$("prLevel").value;
+    mode=$("prMode").value;battle=$("prKind").value==="battle";plan=null;var secs=+$("prSecs").value,level=+$("prLevel").value;
     stopSong();makeBots(+$("prBots").value);
     document.body.classList.add("pr-busy");
     n++;
     var go=function(c){
       if(my!==job)return;
       chart=c;
-      ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,title:title,chart:c,ms:secs*1000});
+      ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,battle:battle,title:title,chart:c,ms:secs*1000});
       startT=setTimeout(function(){if(my===job)playSong(my);},secs*1000);
     };
-    ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,title:title,chart:null,ms:secs*1000+60000});
+    ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,battle:battle,title:title,chart:null,ms:secs*1000+60000});
     decode().then(function(b){
       if(my!==job)return;
       CHART.analyse(b,{level:level},function(c){go(c);});        /* free dance too: the spotlight turns follow the bars */
@@ -3149,8 +3340,9 @@ var PRACTICE=(function(){
     /* the song's first moment reaches the ears at "at" plus the speaker delay */
     var lagMs=(at-c.currentTime+(c.outputLatency||0))*1000;
     playAt=performance.now()+lagMs;
-    viewers.me.dance=0;bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=mode==="free"?4:5;});
+    viewers.me.dance=0;bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=mode==="free"||battle?4:5;});
     ROUND.onMsg({type:"round",phase:"play",n:n,ts0:null,pos:-lagMs});
+    if(battle){battleStart(my);return;}
     /* free dance: lock in the spotlight 35% of the way through (at least 20 s in), as the server does in a show */
     if(mode==="free"&&chart){
       var lockAt=Math.max(20000,chart.dur*0.35);
@@ -3167,8 +3359,73 @@ var PRACTICE=(function(){
     clearInterval(scoreT);var k=0;
     scoreT=setInterval(function(){if(my!==job)return;botTick(perStep);if(++k%Math.max(1,Math.round(3000/per))===0)standings();},per);
   }
-  function stopSong(){if(src){try{src.onended=null;src.stop();}catch(e){}src=null;}clearInterval(scoreT);clearTimeout(startT);clearTimeout(voteT);clearTimeout(spotT);}
+  /* ---------- a battle round in practice: the same bracket as a show, with the practice dancers ---------- */
+  function battleStart(my){
+    var lockAt=chart&&chart.dur?Math.max(12000,chart.dur*0.12):15000;
+    spotT=setTimeout(function(){
+      if(my!==job)return;
+      var list=bots.map(function(b){return{id:b.id,name:b.name,color:b.color};});
+      if(GAME.mode)list.push({id:"me",name:myName,color:myColor});
+      for(var i=list.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=list[i];list[i]=list[j];list[j]=t;}
+      plan=BATTLE.plan(list,chart,ROUND.pos());
+      if(!plan){ROUND.setBattle({n:n,none:true,dancers:list.length});return;}
+      plan.slots.forEach(function(s,k){s.sa=0;s.sb=0;s.va=0;s.vb=0;
+        bTimers.push(setTimeout(function(){bDecide(my,k);},Math.max(0,s.end+600-ROUND.pos())));});
+      ROUND.setBattle({n:n,b:pub()});
+    },lockAt);
+    /* every beat: the two in the match play (practice dancers score at their skill); everyone else dances freely */
+    var per=chart?60000/chart.bpm:500;
+    clearInterval(scoreT);
+    scoreT=setInterval(function(){
+      if(my!==job)return;
+      var k=plan?BATTLE.live(plan,ROUND.pos(),0):-1,s=k>=0?plan.slots[k]:null,ids=s?[s.a,s.b].map(function(e){return e>=0?plan.entrants[e].id:"";}):[];
+      bots.forEach(function(b){
+        var v=viewers[b.id];if(!v)return;
+        var side=ids.indexOf(b.id);
+        if(side<0||mode==="free"){v.dance=4;v.pose=[Math.random()*3-0.6,-(Math.random()*3-0.6),Math.random()*1.8-0.9,Math.random()*1.8-0.9];if(side<0)return;}
+        if(mode!=="free"){v.dance=5;if(Math.random()<b.skill){b.combo++;var add=Math.round(80*(0.6+b.skill*0.4)*(1+Math.floor(b.combo/10)*0.1));if(side===0)s.sa+=add;else s.sb+=add;}else b.combo=0;
+          v.pose=POSES[Math.floor(Math.random()*4)];v.combo=b.combo;v.hitT=Date.now();}
+      });
+      if(s){
+        if(mode!=="free"&&GAME.roundM===k){var mine=ids.indexOf("me");if(mine===0)s.sa=GAME.score;else if(mine===1)s.sb=GAME.score;}
+        if(mode==="free"&&s.va===0&&s.vb===0&&ROUND.pos()>s.start+2000){
+          /* practice dancers watching vote once each match */
+          bots.forEach(function(b){if(ids.indexOf(b.id)<0){if(Math.random()<0.5)s.va++;else s.vb++;}});
+        }
+        if(mode==="free"){s.sa=s.va+(myBVote===0?2:0);s.sb=s.vb+(myBVote===1?2:0);}
+        ROUND.bscore({n:n,m:k,sa:s.sa,sb:s.sb});
+      }
+    },per);
+  }
+  function pub(){return{entrants:plan.entrants,slots:plan.slots.map(function(s){return{r:s.r,label:s.label,a:s.a,b:s.b,w:s.w,start:s.start,end:s.end,sa:s.sa,sb:s.sb};})};}
+  function bDecide(my,k){
+    if(my!==job||!plan)return;
+    var s=plan.slots[k];BATTLE.advance(plan);if(s.w>=0||s.a<0||s.b<0)return;
+    var ids=[plan.entrants[s.a].id,plan.entrants[s.b].id];
+    if(mode!=="free"){var mi=ids.indexOf("me");if(mi>=0&&GAME.roundM===k){if(mi===0)s.sa=GAME.score;else s.sb=GAME.score;}}
+    s.w=s.sb>s.sa?1:0;myBVote=-1;
+    BATTLE.advance(plan);
+    ROUND.setBattle({n:n,b:pub(),done:k});
+  }
+  function bvote(side){myBVote=side;}
+  function battleResult(my){
+    var ranking=[];
+    if(plan)BATTLE.ranks(plan).forEach(function(x){var e=plan.entrants[x.e];ranking.push({id:e.id,name:e.name,score:x.wins,place:x.place+1,pts:[10,7,5,3][x.place]||1});});
+    ranking.forEach(function(r){var t=totals[r.name]||(totals[r.name]={name:r.name,pts:0,wins:0});t.pts+=r.pts;if(r.place===1)t.wins++;});
+    var tl=Object.keys(totals).map(function(k){return totals[k];}).sort(function(a,b){return b.pts-a.pts||b.wins-a.wins;});
+    ROUND.onMsg({type:"round",phase:"result",n:n,battle:true,ranking:ranking.slice(0,10),totals:tl.slice(0,10)});
+    document.body.classList.remove("pr-busy");
+    note("Round "+n+" done. Change anything and start another, or pick a new song. Points keep adding up until you close this page.");
+  }
+  function stopSong(){if(src){try{src.onended=null;src.stop();}catch(e){}src=null;}clearInterval(scoreT);clearTimeout(startT);clearTimeout(voteT);clearTimeout(spotT);bTimers.forEach(clearTimeout);bTimers=[];}
   function endRound(my){
+    if(battle){
+      /* decide the match that was on, then the bracket placings */
+      if(plan){var lk=BATTLE.live(plan,ROUND.pos()+1200,0);if(lk<0)lk=BATTLE.live(plan,ROUND.pos()-1000,0);if(lk>=0)bDecide(my,lk);}
+      stopSong();if(GAME.mode)GAME.stop();
+      bots.forEach(function(b){if(viewers[b.id]){viewers[b.id].dance=0;viewers[b.id].pose=null;}});
+      battleResult(my);return;
+    }
     stopSong();
     var mine=GAME.mode?GAME.score:0,danced=!!GAME.mode;
     if(GAME.mode)GAME.stop();
@@ -3226,7 +3483,8 @@ var PRACTICE=(function(){
     if(window.parent!==window){try{window.parent.postMessage({uk:"practice-close"},location.origin);}catch(x){}}
   });
   window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
-  return{get on(){return on;},enter:enter,vote:vote};
+  window.ukPracticeBattle=function(){return plan?pub():null;};
+  return{get on(){return on;},enter:enter,vote:vote,bvote:bvote};
 })();
 
 /* ============================================================
@@ -3488,6 +3746,63 @@ function drawParticles(){
    DRAWING: AVATAR SPRITE
    ============================================================ */
 /* the spotlight on the stage: a cone of light from above and a glowing disc to stand on */
+/* a battle match on centre stage: the two dancers under their own lights, VS between them, their scores
+   over their heads and, for the scored games, a little copy of each one's game screen beside them */
+function drawBattle(bp,py){
+  var k=bp.fade,mode=ROUND.mode,now=Date.now(),px=Math.max(2,Math.round(Math.min(W,900)/300));
+  drawCentreSpot(bp.xa,py,k,bp.A);drawCentreSpot(bp.xb,py,k,bp.B);
+  [[bp.A,bp.xa,bp.sa,bp.sb,true],[bp.B,bp.xb,bp.sb,bp.sa,false]].forEach(function(q){
+    var e=q[0],x=q[1],v=viewers[e.id];
+    ctx.save();ctx.globalAlpha=Math.max(0.15,k);
+    if(v){
+      var ps=e.id===myId&&GAME.mode==="free"?GAME.pose:(v.poseCur||v.pose||GAME.REST);
+      if(!v.look)v.look=lookOf(null,v.color,v.name);
+      drawAvatar(x,py,v.color,e.name,3,false,false,false,4,v.seed||0,e.id===myId,ps,now-(v.hitT||0),v.look);
+    }
+    /* score (or votes) under the name; the one ahead in gold */
+    if(bp.into>=0){var ahead=q[2]>q[3];ART.pixText(ctx,mode==="free"?q[2]+(q[2]===1?" VOTE":" VOTES"):String(q[2]),x,py+12*3+22,px,ahead?"#F5D03C":"#EDEDF5","center",0.85);}
+    ctx.restore();
+    if(mode!=="free"&&bp.into>-1500){
+      var bw=Math.round(Math.max(64,Math.min(120,W*0.17))),bh=Math.round(Math.max(70,(STAGE_BOTTOM-STAGE_TOP)*H-30)),
+        x0=q[4]?x-42-bw-8:x+50;x0=Math.max(4,Math.min(W-bw-4,x0));
+      drawBattleBoard(x0,Math.round(STAGE_TOP*H+10),bw,bh,e,bp,k);
+    }
+  });
+  ctx.save();ctx.globalAlpha=k;
+  var vp=Math.max(3,Math.round(Math.min(W,900)/240));
+  ART.pixText(ctx,"VS",W/2,py-vp*5,vp,"#F5D03C","center","#3a1a10");
+  if(bp.final)ART.pixText(ctx,"FINAL",W/2,py-vp*5-px*11,px,"#E8505B","center",0.8);
+  ctx.restore();
+}
+/* someone's game screen, small: the notes they're playing (everyone in the round gets the same ones) coming
+   down to their hit line, which flashes as they hit */
+function drawBattleBoard(x0,y0,bw,bh,e,bp,k){
+  var mode=ROUND.mode,steps=GAME.boardSteps(ROUND.chart(),ROUND.n,mode),pos=ROUND.pos(),TV=1700,v=viewers[e.id],hitAge=v?Date.now()-(v.hitT||0):1e9,i,st;
+  ctx.save();ctx.globalAlpha=k;
+  ctx.fillStyle="rgba(10,8,22,.88)";ctx.fillRect(x0,y0,bw,bh);
+  ctx.strokeStyle=hitAge<160?"#fff":e.color;ctx.lineWidth=2;ctx.strokeRect(x0+1,y0+1,bw-2,bh-2);
+  ctx.beginPath();ctx.rect(x0+2,y0+2,bw-4,bh-4);ctx.clip();
+  var w0=bp.s.start,w1=bp.s.end;
+  if(mode==="aim"){
+    for(i=0;i<steps.length;i++){st=steps[i];if(st.ms<w0||st.ms>w1||st.ms<pos-200)continue;if(st.ms>pos+1000)break;
+      var f=Math.max(0,(st.ms-pos)/1000),cx=x0+st.x*bw,cy=y0+st.y*bh,R=Math.max(4,bw*0.06);
+      ctx.fillStyle=GAME.LCOL[st.lanes[0]];ctx.beginPath();ctx.arc(cx,cy,R,0,6.3);ctx.fill();
+      ctx.strokeStyle="rgba(255,255,255,.85)";ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,cy,R*(1+f*2),0,6.3);ctx.stroke();}
+  }else{
+    var L=mode==="keys"?7:4,cols=mode==="keys"?GAME.KCOL:GAME.LCOL,lw=(bw-4)/L,hitY=y0+bh-10,span=bh-20;
+    ctx.fillStyle="rgba(255,255,255,.05)";for(i=1;i<L;i++)ctx.fillRect(Math.round(x0+2+i*lw),y0,1,bh);
+    for(i=0;i<steps.length;i++){st=steps[i];if(st.ms<w0||st.ms>w1)continue;if(st.ms+st.hold<pos-120)continue;if(st.ms>pos+TV)break;
+      var y=hitY-(st.ms-pos)/TV*span;
+      st.lanes.forEach(function(l){
+        var nx=Math.round(x0+2+l*lw+lw*0.12),nw=Math.max(2,Math.round(lw*0.76));
+        if(st.hold>0){var ty=hitY-(st.ms+st.hold-pos)/TV*span;ctx.fillStyle=hexA(cols[l],0.5);ctx.fillRect(nx+nw*0.3,Math.max(y0,ty),nw*0.4,Math.max(0,Math.min(y,hitY)-Math.max(y0,ty)));}
+        if(y<=hitY+4){ctx.fillStyle=cols[l];ctx.fillRect(nx,Math.round(y)-2,nw,4);}
+      });
+    }
+    ctx.fillStyle=hitAge<160?"#fff":"rgba(255,255,255,.45)";ctx.fillRect(x0+2,hitY,bw-4,2);
+  }
+  ctx.restore();
+}
 function drawCentreSpot(x,y,k,feat){
   var col=feat?feat.color:"#FFFFFF",top=0,footY=y+40,w=90;
   ctx.save();
@@ -3753,16 +4068,19 @@ function renderLoop(){
   if(document.body.classList.contains("gaming")&&meEl&&meEl.offsetWidth&&getComputedStyle(meEl).display!=="none"){
     var mr=meEl.getBoundingClientRect();side=Math.max(0,(mr.right-mr.left)/2+70)*-1;
   }
-  var feat=ROUND.featured(),spotK=ROUND.spotOn();
+  var feat=ROUND.featured(),spotK=ROUND.spotOn(),bp=ROUND.pair();
   if(spotK>0)side=Math.min(side,-Math.min(W*0.28,170));             /* the spotlight needs the middle of the stage */
+  if(bp)side=Math.min(side,-Math.min(W*0.45,440));                  /* a battle match: the performer steps right aside */
   perfShift+=(side-perfShift)*0.12;perfPx+=perfShift;
   var perfPy=(STAGE_TOP+STAGE_BOTTOM)/2*H+20;
   if(spotK>0)drawCentreSpot(W/2,perfPy,spotK,feat);
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){
+    var perfDim=bp&&W<640;if(perfDim){ctx.save();ctx.globalAlpha=0.35;}   /* small screens: the match needs the room */
     drawAvatar(perfPx,perfPy,performer.color,performer.name,3,true,isPerformerPlaying,false,0,0,false,null,1e9,performer.look);
     /* the keyboard in front of the performer, the key for the last note lit; the mic stand beside */
     var nAge=Date.now()-lastNoteTime,pc=((lastNoteMidi%12)+12)%12;
     ART.keyboard(ctx,perfPx,perfPy+5*3,3,isPerformerPlaying&&nAge<350?[0,0,1,1,2,3,3,4,4,5,5,6][pc]:-1,"hsl("+(pc*30)+",80%,60%)");
+    if(perfDim)ctx.restore();
   }   /* nobody on stage in practice */
 
   /* the featured dancer, big, centre stage (their moves are live) */
@@ -3773,6 +4091,7 @@ function renderLoop(){
     drawAvatar(W/2,perfPy,fv.color,"\u2605 "+fv.name,3,false,false,false,4,fv.seed||0,feat.id===myId,fp,now-(fv.hitT||0),fv.look);
     ctx.restore();
   }
+  if(bp)drawBattle(bp,perfPy);
   /* Note flash near performer */
   drawNoteFlash();
 
@@ -3804,13 +4123,13 @@ function renderLoop(){
     var bigMe=ids[i]===myId&&document.body.classList.contains("gaming")&&!document.body.classList.contains("gaming-free")&&window.innerWidth>520;
     var combo=v.dance>=4?(v.combo||0):0;
     STREAK.track(v,combo);
-    if(combo>=10&&!bigMe)STREAK.draw(ctx,vx,vy,2,combo,now,v.seed||0);
-    var onStage=feat&&feat.id===ids[i];
-    if(feat&&!onStage){ctx.save();ctx.globalAlpha=0.55;}
+    if(combo>=10&&!bigMe&&!(bp&&(bp.A.id===ids[i]||bp.B.id===ids[i]))&&!(feat&&feat.id===ids[i]))STREAK.draw(ctx,vx,vy,2,combo,now,v.seed||0);
+    var onStage=(feat&&feat.id===ids[i])||(bp&&(bp.A.id===ids[i]||bp.B.id===ids[i]));
+    if((feat||bp)&&!onStage){ctx.save();ctx.globalAlpha=0.55;}
     var freeMe=ids[i]===myId&&GAME.mode==="free";
     if(!v.look)v.look=lookOf(null,v.color,v.name);
     if(!bigMe&&!onStage)drawAvatar(vx,vy,v.color,v.name,freeMe?GAME.freeS():2,false,false,moving,v.dance,v.seed,ids[i]===myId,freeMe?GAME.pose:vp,now-(v.hitT||0),v.look);
-    if(feat&&!onStage)ctx.restore();
+    if((feat||bp)&&!onStage)ctx.restore();
     if(v.msT&&!bigMe&&now-v.msT<1700)STREAK.pop(ctx,vx,vy-50,v.msN,now-v.msT,1);
     else if(v.dance===5&&v.combo>=3&&!bigMe){
       /* step and target game combo over the dancer's head */

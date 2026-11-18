@@ -58,6 +58,7 @@ function makeBot(i) {
   ws.on("message", function(raw) {
     var m; try { m = JSON.parse(raw); } catch (e) { return; }
     if (m.type === "error") { stats.failed++; stats.lastError = m.msg; ws.close(); return; }
+    if (m.type === "battle" && m.b) { bot.plan = m.b; return; }
     if (m.type === "round") { botRound(bot, m); if (bot.first) stats.round = m.phase === "result" ? "round " + m.n + " won by " + (m.ranking && m.ranking[0] ? m.ranking[0].name : "nobody") : m.phase === "off" ? null : "round " + m.n + " " + m.phase; return; }
     if (m.type === "room-state") {
       stats.joined++;
@@ -125,6 +126,22 @@ function botRound(bot, m) {
     dancing += bot.dance ? 0 : 1; bot.dance = m.mode === "free" ? 4 : 5;
     send(bot, { type: "dance", style: bot.dance });
     clearInterval(bot.scoreTimer);
+    bot.plan = m.b || null; bot.playAt = Date.now() - (m.pos || 0);
+    if (m.battle) {
+      /* battle round: free dance; in their own match, play (score with the match number); watching a free dance match, vote */
+      send(bot, { type: "dance", style: 4 });
+      var mk = -1, ms = 0, voted = -1;
+      bot.scoreTimer = setInterval(function() {
+        var p = bot.plan, pos = Date.now() - bot.playAt; if (!p) return;
+        for (var k = 0; k < p.slots.length; k++) {
+          var sl = p.slots[k]; if (pos < sl.start || pos >= sl.end) continue;
+          var me = (p.entrants[sl.a] || {}).id === bot.id || (p.entrants[sl.b] || {}).id === bot.id;
+          if (me && m.mode !== "free") { if (mk !== k) { mk = k; ms = 0; } ms += Math.round(bot.rate / 2 * (0.6 + Math.random() * 0.8)); send(bot, { type: "score", s: ms, m: k }); }
+          if (!me && m.mode === "free" && voted !== k && Math.random() < 0.3) { voted = k; send(bot, { type: "bvote", side: Math.random() < 0.5 ? 0 : 1 }); }
+        }
+      }, 1000);
+      return;
+    }
     if (m.mode !== "free") bot.scoreTimer = setInterval(function() { bot.roundScore += Math.round(bot.rate * (0.6 + Math.random() * 0.8)); send(bot, { type: "score", s: bot.roundScore }); }, 2000);
   } else if (m.phase === "vote" && Array.isArray(m.dancers)) {
     var others = m.dancers.filter(function(d) { return d.id !== bot.id; });
