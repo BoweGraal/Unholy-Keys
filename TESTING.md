@@ -300,7 +300,7 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - A held note keeps moving (the bow, the accordion's bellows, vibrato on the fret hand); letting go relaxes the hands.
 - To check: go live, open the venue, then change instruments and play, low notes and high notes.
 
-**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.3"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
+**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.4"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
 - Everything matching means you have the new build.
 - A red "Out of date: art.js …" line means your browser kept an old copy of a script. Hard refresh with Ctrl+Shift+R (Cmd+Shift+R on a Mac).
 - A red "Server is on v…" line means the server hasn't been redeployed yet (on Render: Manual Deploy, then Deploy latest commit).
@@ -318,12 +318,14 @@ The "Click to capture keys" box is gone. Keys play whenever the page has focus (
 
 **Mosh pit round.** Pick "Mosh pit round" under Dance rounds on the performer page, or "Mosh pit" in dance practice. Three parts, timed to the song:
 - **Mosh pit** (most of the song): walk with the joystick or arrows and run into people. Bumping someone scores and shoves them. Drag round in circles on the floor to windmill your arms: each turn scores, more on the beat (two scoring turns a second at most). Everyone sees your arms.
-- **Wall of death** at the song's biggest drop (the chart now finds it): "WALL OF DEATH", and everyone goes to the side they're on, with a line down the middle and the count for each side. Then 3-2-1 on the beats, everyone charges the middle on the drop, and it's a tug of war for 10 seconds: tap the big pad as fast as you can (or click, or any key). The bar at the top shows both sides' totals live (the server adds them up), the flag on the rope leans toward whoever's ahead, and the winning side gets 800 points each. The losers get knocked back.
+- **Wall of death** at the song's biggest drop (the chart now finds it): "WALL OF DEATH", and everyone goes to the side they're on, with a line down the middle and the count for each side. Then 3-2-1 on the beats, everyone charges the middle on the drop, and the two sides slam together in a 10-second **push war**: tap the big PUSH pad as fast as you can (or click, or any key). Each side packs in behind the front line with arms out shoving. The faster side drives the front line back into the other, with dust flying where they meet. The bar at the top shows both sides' pushes live (the server adds them up). When time's up the winners shove through and get 800 points each, and the losers get knocked back.
 - **Circle pit** during the song's other big moments: everyone runs round the ring by themselves. Push the joystick forward to sprint, back to slow down, in or out to change lanes. Laps and shoves score.
 - A song needs a clear drop with about 15 seconds after it for a wall of death. Without one you get the pit and circle pits. A round started without a song has a circle pit every 70 seconds or so.
-- Practice dancers mosh too: they wander the pit, take sides, pull in the tug of war and run the circle. Someone who moshes the whole song should beat them.
+- Practice dancers mosh too: they wander the pit, take sides, push in the push war and run the circle. Someone who moshes the whole song should beat them.
 
 **Note highway · 4 keys.** Looks like piano tiles: white tiles in four columns with rows that scroll on the beat, and each note a big tile (blue for the left hand, green for the right). Hit a tile on D F J K (or the arrows), or tap its column, as its bottom edge reaches the red bar. Holds are tall tiles that shrink while you hold, and missed tiles turn red. The notes follow the beat rather than the tune: beats 1 and 3 on the left hand and 2 and 4 on the right, like a kick and snare, switching between the inner and outer key each bar, with half beats on the other hand. Both outer keys together only on bar starts in the big moments, never more than two. It's in the dance menu (key 5), dance practice, and as a round type ("Note highway round (4 keys, on the beat)"), and it works in battles.
+
+**Free dance: jumping.** Space jumps (Esc or the Stop button stops dancing). On phones, and whenever a dance is picked, there's a small Jump button between the two dots. Everyone sees the jump.
 
 **Free dance on a computer.** Once you've picked a dance (not Freestyle), WASD moves the left dot and the arrow keys the right one. Hold two keys for a diagonal, and let go to spring back. The mouse can still drag either dot. In Freestyle the keys work as before (arrows walk; D F J K raise a limb).
 
