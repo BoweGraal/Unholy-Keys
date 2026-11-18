@@ -6,6 +6,7 @@
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script src="art.js"></script>
+<script src="instruments.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -3954,17 +3955,34 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 var PFOLLOW=ART.follower();
+/* what you're playing, for your character with the instrument you've picked (instruments.js) */
+var PPLAY={midi:60,on:false,t0:0,off:0,n:0},PKIND={id:null,kind:"synth"};
+function perfKind(){var id=S.eng;if(PKIND.id!==id){var ins=findInst(id);PKIND.id=id;PKIND.kind=ART.INST.kindOf(id,ins&&ins.l);}return PKIND.kind;}
+/* you on stage holding your instrument: glows while a note sounds; the name under your feet.
+   demo: in the Show tab preview, a made-up tune plays when you're not playing */
+function perfDraw(g,x,y,p,now,crowd,lay,H,named,demo){
+  var st={midi:PPLAY.midi,on:PPLAY.on,t0:PPLAY.t0,off:PPLAY.off,now:now,n:PPLAY.n};
+  if(demo&&!PPLAY.on&&now-PPLAY.off>1500){var beat=Math.floor(now/420),ph=now%420;st={midi:[60,64,67,72,67,64,62,65][beat%8],on:ph<330,t0:now-ph,off:now-ph+330,now:now,n:beat};}
+  if(st.on){var gl=g.createRadialGradient(x,y-6*p,3,x,y-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.5)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,y-6*p,24*p,0,6.3);g.fill();}
+  ART.INST.draw(g,x,y,p,perfLook,perfKind(),st);
+  if(crowd){var cr=ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target);ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,2,cr.hands,crowd.target);}
+  if(lay)ART.envFx(g,lay,H,x,y,p,now,2);
+  if(named){var nm=(typeof stageName==="function"?stageName():"You");g.font="600 "+Math.round(10.5*Math.min(p,1.4))+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="top";var ny=y+12*p+6*p;g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(nm,x,ny);g.fillStyle="#F5C518";g.fillText(nm,x,ny);g.textBaseline="alphabetic";}
+}
+window.ukPerfKind=function(){return{id:S.eng,kind:perfKind(),playing:PPLAY.on,midi:PPLAY.midi};};
+window.ukInstKinds=function(){var by={};allInst.forEach(function(i){var k=ART.INST.kindOf(i.id,i.l);(by[k]=by[k]||[]).push(i.l);});return{n:allInst.length,by:by};};      /* for testing: which art each instrument gets */
+window.ukSelInst=function(id){selInst(id);return S.eng;};
 /* Hook into playNote to broadcast */
 var _origPlayNote=playNote;
 playNote=function(nk,midi){
   _origPlayNote(nk,midi);
-  PFOLLOW.note(midi,true);
+  PFOLLOW.note(midi,true);PPLAY.midi=midi;PPLAY.on=true;PPLAY.t0=Date.now();PPLAY.n++;
   liveSend({type:"note",midi:midi,on:true,inst:S.eng,mode:S.mode,nk:nk});
 };
 var _origSilence=silenceNote;
 silenceNote=function(){
   _origSilence();
-  PFOLLOW.note(0,false);
+  PFOLLOW.note(0,false);if(PPLAY.on){PPLAY.on=false;PPLAY.off=Date.now();}
   liveSend({type:"note",on:false});
 };
 /* Hook into selInst to broadcast instrument changes */
@@ -4203,9 +4221,7 @@ function drawVenueTo(g,W,H,opts){
   var cAge=now-PCROWD.t0,crowd=cAge<ART.CROWD_MS&&PCROWD.kind?{kind:PCROWD.kind,age:cAge,target:{x:W/2,y:SB*H*0.25}}:null;
   /* you, on stage at your keyboard (at the front of the stage when the Jumbotron is down); glows while a note sounds */
   var pp=stage?Math.max(3,Math.round(H/260)):Math.max(2,Math.round(sc*1.25)),py=stage?SB*H-14*pp:.15*sy+8;
-  AUDX={lay:alay,H:H};
-  audPerson(g,W/2,py,"#D354A0",(typeof stageName==="function"?stageName():"You"),pp,0,0,!!activeVoice,now,"#F5C518",null,null,1e9,perfLook,true,null,crowd&&crowd.kind!=="lasers"&&crowd.kind!=="float"?crowd:null);
-  ART.keyboard(g,W/2,py+5*pp,pp,activeVoice?Math.floor(now/180)%7:-1,"#F5D03C");
+  perfDraw(g,W/2,py,pp,now,crowd&&crowd.kind!=="lasers"&&crowd.kind!=="float"?crowd:null,alay,H,true);
   /* audience, back to front so nearer people overlap farther ones */
   ids.sort(function(a,b){return AUD.people[a].dy-AUD.people[b].dy;});
   var heads=[];
@@ -4587,7 +4603,7 @@ var STAGEFX=(function(){
       else{var bars=["#C0C0C0","#C0C000","#00C0C0","#00C000","#C000C0","#C00000","#0000C0"];for(var bi=0;bi<7;bi++){g.fillStyle=bars[bi];g.fillRect(jt.x+Math.round(bi*jt.w/7),jt.y,Math.ceil(jt.w/7),jt.h);}
         g.fillStyle="rgba(0,0,0,.55)";g.fillRect(jt.x,jt.y+jt.h*0.4,jt.w,jt.h*0.2);g.fillStyle="#fff";g.font="bold "+Math.round(jt.h*0.13)+"px monospace";g.textAlign="center";g.textBaseline="middle";g.fillText("YOUR VIDEO",jt.x+jt.w/2,jt.y+jt.h/2);}}
     var pyy=H*(0.18+0.12*Math.max(0,Math.min(1,(jk-0.3)/0.5)));
-    ART.drawChar(g,W/2,pyy+8,2,perfLook,{armL:-0.55,armR:0.55});ART.keyboard(g,W/2,pyy+18,2,Math.floor(now/200)%7,"#F5D03C");
+    perfDraw(g,W/2,pyy+8,2,now,null,null,H,false,true);
     if(fx.crowdT!==pc.lastT){pc.lastT=fx.crowdT;pc.kind=fx.crowd;pc.t0=now;}
     var cAge=now-pc.t0;
     for(var i=0;i<4;i++){var dx=W*(0.18+i*0.21),dy=H*0.7,ps=ART.dance([1,4,8,6][i],0,[0,0,0,0],now/500+i*0.3),tg={x:W/2+Math.sin(now/650+i)*W*0.3,y:H*0.08};

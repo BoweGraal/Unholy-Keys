@@ -6,6 +6,7 @@
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script src="art.js"></script>
+<script src="instruments.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -1372,10 +1373,11 @@ function handleMsg(msg){
   else if(t==="react"){if(msg.id!==myId&&viewers[msg.id])addReact(msg.id,String(msg.k));}
   else if(t==="note"){
     if(msg.on){
-      var _m=+msg.midi;if(isFinite(_m)&&_m>=0&&_m<=128){lastNoteMidi=_m;lastNoteTime=Date.now();isPerformerPlaying=true;}   /* the lights follow the playing even with your sound off */
+      var _m=+msg.midi;if(isFinite(_m)&&_m>=0&&_m<=128){lastNoteMidi=_m;lastNoteTime=Date.now();isPerformerPlaying=true;PERF.n++;}   /* the lights follow the playing even with your sound off */
       playNoteFromEvent(msg.midi,msg.inst||activeInst,msg.mode||"sustain");
     }else{
       silenceNote();
+      if(isPerformerPlaying)PERF.off=Date.now();
       isPerformerPlaying=false;
     }
   }
@@ -4034,6 +4036,16 @@ function limbJoints(x,y,s,bob){return ART.joints(x,y,s,bob);}
 var LIMB_LEN=ART.LIMB;
 /* A character (see ART.drawChar in art.js) with its body centre at (x,y), each art pixel `scale` screen
    pixels. Dances, walks and poses set the limb angles; the name goes under the feet. */
+/* the performer holding the instrument they picked, playing the notes as they come (instruments.js) */
+var PERF={kind:"synth",id:null,off:0,n:0};
+function perfKind(){if(PERF.id!==activeInst){var ins=findInst(activeInst);PERF.id=activeInst;PERF.kind=ART.INST.kindOf(activeInst,ins&&ins.l);}return PERF.kind;}
+function drawPerformer(x,y){
+  var s=3,now=Date.now();
+  if(isPerformerPlaying){var pulse=0.35+0.25*Math.sin(now*0.008);ctx.save();ctx.globalAlpha=pulse;var gl=ctx.createRadialGradient(x,y-6*s,2,x,y-6*s,22*s);gl.addColorStop(0,hexA(performer.color,0.9));gl.addColorStop(1,hexA(performer.color,0));ctx.fillStyle=gl;ctx.beginPath();ctx.arc(x,y-6*s,22*s,0,6.3);ctx.fill();ctx.restore();}
+  ART.INST.draw(ctx,x,y,s,performer.look||ART.looks.fromColor(performer.color,1),perfKind(),{midi:lastNoteMidi,on:isPerformerPlaying,t0:lastNoteTime,off:PERF.off,now:now,n:PERF.n});
+  if(performer.name){ctx.font="bold 18px 'Segoe UI',system-ui,sans-serif";ctx.textAlign="center";ctx.textBaseline="top";var ny=y+12*s+3+6*s;ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,0.75)";ctx.strokeText(performer.name,x,ny);ctx.fillStyle="#fff";ctx.fillText(performer.name,x,ny);ctx.textBaseline="alphabetic";}
+}
+window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 var AVO=null;          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
 function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge,look,fd){
   var s=scale||1,cx=x,cy=y;
@@ -4350,10 +4362,7 @@ function renderLoop(){
   if(spotK>0)drawCentreSpot(W/2,perfPy,spotK,feat);
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){
     var perfDim=bp&&W<640;if(perfDim){ctx.save();ctx.globalAlpha=0.35;}   /* small screens: the match needs the room */
-    drawAvatar(perfPx,perfPy,performer.color,performer.name,3,true,isPerformerPlaying,false,0,0,false,null,1e9,performer.look);
-    /* the keyboard in front of the performer, the key for the last note lit; the mic stand beside */
-    var nAge=Date.now()-lastNoteTime,pc=((lastNoteMidi%12)+12)%12;
-    ART.keyboard(ctx,perfPx,perfPy+5*3,3,isPerformerPlaying&&nAge<350?[0,0,1,1,2,3,3,4,4,5,5,6][pc]:-1,"hsl("+(pc*30)+",80%,60%)");
+    drawPerformer(perfPx,perfPy);
     ART.envFx(ctx,LAYV,H,perfPx,perfPy,3,Date.now(),2);
     var pcAge=crowdAge();if(pcAge<ART.CROWD_MS&&CROWD.kind!=="lasers"&&CROWD.kind!=="float")ART.crowdFx(ctx,CROWD.kind,perfPx,perfPy,3,pcAge,3,null,null);
     if(perfDim)ctx.restore();
