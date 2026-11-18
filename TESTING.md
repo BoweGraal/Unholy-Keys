@@ -276,6 +276,15 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - Under the dots are moves for that dance, such as Running man's Classic, Fast, Moonwalk and Arms pump, or Silly's Chicken, Sprinkler, YMCA, Floss and Macarena. On a computer, keys Z X C V B pick the moves.
 - Everyone sees your dance (venue and the performer's audience panel), drawn from the dance, the move and the two dots, so it looks the same everywhere.
 
+**Jumbotron, things that lower in, and crowd surprises (Show tab).**
+- **Jumbotron**: Auto, Down or Up. On Auto it lowers on its cables whenever a video plays (or your visuals are on) and goes back up when it stops; Down and Up hold it there. While it's down, the round box slims to a line at the top and you step forward so you're not hidden.
+- **Jam view** (also the **Stage** button at the top of jam mode): Classic is the jam screen as before. Stage puts jam on the venue stage, with your video (or visuals) on the Jumbotron and the crowd in front. Remembered on this browser.
+- **Lower in**: a Disco ball that drops over the front of the dance floor, and a Banner with your own text (up to 20 letters, numbers and ! ? ' . # * -). The banner moves aside when the Jumbotron is down.
+- **Moments**: Balloons and Confetti drop once each time you press them.
+- **Crowd**: Sparkle, Fire, Lasers (everyone shoots lasers from their hands at the stage) or Float. It hits everyone at once, you included, and lasts about 7 seconds.
+- **Follow my playing**: the lights follow your notes. The wash climbs the back wall and the lit row on the floor moves back with higher notes and drops with lower ones, and the colour follows the note. It works out your range as you play, so it uses the full height whatever octave you're in. It still works if someone in the audience has their sound off. Your preview shows it too (a made-up melody when you're not playing).
+- To check: go live, open the venue in another window, then try each one. Late arrivals should see the Jumbotron, disco ball, banner and follow lights as they are, but not balloons, confetti or crowd surprises that already finished.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |
