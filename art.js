@@ -286,6 +286,49 @@ var ART=(function(){
     g.imageSmoothingEnabled=was;
     return geo;
   }
+  /* the performer's key panel, mounted on the back wall: SPACE D E 3 on top, the arrow cross below, lit live as
+     they press. st = {mods:{space,d,e,three}, dir:"up"|"down"|"left"|"right"|null, col: the arrow's colour,
+     modCols:{space,d,e,three}, age: ms since the arrow went down}. 27 x 25 art pixels at p screen pixels each. */
+  var KP_W=27,KP_H=25;
+  function keyPad(g,x,y,p,st){
+    st=st||{};var mods=st.mods||{},mc=st.modCols||{};
+    var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
+    function r(ax,ay,ww,hh,c){g.fillStyle=c;g.fillRect(Math.round(x+ax*p),Math.round(y+ay*p),Math.round(ww*p),Math.round(hh*p));}
+    /* the panel and its two wall bolts */
+    r(0,0,KP_W,KP_H,"#0d0918");r(0,0,KP_W,1,"#4d4170");r(0,KP_H-1,KP_W,1,"#120d1e");r(0,0,1,KP_H,"#3a3058");r(KP_W-1,0,1,KP_H,"#120d1e");
+    r(1,1,1,1,"#6a5c8a");r(KP_W-2,1,1,1,"#6a5c8a");
+    function key(kx,ky,kw,kh,on,c){
+      r(kx,ky,kw,kh,on?c:"#1f1933");r(kx,ky,kw,1,on?"rgba(255,255,255,.45)":"#2e2648");r(kx,ky+kh-1,kw,1,on?"rgba(0,0,0,.3)":"#151024");
+      if(on){g.globalAlpha=0.25;r(kx-1,ky-1,kw+2,kh+2,c);g.globalAlpha=1;r(kx,ky,kw,kh,c);r(kx,ky,kw,1,"rgba(255,255,255,.45)");}
+    }
+    function label(t,cx,cy,on){if(p<3)return;g.fillStyle=on?"#fff":"rgba(255,255,255,.4)";g.font="700 "+Math.max(7,Math.round(p*2.6))+"px system-ui,sans-serif";
+      g.textAlign="center";g.textBaseline="middle";g.fillText(t,Math.round(x+cx*p),Math.round(y+cy*p)+1);}
+    var row=[["SPACE",2,9,"space"],["D",12,4,"d"],["E",17,4,"e"],["3",22,3,"three"]];
+    row.forEach(function(k){var on=!!mods[k[3]];key(k[1],2,k[2],5,on,mc[k[3]]||"#7F77DD");label(k[0],k[1]+k[2]/2,4.5,on);});
+    /* the arrows: a 7x7 key each, with a pixel triangle */
+    var ar={up:[10,9],left:[2,17],down:[10,17],right:[18,17]},col=st.col||"#7F77DD";
+    for(var d in ar){var on=st.dir===d,ax=ar[d][0],ay=ar[d][1];
+      if(on&&st.age!==undefined&&st.age<450){g.globalAlpha=0.6*(1-st.age/450);var gr=1+st.age/90;r(ax-gr,ay-gr,7+gr*2,7+gr*2,col);g.globalAlpha=1;}
+      key(ax,ay,7,7,on,col);
+      var tc=on?"#fff":"#4a4068",cx=ax+3,cy=ay+3;
+      for(var i=0;i<3;i++){
+        if(d==="up")r(cx-i,cy-1+i,1+2*i,1,tc);
+        else if(d==="down")r(cx-i,cy+1-i,1+2*i,1,tc);
+        else if(d==="left")r(cx-1+i,cy-i,1,1+2*i,tc);
+        else r(cx+1-i,cy-i,1,1+2*i,tc);}
+    }
+    g.imageSmoothingEnabled=was;
+  }
+  /* where the key panel hangs: top-left of the back wall, inside the left truss pillar, clear of a Jumbotron
+     (jt = its screen rect, or null) and of anything in the corner down to avoidY. Returns {x,y,p} or null. */
+  function keyPadSpot(W,H,lay,jt,avoidY){
+    var P=sceneP(W,H),wallTop=6*P,wallBot=Math.round(lay.stageBottom*H)-5*P;
+    var x0=Math.round(W*0.12)+3*P,xmax=jt?jt.x-2*P:W*0.4,y0=Math.max(wallTop+2*P,avoidY||0);
+    if(xmax-x0<KP_W*2){x0=8;y0=Math.max(y0,avoidY||0);}
+    var p=Math.min(P,Math.floor((xmax-x0)/KP_W),Math.floor((wallBot-y0)/KP_H));
+    if(p<2)return null;
+    return{x:Math.round(x0),y:Math.round(y0),p:p};
+  }
   /* the performer's keyboard: a stand and a 7-white-key board; lit = which key index (0-6) is sounding, or -1 */
   function keyboard(g,x,y,p,lit,litCol){
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
@@ -785,6 +828,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{VERSION:"1.30.7",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.30.9",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
