@@ -1301,7 +1301,7 @@ function resize(){
 }
 
 function floorPt(e){var r=canvas.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
-var walkMark=null;
+var walkMark=null,FRAME_DT=0.016,LAST_FRAME=0;
 /* a tap or click on the venue: grab one of your limbs if you're free dancing and it's on you, otherwise walk there */
 function onFloorDown(e){
   var p=floorPt(e);
@@ -4461,7 +4461,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.31.1",SERVER_VERSION="";
+var PAGE_VERSION="1.32.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4478,8 +4478,9 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     var gl=ctx.createRadialGradient(cx,cy-6*s,2,cx,cy-6*s,22*s);gl.addColorStop(0,hexA(color,0.9));gl.addColorStop(1,hexA(color,0));
     ctx.fillStyle=gl;ctx.beginPath();ctx.arc(cx,cy-6*s,22*s,0,6.3);ctx.fill();ctx.restore();
   }
-  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0;
-  if(moving&&!dance){var wsw=Math.sin(Date.now()*0.012);bob=-Math.abs(Math.cos(Date.now()*0.012))*1.5*s;legL=wsw*0.45;legR=-legL;armL=0.15-wsw*0.55;armR=-0.15-wsw*0.55;}
+  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR;
+  /* walking: moving = the walk state from ART.walkStep (feet planted, stride by distance) */
+  if(moving&&!dance){var wp=ART.walkPose(moving);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*s;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*6*s;armL=2.7+Math.sin(dT*2)*0.35;armR=-armL;legL=Math.sin(dT*2)*0.25;legR=-legL;}
   else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*2*s;cx+=Math.sin(dT)*4*s;var sw=Math.sin(dT);armL=1.9+sw*0.9;armR=-1.9+sw*0.9;legL=sw*0.2;legR=sw*0.2;}
   else if(dance===3){var jp=Math.abs(Math.sin(dT));bob=-Math.pow(jp,3)*11*s;armL=1.5+jp*1.1;armR=-armL;legL=jp*0.5;legR=-legL;mouth=jp>0.7;}
@@ -4504,7 +4505,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
   if(AVO){var ro=AVO.r,eo=AVO.e;
     if(ro){bob+=ro.lift||0;if(ro.armL!==undefined)armL=ro.armL;if(ro.armR!==undefined)armR=ro.armR;if(ro.legL!==undefined)legL=ro.legL;if(ro.legR!==undefined)legR=ro.legR;if(ro.mouth)mouth=true;}
     if(eo){var ek=eo.k;bob+=eo.lift;rot=rot*(1-ek)+eo.rot;if(!ro){armL=armL*(1-ek)+eo.armL*ek;armR=armR*(1-ek)+eo.armR*ek;}legL=legL*(1-ek)+eo.legL*ek;legR=legR*(1-ek)+eo.legR*ek;}}
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
   /* name under the feet (stays put while dancing); yours is gold */
   if(name){
     var fs=Math.min(18,Math.round(11*Math.min(s,2.4)));
@@ -4817,19 +4818,19 @@ function renderLoop(){
   /* Note flash near performer */
   drawNoteFlash();
 
-  /* Audience avatars - lerp positions */
-  var now=Date.now();
+  /* Audience avatars */
+  var now=Date.now(),pnow=performance.now();FRAME_DT=Math.min(0.05,Math.max(0.001,(pnow-(LAST_FRAME||pnow))/1000));LAST_FRAME=pnow;
   var ids=Object.keys(viewers);
   ids.sort(function(a,b){return viewers[a].y-viewers[b].y;});                                 /* back to front, so nearer people overlap farther ones */
   if(myId&&viewers[myId]){ids=ids.filter(function(k){return k!==myId;});ids.push(myId);}     /* you're drawn last, on top */
   for(var i=0;i<ids.length;i++){
     var v=viewers[ids[i]];
     /* Lerp */
-    var dx=v.tx-v.x, dy=v.ty-v.y;
-    var dist2=dx*dx+dy*dy;
-    var moving=dist2>0.0001;
-    v.x+=dx*0.08;
-    v.y+=dy*0.08;
+    /* you go exactly where you're steering; everyone else closes the gap to their latest position at a steady
+       walking pace (a little quicker when far behind), so nobody glides in and slows to a drift */
+    var dx=v.tx-v.x, dy=v.ty-v.y, gap=Math.hypot(dx,dy*H/W);
+    if(ids[i]===myId||gap>0.3){v.x=v.tx;v.y=v.ty;}
+    else if(gap>0){var stp=Math.min(gap,(0.36+gap*3)*FRAME_DT);v.x+=dx/gap*stp;v.y+=dy/gap*stp;}
 
     var vx=v.x*W, vy=v.y*H;
     if(v.seed===undefined)v.seed=(ids[i].charCodeAt(0)||0)%7+(v.name.length%5);
@@ -4861,7 +4862,9 @@ function renderLoop(){
     if(!bigMe&&!onStage){
       var rpo=ART.reactPose(v.reacts,now,sc2),epo=ART.envPose(LAYV,H,vx,dyy,sc2,now,v.seed||0);
       AVO=rpo||epo?{r:rpo,e:epo}:null;
-      drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,moving,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
+      var wk=v._walk||(v._walk={}),walking=ART.walkStep(wk,vx,vy,pnow,sc2);
+      if(!cdn&&!ck)ART.footShadow(ctx,vx,vy,sc2,(rpo?rpo.lift:0)+(epo?epo.lift:0));
+      drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
       AVO=null;
       if(ck)ART.crowdFx(ctx,ck,vx,dyy,sc2,cAge,v.seed||0,hands,v._tg);
       var lyy=dyy+(rpo?rpo.lift:0)+(epo?epo.lift:0);

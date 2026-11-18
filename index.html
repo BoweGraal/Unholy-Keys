@@ -4072,7 +4072,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.31.1",SERVER_VERSION="";
+var PAGE_VERSION="1.32.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4261,9 +4261,9 @@ var STREAK=(function(){
 var AUDX=null;
 function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys,fd,crowd){
   /* the venue's pixel character (art.js), small: name under the feet */
-  var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,p=Math.max(1,Math.round(sc));
+  var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,lgL=7,lgR=7,alL,alR,p=Math.max(1,Math.round(sc));
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
-  if(walk!=null&&!dance){var ws=Math.sin(walk);legL=ws*.45;legR=-legL;armL=.15-ws*.6;armR=-.15-ws*.6;bob=-Math.abs(Math.cos(walk))*1.6*p;}
+  if(walk&&!dance){var wp=ART.walkPose(walk);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*p;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*5*p;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;legL=Math.sin(dT*2)*.25;legR=-legL;}
   else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*1.5*p;x+=Math.sin(dT)*3*p;var sw=Math.sin(dT);armL=1.9+sw*.9;armR=-1.9+sw*.9;}
   else if(dance===3){var jp=Math.abs(Math.sin(dT));bob=-Math.pow(jp,3)*8*p;armL=1.5+jp*1.1;armR=-armL;legL=jp*.5;legR=-legL;}
@@ -4284,7 +4284,8 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
   if(AX){rpo=atKeys?null:ART.reactPose(AX.reacts,now,p);epo=AX.lay?ART.envPose(AX.lay,AX.H,x,y,p,now,seed||0):null;
     if(rpo){bob+=rpo.lift||0;if(rpo.armL!==undefined)armL=rpo.armL;if(rpo.armR!==undefined)armR=rpo.armR;if(rpo.legL!==undefined)legL=rpo.legL;if(rpo.legR!==undefined)legR=rpo.legR;if(rpo.mouth)mouth=true;}
     if(epo&&!atKeys){var ek=epo.k;bob+=epo.lift;rot=rot*(1-ek)+epo.rot;if(!rpo){armL=armL*(1-ek)+epo.armL*ek;armR=armR*(1-ek)+epo.armR*ek;}legL=legL*(1-ek)+epo.legL*ek;legR=legR*(1-ek)+epo.legR*ek;}}
-  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
+  if(!dance&&!crowd)ART.footShadow(g,x,y,p,0);
+  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
   if(cr)ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,seed||0,cr.hands,crowd.target);
   if(AX){var ly=y+(rpo?rpo.lift:0)+(epo&&!atKeys?epo.lift:0);if(AX.reacts)ART.reactFx(g,AX.reacts,now,x,ly,p,seed||0);if(epo)ART.envFx(g,AX.lay,AX.H,x,ly,p,now,seed||0);}
   if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+10*p,y-20*p-ph*14);g.globalAlpha=1;}
@@ -4388,11 +4389,11 @@ function drawVenueTo(g,W,H,opts){
   var heads=[];
   ids.forEach(function(id){var p=AUD.people[id];
     /* glide toward where they are, and advance the stride by distance covered so steps match speed */
-    var mx=(p.x-p.dx)*.18,my=(p.y-p.dy)*.18;p.dx+=mx;p.dy+=my;
-    var step=Math.hypot(mx*W,my*sy);
-    if(step>.15){p.walk=(p.walk||0)+Math.min(.5,step*.22+.12);p.walkUntil=now+120;}
-    var walking=now<(p.walkUntil||0);
+    /* close the gap to where they are at a steady walking pace (quicker when far behind), so nobody glides in */
+    var gx=p.x-p.dx,gy=p.y-p.dy,gap=Math.hypot(gx,gy*sy/W),fdt=Math.min(0.05,Math.max(0.001,(now-(p._ft||now))/1000));p._ft=now;
+    if(gap>0.3){p.dx=p.x;p.dy=p.y;}else if(gap>0){var stp=Math.min(gap,(0.36+gap*3)*fdt);p.dx+=gx/gap*stp;p.dy+=gy/gap*stp;}
     var x=p.dx*W,y=Math.min(H-24,Y(p.dy));
+    var walking=ART.walkStep(p._walk||(p._walk={}),x,y,now,sc);
     var pz=null;
     if(p.dance>=4&&p.pose){if(!p.poseCur)p.poseCur=p.pose.slice();for(var q=0;q<4;q++)p.poseCur[q]+=(p.pose[q]-p.poseCur[q])*.4;pz=p.poseCur;}
     var cmb=p.dance>=4?(p.combo||0):0;STREAK.track(p,cmb);
@@ -4400,7 +4401,7 @@ function drawVenueTo(g,W,H,opts){
     if(!p.look)p.look=audLook("",p.color,p.name);
     var cw=crowd&&crowd.kind==="lasers"?{kind:"lasers",age:cAge,target:{x:W/2+Math.sin(now/650+(p.seed||0))*W*0.32,y:SB*H*0.25}}:crowd;
     AUDX={reacts:p.reacts,lay:alay,H:H};
-    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null,cw);
+    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null,cw);
     if(p.msT&&now-p.msT<1700)STREAK.pop(g,x,headY,p.msN,now-p.msT,Math.max(0.75,sc*0.7));
     else if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
     heads.push([p,x,headY]);});

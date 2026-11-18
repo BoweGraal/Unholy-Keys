@@ -402,3 +402,10 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 ## Jumbotron note lines (v1.31.1)
 - The big note name and keyboard on the Jumbotron are gone. The Jumbotron now shows big note lines instead: each note is a thick bar sliding left, higher notes higher up, coloured by key row (same colours as the arrow pad). A held note keeps stretching and pulses at the "now" line on the right. The pitch range follows what you play.
 - Same in the Show preview and in the visuals stream the audience sees.
+
+## Walking (v1.32.0)
+- Walk around the venue. Steps now follow how far you actually move: push the joystick a little and the steps slow down, all the way and they speed up. One foot stays planted while the other lifts and swings through. The body rises slightly as the legs pass and settles on each footfall. A soft shadow under the feet stays on the floor.
+- Walking toward or away from the stage, the feet lift instead of scissoring sideways. Walking left or right, the legs swing.
+- When you stop, the step finishes and both feet come down. No sliding to a stop.
+- Other people move at a steady walking pace toward where they are instead of gliding and slowing down. Your own character goes exactly where you steer, with no lag.
+- Same on the performer's stage view of the crowd.

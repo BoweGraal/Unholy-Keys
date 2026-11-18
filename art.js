@@ -92,7 +92,10 @@ var ART=(function(){
     if(L.top===2){px(-6,-14,12,2,tcD);px(-7,-12,2,7,tcD);px(5,-12,2,7,tcD);}
     /* legs */
     var legCols=L.bottom===0?[[5,bc],[7,shoe]]:L.bottom===1?[[2.5,bc],[5,skin],[7,shoe]]:[[5,skin],[7,shoe]];
-    limb(-2.5,4,lL,7,legCols);limb(2.5,4,lR,7,legCols);
+    /* a leg can be drawn shorter: the knee coming up, the foot lifting off the floor mid-step */
+    function legC(n){return legCols.map(function(c){return [c[0]*n/7,c[1]];});}
+    var gL=Math.max(3,Math.min(7,st.legLenL||7)),gR=Math.max(3,Math.min(7,st.legLenR||7));
+    limb(-2.5,4,lL,gL,legC(gL));limb(2.5,4,lR,gR,legC(gR));
     /* torso */
     px(-5,-5,10,10,tc);
     if(L.top===4){for(var r=-4;r<5;r+=3)px(-5,r,10,1,tcL);}
@@ -140,7 +143,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     st=st||{};if(!L)L=random(7);
-    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR};
+    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR};
     var c=drawSprite(L,s),q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
     if(st.rot){
@@ -149,6 +152,57 @@ var ART=(function(){
       g.drawImage(c,-OX*q,-OY*q,CWD*q,CHT*q);g.restore();
     }else g.drawImage(c,Math.round(x+dx-OX*q),Math.round(y-OY*q+bob),CWD*q,CHT*q);
     g.imageSmoothingEnabled=was;
+  }
+
+  /* ---------------- walking ----------------
+     A walk that stays on the ground: the stride advances with the distance actually covered (so the feet keep
+     pace with the body instead of paddling in the air), one foot stays planted while the other lifts and swings
+     through, the body rises a pixel as the legs pass and settles on each footfall, and when you stop the feet
+     come down together instead of freezing mid-stride.
+     w = a state object kept on each person; x, y = where they're drawn this frame (screen px); s = their scale. */
+  function walkStep(w,x,y,now,s){
+    if(w.t===undefined){w.t=now;w.px=x;w.py=y;w.ph=0;w.k=0;w.dx=1;w.dy=0;w.sp=0;}
+    var dt=Math.max(1,Math.min(100,now-w.t)),mx=x-w.px,my=y-w.py,md=Math.hypot(mx,my);w.t=now;w.px=x;w.py=y;
+    if(md>40*s){md=0;}                                   /* a jump across the room (joining, a snap): not a walk */
+    var moving=md>0.25*Math.max(1,s*0.5);
+    if(moving){
+      /* a step every ~18 art pixels of ground, but never slower than a stroll or faster than a run */
+      var stride=18*s,cad=md/stride;cad=Math.max(cad,dt/280);w.ph+=Math.min(cad,dt/115);
+      var nd=Math.hypot(mx,my)||1;w.dx+=(mx/nd-w.dx)*0.35;w.dy+=(my/nd-w.dy)*0.35;
+      w.k=Math.min(1,w.k+dt/70);w.still=0;
+    }else{
+      /* stopping: finish the footfall (to the nearest step), then ease back to standing */
+      w.still=(w.still||0)+dt;
+      if(w.still>60){var tgt=Math.round(w.ph);w.ph+=(tgt-w.ph)*Math.min(1,dt/80);w.k=Math.max(0,w.k-dt/160);}
+    }
+    w.sp+=((moving?md/dt:0)-w.sp)*0.2;
+    return w.k>0.01?w:null;
+  }
+  /* the pose for a walk state (from walkStep): limb angles, leg lengths, and the body bob in art pixels */
+  function walkPose(w){
+    var k=w.k,ph=w.ph,step=Math.floor(ph),u=ph-step,leftPlanted=(((step%2)+2)%2)===0;
+    var hx=Math.max(-1,Math.min(1,w.dx||0)),side=Math.abs(hx);
+    var run=Math.min(1,(w.sp||0)/0.5);                 /* px per ms: faster walking lifts the knees more */
+    /* the planted foot stays put as the body passes over it (it sweeps from ahead to behind); the lifted foot
+       swings the other way. Walking toward or away from you the feet mostly lift rather than swing */
+    var A=0.08+0.30*side,dir=hx>=0?1:-1;
+    var aPlant=-dir*A*(1-2*u),aSwing=-aPlant;
+    var lift=(1.4+1.6*(1-side)+run*0.8)*Math.sin(Math.PI*u);
+    var legL=leftPlanted?aPlant:aSwing,legR=leftPlanted?aSwing:aPlant;
+    var lenL=leftPlanted?7:7-lift,lenR=leftPlanted?7-lift:7;
+    /* the planted leg is angled, so the body drops a touch to keep that foot on the floor; up as the legs pass */
+    var bob=7*(1-Math.cos(aPlant))-Math.sin(Math.PI*u)*(1+run*0.6);
+    /* the arms swing against the legs: seen side-on (walking left or right) they swing a little across; walking
+       toward or away from you the arm coming forward looks shorter instead */
+    var sw=(leftPlanted?1:-1)*Math.sin(Math.PI*u),ang=-dir*sw*(0.12+0.18*run)*side,fore=Math.abs(sw)*(1.5+run)*(1-side);
+    var armLenL=9-(sw<0?fore:0),armLenR=9-(sw>0?fore:0);
+    return{legL:legL*k,legR:legR*k,legLenL:7-(7-lenL)*k,legLenR:7-(7-lenR)*k,armL:0.15+ang*k,armR:-0.15+ang*k,lenL:9-(9-armLenL)*k,lenR:9-(9-armLenR)*k,bob:bob*k};
+  }
+  /* a soft shadow on the floor under someone's feet; it stays on the floor while they bob or jump */
+  function footShadow(g,x,y,s,lift){
+    var a=Math.max(0.12,0.32-Math.abs(lift||0)/(30*s));g.fillStyle="rgba(0,0,0,"+a.toFixed(3)+")";
+    var rw=Math.max(3,(6.5-Math.min(3,Math.abs(lift||0)/(4*s)))*s),rh=Math.max(1,1.6*s);
+    g.beginPath();g.ellipse(Math.round(x),Math.round(y+11*s),rw,rh,0,0,Math.PI*2);g.fill();
   }
   /* where the shoulders and hips are on screen (for grabbing limbs), and limb lengths in art pixels */
   function joints(x,y,p,bob){return [[x-6.5*p,y-4.5*p+bob],[x+6.5*p,y-4.5*p+bob],[x-2.5*p,y+4*p+bob],[x+2.5*p,y+4*p+bob]];}
@@ -828,6 +882,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.31.1",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.32.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
