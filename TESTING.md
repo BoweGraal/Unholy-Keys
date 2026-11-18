@@ -255,6 +255,15 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - Big moments still burn and score double, but add less difficulty than before. The highway scrolls slower and is a little more forgiving on timing than Step dance.
 - Free play (not a round) starts gentle and adds notes as your combo grows.
 
+**Battle rounds (1 v 1 knockout, any game).** Tick "⚔ Battle (1 v 1s)" next to the round type on the performer page (or pick "Battle" in dance practice), then play a song.
+- Everyone free dances at first. About 12% of the way into the song (at least 12 s), everyone who's dancing is drawn into a bracket at random. If the numbers don't make a full bracket, some get a bye through the first round.
+- One match at a time. The two step up to centre stage under their own lights, with VS between them, and play the round's game: Step, Target or Note highway, with the same notes for both. Their scores show under their names, with a small live copy of each one's game screen beside them. Everyone else keeps free dancing and watches. Your own match switches your screen to the game, then back to free dance afterwards.
+- Free dance battles: the two free dance on the stage, and everyone else votes with the two buttons on their banner (change your mind any time). Your vote on the performer page counts double.
+- The final is a showdown during the song's finale (the last 15 to 30 s). Earlier matches are 9 to 25 s each. If the song is too short for everyone, the bracket gets smaller (the extra dancers just watch).
+- Results go by how far each dancer got: winner first, then the finalist, then semifinal losers, and so on. The score shown is matches won, and show points work as usual.
+- "Start a round now" (no song length): 18 s matches and a 25 s final, starting soon after the draw.
+- `npm run crowd` bots play their matches and vote in free dance battles.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |
