@@ -248,6 +248,13 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - **Dance floor:** dark tiles that light up in waves on the beat, behind a crowd barrier at the front of the stage.
 - **For the art team:** each look is 8 characters (one per option). The options and colours are listed at the top of `art.js` (`OPTS`). Body layout and limb angles are described above `drawChar`; the dance games depend on the shoulder and hip positions in `joints`.
 
+**Difficulty ramps up through the show.** Rounds 1 and 2 are Easy, 3 and 4 Normal, and 5 onwards Hard. The round banner and your status line on the performer page show the level. Everyone in a round gets the same notes.
+- Easy: about one note a beat at most, no doubles or chords. On the highway, only the middle five keys (S to H).
+- Normal: no notes closer than half a beat, except in the big moments; doubles and chords only in the big moments.
+- Hard: the song's steps as analysed.
+- Big moments still burn and score double, but add less difficulty than before. The highway scrolls slower and is a little more forgiving on timing than Step dance.
+- Free play (not a round) starts gentle and adds notes as your combo grows.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |

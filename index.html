@@ -4361,7 +4361,7 @@ var CHART=(function(){
       if(pulse(e,bt,i)<PULSE){groove=false;continue;}                 /* talking, a free-time intro, ambient pads: no steady beat, no steps */
       var on=near(e,bt[i],3)/hit;
       if(!groove){if(on<0.3)continue;groove=true;}                    /* after a stretch with no beat, start again on a real hit */
-      var D=E[i]*level+(inPeak[i]?0.25:0),tier=D<0.3?0:D<0.6?1:D<0.85||!inPeak[i]?2:3,bar=i%4===0;
+      var D=E[i]*level+(inPeak[i]?0.12:0),tier=D<0.3?0:D<0.6?1:D<0.85||!inPeak[i]?2:3,bar=i%4===0;
       if(heldLane>=0&&i>=heldUntil)heldLane=-1;                       /* the hold has ended */
       /* during a hold in a calm or normal part, just hold; busier parts keep other arrows coming */
       if(heldLane>=0&&holdQuiet)continue;
@@ -4481,7 +4481,8 @@ var ROUNDS=(function(){
     /* tell the room again as the song settles in, and regularly after (covers pausing and skipping around) */
     clearInterval(syncT);var n=0;syncT=setInterval(function(){n++;if(n===1||n===3||n%10===0)sync();},1500);
     draw();buttons();
-    status("Round "+(cur.n||"")+" is on: “"+cur.title+"”."+(cur.file?" It ends when the song does.":" Press End round when the song finishes."));
+    var lvN=+cur.n||1,lvT=cur.mode==="free"?"":" ("+["Easy","Normal","Hard"][lvN<=2?0:lvN<=4?1:2]+")";
+    status("Round "+(cur.n||"")+lvT+" is on: “"+cur.title+"”."+(cur.file?" It ends when the song does.":" Press End round when the song finishes."));
   }
   function sync(){
     if(!cur||cur.phase!=="play")return;

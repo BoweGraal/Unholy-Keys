@@ -1738,21 +1738,51 @@ var GAME=(function(){
   var STEP_POSE={left:[2.1,0.35,0.85,0],right:[-0.35,-2.1,0,-0.85],up:[2.55,-2.55,0.1,-0.1],down:[1.2,-1.2,0.75,-0.75]};
   var letGos=0,lastFreeHold=-1e9,freeHoldLane=-1,freeHoldEnd=-1e9,laneDown=[false,false,false,false,false,false,false],waiting=false,notes=[],score=0,best=0,hits=0,misses=0,judge="",judgeT=0,judgeCol="#fff",flash=[0,0,0,0,0,0,0],lastSlot=0,lastGen=-1,prevLane=-1,prevLane2=-1,prevX=0.5,prevY=0.5,startT=0;
   var HIT=[[60,"PERFECT",100,"#F5C518"],[120,"GREAT",60,"#3CCB8A"],[180,"GOOD",30,"#5FB4F0"]];
+  /* how close (ms) counts as PERFECT / GREAT / GOOD: a little more forgiving on the highway, with seven keys to find */
+  function win(i){return mode==="keys"?[75,140,205][i]:HIT[i][0];}
   /* note highway: seven lanes on A S D F G H J, each its own colour */
   var KEYS=["A","S","D","F","G","H","J"],KCOL=["#E8505B","#F0A040","#F5D03C","#4CC38A","#4A9BE8","#9B7FE0","#EDEDF5"];
   var KPOSE=["left","left","down","up","down","right","right"],hype=0.3,keyCur=3;
   function NL(){return mode==="keys"?7:4;}
   function laneName(l){return mode==="keys"?KEYS[l]:LANES[l];}
-  /* A round's chart is made for four arrows. For seven keys, walk a hand along the keyboard: each arrow
-     moves it a step or two left or right (bouncing off the ends), so runs become runs and repeats repeat.
-     Two arrows at once become a chord. Worked out once from the start, so everyone gets the same notes. */
-  function keyLanes(st){
-    var c=3,out=[],D=[-1,-2,2,1];
+  /* A round's chart is made for four arrows; seven keys need a gentler version of it.
+     - Notes at least most of a beat apart (half a beat in the big moments), so it isn't keys everywhere.
+     - A hand walking the keys one at a time: left and down arrows step left, up and right step right.
+     - Outside the big moments the hand stays on the middle five keys (S to H); in them it can reach A and J,
+       and two arrows at once become a chord.
+     Worked out once from the start, so everyone gets the same notes. */
+  /* Difficulty ramps up through the show: rounds 1 and 2 are Easy, 3 and 4 Normal, 5 on Hard. Everyone in a
+     round works it out from the round number, so everyone still gets the same notes. */
+  function diffOf(n){if(window.ukForceDiff!==undefined)return +window.ukForceDiff;n=+n||1;return n<=2?0:n<=4?1:2;}   /* ukForceDiff: for testing */
+  /* thin a round's chart for its difficulty (Hard is the chart as analysed)
+     Easy: about one note a beat at most, no doubles. Normal: no notes closer than half a beat, except in the
+     big moments; doubles only in the big moments. */
+  function easeChart(chart,diff){
+    if(!chart||diff>=2)return chart;
+    var per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9;
+    function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
+    for(var i=0;i<chart.steps.length;i++){
+      var s=chart.steps[i],big=inPk(s[0]),gap=diff===0?per*0.95:(big?0:per*0.45);
+      if(s[0]-last<gap)continue;
+      if(s.length>2){out.push(s);last=s[0]+(+s[2]||0);continue;}           /* holds stay */
+      var m=s[1];if(diff===0||!big){var lb=m&(-m);m=lb;}                    /* doubles become one arrow */
+      out.push([s[0],m]);last=s[0];
+    }
+    var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;
+  }
+  window.ukEase=easeChart;window.ukDiffOf=diffOf;          /* for testing the difficulty levels */
+  function keyLanes(chart,diff){
+    var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],c=3,out=[],last=-1e9,D=[-1,-1,1,1];
+    if(diff===undefined)diff=1;
+    function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
     for(var i=0;i<st.length;i++){
       var s=st[i],bits=[];for(var b=0;b<4;b++)if(s[1]&(1<<b))bits.push(b);
-      if(!bits.length){out.push([]);continue;}
-      c+=D[bits[0]];if(c<0)c=-c;if(c>6)c=12-c;
-      if(bits.length>1){var c2=c+3<=6?c+3:c-3;out.push([c,c2]);}else out.push([c]);
+      var big=inPk(s[0]),gap=diff===0?per*0.95:diff===1?(big?per*0.45:per*0.9):(big?per*0.25:per*0.45);
+      if(!bits.length||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
+      var wide=diff===2||(diff===1&&big),lo=wide?0:1,hi=wide?6:5;
+      c+=D[bits[0]];if(c<lo)c=lo+1;if(c>hi)c=hi-1;
+      last=s[0]+(s[2]>0?+s[2]:0);
+      if(bits.length>1&&big&&diff>0){var c2=c+2<=hi?c+2:c-2;out.push([c,c2]);}else out.push([c]);
     }
     return out;
   }
@@ -1804,7 +1834,7 @@ var GAME=(function(){
         notes.push(nn);rndIdx++;continue;
       }
       if(mode==="keys"){
-        if(!rnd.keyMap)rnd.keyMap=keyLanes(st);
+        if(!rnd.keyMap)rnd.keyMap=keyLanes(rnd.chart,rnd.diff);
         var kl=rnd.keyMap[rndIdx]||[];
         for(var ki=0;ki<kl.length;ki++)notes.push({ms:s[0],lane:kl[ki],x:0,y:0,t:0,j:"",jt:0,hold:ki===0&&s[2]>0?+s[2]:0});
         rndIdx++;continue;
@@ -1917,7 +1947,7 @@ var GAME=(function(){
   }
 
   /* ---------- step dance ---------- */
-  function travel(per){return Math.max(1400,Math.min(2300,per*3.5));}
+  function travel(per){var t=Math.max(1400,Math.min(2300,per*3.5));return mode==="keys"?t*1.3:t;}   /* the highway scrolls slower: more time to read seven lanes */
   function makeNotes(now,bt){
     if(rnd&&rnd.chart){feedRound(now,bt);return;}
     /* free play: no new steps until the music has a beat to follow (talking, a quiet intro, silence) */
@@ -1941,6 +1971,7 @@ var GAME=(function(){
       var onBeat=((k%2)+2)%2===0,p;
       /* on the beat most of the time; off-beat steps join in as your combo grows (fewer at fast tempos) */
       if(mode==="aim"){if(t<swoopEnd+120)continue;if(!onBeat&&(bt.bpm>110||combo<10))continue;p=onBeat?(bt.bpm>150?0.6:0.8):0.3;}
+      else if(mode==="keys"){if(!onBeat&&(combo<20||bt.bpm>120))continue;p=onBeat?(bt.bpm>140?0.6:0.78):0.25;}
       else if(onBeat)p=bt.bpm>150?0.7:0.86;
       else p=bt.bpm>150?(combo>=25?0.12:0):bt.bpm<95?(combo>=4?0.42:0.15):(combo>=8?0.26:0);
       /* louder music, more steps: quiet passages thin out, loud ones fill in the off-beats */
@@ -1948,7 +1979,8 @@ var GAME=(function(){
       if(onBeat)p*=0.5+0.6*I;else p=I<0.35?0:Math.min(0.7,p*(0.4+1.6*I)+(I>0.75&&bt.bpm<=150?0.2:0));
       if(Math.random()>p)continue;
       var lane;
-      if(mode==="keys"){keyCur+=[-2,-1,-1,1,1,2][Math.floor(Math.random()*6)];if(keyCur<0)keyCur=-keyCur;if(keyCur>6)keyCur=12-keyCur;lane=keyCur;}   /* a hand walking the keys */
+      if(mode==="keys"){   /* a hand walking the keys, one at a time; the outer keys (A, J) once you've a combo going */
+        var klo=combo>=15?0:1,khi=combo>=15?6:5;keyCur+=Math.random()<0.5?-1:1;if(keyCur<klo)keyCur=klo+1;if(keyCur>khi)keyCur=khi-1;lane=keyCur;}
       else do{lane=Math.floor(Math.random()*4);}while(lane===prevLane&&lane===prevLane2);
       prevLane2=prevLane;prevLane=lane;
       /* free play: now and then a hold of two beats, once you've got a combo going */
@@ -1965,7 +1997,7 @@ var GAME=(function(){
       }
       notes.push(nn);
       /* note highway: a chord now and then on loud beats, once you're on a roll */
-      if(mode==="keys"&&onBeat&&!hold&&combo>=15&&I>0.65&&Math.random()<0.15)notes.push({t:t,lane:lane+3<=6?lane+3:lane-3,x:0,y:0,j:"",jt:0,hold:0});
+      if(mode==="keys"&&onBeat&&!hold&&combo>=25&&I>0.75&&Math.random()<0.1)notes.push({t:t,lane:lane+2<=6?lane+2:lane-2,x:0,y:0,j:"",jt:0,hold:0});
     }
   }
   function press(dir){
@@ -1979,7 +2011,7 @@ var GAME=(function(){
     var now=performance.now(),bestN=null,bd=1e9;
     for(var i=0;i<notes.length;i++){var n=notes[i];if(n.j||n.lane!==lane)continue;var d=Math.abs(n.t-now);if(d<bd){bd=d;bestN=n;}}
     flash[lane]=now;laneDown[lane]=true;
-    if(!bestN||bd>HIT[2][0])return;                 /* nothing close enough: no penalty for a stray tap */
+    if(!bestN||bd>win(2))return;                    /* nothing close enough: no penalty for a stray tap */
     grade(bestN,bd,now);
     if(bestN.hold>0){bestN.holding=true;bestN.j="";bestN.headJ=judge;}          /* a hold: keep it down until the tail ends */
     setPose(hitPose,true);sendPose(true);
@@ -2011,7 +2043,7 @@ var GAME=(function(){
     judge=why||"LET GO";judgeT=now;judgeCol="#E05050";hype=Math.max(0,hype-0.08);foot();
   }
   function grade(n,bd,now){
-    for(var i=0;i<HIT.length;i++)if(bd<=HIT[i][0]){
+    for(var i=0;i<HIT.length;i++)if(bd<=win(i)){
       n.j=HIT[i][1];n.jt=now;combo++;hits++;if(combo>best)best=combo;
       score+=Math.round(HIT[i][2]*(1+Math.floor(combo/10)*0.1)*(onFire?2:1));   /* big moments score double */
       judge=HIT[i][1];judgeT=now;judgeCol=HIT[i][3];hype=Math.min(1,hype+[0.035,0.025,0.012][i]);return;
@@ -2023,7 +2055,7 @@ var GAME=(function(){
     /* anything that got past unhit is a miss, and a miss ends the combo */
     var missed=false;
     if(mode==="aim")followSwoops(now);
-    for(var i=0;i<notes.length;i++){var n=notes[i];if(!n.j&&!n.holding&&!n.sliding&&!n.headJ&&now-n.t>HIT[2][0]){n.j="MISS";n.jt=now;misses++;missed=true;}}
+    for(var i=0;i<notes.length;i++){var n=notes[i];if(!n.j&&!n.holding&&!n.sliding&&!n.headJ&&now-n.t>win(2)){n.j="MISS";n.jt=now;misses++;missed=true;}}
     if(missed){
       if(combo>0){combo=0;setPose(REST);sendPose(true);}
       judge="MISS";judgeT=now;judgeCol="#E05050";hype=Math.max(0,hype-0.08);foot();
@@ -2383,7 +2415,8 @@ var GAME=(function(){
   function start(m,round){
     if(m!=="free"&&m!=="step"&&m!=="aim"&&m!=="keys")return;
     if(mode)stop(true);
-    rnd=round||null;rndIdx=0;sentScore=-1;clkOff=null;clkJumps=0;swoopEnd=-1e9;finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
+    rnd=round||null;rndIdx=0;sentScore=-1;
+    if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart)rnd.chart=easeChart(rnd.chart,rnd.diff);}clkOff=null;clkJumps=0;swoopEnd=-1e9;finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
     mode=m;myDance=m==="free"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
@@ -2447,7 +2480,7 @@ var GAME=(function(){
       following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
       handles:mode==="free"?floorHandles():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
+  return{diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
 })();
 
 /* ============================================================
@@ -2584,7 +2617,8 @@ var ROUND=(function(){
     clearTimeout(hideT);hideT=null;
   }
   function hide(){var b=box();b.className="";b.textContent="";}
-  function head(){return mk("div","rb-head","Round "+rd.n+" · "+(NAMES[rd.mode]||"Dance"));}
+  function lvl(){return rd.mode==="free"?"":" · "+GAME.DIFFS[GAME.diffOf(rd.n)];}
+  function head(){return mk("div","rb-head","Round "+rd.n+" · "+(NAMES[rd.mode]||"Dance")+lvl());}
   function drawCountdown(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
     show([head(),mk("div","rb-title",rd.title),mk("div","rb-big",left>0?String(left):"GO!"),
@@ -2618,7 +2652,7 @@ var ROUND=(function(){
       var t=top.top[0],mine=-1;for(var i=0;i<top.top.length;i++)if(top.top[i].id===myId)mine=i;
       line="Leading: "+t.name+" "+t.score.toLocaleString()+(mine>=0?"  ·  You: "+ord(mine+1):"")+"  ·  "+top.players+" dancing";
     }else line="Hit the steps: highest score wins.";
-    var nodes=[mk("div","rb-head","Round "+rd.n+" · "+rd.title),mk("div","rb-sub",line)];
+    var nodes=[mk("div","rb-head","Round "+rd.n+" · "+rd.title+lvl()),mk("div","rb-sub",line)];
     if(sat){var j=mk("button","rb-btn","Join the round");j.onclick=function(){join();};nodes.push(j);}
     show(nodes,"strip"+(mine?" myturn":"")+(rd.mode==="free"&&spotOn()>0?" spot":""));
   }
@@ -2670,7 +2704,7 @@ var ROUND=(function(){
     if(rd.phase==="countdown")drawCountdown();
     else if(rd.phase==="vote")drawVote();
   }
-  function join(){if(!active())return;sat=false;GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart});drawPlay();}
+  function join(){if(!active())return;sat=false;GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n});drawPlay();}
   function sitOut(){sat=true;if(active())drawPlay();}
   function cleanChart(c){
     if(!c||!Array.isArray(c.steps)||!Array.isArray(c.beats)||!(c.bpm>=30&&c.bpm<=300))return null;
@@ -2698,7 +2732,7 @@ var ROUND=(function(){
       if(m.spot)setSpot(m.spot);                                /* joined after the spotlight was planned */
       if(first){
         clearInterval(alignT);alignT=setInterval(align,500);
-        if(!sat)GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart});
+        if(!sat)GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n});
         drawPlay();
       }
     }
@@ -2927,7 +2961,7 @@ var CHART=(function(){
       if(pulse(e,bt,i)<PULSE){groove=false;continue;}                 /* talking, a free-time intro, ambient pads: no steady beat, no steps */
       var on=near(e,bt[i],3)/hit;
       if(!groove){if(on<0.3)continue;groove=true;}                    /* after a stretch with no beat, start again on a real hit */
-      var D=E[i]*level+(inPeak[i]?0.25:0),tier=D<0.3?0:D<0.6?1:D<0.85||!inPeak[i]?2:3,bar=i%4===0;
+      var D=E[i]*level+(inPeak[i]?0.12:0),tier=D<0.3?0:D<0.6?1:D<0.85||!inPeak[i]?2:3,bar=i%4===0;
       if(heldLane>=0&&i>=heldUntil)heldLane=-1;                       /* the hold has ended */
       /* during a hold in a calm or normal part, just hold; busier parts keep other arrows coming */
       if(heldLane>=0&&holdQuiet)continue;
