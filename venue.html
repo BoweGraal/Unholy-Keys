@@ -1358,6 +1358,7 @@ function handleMsg(msg){
   }
   else if(t==="note"){
     if(msg.on){
+      var _m=+msg.midi;if(isFinite(_m)&&_m>=0&&_m<=128){lastNoteMidi=_m;lastNoteTime=Date.now();isPerformerPlaying=true;}   /* the lights follow the playing even with your sound off */
       playNoteFromEvent(msg.midi,msg.inst||activeInst,msg.mode||"sustain");
     }else{
       silenceNote();
@@ -4077,7 +4078,8 @@ function crowdAge(){return CROWD.kind?performance.now()-CROWD.t0:1e9;}
 function crowdCheck(){var fx=SHOWFX;if(fx&&fx.crowd&&fx.crowdT&&fx.crowdT!==CROWD.lastT){CROWD.lastT=fx.crowdT;CROWD.kind=fx.crowd;CROWD.t0=performance.now();}}
 /* the effects already set off before you arrived don't replay for you */
 function primeFx(fx){if(!fx)return;CROWD.lastT=fx.crowdT||0;ART.primeFx(fx);}
-window.ukVideoMsg=function(m){handleVideo(m);};          /* for testing: as if the performer sent a video message */
+window.ukVideoMsg=function(m){handleVideo(m);};
+window.ukFollow=function(){return{lastNote:lastNoteMidi,msAgo:Date.now()-lastNoteTime,playing:isPerformerPlaying,h:Math.round(FOLLOW.h*100)/100,range:[Math.round(FOLLOW.lo),Math.round(FOLLOW.hi)]};};          /* for testing: as if the performer sent a video message */
 window.ukJumbo=function(){var e=document.getElementById("bigScreen");return{down:e.classList.contains("on"),video:JT.video,visuals:JT.visuals,rect:JT.rect,k:Math.round(JT.k*100)/100};};
 window.ukCrowd=function(){return{kind:CROWD.kind,ageMs:Math.round(crowdAge())};};
 function drawScene(){
