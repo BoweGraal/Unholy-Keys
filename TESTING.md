@@ -300,7 +300,7 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - A held note keeps moving (the bow, the accordion's bellows, vibrato on the fret hand); letting go relaxes the hands.
 - To check: go live, open the venue, then change instruments and play, low notes and high notes.
 
-**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.4"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
+**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.5"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
 - Everything matching means you have the new build.
 - A red "Out of date: art.js …" line means your browser kept an old copy of a script. Hard refresh with Ctrl+Shift+R (Cmd+Shift+R on a Mac).
 - A red "Server is on v…" line means the server hasn't been redeployed yet (on Render: Manual Deploy, then Deploy latest commit).
@@ -330,6 +330,10 @@ The "Click to capture keys" box is gone. Keys play whenever the page has focus (
 **Free dance on a computer.** Once you've picked a dance (not Freestyle), WASD moves the left dot and the arrow keys the right one. Hold two keys for a diagonal, and let go to spring back. The mouse can still drag either dot. In Freestyle the keys work as before (arrows walk; D F J K raise a limb).
 
 **Shamisen.** Its own art now: a square drum with a cream skin, a thin fretless neck, a peg box with three pegs, and the fan-shaped bachi in the strumming hand striking the skin. The other hand slides along the neck with the pitch.
+
+**Room codes** are 4 letters now (no I, L or O, so they're easy to read out). The venue's code box takes 4 and capitalises as you type.
+
+**Leaving dance practice.** A "✕ Leave practice" button sits in the top-left corner the whole time you're practising. It takes you back to the join screen, which matters in the Home Screen app where there's no address bar.
 
 ## Troubleshooting
 
