@@ -264,6 +264,18 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - "Start a round now" (no song length): 18 s matches and a 25 s final, starting soon after the draw.
 - `npm run crowd` bots play their matches and vote in free dance battles.
 
+**Show effects (performer).** The new **Show** tab in the sidebar controls the venue's effects live, with a preview of what the audience sees.
+- Lights: Auto (follows the music), Party, Strobe, Spotlight (on you), Warm, Cool or Off.
+- Weather: Clear, Rain, Storm (rain, darkness and lightning) or Snow.
+- Fog and Darkness sliders. Darkness leaves pools of light around you and on the stage.
+- Extras: Lasers, Sunset (an open-air sky with a skyline at sunset), a Burning building behind the stage, and Fireworks (automatic volleys). **Launch fireworks** fires a volley now. **Reset all** clears everything.
+- Changes reach the audience straight away while you're live, and anyone who arrives later sees the same show. Your settings are remembered on this browser and sent again when you go live.
+
+**Free dance styles.** In free dance, dance buttons run down both edges of the screen: Freestyle (drag your own hands and feet, as before), Two-step, Hands on knees, Shake it, Running man, Skank, Robot, The worm and Silly.
+- Pick a dance and two dots appear in the middle at the bottom. Drag them with your thumbs (or the mouse) to steer the dance: in Running man the left dot moves you up and down and slides you about; in The worm you slide your thumbs up and down to lift the chest and the hips; in Robot each dot points an arm. Each dance shows a one-line tip. Let go and the dots drift back to the middle while the dance carries on with the beat.
+- Under the dots are moves for that dance, such as Running man's Classic, Fast, Moonwalk and Arms pump, or Silly's Chicken, Sprinkler, YMCA, Floss and Macarena. On a computer, keys Z X C V B pick the moves.
+- Everyone sees your dance (venue and the performer's audience panel), drawn from the dance, the move and the two dots, so it looks the same everywhere.
+
 ## Troubleshooting
 
 | What you see | Likely cause | What to do |

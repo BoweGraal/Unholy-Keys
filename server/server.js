@@ -65,7 +65,7 @@ function liveVideo(r) {
     v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
   return v;
 }
-var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1 };
+var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1 };
 
 /* ── Live sound/visual stream ──
    The performer sends binary packets: byte 0 is the kind (1 = audio, 2 = visuals), the rest is
@@ -364,6 +364,15 @@ function castVote(ws, voter, target, weight) {
   if (rd.votes.size >= r.viewers.size + 1) roundFinish(ws.room);        /* everyone has voted: no need to wait */
 }
 
+/* the show's effects, checked: anything unknown is dropped */
+var FX_LIGHTS = ["auto", "party", "strobe", "spot", "warm", "cool", "off"], FX_WEATHER = ["none", "rain", "storm", "snow"];
+function showFx(f) {
+  if (!f || typeof f !== "object") return null;
+  function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
+  return { lights: FX_LIGHTS.indexOf(f.lights) >= 0 ? f.lights : "auto", fog: lvl(f.fog), lasers: f.lasers ? 1 : 0, dark: lvl(f.dark),
+    weather: FX_WEATHER.indexOf(f.weather) >= 0 ? f.weather : "none", sunset: f.sunset ? 1 : 0, fire: f.fire ? 1 : 0, fireworks: f.fireworks ? 1 : 0,
+    burst: Math.max(0, Math.floor(+f.burst || 0)) % 1e13 };
+}
 /* a character's look: 8 letters/digits (see art.js), or nothing */
 function look(s) { return typeof s === "string" && /^[0-9a-z]{8}$/.test(s) ? s : ""; }
 
@@ -371,7 +380,7 @@ function viewerList(room) {
   var r = rooms[room]; if (!r) return [];
   var out = [];
   r.viewers.forEach(function(v, id) { var o = { id: id, name: v.name, x: v.x, y: v.y, color: v.color, look: v.look || "", dance: v.dance || 0 };
-    if (v.pose && v.dance >= 4) { o.pose = v.pose; o.combo = v.combo || 0; }
+    if (v.pose && v.dance >= 4) { o.pose = v.pose; o.combo = v.combo || 0; if (v.fd) o.fd = v.fd; }
     out.push(o); });
   return out;
 }
@@ -438,7 +447,8 @@ wss.on("connection", function(ws) {
         stream: r.stream || null,
         performer: { name: r.performerName || "Performer", look: r.performerLook || "" },
         round: roundPublic(r),
-        totals: totalsList(r)
+        totals: totalsList(r),
+        fx: r.fx || null
       });
 
       // Notify everyone else
@@ -452,11 +462,18 @@ wss.on("connection", function(ws) {
 
     /* ── Performer broadcasts ── */
     if (ws.role === "performer" && ws.room && rooms[ws.room]) {
-      if (msg.type === "round-start" || msg.type === "round-play" || msg.type === "round-end" || msg.type === "round-vote") { roundMessage(ws, msg); return; }
+      if (msg.type === "round-start" || msg.type === "round-play" || msg.type === "round-end" || msg.type === "round-vote" || msg.type === "round-bvote") { roundMessage(ws, msg); return; }
       if (!PERFORMER_TYPES[msg.type]) return;
       if (msg.type === "state") rooms[ws.room].state = msg;
       if (msg.type === "video") { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); }
       if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
+      if (msg.type === "show-fx") {
+        // the show's effects (lights, fog, lasers, darkness, weather, sunset, fire, fireworks): kept for latecomers
+        var fx = showFx(msg.fx); if (!fx) return;
+        rooms[ws.room].fx = fx;
+        broadcast(ws.room, { type: "show-fx", fx: fx }, ws);
+        return;
+      }
       if (msg.type === "perf-name") {
         rooms[ws.room].performerName = str(msg.name, 24) || "Performer";
         if (look(msg.look)) rooms[ws.room].performerLook = look(msg.look);
@@ -503,9 +520,19 @@ wss.on("connection", function(ws) {
           a.push(Math.max(-320, Math.min(320, n)));
         }
         var combo = Math.max(0, Math.min(9999, Math.floor(+msg.c || 0)));
+        // free dance: which dance (0-8), which of its moves (0-7), and the two control dots (4 numbers, -100..100)
+        var fd = null;
+        if (msg.fd && typeof msg.fd === "object") {
+          var fs = Math.floor(+msg.fd.s), fm = Math.floor(+msg.fd.m), fc = [];
+          if (fs >= 0 && fs <= 8 && fm >= 0 && fm <= 7 && Array.isArray(msg.fd.c) && msg.fd.c.length === 4) {
+            for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
+            if (fc) fd = { s: fs, m: fm, c: fc };
+          }
+        }
         var pv = rooms[ws.room].viewers.get(ws.viewerId);
-        if (pv) { pv.pose = a; pv.combo = combo; var prd = rooms[ws.room].round; if (prd && prd.phase === "play") pv.danced = true; }
-        broadcast(ws.room, { type: "pose", id: ws.viewerId, a: a, c: combo }, ws);
+        if (pv) { pv.pose = a; pv.combo = combo; pv.fd = fd; var prd = rooms[ws.room].round; if (prd && prd.phase === "play") pv.danced = true; }
+        var pm = { type: "pose", id: ws.viewerId, a: a, c: combo }; if (fd) pm.fd = fd;
+        broadcast(ws.room, pm, ws);
         return;
       }
       if (msg.type === "score") {

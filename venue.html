@@ -108,6 +108,33 @@ body.dev-tablet #gameFoot{font-size:13px}
 /* very short screens (a phone held sideways): the leader banner steps aside while you play */
 body.short.gaming #roundBox.strip{display:none}
 body.gaming-free #gameMe,body.battle-match #gameMe{display:none}
+/* free dance controls */
+#fdUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none;user-select:none;-webkit-user-select:none}
+body.gaming-free #fdUI{display:block}
+body.gaming-free #moveHint{display:none}
+#fdUI .fd-col{position:absolute;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:7px}
+#fdUI .fd-l{left:8px}#fdUI .fd-r{right:8px}
+#fdUI button{pointer-events:auto;border:1px solid rgba(255,255,255,.18);background:rgba(21,18,31,.82);color:#fff;border-radius:10px;font:600 12px system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
+#fdUI .fd-col button{width:74px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.1}
+#fdUI .fd-col button .i{font-size:20px}
+#fdUI button.on{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:#fff}
+#fdUI .fd-subs{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 190px)}
+#fdUI .fd-subs button{padding:7px 11px}
+#fdUI .fd-pads{position:absolute;left:50%;transform:translateX(-50%);bottom:64px;display:flex;gap:28px}
+#fdUI .fd-ring{pointer-events:auto;width:118px;height:118px;border-radius:50%;border:2px dashed rgba(255,255,255,.35);background:rgba(10,8,22,.35);position:relative;touch-action:none;cursor:grab}
+#fdUI .fd-knob{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#D354A0 70%);box-shadow:0 0 14px rgba(211,84,160,.8);pointer-events:none}
+#fdUI .fd-ring[data-i="1"] .fd-knob{background:radial-gradient(circle at 35% 35%,#fff,#7F77DD 70%);box-shadow:0 0 14px rgba(127,119,221,.8)}
+#fdUI .fd-help{position:absolute;left:50%;transform:translateX(-50%);bottom:190px;font:600 12px system-ui,sans-serif;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000;text-align:center;max-width:calc(100% - 190px)}
+#fdUI.free .fd-pads,#fdUI.free .fd-subs{display:none}
+body.gaming-free #dpad{display:none}
+@media (max-width:520px){
+  #fdUI .fd-col button{width:62px;font-size:10px;padding:5px 2px}#fdUI .fd-col button .i{font-size:18px}
+  #fdUI .fd-ring{width:104px;height:104px}#fdUI .fd-pads{gap:18px;bottom:60px}
+  #fdUI .fd-subs{max-width:calc(100% - 150px)}#fdUI .fd-subs button{padding:6px 8px;font-size:11px}#fdUI .fd-help{bottom:172px;font-size:11px;max-width:calc(100% - 150px)}
+}
+body.gaming-free #moveCtl{display:none}
+#fdUI .fd-act{flex-direction:row;font-size:11px;padding:5px 2px}
+body.gaming-free #hudBR{display:none}
 #gameFoot{padding:6px 10px 9px;font:600 11px system-ui,sans-serif;color:rgba(255,255,255,.6);text-align:center}
 /* ── Dance rounds: countdown, standings, voting and results (top centre) ── */
 #roundBox{display:none;position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:26;width:min(420px,92vw);box-sizing:border-box;padding:12px 16px;text-align:center;background:rgba(14,11,26,.93);border:1px solid rgba(211,84,160,.55);border-radius:14px;color:#fff;font-family:system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
@@ -214,6 +241,13 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
   <div id="hudBR"></div>
   <div id="perfLeft">Performer has left the stage</div>
   <div id="moveHint">Arrows or WASD to walk &middot; Enter to talk &middot; Space to dance</div>
+  <!-- free dance: dance buttons down both edges, the dance's own moves along the bottom, two control dots in the middle -->
+  <div id="fdUI" aria-label="Free dance controls">
+    <div class="fd-col fd-l"></div><div class="fd-col fd-r"></div>
+    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div></div>
+    <div class="fd-help"></div>
+    <div class="fd-subs"></div>
+  </div>
   <div id="moveCtl">
     <div id="dpad">
       <button data-d="up" aria-label="Walk up">&#9650;</button>
@@ -1082,6 +1116,9 @@ var MAKER=ART.maker(document.getElementById("maker"),myLook,function(L){
   try{localStorage.setItem("uk_look",ART.looks.pack(L));}catch(e){}
 });
 /* a look from the network: 8 letters, or nothing (then dress them in their colour) */
+/* a free dance from the network: {s: dance 1-8, m: move, c: [4 dots, -100..100]} or null */
+function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=8)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
+  var c=f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v)):0;});return{s:s,m:m,c:c};}
 function lookOf(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;name=String(name||"");for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return ART.looks.fromColor(color,h+1);}
 
 if(/[?&]practice\b/.test(location.search))setTimeout(function(){PRACTICE.enter();},0);
@@ -1234,10 +1271,11 @@ function handleMsg(msg){
         var vx=safeNum(v.x,0.5),vy=safeNum(v.y,FLOOR_TOP+0.1);
         viewers[v.id]={name:safeText(v.name,24),x:vx,y:vy,
           tx:vx,ty:vy,color:safeColor(v.color),look:lookOf(v.look,v.color,v.name),
-          bubbleText:null,bubbleTime:0,dance:danceStyle(v.dance),pose:safePose(v.pose),combo:Math.max(0,Math.min(9999,Math.floor(+v.combo||0)))};
+          bubbleText:null,bubbleTime:0,dance:danceStyle(v.dance),pose:safePose(v.pose),fd:safeFd(v.fd),combo:Math.max(0,Math.min(9999,Math.floor(+v.combo||0)))};
       });
     }
     ROUND.setTotals(msg.totals);
+    SHOWFX=msg.fx||null;
     if(msg.round)ROUND.onMsg(msg.round);else ROUND.reset();
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
@@ -1283,10 +1321,11 @@ function handleMsg(msg){
   else if(t==="round-scores"){ROUND.scores(msg);}
   else if(t==="spotlight"){ROUND.setSpot(msg.turns);}
   else if(t==="battle"){ROUND.setBattle(msg);}
+  else if(t==="show-fx"){SHOWFX=msg.fx||null;}
   else if(t==="bscore"){ROUND.bscore(msg);}
   else if(t==="pose"){
     var pv=viewers[msg.id],pp=safePose(msg.a);
-    if(pv&&pp&&msg.id!==myId){pv.pose=pp;pv.combo=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pv.hitT=Date.now();}
+    if(pv&&pp&&msg.id!==myId){var nc=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pv.fd=safeFd(msg.fd);if(!pv.fd||nc>(pv.combo||0))pv.hitT=Date.now();pv.pose=pp;pv.combo=nc;}
   }
   else if(t==="dance"){
     if(viewers[msg.id])viewers[msg.id].dance=danceStyle(msg.style);
@@ -1613,6 +1652,9 @@ document.addEventListener("keydown",function(e){
   if(GAME.mode==="step"&&d&&e.code.indexOf("Arrow")===0){e.preventDefault();if(!e.repeat)GAME.press(d);return;}   /* arrows are dance steps */
   if(GAME.mode==="step"&&d){e.preventDefault();if(!e.repeat)GAME.press(d);return;}
   if(GAME.mode==="free"){
+    /* 1-9 pick a dance; Z X C V B its moves */
+    var dn=/^(Digit|Numpad)([1-9])$/.exec(e.code);if(dn){e.preventDefault();GAME.fdPick(+dn[2]-1);return;}
+    var sk="KeyZ KeyX KeyC KeyV KeyB".split(" ").indexOf(e.code);if(sk>=0&&GAME.fStyle>0&&sk<ART.DANCES[GAME.fStyle].subs.length){e.preventDefault();GAME.fdSub(sk);return;}
     var lk=LIMBKEY[e.code];
     if(lk!==undefined){e.preventDefault();if(!e.repeat)GAME.limbKey(lk,true);return;}
     if(d&&e.code.indexOf("Arrow")!==0)return;                                                  /* letters are limbs here; the arrow keys still walk */
@@ -1879,17 +1921,67 @@ var GAME=(function(){
   }
 
   function me(){return (myId&&viewers[myId])||null;}
-  function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;if(hit)m.hitT=Date.now();}
+  function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;m.fd=mode==="free"?fdState():null;if(hit)m.hitT=Date.now();}
   function sendPose(force){
-    var now=Date.now(),msg=pose.map(function(a){return Math.round(a*100);});
-    var key=msg.join(",")+"|"+combo;
+    var now=Date.now(),fd=mode==="free"?fdState():null,msg=pose.map(function(a){return Math.round(a*100);});
+    if(fd){var rg=ART.dance(fd.s,fd.m,fCtl,beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
+    var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(","):msg.join(","))+"|"+combo;
     if(key===lastSent&&!force)return;
     if(now-lastSend<90&&!force){if(!sendTimer)sendTimer=setTimeout(function(){sendTimer=null;sendPose();},95-(now-lastSend));return;}
     lastSend=now;lastSent=key;
-    wsSend({type:"pose",a:msg,c:combo});
+    var pm={type:"pose",a:msg,c:combo};if(fd)pm.fd=fd;
+    wsSend(pm);
   }
   function setPose(p,hit){pose=p.slice();applyToMe(hit);}
 
+  /* ---------- free dance styles (see ART.dance) ----------
+     A dance button picks the dance; its own move buttons add variety; the two dots steer it (each -1..1).
+     Freestyle (0) is the grab-your-limbs dance below. */
+  var fStyle=0,fSub=0,fCtl=[0,0,0,0],fHeld=[null,null],fdBuilt=false;
+  function fdState(){return fStyle>0?{s:fStyle,m:fSub,c:fCtl.map(function(v){return Math.round(v*100);})}:null;}
+  function beatPos(){var b=BEAT.get(),now=performance.now();return b.known&&b.period>0?(now-b.t0)/b.period:now/500;}
+  function fdBuild(){
+    if(fdBuilt)return;fdBuilt=true;
+    var ui=document.getElementById("fdUI"),L=ui.querySelector(".fd-l"),R=ui.querySelector(".fd-r");
+    function act(label,fn,title){var b=document.createElement("button");b.className="fd-act";b.innerHTML=label;b.title=title;b.onclick=function(e){e.stopPropagation();b.blur();fn();};return b;}
+    R.appendChild(act("&#10005; Stop",function(){stop();},"Stop dancing (Space)"));
+    R.appendChild(act("&#128172; Talk",function(){var t=document.getElementById("talkBtn");if(t)t.click();},"Say something (Enter)"));
+    ART.DANCES.forEach(function(d,i){
+      var b=document.createElement("button");b.setAttribute("data-s",i);b.title=d.name+(i?"  ("+(i+1)+")":"  (1)");
+      b.innerHTML='<span class="i">'+d.icon+'</span>'+d.name;
+      b.onclick=function(e){e.stopPropagation();b.blur();fdPick(i);};
+      (i<5?L:R).appendChild(b);
+    });
+    Array.prototype.forEach.call(ui.querySelectorAll(".fd-ring"),function(ring){
+      var i=+ring.getAttribute("data-i");
+      function at(e){var r=ring.getBoundingClientRect(),rad=r.width/2,x=(e.clientX-r.left-rad)/rad,y=(e.clientY-r.top-rad)/rad,d=Math.hypot(x,y);if(d>1){x/=d;y/=d;}fCtl[i*2]=x;fCtl[i*2+1]=y;fdShow();applyToMe();sendPose();}
+      ring.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();fHeld[i]=e.pointerId;try{ring.setPointerCapture(e.pointerId);}catch(x){}at(e);});
+      ring.addEventListener("pointermove",function(e){if(fHeld[i]===e.pointerId)at(e);});
+      ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){ring.addEventListener(ev,function(e){if(fHeld[i]===e.pointerId)fHeld[i]=null;});});
+    });
+  }
+  function fdPick(i){fStyle=i;fSub=0;fCtl=[0,0,0,0];if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
+  function fdSub(k){fSub=k;fdRender();applyToMe();sendPose(true);}
+  function fdRender(){
+    fdBuild();
+    var ui=document.getElementById("fdUI"),d=ART.DANCES[fStyle];
+    ui.classList.toggle("free",fStyle===0);
+    Array.prototype.forEach.call(ui.querySelectorAll(".fd-col button[data-s]"),function(b){b.classList.toggle("on",+b.getAttribute("data-s")===fStyle);});
+    var sb=ui.querySelector(".fd-subs");sb.textContent="";
+    d.subs.forEach(function(nm,k){var b=document.createElement("button");b.textContent=nm;b.className=k===fSub?"on":"";b.title=nm+"  ("+"ZXCVB".charAt(k)+")";b.onclick=function(e){e.stopPropagation();b.blur();fdSub(k);};sb.appendChild(b);});
+    ui.querySelector(".fd-help").textContent=fStyle?d.help:"Freestyle: drag your hands and feet, or tap the floor to walk. Pick a dance on the sides for more.";
+    fdShow();
+  }
+  function fdShow(){
+    var rings=document.querySelectorAll("#fdUI .fd-ring");
+    for(var i=0;i<rings.length;i++){var r=rings[i],rad=r.offsetWidth/2,k=r.firstChild;k.style.transform="translate("+(fCtl[i*2]*rad*0.78)+"px,"+(fCtl[i*2+1]*rad*0.78)+"px)";}
+  }
+  /* let go of a dot and it drifts back to the middle */
+  function fdSpring(){
+    var moved=false;
+    for(var i=0;i<2;i++)if(fHeld[i]===null&&(fCtl[i*2]||fCtl[i*2+1])){fCtl[i*2]*=0.82;fCtl[i*2+1]*=0.82;if(Math.abs(fCtl[i*2])<0.02&&Math.abs(fCtl[i*2+1])<0.02){fCtl[i*2]=0;fCtl[i*2+1]=0;}moved=true;}
+    if(moved){fdShow();applyToMe();sendPose();}
+  }
   /* ---------- free dance ----------
      You dance right on the floor (or centre stage on your spotlight turn), where you can still see the
      stage. Grab a hand or foot on your own character and drag it; tap anywhere else on the floor to walk there. */
@@ -1916,7 +2008,7 @@ var GAME=(function(){
   function floorHandles(){var r=floorRig();return r?r.H.map(function(h){return [Math.round(h[0]),Math.round(h[1])];}):null;}
   /* a finger went down on the floor: if it's on your character, grab the hand or foot it's nearest */
   function floorGrab(pid,p){
-    if(mode!=="free")return false;
+    if(mode!=="free"||fStyle>0)return false;
     var r=floorRig();if(!r)return false;
     var sp=r.sp,reach=sp.s*14+26;
     if(Math.abs(p[0]-sp.x)>reach||p[1]<sp.y-sp.s*20-20||p[1]>sp.y+sp.s*12+26)return false;
@@ -1941,7 +2033,7 @@ var GAME=(function(){
   function floorRelease(pid){var had=grab[pid]!==undefined;delete grab[pid];return had;}
   /* the handles on your character, drawn on the venue */
   function drawHandles(c){
-    if(mode!=="free")return;
+    if(mode!=="free"||fStyle>0)return;
     var r=floorRig();if(!r)return;
     var m=me(),col=m?m.color:"#7F77DD",rad=Math.max(7,r.sp.s*2.4),keys=["D","K","F","J"],pc=!("ontouchstart" in window);
     c.save();
@@ -2428,7 +2520,7 @@ var GAME=(function(){
   function tick(){
     if(!mode){raf=0;return;}
     var now=performance.now();
-    if(mode==="free"){freeTick();raf=requestAnimationFrame(tick);return;}
+    if(mode==="free"){freeTick();fdSpring();raf=requestAnimationFrame(tick);return;}
     size();
     if(mode==="aim")drawAim(now);else if(mode==="keys")drawKeys(now);else drawStep(now);
     drawMe();
@@ -2439,7 +2531,7 @@ var GAME=(function(){
   function start(m,round){
     if(m!=="free"&&m!=="step"&&m!=="aim"&&m!=="keys")return;
     if(mode)stop(true);
-    rnd=round||null;rndIdx=0;sentScore=-1;
+    rnd=round||null;rndIdx=0;sentScore=-1;fCtl=[0,0,0,0];
     if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart)rnd.chart=easeChart(rnd.chart,rnd.diff);}clkOff=null;clkJumps=0;swoopEnd=-1e9;finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
     mode=m;myDance=m==="free"?4:5;
@@ -2451,6 +2543,7 @@ var GAME=(function(){
     document.getElementById("gamePanel").classList.toggle("on",m!=="free");
     lastFit=0;DEVICE.fit();
     document.getElementById("gameTitle").textContent=m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?"🎹 Note highway":"⬆️ Step dance";
+    if(m==="free")setTimeout(fdRender,0);
     document.getElementById("moveHint").textContent=m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
@@ -2502,9 +2595,9 @@ var GAME=(function(){
     return{mode:mode,letGo:letGos,round:!!rnd,chartSteps:rnd&&rnd.chart?rnd.chart.steps.length:0,bigMoments:rnd&&rnd.chart&&rnd.chart.peaks?rnd.chart.peaks.map(function(p){return [Math.round(p[0]/100)/10,Math.round(p[1]/100)/10];}):[],onFire:onFire,songPos:rnd?Math.round(ROUND.pos()):null,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
       upcoming:notes.filter(function(n){return !n.j&&!n.holding&&!n.headJ;}).map(function(n){var o={dir:laneName(n.lane),inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};if(n.hold>0)o.holdMs=Math.round(n.hold);if(n.x2!==undefined){o.swoop=true;o.cx=Math.round(n.cx*CW);o.cy=Math.round(n.cy*CH);o.x2=Math.round(n.x2*CW);o.y2=Math.round(n.y2*CH);}return o;}),holding:notes.filter(function(n){return n.holding;}).map(function(n){return{dir:laneName(n.lane),leftMs:Math.round(n.t+n.hold-now)};}),
       following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
-      handles:mode==="free"?floorHandles():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
+      handles:mode==="free"?floorHandles():null,fd:mode==="free"?fdState():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
+  return{get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get score(){return score;},REST:REST};
 })();
 
 /* ============================================================
@@ -3757,7 +3850,7 @@ function drawBattle(bp,py){
     if(v){
       var ps=e.id===myId&&GAME.mode==="free"?GAME.pose:(v.poseCur||v.pose||GAME.REST);
       if(!v.look)v.look=lookOf(null,v.color,v.name);
-      drawAvatar(x,py,v.color,e.name,3,false,false,false,4,v.seed||0,e.id===myId,ps,now-(v.hitT||0),v.look);
+      drawAvatar(x,py,v.color,e.name,3,false,false,false,4,v.seed||0,e.id===myId,ps,now-(v.hitT||0),v.look,e.id===myId?GAME.fd:(v.dance===4?v.fd:null));
     }
     /* score (or votes) under the name; the one ahead in gold */
     if(bp.into>=0){var ahead=q[2]>q[3];ART.pixText(ctx,mode==="free"?q[2]+(q[2]===1?" VOTE":" VOTES"):String(q[2]),x,py+12*3+22,px,ahead?"#F5D03C":"#EDEDF5","center",0.85);}
@@ -3823,7 +3916,7 @@ function limbJoints(x,y,s,bob){return ART.joints(x,y,s,bob);}
 var LIMB_LEN=ART.LIMB;
 /* A character (see ART.drawChar in art.js) with its body centre at (x,y), each art pixel `scale` screen
    pixels. Dances, walks and poses set the limb angles; the name goes under the feet. */
-function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge,look){
+function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge,look,fd){
   var s=scale||1,cx=x,cy=y;
   /* dance timing: faster while the performer is playing; seed keeps dancers out of lockstep */
   var dT=Date.now()*(isPerformerPlaying?0.0105:0.0075)+(seed||0);
@@ -3834,23 +3927,29 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     var gl=ctx.createRadialGradient(cx,cy-6*s,2,cx,cy-6*s,22*s);gl.addColorStop(0,hexA(color,0.9));gl.addColorStop(1,hexA(color,0));
     ctx.fillStyle=gl;ctx.beginPath();ctx.arc(cx,cy-6*s,22*s,0,6.3);ctx.fill();ctx.restore();
   }
-  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false;
+  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0;
   if(moving&&!dance){var wsw=Math.sin(Date.now()*0.012);bob=-Math.abs(Math.cos(Date.now()*0.012))*1.5*s;legL=wsw*0.45;legR=-legL;armL=0.15-wsw*0.55;armR=-0.15-wsw*0.55;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*6*s;armL=2.7+Math.sin(dT*2)*0.35;armR=-armL;legL=Math.sin(dT*2)*0.25;legR=-legL;}
   else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*2*s;cx+=Math.sin(dT)*4*s;var sw=Math.sin(dT);armL=1.9+sw*0.9;armR=-1.9+sw*0.9;legL=sw*0.2;legR=sw*0.2;}
   else if(dance===3){var jp=Math.abs(Math.sin(dT));bob=-Math.pow(jp,3)*11*s;armL=1.5+jp*1.1;armR=-armL;legL=jp*0.5;legR=-legL;mouth=jp>0.7;}
   else if(dance>=4){
     /* dance games: limbs where the dancer put them, a hop on every beat, a bigger one when a step lands */
+    if(fd&&dance===4){
+      /* a free dance style: worked out here from the dance, its move and the two dots (the same on every screen) */
+      var rg=ART.dance(fd.s,fd.m,[fd.c[0]/100,fd.c[1]/100,fd.c[2]/100,fd.c[3]/100],GAME.beatPos());
+      armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;
+    }else{
     var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];
     bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
     if(hitAge<220){bob-=(1-hitAge/220)*5*s;mouth=true;}
+    }
   }
   if(isPerf){
     /* at the keyboard: hands on the keys, playing */
     var pl=isPlaying?Math.sin(Date.now()*0.02):0;
     armL=-0.55+pl*0.18;armR=0.55+pl*0.18;mouth=isPlaying&&Date.now()-lastNoteTime<400;
   }
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
   /* name under the feet (stays put while dancing); yours is gold */
   if(name){
     var fs=Math.min(18,Math.round(11*Math.min(s,2.4)));
@@ -3924,12 +4023,26 @@ function roundRect(c,x,y,w,h,r){
 /* ============================================================
    DRAWING: STAGE & FLOOR
    ============================================================ */
+/* the performer's show effects (lights, fog, lasers, darkness, weather, sunset, fire, fireworks); see art.js */
+var SHOWFX=null;
+window.ukShowFx=function(f){if(f!==undefined)SHOWFX=f;return SHOWFX;};
 /* the stage and the dance floor (art.js), moving with the beat and the performer's notes */
 function drawScene(){
-  var nAge=Date.now()-lastNoteTime;
-  ART.scene(ctx,W,H,{stageBottom:STAGE_BOTTOM,floorBottom:FLOOR_BOTTOM},{
+  var nAge=Date.now()-lastNoteTime,fx=SHOWFX||{},lay={stageBottom:STAGE_BOTTOM,floorBottom:FLOOR_BOTTOM};
+  ART.scene(ctx,W,H,lay,{
     now:Date.now(),phase:BEAT.phase(performance.now()),level:BEAT.level(),playing:isPerformerPlaying||(typeof PRACTICE!=="undefined"&&PRACTICE.on),
-    hue:(((lastNoteMidi%12)+12)%12)*30,hueA:isPerformerPlaying&&nAge<1500?0.1*(1-nAge/1500):0});
+    hue:(((lastNoteMidi%12)+12)%12)*30,hueA:isPerformerPlaying&&nAge<1500?0.1*(1-nAge/1500):0,
+    lights:fx.lights,fog:fx.fog,spotX:performer.x*W+perfShift});
+  if(SHOWFX)ART.fxBack(ctx,W,H,lay,SHOWFX,{now:Date.now()});
+}
+/* in front of everything: fog, weather, lasers, darkness (light pools on the performer, the spotlights and you), fireworks */
+function drawFxFront(bp,feat,perfPx,perfPy){
+  if(!SHOWFX)return;
+  var holes=[{x:perfPx,y:perfPy-10,r:Math.max(90,W*0.12)}],m=myId&&viewers[myId];
+  if(bp){holes.push({x:bp.xa,y:perfPy,r:110});holes.push({x:bp.xb,y:perfPy,r:110});}
+  if(feat)holes.push({x:W/2,y:perfPy,r:120});
+  if(m)holes.push({x:m.x*W,y:m.y*H,r:60});
+  ART.fxFront(ctx,W,H,{stageBottom:STAGE_BOTTOM,floorBottom:FLOOR_BOTTOM},SHOWFX,{now:Date.now(),phase:BEAT.phase(performance.now()),holes:holes});
 }
 function drawStage(){
   var sy=STAGE_TOP*H, sh=(STAGE_BOTTOM-STAGE_TOP)*H;
@@ -4088,7 +4201,7 @@ function renderLoop(){
     var fv=viewers[feat.id],fk=Math.min(1,feat.into/300,feat.left/300);
     var fp=feat.id===myId&&GAME.mode==="free"?GAME.pose:(fv.poseCur||fv.pose||(GAME.REST));
     ctx.save();ctx.globalAlpha=Math.max(0.15,fk);
-    drawAvatar(W/2,perfPy,fv.color,"\u2605 "+fv.name,3,false,false,false,4,fv.seed||0,feat.id===myId,fp,now-(fv.hitT||0),fv.look);
+    drawAvatar(W/2,perfPy,fv.color,"\u2605 "+fv.name,3,false,false,false,4,fv.seed||0,feat.id===myId,fp,now-(fv.hitT||0),fv.look,feat.id===myId?GAME.fd:fv.fd);
     ctx.restore();
   }
   if(bp)drawBattle(bp,perfPy);
@@ -4128,7 +4241,7 @@ function renderLoop(){
     if((feat||bp)&&!onStage){ctx.save();ctx.globalAlpha=0.55;}
     var freeMe=ids[i]===myId&&GAME.mode==="free";
     if(!v.look)v.look=lookOf(null,v.color,v.name);
-    if(!bigMe&&!onStage)drawAvatar(vx,vy,v.color,v.name,freeMe?GAME.freeS():2,false,false,moving,v.dance,v.seed,ids[i]===myId,freeMe?GAME.pose:vp,now-(v.hitT||0),v.look);
+    if(!bigMe&&!onStage)drawAvatar(vx,vy,v.color,v.name,freeMe?GAME.freeS():2,false,false,moving,v.dance,v.seed,ids[i]===myId,freeMe?GAME.pose:vp,now-(v.hitT||0),v.look,freeMe?GAME.fd:v.fd);
     if((feat||bp)&&!onStage)ctx.restore();
     if(v.msT&&!bigMe&&now-v.msT<1700)STREAK.pop(ctx,vx,vy-50,v.msN,now-v.msT,1);
     else if(v.dance===5&&v.combo>=3&&!bigMe){
@@ -4156,6 +4269,7 @@ function renderLoop(){
 
   /* where you tapped to walk to */
   if(walkMark){var wa=1-(performance.now()-walkMark.t)/600;if(wa>0){ctx.save();ctx.globalAlpha=wa*0.8;ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(walkMark.x,walkMark.y,10+(1-wa)*14,(10+(1-wa)*14)*0.45,0,0,6.3);ctx.stroke();ctx.restore();}else walkMark=null;}
+  drawFxFront(bp,feat,perfPx,perfPy);
   GAME.drawHandles(ctx);
 
   requestAnimationFrame(renderLoop);
