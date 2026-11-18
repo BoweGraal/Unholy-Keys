@@ -2846,9 +2846,25 @@ var ROUND=(function(){
   }
   function myName(){return myId&&viewers[myId]?viewers[myId].name:"";}
   function myTotal(){var n=myName().toLowerCase();for(var i=0;i<totals.length;i++)if(totals[i].name.toLowerCase()===n)return{pts:totals[i].pts,place:i+1};return null;}
+  /* update the box in place when only text, colours or handlers changed: it redraws 4 times a second, and
+     replacing a button between press and release would swallow the tap */
+  function same(o,n){
+    if(o.nodeType!==n.nodeType||o.nodeName!==n.nodeName||o.childNodes.length!==n.childNodes.length)return false;
+    for(var i=0;i<o.childNodes.length;i++)if(!same(o.childNodes[i],n.childNodes[i]))return false;
+    return true;
+  }
+  function morph(o,n){
+    if(o.nodeType===3){if(o.nodeValue!==n.nodeValue)o.nodeValue=n.nodeValue;return;}
+    if(o.className!==n.className)o.className=n.className;
+    if(o.style.cssText!==n.style.cssText)o.style.cssText=n.style.cssText;
+    o.onclick=n.onclick;
+    for(var i=0;i<o.childNodes.length;i++)morph(o.childNodes[i],n.childNodes[i]);
+  }
   function show(nodes,cls){
-    var b=box();b.textContent="";b.className="on "+(cls||"");
-    nodes.forEach(function(n){if(n)b.appendChild(n);});
+    var b=box();nodes=nodes.filter(Boolean);b.className="on "+(cls||"");
+    var keep=b.childNodes.length===nodes.length&&nodes.every(function(n,i){return same(b.childNodes[i],n);});
+    if(keep)nodes.forEach(function(n,i){morph(b.childNodes[i],n);});
+    else{b.textContent="";nodes.forEach(function(n){b.appendChild(n);});}
     clearTimeout(hideT);hideT=null;
   }
   function hide(){var b=box();b.className="";b.textContent="";}
