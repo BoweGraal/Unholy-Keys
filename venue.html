@@ -1928,8 +1928,31 @@ var GAME=(function(){
   /* thin a round's chart for its difficulty (Hard is the chart as analysed)
      Easy: about one note a beat at most, no doubles. Normal: no notes closer than half a beat, except in the
      big moments; doubles only in the big moments. */
+  /* Touch screens: two thumbs. Never more than two presses at once (a held arrow counts: while one is held,
+     only single arrows), nothing faster than half beats, and steps that fall between the beats are dropped so
+     the chart sits on the groove. Applied at every level, on top of the easing below. */
+  function touchScreen(){return !!(window.matchMedia&&matchMedia("(pointer: coarse)").matches)||!!window.ukForceTouch;}
+  function thumbChart(chart){
+    if(!chart||!chart.steps)return chart;
+    var per=60000/(chart.bpm||120),bt=chart.beats||[],out=[],last=-1e9,holdEnd=-1e9,bi=0;
+    function offGrid(ms){if(bt.length<4)return 0;while(bi<bt.length-1&&bt[bi+1]<=ms)bi++;var b0=bt[bi],b1=bi+1<bt.length?bt[bi+1]:b0+per,g=b1-b0||per,f=(ms-b0)/g;
+      var d=Math.min(Math.abs(f),Math.abs(f-0.5),Math.abs(f-1));return d*g;}                     /* ms from the nearest beat or half beat */
+    for(var i=0;i<chart.steps.length;i++){
+      var s=chart.steps[i],t=s[0],m=s[1],hold=s.length>2?+s[2]||0:0;
+      if(t-last<Math.max(per*0.48,280))continue;                      /* no faster than half beats, and never under 280 ms (fast or double-time songs) */
+      if(offGrid(t)>Math.max(45,per*0.12))continue;                   /* between the beats: leave it out */
+      var holding=t<holdEnd-30;
+      if(holding||m&(m-1)){if(holding||hold){m=m&(-m);}}             /* during a hold, or a double that holds: one arrow */
+      if(holding&&hold)hold=0;                                        /* no new hold while one is held */
+      if(m&(m-1)&&!holding){var n=0;for(var q=0;q<4;q++)if(m&(1<<q))n++;if(n>2){var lb=m&(-m),rest=m&~lb;m=lb|(rest&(-rest));}}   /* at most two together */
+      out.push(hold?[t,m,hold]:[t,m]);last=t;if(hold)holdEnd=t+hold;
+    }
+    var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;
+  }
   function easeChart(chart,diff){
-    if(!chart||diff>=2)return chart;
+    if(!chart)return chart;
+    if(touchScreen())chart=thumbChart(chart);
+    if(diff>=2)return chart;
     var per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9;
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
     for(var i=0;i<chart.steps.length;i++){
@@ -1941,7 +1964,7 @@ var GAME=(function(){
     }
     var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;
   }
-  window.ukEase=easeChart;window.ukDiffOf=diffOf;          /* for testing the difficulty levels */
+  window.ukEase=easeChart;window.ukDiffOf=diffOf;window.ukThumb=thumbChart;          /* for testing the difficulty levels */
   function keyLanes(chart,diff){
     var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],c=3,out=[],last=-1e9,D=[-1,-1,1,1];
     if(diff===undefined)diff=1;
@@ -4074,7 +4097,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.29.0",SERVER_VERSION="";
+var PAGE_VERSION="1.29.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}

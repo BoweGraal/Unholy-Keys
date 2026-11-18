@@ -300,13 +300,21 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - A held note keeps moving (the bow, the accordion's bellows, vibrato on the fret hand); letting go relaxes the hands.
 - To check: go live, open the venue, then change instruments and play, low notes and high notes.
 
-**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.29.0"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
+**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.29.1"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
 - Everything matching means you have the new build.
 - A red "Out of date: art.js …" line means your browser kept an old copy of a script. Hard refresh with Ctrl+Shift+R (Cmd+Shift+R on a Mac).
 - A red "Server is on v…" line means the server hasn't been redeployed yet (on Render: Manual Deploy, then Deploy latest commit).
 - The number is set in five places, which should always match: `PAGE_VERSION` in index.html and venue.html, `VERSION` in art.js and instruments.js, and `VERSION` in server/server.js.
 
 The "Click to capture keys" box is gone. Keys play whenever the page has focus (click anywhere on it first).
+
+**Phone play screen (performer, Mobile button).** On the right, a circle in four quadrants (up, right, down, left): tap one to play it straight away, and slide round to switch note once you're past the line. On the left, five zones: hold one for a higher group of notes (zones 2 to 6, the same groups as Space, D, Space+D, Space+E and Space+3), and with no finger on a zone you get the root group. You can slide your thumb between zones while a note holds. Along the top: Oct − / Oct +, the instrument button (your 9 hotkey favourites, tap one to switch) and fullscreen. Tap the mode under the note to change how notes play.
+
+**Fullscreen.** There's a Fullscreen button at the top right of the main page, in jam mode's toolbar and in the phone screen. iPhones can't make a web page fullscreen, so on an iPhone the button explains how: Share, then Add to Home Screen, then open it from the home screen.
+
+**Home Screen app (iPhone).** If the venue gets squeezed into the top of the screen with empty space below (usually after the keyboard closes), it now fixes itself within half a second.
+
+**Charts.** Rap verses, where the vocals sit over a quiet beat, now get steps; songs no longer go empty partway through. On touch screens: never more than two presses at once (while an arrow is held, only single arrows), nothing faster than half beats or 280 ms, and steps sit on the beat.
 
 ## Troubleshooting
 
