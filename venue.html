@@ -4450,16 +4450,18 @@ var LIMB_LEN=ART.LIMB;
    pixels. Dances, walks and poses set the limb angles; the name goes under the feet. */
 /* the performer holding the instrument they picked, playing the notes as they come (instruments.js) */
 var PERF={kind:"synth",id:null,off:0,n:0};
-function perfKind(){if(PERF.id!==activeInst){var ins=findInst(activeInst);PERF.id=activeInst;PERF.kind=ART.INST.kindOf(activeInst,ins&&ins.l);}return PERF.kind;}
+function perfKind(){if(PERF.id!==activeInst){var ins=findInst(activeInst);PERF.id=activeInst;PERF.kind=ART.INST.kindOf(activeInst,ins&&ins.l);PERF.band=ART.INST.section(activeInst,ins&&ins.l);}return PERF.kind;}
 function drawPerformer(x,y){
   var s=3,now=Date.now();
   if(isPerformerPlaying){var pulse=0.35+0.25*Math.sin(now*0.008);ctx.save();ctx.globalAlpha=pulse;var gl=ctx.createRadialGradient(x,y-6*s,2,x,y-6*s,22*s);gl.addColorStop(0,hexA(performer.color,0.9));gl.addColorStop(1,hexA(performer.color,0));ctx.fillStyle=gl;ctx.beginPath();ctx.arc(x,y-6*s,22*s,0,6.3);ctx.fill();ctx.restore();}
-  ART.INST.draw(ctx,x,y,s,performer.look||ART.looks.fromColor(performer.color,1),perfKind(),{midi:lastNoteMidi,on:isPerformerPlaying,t0:lastNoteTime,off:PERF.off,now:now,n:PERF.n});
+  var _pk=perfKind(),_ps={midi:lastNoteMidi,on:isPerformerPlaying,t0:lastNoteTime,off:PERF.off,now:now,n:PERF.n};
+  if(PERF.band)ART.INST.drawBand(ctx,x,y,s,PERF.band,_ps,Math.min(x,W-x)-8);   /* a choir or a section plays along around the performer */
+  ART.INST.draw(ctx,x,y,s,performer.look||ART.looks.fromColor(performer.color,1),_pk,_ps);
   if(performer.name){ctx.font="bold 18px 'Segoe UI',system-ui,sans-serif";ctx.textAlign="center";ctx.textBaseline="top";var ny=y+12*s+3+6*s;ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,0.75)";ctx.strokeText(performer.name,x,ny);ctx.fillStyle="#fff";ctx.fillText(performer.name,x,ny);ctx.textBaseline="alphabetic";}
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.30.9",SERVER_VERSION="";
+var PAGE_VERSION="1.31.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}

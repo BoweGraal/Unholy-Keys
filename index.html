@@ -4072,7 +4072,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.30.9",SERVER_VERSION="";
+var PAGE_VERSION="1.31.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4080,19 +4080,20 @@ showVersion();
 var PFOLLOW=ART.follower();
 /* what you're playing, for your character with the instrument you've picked (instruments.js) */
 var PPLAY={midi:60,on:false,t0:0,off:0,n:0},PKIND={id:null,kind:"synth"};
-function perfKind(){var id=S.eng;if(PKIND.id!==id){var ins=findInst(id);PKIND.id=id;PKIND.kind=ART.INST.kindOf(id,ins&&ins.l);}return PKIND.kind;}
+function perfKind(){var id=S.eng;if(PKIND.id!==id){var ins=findInst(id);PKIND.id=id;PKIND.kind=ART.INST.kindOf(id,ins&&ins.l);PKIND.band=ART.INST.section(id,ins&&ins.l);}return PKIND.kind;}
 /* you on stage holding your instrument: glows while a note sounds; the name under your feet.
    demo: in the Show tab preview, a made-up tune plays when you're not playing */
 function perfDraw(g,x,y,p,now,crowd,lay,H,named,demo){
   var st={midi:PPLAY.midi,on:PPLAY.on,t0:PPLAY.t0,off:PPLAY.off,now:now,n:PPLAY.n};
   if(demo&&!PPLAY.on&&now-PPLAY.off>1500){var beat=Math.floor(now/420),ph=now%420;st={midi:[60,64,67,72,67,64,62,65][beat%8],on:ph<330,t0:now-ph,off:now-ph+330,now:now,n:beat};}
   if(st.on){var gl=g.createRadialGradient(x,y-6*p,3,x,y-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.5)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;g.beginPath();g.arc(x,y-6*p,24*p,0,6.3);g.fill();}
-  ART.INST.draw(g,x,y,p,perfLook,perfKind(),st);
+  var _k=perfKind();if(PKIND.band)ART.INST.drawBand(g,x,y,p,PKIND.band,st,Math.min(x,(g.canvas.width/(window.devicePixelRatio>1?Math.min(2,window.devicePixelRatio):1))-x)-8);   /* a choir or a section plays along around you */
+  ART.INST.draw(g,x,y,p,perfLook,_k,st);
   if(crowd){var cr=ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target);ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,2,cr.hands,crowd.target);}
   if(lay)ART.envFx(g,lay,H,x,y,p,now,2);
   if(named){var nm=(typeof stageName==="function"?stageName():"You");g.font="600 "+Math.round(10.5*Math.min(p,1.4))+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="top";var ny=y+12*p+6*p;g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(nm,x,ny);g.fillStyle="#F5C518";g.fillText(nm,x,ny);g.textBaseline="alphabetic";}
 }
-window.ukPerfKind=function(){return{id:S.eng,kind:perfKind(),playing:PPLAY.on,midi:PPLAY.midi};};
+window.ukPerfKind=function(){return{id:S.eng,kind:perfKind(),band:PKIND.band,playing:PPLAY.on,midi:PPLAY.midi};};
 window.ukInstKinds=function(){var by={};allInst.forEach(function(i){var k=ART.INST.kindOf(i.id,i.l);(by[k]=by[k]||[]).push(i.l);});return{n:allInst.length,by:by};};      /* for testing: which art each instrument gets */
 window.ukSelInst=function(id){selInst(id);return S.eng;};
 /* Hook into playNote to broadcast */
