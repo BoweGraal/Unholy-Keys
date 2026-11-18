@@ -520,7 +520,7 @@ body.jset .nav-item.jam-only{display:flex}
   <div class="sl">Dance rounds <span class="bdg" style="background:var(--bg3);color:var(--tx3)">live shows</span></div>
   <div class="pnl" id="roundPanel">
     <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-      <label>When I play a backing track <select id="rdMode"><option value="off">no round</option><option value="step">Step dance round</option><option value="aim">Target dance round</option><option value="keys">Note highway round</option><option value="free">Free dance round (audience votes)</option></select></label>
+      <label>When I play a backing track <select id="rdMode"><option value="off">no round</option><option value="step">Step dance round</option><option value="aim">Target dance round</option><option value="keys">Note highway round</option><option value="free">Free dance round (audience votes)</option><option value="mosh">Mosh pit round (wall of death at the drop)</option></select></label>
       <label>Countdown <select id="rdSecs"><option value="5">5 s</option><option value="10">10 s</option><option value="15">15 s</option><option value="20">20 s</option><option value="30">30 s</option></select></label>
       <label>Steps <select id="rdLevel"><option value="0.7">Easy</option><option value="1">Normal</option><option value="1.3">Hard</option></select></label>
       <label title="Everyone dances; a little way in, the dancers are drawn into a knockout of quick 1 v 1s on the stage, one match at a time, with the final at the end of the song"><input type="checkbox" id="rdBattle"> &#9876; Battle (1 v 1s)</label>
@@ -4667,7 +4667,12 @@ var CHART=(function(){
         if(want&&room(h*10,(i+1)%4===0&&tier===3?3:1)){var lo=lane(tier);add(h*10,1<<lo,lo,false);}   /* keep room for the double at the next bar start */
       }
     }
-    return{steps:out,peaks:ii.peaks.map(function(p){return [Math.round(bt[p[0]]*10+LAG),Math.round((p[1]+1<nb?bt[p[1]+1]:bt[p[1]]+50)*10+LAG)];})};
+    /* The drop: the beat where the song comes in hardest. Loudness and intensity over the next 4 beats against the
+       8 before, kept away from the very start and end; the biggest jump wins. (The mosh pit's wall of death.) */
+    var drop=-1,dropRise=0,ds=Math.max(8,Math.round(nb*0.12)),de=nb-Math.max(12,Math.round(nb*0.06));
+    for(i=ds;i<de;i++){var a0=0,a1=0,e0=0,e1=0,q;for(q=1;q<=8;q++){a0+=loud[i-q];e0+=E[i-q];}for(q=0;q<4;q++){a1+=loud[i+q];e1+=E[i+q];}
+      var rise=(a1/4-a0/8)/6+(e1/4-e0/8)+(near(e,bt[i],3)/hit)*0.15;if(rise>dropRise){dropRise=rise;drop=i;}}
+    return{steps:out,drop:drop>=0&&dropRise>0.15?Math.round(bt[drop]*10+LAG):0,peaks:ii.peaks.map(function(p){return [Math.round(bt[p[0]]*10+LAG),Math.round((p[1]+1<nb?bt[p[1]+1]:bt[p[1]]+50)*10+LAG)];})};
   }
   /* The whole job. buffer is a decoded AudioBuffer (or {sampleRate,length,numberOfChannels,getChannelData}).
      opts: {level, seed, onProgress(0..1)}; cb(chart). */
@@ -4689,7 +4694,7 @@ var CHART=(function(){
         bt=beats(e,bpm);
       }
       var res=steps(e,rms,ft,bt,bpm,opts.level||1,opts.seed||(n%100000+Math.round(bpm*10))),st=res.steps;
-      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks});
+      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop});
     });
   }
   return{analyse:analyse};
@@ -4771,7 +4776,7 @@ window.addEventListener("load",function(){STAGEFX.init();});
    whatever is already sounding (YouTube, or you playing), with steps made live on each device. */
 var ROUNDS=(function(){
   var cfg={mode:"off",secs:10,level:1,battle:false},cur=null,job=0,cdT=null,syncT=null,uiT=null,hideT=null,totals=[],myVote="",votes=null,top=null;
-  var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",free:"Free dance"},ORD=["1st","2nd","3rd"];
+  var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",free:"Free dance",mosh:"Mosh pit"},ORD=["1st","2nd","3rd"];
   try{var sv=JSON.parse(localStorage.getItem("uk_rounds")||"{}");if(NAMES[sv.mode]||sv.mode==="off")cfg.mode=sv.mode;if(sv.secs>=5&&sv.secs<=30)cfg.secs=+sv.secs;if(sv.level>=0.5&&sv.level<=1.5)cfg.level=+sv.level;cfg.battle=!!sv.battle;}catch(e){}
   function ord(n){return ORD[n-1]||n+"th";}
   function $(id){return document.getElementById(id);}

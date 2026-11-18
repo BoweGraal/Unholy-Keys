@@ -132,7 +132,7 @@ function cleanChart(c) {
     var p0 = intIn(pk[0], 0, 3600000, -1), p1 = intIn(pk[1], 0, 3600000, -1);
     if (p0 >= 0 && p1 > p0) peaks.push([p0, p1]);
   }
-  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks };
+  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks, drop: intIn(c.drop, 0, 3600000, 0) };
 }
 /* Spotlight plan for free dance rounds: who takes the centre stage when, in song time (ms).
    dancers: [{id,name,color}] in turn order; chart: {dur, beats} or null; lockPos: song position now.
@@ -217,7 +217,7 @@ function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
   var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle };
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
-  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = Date.now() - rd.playAt; if (rd.spot) o.spot = rd.spot; if (rd.battle) o.b = battlePublic(rd); }
+  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = Date.now() - rd.playAt; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
   return o;
 }
@@ -226,7 +226,7 @@ function totalsList(r) {
   out.sort(function(a, b) { return b.pts - a.pts || b.wins - a.wins; });
   return out.slice(0, 10);
 }
-function roundStop(r) { var rd = r.round; if (!rd) return; clearInterval(rd.tick); clearTimeout(rd.timer); clearTimeout(rd.spotTimer); rd.tick = rd.timer = rd.spotTimer = null; (rd.battleTimers || []).forEach(clearTimeout); rd.battleTimers = []; }
+function roundStop(r) { var rd = r.round; if (!rd) return; clearInterval(rd.tick); clearTimeout(rd.timer); clearTimeout(rd.spotTimer); clearTimeout(rd.tugTimer); clearTimeout(rd.tugSend); rd.tick = rd.timer = rd.spotTimer = null; (rd.battleTimers || []).forEach(clearTimeout); rd.battleTimers = []; }
 /* free dance: partway through the song, take who's dancing, shuffle them, and plan their spotlight turns */
 function spotLock(code) {
   var r = rooms[code], rd = r && r.round; if (!rd || rd.phase !== "play" || rd.spot) return;
@@ -285,11 +285,11 @@ function roundFinish(code) {
 function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { n: r.roundN, mode: mode, isBattle: !!msg.battle, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { n: r.roundN, mode: mode, isBattle: !!msg.battle && mode !== "mosh", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
     broadcast(code, roundPublic(r));
@@ -309,6 +309,11 @@ function roundMessage(ws, msg) {
       return;
     }
     if (first && rd.mode !== "free") rd.tick = setInterval(function() { roundStandings(code); }, 3000);
+    if (first && rd.mode === "mosh" && rd.chart && rd.chart.drop) {
+      /* the wall of death's tug of war: when it's over, everyone gets the final count */
+      rd.tugTimer = setTimeout(function() { var rr = rooms[code]; if (!rr || rr.round !== rd) return; rd.tug.done = true; var m = { type: "tug", n: rd.n, s: rd.tug.s, done: true }; broadcast(code, m); },
+        Math.max(0, rd.chart.drop + TUG_AT + TUG_MS + 400 - (Date.now() - rd.playAt)));
+    }
     if (first && rd.mode === "free") {
       /* lock in the spotlight dancers 35% of the way into the song (at least 20 s in), or at 30 s without a song length */
       var dur = rd.chart && rd.chart.dur > 0 ? rd.chart.dur : 0, lockAt = dur ? Math.max(20000, dur * 0.35) : 30000;
@@ -368,6 +373,8 @@ function castVote(ws, voter, target, weight) {
 var FX_LIGHTS = ["auto", "party", "strobe", "spot", "warm", "cool", "off"], FX_WEATHER = ["none", "rain", "storm", "snow"];
 var FX_CROWD = ["sparkle", "fire", "lasers", "float"];
 var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
+/* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
+var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
 var VERSION = "1.29.1";
 function showFx(f) {
@@ -559,7 +566,7 @@ wss.on("connection", function(ws) {
         var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
         if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
         var arrows = srd.chart ? srd.chart.arrows : 20000;
-        sv.roundScore = intIn(msg.s, 0, Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+        sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
         if (srd.battle && msg.m !== undefined) {
           /* a battle match score: only from the two in the match that's on */
           var bk = battleNow(srd), bs = srd.battle.slots[msg.m | 0], be = srd.battle.entrants;
@@ -570,6 +577,16 @@ wss.on("connection", function(ws) {
             var bm = { type: "bscore", n: srd.n, m: bk, sa: bs.sa, sb: bs.sb }; broadcast(ws.room, bm); if (rooms[ws.room].performer) send(rooms[ws.room].performer, bm);
           }
         }
+        return;
+      }
+      if (msg.type === "tug") {
+        /* the mosh pit's wall of death: taps for one side of the tug of war, counted only while it's on */
+        var trd = rooms[ws.room].round; if (!trd || trd.mode !== "mosh" || trd.phase !== "play" || !trd.chart || !trd.chart.drop || trd.tug.done) return;
+        var tp = Date.now() - trd.playAt, t0 = trd.chart.drop + TUG_AT;
+        if (tp < t0 - 400 || tp > t0 + TUG_MS + 400 || !allow(ws, "tug", 12, 7)) return;
+        var side = msg.side === 1 ? 1 : 0, tn = intIn(msg.k, 0, 6, 0); if (!tn) return;
+        trd.tug.s[side] += tn;
+        if (!trd.tugSend) trd.tugSend = setTimeout(function() { trd.tugSend = null; var m = { type: "tug", n: trd.n, s: trd.tug.s }; broadcast(ws.room, m); }, 200);
         return;
       }
       if (msg.type === "vote") { castVote(ws, ws.viewerId, msg.id, 1); return; }
