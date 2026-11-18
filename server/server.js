@@ -168,11 +168,56 @@ function spotPlan(dancers, chart, lockPos) {
   }
   return [];
 }
+/* ---------- battle rounds: a knockout of quick 1 v 1s during the song (see battle.js) ----------
+   Everyone free dances; a little way into the song, whoever is dancing is entered and seeded at random.
+   One match at a time: the two take centre stage and play the round's game (free dance: the room votes
+   during the match, the performer's vote counts double); everyone else keeps dancing and watches. */
+var BATTLE = require("./battle.js");
+function battlePublic(rd) {
+  var b = rd.battle; if (!b) return null;
+  return { entrants: b.entrants, slots: b.slots.map(function(s) { return { r: s.r, label: s.label, a: s.a, b: s.b, w: s.w, start: s.start, end: s.end, sa: s.sa || 0, sb: s.sb || 0 }; }) };
+}
+function battleLock(code) {
+  var r = rooms[code], rd = r && r.round; if (!rd || rd.phase !== "play" || rd.battle) return;
+  var list = [];
+  r.viewers.forEach(function(v, id) { if (v.danced || v.dance >= 4) list.push({ id: id, name: v.name, color: v.color }); });
+  for (var i = list.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = list[i]; list[i] = list[j]; list[j] = t; }
+  var plan = BATTLE.plan(list, rd.chart, Date.now() - rd.playAt);
+  if (!plan) { broadcast(code, { type: "battle", n: rd.n, none: true, dancers: list.length }); return; }
+  plan.slots.forEach(function(s) { s.sa = 0; s.sb = 0; s.votes = new Map(); });
+  rd.battle = plan; rd.battleTimers = [];
+  broadcast(code, { type: "battle", n: rd.n, b: battlePublic(rd) });
+  if (r.performer) send(r.performer, { type: "battle", n: rd.n, b: battlePublic(rd) });
+  /* decide each match a moment after it ends (late scores still arriving) */
+  plan.slots.forEach(function(s, k) {
+    rd.battleTimers.push(setTimeout(function() { battleDecide(code, k); }, Math.max(0, s.end + 1200 - (Date.now() - rd.playAt))));
+  });
+}
+function battleDecide(code, k) {
+  var r = rooms[code], rd = r && r.round, b = rd && rd.battle; if (!b) return;
+  var s = b.slots[k]; if (!s || s.w >= 0) return;
+  BATTLE.advance(b);
+  if (s.a < 0 && s.b < 0) return;
+  /* someone left: the other goes through */
+  var gone = function(e) { return e < 0 || !r.viewers.has(b.entrants[e].id); };
+  if (gone(s.a) || gone(s.b)) s.w = gone(s.a) ? 1 : 0;
+  else if (rd.mode === "free") {
+    var va = 0, vb = 0; s.votes.forEach(function(v) { if (v.side === 0) va += v.w; else vb += v.w; });
+    s.sa = va; s.sb = vb; s.w = vb > va ? 1 : 0;              /* a tie goes to the higher seed */
+  } else s.w = s.sb > s.sa ? 1 : 0;
+  BATTLE.advance(b);
+  var msg = { type: "battle", n: rd.n, b: battlePublic(rd), done: k };
+  broadcast(code, msg); if (r.performer) send(r.performer, msg);
+  if (k === b.slots.length - 1 && rd.phase === "play") setTimeout(function() { var rr = rooms[code]; if (rr && rr.round === rd && rd.phase === "play") { rd.phase = "tally"; broadcast(code, { type: "round", phase: "tally", n: rd.n }); rd.timer = setTimeout(function() { roundFinish(code); }, 1500); } }, 2500);
+}
+/* which match is on now (server time), for scores and votes; a little grace at the end */
+function battleNow(rd) { var b = rd.battle; if (!b) return -1; var p = Date.now() - rd.playAt; for (var i = 0; i < b.slots.length; i++) if (p >= b.slots[i].start - 2000 && p < b.slots[i].end + 1200) return i; return -1; }
+
 function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
-  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart };
+  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle };
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
-  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = Date.now() - rd.playAt; if (rd.spot) o.spot = rd.spot; }
+  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = Date.now() - rd.playAt; if (rd.spot) o.spot = rd.spot; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
   return o;
 }
@@ -181,7 +226,7 @@ function totalsList(r) {
   out.sort(function(a, b) { return b.pts - a.pts || b.wins - a.wins; });
   return out.slice(0, 10);
 }
-function roundStop(r) { var rd = r.round; if (!rd) return; clearInterval(rd.tick); clearTimeout(rd.timer); clearTimeout(rd.spotTimer); rd.tick = rd.timer = rd.spotTimer = null; }
+function roundStop(r) { var rd = r.round; if (!rd) return; clearInterval(rd.tick); clearTimeout(rd.timer); clearTimeout(rd.spotTimer); rd.tick = rd.timer = rd.spotTimer = null; (rd.battleTimers || []).forEach(clearTimeout); rd.battleTimers = []; }
 /* free dance: partway through the song, take who's dancing, shuffle them, and plan their spotlight turns */
 function spotLock(code) {
   var r = rooms[code], rd = r && r.round; if (!rd || rd.phase !== "play" || rd.spot) return;
@@ -205,6 +250,16 @@ function roundFinish(code) {
   var rd = r.round; roundStop(r);
   if (rd.phase === "result" || rd.phase === "off") return;
   var list = [];
+  if (rd.isBattle) {
+    /* battle: placed by how far each got in the bracket; the score shown is matches won */
+    if (rd.battle) BATTLE.ranks(rd.battle).forEach(function(x) { var e = rd.battle.entrants[x.e]; list.push({ id: e.id, name: e.name, color: e.color, score: x.wins, bplace: x.place }); });
+    list.forEach(function(x) { x.place = x.bplace; x.pts = ROUND_POINTS[x.place] || 1; var key = x.name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: x.name, color: x.color, pts: 0, wins: 0 }); t.pts += x.pts; t.color = x.color; if (x.place === 0) t.wins++; });
+    rd.phase = "result";
+    broadcast(code, { type: "round", phase: "result", n: rd.n, mode: rd.mode, battle: true, title: rd.title, players: list.length,
+      ranking: list.slice(0, 10).map(function(x) { return { id: x.id, name: x.name, color: x.color, score: x.score, pts: x.pts, place: x.place + 1 }; }),
+      totals: totalsList(r) });
+    return;
+  }
   if (rd.mode === "free") {
     var tally = {};
     rd.votes.forEach(function(v) { tally[v.id] = (tally[v.id] || 0) + v.w; });
@@ -234,7 +289,7 @@ function roundMessage(ws, msg) {
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { n: r.roundN, mode: mode, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { n: r.roundN, mode: mode, isBattle: !!msg.battle, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
     broadcast(code, roundPublic(r));
@@ -247,6 +302,12 @@ function roundMessage(ws, msg) {
     rd.playAt = Date.now() - intIn(msg.pos, 0, 3600000, 0);
     var first = rd.phase !== "play"; rd.phase = "play";
     broadcast(code, roundPublic(r));
+    if (first && rd.isBattle) {
+      /* enter whoever is dancing 12% of the way in (at least 12 s), then run the bracket */
+      var bdur = rd.chart && rd.chart.dur > 0 ? rd.chart.dur : 0, block = bdur ? Math.max(12000, bdur * 0.12) : 15000;
+      rd.spotTimer = setTimeout(function() { battleLock(code); }, Math.max(0, block - (Date.now() - rd.playAt)));
+      return;
+    }
     if (first && rd.mode !== "free") rd.tick = setInterval(function() { roundStandings(code); }, 3000);
     if (first && rd.mode === "free") {
       /* lock in the spotlight dancers 35% of the way into the song (at least 20 s in), or at 30 s without a song length */
@@ -259,6 +320,13 @@ function roundMessage(ws, msg) {
     if (rd.phase === "result" || rd.phase === "off" || rd.phase === "vote" || rd.phase === "tally") return;
     roundStop(r);
     if (msg.cancel || rd.phase === "countdown") { rd.phase = "off"; broadcast(code, { type: "round", phase: "off", n: rd.n }); return; }
+    if (rd.isBattle) {
+      /* the song ended: decide the match that was on, then the results */
+      var bk = battleNow(rd); if (bk >= 0) battleDecide(code, bk);
+      rd.phase = "tally"; broadcast(code, { type: "round", phase: "tally", n: rd.n });
+      rd.timer = setTimeout(function() { roundFinish(code); }, 1500);
+      return;
+    }
     if (rd.mode === "free") {
       rd.dancers = [];
       r.viewers.forEach(function(v, id) { if (v.danced) rd.dancers.push({ id: id, name: v.name, color: v.color }); });
@@ -274,6 +342,18 @@ function roundMessage(ws, msg) {
     return;
   }
   if (msg.type === "round-vote") castVote(ws, "performer", msg.id, 2);
+  if (msg.type === "round-bvote") battleVote(ws, "performer", msg.side, 2);
+}
+/* free dance battles: a vote for one side of the match that's on (not by the two dancing) */
+function battleVote(ws, voter, side, weight) {
+  var r = rooms[ws.room], rd = r && r.round; if (!rd || !rd.battle || rd.mode !== "free" || rd.phase !== "play") return;
+  var k = battleNow(rd); if (k < 0 || (side !== 0 && side !== 1)) return;
+  var s = rd.battle.slots[k], e = rd.battle.entrants;
+  if ((s.a >= 0 && e[s.a].id === voter) || (s.b >= 0 && e[s.b].id === voter)) return;
+  s.votes.set(voter, { side: side, w: weight });
+  var va = 0, vb = 0; s.votes.forEach(function(v) { if (v.side === 0) va += v.w; else vb += v.w; });
+  s.sa = va; s.sb = vb;
+  var m = { type: "bscore", n: rd.n, m: k, sa: va, sb: vb }; broadcast(ws.room, m); if (r.performer) send(r.performer, m);
 }
 function castVote(ws, voter, target, weight) {
   var r = rooms[ws.room], rd = r && r.round;
@@ -434,9 +514,20 @@ wss.on("connection", function(ws) {
         if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
         var arrows = srd.chart ? srd.chart.arrows : 20000;
         sv.roundScore = intIn(msg.s, 0, Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+        if (srd.battle && msg.m !== undefined) {
+          /* a battle match score: only from the two in the match that's on */
+          var bk = battleNow(srd), bs = srd.battle.slots[msg.m | 0], be = srd.battle.entrants;
+          if (bk === (msg.m | 0) && bs && bs.w < 0) {
+            if (bs.a >= 0 && be[bs.a].id === ws.viewerId) bs.sa = sv.roundScore;
+            else if (bs.b >= 0 && be[bs.b].id === ws.viewerId) bs.sb = sv.roundScore;
+            else return;
+            var bm = { type: "bscore", n: srd.n, m: bk, sa: bs.sa, sb: bs.sb }; broadcast(ws.room, bm); if (rooms[ws.room].performer) send(rooms[ws.room].performer, bm);
+          }
+        }
         return;
       }
       if (msg.type === "vote") { castVote(ws, ws.viewerId, msg.id, 1); return; }
+      if (msg.type === "bvote") { if (allow(ws, "bvote", 6, 2)) battleVote(ws, ws.viewerId, msg.side, 1); return; }
       return; // anything else from a viewer is dropped (it used to be relayed to the whole room as-is)
     }
   });
