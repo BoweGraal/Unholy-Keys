@@ -300,7 +300,7 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - A held note keeps moving (the bow, the accordion's bellows, vibrato on the fret hand); letting go relaxes the hands.
 - To check: go live, open the venue, then change instruments and play, low notes and high notes.
 
-**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.29.1"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
+**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.0"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
 - Everything matching means you have the new build.
 - A red "Out of date: art.js …" line means your browser kept an old copy of a script. Hard refresh with Ctrl+Shift+R (Cmd+Shift+R on a Mac).
 - A red "Server is on v…" line means the server hasn't been redeployed yet (on Render: Manual Deploy, then Deploy latest commit).
