@@ -300,7 +300,7 @@ At 10, 25, 50, 75, 100, 150, 200 and every 100 after, a STREAK number pops over 
 - A held note keeps moving (the bow, the accordion's bellows, vibrato on the fret hand); letting go relaxes the hands.
 - To check: go live, open the venue, then change instruments and play, low notes and high notes.
 
-**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.0"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
+**Which version am I running?** The performer page shows it at the bottom of the sidebar ("Unholy Keys v1.30.1"), and the venue in the bottom-right corner, on the join screen too. Once you're live (or have joined), the server's version appears next to it.
 - Everything matching means you have the new build.
 - A red "Out of date: art.js …" line means your browser kept an old copy of a script. Hard refresh with Ctrl+Shift+R (Cmd+Shift+R on a Mac).
 - A red "Server is on v…" line means the server hasn't been redeployed yet (on Render: Manual Deploy, then Deploy latest commit).
@@ -323,7 +323,7 @@ The "Click to capture keys" box is gone. Keys play whenever the page has focus (
 - A song needs a clear drop with about 15 seconds after it for a wall of death. Without one you get the pit and circle pits. A round started without a song has a circle pit every 70 seconds or so.
 - Practice dancers mosh too: they wander the pit, take sides, pull in the tug of war and run the circle. Someone who moshes the whole song should beat them.
 
-**Note highway · 4 keys.** Four fat keys on D F J K (or the arrow keys), or tap the lanes. The notes follow the beat rather than the tune: beats 1 and 3 on the left hand and 2 and 4 on the right, like a kick and snare, switching between the inner and outer key each bar, with half beats on the other hand. Both outer keys together only on bar starts in the big moments, never more than two. It's in the dance menu (key 5), dance practice, and as a round type ("Note highway round (4 keys, on the beat)"), and it works in battles.
+**Note highway · 4 keys.** Looks like piano tiles: white tiles in four columns with rows that scroll on the beat, and each note a big tile (blue for the left hand, green for the right). Hit a tile on D F J K (or the arrows), or tap its column, as its bottom edge reaches the red bar. Holds are tall tiles that shrink while you hold, and missed tiles turn red. The notes follow the beat rather than the tune: beats 1 and 3 on the left hand and 2 and 4 on the right, like a kick and snare, switching between the inner and outer key each bar, with half beats on the other hand. Both outer keys together only on bar starts in the big moments, never more than two. It's in the dance menu (key 5), dance practice, and as a round type ("Note highway round (4 keys, on the beat)"), and it works in battles.
 
 ## Troubleshooting
 

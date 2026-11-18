@@ -1943,7 +1943,7 @@ var GAME=(function(){
   var KEYS=["A","S","D","F","G","H","J"],KCOL=["#E8505B","#F0A040","#F5D03C","#4CC38A","#4A9BE8","#9B7FE0","#EDEDF5"];
   var KPOSE=["left","left","down","up","down","right","right"],hype=0.3,keyCur=3;
   /* the 4-key highway: four fat keys on D F J K (or the arrows), mapped for the rhythm */
-  var four=false,KEYS4=["D","F","J","K"],KCOL4=["#E8505B","#F5D03C","#4A9BE8","#4CC38A"],KPOSE4=["left","down","up","right"];
+  var four=false,KEYS4=["D","F","J","K"],KCOL4=["#2F7FE0","#3B8EF0","#2BB868","#22A85A"],KPOSE4=["left","down","up","right"];
   function KC(){return four?KCOL4:KCOL;}
   function NL(){return mode==="keys"?(four?4:7):4;}
   function laneName(l){return mode==="keys"?(four?KEYS4:KEYS)[l]:LANES[l];}
@@ -2584,6 +2584,54 @@ var GAME=(function(){
     judgeText(now,ty+sz*2.5);
   }
   /* ---------- note highway ---------- */
+  /* The 4-key highway as piano tiles: a board of white tiles in four columns whose rows scroll with the beat
+     (one row a beat). Each note is a big tile filling its column, blue on the left hand and green on the
+     right; hit it as its bottom edge reaches the bar at the bottom. Holds are tall tiles that shrink while
+     you hold. Hit tiles flash and fade; missed ones turn red. The whole column is the key. */
+  function drawTiles(now,bt,tv,top,px){
+    var L=4,lw=CW/L,labH=Math.round(Math.max(26,Math.min(46,CH*0.085))),hitY=CH-labH-px*2,span=hitY-top,i,n;
+    var rowH=bt.known?bt.period/tv*span:span/4,th=Math.max(px*8,Math.round(rowH*0.94));
+    /* white tiles: the column lines, and row lines on the beat rolling down */
+    g.fillStyle="#F4F4F8";g.fillRect(0,top,CW,CH-top);
+    for(i=0;i<L;i++){var fl=Math.max(0,1-(now-flash[i])/220);if(laneDown[i]||fl>0){g.fillStyle=hexA(KC()[i],0.16*Math.max(fl,laneDown[i]?1:0));g.fillRect(i*lw,top,lw,hitY-top);}}
+    g.fillStyle="#C9C9D6";
+    if(bt.known){var k0=Math.ceil((now-bt.t0)/bt.period)-1;for(var k=k0;;k++){var yb=hitY-(bt.t0+k*bt.period-now)/tv*span;if(yb<top)break;if(yb<=hitY)g.fillRect(0,Math.round(yb),CW,k%4===0?3:2);}}
+    for(i=1;i<L;i++)g.fillRect(Math.round(i*lw)-1,top,2,hitY-top);
+    /* the divider between the hands, like the cabinet's */
+    var mx=Math.round(CW/2);g.fillStyle="#2b2340";g.fillRect(mx-3,top,6,CH-top);g.fillStyle="#F5D03C";g.fillRect(mx-1,top,2,CH-top);
+    fireBorder(now);
+    function tile(x,y,w,h,col,a){
+      g.globalAlpha=a;g.fillStyle=col;g.fillRect(x,y,w,h);
+      g.fillStyle="rgba(255,255,255,.22)";g.fillRect(x,y,w,Math.max(2,px));               /* light top edge */
+      g.fillStyle="rgba(0,0,0,.22)";g.fillRect(x,y+h-Math.max(3,px*1.5),w,Math.max(3,px*1.5));   /* shadow along the bottom */
+      g.globalAlpha=1;
+    }
+    /* a tile is a beat tall, but never runs into the next one in its column */
+    var nextIn=[1e12,1e12,1e12,1e12],ord=notes.slice().sort(function(p,q){return q.t-p.t;});
+    for(i=0;i<ord.length;i++){n=ord[i];var room=(nextIn[n.lane]-(n.t+(n.hold>0?n.hold:0)))/tv*span-px*2;n._th=Math.max(px*5,Math.min(th,room));nextIn[n.lane]=n.t;}
+    for(i=0;i<notes.length;i++){
+      n=notes[i];var x=Math.round(n.lane*lw)+2,w=Math.round(lw)-4;if(n.lane===1||n.lane===2)w-=3;if(n.lane===2)x+=3;
+      var bot=hitY-(n.t-now)/tv*span,hgt=(n._th||th)+(n.hold>0?n.hold/tv*span:0),col=KC()[n.lane];
+      if(n.holding){var endY=hitY-(n.t+n.hold-now)/tv*span-th*0.4;var yy=Math.max(top,Math.round(endY));tile(x,yy,w,Math.round(hitY)-yy,col,1);
+        g.fillStyle="rgba(255,255,255,"+(0.18+0.14*Math.sin(now*0.03))+")";g.fillRect(x,yy,w,Math.round(hitY)-yy);continue;}
+      var y=Math.round(bot-hgt);if(bot<top||y>CH)continue;
+      var y0=Math.max(top,y),hh=Math.round(Math.min(bot,hitY+th))-y0;if(hh<=0)continue;
+      if(n.j==="GONE"){var ga=1-(now-n.jt)/350;if(ga>0)tile(x,y0,w,hh,col,ga*0.6);continue;}
+      if(n.j&&n.j!=="MISS"&&n.j!=="LETGO"){var a=1-(now-n.jt)/260;if(a<=0)continue;     /* hit: it flashes white and fades */
+        tile(x,y0,w,hh,"#DCDCE6",a);g.globalAlpha=a;g.fillStyle="#fff";var gr=Math.round((1-a)*px*6);g.fillRect(x-gr,Math.round(hitY)-px,w+gr*2,px*2);g.globalAlpha=1;continue;}
+      if(n.j==="MISS"||n.j==="LETGO"){tile(x,y0,w,hh,"#E8505B",0.75);continue;}
+      tile(x,y0,w,hh,col,1);
+    }
+    /* the bar you hit on, and the key labels under each column */
+    var pulse=Math.pow(1-BEAT.phase(now),3);g.fillStyle="rgba(232,80,91,"+(0.55+0.45*pulse)+")";g.fillRect(0,Math.round(hitY)-1,CW,3);
+    g.fillStyle="#1b1530";g.fillRect(0,CH-labH,CW,labH);
+    for(i=0;i<L;i++){var lx=Math.round(i*lw),lc=KC()[i],dn=laneDown[i];g.fillStyle=dn?lc:hexA(lc,0.28);g.fillRect(lx+3,CH-labH+3,Math.round(lw)-6,labH-6);
+      var lp=Math.max(2,Math.round(Math.min(lw/10,labH/12)));pixText(KEYS4[i],lx+lw/2,CH-labH/2-lp*3.5,lp,dn?"#fff":"#E9E4FF","center",0);}
+    /* the combo in big red figures at the top, and the call under it */
+    if(combo>=3){var cp=Math.max(3,Math.round(Math.min(CW/48,span/40)));pixText(String(combo),CW/2,top+span*0.06,cp,"#E8505B","center",0.95);}
+    var ja=1-(now-judgeT)/560;
+    if(judge&&ja>0){var jp=Math.max(2,Math.round(Math.min(CW/80,span/56)));g.globalAlpha=ja;pixText(judge.replace("!",""),CW/2,top+span*0.06+Math.max(3,Math.round(Math.min(CW/48,span/40)))*10-(1-ja)*px*3,jp,judgeCol==="#F5C518"?"#C89810":judgeCol,"center",1);g.globalAlpha=1;}
+  }
   function drawKeys(now){
     var bt=grid(),tv=travel(bt.period),i,n;
     makeNotes(now,bt);expire(now);
@@ -2594,6 +2642,7 @@ var GAME=(function(){
         boxH=Math.round(Math.max(12,CH*0.045)),
         hitY=CH-keyH-boxH-px*3,                                /* notes are hit as they reach the boxes */
         lw=CW/NL(),top=hudH+px*3,span=hitY-top,noteH=Math.max(px*4,Math.round(boxH*0.7));
+    if(four)drawTiles(now,bt,tv,top,px);else{
     /* the board: dark lanes with faint dividers, and beat lines rolling down */
     g.fillStyle="rgba(12,9,28,.92)";g.fillRect(0,top,CW,CH-top);
     g.fillStyle="rgba(255,255,255,.06)";for(i=1;i<NL();i++)g.fillRect(Math.round(i*lw),top,1,hitY-top);
@@ -2655,6 +2704,7 @@ var GAME=(function(){
     }
     for(i=0;i<(four?0:NL());i++){if(i===2||i===6)continue;           /* black keys sit between A-S, S-D, F-G, G-H, H-J (none on the 4 fat keys) */
       var bkx=Math.round((i+1)*lw-lw*0.18);g.fillStyle="#15121f";g.fillRect(bkx,ky,Math.round(lw*0.36),Math.round(keyH*0.5));}
+    }
     /* score, song progress and hype across the top */
     g.fillStyle="rgba(12,9,28,.96)";g.fillRect(0,0,CW,top);
     pixText("SCORE "+score,8,6,px,"#E9E4FF","left",0.8);
@@ -4366,7 +4416,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.30.0",SERVER_VERSION="";
+var PAGE_VERSION="1.30.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
