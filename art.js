@@ -673,7 +673,8 @@ var ART=(function(){
     {name:"Street jam",icon:"\uD83D\uDCA5",subs:["High knees","Strike a pose","Hop step","Floor spin","Mix it up"],help:"Left dot: how low and how far you travel. Right dot: knee height and arms."},
     {name:"Cyber goth",icon:"\uD83E\uDD16",subs:["Stomp & punch","Arm sweep","Hands up","Windmill","Arm roll","Chop","Mix it up"],help:"Left dot: stomp width and how low. Right dot: arm size and speed."},
     {name:"Headbang",icon:"\uD83E\uDD18",subs:["Headbang","Hair windmill","Air guitar","Rock on","Mix it up"],help:"Left dot: stance width and how low. Right dot: how hard and how fast."},
-    {name:"Lighters up",icon:"\uD83D\uDD25",subs:["Lighter sway","Phone light","Wave it","Both hands","Glow sticks"],help:"Left dot: how far you sway. Right dot: how high you hold it."}
+    {name:"Lighters up",icon:"\uD83D\uDD25",subs:["Lighter sway","Phone light","Wave it","Both hands","Glow sticks"],help:"Left dot: how far you sway. Right dot: how high you hold it."},
+    {name:"Techno march",icon:"\uD83E\uDD7E",subs:["March","Point","Arm swing","Flex","Mix it up"],help:"Left dot: stride and how low. Right dot: arm power."}
   ];
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function dance(style,sub,c,bp){
@@ -756,6 +757,23 @@ var ART=(function(){
       o.legL=dir*(0.05+leg*1.35);o.legR=dir*(0.05+leg*1.2);                                   /* legs kick up off the floor */
       o.armL=dir*(-2.55+chest*0.45);o.armR=dir*(-2.1+chest*0.5);o.alL=o.alR=8-chest*2;             /* hands planted out in front */
       o.dx=dir*((bp%4+4)%4)*1.2-dir*2.4;
+      break;}
+    case 15:{ /* techno march (from a street-parade clip): a heavy stomping march on every beat, body upright, arms
+                 swinging in big arcs, punching a pointing finger out at the crowd, flexing */
+      var str6=0.3+(ax+1)*0.15,lo6=Math.max(0,ay)*2,pw=0.8+(bx+1)*0.3+Math.max(0,-by)*0.4,m6=sub;
+      if(sub===4)m6=Math.floor(bp/4)%4;
+      var sd6=Math.floor(bp)%2?1:-1,st6=Math.pow(1-ph,3);
+      if(sd6<0){o.legL=str6+st6*0.1;o.legR=-0.1;if(ph>0.5)o.lgR=7-(ph-0.5)*3;}else{o.legR=-str6-st6*0.1;o.legL=0.1;if(ph>0.5)o.lgL=7-(ph-0.5)*3;}
+      o.bob=lo6+st6*1.5;o.dx=sd6*1.5;o.rot=sd6*0.03;
+      if(m6===0){   /* march: arms swinging low and wide, opposite the stomping foot */
+        var ms=Math.sin(bp*Math.PI);o.armL=0.35+ms*0.6*pw;o.armR=-0.35+ms*0.6*pw;
+      }else if(m6===1){   /* point: an arm thrust straight out at the crowd on the beat, pulled back between */
+        var pt=Math.pow(1-ph,2),pl=Math.floor(bp/2)%2;if(pl){o.armL=0.5+pt*1.1*pw;o.alL=9;o.armR=-0.5;o.alR=6;}else{o.armR=-0.5-pt*1.1*pw;o.alR=9;o.armL=0.5;o.alL=6;}
+      }else if(m6===2){   /* arm swing: big arcs across the chest, one arm then the other, like clearing the way */
+        var as6=Math.sin(bp*Math.PI*0.5);o.armL=-0.6+Math.max(0,as6)*2.4*pw;o.armR=0.6-Math.max(0,-as6)*2.4*pw;o.alL=o.alR=8;o.rot=as6*0.08;
+      }else{   /* flex: both arms bent, fists by the shoulders, sweeping down and out on the beat */
+        var fx6=Math.pow(1-ph,2);o.armL=1.9-fx6*1.2*pw;o.armR=-1.9+fx6*1.2*pw;o.alL=o.alR=5;o.mouth=fx6>0.6;
+      }
       break;}
     case 14:{ /* lighters up (from a crowd clip): for the slow one. An arm held straight up with a lighter (or a phone torch),
                  swaying with the whole crowd, once every two beats */

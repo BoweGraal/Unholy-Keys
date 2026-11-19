@@ -509,3 +509,4 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - **Lights → EDM** (new show button): the room goes dark and washes cyan or magenta, flipping on the beat, with beams sweeping out over the crowd from behind the stage.
 - **Extras → 🌃 Neon night** (new show toggle): the room goes black, the stage is traced in glowing tube lights (truss, stage lip, a floor grid), everyone becomes a glowing outline in their shirt colour, and the crowd waves glow sticks. Works with any lights mode (try it with EDM).
 - **Lighters up → Glow sticks**: both arms waving glow sticks fast.
+- New **🥾 Techno march** style (the "'" key), from a street-parade clip: a heavy stomping march under everything, plus **March**, **Point** (arm thrust out at the crowd on the beat), **Arm swing** (big arcs across the chest), **Flex**, **Mix it up**. Made for the DJ booth and EDM lights.
