@@ -630,7 +630,8 @@ var ART=(function(){
     {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop","Dive in"],help:"Slide your thumbs up and down: left lifts the chest, right lifts the hips."},
     {name:"Silly",icon:"\uD83E\uDD2A",subs:["Chicken","Sprinkler","YMCA","Floss","Macarena"],help:"Left dot: size and speed. Right dot: bounce."},
     {name:"Shuffle",icon:"\uD83D\uDC5F",subs:["Running man","T-step","Spin","Mix it up"],help:"Left dot: how far you travel and how low. Right dot: knee lift and arms."},
-    {name:"Thriller",icon:"\uD83E\uDDDF",subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left dot: how low and how wide. Right dot: lean and arm reach."}
+    {name:"Thriller",icon:"\uD83E\uDDDF",subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left dot: how low and how wide. Right dot: lean and arm reach."},
+    {name:"Street jam",icon:"\uD83D\uDCA5",subs:["High knees","Strike a pose","Hop step","Floor spin","Mix it up"],help:"Left dot: how low and how far you travel. Right dot: knee height and arms."}
   ];
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function dance(style,sub,c,bp){
@@ -713,6 +714,30 @@ var ART=(function(){
       o.legL=dir*(0.05+leg*1.35);o.legR=dir*(0.05+leg*1.2);                                   /* legs kick up off the floor */
       o.armL=dir*(-2.55+chest*0.45);o.armR=dir*(-2.1+chest*0.5);o.alL=o.alR=8-chest*2;             /* hands planted out in front */
       o.dx=dir*((bp%4+4)%4)*1.2-dir*2.4;
+      break;}
+    case 11:{ /* street jam (from a clip of a guy dancing his way through town): prancing high knees with the fists pumping,
+                 a squat with one arm cocked up and a leg kicked out, hopping side to side on one leg, and a crouched floor spin */
+      var lo=Math.max(0,ay)*2.5,trv=0.6+(ax+1)*0.5,kh2=0.8+Math.max(0,-by)*0.5,am=0.6+(bx+1)*0.3,mv2=sub;
+      if(sub===4)mv2=Math.floor(bp/4)%4;
+      if(mv2===0){   /* high knees: knees right up in turn on the eighths, fists pumping, jogging on the spot */
+        var hq=Math.sin(bp*Math.PI*2),hu=Math.abs(hq);
+        if(hq>0){o.lgL=7-hu*3.8*kh2;o.legL=0.15;o.legR=-0.1;}else{o.lgR=7-hu*3.8*kh2;o.legR=-0.15;o.legL=0.1;}
+        o.bob=lo-hu*3;o.dx=Math.sin(bp*Math.PI*0.5)*3*trv;o.armL=0.6+hq*am;o.armR=-0.6+hq*am;o.alL=o.alR=6;o.mouth=hu>0.8;
+      }else if(mv2===1){   /* strike a pose: low wide squat, one arm cocked up by the head, the other bent at the hip; a leg kicks up on the 4 */
+        var sd2=Math.floor(bp/2)%2?1:-1,kick=((bp%2)+2)%2>1.4;
+        o.legL=0.55;o.legR=-0.55;o.bob=lo+3;
+        if(sd2<0){o.armL=2.5;o.alL=6;o.armR=-0.9;o.alR=5;}else{o.armR=-2.5;o.alR=6;o.armL=0.9;o.alL=5;}
+        if(kick){if(sd2<0){o.legR=-1.1;o.lgR=5;o.bob=lo+1;}else{o.legL=1.1;o.lgL=5;o.bob=lo+1;}}
+        o.rot=sd2*0.08;
+      }else if(mv2===2){   /* hop step: hopping on one foot with the other knee tucked, travelling side to side, arms bent out */
+        var hs2=Math.floor(bp)%2?1:-1,hp2=Math.pow(1-ph,2);
+        if(hs2>0){o.lgL=7-3.2*kh2;o.legL=0.3;o.legR=-0.05;}else{o.lgR=7-3.2*kh2;o.legR=-0.3;o.legL=0.05;}
+        o.bob=lo-hp2*5;o.dx=hs2*4*trv;o.armL=1.2;o.armR=-1.2;o.alL=o.alR=5;o.rot=hs2*0.06;
+      }else{   /* floor spin: crouched right down, hands on the floor, the legs sweeping round under you */
+        var fs2=bp*Math.PI*2,sw2=Math.sin(fs2),cw2=Math.cos(fs2);
+        o.bob=7+lo*0.5-Math.abs(cw2)*1.5;o.legL=0.9+sw2*0.6;o.legR=-0.9+sw2*0.6;o.lgL=6-Math.max(0,cw2)*2;o.lgR=6-Math.max(0,-cw2)*2;
+        o.armL=-0.4+sw2*0.3;o.armR=0.4+sw2*0.3;o.alL=o.alR=6;o.dx=sw2*3;o.rot=sw2*0.15;
+      }
       break;}
     case 10:{ /* Thriller (from a clip of the zombie dance): low wide stance, both arms flung out to one side then the other,
                  a clawed side-step with the knees pumping and the head bobbing, a shoulder pop */
