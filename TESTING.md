@@ -402,3 +402,29 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 ## Jumbotron note lines (v1.31.1)
 - The big note name and keyboard on the Jumbotron are gone. The Jumbotron now shows big note lines instead: each note is a thick bar sliding left, higher notes higher up, coloured by key row (same colours as the arrow pad). A held note keeps stretching and pulses at the "now" line on the right. The pitch range follows what you play.
 - Same in the Show preview and in the visuals stream the audience sees.
+
+## Walking (v1.32.0)
+- Walk around the venue. Steps now follow how far you actually move: push the joystick a little and the steps slow down, all the way and they speed up. One foot stays planted while the other lifts and swings through. The body rises slightly as the legs pass and settles on each footfall. A soft shadow under the feet stays on the floor.
+- Walking toward or away from the stage, the feet lift instead of scissoring sideways. Walking left or right, the legs swing.
+- When you stop, the step finishes and both feet come down. No sliding to a stop.
+- Other people move at a steady walking pace toward where they are instead of gliding and slowing down. Your own character goes exactly where you steer, with no lag.
+- Same on the performer's stage view of the crowd.
+
+## Performer in front of the Jumbotron (v1.32.1)
+- Jam → Stage view with a video playing (YouTube, a local video or a backing video): the performer, and any section players, stand in front of the video instead of behind it.
+- Venue with the Jumbotron down: the performer is drawn in front of the screen.
+
+## Site songs in practice (v1.33.0)
+- Put an MP3 in the repo's `songs` folder (see songs/README.md) and commit it. Open venue.html?practice: the song drop-down has an **Unholy Keys songs** group with it, titled from the file name (underscores become spaces).
+- Pick it: "Loading…" shows, then the title, and Start lights up.
+- Opened from the performer page, your Backing Tracks are listed under **Your Backing Tracks** below the site songs, and the first Backing Track is still picked automatically. Site songs only download when you pick one.
+- Running locally with `node server/server.js`, the folder is read straight from disk.
+
+## YouTube songs in practice (v1.34.0)
+- Needs desktop Chrome or Edge. Open venue.html?practice → **Add YouTube songs** → paste one or more links → **Add to queue**.
+- The browser's share box opens. Pick **this tab** and turn on **Share tab audio**.
+- The panel moves to the bottom and shows "listening N%". The song plays in full on the Jumbotron. Leave the tab open and don't pause it (a pause just waits; if too much is missed it says so). **Stop adding** cancels.
+- When it finishes: "working out the steps…", then "added for everyone ✓" (with GITHUB_TOKEN on Render, see SETUP.md) or "added on this computer ✓". It then appears in the drop-down under **YouTube songs**.
+- Pick it and start a round: the video plays on the Jumbotron from the top. The steps follow the video, and the round ends when the video ends.
+- On a phone: YouTube songs in the list play fine (tap ▶ on the video if asked). Adding new ones explains that it needs a computer.
+- If you hear silence or "Heard only silence": the tab audio wasn't shared. Try again and tick the box.

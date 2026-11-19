@@ -477,5 +477,5 @@
       if(s2t.on&&(st.now||Date.now())<s2t.t0)s2t.on=false;
       draw(g,x+X[i],y+Y[i],p*S[i],ART.looks.random(101+i*17),kinds[i],s2t);}
   }
-  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.31.1"};
+  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.34.0"};
 })();

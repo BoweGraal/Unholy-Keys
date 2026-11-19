@@ -158,6 +158,9 @@ body.jset #app.jx #side-name{display:none}
 /* jam stage view: the venue fills the screen; the video sits on the Jumbotron (placed by JAMSTAGE) */
 #jStage{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;image-rendering:pixelated}
 #jm.stage #jStage{display:block}
+/* stage view: the performer (and any section players) drawn on a layer above the video, so you stand in front of the Jumbotron */
+#jFront{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;image-rendering:pixelated}
+#jm.stage #jFront{display:block}
 #jm.stage #jcv{opacity:0}
 #jm.stage #jmV{z-index:3;transition:none}
 #jm.stage #jmV iframe,#jm.stage #jmV video{opacity:1!important}
@@ -683,7 +686,7 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="jm">
-  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
   <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
     <button id="jStageBtn" title="Stage view: your venue, with the video on a Jumbotron">&#127967; Stage</button>
     <button id="jFsBtn" title="Fullscreen (F11)">&#9974; Fullscreen</button>
@@ -4072,7 +4075,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.31.1",SERVER_VERSION="";
+var PAGE_VERSION="1.34.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4261,9 +4264,9 @@ var STREAK=(function(){
 var AUDX=null;
 function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys,fd,crowd){
   /* the venue's pixel character (art.js), small: name under the feet */
-  var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,p=Math.max(1,Math.round(sc));
+  var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,lgL=7,lgR=7,alL,alR,p=Math.max(1,Math.round(sc));
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
-  if(walk!=null&&!dance){var ws=Math.sin(walk);legL=ws*.45;legR=-legL;armL=.15-ws*.6;armR=-.15-ws*.6;bob=-Math.abs(Math.cos(walk))*1.6*p;}
+  if(walk&&!dance){var wp=ART.walkPose(walk);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*p;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*5*p;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;legL=Math.sin(dT*2)*.25;legR=-legL;}
   else if(dance===2){bob=-Math.abs(Math.sin(dT*2))*1.5*p;x+=Math.sin(dT)*3*p;var sw=Math.sin(dT);armL=1.9+sw*.9;armR=-1.9+sw*.9;}
   else if(dance===3){var jp=Math.abs(Math.sin(dT));bob=-Math.pow(jp,3)*8*p;armL=1.5+jp*1.1;armR=-armL;legL=jp*.5;legR=-legL;}
@@ -4284,7 +4287,8 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
   if(AX){rpo=atKeys?null:ART.reactPose(AX.reacts,now,p);epo=AX.lay?ART.envPose(AX.lay,AX.H,x,y,p,now,seed||0):null;
     if(rpo){bob+=rpo.lift||0;if(rpo.armL!==undefined)armL=rpo.armL;if(rpo.armR!==undefined)armR=rpo.armR;if(rpo.legL!==undefined)legL=rpo.legL;if(rpo.legR!==undefined)legR=rpo.legR;if(rpo.mouth)mouth=true;}
     if(epo&&!atKeys){var ek=epo.k;bob+=epo.lift;rot=rot*(1-ek)+epo.rot;if(!rpo){armL=armL*(1-ek)+epo.armL*ek;armR=armR*(1-ek)+epo.armR*ek;}legL=legL*(1-ek)+epo.legL*ek;legR=legR*(1-ek)+epo.legR*ek;}}
-  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{armL:armL,armR:armR,legL:legL,legR:legR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
+  if(!dance&&!crowd)ART.footShadow(g,x,y,p,0);
+  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
   if(cr)ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,seed||0,cr.hands,crowd.target);
   if(AX){var ly=y+(rpo?rpo.lift:0)+(epo&&!atKeys?epo.lift:0);if(AX.reacts)ART.reactFx(g,AX.reacts,now,x,ly,p,seed||0);if(epo)ART.envFx(g,AX.lay,AX.H,x,ly,p,now,seed||0);}
   if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+10*p,y-20*p-ph*14);g.globalAlpha=1;}
@@ -4382,17 +4386,17 @@ function drawVenueTo(g,W,H,opts){
   var cAge=now-PCROWD.t0,crowd=cAge<ART.CROWD_MS&&PCROWD.kind?{kind:PCROWD.kind,age:cAge,target:{x:W/2,y:SB*H*0.25}}:null;
   /* you, on stage at your keyboard (at the front of the stage when the Jumbotron is down); glows while a note sounds */
   var pp=stage?Math.max(3,Math.round(H/260)):Math.max(2,Math.round(sc*1.25)),py=stage?SB*H-14*pp:.15*sy+8;
-  perfDraw(g,W/2,py,pp,now,crowd&&crowd.kind!=="lasers"&&crowd.kind!=="float"?crowd:null,alay,H,true);
+  perfDraw((opts&&opts.front)||g,W/2,py,pp,now,crowd&&crowd.kind!=="lasers"&&crowd.kind!=="float"?crowd:null,alay,H,true);
   /* audience, back to front so nearer people overlap farther ones */
   ids.sort(function(a,b){return AUD.people[a].dy-AUD.people[b].dy;});
   var heads=[];
   ids.forEach(function(id){var p=AUD.people[id];
     /* glide toward where they are, and advance the stride by distance covered so steps match speed */
-    var mx=(p.x-p.dx)*.18,my=(p.y-p.dy)*.18;p.dx+=mx;p.dy+=my;
-    var step=Math.hypot(mx*W,my*sy);
-    if(step>.15){p.walk=(p.walk||0)+Math.min(.5,step*.22+.12);p.walkUntil=now+120;}
-    var walking=now<(p.walkUntil||0);
+    /* close the gap to where they are at a steady walking pace (quicker when far behind), so nobody glides in */
+    var gx=p.x-p.dx,gy=p.y-p.dy,gap=Math.hypot(gx,gy*sy/W),fdt=Math.min(0.05,Math.max(0.001,(now-(p._ft||now))/1000));p._ft=now;
+    if(gap>0.3){p.dx=p.x;p.dy=p.y;}else if(gap>0){var stp=Math.min(gap,(0.36+gap*3)*fdt);p.dx+=gx/gap*stp;p.dy+=gy/gap*stp;}
     var x=p.dx*W,y=Math.min(H-24,Y(p.dy));
+    var walking=ART.walkStep(p._walk||(p._walk={}),x,y,now,sc);
     var pz=null;
     if(p.dance>=4&&p.pose){if(!p.poseCur)p.poseCur=p.pose.slice();for(var q=0;q<4;q++)p.poseCur[q]+=(p.pose[q]-p.poseCur[q])*.4;pz=p.poseCur;}
     var cmb=p.dance>=4?(p.combo||0):0;STREAK.track(p,cmb);
@@ -4400,7 +4404,7 @@ function drawVenueTo(g,W,H,opts){
     if(!p.look)p.look=audLook("",p.color,p.name);
     var cw=crowd&&crowd.kind==="lasers"?{kind:"lasers",age:cAge,target:{x:W/2+Math.sin(now/650+(p.seed||0))*W*0.32,y:SB*H*0.25}}:crowd;
     AUDX={reacts:p.reacts,lay:alay,H:H};
-    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking?p.walk:null,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null,cw);
+    var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,walking,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null,cw);
     if(p.msT&&now-p.msT<1700)STREAK.pop(g,x,headY,p.msN,now-p.msT,Math.max(0.75,sc*0.7));
     else if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
     heads.push([p,x,headY]);});
@@ -4447,7 +4451,10 @@ var JAMSTAGE=(function(){
     /* (it starts below the jam toolbar so the toolbar's buttons stay clickable) */
     var drop=(1-(1-Math.pow(1-k,3)))*(y0+hh+60);
     var jt={x:Math.round(W/2-ww/2),y:Math.round(y0-drop),w:Math.round(ww),h:Math.round(hh),k:k},vid=videoOn();
-    drawVenueTo(g,W,H,{stage:true,jt:jt,video:vid});
+    /* with a video up, you're drawn on the layer above it (the video element sits over the stage canvas) */
+    var fc=$("jFront"),fg=null;
+    if(fc){if(fc.width!==cv.width||fc.height!==cv.height){fc.width=cv.width;fc.height=cv.height;}fg=fc.getContext("2d");fg.setTransform(1,0,0,1,0,0);fg.clearRect(0,0,fc.width,fc.height);fg.setTransform(dpr,0,0,dpr,0,0);fg.imageSmoothingEnabled=false;}
+    drawVenueTo(g,W,H,{stage:true,jt:jt,video:vid,front:vid&&k>0.02?fg:null});
     /* the video element sits exactly on the Jumbotron's screen */
     var v=$("jmV");
     if(v){var key=jt.x+","+jt.y+","+jt.w+","+jt.h+","+(vid&&k>0.02);
@@ -4629,8 +4636,8 @@ var CHART=(function(){
                       patterns across all four arrows
      with a cap on arrows per second so it stays playable (lower for fast songs). */
   var RUNS=[[0,1,3,2],[3,2,0,1],[0,2,3,1],[3,1,0,2],[0,1,2,3],[3,2,1,0],[1,0,2,3],[2,3,1,0]];
-  function steps(e,rms,ft,bt,bpm,level,seed){
-    var nb=bt.length,ii=intensity(e,rms,ft,bt),E=ii.E,loud=ii.loud,CHR=ii.chroma,i;
+  function steps(e,rms,ft,bt,bpm,level,seed,iiPre){
+    var nb=bt.length,ii=iiPre||intensity(e,rms,ft,bt),E=ii.E,loud=ii.loud,CHR=ii.chroma,i;
     /* Holds: an arrow with a tail, held down until the tail ends. They go where the music holds a sound:
        the harmony stays the same and the volume stays up for the next 2 (or 4) beats. */
     function cosb(a,b){var d=0,x=0,y=0;for(var q=0;q<12;q++){d+=a[q]*b[q];x+=a[q]*a[q];y+=b[q]*b[q];}return x>0&&y>0?d/Math.sqrt(x*y):0;}
@@ -4736,7 +4743,43 @@ var CHART=(function(){
       cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop});
     });
   }
-  return{analyse:analyse};
+  /* ---- a song's analysis, kept small enough to store and share (for YouTube songs, where only the analysis is
+     kept, never the sound). features() is everything analyse() measures before the steps are placed; fromFeatures()
+     places the steps from it at any level and gives the same chart analyse() would. ---- */
+  function b64(u8){var s="",i;for(i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);}
+  function unb64(t){var s=atob(t),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+  function r(v,d){var m=Math.pow(10,d);return Math.round(v*m)/m;}
+  function features(buffer,opts,cb){
+    opts=opts||{};
+    var sr=buffer.sampleRate,n=buffer.length,ch=buffer.numberOfChannels,x=new Float32Array(n),c,i;
+    for(c=0;c<ch;c++){var d=buffer.getChannelData(c);for(i=0;i<n;i++)x[i]+=d[i]/ch;}
+    envelope(x,sr,opts.onProgress,function(env,rms,ft){
+      var e=standOut(env),bpm=tempo(e),bt=beats(e,bpm);
+      for(var pass=0;pass<2;pass++){
+        var gaps=[];for(i=1;i<bt.length;i++)gaps.push(bt[i]-bt[i-1]);
+        var med=pct(gaps,0.5),sum=0,cnt=0;
+        for(i=0;i<gaps.length;i++)if(Math.abs(gaps[i]/med-1)<0.15){sum+=gaps[i];cnt++;}
+        var real=cnt?60*FPS/(sum/cnt):bpm,changed=Math.abs(real/bpm-1)>0.04;
+        bpm=real;if(!changed)break;
+        bt=beats(e,bpm);
+      }
+      var ii=intensity(e,rms,ft,bt),mx=0;for(i=0;i<e.length;i++)if(e[i]>mx)mx=e[i];
+      var q=new Uint16Array(e.length);for(i=0;i<e.length;i++)q[i]=mx>0?Math.round(e[i]/mx*65535):0;
+      cb({v:1,bpm:bpm,dur:Math.round(n/sr*1000),seed:n%100000+Math.round(bpm*10),bt:bt.map(function(b){return r(b,2);}),
+        e:{s:mx,d:b64(new Uint8Array(q.buffer))},
+        ii:{E:Array.prototype.map.call(ii.E,function(v){return r(v,4);}),loud:Array.prototype.map.call(ii.loud,function(v){return r(v,2);}),
+          ch:ii.chroma.map(function(a){return Array.prototype.map.call(a,function(v){return r(v,3);});}),peaks:ii.peaks}});
+    });
+  }
+  function fromFeatures(f,opts){
+    opts=opts||{};
+    var u=unb64(f.e.d),q=new Uint16Array(u.buffer,0,u.length>>1),e=new Float32Array(q.length),i;
+    for(i=0;i<q.length;i++)e[i]=q[i]/65535*f.e.s;
+    var ii={E:Float32Array.from(f.ii.E),loud:Float32Array.from(f.ii.loud),chroma:f.ii.ch.map(function(a){return Float32Array.from(a);}),peaks:f.ii.peaks.map(function(p){return p.slice();})};
+    var bt=f.bt.slice(),bpm=f.bpm,res=steps(e,null,null,bt,bpm,opts.level||1,opts.seed||f.seed,ii),st=res.steps;
+    return{bpm:Math.round(bpm*10)/10,dur:f.dur,beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop};
+  }
+  return{analyse:analyse,features:features,fromFeatures:fromFeatures};
 })();
 
 /* ── Show effects (performer side) ──
