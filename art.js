@@ -23,7 +23,7 @@ var ART=(function(){
   var CLOTH=["#E8505B","#F0A040","#F5D03C","#4CC38A","#2F8F6A","#4A9BE8","#2D4E9B","#9B7FE0","#D354A0","#EDEDF5","#5A5670","#26222F"];
   var OPTS={
     skin:{label:"Skin",n:SKIN.length,col:SKIN},
-    hair:{label:"Hair",names:["Bald","Short","Spiky","Long","Mohawk","Afro","Ponytail","Beanie"]},
+    hair:{label:"Hair",names:["Bald","Short","Spiky","Long","Mohawk","Afro","Ponytail","Beanie","Bob","Bangs","Bun","Pigtails","Braid","Curly","Side swoop","Long waves","Pixie","Buzz","Bowl cut","Quiff","Messy","Shoulder length","High ponytail"]},
     hairCol:{label:"Hair colour",n:HAIRCOL.length,col:HAIRCOL},
     top:{label:"Top",names:["T-shirt","Tank top","Hoodie","Jacket","Striped tee"]},
     topCol:{label:"Top colour",n:CLOTH.length,col:CLOTH},
@@ -99,6 +99,15 @@ var ART=(function(){
     /* behind the head: afro, long hair, the hood */
     if(L.hair===5){px(-7,-19,14,9,hc);px(-6,-20,12,1,hc);px(-8,-17,1,6,hc);px(7,-17,1,6,hc);}
     if(L.hair===3){px(-6,-14,2,11,hc);px(4,-14,2,11,hc);}
+    var H=L.hair,hcL=shade(hc,0.25),hb=Math.round(Math.max(0,hd)*3);
+    if(H===9){px(-6,-14+hb,2,11,hc);px(4,-14+hb,2,11,hc);px(-6,-4+hb,2,1,hcD);px(4,-4+hb,2,1,hcD);}              /* bangs: long and straight behind */
+    if(H===13){px(-8,-17+hb,16,11,hc);px(-9,-15+hb,1,7,hc);px(8,-15+hb,1,7,hc);px(-7,-6+hb,14,2,hc);           /* curly: a big cloud of curls */
+      for(var cu=-8;cu<8;cu+=3){px(cu,-5+hb,2,1,hcD);px(cu+1,-18+hb,2,1,hc);}px(-9,-9+hb,1,2,hcD);px(8,-11+hb,1,2,hcD);}
+    if(H===14){px(-7,-13+hb,2,11,hc);px(-7,-3+hb,2,1,hcD);}                                                       /* side swoop: long on one side */
+    if(H===15){for(var wv=0;wv<14;wv++){var wo=(wv>>1)%2;px(-7+wo,-13+wv+hb,2,1,hc);px(5-wo,-13+wv+hb,2,1,hc);}px(-6,-13+hb,1,12,hcD);px(5,-13+hb,1,12,hcD);}   /* long waves */
+    if(H===21){px(-7,-12+hb,2,9,hc);px(5,-12+hb,2,9,hc);px(-7,-4+hb,2,1,hcD);px(5,-4+hb,2,1,hcD);}              /* shoulder length */
+    if(H===22){px(1,-19+hb,3,2,hc);px(3,-18+hb,3,3,hc);px(5,-16+hb,2,6,hc);px(5,-10+hb,2,3,hcD);px(6,-8+hb,1,2,hc);}   /* high ponytail, swinging out behind */
+    if(H===11){px(-9,-13+hb,3,7,hc);px(6,-13+hb,3,7,hc);px(-9,-6+hb,2,2,hcD);px(7,-6+hb,2,2,hcD);}             /* pigtails */
     if(L.top===2){px(-6,-14,12,2,tcD);px(-7,-12,2,7,tcD);px(5,-12,2,7,tcD);}
     /* legs */
     var legCols=L.bottom===0?[[5,bc],[7,shoe]]:L.bottom===1?[[2.5,bc],[5,skin],[7,shoe]]:[[5,skin],[7,shoe]];
@@ -137,8 +146,26 @@ var ART=(function(){
     if(hair===5){px(-6,-16+hy,12,3,hc);}
     if(hair===6){px(5,-13+hy,2,6,hc);px(5,-7+hy,2,1,hcD);}
     if(hair===7){px(-6,-17+hy,12,4,hc);px(-6,-14+hy,12,1,shade(hc,0.35));px(-5,-18+hy,10,1,hc);px(-1,-19+hy,2,1,shade(hc,0.35));}
+    /* the newer styles: the top of the head (and anything over the face) */
+    function cap(){px(-5,-15+hy,10,3,hc);px(-5,-12+hy,1,2,hc);px(4,-12+hy,1,2,hc);px(-5,-15+hy,10,1,hcD);}
+    var RIB="#E8505B";
+    if(hair===8){px(-4,-17+hy,8,1,hc);px(-5,-16+hy,10,3,hc);px(-6,-15+hy,2,9,hc);px(4,-15+hy,2,9,hc);px(-4,-13+hy,4,1,hc);px(-6,-7+hy,2,1,hcD);px(4,-7+hy,2,1,hcD);px(-3,-16+hy,4,1,hcL);}   /* bob */
+    if(hair===9){cap();px(-5,-13+hy,10,2,hc);px(-6,-14+hy,1,9,hc);px(5,-14+hy,1,9,hc);px(-5,-12+hy,10,1,hcD);px(-3,-15+hy,3,1,hcL);}   /* bangs: a straight fringe */
+    if(hair===10){px(-5,-15+hy,10,2,hc);px(-5,-15+hy,10,1,hcD);px(-5,-13+hy,1,1,hc);px(4,-13+hy,1,1,hc);px(-3,-18+hy,6,3,hc);px(-2,-19+hy,4,1,hc);px(-1,-19+hy,2,1,hcL);px(-3,-16+hy,6,1,hcD);}   /* bun on top */
+    if(hair===11){cap();px(-4,-13+hy,8,1,hc);px(-7,-13+hy,1,1,RIB);px(6,-13+hy,1,1,RIB);}   /* pigtails: the ties */
+    if(hair===12){cap();px(-5,-13+hy,5,1,hc);px(4,-13+hy,2,3,hc);for(var bk=0;bk<6;bk++)px(4+(bk%2),-10+bk*2+hy,2,2,bk%2?hcD:hc);px(4,2+hy,2,1,RIB);px(4,3+hy,2,1,hc);}   /* a braid over the shoulder */
+    if(hair===13){px(-6,-17+hy,12,3,hc);px(-6,-14+hy,2,3,hc);px(4,-14+hy,2,3,hc);px(-4,-14+hy,2,1,hc);px(1,-14+hy,3,1,hc);for(var ck=-5;ck<6;ck+=3)px(ck,-16+hy,1,1,hcD);}   /* curly: curls over the forehead */
+    if(hair===14){cap();px(-5,-14+hy,6,2,hc);px(-5,-12+hy,4,2,hc);px(-6,-14+hy,1,9,hc);px(1,-15+hy,3,1,hcL);px(-5,-11+hy,3,1,hcD);}   /* side swoop over one eye */
+    if(hair===15){cap();px(-1,-15+hy,1,1,shade(hc,-0.45));px(-6,-13+hy,1,6,hc);px(5,-13+hy,1,6,hc);px(-4,-15+hy,2,1,hcL);}   /* long waves: parted */
+    if(hair===16){px(-5,-15+hy,10,2,hc);px(-5,-15+hy,10,1,hcD);px(-5,-13+hy,6,1,hc);px(-5,-12+hy,3,1,hc);px(4,-13+hy,1,2,hc);px(1,-16+hy,3,1,hc);}   /* pixie */
+    if(hair===17){var bz=shade(hc,-0.1);px(-5,-15+hy,10,2,bz);for(var bx2=-5;bx2<5;bx2+=2)px(bx2,-14+hy,1,1,hcL);px(-5,-13+hy,1,1,bz);px(4,-13+hy,1,1,bz);}   /* buzz cut */
+    if(hair===18){px(-5,-17+hy,10,1,hc);px(-6,-16+hy,12,4,hc);px(-6,-12+hy,1,3,hc);px(5,-12+hy,1,3,hc);px(-6,-13+hy,12,1,hcD);px(-3,-16+hy,4,1,hcL);}   /* bowl cut */
+    if(hair===19){cap();px(-4,-17+hy,7,2,hc);px(-2,-18+hy,5,1,hc);px(2,-17+hy,3,1,hcL);px(-1,-18+hy,2,1,hcL);}   /* quiff, swept up and back */
+    if(hair===20){cap();px(-5,-17+hy,1,2,hc);px(-3,-18+hy,2,3,hc);px(0,-17+hy,2,2,hc);px(3,-18+hy,1,3,hc);px(-4,-13+hy,1,2,hc);px(-1,-13+hy,2,2,hc);px(2,-13+hy,1,1,hc);px(-6,-13+hy,1,4,hc);px(5,-13+hy,1,4,hc);}   /* messy */
+    if(hair===21){cap();px(-1,-15+hy,1,2,shade(hc,-0.45));px(-6,-13+hy,2,8,hc);px(4,-13+hy,2,8,hc);}   /* shoulder length, centre part */
+    if(hair===22){px(-5,-15+hy,10,2,hc);px(-5,-15+hy,10,1,hcD);px(-5,-13+hy,1,1,hc);px(4,-13+hy,1,1,hc);px(1,-17+hy,2,2,hc);px(1,-17+hy,2,1,RIB);}   /* high ponytail: pulled back, tied at the crown */
     /* headbanging: bowed right down, the hair hangs over the face; flung back up, it flies */
-    if(hd>0.55&&hair!==0&&hair!==4){px(-5,-13+hy,10,6,hc);px(-6,-12+hy,1,6,hc);px(5,-12+hy,1,6,hc);px(-5,-7+hy,10,1,hcD);}
+    if(hd>0.55&&hair!==0&&hair!==4&&hair!==17){px(-5,-13+hy,10,6,hc);px(-6,-12+hy,1,6,hc);px(5,-12+hy,1,6,hc);px(-5,-7+hy,10,1,hcD);}
     if(hd<-0.3&&hair!==0){px(-5,-19,2,3,hc);px(-1,-20,2,4,hc);px(3,-19,2,3,hc);px(-7,-17,2,2,hc);px(5,-17,2,2,hc);}
     /* extras */
     var ex=L.extra;
@@ -1259,6 +1286,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.42.1",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.43.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

@@ -526,3 +526,7 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Opening the performer page, jam mode and the Start song menu no longer contacts the server. The badge shows which server it would use; click it to check (that wakes Render).
 - The server is only contacted when you go live, open the YouTube tab in the song menu, or click the badge.
 - Venue practice reads the processed YouTube songs from the repo's data branch first, so practice never wakes the server.
+
+## More hairstyles (v1.43.0)
+- Character creator → Hair now has 23 styles (was 8). New: **Bob, Bangs, Bun, Pigtails, Braid** (over the shoulder), **Curly** (big cloud), **Side swoop** (over one eye), **Long waves, Pixie, Buzz, Bowl cut, Quiff, Messy, Shoulder length, High ponytail**.
+- Old saved characters keep their hair. Bots and random looks use the new styles too. Headbanging throws the new styles over the face (not the buzz cut).
