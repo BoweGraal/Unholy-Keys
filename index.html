@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="gfx.js"></script>
 <script src="art.js"></script>
 <script src="instruments.js"></script>
 <style>
@@ -174,6 +175,8 @@ body.jset #app.jx #side-name{display:none}
 .srv-badge.custom{color:#e6d4ff;border-color:rgba(160,120,255,.55);background:rgba(160,120,255,.12)}
 #srvBadge{max-width:100%;white-space:normal;line-height:1.3;margin-top:4px;box-sizing:border-box}
 .srv-badge.waking,.srv-badge.checking{opacity:.8}.srv-badge.down{color:#ffb4b4;border-color:rgba(232,80,91,.6);background:rgba(232,80,91,.12)}
+.aud-link{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#audLinkTxt{flex:1 1 220px;min-width:0;background:var(--bg2,#120e22);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:var(--tx,#fff);font:600 11px ui-monospace,monospace;padding:5px 8px}
 #jHangBar{display:none;position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:12;gap:8px;align-items:center;width:min(640px,92vw);padding:8px 10px;border-radius:12px;background:rgba(14,11,26,.9);border:1px solid rgba(245,197,24,.45)}
 #jm.hang #jHangBar,#jm.talk #jHangBar{display:flex}
 #jm.talk:not(.hang) #jHangBar span{display:none}
@@ -468,7 +471,9 @@ body.jset .nav-item.jam-only{display:flex}
         <button class="btn" id="liveStop" style="background:#FF4444;border-color:#FF4444;color:#fff;padding:5px 14px;font-size:11px">End Stream</button>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--tx3);margin-top:6px">Share the room code -- audience opens venue.html and enters it to watch you play</div>
+    <div class="aud-link" style="margin-top:8px"><span style="font-size:11px;color:var(--tx3)">Audience link:</span>
+      <input id="audLinkTxt" readonly onclick="this.select()" title="Send this to your audience: it opens the venue on this server with your room code filled in">
+      <button class="btn" id="audLinkCopy" style="padding:4px 10px;font-size:11px">&#128203; Copy</button><button class="btn" id="audLinkShare" style="padding:4px 10px;font-size:11px;display:none">&#128228; Share</button></div>
     <div id="streamRow"></div>
   </div>
   <div class="app-section active" id="sec-play">
@@ -752,7 +757,7 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="jm">
-  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
   <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
     <button id="jStageBtn" title="Stage view: your venue, with the video on a Jumbotron">&#127967; Stage</button>
     <button id="jSongBtn" title="Start a song: pick it (your music, a video, or YouTube), pick the game, then start">&#127925; Start song</button>
@@ -4070,6 +4075,21 @@ function resolveWsUrl(){
 }
 var LIVE_URL=resolveWsUrl();
 var liveWs=null,liveOn=false;
+/* the link the audience opens: the venue next to this page, on the same server as you (a home show's tunnel address
+   rides along), with the room code filled in */
+function audienceLink(){
+  var code=(document.getElementById("liveCode")||{}).textContent||"",base=location.href.split("#")[0].split("?")[0].replace(/[^\/]*$/,"")+"venue.html",q=[];
+  if(LIVE_URL!==WS_URL&&!(location.host&&LIVE_URL.indexOf(location.host)>=0))q.push("ws="+encodeURIComponent(LIVE_URL));
+  if(/^[A-Z0-9]{4}$/i.test(code))q.push("room="+code.toUpperCase());
+  return base+(q.length?"?"+q.join("&"):"");
+}
+function copyAudienceLink(){var l=audienceLink();
+  (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(l):Promise.reject()).then(function(){showJamToast("🔗 Audience link copied: send it with the room code","#3CCB8A",2600);},function(){var t=document.getElementById("audLinkTxt");if(t){t.focus();t.select();}showJamToast("Select the link and copy it","#E0A030");});}
+function shareAudienceLink(){var l=audienceLink();if(navigator.share)navigator.share({title:"Unholy Keys: I'm live",text:"Come watch me play live",url:l}).catch(function(){});else copyAudienceLink();}
+function paintAudienceLink(){var t=document.getElementById("audLinkTxt");if(t)t.value=audienceLink();var j=document.getElementById("jAudLink");if(j)j.style.display=liveOn?"":"none";
+  var sb=document.getElementById("audLinkShare");if(sb)sb.style.display=navigator.share?"":"none";}
+window.addEventListener("load",function(){var c=document.getElementById("audLinkCopy"),s=document.getElementById("audLinkShare"),j=document.getElementById("jAudLink");
+  if(c)c.onclick=copyAudienceLink;if(s)s.onclick=shareAudienceLink;if(j)j.onclick=function(e){e.stopPropagation();if(navigator.share&&matchMedia("(pointer:coarse)").matches)shareAudienceLink();else copyAudienceLink();};paintAudienceLink();});
 /* ── Which server: Render (the cloud one) or self-hosted (your own computer, a home tunnel) ──
    Worked out from the address, confirmed by the server itself (/health and when you connect: Render sets
    RENDER=true there). Shown as a badge, and in the version line at the bottom. */
@@ -4175,7 +4195,8 @@ function goLive(){
     if(msg.type==="room-created"){SRV.reported(msg.host,msg.hostName);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
       liveOn=true;
       document.getElementById("livePnl").style.display="block";
-      document.getElementById("liveCode").textContent=msg.room;
+      document.getElementById("liveCode").textContent=msg.room;setTimeout(paintAudienceLink,0);
+      if(LIVE_URL!==WS_URL)setTimeout(function(){showJamToast("🔗 Live on your own server: copy the audience link (🔗) and send it out","#3CCB8A",4500);},400);
       audReset();
       document.getElementById("bLive").textContent="LIVE";
       document.getElementById("bLive").style.animation="pls 1s infinite";
@@ -4199,7 +4220,7 @@ function goLive(){
 }
 function endLive(){
   STREAM.stop();
-  liveOn=false;
+  liveOn=false;setTimeout(paintAudienceLink,0);
   ROUNDS.reset();
   if(liveWs)try{liveWs.close();}catch(e){}
   liveWs=null;
@@ -4213,7 +4234,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.45.0",SERVER_VERSION="";
+var PAGE_VERSION="1.49.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4272,7 +4293,7 @@ var AUD={people:{},count:0,min:false,big:false,rx:[]};
 try{AUD.min=localStorage.getItem("uk_jaud_min")==="1";AUD.big=localStorage.getItem("uk_jaud_big")==="1";}catch(e){}
 var AUD_SAY_MS=7000;
 /* reactions in the last 15 s, for the panel header: " · ❤ 5 👏 3" */
-var AUD_RX_ICON={jump:"🙌",hearts:"❤️",bigheart:"💖",clap:"👏",whistle:"😙"};
+var AUD_RX_ICON={jump:"🙌",hearts:"❤️",bigheart:"💖",clap:"👏",whistle:"😙",spin:"🌀",twirl:"💫"};
 function audRxText(){var now=Date.now(),c={},out="";(AUD.rx||[]).forEach(function(r){if(now-r.t<15000)c[r.k]=(c[r.k]||0)+1;});ART.REACTS.forEach(function(k){if(c[k])out+=" "+AUD_RX_ICON[k]+" "+c[k];});return out?" ·"+out:"";}
 window.ukAudReacts=function(){var o={};Object.keys(AUD.people).forEach(function(id){var L=AUD.people[id].reacts;if(L&&L.length)o[AUD.people[id].name]=L.map(function(r){return r.k;});});return{people:o,header:document.getElementById("jAudN").textContent};};
 function audColor(c,d){return /^#[0-9a-fA-F]{6}$/.test(c)?c:d;}
@@ -5491,18 +5512,21 @@ var ROUNDS=(function(){
     var src=f.file&&f.file.arrayBuffer?f.file.arrayBuffer():fetch(f.url).then(function(r){return r.arrayBuffer();});
     src.then(decode).then(function(buf){
       if(my!==job)return;
-      if(buf.duration>900)throw new Error("too long to check");
+      if(buf.duration>900){   /* a long mix: chart the first 15 minutes rather than give up */
+        var full=buf,lim=Math.floor(900*full.sampleRate);
+        buf={sampleRate:full.sampleRate,length:lim,numberOfChannels:full.numberOfChannels,duration:900,getChannelData:function(c){return full.getChannelData(c).subarray(0,lim);}};
+      }
       CHART.analyse(buf,{level:cfg.level,onProgress:function(p){if(my===job)fill.style.width=Math.round(p*100)+"%";}},function(chart){if(my===job)send(chart,my);});
     }).catch(function(e){
       console.warn("[Unholy Keys] could not analyse the song, using live detection:",e&&e.message);
-      if(my===job)send(null,my,true);
+      if(my===job)send(null,my,true,e&&e.message);
     });
   }
-  function send(chart,my,failed){
+  function send(chart,my,failed,why){
     if(my!==job||!cur)return;
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cfg.secs*1000;
     liveSend({type:"round-start",mode:cur.mode==="ice"?"skate":cur.mode,ice:cur.mode==="ice"?1:0,battle:!!cur.battle,title:cur.title,countdown:cfg.secs*1000,chart:chart});
-    status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file, so steps will follow the beat live. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
+    status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file"+(why?" ("+String(why).slice(0,60)+")":"")+", so there are no notes for the Note highway on this one. Try an mp3 or wav copy. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cfg.secs*1000);
     clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();
   }

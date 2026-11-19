@@ -540,3 +540,62 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Character creator: the rows of colour squares are gone. Skin, Hair, Top and Bottoms each have one round colour button. Tap it: a window opens zoomed in on that part (the head for hair and skin, the body for the top, the legs for bottoms) with the standard colours, a colour square to drag across for any colour, the browser's colour picker, and a hex box. Done (or Esc / tap outside) closes it.
 - A picked colour travels with your character: everyone in the room sees it (needs the updated server).
 - New hair: **Flame spikes**, **Widow's peak**, **Long locks** (full fringe, locks down the sides, long behind), **Bob & headband**, **Side tail**, **Fluffy mop**, **Wild crop**. New standard hair colour: teal. New hat: **Goggles** (pushed up on the head).
+
+## Audience link when live (v1.45.1)
+- Go live: the live panel shows **Audience link** with **Copy** (and **Share** on phones). The link opens the venue on the same server you're on (a home show's tunnel address included) with your room code already filled in.
+- Jam mode: a **🔗** button next to the room in the audience panel copies it (shares it on a phone).
+- On your own server (home show), a pop-up reminds you to send the link.
+- `venue.html?room=ABCD` fills in the room code on the join screen.
+
+## v1.45.2 — Note highway: no more silent empty board
+
+- Pick a song from your computer, go live, start a Note highway round. Notes should come down as before.
+- Songs longer than 15 minutes are now charted for their first 15 minutes instead of failing.
+- If a file can't be read, the performer's round status says so, and the audience board shows "NO NOTES FOR THIS SONG" instead of sitting blank. If you ever see that, tell me the file type and length.
+- Server unchanged in behaviour (version bump only), but redeploy Render to keep versions matched.
+
+## v1.46.0 — Tuning lab
+
+Open `venue.html?practice&lab` (or the new **🔧 Tuning lab** link on the join screen). A panel opens on the right (bottom sheet on a phone).
+
+- Tabs: Walking, Step & Target dance, Note highway, Keepy uppy, Roller & Ice rink, Mosh pit. Each has a short explainer and every movement, timing and scoring number for that game, with what it does and its default.
+- **▶ Play … now** starts that game in practice with the first song. The panel stays open so you can change a slider and feel it straight away. Changed values turn yellow, ↺ puts one back.
+- Changes are saved on this device and apply everywhere you play on it, until you press **Reset everything**. 🔧 Lab button (top right) shows how many are changed.
+- **Share box:** **Copy settings** copies a text list of only what you changed, ending in a JSON line. Paste that to me and I bake the values in as the new defaults. You can also paste someone's settings into the box and press **Apply pasted**.
+- Check: change Keepy "Jump power" to 150, play Keepy uppy, jump: much taller. Copy, Reset everything, paste, Apply: the value comes back.
+- Server unchanged (version bump only). Redeploy Render to keep versions matched.
+
+## v1.47.0 — Graphics lab
+
+Open `gfx.html` (or the new **🎨 Graphics lab** link on the venue join screen). It works on its own, no server needed.
+
+**Stage & lights** (live preview with a performer and dancers, beat at 128 BPM)
+- Row under the picture: lights mode, weather, fog, darkness, lasers, fireworks, neon night, disco ball, sunset, fire, follow-the-notes, 💥 burst, BPM.
+- Side tabs: Stage lights, Weather & air, Lasers/strobe/fireworks, Neon & disco ball, Colour grade. Each value has a plain explanation, a default and a reset.
+- Colour grade (brightness, contrast, saturation, hue, sepia, blur) is a filter over the whole picture, and it also applies in the venue on this device.
+
+**Assets & animation**
+- Types: Character (pose by hand), Dance (every style and variation), Instrument (every kind, with a note slider), Prop (keyboard, mic, key panel, keepy objects, rinks, disco ball).
+- Dance frames: the loop is 4 beats. Left character = original, right = with your tweaks. Scrub to a frame, move the nudge sliders (arms, legs, bounce, sideways, tilt), **Save frame at this beat**. The change fades in and out around that beat and plays in the game on this device.
+- Each asset has brightness, contrast, saturation and hue sliders and a **Save this look**. Those saved looks are for sending to me: they appear in the share box, and I apply them to the artwork.
+
+**Sharing:** the share box lists everything changed plus JSON lines. **Copy changes** → paste to me; I lock them in as defaults. Paste a saved set and press **Apply pasted** to load it. **Reset everything** clears values, dance tweaks and asset looks.
+
+Server unchanged (version bump only); redeploy Render to keep versions matched.
+
+## v1.48.0 — Puppet dance, spins, pull-out dots, move queue
+
+Free dance (all in the free dance panel).
+
+- **Puppet** (new dance, last button on the right): nothing moves by itself. Left dot = body (slide to shift and lean, up to rise, down to crouch). Right dot = limbs (up raises them, left/right swings them). Moves: Arms, Legs, Arms + legs, Cross (one arm up, the other down).
+- **Spin** (T) and **Twirl** (G, two fast turns): new buttons in the free dance panel and the reaction bar. Your character turns right round on the spot; everyone in the show sees it.
+- **Pull a dot out:** drag a dot only a little past its ring and it just stretches. Pull hard (well past the edge) and it tears out: the ring glows gold and your dancer carries on by itself (Puppet loops your last couple of seconds; the other dances keep dancing). Slide the dot over a dance or move button and it switches after a moment (button lights up). Let go and the dot pops back into its ring and you're in control again.
+- **Move queue:** with a dance and move showing, press **＋ Add this move** (up to 8). When it's your turn in the middle, the queue plays in order and splits your turn evenly; the current one is lit gold. Tap a chip to remove it, Clear to empty. Kept on this device.
+- Server changed: accepts dance 16 and the spin/twirl reactions. **Redeploy Render** or other players won't see Puppet or spins.
+
+## v1.49.0 — Phone-friendly labs, more graphics sliders, asset looks in the game
+
+- **Phones:** open `venue.html?practice&lab` (Tuning lab) or `gfx.html` (Graphics lab) on your phone. The panel is a bottom sheet with one scrolling row of tabs; the share text box is tucked away. **Copy settings / Copy changes** copies straight to your clipboard. **✎ Text** opens the box to paste a set back in.
+- **New section "Sunset, fire & Jumbotron"** in the Graphics lab: sun size and sky strength, flame height, window glow, ember count, Jumbotron light speed and frame thickness. Turn on Sunset or Fire in the effect row to see them.
+- **Asset looks now apply in the game:** in the Graphics lab, set an asset's brightness / contrast / saturation / hue and press **Save this look**. Instruments, keyboard, mic stand, keepy objects and both rinks use their saved look in the venue and on the stage on this device. Works in Chrome, Edge and Firefox; Safari ignores it. **Reset look** puts it back.
+- Server unchanged (version bump only).
