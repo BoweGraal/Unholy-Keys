@@ -441,3 +441,18 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Music tab → Dance rounds → "When I play a backing track": **no game: everyone just listens & hangs out** (the default). The song plays, with no countdown and no game. The audience walks, talks, reacts, and can Dance → Free dance whenever they like.
 - **🤖 Fill the room with bots: up to N people** (2–8, remembered). Go live: bots join until the room has N people. Each real person who joins takes a bot's place, and when someone leaves a bot fills in. Set it to off and they all leave.
 - Bots have 🤖 in their names. They walk around, chat now and then (no two say the same line within 2 minutes), react while music plays, and sometimes free dance between songs. In rounds they dance, post decent (rarely winning) scores, vote in free-dance rounds and battles, and push in the mosh pit's wall of death.
+
+## Live song menu (v1.37.0)
+- In Jam, click **🎵 Start song** (top, next to Hang out).
+  1. **Pick the song**:
+     - **Music**: your Backing Tracks, the site's songs folder, **+ Song file**, **📁 Folder**.
+     - **Video**: video files. The sound goes to everyone like any track; the picture shows behind the visuals and on the Jumbotron for you.
+     - **YouTube**: search or paste a link. Songs added in dance practice show "✓ steps ready".
+  2. **Pick the game**: No game (just listen & hang out), Step, Target, Note highway, 4 keys, Free dance or Mosh pit, plus countdown, steps level and Battle.
+  3. **Start**.
+- **With a game, while live**: the song is checked, the audience gets the countdown, and the song starts at zero. A YouTube song uses its practice steps if it has them, otherwise steps made live from the beat.
+- **With no game**: an optional countdown just for you, then the song plays.
+- **The bar** at the bottom left shows the song, the game, its time and progress.
+  - **❚❚ / ▶** (or P) pauses and resumes. During a round everyone's game holds still and the venue shows "⏸ Paused".
+  - **■ End** ends the round (scores counted) and stops the song.
+- **When the song ends on its own**: same as End. The Jumbotron goes back up, in the venue and in Stage view (this used to stay down after a YouTube song finished).

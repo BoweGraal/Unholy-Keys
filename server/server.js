@@ -232,7 +232,7 @@ function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
   var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle };
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
-  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = Date.now() - rd.playAt; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
+  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
   return o;
 }
@@ -315,6 +315,8 @@ function roundMessage(ws, msg) {
     if (rd.phase !== "countdown" && rd.phase !== "play") return;
     var ts0 = +msg.ts0; rd.ts0 = isFinite(ts0) && msg.ts0 !== null ? ts0 : null;
     rd.playAt = Date.now() - intIn(msg.pos, 0, 3600000, 0);
+    /* paused: everyone's game holds at this point in the song until the next round-play */
+    rd.paused = !!msg.paused; rd.pausePos = rd.paused ? intIn(msg.pos, 0, 3600000, 0) : 0;
     var first = rd.phase !== "play"; rd.phase = "play";
     broadcast(code, roundPublic(r));
     if (first && rd.isBattle) {
@@ -391,7 +393,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.36.0";
+var VERSION = "1.37.0";
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
@@ -499,7 +501,7 @@ function onMessage(ws, raw, isBinary) {
     if (msg.type === "bots") { BOTS.setFill(ws.room, msg.fill); return; }
     if (!PERFORMER_TYPES[msg.type]) return;
     if (msg.type === "state") rooms[ws.room].state = msg;
-    if (msg.type === "video") { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); }
+    if (msg.type === "video") { if (msg.action === "stop") rooms[ws.room].video = null; else { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); } }
     if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
     if (msg.type === "show-fx") {
       // the show's effects (lights, fog, lasers, darkness, weather, sunset, fire, fireworks): kept for latecomers

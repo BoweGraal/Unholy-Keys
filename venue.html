@@ -248,6 +248,8 @@ body.pr-yt #prBar>*:not(#prYtBox){display:none}
 body.pr-yt #prYtBox{display:block!important;margin-top:0}
 body.pr-yt #prYtBox>*:not(#prYtQ):not(#prYtCancel){display:none}
 body.pr-yt #prYtCancel{display:inline-block}
+/* the performer paused the song: a note across the top while everyone's game holds still */
+body.rd-paused::after{content:"\23F8  Paused";position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9999;padding:8px 18px;border-radius:12px;background:rgba(14,11,26,.9);border:1px solid rgba(245,197,24,.6);color:#F5C518;font:800 16px system-ui,sans-serif;letter-spacing:.5px;pointer-events:none}
 #prYtQ{display:flex;flex-direction:column;gap:4px;margin-top:6px;font-size:12px}
 #prYtQ .q{display:flex;gap:8px;align-items:center;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.05)}
 #prYtQ .q b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
@@ -3337,6 +3339,7 @@ var ROUND=(function(){
   function active(){return !!rd&&rd.phase==="play";}
   function pos(){
     if(!rd)return -1e9;
+    if(rd.paused)return rd.pausePos+corr;                 /* the performer paused the song: hold still */
     var p=(rd.ts0!==null&&rd.ts0!==undefined)?SP.songPos(rd.ts0):null,now=performance.now();
     if(p!==null){rd.liveP=p;rd.liveT=now;}
     /* the live sound dropped out for a moment: carry on from where it was, rather than jump to another clock */
@@ -3567,6 +3570,7 @@ var ROUND=(function(){
       var first=rd.phase!=="play";
       rd.ts0=(typeof m.ts0==="number"&&isFinite(m.ts0))?m.ts0:null;
       playPerf=performance.now()-(+m.pos||0);
+      rd.paused=!!m.paused;rd.pausePos=+m.pos||0;if(rd.paused)rd.liveT=0;document.body.classList.toggle("rd-paused",rd.paused);
       rd.phase=ph;
       if(m.spot)setSpot(m.spot);                                /* joined after the spotlight was planned */
       if(m.b)setBattle({n:rd.n,b:m.b});                         /* joined after the bracket was drawn */
@@ -3586,7 +3590,7 @@ var ROUND=(function(){
     }
     else if(ph==="off"){if(GAME.mode)GAME.stop();end();hide();}
   }
-  function end(){document.getElementById("gamePanel").classList.remove("spotlit");document.body.classList.remove("battle-match");rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
+  function end(){document.getElementById("gamePanel").classList.remove("spotlit");document.body.classList.remove("battle-match");document.body.classList.remove("rd-paused");rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
   function reset(){if(rd&&GAME.mode)GAME.stop();end();hide();}
   function setTotals(t){totals=Array.isArray(t)?t.slice(0,10).map(function(x){return{name:safeText(x.name,24),pts:Math.max(0,Math.floor(+x.pts||0)),wins:Math.max(0,Math.floor(+x.wins||0))};}):[];}
   function scores(m){if(rd&&m.n===rd.n&&active()){top={top:Array.isArray(m.top)?m.top.slice(0,5).map(function(x){return{id:String(x.id),name:safeText(x.name,24),score:Math.max(0,Math.floor(+x.score||0))};}):[],players:Math.max(0,Math.floor(+m.players||0))};drawPlay();}}
@@ -4747,7 +4751,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.36.0",SERVER_VERSION="";
+var PAGE_VERSION="1.37.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
