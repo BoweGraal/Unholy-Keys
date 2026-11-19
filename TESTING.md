@@ -510,3 +510,14 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - **Extras → 🌃 Neon night** (new show toggle): the room goes black, the stage is traced in glowing tube lights (truss, stage lip, a floor grid), everyone becomes a glowing outline in their shirt colour, and the crowd waves glow sticks. Works with any lights mode (try it with EDM).
 - **Lighters up → Glow sticks**: both arms waving glow sticks fast.
 - New **🥾 Techno march** style (the "'" key), from a street-parade clip: a heavy stomping march under everything, plus **March**, **Point** (arm thrust out at the crowd on the beat), **Arm swing** (big arcs across the chest), **Flex**, **Mix it up**. Made for the DJ booth and EDM lights.
+
+## Song map, recorded shows, sustain lock (v1.42.0)
+- **Start song** menu has new options: **🤖 Bots** (same as the room fill), **🎼 Auto key** (on by default), **🌟 Auto stage**.
+- Pick a game while you're not live: the note says Start goes live first. Press Start: it goes live (screen share prompt), the bots come in, and the round begins. No more being blocked.
+- **Auto key:** the song is analysed (with a game, as part of the round; with No game, in the background). Your key and scale are set to the song's key, and follow key changes partway through (a "🎼 Key: D major" pop-up). The now-playing bar shows the part and key, e.g. "🔥 Chorus · D major".
+- **Parts:** intro, verse, chorus, solo, bridge, breakdown, finale, outro. The audience gets a big banner as each part starts. In the dance games, the finale counts as a big moment the whole way (burning border, double points).
+- **Auto stage:** each part gets its own look: intro cool and foggy, verse plain, chorus party lights + lasers, solo spotlight, bridge warm, breakdown strobe in the dark, finale party + lasers + fireworks + confetti, outro cool. (Chorus uses EDM lights if you're on EDM.)
+- **⏺ Record show** (on the now-playing bar): press it while a song plays, then make stage changes as you like. End the song (or press it again) to save. Next time that song plays, your show plays back by itself at the same moments ("▶ Show ✕" on the bar; click it to delete the saved show). A saved show takes over from Auto stage.
+- **Sustain:** every session starts in Sustain, and Z / X / Ctrl / V no longer change the articulation. Change it in Setup → Play.
+- Jumbotron note lines: medium size (between the old small and big ones).
+- Bassoon redrawn: black body with silver keys and rings, a white cap on the bell, slimmer.

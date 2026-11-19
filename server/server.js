@@ -79,7 +79,7 @@ function liveVideo(r) {
     v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
   return v;
 }
-var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1 };
+var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1, "song-part": 1 };
 
 /* ── Live sound/visual stream ──
    The performer sends binary packets: byte 0 is the kind (1 = audio, 2 = visuals), the rest is
@@ -130,6 +130,7 @@ function broadcast(room, msg, exclude) {
 var ROUND_POINTS = [10, 7, 5, 3];
 var VOTE_MS = +process.env.VOTE_MS || 20000;
 function intIn(v, lo, hi, def) { v = Math.floor(+v); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : def; }
+var SECTION_NAMES = ["intro", "verse", "chorus", "solo", "bridge", "breakdown", "finale", "outro"];
 function cleanChart(c) {
   if (!c || !Array.isArray(c.steps) || !Array.isArray(c.beats) || c.steps.length > 8000 || c.beats.length > 6000) return null;
   var steps = [], beats = [], arrows = 0, i;
@@ -148,7 +149,17 @@ function cleanChart(c) {
     var p0 = intIn(pk[0], 0, 3600000, -1), p1 = intIn(pk[1], 0, 3600000, -1);
     if (p0 >= 0 && p1 > p0) peaks.push([p0, p1]);
   }
-  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks, drop: intIn(c.drop, 0, 3600000, 0) };
+  /* the song's map: key changes [ms, root 0-11, minor 0/1] and parts [ms, name] */
+  var keys = [], sections = [];
+  if (Array.isArray(c.keys)) for (i = 0; i < c.keys.length && keys.length < 60; i++) {
+    var ky = c.keys[i]; if (!Array.isArray(ky)) continue;
+    var kt = intIn(ky[0], 0, 3600000, -1), kr = intIn(ky[1], 0, 11, -1); if (kt >= 0 && kr >= 0) keys.push([kt, kr, ky[2] ? 1 : 0]);
+  }
+  if (Array.isArray(c.sections)) for (i = 0; i < c.sections.length && sections.length < 120; i++) {
+    var sc = c.sections[i]; if (!Array.isArray(sc)) continue;
+    var stt = intIn(sc[0], 0, 3600000, -1); if (stt >= 0 && SECTION_NAMES.indexOf(sc[1]) >= 0) sections.push([stt, sc[1]]);
+  }
+  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks, drop: intIn(c.drop, 0, 3600000, 0), keys: keys, sections: sections };
 }
 /* Spotlight plan for free dance rounds: who takes the centre stage when, in song time (ms).
    dancers: [{id,name,color}] in turn order; chart: {dur, beats} or null; lockPos: song position now.
@@ -394,7 +405,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.41.0";
+var VERSION = "1.42.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -523,6 +534,14 @@ function onMessage(ws, raw, isBinary) {
       return;
     }
     /* the performer talking: everyone sees it in the chat and over the performer's head */
+    if (msg.type === "song-part") {
+      /* which part of the song is playing (verse, chorus, solo, finale...), or "" when it ends: for the audience's banner */
+      var part = msg.k === "" ? "" : SECTION_NAMES.indexOf(msg.k) >= 0 ? msg.k : null;
+      if (part === null || !allow(ws, "part", 4, 1)) return;
+      rooms[ws.room].part = part;
+      broadcast(ws.room, { type: "song-part", k: part }, ws);
+      return;
+    }
     if (msg.type === "perf-chat") {
       var ptext = str(msg.text, 300);
       if (!ptext || !allow(ws, "chat", 5, 1)) return;

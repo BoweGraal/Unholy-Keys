@@ -97,6 +97,9 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #reactBar button:active,#reactBar button.pop{transform:scale(1.18);background:rgba(211,84,160,.6);border-color:#D354A0}
 #reactBar button.cool{opacity:.4}
 /* the mosh pit: a banner for each part, your score, a hint, and the big tap pad for the push war */
+/* ── the part of the song (verse, chorus, solo...), announced as it starts ── */
+#partBanner{position:fixed;left:50%;top:26%;transform:translateX(-50%);z-index:22;pointer-events:none;font:900 clamp(24px,5.5vw,48px)/1 system-ui,sans-serif;color:#fff;text-shadow:0 0 18px #D354A0,0 3px 0 #000;white-space:nowrap;opacity:0}
+#partBanner.pop{animation:moshPop 2.2s ease-out forwards}
 /* ── keepy uppy ── */
 #keepyUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
 #keepyUI.on{display:block}
@@ -404,6 +407,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
     <button data-r="whistle" title="Whistle (U)" aria-label="Whistle">&#128537;</button>
   </div>
   <div id="moshUI"><div id="moshBanner">🤘 MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
+  <div id="partBanner"></div>
   <div id="keepyUI"><div id="kpBanner">🎈 KEEPY UPPY</div><div id="kpScore">0</div><div id="kpHint"></div><button id="kpJump" aria-label="Jump">JUMP<small>tap twice</small></button></div>
   <div id="skateUI"><div id="skBanner">🛼 ROLLER RINK</div><div id="skScore">0</div><div id="skSpeed"><i></i></div><div id="skTrick"></div><div id="skHint"></div><button id="skJump" aria-label="Jump">JUMP</button><div id="skWheel"><b data-t="1" style="left:50%;top:9%">SUPERMAN</b><b data-t="2" style="left:50%;top:91%">TUCK</b><b data-t="3" style="left:13%;top:50%">KICK</b><b data-t="4" style="left:87%;top:50%">SPLIT</b><i id="skKnob"></i></div></div>
   <div id="roundBox"></div>
@@ -1553,6 +1557,7 @@ function handleMsg(msg){
   else if(t==="show-fx"){SHOWFX=msg.fx||null;}
   else if(t==="perf-pos"){perfPos(msg);}
   else if(t==="kick"){KEEPY.onKick(msg);}
+  else if(t==="song-part"){songPart(msg.k);}
   else if(t==="bscore"){ROUND.bscore(msg);}
   else if(t==="pose"){
     var pv=viewers[msg.id],pp=safePose(msg.a);
@@ -2295,6 +2300,7 @@ var GAME=(function(){
     /* inside one of the song's big moments? (the border burns and hits score double) */
     var pk=rnd.chart.peaks||[],inside=false;
     for(i=0;i<pk.length;i++)if(pos>=pk[i][0]&&pos<pk[i][1]){inside=true;break;}
+    var sx=rnd.chart.sections;if(sx&&!inside){var cs="";for(i=0;i<sx.length&&sx[i][0]<=pos;i++)cs=sx[i][1];if(cs==="finale")inside=true;}   /* the finale's a big moment the whole way */
     if(inside!==onFire){onFire=inside;fireT=now;foot();document.getElementById("gamePanel").classList.toggle("onfire",onFire);}
   }
   /* scores go to the server; in a battle match, tagged with the match and sent more often (the room watches them live) */
@@ -3962,6 +3968,19 @@ var CHART=(function(){
        chroma: energy per note name, 80 Hz to 2 kHz, for spotting the parts of the song that repeat */
     var brightBin=Math.round(2500/(sr/NFFT)),pcOf=new Int8Array(NFFT/2).fill(-1);
     for(k=Math.max(1,Math.round(80/(sr/NFFT)));k<Math.min(NFFT/2,Math.round(2000/(sr/NFFT)));k++){var fz=k*sr/NFFT;pcOf[k]=((Math.round(12*Math.log(fz/261.63)/Math.LN2)%12)+12)%12;}
+    /* key chroma: a long, fine-grained look (about 0.37 s of sound) every quarter second, 110 Hz to 2 kHz, each bin counted only
+       when it sits close to a real note, so the song's key can be worked out (the short look above is too coarse) */
+    var KN=sr>32000?16384:8192,KH=25,kre=new Float32Array(KN),kim=new Float32Array(KN),kwin=new Float32Array(KN),kpc=new Int8Array(KN/2).fill(-1),kw=new Float32Array(KN/2),kc=new Float32Array(Math.ceil(N/KH)*12+12);
+    for(k=0;k<KN;k++)kwin[k]=0.5-0.5*Math.cos(2*Math.PI*k/(KN-1));
+    var knote=new Int16Array(KN/2).fill(-999),ksum={};
+    for(k=1;k<KN/2;k++){var kf=k*sr/KN;if(kf<65||kf>2000)continue;var st=12*Math.log(kf/261.63)/Math.LN2,dv=Math.abs(st-Math.round(st));if(dv<0.3){knote[k]=Math.round(st);kpc[k]=((knote[k]%12)+12)%12;kw[k]=1-dv/0.3;ksum[knote[k]]=(ksum[knote[k]]||0)+kw[k];}}
+    for(k=1;k<KN/2;k++)if(kpc[k]>=0)kw[k]/=ksum[knote[k]];   /* every note counts the same however many bins it spans (high notes span more) */
+    function keySlice(i){
+      var o=Math.floor(i*hop),kk;if(o+KN>x.length)return;
+      for(kk=0;kk<KN;kk++){kre[kk]=x[o+kk]*kwin[kk];kim[kk]=0;}
+      fft(kre,kim);var cb=(i/KH|0)*12;
+      for(kk=1;kk<KN/2;kk++)if(kpc[kk]>=0)kc[cb+kpc[kk]]+=Math.sqrt(kre[kk]*kre[kk]+kim[kk]*kim[kk])*kw[kk];
+    }
     function slice(){
       var end=Math.min(N,i+1500);
       for(;i<end;i++){
@@ -3975,9 +3994,10 @@ var CHART=(function(){
           tot+=p2;if(k>=brightBin)hiE+=p2;if(pcOf[k]>=0)chroma[cb+pcOf[k]]+=p2;
         }
         env[i]=f;bright[i]=tot>0?hiE/tot:0;
+        if(i%KH===0)keySlice(i);
       }
       if(i<N){if(onProgress){onProgress(i/N);setTimeout(slice,0);}else slice();}
-      else done(env,rms,{bright:bright,chroma:chroma});
+      else done(env,rms,{bright:bright,chroma:chroma,kc:kc,kh:KH});
     }
     slice();
   }
@@ -4077,7 +4097,9 @@ var CHART=(function(){
       if(up){if(start<0)start=i;gap=0;}
       else if(start>=0){gap++;if(gap>4||i===nb){var end=i-gap;if(end-start+1>=8)peaks.push([start,end]);start=-1;gap=0;}}
     }
-    return{E:E,loud:loud,peaks:peaks,chroma:ch};
+    /* the key chroma, beat by beat (for the song's key) */
+    var kch=null;if(ft&&ft.kc){kch=[];for(i=0;i<nb;i++){var a2=Math.floor(bt[i]/ft.kh),b2=Math.max(a2+1,Math.floor((i+1<nb?bt[i+1]:bt[i]+50)/ft.kh)),v2=new Float32Array(12);for(k=a2;k<b2;k++)for(q=0;q<12;q++)v2[q]+=ft.kc[k*12+q]||0;kch.push(v2);}}
+    return{E:E,loud:loud,peaks:peaks,chroma:ch,kch:kch};
   }
   /* Step 5: the steps. level: 0.7 easier, 1 normal, 1.3 harder.
      calm parts:      every other beat, small moves between neighbouring arrows
@@ -4169,7 +4191,7 @@ var CHART=(function(){
     var drop=-1,dropRise=0,ds=Math.max(8,Math.round(nb*0.12)),de=nb-Math.max(12,Math.round(nb*0.06));
     for(i=ds;i<de;i++){var a0=0,a1=0,e0=0,e1=0,q;for(q=1;q<=8;q++){a0+=loud[i-q];e0+=E[i-q];}for(q=0;q<4;q++){a1+=loud[i+q];e1+=E[i+q];}
       var rise=(a1/4-a0/8)/6+(e1/4-e0/8)+(near(e,bt[i],3)/hit)*0.15;if(rise>dropRise){dropRise=rise;drop=i;}}
-    return{steps:out,drop:drop>=0&&dropRise>0.15?Math.round(bt[drop]*10+LAG):0,peaks:ii.peaks.map(function(p){return [Math.round(bt[p[0]]*10+LAG),Math.round((p[1]+1<nb?bt[p[1]+1]:bt[p[1]]+50)*10+LAG)];})};
+    return{ii:ii,steps:out,drop:drop>=0&&dropRise>0.15?Math.round(bt[drop]*10+LAG):0,peaks:ii.peaks.map(function(p){return [Math.round(bt[p[0]]*10+LAG),Math.round((p[1]+1<nb?bt[p[1]+1]:bt[p[1]]+50)*10+LAG)];})};
   }
   /* The whole job. buffer is a decoded AudioBuffer (or {sampleRate,length,numberOfChannels,getChannelData}).
      opts: {level, seed, onProgress(0..1)}; cb(chart). */
@@ -4191,7 +4213,7 @@ var CHART=(function(){
         bt=beats(e,bpm);
       }
       var res=steps(e,rms,ft,bt,bpm,opts.level||1,opts.seed||(n%100000+Math.round(bpm*10))),st=res.steps;
-      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop});
+      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop,keys:(res.map=structure(res.ii,bt)).keys,sections:res.map.sections});
     });
   }
   /* ---- a song's analysis, kept small enough to store and share (for YouTube songs, where only the analysis is
@@ -4219,18 +4241,65 @@ var CHART=(function(){
       cb({v:1,bpm:bpm,dur:Math.round(n/sr*1000),seed:n%100000+Math.round(bpm*10),bt:bt.map(function(b){return r(b,2);}),
         e:{s:mx,d:b64(new Uint8Array(q.buffer))},
         ii:{E:Array.prototype.map.call(ii.E,function(v){return r(v,4);}),loud:Array.prototype.map.call(ii.loud,function(v){return r(v,2);}),
-          ch:ii.chroma.map(function(a){return Array.prototype.map.call(a,function(v){return r(v,3);});}),peaks:ii.peaks}});
+          ch:ii.chroma.map(function(a){return Array.prototype.map.call(a,function(v){return r(v,3);});}),peaks:ii.peaks,
+          kc:ii.kch?ii.kch.map(function(a){var m=0,z;for(z=0;z<12;z++)if(a[z]>m)m=a[z];return Array.prototype.map.call(a,function(v){return m?Math.round(v/m*99):0;});}):null}});
     });
   }
   function fromFeatures(f,opts){
     opts=opts||{};
     var u=unb64(f.e.d),q=new Uint16Array(u.buffer,0,u.length>>1),e=new Float32Array(q.length),i;
     for(i=0;i<q.length;i++)e[i]=q[i]/65535*f.e.s;
-    var ii={E:Float32Array.from(f.ii.E),loud:Float32Array.from(f.ii.loud),chroma:f.ii.ch.map(function(a){return Float32Array.from(a);}),peaks:f.ii.peaks.map(function(p){return p.slice();})};
+    var ii={E:Float32Array.from(f.ii.E),loud:Float32Array.from(f.ii.loud),chroma:f.ii.ch.map(function(a){return Float32Array.from(a);}),peaks:f.ii.peaks.map(function(p){return p.slice();}),kch:f.ii.kc?f.ii.kc.map(function(a){return Float32Array.from(a);}):null};
     var bt=f.bt.slice(),bpm=f.bpm,res=steps(e,null,null,bt,bpm,opts.level||1,opts.seed||f.seed,ii),st=res.steps;
-    return{bpm:Math.round(bpm*10)/10,dur:f.dur,beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop};
+    return{bpm:Math.round(bpm*10)/10,dur:f.dur,beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop,keys:(res.map=structure(res.ii,bt)).keys,sections:res.map.sections};
   }
-  return{analyse:analyse,features:features,fromFeatures:fromFeatures};
+  /* ---- the song's map: what key it's in (and where that changes) and its parts (intro, verse, chorus, solo,
+     bridge, breakdown, finale, outro). From the harmony and intensity of each beat.
+     keys: [[ms, root 0-11 (C=0), 1 if minor]]; sections: [[ms, name]], each where it starts. ---- */
+  var KMAJ=[6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88],KMIN=[6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+  function keyOf(c){   /* Krumhansl-Schmuckler: the key whose profile best matches the notes heard */
+    var best=-2,bk=0,second=-2,mc=0,i,r;for(i=0;i<12;i++)mc+=c[i];mc/=12;
+    function corr(P,root){var mp=0,j;for(j=0;j<12;j++)mp+=P[j];mp/=12;var n=0,da=0,db=0;for(j=0;j<12;j++){var a=c[(j+root)%12]-mc,b=P[j]-mp;n+=a*b;da+=a*a;db+=b*b;}return da&&db?n/Math.sqrt(da*db):0;}
+    for(r=0;r<24;r++){var v=corr(r<12?KMAJ:KMIN,r%12);if(v>best){second=best;best=v;bk=r;}else if(v>second)second=v;}
+    return{root:bk%12,minor:bk>=12?1:0,k:bk,score:best,margin:best-second};
+  }
+  function structure(ii,bt){
+    var nb=bt.length,ch=ii.chroma,E=ii.E,i,q,ms=function(b){return Math.round(bt[Math.min(nb-1,b)]*10+LAG);};
+    if(nb<16)return{keys:[],sections:[]};
+    function sumC(a,b,src){src=src||ch;var c=new Float64Array(12);for(var z=Math.max(0,a);z<Math.min(nb,b);z++)for(q=0;q<12;q++)c[q]+=src[z][q];return c;}
+    var KC=ii.kch&&ii.kch.length===nb?ii.kch:ch;
+    /* key: the whole song's, then 8-bar windows a bar apart; a change only counts if the new key holds for
+       6 windows (bars) in a row and clearly beats the old one there */
+    var whole=keyOf(sumC(0,nb,KC)),votes={},vb=-1,vk=whole.k;
+    for(var w0=0;w0+32<=nb&&w0<=28;w0+=4){var k0=keyOf(sumC(w0,w0+32,KC)).k;votes[k0]=(votes[k0]||0)+1;if(votes[k0]>vb){vb=votes[k0];vk=k0;}}   /* the opening key: what the first bars agree on */
+    var keys=[[ms(0),vk%12,vk>=12?1:0]],curK=vk,run=0,runAt=0,cand={};
+    function fit(cw,K){var P=K<12?KMAJ:KMIN,rt=K%12,mp=0,mc=0,j,n=0,da=0,db=0;for(j=0;j<12;j++){mp+=P[j];mc+=cw[j];}mp/=12;mc/=12;
+      for(j=0;j<12;j++){var a=cw[(j+rt)%12]-mc,b=P[j]-mp;n+=a*b;da+=a*a;db+=b*b;}return da&&db?n/Math.sqrt(da*db):0;}
+    for(var w=0;w+32<=nb;w+=4){
+      var cw=sumC(w,w+32,KC),kw=keyOf(cw),old=fit(cw,curK);
+      /* the current key clearly doesn't fit here any more: count it, and note what fits instead */
+      if(kw.k!==curK&&kw.score-old>0.08){if(!run)runAt=w+20;run++;cand[kw.k]=(cand[kw.k]||0)+kw.score;}else{run=0;cand={};}
+      if(run>=6){var bk=-1,bs=-1;for(var ck in cand)if(cand[ck]>bs){bs=cand[ck];bk=+ck;}
+        if(bk>=0&&bk!==curK){curK=bk;keys.push([ms(runAt),curK%12,curK>=12?1:0]);}run=0;cand={};}
+    }
+    /* parts: 4-bar blocks by intensity and by whether they come back again later (choruses repeat) */
+    var nB=Math.floor(nb/16),blk=[],bv=[];
+    for(var B=0;B<nB;B++){var v=sumC(B*16,B*16+16),m=0;for(q=0;q<12;q++)m+=v[q]*v[q];m=Math.sqrt(m)||1;for(q=0;q<12;q++)v[q]/=m;bv.push(v);
+      var e=0;for(i=B*16;i<B*16+16;i++)e+=E[i];blk.push({e:e/16});}
+    for(B=0;B<nB;B++){var cnt=0;for(var C=0;C<nB;C++){if(C===B)continue;var dot=0;for(q=0;q<12;q++)dot+=bv[B][q]*bv[C][q];if(dot>0.95)cnt++;}blk[B].rep=cnt;}
+    var hi=0.58,lab=blk.map(function(b,k){
+      if(b.e>=hi)return b.rep>=1?"chorus":"solo";
+      if(k>0&&blk[k-1].e>=hi&&b.e<0.3)return "breakdown";
+      return b.rep>=1?"verse":"bridge";
+    });
+    for(B=0;B<nB&&blk[B].e<0.35;B++)lab[B]="intro";                     /* a quiet start */
+    for(B=nB-1;B>0&&blk[B].e<0.35;B--)lab[B]="outro";                    /* a quiet ending */
+    for(B=nB-1;B>=0&&lab[B]==="outro";B--);                              /* the last big part before the end is the finale */
+    if(B>=0&&(lab[B]==="chorus"||lab[B]==="solo")){var f2=B;while(f2>0&&(lab[f2-1]==="chorus"||lab[f2-1]==="solo"))f2--;if(f2>nB*0.5)for(var z=f2;z<=B;z++)lab[z]="finale";}
+    var sections=[];for(B=0;B<nB;B++)if(!B||lab[B]!==lab[B-1])sections.push([ms(B*16),lab[B]]);
+    return{keys:keys,sections:sections};
+  }
+  return{analyse:analyse,features:features,fromFeatures:fromFeatures,structure:structure};
 })();
 
 /* ============================================================
@@ -5075,7 +5144,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.41.0",SERVER_VERSION="";
+var PAGE_VERSION="1.42.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5083,6 +5152,10 @@ showVersion();window.ukVersion=function(){showVersion();return document.getEleme
 var AVO=null,PERF_AT=null;   /* PERF_AT: where the performer is drawn this frame (for their speech bubble) */
 /* the roller rink is out while a skate round is on (or you're skating in practice) */
 function rinkOn(){return GAME.mode==="skate"||(typeof ROUND!=="undefined"&&ROUND.mode==="skate");}
+/* the part of the song the performer's playing: a banner as each starts (the finale burns the dance games' border too) */
+var PART="";var PART_NAMES={intro:"🌅 INTRO",verse:"🎤 VERSE",chorus:"🔥 CHORUS",solo:"🎸 SOLO",bridge:"🌉 BRIDGE",breakdown:"🌑 BREAKDOWN",finale:"🎆 FINALE",outro:"🌙 OUTRO"};
+function songPart(k){k=PART_NAMES[k]?k:"";if(k===PART)return;PART=k;if(!k)return;var b=document.getElementById("partBanner");if(!b)return;b.textContent=PART_NAMES[k];b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+window.ukPart=function(){return PART;};
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
 function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge,look,fd){
   var s=scale||1,cx=x,cy=y;
