@@ -4085,10 +4085,10 @@ var SRV=(function(){
     if(rep==="self")return{k:"self",icon:"🏠",name:"Self-hosted"+(repName?" · "+repName:"")+" ("+hn+")",tip:"Your own server ("+h+")."};
     return{k:"custom",icon:"🛰",name:"Custom server ("+hn+")",tip:"A server at "+h+"."};
   }
-  function label(){var i=info();return i.icon+" "+i.name+(st==="waking"?" · waking up…":st==="down"?" · not reachable":"");}
+  function label(){var i=info();return i.icon+" "+i.name+(st==="waking"?" · waking up…":st==="down"?" · not reachable":"");}   /* "unchecked": not asked yet (click to check) */
   function paint(){
     var i=info();
-    els.forEach(function(id){var e=document.getElementById(id);if(!e)return;e.textContent=label();e.title=i.tip+(ver?" Server v"+ver+".":"")+(st==="down"?" It didn't answer just now.":"");
+    els.forEach(function(id){var e=document.getElementById(id);if(!e)return;e.textContent=label();e.title=i.tip+(ver?" Server v"+ver+".":"")+(st==="down"?" It didn't answer just now.":"")+(st==="unchecked"?" Not contacted yet: it's only woken when you go live, or click here to check it.":"");
       e.className="srv-badge "+i.k+" "+st;});
     if(typeof showVersion==="function")showVersion();
   }
@@ -4101,7 +4101,9 @@ var SRV=(function(){
     fetch(base+"/health",{cache:"no-cache",signal:ctl?ctl.signal:undefined}).then(function(r){return r.json();}).then(function(j){done=true;st="ok";if(j&&j.host)rep=j.host;if(j&&j.name)repName=String(j.name).slice(0,40);if(j&&j.version)ver=String(j.version).slice(0,20);paint();})
       .catch(function(){done=true;st="down";paint();});
   }
-  return{init:function(ids){els=ids;paint();check();},check:check,
+  /* no knock on the server when the page opens (that would wake Render every time you test): it's asked when you
+     go live / join, or when you click the badge */
+  return{init:function(ids){els=ids;st="unchecked";paint();els.forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener("click",function(){check();});});},check:check,
     reported:function(h,n){if(h==="render"||h==="self")rep=h;if(n)repName=String(n).slice(0,40);st="ok";paint();},
     short:function(){var i=info();return i.icon+" "+(i.k==="render"?"Render":i.k==="self"?"self-hosted":"custom server");},
     get kind(){return info().k;},get state(){return st;}};
@@ -4211,7 +4213,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.42.0",SERVER_VERSION="";
+var PAGE_VERSION="1.43.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4604,7 +4606,8 @@ var LSET=(function(){
   function clean(n){return String(n||"").replace(/\.(mp3|wav|flac|ogg|m4a|aac|opus|mp4|m4v|webm|mov|mkv)$/i,"").replace(/_/g," ");}
 
   /* ---- 1: the song ---- */
-  function setTab(t){tab=t;Array.prototype.forEach.call($("lsTabs").children,function(b){b.classList.toggle("on",b.getAttribute("data-t")===t);});
+  var readyAsked=false;
+  function setTab(t){tab=t;if(t==="yt"&&!readyAsked&&$("lsModal").classList.contains("on")){readyAsked=true;loadReady();}Array.prototype.forEach.call($("lsTabs").children,function(b){b.classList.toggle("on",b.getAttribute("data-t")===t);});
     $("lsMusic").style.display=t==="music"?"":"none";$("lsVideo").style.display=t==="video"?"":"none";$("lsYt").style.display=t==="yt"?"":"none";render();if(t==="yt")setTimeout(function(){$("lsYQ").focus();},30);}
   function item(list,label,meta,obj){var b=mk("button","it"+(pick&&pick.key===obj.key?" on":""));b.appendChild(mk("b","",label));if(meta)b.appendChild(mk("i","",meta));b.onclick=function(){choose(obj);};list.appendChild(b);}
   function render(){
@@ -4657,7 +4660,7 @@ var LSET=(function(){
 
   /* ---- 3: start, and the now-playing bar ---- */
   function open(){
-    if(!jamOn)return;loadSite();loadReady();
+    if(!jamOn)return;loadSite();if(tab==="yt"||liveOn)loadReady();   /* the server is only asked once you want YouTube songs, or you're live anyway */
     var r=ROUNDS.cfg;$("lsLevel").value=String(r.level);$("lsBattle").checked=!!r.battle;$("lsSecs").value=String(SECS);if($("lsSecs").selectedIndex<0)$("lsSecs").value="10";
     setGame(game);setTab(tab);$("lsModal").classList.add("on");
   }

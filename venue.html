@@ -508,10 +508,10 @@ var SRV=(function(){
     if(rep==="self")return{k:"self",icon:"🏠",name:"Self-hosted"+(repName?" · "+repName:"")+" ("+hn+")",tip:"Your own server ("+h+")."};
     return{k:"custom",icon:"🛰",name:"Custom server ("+hn+")",tip:"A server at "+h+"."};
   }
-  function label(){var i=info();return i.icon+" "+i.name+(st==="waking"?" · waking up…":st==="down"?" · not reachable":"");}
+  function label(){var i=info();return i.icon+" "+i.name+(st==="waking"?" · waking up…":st==="down"?" · not reachable":"");}   /* "unchecked": not asked yet (click to check) */
   function paint(){
     var i=info();
-    els.forEach(function(id){var e=document.getElementById(id);if(!e)return;e.textContent=label();e.title=i.tip+(ver?" Server v"+ver+".":"")+(st==="down"?" It didn't answer just now.":"");
+    els.forEach(function(id){var e=document.getElementById(id);if(!e)return;e.textContent=label();e.title=i.tip+(ver?" Server v"+ver+".":"")+(st==="down"?" It didn't answer just now.":"")+(st==="unchecked"?" Not contacted yet: it's only woken when you go live, or click here to check it.":"");
       e.className="srv-badge "+i.k+" "+st;});
     if(typeof showVersion==="function")showVersion();
   }
@@ -524,7 +524,9 @@ var SRV=(function(){
     fetch(base+"/health",{cache:"no-cache",signal:ctl?ctl.signal:undefined}).then(function(r){return r.json();}).then(function(j){done=true;st="ok";if(j&&j.host)rep=j.host;if(j&&j.name)repName=String(j.name).slice(0,40);if(j&&j.version)ver=String(j.version).slice(0,20);paint();})
       .catch(function(){done=true;st="down";paint();});
   }
-  return{init:function(ids){els=ids;paint();check();},check:check,
+  /* no knock on the server when the page opens (that would wake Render every time you test): it's asked when you
+     go live / join, or when you click the badge */
+  return{init:function(ids){els=ids;st="unchecked";paint();els.forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener("click",function(){check();});});},check:check,
     reported:function(h,n){if(h==="render"||h==="self")rep=h;if(n)repName=String(n).slice(0,40);st="ok";paint();},
     short:function(){var i=info();return i.icon+" "+(i.k==="render"?"Render":i.k==="self"?"self-hosted":"custom server");},
     get kind(){return info().k;},get state(){return st;}};
@@ -4413,18 +4415,18 @@ var PRACTICE=(function(){
       out.sort(function(a,b){return a.name.localeCompare(b.name);});
       var keep=ytSel&&ytSel.yt;YTL=out;renderList(keep?(out.filter(function(t){return t.yt===keep;})[0]||{}).name:null);
     }
-    /* the list: from the server (it may take a while to wake up), else straight from the repo's data branch */
+    /* the list: straight from the repo's data branch (so practice never wakes the server), else from the server */
     function load(){
       setList([]);
       var b=http();
-      (b?getJSON(b+"/yt/list",25000).then(function(r){return r.songs;}):Promise.reject())
-        .catch(function(){return getJSON(rawBase()+"index.json?t="+Date.now(),10000);})
+      getJSON(rawBase()+"index.json?t="+Date.now(),10000)
+        .catch(function(){return b?getJSON(b+"/yt/list",25000).then(function(r){return r.songs;}):Promise.reject();})
         .then(function(songs){setList(songs);}).catch(function(){});
     }
     function features(vid){
       var l=local();if(l[vid]&&l[vid].f)return Promise.resolve(l[vid].f);
       var b=http();
-      return (b?getJSON(b+"/yt/"+vid+".json",25000):Promise.reject()).catch(function(){return getJSON(rawBase()+vid+".json",10000);});
+      return getJSON(rawBase()+vid+".json",10000).catch(function(){return b?getJSON(b+"/yt/"+vid+".json",25000):Promise.reject();});
     }
     function cue(vid){var y=bridge();JT.video=true;y.load(vid,0,{paused:true});}
     /* play from the top; the round starts when the video really starts, and keeps to the video's clock */
@@ -5144,7 +5146,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.42.0",SERVER_VERSION="";
+var PAGE_VERSION="1.43.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
