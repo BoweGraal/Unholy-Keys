@@ -631,7 +631,8 @@ var ART=(function(){
     {name:"Silly",icon:"\uD83E\uDD2A",subs:["Chicken","Sprinkler","YMCA","Floss","Macarena"],help:"Left dot: size and speed. Right dot: bounce."},
     {name:"Shuffle",icon:"\uD83D\uDC5F",subs:["Running man","T-step","Spin","Mix it up"],help:"Left dot: how far you travel and how low. Right dot: knee lift and arms."},
     {name:"Thriller",icon:"\uD83E\uDDDF",subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left dot: how low and how wide. Right dot: lean and arm reach."},
-    {name:"Street jam",icon:"\uD83D\uDCA5",subs:["High knees","Strike a pose","Hop step","Floor spin","Mix it up"],help:"Left dot: how low and how far you travel. Right dot: knee height and arms."}
+    {name:"Street jam",icon:"\uD83D\uDCA5",subs:["High knees","Strike a pose","Hop step","Floor spin","Mix it up"],help:"Left dot: how low and how far you travel. Right dot: knee height and arms."},
+    {name:"Cyber goth",icon:"\uD83E\uDD16",subs:["Stomp & punch","Arm sweep","Hands up","Windmill","Mix it up"],help:"Left dot: stomp width and how low. Right dot: arm size and speed."}
   ];
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function dance(style,sub,c,bp){
@@ -714,6 +715,24 @@ var ART=(function(){
       o.legL=dir*(0.05+leg*1.35);o.legR=dir*(0.05+leg*1.2);                                   /* legs kick up off the floor */
       o.armL=dir*(-2.55+chest*0.45);o.armR=dir*(-2.1+chest*0.5);o.alL=o.alR=8-chest*2;             /* hands planted out in front */
       o.dx=dir*((bp%4+4)%4)*1.2-dir*2.4;
+      break;}
+    case 12:{ /* cyber goth (from a clip of an industrial dance crew): heavy stomping steps out wide, fists punching
+                 forward in turn, big arm sweeps across the body side to side, hands up over the head, arms windmilling */
+      var sw3=0.4+(ax+1)*0.2,lo3=Math.max(0,ay)*2.5,sz=0.8+(bx+1)*0.35,fast3=by<-0.4?2:1,m3=sub;
+      if(sub===4)m3=Math.floor(bp/4)%4;
+      var st3=Math.floor(bp)%2?1:-1,sp3=Math.pow(1-ph,3);
+      /* the stomp under everything: step out wide on each beat, knee lifting on the off-beat */
+      o.legL=st3<0?sw3+0.2*sp3:0.15;o.legR=st3>0?-sw3-0.2*sp3:-0.15;if(ph>0.5){if(st3<0)o.lgR=7-(ph-0.5)*4;else o.lgL=7-(ph-0.5)*4;}
+      o.bob=lo3+sp3*1.5;o.dx=st3*2;
+      if(m3===0){   /* stomp & punch: a straight punch forward with the stomping side's fist, the other pulled back */
+        var pn=Math.sin(bp*Math.PI*fast3);if(pn>0){o.armL=1.5*sz;o.alL=9;o.armR=-0.6;o.alR=5;}else{o.armR=-1.5*sz;o.alR=9;o.armL=0.6;o.alL=5;}o.rot=pn*0.08;
+      }else if(m3===1){   /* arm sweep: both arms swing across the body together in a big arc, one side then the other */
+        var as=Math.sin(bp*Math.PI*fast3);o.armL=0.4+as*1.4*sz;o.armR=-0.4+as*1.4*sz;o.rot=as*0.1;o.dx=as*3;
+      }else if(m3===2){   /* hands up: both hands over the head, swaying, elbows bent */
+        var hw=Math.sin(bp*Math.PI*fast3);o.armL=2.6+hw*0.25;o.armR=-2.6+hw*0.25;o.alL=o.alR=6;o.rot=hw*0.07;
+      }else{   /* windmill: arms circling, one after the other */
+        var wa=bp*Math.PI*fast3*1.5;o.armL=((wa%(Math.PI*2))+Math.PI*2)%(Math.PI*2);o.armR=-((wa+Math.PI)%(Math.PI*2));o.alL=o.alR=9;
+      }
       break;}
     case 11:{ /* street jam (from a clip of a guy dancing his way through town): prancing high knees with the fists pumping,
                  a squat with one arm cocked up and a leg kicked out, hopping side to side on one leg, and a crouched floor spin */

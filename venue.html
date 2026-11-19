@@ -1314,7 +1314,7 @@ var MAKER=ART.maker(document.getElementById("maker"),myLook,function(L){
 });
 /* a look from the network: 8 letters, or nothing (then dress them in their colour) */
 /* a free dance from the network: {s: dance 1-8, m: move, c: [4 dots, -100..100]} or null */
-function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=11)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
+function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=12)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
   var c=f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v)):0;});return{s:s,m:m,c:c};}
 function lookOf(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;name=String(name||"");for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return ART.looks.fromColor(color,h+1);}
 
@@ -1916,6 +1916,7 @@ document.addEventListener("keydown",function(e){
     /* 1-9 pick a dance; Z X C V B its moves */
     if((e.code==="Minus"||e.code==="NumpadSubtract")&&GAME.fStyle!==undefined&&ART.DANCES.length>10&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(10);return;}
     if((e.code==="Equal"||e.code==="NumpadAdd")&&ART.DANCES.length>11&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(11);return;}
+    if(e.code==="BracketRight"&&ART.DANCES.length>12&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(12);return;}
     var dn=/^(Digit|Numpad)([0-9])$/.exec(e.code);if(dn){e.preventDefault();var di=dn[2]==="0"?9:+dn[2]-1;if(di<ART.DANCES.length)GAME.fdPick(di);return;}
     var sk="KeyZ KeyX KeyC KeyV KeyB".split(" ").indexOf(e.code);if(sk>=0&&GAME.fStyle>0&&sk<ART.DANCES[GAME.fStyle].subs.length){e.preventDefault();GAME.fdSub(sk);return;}
     if(GAME.fdKey(e.code,true)){e.preventDefault();return;}                                    /* a dance picked: WASD and the arrows move the two dots */
