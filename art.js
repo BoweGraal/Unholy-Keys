@@ -81,8 +81,11 @@ var ART=(function(){
     }
   }
   /* an 80s quad roller skate on a foot: white high-top boot with a hot pink stripe, a stopper, neon wheels */
-  function skate(jx,jy,a,len){
+  function skate(jx,jy,a,len,ice){
     var fx=Math.round(OX+jx-Math.sin(a)*len),fy=Math.round(OY+jy+Math.cos(a)*len);
+    if(ice){   /* figure skates: a white boot on a silver blade */
+      sg.fillStyle="#F4F1FF";sg.fillRect(fx-2,fy-3,4,4);sg.fillStyle="#C9CEE0";sg.fillRect(fx-2,fy,4,1);
+      sg.fillStyle="#9AA3B8";sg.fillRect(fx-1,fy+1,1,1);sg.fillRect(fx+1,fy+1,1,1);sg.fillStyle="#E8F6FF";sg.fillRect(fx-3,fy+2,7,1);sg.fillRect(fx+4,fy+1,1,1);return;}
     sg.fillStyle="#F4F1FF";sg.fillRect(fx-2,fy-2,5,3);sg.fillStyle="#FF3DA8";sg.fillRect(fx-2,fy-1,5,1);
     sg.fillStyle="#2a2440";sg.fillRect(fx-2,fy+1,6,1);sg.fillStyle="#FF3DA8";sg.fillRect(fx-3,fy,1,1);
     sg.fillStyle="#3DF2FF";sg.fillRect(fx-2,fy+2,2,1);sg.fillStyle="#F5F23D";sg.fillRect(fx+2,fy+2,2,1);
@@ -103,7 +106,7 @@ var ART=(function(){
     function legC(n){return legCols.map(function(c){return [c[0]*n/7,c[1]];});}
     var gL=Math.max(3,Math.min(7,st.legLenL||7)),gR=Math.max(3,Math.min(7,st.legLenR||7));
     limb(-2.5,4,lL,gL,legC(gL));limb(2.5,4,lR,gR,legC(gR));
-    if(st.skates){skate(-2.5,4,lL,gL);skate(2.5,4,lR,gR);}
+    if(st.skates){var ic=st.skates==="ice";skate(-2.5,4,lL,gL,ic);skate(2.5,4,lR,gR,ic);}
     /* torso */
     px(-5,-5,10,10,tc);
     if(L.top===4){for(var r=-4;r<5;r+=3)px(-5,r,10,1,tcL);}
@@ -151,7 +154,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     st=st||{};if(!L)L=random(7);
-    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,skates:!!st.skates};
+    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,skates:st.skates==="ice"?"ice":!!st.skates};
     var c=drawSprite(L,s),q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
     if(st.rot){
@@ -167,8 +170,9 @@ var ART=(function(){
      An 80s rink laid over the floor: a glossy maple oval with neon pink and cyan rails, a carpeted island in the
      middle where the performer plays, a mirror ball's spots sliding across it all.
      G = {cx, cy, rx, ry, ix, iy}: the oval's centre and radii and the island's radii, in screen pixels. */
-  function rink(g,G,now,k){
+  function rink(g,G,now,k,ice){
     if(!G)return;k=k===undefined?1:k;if(k<=0.01)return;
+    if(ice)return iceRink(g,G,now,k);
     g.save();g.globalAlpha=k;
     /* carpet outside the rail: dark, with an 80s squiggle and triangle pattern */
     g.save();g.beginPath();g.rect(G.cx-G.rx-60,G.cy-G.ry-30,G.rx*2+120,G.ry*2+60);g.ellipse(G.cx,G.cy,G.rx,G.ry,0,0,6.2832,true);g.clip("evenodd");
@@ -199,6 +203,31 @@ var ART=(function(){
     g.fillStyle="#2a1650";g.beginPath();g.ellipse(G.cx,G.cy,G.ix,G.iy,0,0,6.2832);g.fill();
     g.strokeStyle="rgba(245,242,61,.35)";g.lineWidth=2;for(var z=0;z<5;z++){g.beginPath();g.ellipse(G.cx,G.cy,G.ix*(0.25+z*0.15),G.iy*(0.25+z*0.15),0,0,6.2832);g.stroke();}
     rail(G.ix,G.iy,"#3DF2FF","#d8fdff");
+    g.restore();
+  }
+  /* the ice rink: the same oval, frozen. Snowbanks round the outside, scuffed blue-white ice, a frosty rail */
+  function iceRink(g,G,now,k){
+    g.save();g.globalAlpha=k;
+    g.save();g.beginPath();g.rect(G.cx-G.rx-60,G.cy-G.ry-30,G.rx*2+120,G.ry*2+60);g.ellipse(G.cx,G.cy,G.rx,G.ry,0,0,6.2832,true);g.clip("evenodd");
+    g.fillStyle="#1b2a48";g.fillRect(G.cx-G.rx-60,G.cy-G.ry-30,G.rx*2+120,G.ry*2+60);
+    g.fillStyle="rgba(235,244,255,.85)";for(var i=0;i<60;i++){var a=i/60*6.2832,bx=G.cx+Math.cos(a)*(G.rx+10),by=G.cy+Math.sin(a)*(G.ry+6);g.beginPath();g.ellipse(bx,by,14+(i*7)%10,6+(i*3)%4,0,0,6.2832);g.fill();}
+    g.restore();g.globalAlpha=k;
+    g.save();g.beginPath();g.ellipse(G.cx,G.cy,G.rx,G.ry,0,0,6.2832);g.ellipse(G.cx,G.cy,G.ix,G.iy,0,0,6.2832,true);g.clip("evenodd");
+    var ig=g.createLinearGradient(0,G.cy-G.ry,0,G.cy+G.ry);ig.addColorStop(0,"#bfe3f7");ig.addColorStop(0.5,"#e6f6ff");ig.addColorStop(1,"#a9d3ee");
+    g.fillStyle=ig;g.fillRect(G.cx-G.rx,G.cy-G.ry,G.rx*2,G.ry*2);
+    /* blade scuffs: long thin arcs round the oval */
+    g.strokeStyle="rgba(120,160,200,.28)";g.lineWidth=1;
+    for(var j=0;j<22;j++){var r=0.42+((j*37)%55)/100,a0=(j*1.7)%6.28;g.beginPath();g.ellipse(G.cx,G.cy,G.rx*r,G.ry*r,0,a0,a0+0.6+((j*13)%10)/10);g.stroke();}
+    var sh=g.createLinearGradient(G.cx-G.rx,0,G.cx+G.rx,0),so=((now/5000)%1);sh.addColorStop(Math.max(0,so-0.1),"rgba(255,255,255,0)");sh.addColorStop(so,"rgba(255,255,255,.45)");sh.addColorStop(Math.min(1,so+0.1),"rgba(255,255,255,0)");
+    g.fillStyle=sh;g.fillRect(G.cx-G.rx,G.cy-G.ry,G.rx*2,G.ry*2);
+    for(var d=0;d<26;d++){var an=d*0.9+now/2600,rr=0.25+((d*37)%70)/100,sx=G.cx+Math.cos(an)*G.rx*rr*0.95,sy=G.cy+Math.sin(an*1.3)*G.ry*rr*0.9;
+      g.fillStyle=["rgba(255,255,255,.8)","rgba(255,120,200,.45)","rgba(80,200,255,.5)"][d%3];g.beginPath();g.ellipse(sx,sy,3,2,0,0,6.2832);g.fill();}
+    g.restore();
+    function rail(rx,ry,c1,c2){g.shadowColor=c1;g.shadowBlur=12;g.strokeStyle=c1;g.lineWidth=5;g.beginPath();g.ellipse(G.cx,G.cy,rx,ry,0,0,6.2832);g.stroke();g.shadowBlur=0;g.strokeStyle=c2;g.lineWidth=1.5;g.beginPath();g.ellipse(G.cx,G.cy,rx,ry,0,0,6.2832);g.stroke();}
+    rail(G.rx,G.ry,"#8fd8ff","#ffffff");
+    g.fillStyle="#24365e";g.beginPath();g.ellipse(G.cx,G.cy,G.ix,G.iy,0,0,6.2832);g.fill();
+    g.fillStyle="rgba(240,248,255,.9)";for(var z=0;z<14;z++){var za=z/14*6.2832;g.beginPath();g.ellipse(G.cx+Math.cos(za)*G.ix*0.82,G.cy+Math.sin(za)*G.iy*0.8,G.ix*0.14,G.iy*0.22,0,0,6.2832);g.fill();}
+    rail(G.ix,G.iy,"#8fd8ff","#ffffff");
     g.restore();
   }
   /* where an oval rink sits on a floor running from y=top to y=bot (pixels), on a screen W wide */
@@ -685,6 +714,9 @@ var ART=(function(){
     var k=easeOut(drop.disco);if(k<=0.001)return;
     var R=Math.max(P*7,Math.min(W,H)*0.045),cx=W/2,cy=-R*2+(sb+R*1.3+R*2)*k,t=now/1000,i;      /* hangs over the front of the dance floor */
     g.fillStyle="#6a5c8a";g.fillRect(Math.round(cx-P/4),0,Math.max(1,Math.round(P/2)),Math.max(0,cy-R));
+    /* lit: a glow round it, and beams of light hitting it */
+    g.save();g.globalCompositeOperation="lighter";var hal=g.createRadialGradient(cx,cy,R*0.6,cx,cy,R*3.2);hal.addColorStop(0,"rgba(255,240,255,"+(0.45*k)+")");hal.addColorStop(1,"rgba(255,240,255,0)");
+    g.fillStyle=hal;g.fillRect(cx-R*3.2,cy-R*3.2,R*6.4,R*6.4);g.restore();
     var was=g.imageSmoothingEnabled;g.save();g.beginPath();g.arc(cx,cy,R,0,6.3);g.clip();
     g.fillStyle="#5d5670";g.fillRect(cx-R,cy-R,R*2,R*2);
     var cell=Math.max(P,Math.round(R/4));
@@ -869,8 +901,11 @@ var ART=(function(){
      fxBack: behind the dancers (the sunset sky, the burning building). fxFront: in front of everything (fog,
      weather, lasers, darkness with pools of light at holes [{x,y,r}], fireworks, lightning, strobe). */
   var rocks=[],sparks=[],lastBurst=0,nextAuto=0,bolt=null,nextBolt=0;
+  /* a game can force show effects on for itself (the rink's disco ball, snow on the ice) over the performer's */
+  var FORCE=null;
+  function forced(fx){return FORCE?Object.assign({},FX_DEFAULT,fx||{},FORCE):fx;}
   function fxBack(g,W,H,lay,fx,st){
-    if(!fx)return;
+    fx=forced(fx);if(!fx)return;
     easeDrops(fx,(st&&st.now)||Date.now());
     banner(g,W,H,lay.stageBottom*H,sceneP(W,H),fx.bannerText,st&&st.jumbo);
     var P=sceneP(W,H),sb=lay.stageBottom*H,now=st.now||Date.now(),i,x,y;
@@ -897,7 +932,7 @@ var ART=(function(){
   }
   function px2(g,x,y,P,c){g.fillStyle=c;g.fillRect(Math.round(x/P)*P,Math.round(y/P)*P,P,P);}
   function fxFront(g,W,H,lay,fx,st){
-    if(!fx)return;
+    fx=forced(fx);if(!fx)return;
     var P=sceneP(W,H),sb=lay.stageBottom*H,fb=lay.floorBottom*H,now=st.now||Date.now(),t=now/1000,i,x,y,ph=st.phase||0,beat=Math.pow(1-ph,2);
     /* fog rolling across the floor */
     if(fx.fog>0){
@@ -999,6 +1034,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.39.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.40.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

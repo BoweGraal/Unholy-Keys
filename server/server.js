@@ -231,7 +231,7 @@ function battleNow(rd) { var b = rd.battle; if (!b) return -1; var p = Date.now(
 
 function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
-  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle };
+  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1;
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
   if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
@@ -305,7 +305,7 @@ function roundMessage(ws, msg) {
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { n: r.roundN, mode: mode, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
     broadcast(code, roundPublic(r));
@@ -394,7 +394,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.39.0";
+var VERSION = "1.40.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);

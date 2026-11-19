@@ -482,3 +482,10 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Get under something and jump into it: it flies back up and away. Points pop over your head. Feather is worth the most, double-jump hits score double, hits in a row before it lands score more.
 - Two phones: one heads the balloon, the other sees it fly up the same way. The stage view shows the same things flying.
 - Something that lands sits on the floor for a moment, then drops in again from the top.
+
+## Rink upgrades, ice rink, hold timing (v1.40.0)
+- Roller rink: the disco ball drops in lit up (glowing, spots round the room) for the whole round, even if the show's disco is off.
+- New **⛸ Ice rink** round (live menu, "When I play a backing track", venue practice): same game on ice, snowbanks, figure skates, and it snows.
+- Phone/touch: press **JUMP** and a trick wheel opens round your thumb (SUPERMAN up, TUCK down, KICK left, SPLIT right). Slide to a trick and hold, slide to another to chain. Slide back to the middle (or let go) before you land or you bail.
+- Note highway holds: let go as the top of the bar reaches the line. On time = PERFECT/GREAT/GOOD like a tap. Letting go too early is LET GO; holding way past still counts as OK.
+- Note highway: no horizontal beat lines; notes fall faster.
