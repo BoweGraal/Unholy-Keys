@@ -405,7 +405,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.44.0";
+var VERSION = "1.45.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -425,7 +425,7 @@ function showFx(f) {
     space: f.space ? 1 : 0, water: f.water ? 1 : 0 };
 }
 /* a character's look: 8 letters/digits (see art.js), or nothing */
-function look(s) { return typeof s === "string" && /^[0-9a-z]{8,12}$/.test(s) ? s : ""; }
+function look(s) { return typeof s === "string" && /^[0-9a-z]{8,12}(~([shtb][0-9a-f]{6}){1,4})?$/.test(s) ? s : ""; }
 
 function viewerList(room) {
   var r = rooms[room]; if (!r) return [];
