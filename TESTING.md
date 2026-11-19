@@ -456,3 +456,15 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
   - **❚❚ / ▶** (or P) pauses and resumes. During a round everyone's game holds still and the venue shows "⏸ Paused".
   - **■ End** ends the round (scores counted) and stops the song.
 - **When the song ends on its own**: same as End. The Jumbotron goes back up, in the venue and in Stage view (this used to stay down after a YouTube song finished).
+
+## Roller rink, Tab to talk, and fixes (v1.38.0)
+- **Roller rink round** (Start song → 🛼 Roller rink, the Music tab round list, or practice):
+  - The floor turns into an 80s rink: a maple oval, neon pink and cyan rails, mirror-ball spots, a carpeted island in the middle. The performer plays on the island, both in the venue and in Stage view.
+  - Everyone wears quad skates (white boots, neon wheels). Arrows, WASD or the stick push you along and you keep your momentum, bouncing off the rails. The meter top right shows speed.
+  - JUMP (Space or the big button) once you're fast enough. Faster means higher and longer.
+  - In the air, hold a direction for a trick: ↑ Superman, ↓ Tuck, ← Kick, → Split. Switch between them to chain (each one in a row is worth more). Let go before you land: if you're still holding one you BAIL and lose the points. Laps score too.
+  - Everyone sees each other's jumps, tricks and wipe-outs. Bots skate laps and jump.
+- **Tab** always opens the chat box: in the venue (Tab again closes it), and for the performer in jam (on stage, hanging out, or mid-song). The performer's message shows over their head on stage.
+- **Stage view with a video**: the note lines now show over the video (like classic jam), not hidden under it.
+- **Cello**: leans back past the player's shoulder, so you can see them behind it.
+- **Show tab → Weather → Intensity** slider: light drizzle to a downpour (rain and storm), a few flakes to a blizzard (snow).

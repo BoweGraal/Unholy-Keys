@@ -112,6 +112,7 @@ module.exports = function(api) {
     if (b.dead || !b.room || !rooms[b.room]) { clearInterval(b.timer); return; }
     var now = Date.now(), rd = b.rd, playing = rd && rd.phase === "play", songOn = playing || now - b.lastNote < 4000;
     var free = !rd || (playing && (rd.mode === "free" || rd.mode === "mosh"));
+    if (playing && rd.mode === "skate") { skate(b, now); }
 
     /* wander about (not while playing a step, target or highway round: they're busy with the game) */
     if (free && now > b.nextMove && !(b.dancing && Math.random() < 0.7)) {
@@ -144,7 +145,7 @@ module.exports = function(api) {
   /* in a round: dance along, report a score (bots are decent, rarely great), vote in battles, push in the mosh */
   function round(b, now) {
     var rd = b.rd, pos = now - rd.playAt, ch = rd.chart, bpm = ch && ch.bpm || 120;
-    var style = rd.mode === "free" || rd.mode === "mosh" || rd.battle ? 4 : 5;
+    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.battle ? 4 : 5;
     if (!b.dancing || b.style !== style) { b.dancing = true; b.style = style; b.act({ type: "dance", style: style }); }
     pose(b, now, bpm);
     var slot = -1, bs = rd.b && rd.b.slots, be = rd.b && rd.b.entrants;
@@ -156,7 +157,7 @@ module.exports = function(api) {
     if (rd.mode !== "free" && now > b.scoreAt) {
       /* a score that grows through the song at this bot's skill */
       var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, pos / dur));
-      var full = rd.mode === "mosh" ? 60000 : arrows * 100 * (1 + arrows / 100) * 0.55;
+      var full = rd.mode === "mosh" || rd.mode === "skate" ? 60000 : arrows * 100 * (1 + arrows / 100) * 0.55;
       b.score = Math.max(b.score || 0, Math.round(full * frac * b.skill * rnd(0.9, 1.1)));
       var sm = { type: "score", s: b.score }; if (slot >= 0) sm.m = slot;
       b.act(sm); b.scoreAt = now + 2000;
@@ -166,12 +167,25 @@ module.exports = function(api) {
       b.act({ type: "tug", side: b.x < 0.5 ? 0 : 1, k: Math.ceil(rnd(1, 4) * b.skill * 2) }); b.tugAt = now + rnd(250, 600);
     }
   }
+  /* the roller rink: laps round the island, a jump with a trick now and then */
+  function skate(b, now) {
+    if (!b.sk) b.sk = { a: Math.random() * 6.283, r: rnd(0.35, 0.85), dir: Math.random() < 0.5 ? 1 : -1, air: 0, posAt: 0 };
+    var s = b.sk, dt = 0.2;
+    s.a += s.dir * dt * 0.55 * (0.6 + b.skill);
+    if (now - s.posAt > 180) { s.posAt = now; var cy = 0.56, rx = 0.13 + 0.32 * s.r, ry = 0.06 + 0.14 * s.r;
+      b.x = +(0.5 + Math.cos(s.a) * rx).toFixed(3); b.y = +(cy + Math.sin(s.a) * ry).toFixed(3); b.act({ type: "pos", x: b.x, y: b.y }); }
+    if (!s.air && Math.random() < 0.02) s.air = now;
+    var u = s.air ? (now - s.air) / 1300 : 0; if (u >= 1) { s.air = 0; u = 0; }
+    b.skH = s.air ? Math.round(26 * 4 * u * (1 - u)) : 0; b.skT = s.air ? 1 + (Math.floor(s.a * 3) % 4 + 4) % 4 : 0;
+  }
   /* a groove: arms and legs swinging on the beat, in this bot's own style (sent about five times a second) */
   function pose(b, now, bpm) {
     if (now - (b.poseAt || 0) < 190) return; b.poseAt = now;
     var beat = now / (60000 / (bpm || 120)) * b.groove, s = Math.sin(beat * Math.PI), c = Math.cos(beat * Math.PI * 0.5);
     var a = [Math.round((70 + 90 * b.arms * Math.abs(s)) * (c > 0 ? 1 : 1.6)), Math.round(-(70 + 90 * b.arms * Math.abs(Math.sin(beat * Math.PI + 1))) * (c > 0 ? 1.6 : 1)), Math.round(18 * s), Math.round(-18 * s)];
-    b.act({ type: "pose", a: a, c: Math.floor((b.score || 0) / 900) % 60 });
+    var pm = { type: "pose", a: a, c: Math.floor((b.score || 0) / 900) % 60 };
+    if (b.rd && b.rd.mode === "skate") { pm.sk = { h: b.skH || 0, f: 0, t: b.skT || 0 }; if (b.skH) pm.a = [240, -240, 100, -100]; }
+    b.act(pm);
   }
 
   return { setFill: setFill, rebalance: rebalance, stopRoom: stopRoom, isBot: function(ws) { return !!(ws && ws.bot); } };
