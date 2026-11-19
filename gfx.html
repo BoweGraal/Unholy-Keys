@@ -24,7 +24,12 @@ button{cursor:pointer}button.on{background:#7F77DD;border-color:#fff}button.go{b
 #foot{border-top:1px solid #3a2f6a;padding:8px 10px}#foot textarea{width:100%;height:84px;background:#120d28;color:#cfc8f0;border:1px solid #4a3d8a;border-radius:6px;font:11px ui-monospace,monospace;padding:5px}
 #foot .r{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .chips{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}.chips button{padding:2px 7px}
-@media(max-width:800px){#app{flex-direction:column}#side{width:100%;height:55vh;border-left:0;border-top:1px solid #4a3d8a}}
+#bTxt{display:none}
+@media(max-width:800px){html,body{overflow:hidden}#app{flex-direction:column}#side{width:100%;height:56vh;border-left:0;border-top:1px solid #4a3d8a}
+ #top{padding:5px 8px;gap:4px}#top b{display:none}#top a{margin-left:auto;font-size:11px}
+ #view{min-height:0}#fxrow,#assetrow{flex-wrap:nowrap;overflow-x:auto;padding:5px 8px;gap:5px}#fxrow>*,#assetrow>*{flex:none}
+ #tabs{flex-wrap:nowrap;overflow-x:auto;padding:6px 8px}#tabs button{flex:none}
+ .about{font-size:12px;padding:6px}#foot>div:first-child{display:none}#foot textarea{display:none}#foot.open textarea{display:block}#bTxt{display:inline-block}#foot{padding:6px 8px}}
 </style></head><body>
 <div id="app">
  <div id="main">
@@ -35,7 +40,7 @@ button{cursor:pointer}button.on{background:#7F77DD;border-color:#fff}button.go{b
  </div>
  <div id="side"><div id="tabs"></div><div id="body"></div>
   <div id="foot"><div>Share box: copy this to send me your changes, or paste a saved set here and press Apply.</div><textarea id="share" spellcheck="false"></textarea>
-   <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
+   <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
 <script src="gfx.js"></script>
@@ -54,7 +59,8 @@ var AS={cat:"dance",style:1,sub:0,q:0,play:true,speed:1,look:ART.looks.random(11
   pose:{armL:0.15,armR:-0.15,legL:0,legR:0,bob:0,dx:0,rot:0},nudge:{armL:0,armR:0,legL:0,legR:0,bob:0,dx:0,rot:0},
   bg:"#1a1433",zoom:1,f:{bright:1,contrast:1,sat:1,hue:0},prop:"keyboard"};
 var ASSETADJ={};try{ASSETADJ=JSON.parse(localStorage.getItem("uk_assetadj")||"{}");}catch(e){}
-function saveAdj(){try{localStorage.setItem("uk_assetadj",JSON.stringify(ASSETADJ));}catch(e){}}
+function saveAdj(){try{localStorage.setItem("uk_assetadj",JSON.stringify(ASSETADJ));}catch(e){}ART.reloadAdj();}
+ART.noAdj(true);   /* the lab shows the look being edited with its own filter, so the saved one is not applied twice */
 function assetKey(){return AS.cat==="dance"?"dance:"+AS.style+"."+AS.sub:AS.cat==="inst"?"inst:"+AS.kind:AS.cat==="prop"?"prop:"+AS.prop:"char";}
 function loadAdj(){var a=ASSETADJ[assetKey()];AS.f=a?{bright:a.bright||1,contrast:a.contrast||1,sat:a.sat||1,hue:a.hue||0}:{bright:1,contrast:1,sat:1,hue:0};}
 /* ---------- drawing ---------- */
@@ -227,6 +233,7 @@ $("mStage").onclick=function(){setMode("stage");};$("mAssets").onclick=function(
 $("bCopy").onclick=function(){var ta=$("share");ta.value=ta.value;ta.select();var okc=false;try{okc=document.execCommand("copy");}catch(e){}
   var done=function(){$("bCopy").textContent="Copied ✓";setTimeout(function(){$("bCopy").textContent="Copy changes";},1500);};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(done,function(){if(okc)done();});else if(okc)done();};
+$("bTxt").onclick=function(){$("foot").classList.toggle("open");};
 $("bApply").onclick=function(){
   var t=$("share").value,n=GFX.importText(t),m=/DANCE-JSON:\s*(\{[^\n]*\})/.exec(t),a=/ASSET-JSON:\s*(\{[^\n]*\})/.exec(t);
   if(m){try{ART.DTWEAK.load(JSON.parse(m[1]));}catch(e){}}if(a){try{ASSETADJ=JSON.parse(a[1])||{};saveAdj();}catch(e){}}

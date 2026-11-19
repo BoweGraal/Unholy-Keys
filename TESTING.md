@@ -592,3 +592,10 @@ Free dance (all in the free dance panel).
 - **Pull a dot out:** drag a dot only a little past its ring and it just stretches. Pull hard (well past the edge) and it tears out: the ring glows gold and your dancer carries on by itself (Puppet loops your last couple of seconds; the other dances keep dancing). Slide the dot over a dance or move button and it switches after a moment (button lights up). Let go and the dot pops back into its ring and you're in control again.
 - **Move queue:** with a dance and move showing, press **＋ Add this move** (up to 8). When it's your turn in the middle, the queue plays in order and splits your turn evenly; the current one is lit gold. Tap a chip to remove it, Clear to empty. Kept on this device.
 - Server changed: accepts dance 16 and the spin/twirl reactions. **Redeploy Render** or other players won't see Puppet or spins.
+
+## v1.49.0 — Phone-friendly labs, more graphics sliders, asset looks in the game
+
+- **Phones:** open `venue.html?practice&lab` (Tuning lab) or `gfx.html` (Graphics lab) on your phone. The panel is a bottom sheet with one scrolling row of tabs; the share text box is tucked away. **Copy settings / Copy changes** copies straight to your clipboard. **✎ Text** opens the box to paste a set back in.
+- **New section "Sunset, fire & Jumbotron"** in the Graphics lab: sun size and sky strength, flame height, window glow, ember count, Jumbotron light speed and frame thickness. Turn on Sunset or Fire in the effect row to see them.
+- **Asset looks now apply in the game:** in the Graphics lab, set an asset's brightness / contrast / saturation / hue and press **Save this look**. Instruments, keyboard, mic stand, keepy objects and both rinks use their saved look in the venue and on the stage on this device. Works in Chrome, Edge and Firefox; Safari ignores it. **Reset look** puts it back.
+- Server unchanged (version bump only).

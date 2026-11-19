@@ -18,7 +18,8 @@
   "#labBody .row .d{font-size:11px;color:#7f77a8;white-space:nowrap}"+
   "#labFoot{border-top:1px solid #3a2f6a;padding:8px 10px}#labFoot textarea{width:100%;height:84px;background:#120d28;color:#cfc8f0;border:1px solid #4a3d8a;border-radius:6px;font:11px ui-monospace,monospace;padding:5px}"+
   "#labFoot .r{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}"+
-  "@media(max-width:700px){#lab{top:auto;height:58vh;width:100vw;border-left:0;border-top:1px solid #4a3d8a}}";
+  "#labTxt{display:none}"+
+  "@media(max-width:700px){#lab{top:auto;height:60vh;width:100vw;border-left:0;border-top:1px solid #4a3d8a}#labTabs{flex-wrap:nowrap;overflow-x:auto;padding:6px 8px}#labTabs button{flex:none}#labBody .about{font-size:12px;padding:6px}#labFoot{padding:6px 8px}#labFoot>div:first-child{display:none}#labFoot textarea{display:none}#labFoot.open textarea{display:block}#labTxt{display:inline-block}}";
   document.head.appendChild(css);
   function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;}
   var btn=mk("button","","🔧 Lab");btn.id="labBtn";document.body.appendChild(btn);
@@ -62,13 +63,13 @@
     tabs=mk("div");tabs.id="labTabs";box.appendChild(tabs);body=mk("div");body.id="labBody";box.appendChild(body);
     var f=mk("div");f.id="labFoot";f.appendChild(mk("div","","Share box: copy this to send me your settings, or paste settings here and press Apply."));
     ta=document.createElement("textarea");ta.spellcheck=false;f.appendChild(ta);
-    var r=mk("div","r"),cp=mk("button","go","Copy settings"),ap=mk("button","","Apply pasted"),ra=mk("button","","Reset everything");
+    var r=mk("div","r"),cp=mk("button","go","Copy settings"),tx=mk("button","","✎ Text"),ap=mk("button","","Apply pasted"),ra=mk("button","","Reset everything");
     cp.onclick=function(){ta.value=TUNE.exportText();ta.select();var ok=false;try{ok=document.execCommand("copy");}catch(e){}
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(function(){cp.textContent="Copied ✓";setTimeout(function(){cp.textContent="Copy settings";},1500);},function(){if(ok){cp.textContent="Copied ✓";setTimeout(function(){cp.textContent="Copy settings";},1500);}});
       else if(ok){cp.textContent="Copied ✓";setTimeout(function(){cp.textContent="Copy settings";},1500);}};
     ap.onclick=function(){var n=TUNE.importText(ta.value);ap.textContent="Loaded "+n;setTimeout(function(){ap.textContent="Apply pasted";},1500);render();};
     ra.onclick=function(){if(confirm("Put every value back to its default?")){TUNE.resetAll();render();}};
-    r.appendChild(cp);r.appendChild(ap);r.appendChild(ra);f.appendChild(r);box.appendChild(f);
+    tx.id="labTxt";tx.onclick=function(){f.classList.toggle("open");};r.appendChild(cp);r.appendChild(tx);r.appendChild(ap);r.appendChild(ra);f.appendChild(r);box.appendChild(f);
     render();
   }
   build();

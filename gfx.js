@@ -39,6 +39,16 @@ var GFX=(function(){
     V("f.edmTint","EDM colour strength",0.55,0,1,0.02,"How strongly the cyan / magenta washes the room.",""),
     V("f.fwRate","Fireworks rate",1,0.2,5,0.1,"How often rockets launch in auto fireworks.","×"),
     V("f.sparkLife","Firework spark life",1300,400,3500,50,"How long sparks glow.","ms")]},
+  {id:"scenes",name:"Sunset, fire & Jumbotron",icon:"🌇",
+   about:"The sunset sky behind the stage, the burning building, and the Jumbotron screen's frame and lights.",
+   vars:[
+    V("f.sunSky","Sunset sky strength",1,0,1.5,0.05,"How strong the sunset colours are over the back wall.","×"),
+    V("f.sunSize","Sun size",0.09,0.03,0.25,0.005,"Radius of the sun as a fraction of the screen's shorter side.",""),
+    V("f.fireHeight","Flame height",1,0.3,3,0.05,"How tall the flames on the roof are.","×"),
+    V("f.fireGlow","Window glow",1,0,1.5,0.05,"Brightness of the glowing windows on the burning building.","×"),
+    V("f.embers","Ember count",26,0,100,1,"Embers drifting off the fire.",""),
+    V("f.jumboLeds","Jumbotron light speed",250,60,1000,10,"Milliseconds between colour changes of the little lights under the screen. Lower is faster.","ms"),
+    V("f.jumboFrame","Jumbotron frame thickness",2,1,6,0.5,"Thickness of the dark frame round the screen, in art pixels.","px")]},
   {id:"neon",name:"Neon & disco ball",icon:"🪩",
    about:"Neon night traces the stage in glowing tubes. The disco ball hangs over the floor and throws sparkles round the room.",
    vars:[

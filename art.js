@@ -1077,6 +1077,11 @@ var ART=(function(){
   }
   /* Frame tweaks from the graphics lab: nudges to a dance's pose at chosen points in its 4-beat loop, blended in
      smoothly either side. DT["style.sub"] = [{q: beat 0-4, w: how wide (beats), armL, armR, legL, legR, bob, dx, rot}] */
+  /* Looks saved in the graphics lab for an asset (brightness, contrast, saturation, hue), applied as a canvas filter
+     where the browser supports it (Chrome, Edge, Firefox; Safari ignores it). */
+  var ADJ={};function adjLoad(){try{ADJ=JSON.parse(localStorage.getItem("uk_assetadj")||"{}")||{};}catch(e){ADJ={};}}adjLoad();
+  function adjCss(key){var a=ADJ[key];if(!a)return "";var o=[];if(a.bright&&a.bright!==1)o.push("brightness("+a.bright+")");if(a.contrast&&a.contrast!==1)o.push("contrast("+a.contrast+")");if(a.sat!==undefined&&a.sat!==1)o.push("saturate("+a.sat+")");if(a.hue)o.push("hue-rotate("+a.hue+"deg)");return o.join(" ");}
+  var NOADJ=false;function withAdj(key,g,fn){var f=NOADJ?"":adjCss(key);if(!f||!("filter" in g)){return fn();}var was=g.filter;g.filter=f;try{return fn();}finally{g.filter=was;}}
   var DT={},DT_F=["armL","armR","legL","legR","bob","dx","rot"];
   try{var dts=JSON.parse(localStorage.getItem("uk_dtweak")||"{}");if(dts&&typeof dts==="object")DT=dts;}catch(e){}
   function dtSave(){try{localStorage.setItem("uk_dtweak",JSON.stringify(DT));}catch(e){}}
@@ -1175,11 +1180,11 @@ var ART=(function(){
   }
   /* the Jumbotron's frame, drawn round a screen rect {x,y,w,h} hanging on cables from the top; k = how far down */
   function jumboFrame(g,rc,P){
-    var b=Math.max(3,Math.round(P*2));
+    var b=Math.max(3,Math.round(P*G("f.jumboFrame",2)));
     g.fillStyle="#3a3058";g.fillRect(Math.round(rc.x+rc.w*0.18),0,Math.max(2,Math.round(P/1.5)),Math.max(0,rc.y));g.fillRect(Math.round(rc.x+rc.w*0.82),0,Math.max(2,Math.round(P/1.5)),Math.max(0,rc.y));
     g.fillStyle="#15121F";g.fillRect(rc.x-b,rc.y-b,rc.w+b*2,rc.h+b*2+P*3);
     g.fillStyle="#2a2440";g.fillRect(rc.x-b,rc.y+rc.h+b,rc.w+b*2,P*3);
-    for(var i=0;i<12;i++){g.fillStyle=TILECOL[(i+Math.floor(Date.now()/250))%TILECOL.length];g.fillRect(Math.round(rc.x-b+(rc.w+b*2)*(i+0.5)/12-P/2),Math.round(rc.y+rc.h+b+P),Math.max(1,P),Math.max(1,P));}
+    for(var i=0;i<12;i++){g.fillStyle=TILECOL[(i+Math.floor(Date.now()/G("f.jumboLeds",250)))%TILECOL.length];g.fillRect(Math.round(rc.x-b+(rc.w+b*2)*(i+0.5)/12-P/2),Math.round(rc.y+rc.h+b+P),Math.max(1,P),Math.max(1,P));}
   }
   /* crowd surprises, drawn on each dancer for a few seconds: "sparkle", "fire", "lasers" (from the hands,
      aimed at target {x,y}), "float" (the dancer rises; see crowdLift). age = ms since it started. */
@@ -1325,8 +1330,8 @@ var ART=(function(){
     if(fx.sunset&&env.space<0.99){
       /* the back wall opens to a sunset sky: a low sun behind the stage */
       var gr=g.createLinearGradient(0,0,0,sb);gr.addColorStop(0,"rgba(60,30,90,.85)");gr.addColorStop(0.45,"rgba(220,90,90,.75)");gr.addColorStop(0.8,"rgba(250,170,70,.8)");gr.addColorStop(1,"rgba(120,50,60,.85)");
-      g.fillStyle=gr;g.fillRect(0,P*6,W,sb-P*10);
-      var sx=W*0.5,sy=sb-P*12,sr=Math.min(W,H)*0.09;
+      g.globalAlpha=Math.min(1,G("f.sunSky",1));g.fillStyle=gr;g.fillRect(0,P*6,W,sb-P*10);g.globalAlpha=1;
+      var sx=W*0.5,sy=sb-P*12,sr=Math.min(W,H)*G("f.sunSize",0.09);
       g.fillStyle="rgba(255,210,90,.95)";for(y=-sr;y<=sr;y+=P)for(x=-sr;x<=sr;x+=P)if(x*x+y*y<=sr*sr&&sy+y<sb-P*6)g.fillRect(Math.round(sx+x),Math.round(sy+y),P,P);
       g.fillStyle="rgba(255,240,180,.35)";for(i=0;i<5;i++)g.fillRect(sx-sr*1.4,sy-sr*0.6+i*P*3,sr*2.8,P);
       /* a city skyline in silhouette */
@@ -1336,8 +1341,8 @@ var ART=(function(){
       /* a building ablaze behind the right side of the stage: windows glowing, flames on the roof, smoke */
       var fw=Math.max(P*22,W*0.16),fx0=W*0.68,fh=Math.min(sb*0.62,P*44),fy=sb-P*5-fh;
       g.fillStyle="#2a1a24";g.fillRect(fx0,fy,fw,fh);g.fillStyle="#1a0f16";g.fillRect(fx0+fw-P*2,fy,P*2,fh);
-      for(y=fy+P*3;y<fy+fh-P*4;y+=P*6)for(x=fx0+P*3;x<fx0+fw-P*4;x+=P*6){var fl=0.5+0.5*Math.sin(now*0.01+x*0.7+y*1.3);g.fillStyle=fl>0.55?"#F5A030":"#C8501E";g.fillRect(x,y,P*3,P*3);}
-      for(i=0;i<Math.ceil(fw/P);i++){var hh=(3+5*Math.abs(Math.sin(now*0.008+i*1.9))+3*Math.abs(Math.sin(now*0.013+i*0.7)))*P;
+      for(y=fy+P*3;y<fy+fh-P*4;y+=P*6)for(x=fx0+P*3;x<fx0+fw-P*4;x+=P*6){var fl=0.5+0.5*Math.sin(now*0.01+x*0.7+y*1.3);g.fillStyle=fl>0.55?"#F5A030":"#C8501E";g.globalAlpha=Math.min(1,G("f.fireGlow",1));g.fillRect(x,y,P*3,P*3);g.globalAlpha=1;}
+      for(i=0;i<Math.ceil(fw/P);i++){var hh=(3+5*Math.abs(Math.sin(now*0.008+i*1.9))+3*Math.abs(Math.sin(now*0.013+i*0.7)))*P*G("f.fireHeight",1);
         g.fillStyle="#E8505B";g.fillRect(fx0+i*P,fy-hh,P,hh);g.fillStyle="#F5D03C";g.fillRect(fx0+i*P,fy-hh*0.55,P,hh*0.55);}
       g.fillStyle="rgba(40,30,40,.45)";for(i=0;i<6;i++){var ph=((now/3000)+i/6)%1;g.fillRect(fx0+fw*0.3+Math.sin(ph*6+i)*P*6-ph*P*14,fy-P*10-ph*sb*0.5,P*(6+ph*10),P*(4+ph*6));}
     }
@@ -1411,7 +1416,7 @@ var ART=(function(){
       g.drawImage(dc,0,0);
     }
     /* embers off the fire, drifting over everything */
-    if(fx.fire){for(i=0;i<26;i++){var ep=((t*0.25+i*0.071)%1),ex=W*0.7+Math.sin(t+i*1.7)*W*0.18-ep*W*0.1,ey=sb*0.4-ep*sb*0.5+((i*13)%7)*P;
+    if(fx.fire){for(i=0;i<G("f.embers",26);i++){var ep=((t*0.25+i*0.071)%1),ex=W*0.7+Math.sin(t+i*1.7)*W*0.18-ep*W*0.1,ey=sb*0.4-ep*sb*0.5+((i*13)%7)*P;
       g.globalAlpha=1-ep;px2(g,ex,ey+ep*H*0.6,P,i%3?"#F5A030":"#F5D03C");}g.globalAlpha=1;}
     /* fireworks: rockets climb from behind the stage and burst over it */
     if(fx.burst&&fx.burst!==lastBurst){lastBurst=fx.burst;for(i=0;i<5;i++)rocks.push({x:W*(0.15+0.7*Math.random()),t0:now+i*220,top:sb*(0.08+Math.random()*0.35),c:TILECOL[Math.floor(Math.random()*TILECOL.length)]});}
@@ -1473,6 +1478,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.48.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.49.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){return keyboard(g,x,y,p,l,c);});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){return micStand(g,x,y,p);});},reloadAdj:adjLoad,noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
