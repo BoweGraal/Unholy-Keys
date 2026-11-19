@@ -1194,6 +1194,14 @@ function playNoteFromEvent(midi,instId,mode){
 var myId=null,myName="",myColor="#D354A0",roomCode="";
 var viewers={};  /* id -> {name,x,y,tx,ty,color,bubbleText,bubbleTime} */
 var performer={x:0.5,y:0.15,name:"Performer",color:"#D354A0",playing:false};
+/* the performer hanging out between songs: off the stage, walking the floor like everyone else, talking */
+var PH={on:false,x:0.5,y:0.6,tx:0.5,ty:0.6,color:"#F5C518",look:null,name:"",bubbleText:null,bubbleTime:0,dance:0,seed:3};
+function perfPos(m){
+  if(!m)return;var was=PH.on;PH.on=!!m.on;
+  var x=+m.x,y=+m.y;if(isFinite(x)&&isFinite(y)){PH.tx=Math.max(0.03,Math.min(0.97,x));PH.ty=Math.max(FLOOR_TOP+0.05,Math.min(FLOOR_BOTTOM,y));}
+  if(PH.on&&!was){PH.x=PH.tx;PH.y=PH.ty;PH._walk=null;}
+}
+window.ukPerfHang=function(){return{on:PH.on,x:Math.round(PH.tx*1000)/1000,y:Math.round(PH.ty*1000)/1000,say:PH.bubbleText};};
 var isPerformerPlaying=false,lastNoteMidi=60,lastNoteTime=0;
 var perfMode="sustain",perfInst="piano",perfScale="",perfKey="";
 var ws=null,wsReady=false;
@@ -1411,6 +1419,7 @@ function handleMsg(msg){
     if(msg.round)ROUND.onMsg(msg.round);else ROUND.reset();
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
+    if(msg.perfPos)perfPos(msg.perfPos);
     if(msg.performer){
       performer.name=safeText(msg.performer.name,24)||"Performer";
       performer.look=lookOf(msg.performer.look,performer.color,performer.name);
@@ -1454,6 +1463,7 @@ function handleMsg(msg){
   else if(t==="spotlight"){ROUND.setSpot(msg.turns);}
   else if(t==="battle"){ROUND.setBattle(msg);}
   else if(t==="show-fx"){SHOWFX=msg.fx||null;}
+  else if(t==="perf-pos"){perfPos(msg);}
   else if(t==="bscore"){ROUND.bscore(msg);}
   else if(t==="pose"){
     var pv=viewers[msg.id],pp=safePose(msg.a);
@@ -1509,12 +1519,13 @@ function handleMsg(msg){
     if(!sText)return;
     addChat(sender,sText,sColor);
     /* speech bubble */
-    if(msg.viewerId&&viewers[msg.viewerId]){
+    if(msg.viewerId==="performer"){PH.bubbleText=sText;PH.bubbleTime=Date.now();}
+    else if(msg.viewerId&&viewers[msg.viewerId]){
       viewers[msg.viewerId].bubbleText=sText;
       viewers[msg.viewerId].bubbleTime=Date.now();
     }
   }
-  else if(t==="performer-left"){
+  else if(t==="performer-left"){PH.on=false;
     document.getElementById("perfLeft").style.display="block";
     setTimeout(function(){document.getElementById("perfLeft").style.display="none";},5000);
     silenceNote();
@@ -4736,7 +4747,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.34.0",SERVER_VERSION="";
+var PAGE_VERSION="1.35.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5073,7 +5084,8 @@ function renderLoop(){
   jumboTick();crowdCheck();
   if(JT.rect&&JT.k>0.01){var py2=Math.min(STAGE_BOTTOM*H-14*3,JT.rect.y+JT.rect.h+20+19*3);if(py2>perfPy)perfPy+=(py2-perfPy)*JT.k;}
   if(spotK>0)drawCentreSpot(W/2,perfPy,spotK,feat);
-  if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){
+  if(PH.on){var pfc0=document.getElementById("perfFront");if(pfc0)pfc0.getContext("2d").clearRect(0,0,pfc0.width,pfc0.height);}
+  if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)&&!PH.on){   /* hanging out: the performer is on the floor, not the stage */
     var perfDim=bp&&W<640;if(perfDim){ctx.save();ctx.globalAlpha=0.35;}   /* small screens: the match needs the room */
     /* with the Jumbotron down, the performer goes on the layer above it, so they stand in front of the screen */
     var pfc=document.getElementById("perfFront"),mainCtx=ctx,useFront=pfc&&JT.k>0.02;
@@ -5103,8 +5115,13 @@ function renderLoop(){
   var ids=Object.keys(viewers);
   ids.sort(function(a,b){return viewers[a].y-viewers[b].y;});                                 /* back to front, so nearer people overlap farther ones */
   if(myId&&viewers[myId]){ids=ids.filter(function(k){return k!==myId;});ids.push(myId);}     /* you're drawn last, on top */
+  /* the performer hanging out on the floor, in among everyone (by depth) */
+  if(PH.on&&!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){
+    PH.name="\u2605 "+(performer.name||"Performer");PH.look=performer.look||lookOf(null,PH.color,performer.name);
+    var pk=0;while(pk<ids.length&&ids[pk]!==myId&&viewers[ids[pk]].y<=PH.y)pk++;ids.splice(pk,0,"__perf");
+  }
   for(var i=0;i<ids.length;i++){
-    var v=viewers[ids[i]];
+    var v=ids[i]==="__perf"?PH:viewers[ids[i]];
     /* Lerp */
     /* you go exactly where you're steering; everyone else closes the gap to their latest position at a steady
        walking pace (a little quicker when far behind), so nobody glides in and slows to a drift */

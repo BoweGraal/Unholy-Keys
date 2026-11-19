@@ -78,7 +78,7 @@ function liveVideo(r) {
     v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
   return v;
 }
-var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1 };
+var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1 };
 
 /* ── Live sound/visual stream ──
    The performer sends binary packets: byte 0 is the kind (1 = audio, 2 = visuals), the rest is
@@ -391,7 +391,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.34.0";
+var VERSION = "1.35.0";
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
@@ -482,7 +482,8 @@ wss.on("connection", function(ws) {
         performer: { name: r.performerName || "Performer", look: r.performerLook || "" },
         round: roundPublic(r),
         totals: totalsList(r),
-        fx: r.fx || null
+        fx: r.fx || null,
+        perfPos: r.perfPos || null
       });
 
       // Notify everyone else
@@ -506,6 +507,21 @@ wss.on("connection", function(ws) {
         var fx = showFx(msg.fx); if (!fx) return;
         rooms[ws.room].fx = fx;
         broadcast(ws.room, { type: "show-fx", fx: fx }, ws);
+        return;
+      }
+      /* hanging out between songs: the performer walks the floor (on = off the stage, x/y where on the floor) */
+      if (msg.type === "perf-pos") {
+        var hx = unit(msg.x), hy = unit(msg.y);
+        if (hx === null || hy === null || !allow(ws, "ppos", 20, 15)) return;
+        rooms[ws.room].perfPos = { on: msg.on ? 1 : 0, x: hx, y: hy };
+        broadcast(ws.room, { type: "perf-pos", on: msg.on ? 1 : 0, x: hx, y: hy }, ws);
+        return;
+      }
+      /* the performer talking: everyone sees it in the chat and over the performer's head */
+      if (msg.type === "perf-chat") {
+        var ptext = str(msg.text, 300);
+        if (!ptext || !allow(ws, "chat", 5, 1)) return;
+        broadcast(ws.room, { type: "chat", id: "performer", viewerId: "performer", perf: 1, name: rooms[ws.room].performerName || "Performer", color: "#F5C518", text: ptext }, ws);
         return;
       }
       if (msg.type === "perf-name") {
