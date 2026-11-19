@@ -582,3 +582,13 @@ Open `gfx.html` (or the new **🎨 Graphics lab** link on the venue join screen)
 **Sharing:** the share box lists everything changed plus JSON lines. **Copy changes** → paste to me; I lock them in as defaults. Paste a saved set and press **Apply pasted** to load it. **Reset everything** clears values, dance tweaks and asset looks.
 
 Server unchanged (version bump only); redeploy Render to keep versions matched.
+
+## v1.48.0 — Puppet dance, spins, pull-out dots, move queue
+
+Free dance (all in the free dance panel).
+
+- **Puppet** (new dance, last button on the right): nothing moves by itself. Left dot = body (slide to shift and lean, up to rise, down to crouch). Right dot = limbs (up raises them, left/right swings them). Moves: Arms, Legs, Arms + legs, Cross (one arm up, the other down).
+- **Spin** (T) and **Twirl** (G, two fast turns): new buttons in the free dance panel and the reaction bar. Your character turns right round on the spot; everyone in the show sees it.
+- **Pull a dot out:** drag a dot only a little past its ring and it just stretches. Pull hard (well past the edge) and it tears out: the ring glows gold and your dancer carries on by itself (Puppet loops your last couple of seconds; the other dances keep dancing). Slide the dot over a dance or move button and it switches after a moment (button lights up). Let go and the dot pops back into its ring and you're in control again.
+- **Move queue:** with a dance and move showing, press **＋ Add this move** (up to 8). When it's your turn in the middle, the queue plays in order and splits your turn evenly; the current one is lit gold. Tap a chip to remove it, Clear to empty. Kept on this device.
+- Server changed: accepts dance 16 and the spin/twirl reactions. **Redeploy Render** or other players won't see Puppet or spins.
