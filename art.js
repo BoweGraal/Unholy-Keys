@@ -95,7 +95,7 @@ var ART=(function(){
     sg.clearRect(0,0,CWD,CHT);
     var skin=SKIN[L.skin]||SKIN[1],hc=HAIRCOL[L.hairCol]||HAIRCOL[0],tc=CLOTH[L.topCol]||CLOTH[0],bc=CLOTH[L.botCol]||CLOTH[6];
     var tcD=shade(tc,-0.25),tcL=shade(tc,0.25),bcD=shade(bc,-0.25),skD=shade(skin,-0.18),hcD=shade(hc,-0.3),shoe="#2A2238";
-    var aL=st.armL,aR=st.armR,lL=st.legL,lR=st.legR,hy=0;
+    var aL=st.armL,aR=st.armR,lL=st.legL,lR=st.legR,hd=st.head||0,hy=Math.round(Math.max(0,hd)*3);   /* head: bowed forward (1) or flung back (-1) */
     /* behind the head: afro, long hair, the hood */
     if(L.hair===5){px(-7,-19,14,9,hc);px(-6,-20,12,1,hc);px(-8,-17,1,6,hc);px(7,-17,1,6,hc);}
     if(L.hair===3){px(-6,-14,2,11,hc);px(4,-14,2,11,hc);}
@@ -137,6 +137,9 @@ var ART=(function(){
     if(hair===5){px(-6,-16+hy,12,3,hc);}
     if(hair===6){px(5,-13+hy,2,6,hc);px(5,-7+hy,2,1,hcD);}
     if(hair===7){px(-6,-17+hy,12,4,hc);px(-6,-14+hy,12,1,shade(hc,0.35));px(-5,-18+hy,10,1,hc);px(-1,-19+hy,2,1,shade(hc,0.35));}
+    /* headbanging: bowed right down, the hair hangs over the face; flung back up, it flies */
+    if(hd>0.55&&hair!==0&&hair!==4){px(-5,-13+hy,10,6,hc);px(-6,-12+hy,1,6,hc);px(5,-12+hy,1,6,hc);px(-5,-7+hy,10,1,hcD);}
+    if(hd<-0.3&&hair!==0){px(-5,-19,2,3,hc);px(-1,-20,2,4,hc);px(3,-19,2,3,hc);px(-7,-17,2,2,hc);px(5,-17,2,2,hc);}
     /* extras */
     var ex=L.extra;
     if(ex===1){px(-4,-11+hy,8,2,"#111018");px(-4,-11+hy,3,1,"#3a3650");}
@@ -154,7 +157,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     st=st||{};if(!L)L=random(7);
-    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,skates:st.skates==="ice"?"ice":!!st.skates};
+    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,head:st.head||0,skates:st.skates==="ice"?"ice":!!st.skates};
     var c=drawSprite(L,s),q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
     if(st.rot){
@@ -163,6 +166,23 @@ var ART=(function(){
       g.drawImage(c,-OX*q,-OY*q,CWD*q,CHT*q);g.restore();
     }else g.drawImage(c,Math.round(x+dx-OX*q),Math.round(y-OY*q+bob),CWD*q,CHT*q);
     g.imageSmoothingEnabled=was;
+    if(st.prop)handProp(g,x,y,q,dx,bob,s,st);
+  }
+  /* something held up in the right hand: a lit lighter or a phone torch, with a warm (or white) glow round it */
+  function handProp(g,x,y,q,dx,bob,s,st){
+    var nR=Math.max(3,Math.min(9,s.lenR||9)),hx=6.5-Math.sin(s.armR)*nR,hy=-4.5+Math.cos(s.armR)*nR,t=(st.now||Date.now())/1000;
+    g.save();
+    if(st.rot){g.translate(Math.round(x+dx),Math.round(y+8*q*Math.abs(Math.sin(st.rot))+bob));g.rotate(st.rot);}else g.translate(Math.round(x+dx),Math.round(y+bob));
+    var X=hx*q,Y=hy*q,fl=0.75+0.25*Math.sin(t*23+x)*Math.sin(t*9.7);
+    if(st.prop==="phone"){
+      g.globalCompositeOperation="lighter";var gr=g.createRadialGradient(X,Y-q*3,0,X,Y-q*3,q*16);gr.addColorStop(0,"rgba(230,240,255,.55)");gr.addColorStop(1,"rgba(230,240,255,0)");g.fillStyle=gr;g.fillRect(X-q*16,Y-q*19,q*32,q*32);
+      g.globalCompositeOperation="source-over";g.fillStyle="#15121F";g.fillRect(Math.round(X-q*1.5),Math.round(Y-q*5),q*3,q*5);g.fillStyle="#EEF4FF";g.fillRect(Math.round(X-q),Math.round(Y-q*4.5),q*2,q*3.5);
+    }else{
+      g.fillStyle="#C9CEE0";g.fillRect(Math.round(X-q),Math.round(Y-q*2),q*2,q);g.fillStyle="#E8505B";g.fillRect(Math.round(X-q),Math.round(Y-q),q*2,q*2);
+      var fh=Math.max(2,Math.round(3*fl));g.fillStyle="#FF8A1E";g.fillRect(Math.round(X-q),Math.round(Y-q*(2+fh)),q*2,q*fh);g.fillStyle="#FFE45C";g.fillRect(Math.round(X-q*0.5),Math.round(Y-q*(1.5+fh*0.6)),q,Math.max(q,q*fh*0.5));
+      g.globalCompositeOperation="lighter";var gw=g.createRadialGradient(X,Y-q*4,0,X,Y-q*4,q*(10+fl*3));gw.addColorStop(0,"rgba(255,170,60,"+(0.45*fl)+")");gw.addColorStop(1,"rgba(255,140,40,0)");g.fillStyle=gw;g.fillRect(X-q*14,Y-q*18,q*28,q*28);
+    }
+    g.restore();
   }
 
 
@@ -632,7 +652,9 @@ var ART=(function(){
     {name:"Shuffle",icon:"\uD83D\uDC5F",subs:["Running man","T-step","Spin","Mix it up"],help:"Left dot: how far you travel and how low. Right dot: knee lift and arms."},
     {name:"Thriller",icon:"\uD83E\uDDDF",subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left dot: how low and how wide. Right dot: lean and arm reach."},
     {name:"Street jam",icon:"\uD83D\uDCA5",subs:["High knees","Strike a pose","Hop step","Floor spin","Mix it up"],help:"Left dot: how low and how far you travel. Right dot: knee height and arms."},
-    {name:"Cyber goth",icon:"\uD83E\uDD16",subs:["Stomp & punch","Arm sweep","Hands up","Windmill","Arm roll","Chop","Mix it up"],help:"Left dot: stomp width and how low. Right dot: arm size and speed."}
+    {name:"Cyber goth",icon:"\uD83E\uDD16",subs:["Stomp & punch","Arm sweep","Hands up","Windmill","Arm roll","Chop","Mix it up"],help:"Left dot: stomp width and how low. Right dot: arm size and speed."},
+    {name:"Headbang",icon:"\uD83E\uDD18",subs:["Headbang","Hair windmill","Air guitar","Rock on","Mix it up"],help:"Left dot: stance width and how low. Right dot: how hard and how fast."},
+    {name:"Lighters up",icon:"\uD83D\uDD25",subs:["Lighter sway","Phone light","Wave it","Both hands"],help:"Left dot: how far you sway. Right dot: how high you hold it."}
   ];
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function dance(style,sub,c,bp){
@@ -715,6 +737,29 @@ var ART=(function(){
       o.legL=dir*(0.05+leg*1.35);o.legR=dir*(0.05+leg*1.2);                                   /* legs kick up off the floor */
       o.armL=dir*(-2.55+chest*0.45);o.armR=dir*(-2.1+chest*0.5);o.alL=o.alR=8-chest*2;             /* hands planted out in front */
       o.dx=dir*((bp%4+4)%4)*1.2-dir*2.4;
+      break;}
+    case 14:{ /* lighters up (from a crowd clip): for the slow one. An arm held straight up with a lighter (or a phone torch),
+                 swaying with the whole crowd, once every two beats */
+      var sa=0.6+(ax+1)*0.5,hi=2.75+Math.max(0,-by)*0.25-Math.max(0,by)*0.6,sw5=Math.sin(bp*Math.PI*0.5);
+      o.dx=sw5*3*sa;o.rot=sw5*0.07*sa;o.bob=0.5-Math.abs(Math.cos(bp*Math.PI*0.5))*0.8;o.legL=0.18+Math.max(0,sw5)*0.08;o.legR=-0.18+Math.min(0,sw5)*0.08;
+      o.armR=-hi+sw5*0.08;o.alR=9;o.armL=0.2+sw5*0.05;o.prop=sub===1?"phone":"lighter";
+      if(sub===2){o.armR=-hi+Math.sin(bp*Math.PI)*0.45;o.dx=sw5*2*sa;}                                /* waving it overhead */
+      if(sub===3){o.armL=hi-0.15+sw5*0.06;o.alL=9;}                                                    /* both arms up */
+      break;}
+    case 13:{ /* headbanging (from a clip of a metal band): feet planted wide, knees bent, the whole top half whipping down
+                 on every beat and snapping back up, arms hanging loose and swinging with it */
+      var wd4=0.4+(ax+1)*0.2,lo4=1.5+Math.max(0,ay)*3,hard=1+Math.max(0,-by)*0.6,f4=bx>0.4?2:1,m4=sub;
+      if(sub===4)m4=Math.floor(bp/4)%4;
+      var hp4=((bp*f4)%1+1)%1,down=hp4<0.35?Math.sin(hp4/0.35*Math.PI/2):Math.cos((hp4-0.35)/0.65*Math.PI/2);   /* fast whip down, slower lift */
+      o.legL=wd4;o.legR=-wd4;o.lgL=o.lgR=7-lo4*0.3;o.bob=lo4+down*3*hard;
+      o.armL=0.25+down*0.5;o.armR=-0.25-down*0.5;o.mouth=down>0.7;o.head=hp4>0.55&&hp4<0.8?-0.6:down;   /* head whips down, the hair flies on the way back */
+      if(m4===1){   /* hair windmill: the head circling round, the body swinging with it */
+        var ca=bp*Math.PI*f4;o.dx=Math.cos(ca)*3*hard;o.rot=Math.sin(ca)*0.16*hard;o.bob=lo4+(Math.sin(ca)*0.5+0.5)*3*hard;o.head=Math.sin(ca)>0.3?Math.sin(ca):Math.sin(ca)<-0.5?-0.6:0;o.armL=0.3+Math.max(0,Math.sin(ca))*0.4;o.armR=-0.3-Math.max(0,-Math.sin(ca))*0.4;
+      }else if(m4===2){   /* air guitar: left hand out on the neck, the right hand strumming hard on the eighths, still banging */
+        o.armL=1.15;o.alL=8;o.armR=-0.55+Math.sin(bp*Math.PI*4)*0.35;o.alR=5;o.rot=-0.05;
+      }else if(m4===3){   /* rock on (from a clip): one arm straight up throwing the horns, still banging, the other hand by the hip */
+        var pm4=Math.pow(1-ph,2);o.armR=-2.85-pm4*0.15;o.alR=9-pm4*1.5;o.armL=0.15+down*0.25;o.alL=8;o.bob=lo4+down*2*hard;
+      }
       break;}
     case 12:{ /* cyber goth (from a clip of an industrial dance crew): heavy stomping steps out wide, fists punching
                  forward in turn, big arm sweeps across the body side to side, hands up over the head, arms windmilling */

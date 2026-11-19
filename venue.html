@@ -1315,7 +1315,7 @@ var MAKER=ART.maker(document.getElementById("maker"),myLook,function(L){
 });
 /* a look from the network: 8 letters, or nothing (then dress them in their colour) */
 /* a free dance from the network: {s: dance 1-8, m: move, c: [4 dots, -100..100]} or null */
-function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=12)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
+function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=14)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
   var c=f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v)):0;});return{s:s,m:m,c:c};}
 function lookOf(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;name=String(name||"");for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return ART.looks.fromColor(color,h+1);}
 
@@ -1918,6 +1918,8 @@ document.addEventListener("keydown",function(e){
     if((e.code==="Minus"||e.code==="NumpadSubtract")&&GAME.fStyle!==undefined&&ART.DANCES.length>10&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(10);return;}
     if((e.code==="Equal"||e.code==="NumpadAdd")&&ART.DANCES.length>11&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(11);return;}
     if(e.code==="BracketRight"&&ART.DANCES.length>12&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(12);return;}
+    if(e.code==="BracketLeft"&&ART.DANCES.length>13&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(13);return;}
+    if(e.code==="Backslash"&&ART.DANCES.length>14&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(14);return;}
     var dn=/^(Digit|Numpad)([0-9])$/.exec(e.code);if(dn){e.preventDefault();var di=dn[2]==="0"?9:+dn[2]-1;if(di<ART.DANCES.length)GAME.fdPick(di);return;}
     var sk="KeyZ KeyX KeyC KeyV KeyB KeyN KeyM".split(" ").indexOf(e.code);if(sk>=0&&GAME.fStyle>0&&sk<ART.DANCES[GAME.fStyle].subs.length){e.preventDefault();GAME.fdSub(sk);return;}
     if(GAME.fdKey(e.code,true)){e.preventDefault();return;}                                    /* a dance picked: WASD and the arrows move the two dots */
@@ -5092,7 +5094,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     var gl=ctx.createRadialGradient(cx,cy-6*s,2,cx,cy-6*s,22*s);gl.addColorStop(0,hexA(color,0.9));gl.addColorStop(1,hexA(color,0));
     ctx.fillStyle=gl;ctx.beginPath();ctx.arc(cx,cy-6*s,22*s,0,6.3);ctx.fill();ctx.restore();
   }
-  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR;
+  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,prA="";
   /* walking: moving = the walk state from ART.walkStep (feet planted, stride by distance) */
   if(moving&&!dance){var wp=ART.walkPose(moving);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*s;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*6*s;armL=2.7+Math.sin(dT*2)*0.35;armR=-armL;legL=Math.sin(dT*2)*0.25;legR=-legL;}
@@ -5103,7 +5105,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     if(fd&&dance===4){
       /* a free dance style: worked out here from the dance, its move and the two dots (the same on every screen) */
       var rg=ART.dance(fd.s,fd.m,[fd.c[0]/100,fd.c[1]/100,fd.c[2]/100,fd.c[3]/100],GAME.beatPos());
-      armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
+      armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;prA=rg.prop||"";if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
     }else{
     var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];
     bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
@@ -5120,7 +5122,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     if(ro){bob+=ro.lift||0;if(ro.armL!==undefined)armL=ro.armL;if(ro.armR!==undefined)armR=ro.armR;if(ro.legL!==undefined)legL=ro.legL;if(ro.legR!==undefined)legR=ro.legR;if(ro.mouth)mouth=true;}
     if(eo){var ek=eo.k;bob+=eo.lift;rot=rot*(1-ek)+eo.rot;if(!ro){armL=armL*(1-ek)+eo.armL*ek;armR=armR*(1-ek)+eo.armR*ek;}legL=legL*(1-ek)+eo.legL*ek;legR=legR*(1-ek)+eo.legR*ek;}}
   var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,skates:!!sko&&!sko.ns?(ICE?"ice":true):false});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,head:hdA,prop:prA,skates:!!sko&&!sko.ns?(ICE?"ice":true):false});
   /* name under the feet (stays put while dancing); yours is gold */
   if(name){
     var fs=Math.min(18,Math.round(11*Math.min(s,2.4)));

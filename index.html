@@ -4285,7 +4285,7 @@ function audEvent(msg){
     var pp=AUD.people[id],pa=[];for(var pi=0;pi<4;pi++){var pn=+msg.a[pi];if(!isFinite(pn))return;pa.push(Math.max(-3.2,Math.min(3.2,pn/100)));}
     var nc=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));
     /* free dance styles: the dance, its move and the two dots (drawn here the same way the venue draws them) */
-    var f=msg.fd;pp.fd=f&&f.s>=1&&f.s<=12&&Array.isArray(f.c)&&f.c.length===4?{s:f.s|0,m:f.m|0,c:f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v))/100:0;})}:null;
+    var f=msg.fd;pp.fd=f&&f.s>=1&&f.s<=14&&Array.isArray(f.c)&&f.c.length===4?{s:f.s|0,m:f.m|0,c:f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v))/100:0;})}:null;
     if(!pp.fd||nc>(pp.combo||0))pp.hitT=Date.now();pp.pose=pa;pp.combo=nc;
     pp.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0}:null;   /* on the roller rink */
   }
@@ -4409,7 +4409,7 @@ var KPS={objs:null,round:0,
     objs.forEach(function(o){ART.KEEPY.advance(o,t,B);});ART.KEEPY.draw(g,objs,function(x,y,z){return[x*W,Y(y)-z*sc];},sc,now);}};   /* set while drawing someone on the roller rink: {h: height in the air, f: wiped out} */
 function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys,fd,crowd){
   /* the venue's pixel character (art.js), small: name under the feet */
-  var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,lgL=7,lgR=7,alL,alR,p=Math.max(1,Math.round(sc));
+  var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,lgL=7,lgR=7,alL,alR,hdA=0,prA="",p=Math.max(1,Math.round(sc));
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
   if(walk&&!dance){var wp=ART.walkPose(walk);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*p;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*5*p;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;legL=Math.sin(dT*2)*.25;legR=-legL;}
@@ -4422,7 +4422,7 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
   }
   if(atKeys){var pl=glow?Math.sin(now*0.02):0;armL=-.55+pl*.18;armR=.55+pl*.18;mouth=glow;}
   var dxs=0,rot=0;
-  if(fd){var rg=ART.dance(fd.s,fd.m,fd.c,now/500);armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*p;dxs=rg.dx*p;rot=rg.rot;mouth=rg.mouth;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;}
+  if(fd){var rg=ART.dance(fd.s,fd.m,fd.c,now/500);armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*p;dxs=rg.dx*p;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;prA=rg.prop||"";if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;}
   /* a crowd surprise: float up; hand lasers point both arms at the stage */
   var cr=crowd&&crowd.kind?ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target):null;
   if(cr){y+=cr.lift;if(cr.armL!==undefined){armL=cr.armL;armR=cr.armR;fd=null;}}
@@ -4434,7 +4434,7 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
     if(epo&&!atKeys){var ek=epo.k;bob+=epo.lift;rot=rot*(1-ek)+epo.rot;if(!rpo){armL=armL*(1-ek)+epo.armL*ek;armR=armR*(1-ek)+epo.armR*ek;}legL=legL*(1-ek)+epo.legL*ek;legR=legR*(1-ek)+epo.legR*ek;}}
   if(!dance&&!crowd)ART.footShadow(g,x,y,p,0);
   if(AUDSK){bob-=AUDSK.h*p;if(AUDSK.f)rot=(seed%2?1.45:-1.45);}      /* skating: up in the air, or flat out */
-  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{skates:!!AUDSK&&!AUDSK.ns?(AUDSK.ice?"ice":true):false,armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
+  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{head:hdA,prop:prA,skates:!!AUDSK&&!AUDSK.ns?(AUDSK.ice?"ice":true):false,armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot});
   if(cr)ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,seed||0,cr.hands,crowd.target);
   if(AX){var ly=y+(rpo?rpo.lift:0)+(epo&&!atKeys?epo.lift:0);if(AX.reacts)ART.reactFx(g,AX.reacts,now,x,ly,p,seed||0);if(epo)ART.envFx(g,AX.lay,AX.H,x,ly,p,now,seed||0);}
   if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+10*p,y-20*p-ph*14);g.globalAlpha=1;}

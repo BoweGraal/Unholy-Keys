@@ -597,7 +597,7 @@ function onMessage(ws, raw, isBinary) {
       var fd = null;
       if (msg.fd && typeof msg.fd === "object") {
         var fs = Math.floor(+msg.fd.s), fm = Math.floor(+msg.fd.m), fc = [];
-        if (fs >= 0 && fs <= 12 && fm >= 0 && fm <= 7 && Array.isArray(msg.fd.c) && msg.fd.c.length === 4) {
+        if (fs >= 0 && fs <= 14 && fm >= 0 && fm <= 7 && Array.isArray(msg.fd.c) && msg.fd.c.length === 4) {
           for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
           if (fc) fd = { s: fs, m: fm, c: fc };
         }

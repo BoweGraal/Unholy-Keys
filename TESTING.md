@@ -502,3 +502,6 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - New **🤖 Cyber goth** style (the "]" key), from an industrial dance clip: heavy wide stomps under every move, plus **Stomp & punch**, **Arm sweep**, **Hands up**, **Windmill**, **Mix it up**. Right dot pushed up doubles the arm speed.
 - Cyber goth from a second clip: **Arm roll** (forearms rolling at the chest) and **Chop** (lunging arm chops); Mix it up now runs all six. Moves 6 and 7 are on N and M.
 - Phone dance picker: styles split evenly down both sides as compact rows; the move buttons are one row along the bottom that scrolls sideways.
+- New **🤘 Headbang** style (the "[" key), from a metal band clip: **Headbang** (top half whips down on the beat, hair falls over the face, flies on the way back up), **Hair windmill**, **Air guitar**, **Rock on** (one arm straight up throwing horns while banging), **Mix it up**. Right dot right doubles the speed.
+- Characters can now bow their head (hair hangs over the face) and fling it back (hair flies up).
+- New **🔥 Lighters up** style (the "\" key), for the slow one: arm up holding a lit lighter with a flickering flame and warm glow, the crowd swaying every two beats. **Lighter sway**, **Phone light** (white torch glow), **Wave it**, **Both hands**.
