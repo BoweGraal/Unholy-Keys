@@ -419,3 +419,12 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Pick it: "Loading…" shows, then the title, and Start lights up.
 - Opened from the performer page, your Backing Tracks are listed under **Your Backing Tracks** below the site songs, and the first Backing Track is still picked automatically. Site songs only download when you pick one.
 - Running locally with `node server/server.js`, the folder is read straight from disk.
+
+## YouTube songs in practice (v1.34.0)
+- Needs desktop Chrome or Edge. Open venue.html?practice → **Add YouTube songs** → paste one or more links → **Add to queue**.
+- The browser's share box opens. Pick **this tab** and turn on **Share tab audio**.
+- The panel moves to the bottom and shows "listening N%". The song plays in full on the Jumbotron. Leave the tab open and don't pause it (a pause just waits; if too much is missed it says so). **Stop adding** cancels.
+- When it finishes: "working out the steps…", then "added for everyone ✓" (with GITHUB_TOKEN on Render, see SETUP.md) or "added on this computer ✓". It then appears in the drop-down under **YouTube songs**.
+- Pick it and start a round: the video plays on the Jumbotron from the top. The steps follow the video, and the round ends when the video ends.
+- On a phone: YouTube songs in the list play fine (tap ▶ on the video if asked). Adding new ones explains that it needs a computer.
+- If you hear silence or "Heard only silence": the tab audio wasn't shared. Try again and tick the box.

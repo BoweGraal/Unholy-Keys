@@ -10,6 +10,7 @@ var WebSocket = require("ws");
 var http = require("http");
 var fs = require("fs");
 var path = require("path");
+var YT = require("./ytcharts.js");
 var PORT = process.env.PORT || 8080;
 var rooms = {};
 var STARTED = Date.now();
@@ -45,6 +46,7 @@ var server = http.createServer(function(req, res) {
     res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" });
     return res.end(JSON.stringify(health()));
   }
+  if (YT.handle(req, res, url)) return;   /* YouTube song charts for dance practice (see ytcharts.js) */
   if (url === "/songs/list.json") {
     res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-cache" });
     return res.end(JSON.stringify(songList()));
@@ -389,7 +391,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.33.0";
+var VERSION = "1.34.0";
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }

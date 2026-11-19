@@ -117,6 +117,18 @@ Just send them the venue URL + room code. That's it.
 
 ---
 
+## Optional: Save YouTube Songs for Everyone
+
+In dance practice, **Add YouTube songs** plays each link once while the page listens, then saves the dance steps (never the audio). To keep those songs for everyone, the Render server needs permission to write them to a `yt-charts` branch of this repo. Without it, songs only stay until the server restarts.
+
+1. On GitHub: your profile picture → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
+2. Name it `unholy-keys-yt`. Under **Repository access**, choose **Only select repositories → Unholy-Keys**.
+3. Under **Permissions → Repository permissions**, set **Contents** to **Read and write**. Leave everything else as it is.
+4. Click **Generate token** and copy it.
+5. On Render: open the **unholy-keys** service → **Environment** → **Add Environment Variable**. Key `GITHUB_TOKEN`, value the token. Save; Render redeploys by itself.
+
+The server creates the `yt-charts` branch the first time someone adds a song. Render and GitHub Pages only build from `main`, so adding songs never redeploys anything.
+
 ## How It Works
 
 ```

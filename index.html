@@ -4075,7 +4075,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.33.0",SERVER_VERSION="";
+var PAGE_VERSION="1.34.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4636,8 +4636,8 @@ var CHART=(function(){
                       patterns across all four arrows
      with a cap on arrows per second so it stays playable (lower for fast songs). */
   var RUNS=[[0,1,3,2],[3,2,0,1],[0,2,3,1],[3,1,0,2],[0,1,2,3],[3,2,1,0],[1,0,2,3],[2,3,1,0]];
-  function steps(e,rms,ft,bt,bpm,level,seed){
-    var nb=bt.length,ii=intensity(e,rms,ft,bt),E=ii.E,loud=ii.loud,CHR=ii.chroma,i;
+  function steps(e,rms,ft,bt,bpm,level,seed,iiPre){
+    var nb=bt.length,ii=iiPre||intensity(e,rms,ft,bt),E=ii.E,loud=ii.loud,CHR=ii.chroma,i;
     /* Holds: an arrow with a tail, held down until the tail ends. They go where the music holds a sound:
        the harmony stays the same and the volume stays up for the next 2 (or 4) beats. */
     function cosb(a,b){var d=0,x=0,y=0;for(var q=0;q<12;q++){d+=a[q]*b[q];x+=a[q]*a[q];y+=b[q]*b[q];}return x>0&&y>0?d/Math.sqrt(x*y):0;}
@@ -4743,7 +4743,43 @@ var CHART=(function(){
       cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop});
     });
   }
-  return{analyse:analyse};
+  /* ---- a song's analysis, kept small enough to store and share (for YouTube songs, where only the analysis is
+     kept, never the sound). features() is everything analyse() measures before the steps are placed; fromFeatures()
+     places the steps from it at any level and gives the same chart analyse() would. ---- */
+  function b64(u8){var s="",i;for(i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);}
+  function unb64(t){var s=atob(t),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+  function r(v,d){var m=Math.pow(10,d);return Math.round(v*m)/m;}
+  function features(buffer,opts,cb){
+    opts=opts||{};
+    var sr=buffer.sampleRate,n=buffer.length,ch=buffer.numberOfChannels,x=new Float32Array(n),c,i;
+    for(c=0;c<ch;c++){var d=buffer.getChannelData(c);for(i=0;i<n;i++)x[i]+=d[i]/ch;}
+    envelope(x,sr,opts.onProgress,function(env,rms,ft){
+      var e=standOut(env),bpm=tempo(e),bt=beats(e,bpm);
+      for(var pass=0;pass<2;pass++){
+        var gaps=[];for(i=1;i<bt.length;i++)gaps.push(bt[i]-bt[i-1]);
+        var med=pct(gaps,0.5),sum=0,cnt=0;
+        for(i=0;i<gaps.length;i++)if(Math.abs(gaps[i]/med-1)<0.15){sum+=gaps[i];cnt++;}
+        var real=cnt?60*FPS/(sum/cnt):bpm,changed=Math.abs(real/bpm-1)>0.04;
+        bpm=real;if(!changed)break;
+        bt=beats(e,bpm);
+      }
+      var ii=intensity(e,rms,ft,bt),mx=0;for(i=0;i<e.length;i++)if(e[i]>mx)mx=e[i];
+      var q=new Uint16Array(e.length);for(i=0;i<e.length;i++)q[i]=mx>0?Math.round(e[i]/mx*65535):0;
+      cb({v:1,bpm:bpm,dur:Math.round(n/sr*1000),seed:n%100000+Math.round(bpm*10),bt:bt.map(function(b){return r(b,2);}),
+        e:{s:mx,d:b64(new Uint8Array(q.buffer))},
+        ii:{E:Array.prototype.map.call(ii.E,function(v){return r(v,4);}),loud:Array.prototype.map.call(ii.loud,function(v){return r(v,2);}),
+          ch:ii.chroma.map(function(a){return Array.prototype.map.call(a,function(v){return r(v,3);});}),peaks:ii.peaks}});
+    });
+  }
+  function fromFeatures(f,opts){
+    opts=opts||{};
+    var u=unb64(f.e.d),q=new Uint16Array(u.buffer,0,u.length>>1),e=new Float32Array(q.length),i;
+    for(i=0;i<q.length;i++)e[i]=q[i]/65535*f.e.s;
+    var ii={E:Float32Array.from(f.ii.E),loud:Float32Array.from(f.ii.loud),chroma:f.ii.ch.map(function(a){return Float32Array.from(a);}),peaks:f.ii.peaks.map(function(p){return p.slice();})};
+    var bt=f.bt.slice(),bpm=f.bpm,res=steps(e,null,null,bt,bpm,opts.level||1,opts.seed||f.seed,ii),st=res.steps;
+    return{bpm:Math.round(bpm*10)/10,dur:f.dur,beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop};
+  }
+  return{analyse:analyse,features:features,fromFeatures:fromFeatures};
 })();
 
 /* ── Show effects (performer side) ──

@@ -239,6 +239,20 @@ body.practice.pr-busy #prBar{display:none}
 #prGames button{flex:1 1 0;padding:10px 8px;font-size:13px}
 #prGames button.on{background:linear-gradient(135deg,rgba(211,84,160,.75),rgba(127,119,221,.75));border-color:transparent}
 #prList option{background:#1a1626}
+#prYtUrl{font:500 13px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(127,119,221,.55);border-radius:8px;padding:7px 10px;outline:none}
+#prYtUrl:focus{border-color:#D354A0}#prYtUrl::placeholder{color:rgba(255,255,255,.45)}
+/* while a song is being listened to, the panel steps aside (to the bottom) so the video on the Jumbotron stays in view */
+#prYtCancel{display:none;margin-top:6px}
+body.pr-yt #prBar{top:auto;bottom:96px}
+body.pr-yt #prBar>*:not(#prYtBox){display:none}
+body.pr-yt #prYtBox{display:block!important;margin-top:0}
+body.pr-yt #prYtBox>*:not(#prYtQ):not(#prYtCancel){display:none}
+body.pr-yt #prYtCancel{display:inline-block}
+#prYtQ{display:flex;flex-direction:column;gap:4px;margin-top:6px;font-size:12px}
+#prYtQ .q{display:flex;gap:8px;align-items:center;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.05)}
+#prYtQ .q b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+#prYtQ .q i{font-style:normal;opacity:.75;white-space:nowrap}
+#prYtQ .q.done i{color:#5DCB42;opacity:1}#prYtQ .q.err i{color:#ff8a8a;opacity:1}
 /* practice has no chat: the controls drop to the bottom of the screen */
 body.practice #chatPanel,body.practice #talkBtn,body.practice #hudTL{display:none}
 body.practice #moveCtl{bottom:18px}
@@ -360,6 +374,13 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
       <select id="prList" style="flex:1 1 220px;min-width:0"><option value="">Pick a song…</option></select>
       <label class="f" id="prFileLbl">&#127925; Song from computer<input type="file" id="prFile" accept="audio/*,.mp3,.wav,.flac,.ogg,.m4a,.aac"></label>
       <button id="prFolder" style="display:none">&#128193; Pick Backing Tracks folder</button>
+      <button id="prYtBtn" title="Add YouTube songs to the list for everyone">&#9654;&#65039; Add YouTube songs</button>
+    </div>
+    <div id="prYtBox" style="display:none;margin-top:8px">
+      <div class="r"><input id="prYtUrl" placeholder="Paste YouTube links (one or several)" style="flex:1 1 260px;min-width:0" autocomplete="off"><button id="prYtAdd">Add to queue</button></div>
+      <div class="note" id="prYtHelp">Each song plays once, in full, on the Jumbotron while the game listens and works out the steps. When the share box opens, pick <b>this tab</b> and turn on <b>Share tab audio</b>. Keep this tab open until the queue is done. Only the steps are saved, never the sound, and the song then shows up under YouTube songs for everyone.</div>
+      <div id="prYtQ"></div>
+      <button id="prYtCancel">Stop adding</button>
     </div>
     <div class="r" style="margin-top:8px">
       <select id="prMode" style="display:none"><option value="step">Step dance</option><option value="aim">Target dance</option><option value="keys">Note highway</option><option value="keys4">Note highway (4 keys)</option><option value="free">Free dance (vote)</option><option value="mosh">Mosh pit</option></select>
@@ -3727,8 +3748,8 @@ var CHART=(function(){
                       patterns across all four arrows
      with a cap on arrows per second so it stays playable (lower for fast songs). */
   var RUNS=[[0,1,3,2],[3,2,0,1],[0,2,3,1],[3,1,0,2],[0,1,2,3],[3,2,1,0],[1,0,2,3],[2,3,1,0]];
-  function steps(e,rms,ft,bt,bpm,level,seed){
-    var nb=bt.length,ii=intensity(e,rms,ft,bt),E=ii.E,loud=ii.loud,CHR=ii.chroma,i;
+  function steps(e,rms,ft,bt,bpm,level,seed,iiPre){
+    var nb=bt.length,ii=iiPre||intensity(e,rms,ft,bt),E=ii.E,loud=ii.loud,CHR=ii.chroma,i;
     /* Holds: an arrow with a tail, held down until the tail ends. They go where the music holds a sound:
        the harmony stays the same and the volume stays up for the next 2 (or 4) beats. */
     function cosb(a,b){var d=0,x=0,y=0;for(var q=0;q<12;q++){d+=a[q]*b[q];x+=a[q]*a[q];y+=b[q]*b[q];}return x>0&&y>0?d/Math.sqrt(x*y):0;}
@@ -3834,7 +3855,43 @@ var CHART=(function(){
       cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop});
     });
   }
-  return{analyse:analyse};
+  /* ---- a song's analysis, kept small enough to store and share (for YouTube songs, where only the analysis is
+     kept, never the sound). features() is everything analyse() measures before the steps are placed; fromFeatures()
+     places the steps from it at any level and gives the same chart analyse() would. ---- */
+  function b64(u8){var s="",i;for(i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);}
+  function unb64(t){var s=atob(t),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+  function r(v,d){var m=Math.pow(10,d);return Math.round(v*m)/m;}
+  function features(buffer,opts,cb){
+    opts=opts||{};
+    var sr=buffer.sampleRate,n=buffer.length,ch=buffer.numberOfChannels,x=new Float32Array(n),c,i;
+    for(c=0;c<ch;c++){var d=buffer.getChannelData(c);for(i=0;i<n;i++)x[i]+=d[i]/ch;}
+    envelope(x,sr,opts.onProgress,function(env,rms,ft){
+      var e=standOut(env),bpm=tempo(e),bt=beats(e,bpm);
+      for(var pass=0;pass<2;pass++){
+        var gaps=[];for(i=1;i<bt.length;i++)gaps.push(bt[i]-bt[i-1]);
+        var med=pct(gaps,0.5),sum=0,cnt=0;
+        for(i=0;i<gaps.length;i++)if(Math.abs(gaps[i]/med-1)<0.15){sum+=gaps[i];cnt++;}
+        var real=cnt?60*FPS/(sum/cnt):bpm,changed=Math.abs(real/bpm-1)>0.04;
+        bpm=real;if(!changed)break;
+        bt=beats(e,bpm);
+      }
+      var ii=intensity(e,rms,ft,bt),mx=0;for(i=0;i<e.length;i++)if(e[i]>mx)mx=e[i];
+      var q=new Uint16Array(e.length);for(i=0;i<e.length;i++)q[i]=mx>0?Math.round(e[i]/mx*65535):0;
+      cb({v:1,bpm:bpm,dur:Math.round(n/sr*1000),seed:n%100000+Math.round(bpm*10),bt:bt.map(function(b){return r(b,2);}),
+        e:{s:mx,d:b64(new Uint8Array(q.buffer))},
+        ii:{E:Array.prototype.map.call(ii.E,function(v){return r(v,4);}),loud:Array.prototype.map.call(ii.loud,function(v){return r(v,2);}),
+          ch:ii.chroma.map(function(a){return Array.prototype.map.call(a,function(v){return r(v,3);});}),peaks:ii.peaks}});
+    });
+  }
+  function fromFeatures(f,opts){
+    opts=opts||{};
+    var u=unb64(f.e.d),q=new Uint16Array(u.buffer,0,u.length>>1),e=new Float32Array(q.length),i;
+    for(i=0;i<q.length;i++)e[i]=q[i]/65535*f.e.s;
+    var ii={E:Float32Array.from(f.ii.E),loud:Float32Array.from(f.ii.loud),chroma:f.ii.ch.map(function(a){return Float32Array.from(a);}),peaks:f.ii.peaks.map(function(p){return p.slice();})};
+    var bt=f.bt.slice(),bpm=f.bpm,res=steps(e,null,null,bt,bpm,opts.level||1,opts.seed||f.seed,ii),st=res.steps;
+    return{bpm:Math.round(bpm*10)/10,dur:f.dur,beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop};
+  }
+  return{analyse:analyse,features:features,fromFeatures:fromFeatures};
 })();
 
 /* ============================================================
@@ -3868,7 +3925,7 @@ var PRACTICE=(function(){
     showGame();
     Array.prototype.forEach.call(document.querySelectorAll("#prGames button"),function(b){b.onclick=function(){b.blur();$("prMode").value=b.getAttribute("data-m");showGame();save();};});
     $("prList").onchange=function(){var t=lib[+this.value];if(this.value!==""&&t)pickTrack(t);};
-    loadRepoSongs();
+    loadRepoSongs();YTS.load();YTS.ui();
     $("prFolder").onclick=function(){try{window.parent.postMessage({uk:"practice-pick"},location.origin);}catch(e){}};
     $("prFile").onchange=function(){if(this.files&&this.files[0]){setSong(this.files[0],this.files[0].name);$("prList").value="";}};
     $("prGo").onclick=function(){start();};
@@ -3876,7 +3933,7 @@ var PRACTICE=(function(){
     var host=window.parent!==window?window.parent:window.opener;
     if(host){try{host.postMessage({uk:"practice-ready"},location.origin);}catch(e){}}
   }
-  var lib=[],REPO=[],TRACKS=[];
+  var lib=[],REPO=[],TRACKS=[],YTL=[],ytSel=null,ytSync=null;
   /* ---- the site's own songs: whatever is in the repo's /songs folder ----
      From this app's own server, /songs/list.json lists the folder. On GitHub Pages (which can't list a folder)
      GitHub's API lists it instead: drop a song in the folder and it shows up here, no list to keep. */
@@ -3902,13 +3959,13 @@ var PRACTICE=(function(){
   /* the drop-down: the site's songs, then the performer's Backing Tracks (when opened from the performer page) */
   function renderList(selName){
     var sel=$("prList"),keep=sel.value!==""&&lib[+sel.value]?lib[+sel.value].name:null;sel.textContent="";
-    lib=REPO.concat(TRACKS);
+    lib=REPO.concat(YTL,TRACKS);
     var o0=document.createElement("option");o0.value="";o0.textContent=lib.length?"Pick a song ("+lib.length+")…":(document.body.classList.contains("embed")?"No Backing Tracks loaded":"Pick a song…");sel.appendChild(o0);
     var pick=-1;
     function group(label,list,off){if(!list.length)return;var gp=document.createElement("optgroup");gp.label=label;
       list.forEach(function(t,i){var o=document.createElement("option");o.value=String(off+i);o.textContent=safeText(t.name,90);gp.appendChild(o);
         if((selName&&t.name===selName)||(!selName&&keep&&t.name===keep))pick=off+i;});sel.appendChild(gp);}
-    group("Unholy Keys songs",REPO,0);group("Your Backing Tracks",TRACKS,REPO.length);
+    group("Unholy Keys songs",REPO,0);group("YouTube songs",YTL,REPO.length);group("Your Backing Tracks",TRACKS,REPO.length+YTL.length);
     if(pick>=0)sel.value=String(pick);
     return pick;
   }
@@ -3916,6 +3973,7 @@ var PRACTICE=(function(){
   var pickSeq=0;
   function pickTrack(t){
     if(t.file){setSong(t.file,t.name);return;}
+    if(t.yt){pickSeq++;file=null;buf=null;ytSel=t;title=t.name;$("prSong").textContent="▶ "+t.name+" (YouTube)";$("prGo").disabled=false;YTS.cue(t.yt);return;}
     var my=++pickSeq;$("prSong").textContent="Loading "+t.name+"…";$("prGo").disabled=true;
     function get(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.blob();});}
     get(t.url).catch(function(e){if(t.alt)return get(t.alt);throw e;})
@@ -3923,6 +3981,159 @@ var PRACTICE=(function(){
       .catch(function(){if(my===pickSeq){$("prSong").textContent="Couldn't load "+t.name+". Try another song.";}});
   }
   window.ukPracticeSongs=function(){return REPO.map(function(t){return t.name;});};
+
+  /* ---------- YouTube songs ----------
+     Adding: each queued link plays once, in full, in the YouTube player on the Jumbotron, while the page listens
+     to this tab's sound (the browser's own "share this tab" box, with tab audio on). What it hears is lined up
+     with the video's clock, analysed the same way as a song file, and only the analysis (beat times, loudness,
+     the rhythm envelope) is kept: sent to the server, which saves it for everyone. The sound itself is dropped
+     as soon as the analysis is done.
+     Playing: the song plays through the YouTube player again, and the round's clock follows the video's. */
+  var YTS=(function(){
+    var LAT=0.12;        /* what the tab plays reaches the capture about this much after the video's clock says */
+    var q=[],busy=false,stream=null,LKEY="uk_yt_local",cancel=false;
+    function http(){var u=String(typeof LIVE_URL!=="undefined"?LIVE_URL:"").replace(/^ws(s?):\/\//,"http$1://").replace(/\/+$/,"");return u;}
+    function rawBase(){var ri=repoInfo();return "https://raw.githubusercontent.com/"+ri.owner+"/"+ri.repo+"/yt-charts/";}
+    function bridge(){if(!vYT){vYT=ytBridge(document.getElementById("ytFrame"));vYT.onState=function(){updTapHint();};}return vYT;}
+    function local(){try{return JSON.parse(localStorage.getItem(LKEY)||"{}")||{};}catch(e){return {};}}
+    function saveLocal(vid,title,f){try{var l=local();l[vid]={title:title,f:f,at:Date.now()};var ks=Object.keys(l).sort(function(a,b){return l[b].at-l[a].at;});ks.slice(12).forEach(function(k){delete l[k];});localStorage.setItem(LKEY,JSON.stringify(l));}catch(e){}}
+    function timeout(p,ms){return Promise.race([p,new Promise(function(_,rej){setTimeout(function(){rej(new Error("timeout"));},ms);})]);}
+    function getJSON(u,ms){return timeout(fetch(u,{cache:"no-cache"}),ms||10000).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();});}
+    function setList(songs){
+      var seen={},out=[];(songs||[]).forEach(function(e){if(e&&/^[A-Za-z0-9_-]{11}$/.test(e.vid)&&!seen[e.vid]){seen[e.vid]=1;out.push({name:safeText(String(e.title||e.vid),90),yt:e.vid,dur:e.dur||0});}});
+      var l=local();Object.keys(l).forEach(function(v){if(!seen[v]&&/^[A-Za-z0-9_-]{11}$/.test(v)){seen[v]=1;out.push({name:safeText(String(l[v].title||v),90),yt:v});}});
+      out.sort(function(a,b){return a.name.localeCompare(b.name);});
+      var keep=ytSel&&ytSel.yt;YTL=out;renderList(keep?(out.filter(function(t){return t.yt===keep;})[0]||{}).name:null);
+    }
+    /* the list: from the server (it may take a while to wake up), else straight from the repo's data branch */
+    function load(){
+      setList([]);
+      var b=http();
+      (b?getJSON(b+"/yt/list",25000).then(function(r){return r.songs;}):Promise.reject())
+        .catch(function(){return getJSON(rawBase()+"index.json?t="+Date.now(),10000);})
+        .then(function(songs){setList(songs);}).catch(function(){});
+    }
+    function features(vid){
+      var l=local();if(l[vid]&&l[vid].f)return Promise.resolve(l[vid].f);
+      var b=http();
+      return (b?getJSON(b+"/yt/"+vid+".json",25000):Promise.reject()).catch(function(){return getJSON(rawBase()+vid+".json",10000);});
+    }
+    function cue(vid){var y=bridge();JT.video=true;y.load(vid,0,{paused:true});}
+    /* play from the top; the round starts when the video really starts, and keeps to the video's clock */
+    function play(my,started){
+      var y=bridge(),vid=ytSel.yt;JT.video=true;
+      if(y.vid!==vid)y.load(vid,0,{});else{y.cmd("seekTo",[0,true]);y.cmd("playVideo");}
+      y.want="play";var t0=Date.now(),ytOn=false;clearInterval(ytSync);
+      ytSync=setInterval(function(){
+        if(PRACTICE_JOB()!==my){clearInterval(ytSync);return;}
+        updTapHint();
+        if(!ytOn){if(y.state===1&&y.now()<5){ytOn=true;started(-(y.now()*1000));}
+          else if(Date.now()-t0>4000&&y.state!==1&&y.state!==3){y.cmd("playVideo");}
+          return;}
+        if(y.state===1){var pos=y.now()*1000;if(Math.abs(ROUND.pos()-pos)>70)ROUND.onMsg({type:"round",phase:"play",n:n,ts0:null,pos:pos});}
+        if(y.state===0){clearInterval(ytSync);PRACTICE_END(my);}
+      },200);
+    }
+    function stop(){clearInterval(ytSync);ytSync=null;if(vYT&&vYT.vid){vYT.want="pause";vYT.cmd("pauseVideo");}}
+
+    /* ---- adding ---- */
+    function ids(text){var out=[],re=/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/g,m;
+      while((m=re.exec(text)))if(out.indexOf(m[1])<0)out.push(m[1]);
+      String(text).split(/[\s,]+/).forEach(function(w){if(/^[A-Za-z0-9_-]{11}$/.test(w)&&out.indexOf(w)<0)out.push(w);});return out;}
+    function canAdd(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia)&&!matchMedia("(pointer: coarse)").matches;}
+    function render(){
+      var box=$("prYtQ");box.textContent="";
+      q.forEach(function(it){var d=document.createElement("div");d.className="q"+(it.st==="done"?" done":it.st==="err"?" err":"");
+        var b=document.createElement("b");b.textContent=it.title||it.vid;var i=document.createElement("i");i.textContent=it.msg||"waiting";d.appendChild(b);d.appendChild(i);box.appendChild(d);});
+    }
+    function ui(){
+      $("prYtBtn").onclick=function(){var bx=$("prYtBox");bx.style.display=bx.style.display==="none"?"":"none";
+        if(!canAdd()){$("prYtHelp").textContent="Adding YouTube songs needs Chrome or Edge on a computer (it listens to the tab while the song plays). Songs added there show up here for everyone.";$("prYtUrl").disabled=$("prYtAdd").disabled=true;}};
+      $("prYtAdd").onclick=function(){
+        var list=ids($("prYtUrl").value);if(!list.length){$("prYtHelp").textContent="That doesn't look like a YouTube link. Paste the address from the video's page or its Share button.";return;}
+        list.forEach(function(v){if(!q.some(function(it){return it.vid===v&&it.st!=="err";}))q.push({vid:v,st:"wait"});});
+        $("prYtUrl").value="";render();run();
+      };
+      $("prYtCancel").onclick=function(){cancel=true;q.forEach(function(it){if(it.st==="wait"){it.st="err";it.msg="stopped";}});render();};
+      $("prYtUrl").onkeydown=function(e){e.stopPropagation();if(e.key==="Enter")$("prYtAdd").click();};
+    }
+    /* ask for the tab's sound once (it has to be from the click), then work through the queue */
+    function run(){
+      if(busy)return;
+      if(PRACTICE_BUSY()){$("prYtHelp").textContent="Finish or leave the round first, then add songs.";return;}
+      var next=q.filter(function(it){return it.st==="wait";})[0];if(!next)return;
+      busy=true;cancel=false;
+      var gotStream=stream&&stream.getAudioTracks().some(function(t){return t.readyState==="live";})?Promise.resolve(stream):
+        navigator.mediaDevices.getDisplayMedia({video:true,audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},preferCurrentTab:true,selfBrowserSurface:"include",surfaceSwitching:"exclude",systemAudio:"include"});
+      gotStream.then(function(st){
+        if(!st.getAudioTracks().length){st.getTracks().forEach(function(t){t.stop();});throw new Error("noaudio");}
+        stream=st;st.getVideoTracks().forEach(function(t){t.enabled=false;});
+        /* they stopped sharing from the browser's bar: stop listening */
+        st.getAudioTracks().forEach(function(t){t.onended=function(){cancel=true;};});
+        document.body.classList.add("pr-yt");
+        return one(next);
+      }).then(function(){busy=false;if(q.some(function(it){return it.st==="wait";}))run();else finish();},
+        function(e){busy=false;
+          var msg=e&&e.message==="noaudio"?"No sound was shared. Try again and turn on “Share tab audio”.":e&&e.name==="NotAllowedError"?"Sharing was cancelled.":"Couldn’t listen to the tab ("+(e&&e.message||e)+").";
+          q.forEach(function(it){if(it.st==="wait"||it.st==="work"){it.st="err";it.msg=msg;}});render();finish();});
+    }
+    function finish(){document.body.classList.remove("pr-yt");if(stream){stream.getTracks().forEach(function(t){t.stop();});stream=null;}if(!ytSel){JT.video=false;if(vYT)vYT.clear();}else cue(ytSel.yt);updTapHint();}
+    function one(it){
+      return new Promise(function(resolve){
+        it.st="work";it.msg="starting…";render();
+        /* a plain AudioContext of its own for listening (closed when the song is done) */
+        var y=bridge(),c=null;try{c=new (window.AudioContext||window.webkitAudioContext)();c.resume();}catch(e){}
+        JT.video=true;y.load(it.vid,0,{});y.want="play";
+        var sr=c.sampleRate,pcm=null,anchor=null,got=0,t0=Date.now(),src=null,proc=null,mute=null,done=false,lastPos=0;
+        function cleanup(){done=true;clearInterval(tick);try{proc.disconnect();src.disconnect();mute.disconnect();}catch(e){}try{c.close();}catch(e){}}
+        function fail(msg){cleanup();it.st="err";it.msg=msg;render();y.cmd("pauseVideo");resolve();}
+        try{src=c.createMediaStreamSource(stream);proc=c.createScriptProcessor(4096,2,1);mute=c.createGain();mute.gain.value=0;src.connect(proc);proc.connect(mute);mute.connect(c.destination);}
+        catch(e){fail("Couldn’t listen to the tab ("+(e&&e.message||e)+")");return;}
+        proc.onaudioprocess=function(ev){
+          if(done||!pcm||y.state!==1)return;
+          var a=ev.inputBuffer,L=a.getChannelData(0),R=a.numberOfChannels>1?a.getChannelData(1):L,len=L.length,cs=len/sr;
+          var at=y.now()-cs-LAT;
+          if(anchor===null||Math.abs(anchor-at)>0.35)anchor=at;          /* started, a seek, an advert, a stall: line up again */
+          var i0=Math.round(anchor*sr);
+          for(var i=0;i<len;i++){var k=i0+i;if(k>=0&&k<pcm.length)pcm[k]=(L[i]+R[i])*0.5;}
+          if(i0+len>lastPos){got+=Math.min(len,i0+len-lastPos);lastPos=i0+len;}
+          anchor+=cs;
+        };
+        var tick=setInterval(function(){
+          if(done)return;
+          if(cancel){fail("stopped");return;}
+          if(y.title&&!it.title){it.title=y.title;render();}
+          if(!pcm){
+            if(y.dur>0){if(y.dur>15*60){fail("Too long (15 minutes at most)");return;}pcm=new Float32Array(Math.ceil((y.dur+2)*sr));}
+            else if(Date.now()-t0>20000){fail("The video didn’t start. Is it allowed to play on other sites?");return;}
+            if(Date.now()-t0>4000&&y.state!==1&&y.state!==3)y.cmd("playVideo");
+            updTapHint();return;}
+          var pct=Math.min(99,Math.round(y.now()/y.dur*100));it.msg="listening "+pct+"%";render();updTapHint();
+          if(y.state===0||y.now()>=y.dur-0.25){
+            cleanup();
+            if(got<y.dur*sr*0.8){it.st="err";it.msg="Missed too much of it (was it paused?)";render();resolve();return;}
+            var peak=0;for(var j=0;j<pcm.length;j+=97){var v=Math.abs(pcm[j]);if(v>peak)peak=v;}
+            if(peak<0.003){it.st="err";it.msg="Heard only silence: turn on “Share tab audio”";render();resolve();return;}
+            it.msg="working out the steps…";render();
+            var n2=Math.min(pcm.length,Math.ceil(y.dur*sr)),ab=new AudioBuffer({length:n2,numberOfChannels:1,sampleRate:sr});ab.copyToChannel(pcm.subarray(0,n2),0);pcm=null;
+            var title=String(it.title||y.title||it.vid).slice(0,100);
+            setTimeout(function(){
+              CHART.features(ab,{},function(f){
+                ab=null;saveLocal(it.vid,title,f);
+                var b=http();
+                (b?timeout(fetch(b+"/yt/add",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({vid:it.vid,title:title,f:f})}),40000).then(function(r){return r.json();}):Promise.reject(new Error("no server")))
+                  .then(function(r){it.st="done";it.msg=r&&r.saved?"added for everyone ✓":"added on this computer ✓"+(r&&r.error?" ("+r.error+")":"");})
+                  .catch(function(){it.st="done";it.msg="added on this computer ✓ (couldn’t reach the server)";})
+                  .then(function(){render();load();resolve();});
+              });
+            },30);
+          }
+        },250);
+      });
+    }
+    return{load:load,features:features,cue:cue,play:play,stop:stop,ui:ui,ids:ids};
+  })();
+  window.ukYT={now:function(){return vYT?vYT.now():null;},ids:function(t){return YTS.ids(t);},list:function(){return YTL.map(function(t){return t.yt+":"+t.name;});},sel:function(){return ytSel&&ytSel.yt;}};
   function showGame(){var m=$("prMode").value;Array.prototype.forEach.call(document.querySelectorAll("#prGames button"),function(b){b.classList.toggle("on",b.getAttribute("data-m")===m);});}
   /* the performer page's Backing Tracks, sent over when practice opens */
   function setLib(tracks,selected){
@@ -3931,7 +4142,7 @@ var PRACTICE=(function(){
     $("prFolder").style.display=document.body.classList.contains("embed")?"":"none";
     $("prFolder").textContent=lib.length?"📁 Change folder":"📁 Pick Backing Tracks folder";
     /* nothing picked yet: start on the first Backing Track (site songs download only when you pick one) */
-    if(pick<0&&!file&&TRACKS.length)pick=REPO.length;
+    if(pick<0&&!file&&!ytSel&&TRACKS.length)pick=REPO.length+YTL.length;
     if(pick>=0){$("prList").value=String(pick);pickTrack(lib[pick]);}
   }
   function save(){try{localStorage.setItem("uk_practice",JSON.stringify({kind:$("prKind").value,mode:$("prMode").value,secs:+$("prSecs").value,level:+$("prLevel").value,bots:+$("prBots").value}));}catch(e){}}
@@ -3947,7 +4158,7 @@ var PRACTICE=(function(){
     if(d.file)setSong(d.file,d.title||d.file.name);
   });
   function setSong(f,name){
-    file=f;buf=null;title=String(name||"Song").replace(/\.(mp3|wav|flac|ogg|m4a|aac|opus|mp4|m4v|webm|mov|mkv)$/i,"").slice(0,80);
+    file=f;buf=null;ytSel=null;title=String(name||"Song").replace(/\.(mp3|wav|flac|ogg|m4a|aac|opus|mp4|m4v|webm|mov|mkv)$/i,"").slice(0,80);
     $("prSong").textContent="♫ "+title;$("prGo").disabled=false;
   }
   function decode(){
@@ -3982,7 +4193,7 @@ var PRACTICE=(function(){
     ROUND.scores({n:n,top:list.slice(0,5),players:list.length});
   }
   function start(){
-    if(!file)return;
+    if(!file&&!ytSel)return;
     var my=++job;
     initAudio();save();
     try{Tone.start();Tone.getContext().rawContext.resume();}catch(e){}
@@ -3997,6 +4208,11 @@ var PRACTICE=(function(){
       startT=setTimeout(function(){if(my===job)playSong(my);},secs*1000);
     };
     ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,battle:battle,title:title,chart:null,ms:secs*1000+60000});
+    /* a YouTube song: its steps come from the analysis saved when it was added */
+    if(ytSel){var ys=ytSel;
+      YTS.features(ys.yt).then(function(f){if(my!==job)return;go(CHART.fromFeatures(f,{level:level}));})
+        .catch(function(){document.body.classList.remove("pr-busy");ROUND.onMsg({type:"round",phase:"off",n:n});note("Couldn’t load the steps for that YouTube song. Try again in a moment.");});
+      return;}
     decode().then(function(b){
       if(my!==job)return;
       CHART.analyse(b,{level:level},function(c){go(c);});        /* free dance too: the spotlight turns follow the bars */
@@ -4006,6 +4222,7 @@ var PRACTICE=(function(){
     });
   }
   function playSong(my){
+    if(ytSel){YTS.play(my,function(lagMs){afterStart(my,lagMs);});return;}
     var c=Tone.getContext().rawContext;
     if(!gain){gain=c.createGain();gain.gain.value=0.9;gain.connect(c.destination);BEAT.tap(gain);}
     src=c.createBufferSource();src.buffer=buf;src.connect(gain);
@@ -4013,6 +4230,10 @@ var PRACTICE=(function(){
     src.onended=function(){if(my===job&&src)endRound(my);};
     /* the song's first moment reaches the ears at "at" plus the speaker delay */
     var lagMs=(at-c.currentTime+(c.outputLatency||0))*1000;
+    afterStart(my,lagMs);
+  }
+  /* the song has started (lagMs until its first moment is heard): the round's clock, the dancers, the scoring */
+  function afterStart(my,lagMs){
     playAt=performance.now()+lagMs;
     viewers.me.dance=0;bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=mode==="free"||mode==="mosh"||battle?4:5;});
     ROUND.onMsg({type:"round",phase:"play",n:n,ts0:null,pos:-lagMs});
@@ -4092,7 +4313,10 @@ var PRACTICE=(function(){
     document.body.classList.remove("pr-busy");
     note("Round "+n+" done. Change anything and start another, or pick a new song. Points keep adding up until you close this page.");
   }
-  function stopSong(){if(src){try{src.onended=null;src.stop();}catch(e){}src=null;}clearInterval(scoreT);clearTimeout(startT);clearTimeout(voteT);clearTimeout(spotT);bTimers.forEach(clearTimeout);bTimers=[];}
+  function stopSong(){if(src){try{src.onended=null;src.stop();}catch(e){}src=null;}YTS.stop();clearInterval(scoreT);clearTimeout(startT);clearTimeout(voteT);clearTimeout(spotT);bTimers.forEach(clearTimeout);bTimers=[];}
+  function PRACTICE_JOB(){return job;}
+  function PRACTICE_END(my){if(my===job)endRound(my);}
+  function PRACTICE_BUSY(){return document.body.classList.contains("pr-busy");}
   function endRound(my){
     if(battle){
       /* decide the match that was on, then the bracket placings */
@@ -4187,6 +4411,8 @@ function ytBridge(iframe){
     if(d.event==="infoDelivery"&&d.info){
       if(typeof d.info.currentTime==="number"){b.time=d.info.currentTime;b._t=Date.now();}
       if(typeof d.info.playbackRate==="number")b.rate=d.info.playbackRate;
+      if(typeof d.info.duration==="number"&&d.info.duration>0)b.dur=d.info.duration;
+      if(d.info.videoData&&typeof d.info.videoData.title==="string"&&d.info.videoData.title)b.title=d.info.videoData.title;
       if(typeof d.info.muted==="boolean")b.muted=d.info.muted;
       if(typeof d.info.playerState==="number")setState(d.info.playerState);
     }else if(d.event==="onStateChange"){
@@ -4198,7 +4424,7 @@ function ytBridge(iframe){
   b.load=function(vid,start,opts){
     opts=opts||{};start=Math.max(0,start||0);
     if(b.vid===vid&&b.ready&&iframe.getAttribute("src")){b.cmd("seekTo",[start,true]);b.cmd(opts.paused?"pauseVideo":"playVideo");return;}
-    b.vid=vid;b.time=start;b._t=Date.now();b.state=-1;
+    b.vid=vid;b.time=start;b._t=Date.now();b.state=-1;b.dur=0;b.title="";
     if(b.ready&&iframe.getAttribute("src")){b.cmd(opts.paused?"cueVideoById":"loadVideoById",[vid,start]);return;}
     var q="autoplay="+(opts.paused?0:1)+"&enablejsapi=1&playsinline=1&rel=0&start="+Math.floor(start)+(opts.mute?"&mute=1":"");
     if(/^https?:$/.test(location.protocol))q+="&origin="+encodeURIComponent(location.origin);
@@ -4510,7 +4736,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.33.0",SERVER_VERSION="";
+var PAGE_VERSION="1.34.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
