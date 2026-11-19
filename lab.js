@@ -56,7 +56,7 @@
     if(g.id==="walk"){box.classList.remove("on");return;}
     if(b)b.click();
     var sel=$("prList");if(sel&&!sel.value){for(var i=0;i<sel.options.length;i++)if(sel.options[i].value){sel.value=sel.options[i].value;sel.dispatchEvent(new Event("change"));break;}}
-    var tries=0,iv=setInterval(function(){tries++;var go=$("prGo");if(go&&!go.disabled){clearInterval(iv);go.click();if(window.innerWidth<=700)box.classList.remove("on");}else if(tries>60){clearInterval(iv);alert("Pick a song in the practice bar first, then press Start round.");}},250);
+    var tries=0,iv=setInterval(function(){tries++;var go=$("prGo");if(go&&!go.disabled){clearInterval(iv);go.click();if(window.innerWidth<=700)box.classList.remove("on");}else if(tries>60){clearInterval(iv);document.body.classList.add("pr-open");alert("Pick a song in the practice bar first, then press Start round.");}},250);
   }
   function build(){
     var hd=mk("div","hd"),h=mk("b","","🔧 Tuning lab"),x=mk("button","","Hide");x.onclick=function(){box.classList.remove("on");};hd.appendChild(h);hd.appendChild(x);box.appendChild(hd);

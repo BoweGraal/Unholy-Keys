@@ -599,3 +599,9 @@ Free dance (all in the free dance panel).
 - **New section "Sunset, fire & Jumbotron"** in the Graphics lab: sun size and sky strength, flame height, window glow, ember count, Jumbotron light speed and frame thickness. Turn on Sunset or Fire in the effect row to see them.
 - **Asset looks now apply in the game:** in the Graphics lab, set an asset's brightness / contrast / saturation / hue and press **Save this look**. Instruments, keyboard, mic stand, keepy objects and both rinks use their saved look in the venue and on the stage on this device. Works in Chrome, Edge and Firefox; Safari ignores it. **Reset look** puts it back.
 - Server unchanged (version bump only).
+
+## v1.49.1 - practice menu tucked behind a Dance button
+- Practice mode (`venue.html?practice`): the big "Dance practice" menu is hidden behind a **💃 Dance** button top left, under the fullscreen and Leave practice buttons.
+- On a phone (narrow screen or touch) the menu starts closed. On a computer it starts open. Tap Dance to open or close it.
+- Pressing **Start round** closes the menu. The button hides during a round and returns after.
+- The Tuning lab's Play button opens the menu if it needs a song picked first.

@@ -288,8 +288,10 @@ body.jt-top #roundBox.strip .rb-btn{margin-top:0;padding:4px 10px;font-size:12px
 body.practice #prExit{display:block}
 #prExit:hover{border-color:#E8505B;background:rgba(232,80,91,.3)}
 #prBar{display:none;position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:25;width:min(560px,94vw);box-sizing:border-box;padding:10px 14px;background:rgba(14,11,26,.93);border:1px solid rgba(245,197,24,.45);border-radius:14px;color:#fff;font:500 12px system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-body.practice #prBar{display:block}
-body.practice.pr-busy #prBar{display:none}
+#prDance{display:none;position:fixed;left:12px;top:58px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;background:rgba(20,18,32,.88);border:1px solid rgba(245,197,24,.7);cursor:pointer}
+body.practice #prDance{display:block}body.practice.pr-busy #prDance{display:none}body.practice.pr-open #prDance{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:#fff}
+body.practice #prBar{display:none}body.practice.pr-open #prBar{display:block;top:104px;max-height:calc(100vh - 150px);overflow:auto}
+body.practice.pr-busy #prBar,body.practice.pr-busy.pr-open #prBar{display:none}
 #prBar .h{font:700 11px system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:#F5C518;margin-bottom:8px}
 #prBar .r{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 #prGames button{flex:1 1 0;padding:10px 8px;font-size:13px}
@@ -426,6 +428,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
   <div id="keepyUI"><div id="kpBanner">🎈 KEEPY UPPY</div><div id="kpScore">0</div><div id="kpHint"></div><button id="kpJump" aria-label="Jump">JUMP<small>tap twice</small></button></div>
   <div id="skateUI"><div id="skBanner">🛼 ROLLER RINK</div><div id="skScore">0</div><div id="skSpeed"><i></i></div><div id="skTrick"></div><div id="skHint"></div><button id="skJump" aria-label="Jump">JUMP</button><div id="skWheel"><b data-t="1" style="left:50%;top:9%">SUPERMAN</b><b data-t="2" style="left:50%;top:91%">TUCK</b><b data-t="3" style="left:13%;top:50%">KICK</b><b data-t="4" style="left:87%;top:50%">SPLIT</b><i id="skKnob"></i></div></div>
   <div id="roundBox"></div>
+  <button id="prDance" type="button" title="Pick a mini game and a song">&#128131; Dance</button>
   <a id="prExit" href="?" title="Leave practice and go back to joining a show">&#10005; Leave practice</a>
   <div id="prBar">
     <div class="h">Dance practice · pick a mini game and a song</div>
@@ -4433,6 +4436,10 @@ var PRACTICE=(function(){
     myName=safeText(($("inName").value||"").trim(),24)||"You";
     myId="me";roomCode="PRACTICE";
     document.body.classList.add("practice");
+    /* on a phone the menu starts tucked away behind the Dance button; on a computer it starts open */
+    var small=window.innerWidth<700||(window.matchMedia&&matchMedia("(pointer: coarse)").matches);
+    document.body.classList.toggle("pr-open",!small);
+    $("prDance").onclick=function(){document.body.classList.toggle("pr-open");};
     document.getElementById("moveHint").innerHTML="Arrows or WASD to walk &middot; Space to dance";
     document.getElementById("joinScreen").classList.add("hidden");
     document.getElementById("venue").classList.add("on");
@@ -4450,7 +4457,7 @@ var PRACTICE=(function(){
     loadRepoSongs();YTS.load();YTS.ui();
     $("prFolder").onclick=function(){try{window.parent.postMessage({uk:"practice-pick"},location.origin);}catch(e){}};
     $("prFile").onchange=function(){if(this.files&&this.files[0]){setSong(this.files[0],this.files[0].name);$("prList").value="";}};
-    $("prGo").onclick=function(){start();};
+    $("prGo").onclick=function(){document.body.classList.remove("pr-open");start();};
     /* opened from the performer page: ask it for the song and settings */
     var host=window.parent!==window?window.parent:window.opener;
     if(host){try{host.postMessage({uk:"practice-ready"},location.origin);}catch(e){}}
@@ -5258,7 +5265,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.49.0",SERVER_VERSION="";
+var PAGE_VERSION="1.49.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
