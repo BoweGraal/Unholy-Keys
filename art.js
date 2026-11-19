@@ -627,7 +627,7 @@ var ART=(function(){
     {name:"Running man",icon:"\uD83C\uDFC3",subs:["Classic","Fast","Moonwalk","Arms pump"],help:"Left dot moves you: up and down, and slide. Right dot: knee lift and arms."},
     {name:"Skank",icon:"\uD83C\uDFBA",subs:["Classic","Windmill","Pogo","Elbows","Kicks"],help:"Left dot: knee height and travel. Right dot: punches."},
     {name:"Robot",icon:"\uD83E\uDD16",subs:["Arms","Wave","Pop","Freeze"],help:"Each dot points an arm; it snaps like a robot."},
-    {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop","Hold"],help:"Slide your thumbs up and down: left lifts the chest, right lifts the hips."},
+    {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop","Dive in"],help:"Slide your thumbs up and down: left lifts the chest, right lifts the hips."},
     {name:"Silly",icon:"\uD83E\uDD2A",subs:["Chicken","Sprinkler","YMCA","Floss","Macarena"],help:"Left dot: size and speed. Right dot: bounce."},
     {name:"Shuffle",icon:"\uD83D\uDC5F",subs:["Running man","T-step","Spin","Mix it up"],help:"Left dot: how far you travel and how low. Right dot: knee lift and arms."},
     {name:"Thriller",icon:"\uD83E\uDDDF",subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left dot: how low and how wide. Right dot: lean and arm reach."}
@@ -698,12 +698,21 @@ var ART=(function(){
       if(sub===2&&ph<0.15){o.bob=-2;o.mouth=true;}                                                /* pop on the beat */
       if(sub===3){o.bob=0;}
       break;}
-    case 7:{ /* the worm: lying on the floor; the thumbs lift the chest (left) and the hips (right) */
-      var dir=sub===1?-1:1,chest=-ay,hips=-by;
-      if(sub===0||sub===1){var wv=Math.sin(bp*Math.PI*2);chest=chest*0.6+Math.max(0,wv)*0.6;hips=hips*0.6+Math.max(0,-wv)*0.6;o.dx=dir*Math.sin(bp*Math.PI)*3;}
-      if(sub===2){chest=hop;hips=hop;}                                                             /* flop */
-      o.rot=dir*(Math.PI/2)+dir*(hips-chest)*0.35;o.bob=-Math.max(chest,hips)*4;
-      o.armL=0.05;o.armR=-0.05;o.legL=0.04;o.legR=-0.04;
+    case 7:{ /* the worm (from a clip): flat on the floor, the wave runs through you once a beat: hands planted, the hips and
+                legs kick up behind while the chest stays down, then the chest pushes up as the legs come down. "Dive in" jumps
+                up arms out and dives into it. The thumbs add chest (left) and hip (right) lift on top */
+      var dir=sub===1?-1:1,cl=Math.max(0,-ay)*0.5,hl=Math.max(0,-by)*0.5,wp=((bp%1)+1)%1,leg=0,chest=0,mode=sub;
+      if(sub===3){var c4=((bp%4)+4)%4;
+        if(c4<1){var jj=c4;o.rot=0;o.bob=-Math.sin(jj*Math.PI)*7;o.armL=2.5;o.armR=-2.5;o.legL=0.25;o.legR=-0.25;o.mouth=true;break;}   /* jump up, arms out */
+        if(c4<1.5){var dv=(c4-1)*2;o.rot=dir*(Math.PI/2)*dv;o.bob=-(1-dv)*5;o.armL=dir*(2.5-dv*3.9);o.armR=-2.5+dv*1.1;o.legL=dir*dv*0.9;o.legR=dir*dv*0.7;break;}   /* the dive */
+        mode=0;}
+      if(mode===2){chest=hop*0.9;leg=hop*0.9;}                                                          /* flop */
+      else{var k1=Math.sin(Math.min(1,wp*2)*Math.PI),k2=Math.sin(Math.max(0,wp*2-1)*Math.PI);leg=wp<0.5?k1:0;chest=wp>=0.5?k2:0;}
+      leg=Math.min(1.2,leg+hl);chest=Math.min(1,chest+cl);
+      o.rot=dir*(Math.PI/2-chest*0.55);o.bob=-chest*3-leg*1.5;
+      o.legL=dir*(0.05+leg*1.35);o.legR=dir*(0.05+leg*1.2);                                   /* legs kick up off the floor */
+      o.armL=dir*(-2.55+chest*0.45);o.armR=dir*(-2.1+chest*0.5);o.alL=o.alR=8-chest*2;             /* hands planted out in front */
+      o.dx=dir*((bp%4+4)%4)*1.2-dir*2.4;
       break;}
     case 10:{ /* Thriller (from a clip of the zombie dance): low wide stance, both arms flung out to one side then the other,
                  a clawed side-step with the knees pumping and the head bobbing, a shoulder pop */

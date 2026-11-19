@@ -497,3 +497,4 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Bots in free-dance rounds now do styles too, often the shuffle.
 - Also worked out from clips: **Running man → Classic** (knee right up, hands together at the chest pumping), **Running man → Moonwalk** (smooth glide back 4 beats, then 4 the other way; heel up and knee bent, swapping each beat), **Skank → Classic** (knees up crossing in front, elbows pumping) and a new **Skank → Kicks** (kick out to the side on the off-beat).
 - New **🧟 Thriller** style (the "-" key): **Zombie arms** (low lunge, both arms flung out to one side then the other), **Claw walk** (side steps, knees up, claw hands), **Shoulder pop**, **Mix it up**.
+- **The worm** reworked from a clip: hands planted, legs kick up behind, then the chest pushes up as the legs drop, once a beat, inching along. New **Dive in** move (replaces Hold): jump up arms out, dive onto the floor, worm, repeat.
