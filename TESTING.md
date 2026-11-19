@@ -474,3 +474,11 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Venue: the same badge on the join screen, and in the version line.
 - Render asleep: "waking up…" until it answers. Wrong address: "not reachable".
 - Self-hosting with `UK_HOST="Bowe's PC"` adds the name.
+
+## Keepy uppy (v1.39.0)
+- Live song menu or "When I play a backing track": pick **🎈 Keepy uppy**. Venue practice has it too.
+- A balloon, a ball, a feather and a second balloon drop onto the floor. Balloon drifts down, the ball drops fast and bounces a few times, the feather floats for ages.
+- Move with arrows / WASD / stick. Space (or JUMP) jumps; Space again in the air double jumps for more height.
+- Get under something and jump into it: it flies back up and away. Points pop over your head. Feather is worth the most, double-jump hits score double, hits in a row before it lands score more.
+- Two phones: one heads the balloon, the other sees it fly up the same way. The stage view shows the same things flying.
+- Something that lands sits on the floor for a moment, then drops in again from the top.

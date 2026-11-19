@@ -111,8 +111,9 @@ module.exports = function(api) {
   function think(b) {
     if (b.dead || !b.room || !rooms[b.room]) { clearInterval(b.timer); return; }
     var now = Date.now(), rd = b.rd, playing = rd && rd.phase === "play", songOn = playing || now - b.lastNote < 4000;
-    var free = !rd || (playing && (rd.mode === "free" || rd.mode === "mosh"));
+    var free = !rd || (playing && (rd.mode === "free" || rd.mode === "mosh" || rd.mode === "keepy"));
     if (playing && rd.mode === "skate") { skate(b, now); }
+    if (playing && rd.mode === "keepy") { if (!b.hopAt && Math.random() < 0.05) b.hopAt = now; var hu = b.hopAt ? (now - b.hopAt) / 900 : 0; if (hu >= 1) { b.hopAt = 0; hu = 0; } b.skH = b.hopAt ? Math.round(24 * 4 * hu * (1 - hu)) : 0; }
 
     /* wander about (not while playing a step, target or highway round: they're busy with the game) */
     if (free && now > b.nextMove && !(b.dancing && Math.random() < 0.7)) {
@@ -145,7 +146,7 @@ module.exports = function(api) {
   /* in a round: dance along, report a score (bots are decent, rarely great), vote in battles, push in the mosh */
   function round(b, now) {
     var rd = b.rd, pos = now - rd.playAt, ch = rd.chart, bpm = ch && ch.bpm || 120;
-    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.battle ? 4 : 5;
+    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.battle ? 4 : 5;
     if (!b.dancing || b.style !== style) { b.dancing = true; b.style = style; b.act({ type: "dance", style: style }); }
     pose(b, now, bpm);
     var slot = -1, bs = rd.b && rd.b.slots, be = rd.b && rd.b.entrants;
@@ -157,7 +158,7 @@ module.exports = function(api) {
     if (rd.mode !== "free" && now > b.scoreAt) {
       /* a score that grows through the song at this bot's skill */
       var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, pos / dur));
-      var full = rd.mode === "mosh" || rd.mode === "skate" ? 60000 : arrows * 100 * (1 + arrows / 100) * 0.55;
+      var full = rd.mode === "mosh" || rd.mode === "skate" ? 60000 : rd.mode === "keepy" ? 8000 : arrows * 100 * (1 + arrows / 100) * 0.55;
       b.score = Math.max(b.score || 0, Math.round(full * frac * b.skill * rnd(0.9, 1.1)));
       var sm = { type: "score", s: b.score }; if (slot >= 0) sm.m = slot;
       b.act(sm); b.scoreAt = now + 2000;
@@ -184,7 +185,7 @@ module.exports = function(api) {
     var beat = now / (60000 / (bpm || 120)) * b.groove, s = Math.sin(beat * Math.PI), c = Math.cos(beat * Math.PI * 0.5);
     var a = [Math.round((70 + 90 * b.arms * Math.abs(s)) * (c > 0 ? 1 : 1.6)), Math.round(-(70 + 90 * b.arms * Math.abs(Math.sin(beat * Math.PI + 1))) * (c > 0 ? 1.6 : 1)), Math.round(18 * s), Math.round(-18 * s)];
     var pm = { type: "pose", a: a, c: Math.floor((b.score || 0) / 900) % 60 };
-    if (b.rd && b.rd.mode === "skate") { pm.sk = { h: b.skH || 0, f: 0, t: b.skT || 0 }; if (b.skH) pm.a = [240, -240, 100, -100]; }
+    if (b.rd && (b.rd.mode === "skate" || b.rd.mode === "keepy")) { pm.sk = { h: b.skH || 0, f: 0, t: b.skT || 0 }; if (b.skH) pm.a = [240, -240, 100, -100]; }
     b.act(pm);
   }
 

@@ -301,11 +301,11 @@ function roundFinish(code) {
 function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { n: r.roundN, mode: mode, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { n: r.roundN, mode: mode, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
     broadcast(code, roundPublic(r));
@@ -394,7 +394,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.38.1";
+var VERSION = "1.39.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -554,6 +554,17 @@ function onMessage(ws, raw, isBinary) {
       broadcast(ws.room, { type: "react", id: ws.viewerId, k: msg.k }, ws);
       return;
     }
+    if (msg.type === "kick") {
+      /* keepy uppy: someone hit the balloon, ball or feather; pass its new flight on to everyone (numbers clamped) */
+      var krd = rooms[ws.room].round;
+      if (!krd || krd.mode !== "keepy" || krd.phase !== "play" || !allow(ws, "kick", 6, 4)) return;
+      var ko = intIn(msg.o, 0, 3, -1), kt = intIn(msg.t, 0, 3600000, -1), kx = unit(msg.x), ky = unit(msg.y);
+      var kn = function(v, lo, hi) { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, +v.toFixed(4))) : null; };
+      var kz = kn(msg.z, 0, 200), kvx = kn(msg.vx, -2, 2), kvy = kn(msg.vy, -2, 2), kvz = kn(msg.vz, 0, 200);
+      if (ko < 0 || kt < 0 || kx === null || ky === null || kz === null || kvx === null || kvy === null || kvz === null) return;
+      broadcast(ws.room, { type: "kick", id: ws.viewerId, o: ko, t: kt, x: kx, y: ky, z: kz, vx: kvx, vy: kvy, vz: kvz }, ws);
+      return;
+    }
     if (msg.type === "pos") {
       var x = unit(msg.x), y = unit(msg.y);
       if (x === null || y === null || !allow(ws, "pos", 20, 15)) return;
@@ -604,7 +615,7 @@ function onMessage(ws, raw, isBinary) {
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
       if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
-      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
       if (srd.battle && msg.m !== undefined) {
         /* a battle match score: only from the two in the match that's on */
         var bk = battleNow(srd), bs = srd.battle.slots[msg.m | 0], be = srd.battle.entrants;

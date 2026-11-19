@@ -206,6 +206,68 @@ var ART=(function(){
     var cy=(top+bot)/2,ry=Math.max(30,(bot-top)/2),rx=Math.min(W*0.47,Math.max(ry*1.8,W*0.4));
     return{cx:W/2,cy:cy,rx:rx,ry:ry,ix:Math.max(46,rx*0.26),iy:Math.max(18,ry*0.34)};
   }
+
+  /* ---------------- keepy uppy (the keepy round) ----------------
+     A balloon (light, drifts down), a ball (heavy, drops fast and bounces) and a feather (floats high and
+     takes forever to come down) to keep off the floor. Shared between the pages: every screen runs the same
+     simple physics from the same starting point, and each hit carries the object's full new state, so
+     everyone agrees where things are. Positions: x, y on the floor (0-1 of the screen), z height in art
+     pixels; velocities per second; t = song time (ms) of the state. */
+  var KTYPES={
+    balloon:{g:22,drag:1.1,kick:62,push:0.22,spawn:62,pts:10,col:"#FF4D6D",r:5},
+    ball:{g:150,drag:0.15,kick:120,push:0.32,spawn:70,pts:15,col:"#F5F23D",r:3.5,bounce:0.62},
+    feather:{g:9,drag:1.4,kick:32,push:0.12,spawn:88,pts:30,col:"#F4F1FF",r:4,sway:1}
+  };
+  var KORDER=["balloon","ball","feather","balloon"];
+  function kRand(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+  function kSpawn(o,t,B){var T=KTYPES[o.type],n=o.k*7+(o.drops||0)*13+1;
+    o.s={x:B.x0+(B.x1-B.x0)*(0.15+0.7*kRand(n)),y:B.y0+(B.y1-B.y0)*(0.2+0.6*kRand(n+3)),z:T.spawn,vx:(kRand(n+5)-0.5)*0.04,vy:0,vz:0,t:t};o.streak=0;o.bounces=0;o.down=0;}
+  function keepyMake(t,B){return KORDER.map(function(type,k){var o={k:k,type:type,drops:0};kSpawn(o,t-k*1500,B);return o;});}
+  /* move one object on to song time t (fixed 20 ms steps, so every screen gets the same answer) */
+  function keepyAdvance(o,t,B){
+    var T=KTYPES[o.type],s=o.s,DT=20;
+    if(o.down){if(t>=o.down){o.drops++;kSpawn(o,o.down,B);}else return;}
+    var guard=0;
+    while(s.t+DT<=t&&guard++<3000){
+      var dt=DT/1000,dr=Math.exp(-T.drag*dt);
+      s.vz-=T.g*dt;s.vz*=T.drag>1?dr:1;if(T.drag>1&&s.vz<-T.g/T.drag)s.vz=-T.g/T.drag;   /* light things reach a slow fall and stay there */
+      s.vx*=Math.exp(-0.25*dt);s.vy*=Math.exp(-0.25*dt);
+      var sw=T.sway?Math.sin(s.t/600+o.k)*0.035:0;
+      s.x+=(s.vx+sw)*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;s.t+=DT;
+      if(s.x<B.x0){s.x=B.x0;s.vx=Math.abs(s.vx);}if(s.x>B.x1){s.x=B.x1;s.vx=-Math.abs(s.vx);}
+      if(s.y<B.y0){s.y=B.y0;s.vy=Math.abs(s.vy);}if(s.y>B.y1){s.y=B.y1;s.vy=-Math.abs(s.vy);}
+      if(s.z<=0){
+        s.z=0;o.streak=0;
+        if(T.bounce&&o.bounces<3&&s.vz<-25){s.vz=-s.vz*T.bounce;o.bounces++;}       /* the ball bounces a few times */
+        else{o.down=s.t+1200;o.lastDrop=s.t;return;}                                   /* on the floor: back from the top in a moment */
+      }
+    }
+  }
+  /* a hit: the object's new state from now (also what goes over the wire) */
+  function keepyHit(o,st){o.s={x:st.x,y:st.y,z:st.z,vx:st.vx,vy:st.vy,vz:st.vz,t:st.t};o.down=0;o.bounces=0;o.streak=(o.streak||0)+1;}
+  /* draw: P(x,y,z) gives the screen point; s the character scale */
+  function keepyDraw(g,objs,P,sc,now){
+    objs.forEach(function(o){
+      if(o.down)return;var T=KTYPES[o.type],s=o.s,f=P(s.x,s.y,0),p=P(s.x,s.y,s.z),r=T.r*sc;
+      /* the shadow on the floor: smaller and fainter the higher it is */
+      var sh=Math.max(0.35,1-s.z/120);g.fillStyle="rgba(0,0,0,"+(0.35*sh).toFixed(3)+")";g.beginPath();g.ellipse(f[0],f[1],r*1.3*sh,r*0.45*sh,0,0,6.2832);g.fill();
+      g.save();g.translate(Math.round(p[0]),Math.round(p[1]));
+      if(o.type==="balloon"){
+        g.strokeStyle="rgba(255,255,255,.6)";g.lineWidth=Math.max(1,sc*0.4);g.beginPath();g.moveTo(0,r);g.quadraticCurveTo(r*0.6,r*2,0,r*3.2);g.stroke();
+        g.fillStyle=T.col;g.beginPath();g.ellipse(0,0,r,r*1.2,0,0,6.2832);g.fill();g.fillStyle="#c02848";g.fillRect(-sc*0.5,r*1.1,sc,sc*0.8);
+        g.fillStyle="rgba(255,255,255,.55)";g.beginPath();g.ellipse(-r*0.35,-r*0.45,r*0.25,r*0.35,-0.5,0,6.2832);g.fill();
+      }else if(o.type==="ball"){
+        g.rotate(s.x*40);g.fillStyle=T.col;g.beginPath();g.arc(0,0,r,0,6.2832);g.fill();
+        g.fillStyle="#FF3DA8";g.beginPath();g.moveTo(0,0);g.arc(0,0,r,0,2.1);g.fill();g.fillStyle="#3DF2FF";g.beginPath();g.moveTo(0,0);g.arc(0,0,r,2.1,4.2);g.fill();
+        g.fillStyle="#fff";g.beginPath();g.arc(0,0,r*0.25,0,6.2832);g.fill();
+      }else{
+        g.rotate(Math.sin(now/500+o.k)*0.6);g.strokeStyle="#cfc8e8";g.lineWidth=Math.max(1,sc*0.35);g.beginPath();g.moveTo(-r*1.4,r*0.4);g.lineTo(r*1.4,-r*0.4);g.stroke();
+        g.fillStyle=T.col;g.beginPath();g.moveTo(-r*1.2,r*0.35);g.quadraticCurveTo(0,-r*1.1,r*1.3,-r*0.4);g.quadraticCurveTo(0,r*0.2,-r*1.2,r*0.35);g.fill();
+      }
+      g.restore();
+      if(o.streak>=2){g.font="800 "+Math.round(10+Math.min(8,o.streak))+"px system-ui";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("×"+o.streak,p[0],p[1]-r*1.6);g.fillStyle=T.col;g.fillText("×"+o.streak,p[0],p[1]-r*1.6);}
+    });
+  }
   /* ---------------- walking ----------------
      A walk that stays on the ground: the stride advances with the distance actually covered (so the feet keep
      pace with the body instead of paddling in the air), one foot stays planted while the other lifts and swings
@@ -937,6 +999,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.38.1",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.39.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
