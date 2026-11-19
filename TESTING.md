@@ -530,3 +530,13 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 ## More hairstyles (v1.43.0)
 - Character creator → Hair now has 23 styles (was 8). New: **Bob, Bangs, Bun, Pigtails, Braid** (over the shoulder), **Curly** (big cloud), **Side swoop** (over one eye), **Long waves, Pixie, Buzz, Bowl cut, Quiff, Messy, Shoulder length, High ponytail**.
 - Old saved characters keep their hair. Bots and random looks use the new styles too. Headbanging throws the new styles over the face (not the buzz cut).
+
+## Way more clothes (v1.44.0)
+- Character creator: **Top** now has 21 (Suit, Waistcoat, Hi-vis vest, Jersey, Chef coat, Lab coat, Leather jacket, Tuxedo, Polo, Doublet, Robe, Turtleneck, Flannel, Band tee, Uniform, Crop top added). **Bottoms** has 13 (Track pants, Overalls, Long dress, Hose (two-tone legs), Cargo pants, Kilt, Bell-bottoms, Ripped jeans, Shorts & leggings, Mini skirt added).
+- New rows: **Shoes** (10: sneakers, white, red, boots, high-tops, dress shoes, sandals, pointy, rain boots, platforms), **Hat** (13: hard hat, chef hat, fire helmet, police cap, top hat, cowboy, wizard, crown, beret, feathered cap, hood, racing helmet), **Face** (10: moustache, beard, goatee, glasses, round glasses, eye patch, freckles, blush, stubble).
+- Saved characters still load (the new rows start plain). Bots and random looks wear the new things.
+
+## Any colour + more hair (v1.45.0)
+- Character creator: the rows of colour squares are gone. Skin, Hair, Top and Bottoms each have one round colour button. Tap it: a window opens zoomed in on that part (the head for hair and skin, the body for the top, the legs for bottoms) with the standard colours, a colour square to drag across for any colour, the browser's colour picker, and a hex box. Done (or Esc / tap outside) closes it.
+- A picked colour travels with your character: everyone in the room sees it (needs the updated server).
+- New hair: **Flame spikes**, **Widow's peak**, **Long locks** (full fringe, locks down the sides, long behind), **Bob & headband**, **Side tail**, **Fluffy mop**, **Wild crop**. New standard hair colour: teal. New hat: **Goggles** (pushed up on the head).
