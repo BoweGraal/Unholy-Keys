@@ -80,6 +80,13 @@ var ART=(function(){
       if(Math.abs(s)>0.5)sg.fillRect(Math.round(OX+cx-0.5),Math.round(OY+cy-1.5),1,3);   /* keep sideways limbs 3 thick */
     }
   }
+  /* an 80s quad roller skate on a foot: white high-top boot with a hot pink stripe, a stopper, neon wheels */
+  function skate(jx,jy,a,len){
+    var fx=Math.round(OX+jx-Math.sin(a)*len),fy=Math.round(OY+jy+Math.cos(a)*len);
+    sg.fillStyle="#F4F1FF";sg.fillRect(fx-2,fy-2,5,3);sg.fillStyle="#FF3DA8";sg.fillRect(fx-2,fy-1,5,1);
+    sg.fillStyle="#2a2440";sg.fillRect(fx-2,fy+1,6,1);sg.fillStyle="#FF3DA8";sg.fillRect(fx-3,fy,1,1);
+    sg.fillStyle="#3DF2FF";sg.fillRect(fx-2,fy+2,2,1);sg.fillStyle="#F5F23D";sg.fillRect(fx+2,fy+2,2,1);
+  }
   function drawSprite(L,st){
     init();
     sg.clearRect(0,0,CWD,CHT);
@@ -96,6 +103,7 @@ var ART=(function(){
     function legC(n){return legCols.map(function(c){return [c[0]*n/7,c[1]];});}
     var gL=Math.max(3,Math.min(7,st.legLenL||7)),gR=Math.max(3,Math.min(7,st.legLenR||7));
     limb(-2.5,4,lL,gL,legC(gL));limb(2.5,4,lR,gR,legC(gR));
+    if(st.skates){skate(-2.5,4,lL,gL);skate(2.5,4,lR,gR);}
     /* torso */
     px(-5,-5,10,10,tc);
     if(L.top===4){for(var r=-4;r<5;r+=3)px(-5,r,10,1,tcL);}
@@ -143,7 +151,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     st=st||{};if(!L)L=random(7);
-    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR};
+    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,skates:!!st.skates};
     var c=drawSprite(L,s),q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
     if(st.rot){
@@ -154,6 +162,50 @@ var ART=(function(){
     g.imageSmoothingEnabled=was;
   }
 
+
+  /* ---------------- the roller rink (the skate round) ----------------
+     An 80s rink laid over the floor: a glossy maple oval with neon pink and cyan rails, a carpeted island in the
+     middle where the performer plays, a mirror ball's spots sliding across it all.
+     G = {cx, cy, rx, ry, ix, iy}: the oval's centre and radii and the island's radii, in screen pixels. */
+  function rink(g,G,now,k){
+    if(!G)return;k=k===undefined?1:k;if(k<=0.01)return;
+    g.save();g.globalAlpha=k;
+    /* carpet outside the rail: dark, with an 80s squiggle and triangle pattern */
+    g.save();g.beginPath();g.rect(G.cx-G.rx-60,G.cy-G.ry-30,G.rx*2+120,G.ry*2+60);g.ellipse(G.cx,G.cy,G.rx,G.ry,0,0,6.2832,true);g.clip("evenodd");
+    g.fillStyle="#140a28";g.fillRect(G.cx-G.rx-60,G.cy-G.ry-30,G.rx*2+120,G.ry*2+60);
+    for(var i=0;i<46;i++){var px=G.cx-G.rx-50+((i*97)%Math.max(40,(G.rx*2+100))),py=G.cy-G.ry-20+((i*53)%Math.max(30,(G.ry*2+40)));
+      g.strokeStyle=["#FF3DA8","#3DF2FF","#F5F23D","#8A5CFF"][i%4];g.globalAlpha=k*0.45;g.lineWidth=2;
+      if(i%2){g.beginPath();g.moveTo(px,py);g.lineTo(px+8,py-6);g.lineTo(px+16,py);g.lineTo(px+24,py-6);g.stroke();}
+      else{g.beginPath();g.moveTo(px,py);g.lineTo(px+7,py-10);g.lineTo(px+14,py);g.closePath();g.stroke();}}
+    g.restore();g.globalAlpha=k;
+    /* the maple track */
+    g.save();g.beginPath();g.ellipse(G.cx,G.cy,G.rx,G.ry,0,0,6.2832);g.ellipse(G.cx,G.cy,G.ix,G.iy,0,0,6.2832,true);g.clip("evenodd");
+    var wg=g.createLinearGradient(0,G.cy-G.ry,0,G.cy+G.ry);wg.addColorStop(0,"#b9773e");wg.addColorStop(0.5,"#d89a5a");wg.addColorStop(1,"#a8652f");
+    g.fillStyle=wg;g.fillRect(G.cx-G.rx,G.cy-G.ry,G.rx*2,G.ry*2);
+    g.strokeStyle="rgba(90,45,15,.35)";g.lineWidth=1;for(var py2=G.cy-G.ry;py2<G.cy+G.ry;py2+=Math.max(6,G.ry/9)){g.beginPath();g.moveTo(G.cx-G.rx,py2);g.lineTo(G.cx+G.rx,py2);g.stroke();}
+    /* a shine across the polish, and the mirror ball's spots */
+    var sh=g.createLinearGradient(G.cx-G.rx,0,G.cx+G.rx,0),so=((now/6000)%1);sh.addColorStop(Math.max(0,so-0.08),"rgba(255,255,255,0)");sh.addColorStop(so,"rgba(255,255,255,.18)");sh.addColorStop(Math.min(1,so+0.08),"rgba(255,255,255,0)");
+    g.fillStyle=sh;g.fillRect(G.cx-G.rx,G.cy-G.ry,G.rx*2,G.ry*2);
+    for(var d=0;d<26;d++){var an=d*0.9+now/2600,rr=0.25+((d*37)%70)/100,sx=G.cx+Math.cos(an)*G.rx*rr*0.95,sy=G.cy+Math.sin(an*1.3)*G.ry*rr*0.9;
+      g.fillStyle=["rgba(255,255,255,.55)","rgba(255,61,168,.5)","rgba(61,242,255,.5)"][d%3];g.beginPath();g.ellipse(sx,sy,3,2,0,0,6.2832);g.fill();}
+    g.restore();
+    /* lane stripes (a dashed neon line round the middle of the track) */
+    g.setLineDash([14,12]);g.lineDashOffset=-now/40;g.strokeStyle="rgba(255,255,255,.35)";g.lineWidth=2;
+    g.beginPath();g.ellipse(G.cx,G.cy,(G.rx+G.ix)/2,(G.ry+G.iy)/2,0,0,6.2832);g.stroke();g.setLineDash([]);
+    /* neon rails: outer and island, glowing */
+    function rail(rx,ry,c1,c2){g.shadowColor=c1;g.shadowBlur=14;g.strokeStyle=c1;g.lineWidth=4;g.beginPath();g.ellipse(G.cx,G.cy,rx,ry,0,0,6.2832);g.stroke();g.shadowBlur=0;g.strokeStyle=c2;g.lineWidth=1.5;g.beginPath();g.ellipse(G.cx,G.cy,rx,ry,0,0,6.2832);g.stroke();}
+    rail(G.rx,G.ry,"#FF3DA8","#ffd0ec");
+    /* the island: purple carpet, a cyan rail, a little riser for the performer */
+    g.fillStyle="#2a1650";g.beginPath();g.ellipse(G.cx,G.cy,G.ix,G.iy,0,0,6.2832);g.fill();
+    g.strokeStyle="rgba(245,242,61,.35)";g.lineWidth=2;for(var z=0;z<5;z++){g.beginPath();g.ellipse(G.cx,G.cy,G.ix*(0.25+z*0.15),G.iy*(0.25+z*0.15),0,0,6.2832);g.stroke();}
+    rail(G.ix,G.iy,"#3DF2FF","#d8fdff");
+    g.restore();
+  }
+  /* where an oval rink sits on a floor running from y=top to y=bot (pixels), on a screen W wide */
+  function rinkGeom(W,top,bot){
+    var cy=(top+bot)/2,ry=Math.max(30,(bot-top)/2),rx=Math.min(W*0.47,Math.max(ry*1.8,W*0.4));
+    return{cx:W/2,cy:cy,rx:rx,ry:ry,ix:Math.max(46,rx*0.26),iy:Math.max(18,ry*0.34)};
+  }
   /* ---------------- walking ----------------
      A walk that stays on the ground: the stride advances with the distance actually covered (so the feet keep
      pace with the body instead of paddling in the air), one foot stays planted while the other lifts and swings
@@ -795,7 +847,8 @@ var ART=(function(){
     }
     /* rain or a storm: streaks falling at a slant, splashes on the floor */
     if(fx.weather==="rain"||fx.weather==="storm"){
-      var n=fx.weather==="storm"?260:150,sl=fx.weather==="storm"?0.35:0.15;
+      /* wx: how heavy the weather is (0-1, 0.6 = the usual) */
+      var wxk=wxAmt(fx),n=Math.round((fx.weather==="storm"?260:150)*wxk),sl=(fx.weather==="storm"?0.35:0.15)*(0.6+wxk*0.6);
       g.fillStyle=fx.weather==="storm"?"rgba(170,190,230,.55)":"rgba(170,190,230,.45)";
       for(i=0;i<n;i++){var sp=0.9+((i*7919)%100)/120,yy=((t*H*sp*1.1+i*(H/n)*7.3)%(H*1.1))-H*0.05,xx=((i*263.7)%W)+yy*sl;xx%=W;
         g.fillRect(Math.round(xx),Math.round(yy),Math.max(1,P/2),P*3);}
@@ -804,7 +857,7 @@ var ART=(function(){
     }
     if(fx.weather==="snow"){
       g.fillStyle="rgba(240,245,255,.9)";
-      for(i=0;i<140;i++){var sp3=0.3+((i*37)%10)/25,yy2=((t*H*sp3*0.18+i*(H/140)*9.1)%(H*1.05)),xx2=((i*197.3)%W)+Math.sin(t*0.8+i)*P*4;
+      for(i=0;i<Math.round(140*wxAmt(fx));i++){var sp3=0.3+((i*37)%10)/25,yy2=((t*H*sp3*0.18+i*(H/140)*9.1)%(H*1.05)),xx2=((i*197.3)%W)+Math.sin(t*0.8+i)*P*4;
         var sz=i%5===0?P:Math.max(1,Math.round(P/2));g.fillRect(Math.round(xx2),Math.round(yy2),sz,sz);}
     }
     /* lasers fanning out from the stage over the crowd, sweeping with the music */
@@ -861,7 +914,9 @@ var ART=(function(){
   }
   var dkc=null;function darkCanvas(W,H){if(!dkc)dkc=canv(W,H);if(dkc.width!==W||dkc.height!==H){dkc.width=W;dkc.height=H;}return dkc;}
   /* the show's controls, with their defaults (also what the server accepts) */
-  var FX_DEFAULT={lights:"auto",fog:0,lasers:0,dark:0,weather:"none",sunset:0,fire:0,fireworks:0,burst:0,
+  /* how heavy the weather is: the slider's 0-1 as a multiplier (0.6, the default, is the usual amount) */
+  function wxAmt(fx){var w=fx&&fx.wx!==undefined?+fx.wx:0.6;if(!isFinite(w))w=0.6;return 0.15+Math.max(0,Math.min(1,w))*1.42;}
+  var FX_DEFAULT={wx:0.6,lights:"auto",fog:0,lasers:0,dark:0,weather:"none",sunset:0,fire:0,fireworks:0,burst:0,
     follow:0,jumbo:"auto",disco:0,banner:0,bannerText:"UNHOLY KEYS",balloonT:0,confettiT:0,crowd:"",crowdT:0,space:0,water:0};
   var CROWD_KINDS=["sparkle","fire","lasers","float"];
 
@@ -882,6 +937,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.36.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.38.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

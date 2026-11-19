@@ -227,12 +227,15 @@
       var H2=big?44:36;
       c=piece(kind+(on?cf.s:"x"),14,H2,function(r,ln,disc){var by0=H2-16;disc(7,by0+3,5,"#B8501E");disc(7,by0+10,6,"#B8501E");r(2,by0+3,10,8,"#B8501E");r(4,by0+5,1,3,"#2a1010");r(9,by0+5,1,3,"#2a1010");
         r(6,4,2,by0,"#2a1810");r(5,0,4,5,"#5a3220");r(6.5,by0+15,1,1,"#888");for(var s=0;s<4;s++)r(5.2+s*0.9,4,1,by0+8,on&&s===cf.s?"#F5D03C":"#D8D0C0");});
-      var cA=[x+(big?9:0)*p,y+(big?17:16)*p];
-      front=function(){blit(g,c,cA[0],cA[1],p,7,H2,0);
-        var bx=big?cA[0]-(4-6*bw2)*p:cA[0]+(-8+16*bw2)*p,by=cA[1]-(big?13:12)*p;if(!big||on){g.strokeStyle="#D8D0C0";g.lineWidth=Math.max(1,p*0.6);g.beginPath();g.moveTo(bx-10*p,by+1*p);g.lineTo(bx+10*p,by-1*p);g.stroke();}};
+      /* the cello stands between your knees, leaning back past your left shoulder, so you're seen behind it */
+      var cA=[x+(big?9:1)*p,y+(big?17:15)*p],crot=big?0:0.2;
+      front=function(){blit(g,c,cA[0],cA[1],p,7,H2,crot);
+        if(big){var bx=cA[0]-(4-6*bw2)*p,by=cA[1]-13*p;if(on){g.strokeStyle="#D8D0C0";g.lineWidth=Math.max(1,p*0.6);g.beginPath();g.moveTo(bx-10*p,by+1*p);g.lineTo(bx+10*p,by-1*p);g.stroke();}}
+        else{var bc=at(cA[0],cA[1],p,7,H2,crot,7,H2-12),bo=(-8+16*bw2)*p;g.strokeStyle="#D8D0C0";g.lineWidth=Math.max(1,p*0.6);g.beginPath();g.moveTo(bc[0]+bo-10*p,bc[1]+1*p);g.lineTo(bc[0]+bo+10*p,bc[1]-1*p);g.stroke();}};
       var fy=cA[1]-(H2-2-cf.pos*(H2-18)*1.4)*p,bowH=big?[cA[0]-(10-6*bw2)*p,cA[1]-12*p]:[cA[0]+(-8+16*bw2)*p-7*p,cA[1]-12*p+1*p];
       if(big){fy=y-11*p+bob+clamp(cf.pos/0.55,0,1)*10*p;arms(bowH,[cA[0]-1*p,fy+(on?Math.sin(now*0.03)*0.4*p:0)]);}   /* the bass is taller than you: the fretting hand stays between your shoulder and the body */
-      else arms(bowH,[cA[0]+1*p,fy+(on?Math.sin(now*0.03)*0.4*p:0)]);
+      else{var ny=clamp(2+cf.pos*(H2-18)*1.4,4,H2-17),fh=at(cA[0],cA[1],p,7,H2,crot,6,ny),bc2=at(cA[0],cA[1],p,7,H2,crot,7,H2-12);
+        arms([bc2[0]+(-8+16*bw2)*p-6*p,bc2[1]+1*p],[fh[0],fh[1]+(on?Math.sin(now*0.03)*0.4*p:0)]);}
       fx=function(){if(on)waves(g,cA[0],cA[1]-10*p,p,big?0:Math.PI,0.55,"rgba(184,80,30,.7)");};
       break;}
 
@@ -477,5 +480,5 @@
       if(s2t.on&&(st.now||Date.now())<s2t.t0)s2t.on=false;
       draw(g,x+X[i],y+Y[i],p*S[i],ART.looks.random(101+i*17),kinds[i],s2t);}
   }
-  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.36.0"};
+  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:draw,KINDS:KINDS,VERSION:"1.38.0"};
 })();

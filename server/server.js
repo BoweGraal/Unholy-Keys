@@ -232,7 +232,7 @@ function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
   var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle };
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
-  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = Date.now() - rd.playAt; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
+  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
   return o;
 }
@@ -300,11 +300,11 @@ function roundFinish(code) {
 function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { n: r.roundN, mode: mode, isBattle: !!msg.battle && mode !== "mosh", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { n: r.roundN, mode: mode, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
     broadcast(code, roundPublic(r));
@@ -315,6 +315,8 @@ function roundMessage(ws, msg) {
     if (rd.phase !== "countdown" && rd.phase !== "play") return;
     var ts0 = +msg.ts0; rd.ts0 = isFinite(ts0) && msg.ts0 !== null ? ts0 : null;
     rd.playAt = Date.now() - intIn(msg.pos, 0, 3600000, 0);
+    /* paused: everyone's game holds at this point in the song until the next round-play */
+    rd.paused = !!msg.paused; rd.pausePos = rd.paused ? intIn(msg.pos, 0, 3600000, 0) : 0;
     var first = rd.phase !== "play"; rd.phase = "play";
     broadcast(code, roundPublic(r));
     if (first && rd.isBattle) {
@@ -391,12 +393,12 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.36.0";
+var VERSION = "1.38.0";
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
   return { lights: FX_LIGHTS.indexOf(f.lights) >= 0 ? f.lights : "auto", fog: lvl(f.fog), lasers: f.lasers ? 1 : 0, dark: lvl(f.dark),
-    weather: FX_WEATHER.indexOf(f.weather) >= 0 ? f.weather : "none", sunset: f.sunset ? 1 : 0, fire: f.fire ? 1 : 0, fireworks: f.fireworks ? 1 : 0,
+    weather: FX_WEATHER.indexOf(f.weather) >= 0 ? f.weather : "none", wx: f.wx === undefined ? 0.6 : lvl(f.wx), sunset: f.sunset ? 1 : 0, fire: f.fire ? 1 : 0, fireworks: f.fireworks ? 1 : 0,
     burst: Math.max(0, Math.floor(+f.burst || 0)) % 1e13,
     /* lights following the performer's playing; the Jumbotron (auto: down while a video plays); things that lower in */
     follow: f.follow ? 1 : 0, jumbo: f.jumbo === "down" || f.jumbo === "up" ? f.jumbo : "auto", disco: f.disco ? 1 : 0, banner: f.banner ? 1 : 0,
@@ -499,7 +501,7 @@ function onMessage(ws, raw, isBinary) {
     if (msg.type === "bots") { BOTS.setFill(ws.room, msg.fill); return; }
     if (!PERFORMER_TYPES[msg.type]) return;
     if (msg.type === "state") rooms[ws.room].state = msg;
-    if (msg.type === "video") { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); }
+    if (msg.type === "video") { if (msg.action === "stop") rooms[ws.room].video = null; else { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); } }
     if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
     if (msg.type === "show-fx") {
       // the show's effects (lights, fog, lasers, darkness, weather, sunset, fire, fireworks): kept for latecomers
@@ -588,6 +590,8 @@ function onMessage(ws, raw, isBinary) {
       var pv = rooms[ws.room].viewers.get(ws.viewerId);
       if (pv) { pv.pose = a; pv.combo = combo; pv.fd = fd; var prd = rooms[ws.room].round; if (prd && prd.phase === "play") pv.danced = true; }
       var pm = { type: "pose", id: ws.viewerId, a: a, c: combo }; if (fd) pm.fd = fd;
+      /* on the roller rink: height in the air (0-60), a wipe-out, the trick (0-4) */
+      if (msg.sk && typeof msg.sk === "object") pm.sk = { h: intIn(msg.sk.h, 0, 60, 0), f: msg.sk.f ? 1 : 0, t: intIn(msg.sk.t, 0, 4, 0) };
       broadcast(ws.room, pm, ws);
       return;
     }
@@ -596,7 +600,7 @@ function onMessage(ws, raw, isBinary) {
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
       if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
-      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
       if (srd.battle && msg.m !== undefined) {
         /* a battle match score: only from the two in the match that's on */
         var bk = battleNow(srd), bs = srd.battle.slots[msg.m | 0], be = srd.battle.entrants;

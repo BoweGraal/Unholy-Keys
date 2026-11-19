@@ -441,3 +441,30 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Music tab → Dance rounds → "When I play a backing track": **no game: everyone just listens & hangs out** (the default). The song plays, with no countdown and no game. The audience walks, talks, reacts, and can Dance → Free dance whenever they like.
 - **🤖 Fill the room with bots: up to N people** (2–8, remembered). Go live: bots join until the room has N people. Each real person who joins takes a bot's place, and when someone leaves a bot fills in. Set it to off and they all leave.
 - Bots have 🤖 in their names. They walk around, chat now and then (no two say the same line within 2 minutes), react while music plays, and sometimes free dance between songs. In rounds they dance, post decent (rarely winning) scores, vote in free-dance rounds and battles, and push in the mosh pit's wall of death.
+
+## Live song menu (v1.37.0)
+- In Jam, click **🎵 Start song** (top, next to Hang out).
+  1. **Pick the song**:
+     - **Music**: your Backing Tracks, the site's songs folder, **+ Song file**, **📁 Folder**.
+     - **Video**: video files. The sound goes to everyone like any track; the picture shows behind the visuals and on the Jumbotron for you.
+     - **YouTube**: search or paste a link. Songs added in dance practice show "✓ steps ready".
+  2. **Pick the game**: No game (just listen & hang out), Step, Target, Note highway, 4 keys, Free dance or Mosh pit, plus countdown, steps level and Battle.
+  3. **Start**.
+- **With a game, while live**: the song is checked, the audience gets the countdown, and the song starts at zero. A YouTube song uses its practice steps if it has them, otherwise steps made live from the beat.
+- **With no game**: an optional countdown just for you, then the song plays.
+- **The bar** at the bottom left shows the song, the game, its time and progress.
+  - **❚❚ / ▶** (or P) pauses and resumes. During a round everyone's game holds still and the venue shows "⏸ Paused".
+  - **■ End** ends the round (scores counted) and stops the song.
+- **When the song ends on its own**: same as End. The Jumbotron goes back up, in the venue and in Stage view (this used to stay down after a YouTube song finished).
+
+## Roller rink, Tab to talk, and fixes (v1.38.0)
+- **Roller rink round** (Start song → 🛼 Roller rink, the Music tab round list, or practice):
+  - The floor turns into an 80s rink: a maple oval, neon pink and cyan rails, mirror-ball spots, a carpeted island in the middle. The performer plays on the island, both in the venue and in Stage view.
+  - Everyone wears quad skates (white boots, neon wheels). Arrows, WASD or the stick push you along and you keep your momentum, bouncing off the rails. The meter top right shows speed.
+  - JUMP (Space or the big button) once you're fast enough. Faster means higher and longer.
+  - In the air, hold a direction for a trick: ↑ Superman, ↓ Tuck, ← Kick, → Split. Switch between them to chain (each one in a row is worth more). Let go before you land: if you're still holding one you BAIL and lose the points. Laps score too.
+  - Everyone sees each other's jumps, tricks and wipe-outs. Bots skate laps and jump.
+- **Tab** always opens the chat box: in the venue (Tab again closes it), and for the performer in jam (on stage, hanging out, or mid-song). The performer's message shows over their head on stage.
+- **Stage view with a video**: the note lines now show over the video (like classic jam), not hidden under it.
+- **Cello**: leans back past the player's shoulder, so you can see them behind it.
+- **Show tab → Weather → Intensity** slider: light drizzle to a downpour (rain and storm), a few flakes to a blizzard (snow).
