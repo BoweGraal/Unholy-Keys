@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="tune.js"></script>
 <script src="art.js"></script>
 <script src="instruments.js"></script>
 <style>
@@ -349,6 +350,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
   <div class="join-sub">Live Venue</div>
   <div style="text-align:center;margin:-4px 0 10px"><span id="srvTag" class="srv-badge"></span></div>
   <a class="join-practice-btn" href="?practice">&#128378; Dance practice <small style="font-weight:500;opacity:.75">no show needed</small></a>
+  <a class="join-practice-btn" href="?practice&lab" style="margin-top:6px">&#128295; Tuning lab <small style="font-weight:500;opacity:.75">tweak every minigame</small></a>
   <div class="join-box">
     <div>
       <label>Display Name</label>
@@ -1849,10 +1851,10 @@ function moveTick(){
   if(mw&&mw.walk&&anyHeld())mw.walk=null;          /* the arrows take over */
   if(mw&&mw.walk){
     /* walking to where you tapped, at the same pace as the arrows */
-    var wx=mw.walk[0]-mw.tx,wy=(mw.walk[1]-mw.ty)*(H/W),wd=Math.hypot(wx,wy),st=0.33*dt;
+    var wx=mw.walk[0]-mw.tx,wy=(mw.walk[1]-mw.ty)*(H/W),wd=Math.hypot(wx,wy),st=TUNE.v("walk.speed")*dt;
     if(wd<=st){mw.tx=mw.walk[0];mw.ty=mw.walk[1];mw.walk=null;}
     else{mw.tx+=wx/wd*st;mw.ty+=wy/wd*st*(W/H);}
-    mw.x+=(mw.tx-mw.x)*0.35;mw.y+=(mw.ty-mw.y)*0.35;
+    mw.x+=(mw.tx-mw.x)*TUNE.v("walk.ease");mw.y+=(mw.ty-mw.y)*TUNE.v("walk.ease");
     sendPos(mw.tx,mw.ty);
   }
   if(anyHeld()&&myId&&viewers[myId]){
@@ -1860,11 +1862,11 @@ function moveTick(){
     if(dx&&dy){dx*=0.7071;dy*=0.7071;}
     if(joyOn()){var jm=Math.min(1,(Math.hypot(joy.x,joy.y)-0.15)/0.7),ja=Math.atan2(joy.y,joy.x);dx=Math.cos(ja)*jm;dy=Math.sin(ja)*jm;}
     /* about 3 seconds to cross the room; vertical speed matched in pixels */
-    var sp=0.33*dt*(GAME.mode==="mosh"?1.45:1);
+    var sp=TUNE.v("walk.speed")*dt*(GAME.mode==="mosh"?TUNE.v("walk.moshBoost"):1);
     me.tx=Math.max(0.03,Math.min(0.97,me.tx+dx*sp));
     me.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),me.ty+dy*sp*(W/H)));
     /* keep the avatar close behind the target so walking feels direct */
-    me.x+=(me.tx-me.x)*0.35;me.y+=(me.ty-me.y)*0.35;
+    me.x+=(me.tx-me.x)*TUNE.v("walk.ease");me.y+=(me.ty-me.y)*TUNE.v("walk.ease");
     sendPos(me.tx,me.ty);
   }
   requestAnimationFrame(moveTick);
@@ -2131,8 +2133,10 @@ var GAME=(function(){
   var STEP_POSE={left:[2.1,0.35,0.85,0],right:[-0.35,-2.1,0,-0.85],up:[2.55,-2.55,0.1,-0.1],down:[1.2,-1.2,0.75,-0.75]};
   var letGos=0,lastFreeHold=-1e9,freeHoldLane=-1,freeHoldEnd=-1e9,laneDown=[false,false,false,false,false,false,false],waiting=false,notes=[],score=0,best=0,hits=0,misses=0,judge="",judgeT=0,judgeCol="#fff",flash=[0,0,0,0,0,0,0],lastSlot=0,lastGen=-1,prevLane=-1,prevLane2=-1,prevX=0.5,prevY=0.5,startT=0;
   var HIT=[[60,"PERFECT",100,"#F5C518"],[120,"GREAT",60,"#3CCB8A"],[180,"GOOD",30,"#5FB4F0"]];
+  function syncHit(){HIT[0][0]=TUNE.v("hit.perfect");HIT[1][0]=Math.max(HIT[0][0]+5,TUNE.v("hit.great"));HIT[2][0]=Math.max(HIT[1][0]+5,TUNE.v("hit.good"));HIT[0][2]=TUNE.v("hit.ptsPerfect");HIT[1][2]=TUNE.v("hit.ptsGreat");HIT[2][2]=TUNE.v("hit.ptsGood");}
+  syncHit();TUNE.onChange(syncHit);
   /* how close (ms) counts as PERFECT / GREAT / GOOD: a little more forgiving on the highway, with seven keys to find */
-  function win(i){return mode==="keys"?(four?[70,130,190]:[75,140,205])[i]:HIT[i][0];}
+  function win(i){return mode==="keys"?(four?[TUNE.v("hw.p4"),TUNE.v("hw.g4"),TUNE.v("hw.o4")]:[TUNE.v("hw.p7"),TUNE.v("hw.g7"),TUNE.v("hw.o7")])[i]:HIT[i][0];}
   /* note highway: seven lanes on A S D F G H J, each its own colour */
   var KEYS=["A","S","D","F","G","H","J"],KCOL=["#E8505B","#F0A040","#F5D03C","#4CC38A","#4A9BE8","#9B7FE0","#EDEDF5"];
   var KPOSE=["left","left","down","up","down","right","right"],hype=0.3,keyCur=3;
@@ -2465,7 +2469,7 @@ var GAME=(function(){
   }
 
   /* ---------- step dance ---------- */
-  function travel(per){var t=Math.max(1400,Math.min(2300,per*3.5));return mode==="keys"?t*(four?0.72:0.85):t;}   /* the highway: quicker notes */
+  function travel(per){var t=Math.max(TUNE.v("step.travelMin"),Math.min(TUNE.v("step.travelMax"),per*TUNE.v("step.travelBeats")));return mode==="keys"?t*(four?TUNE.v("hw.fall4"):TUNE.v("hw.fall7")):t;}   /* the highway: quicker notes */
   function makeNotes(now,bt){
     if(rnd&&rnd.chart){feedRound(now,bt);return;}
     /* free play: no new steps until the music has a beat to follow (talking, a quiet intro, silence) */
@@ -2555,19 +2559,19 @@ var GAME=(function(){
   function holdDone(n,now,bd){
     n.holding=false;n.sliding=false;n.j="OK";n.jt=now;combo++;hits++;if(combo>best)best=combo;
     var gi=-1;if(bd!=null)for(var q=0;q<HIT.length;q++)if(bd<=win(q)){gi=q;break;}
-    score+=Math.round((40+Math.round(n.hold/100)*5+(gi>=0?HIT[gi][2]:0))*(1+Math.floor(combo/10)*0.1)*(onFire?2:1));
+    score+=Math.round((TUNE.v("hw.holdBase")+Math.round(n.hold/100)*TUNE.v("hw.holdPer")+(gi>=0?HIT[gi][2]:0))*(1+Math.floor(combo/TUNE.v("combo.every"))*TUNE.v("combo.bonus"))*(onFire?TUNE.v("fire.mult"):1));
     judge=gi>=0?HIT[gi][1]:"OK!";judgeT=now;judgeCol=gi>=0?HIT[gi][3]:"#3CCB8A";hype=Math.min(1,hype+0.04);foot();applyToMe(true);sendPose(true);
   }
   function holdFail(n,now,why){
     n.holding=false;n.sliding=false;n.j="LETGO";n.jt=now;misses++;letGos++;
     if(combo>0){combo=0;setPose(REST);sendPose(true);}
-    judge=why||"LET GO";judgeT=now;judgeCol="#E05050";hype=Math.max(0,hype-0.08);foot();
+    judge=why||"LET GO";judgeT=now;judgeCol="#E05050";hype=Math.max(0,hype-TUNE.v("hype.miss"));foot();
   }
   function grade(n,bd,now){
     for(var i=0;i<HIT.length;i++)if(bd<=win(i)){
       n.j=HIT[i][1];n.jt=now;combo++;hits++;if(combo>best)best=combo;
-      score+=Math.round(HIT[i][2]*(1+Math.floor(combo/10)*0.1)*(onFire?2:1));   /* big moments score double */
-      judge=HIT[i][1];judgeT=now;judgeCol=HIT[i][3];hype=Math.min(1,hype+[0.035,0.025,0.012][i]);return;
+      score+=Math.round(HIT[i][2]*(1+Math.floor(combo/TUNE.v("combo.every"))*TUNE.v("combo.bonus"))*(onFire?TUNE.v("fire.mult"):1));   /* big moments score double */
+      judge=HIT[i][1];judgeT=now;judgeCol=HIT[i][3];hype=Math.min(1,hype+[TUNE.v("hype.perfect"),TUNE.v("hype.great"),TUNE.v("hype.good")][i]);return;
     }
   }
   function expire(now){
@@ -2579,7 +2583,7 @@ var GAME=(function(){
     for(var i=0;i<notes.length;i++){var n=notes[i];if(!n.j&&!n.holding&&!n.sliding&&!n.headJ&&now-n.t>win(2)){n.j="MISS";n.jt=now;misses++;missed=true;}}
     if(missed){
       if(combo>0){combo=0;setPose(REST);sendPose(true);}
-      judge="MISS";judgeT=now;judgeCol="#E05050";hype=Math.max(0,hype-0.08);foot();
+      judge="MISS";judgeT=now;judgeCol="#E05050";hype=Math.max(0,hype-TUNE.v("hype.miss"));foot();
     }
     notes=notes.filter(function(n){return n.holding||n.sliding||now-(n.t+(n.hold||0))<700;});
   }
@@ -2916,7 +2920,7 @@ var GAME=(function(){
     var hw=Math.round(CW*0.26),hx2=CW-hw-8,hy=6;
     pixText("HYPE",hx2-px*26,hy,px,"#E9E4FF","left",0.8);
     g.fillStyle="#2a2246";g.fillRect(hx2,hy,hw,px*7);
-    hype+=(0.3-hype)*0.0008;                                     /* drifts back slowly when nothing's happening */
+    hype+=(0.3-hype)*TUNE.v("hype.drift");                                     /* drifts back slowly when nothing's happening */
     g.fillStyle=hype>0.75?"#F5D03C":hype>0.4?"#E8505B":"#9B7FE0";g.fillRect(hx2+px,hy+px,Math.round((hw-px*2)*hype),px*5);
     if(rnd&&rnd.chart&&rnd.chart.dur>0){var pr=Math.max(0,Math.min(1,(now+clkOff)/rnd.chart.dur));if(clkOff!==null){g.fillStyle="#2a2246";g.fillRect(0,top-px*2,CW,px);g.fillStyle="#4A9BE8";g.fillRect(0,top-px*2,Math.round(CW*pr),px);}}
   }
@@ -3108,7 +3112,7 @@ var KEEPY=(function(){
   function banner(t){var b=$("kpBanner");if(!b)return;b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("kpScore");if(h)h.textContent=score.toLocaleString();}
   function songT(){var p=ROUND.pos();return p>-1e8?Math.max(0,p):0;}
-  function jump(){if(!on)return;if(jumps===0){vz=78;jumps=1;dbl=false;}else if(jumps===1){vz=92;jumps=2;dbl=true;}}
+  function jump(){if(!on)return;if(jumps===0){vz=TUNE.v("kp.jump1");jumps=1;dbl=false;}else if(jumps===1){vz=TUNE.v("kp.jump2");jumps=2;dbl=true;}}
   function onKick(m){
     if(!on&&!keepyOn())return;var o=objs[m.o|0];if(!o)return;
     var st={x:+m.x,y:+m.y,z:+m.z,vx:+m.vx,vy:+m.vy,vz:+m.vz,t:+m.t};if(![st.x,st.y,st.z,st.vx,st.vy,st.vz,st.t].every(isFinite))return;
@@ -3118,7 +3122,7 @@ var KEEPY=(function(){
   /* a hit: from you (or a practice dancer): the object flies up and away; tell everyone */
   function kick(o,fx,fy,mvx,mvy,isDbl,t,who){
     var T=ART.KEEPY.TYPES[o.type],dx=o.s.x-fx,dy=(o.s.y-fy)*(H/W),d=Math.hypot(dx,dy)||1;
-    var st={x:o.s.x,y:o.s.y,z:o.s.z+1,vx:dx/d*T.push*0.5+mvx*0.35,vy:(dy/d*T.push*0.5+mvy*0.35)*(W/H)*0.6,vz:T.kick*(isDbl?1.25:1),t:t};
+    var st={x:o.s.x,y:o.s.y,z:o.s.z+1,vx:dx/d*T.push*0.5+mvx*0.35,vy:(dy/d*T.push*0.5+mvy*0.35)*(W/H)*0.6,vz:T.kick*(isDbl?TUNE.v("kp.dblKick"):1),t:t};
     ART.KEEPY.hit(o,st);
     if(!PRACTICE.on&&who==="me")wsSend({type:"kick",o:o.k,t:Math.round(t),x:+st.x.toFixed(4),y:+st.y.toFixed(4),z:+st.z.toFixed(2),vx:+st.vx.toFixed(4),vy:+st.vy.toFixed(4),vz:+st.vz.toFixed(2)});
     return o.streak;
@@ -3129,17 +3133,17 @@ var KEEPY=(function(){
     var me=myId&&viewers[myId];if(!me)return;
     var t=songT();objs.forEach(function(o){ART.KEEPY.advance(o,t,B);});
     /* moving: a bit quicker than walking; jumping */
-    var inp=input(),spd=0.42;vx=inp.x*spd;vy=inp.y*spd*(W/H)*0.6;
+    var inp=input(),spd=TUNE.v("kp.speed");vx=inp.x*spd;vy=inp.y*spd*(W/H)*0.6;
     me.tx=Math.max(B.x0,Math.min(B.x1,me.tx+vx*dt));me.ty=Math.max(B.y0,Math.min(B.y1,me.ty+vy*dt));me.x=me.tx;me.y=me.ty;
-    if(jumps||zp>0){vz-=240*dt;zp+=vz*dt;if(zp<=0){zp=0;vz=0;jumps=0;dbl=false;}}
+    if(jumps||zp>0){vz-=TUNE.v("kp.gravity")*dt;zp+=vz*dt;if(zp<=0){zp=0;vz=0;jumps=0;dbl=false;}}
     sendPos(me.tx,me.ty);
     /* hits: something within reach of your head and hands */
     objs.forEach(function(o){
       if(o.down||(cool[o.k]||0)>now)return;var s2=o.s,dx=(s2.x-me.x)*W/2,dy=(s2.y-me.y)*H/2;
-      if(Math.abs(dx)>9||Math.abs(dy)>7)return;
-      if(s2.z<zp+8||s2.z>zp+30||s2.vz>40)return;
-      cool[o.k]=now+380;var T=ART.KEEPY.TYPES[o.type],isDbl=dbl&&zp>6,str=kick(o,me.x,me.y,vx,vy,isDbl,t,"me");
-      var pts=Math.round(T.pts*(isDbl?2:1)*(1+0.15*(str-1)));score+=pts;GAME.moshPts(pts);hud();
+      if(Math.abs(dx)>TUNE.v("kp.reachX")||Math.abs(dy)>TUNE.v("kp.reachY"))return;
+      if(s2.z<zp+TUNE.v("kp.zMin")||s2.z>zp+TUNE.v("kp.zMax")||s2.vz>40)return;
+      cool[o.k]=now+TUNE.v("kp.cooldown");var T=ART.KEEPY.TYPES[o.type],isDbl=dbl&&zp>6,str=kick(o,me.x,me.y,vx,vy,isDbl,t,"me");
+      var pts=Math.round(T.pts*(isDbl?TUNE.v("kp.dblPts"):1)*(1+TUNE.v("kp.streak")*(str-1)));score+=pts;GAME.moshPts(pts);hud();
       pops.push({x:me.x*W,y:me.y*H-zp*2-60,t:now,txt:(isDbl?"DOUBLE! ":"")+(o.type==="feather"?"🪶":o.type==="ball"?"⚽":"🎈")+(str>1?" ×"+str:"")+" +"+pts,col:T.col});
     });
     GAME.moshPose(zp>0?(dbl?[2.9,-2.9,0.7,-0.7]:[2.5,-2.5,0.35,-0.35]):[0.5+Math.sin(now/200)*0.15,-0.5-Math.sin(now/200)*0.15,Math.abs(inp.x)+Math.abs(inp.y)>0?Math.sin(now/110)*0.4:0,Math.abs(inp.x)+Math.abs(inp.y)>0?-Math.sin(now/110)*0.4:0]);
@@ -3190,11 +3194,11 @@ var SKATE=(function(){
   function banner(t){var b=$("skBanner");if(!b)return;b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("skScore");if(h)h.textContent=score.toLocaleString();}
   function add(n,x,y,txt,col){if(!n)return;score+=n;GAME.moshPts(n);if(txt)pops.push({x:x,y:y,t:performance.now(),txt:txt+" +"+n,col:col||"#F5F23D"});hud();}
-  function maxSp(G){return 640*G.rx/560;}
+  function maxSp(G){return TUNE.v("sk.maxSpeed")*G.rx/560;}
   function jump(){
     if(!on||air||fall>0)return;var G=geom(),sp=Math.hypot(vx,vy)/maxSp(G);
-    if(sp<0.22){var me=viewers[myId];if(me)pops.push({x:me.x*W,y:me.y*H-60,t:performance.now(),txt:"MORE SPEED!",col:"#fff"});return;}
-    air={t0:performance.now(),dur:450+1300*Math.min(1,sp),peak:10+24*Math.min(1,sp)};trick=0;chain=0;airPts=0;
+    if(sp<TUNE.v("sk.minJump")){var me=viewers[myId];if(me)pops.push({x:me.x*W,y:me.y*H-60,t:performance.now(),txt:"MORE SPEED!",col:"#fff"});return;}
+    air={t0:performance.now(),dur:TUNE.v("sk.airBase")+TUNE.v("sk.airExtra")*Math.min(1,sp),peak:TUNE.v("sk.peakBase")+TUNE.v("sk.peakExtra")*Math.min(1,sp)};trick=0;chain=0;airPts=0;
   }
   /* bounce off an oval's rail: k=1 keeps you inside it (the outer rail), k=-1 outside it (the island) */
   function rail(G,px,py,rx,ry,k){
@@ -3202,7 +3206,7 @@ var SKATE=(function(){
     if(k>0?e<=1:e>=1)return null;
     var s2=1/Math.sqrt(e),bx=G.cx+dx*s2,by=G.cy+dy*s2,nx=dx/(rx*rx),ny=dy/(ry*ry),nl=Math.hypot(nx,ny)||1;nx/=nl;ny/=nl;
     if(k<0){nx=-nx;ny=-ny;}
-    var vn=vx*nx+vy*ny;if(vn>0){vx-=1.5*vn*nx;vy-=1.5*vn*ny;}
+    var vn=vx*nx+vy*ny;if(vn>0){vx-=TUNE.v("sk.rail")*vn*nx;vy-=TUNE.v("sk.rail")*vn*ny;}
     return[bx-nx*2,by-ny*2,Math.abs(vn)];
   }
   function tick(){
@@ -3213,15 +3217,15 @@ var SKATE=(function(){
     if(fall>0){fall-=dt;vx*=Math.pow(0.05,dt);vy*=Math.pow(0.05,dt);}
     else if(!air){
       /* skating: push the way you're steering; you keep your speed (a little drag) */
-      var acc=900*G.rx/560;vx+=inp.x*acc*dt;vy+=inp.y*acc*dt*(G.ry/G.rx+0.35);
-      var dr=Math.pow(inp.m>0.1?0.62:0.5,dt);vx*=dr;vy*=dr;sp=Math.hypot(vx,vy);if(sp>MS){vx*=MS/sp;vy*=MS/sp;sp=MS;}
+      var acc=TUNE.v("sk.accel")*G.rx/560;vx+=inp.x*acc*dt;vy+=inp.y*acc*dt*(G.ry/G.rx+0.35);
+      var dr=Math.pow(inp.m>0.1?TUNE.v("sk.dragMove"):TUNE.v("sk.dragIdle"),dt);vx*=dr;vy*=dr;sp=Math.hypot(vx,vy);if(sp>MS){vx*=MS/sp;vy*=MS/sp;sp=MS;}
       stride+=dt*(2+sp/MS*7);
     }else{
       /* in the air: you sail on; the stick does tricks */
       var u=(now-air.t0)/air.dur,t2=trickOf(inp);
       if(t2&&t2!==trick){chain++;trick=t2;var ttl=$("skTrick");if(ttl)ttl.innerHTML=TRICKS[t2]+(chain>1?"<small>× "+chain+" CHAIN</small>":"");}
       else if(!t2)trick=0;
-      if(trick)airPts+=dt*150*(1+0.6*(chain-1));
+      if(trick)airPts+=dt*TUNE.v("sk.trickPts")*(1+TUNE.v("sk.chain")*(chain-1));
       if(WH)Array.prototype.forEach.call(document.querySelectorAll("#skWheel b"),function(el){el.classList.toggle("on",+el.getAttribute("data-t")===trick);});
       if(u>=1){land(me);}
     }
@@ -3230,7 +3234,7 @@ var SKATE=(function(){
     me.tx=me.x=Math.max(0.01,Math.min(0.99,px/W));me.ty=me.y=Math.max(0.05,Math.min(0.99,py/H));
     /* laps: once round the island */
     var ang=Math.atan2((py-G.cy)/G.ry,(px-G.cx)/G.rx);if(lastAng!==null){var da=Math.atan2(Math.sin(ang-lastAng),Math.cos(ang-lastAng));lapAcc+=da;
-      if(Math.abs(lapAcc)>=Math.PI*2){lapAcc=0;add(100,px,py-60,"LAP","#3DF2FF");}}lastAng=ang;
+      if(Math.abs(lapAcc)>=Math.PI*2){lapAcc=0;add(TUNE.v("sk.lapPts"),px,py-60,"LAP","#3DF2FF");}}lastAng=ang;
     sendPos(me.tx,me.ty);
     GAME.moshPose(poseNow(now,inp));
     var sb=$("skSpeed");if(sb&&sb.firstChild)sb.firstChild.style.width=Math.round(Math.min(1,sp/MS)*100)+"%";
@@ -3240,8 +3244,8 @@ var SKATE=(function(){
   }
   function land(me){
     var inp=input(),px=me.x*W,py=me.y*H;
-    if(trickOf(inp)||inp.m>0.45){fall=1.3;vx*=0.15;vy*=0.15;pops.push({x:px,y:py-60,t:performance.now(),txt:"BAIL!",col:"#FF5A5A"});var ttl=$("skTrick");if(ttl)ttl.innerHTML="BAIL!<small>let go before you land</small>";}
-    else{var pts=Math.round(airPts)+(chain?40*chain:0);if(pts>0)add(pts,px,py-70,chain>1?chain+"× COMBO":"LANDED",chain>1?"#FF3DA8":"#F5F23D");else pops.push({x:px,y:py-60,t:performance.now(),txt:"AIR!",col:"#fff"});}
+    if(trickOf(inp)||inp.m>0.45){fall=TUNE.v("sk.bailTime");vx*=TUNE.v("sk.bailKeep");vy*=TUNE.v("sk.bailKeep");pops.push({x:px,y:py-60,t:performance.now(),txt:"BAIL!",col:"#FF5A5A"});var ttl=$("skTrick");if(ttl)ttl.innerHTML="BAIL!<small>let go before you land</small>";}
+    else{var pts=Math.round(airPts)+(chain?TUNE.v("sk.landPts")*chain:0);if(pts>0)add(pts,px,py-70,chain>1?chain+"× COMBO":"LANDED",chain>1?"#FF3DA8":"#F5F23D");else pops.push({x:px,y:py-60,t:performance.now(),txt:"AIR!",col:"#fff"});}
     air=null;trick=0;banked=performance.now();
   }
   function height(){if(!air)return 0;var u=Math.min(1,(performance.now()-air.t0)/air.dur);return air.peak*4*u*(1-u);}
@@ -3341,22 +3345,22 @@ var MOSH=(function(){
     if(phase!==lastPh)enter(phase,lastPh,me);lastPh=phase;
     var f=fl(),w=P&&P.wall,inp=input();
     /* where you go this part */
-    if(phase==="split"||phase==="count"){var sx=team?0.84:0.16;toward(me,sx+(me.tx-sx)*0.0,Math.max(f.top,Math.min(f.bot,me.ty)),0.55,dt);me.tx=team?Math.max(0.56,me.tx):Math.min(0.44,me.tx);}
-    else if(phase==="charge"){toward(me,team?0.545:0.455,me.ty,1.1,dt);}
+    if(phase==="split"||phase==="count"){var sx=team?0.84:0.16;toward(me,sx+(me.tx-sx)*0.0,Math.max(f.top,Math.min(f.bot,me.ty)),TUNE.v("mp.split"),dt);me.tx=team?Math.max(0.56,me.tx):Math.min(0.44,me.tx);}
+    else if(phase==="charge"){toward(me,team?0.545:0.455,me.ty,TUNE.v("mp.charge"),dt);}
     else if(phase==="tug"){var rk=lineSpot(myId);   /* the push war: packed in behind the front line, shoving */
-      toward(me,front()+(team?1:-1)*(0.028+Math.floor(rk/3)*0.04)+Math.sin(now/60)*0.003*(tug.mine?1:0),ropeY()+((rk%3)-1)*0.035,0.9,dt);}
+      toward(me,front()+(team?1:-1)*(0.028+Math.floor(rk/3)*0.04)+Math.sin(now/60)*0.003*(tug.mine?1:0),ropeY()+((rk%3)-1)*0.035,TUNE.v("mp.tug"),dt);}
     else if(phase==="circle"){
       var c=circleCentre(),ex=me.tx-c.x,ey=(me.ty-c.y)/(c.ry/0.3),r=Math.hypot(ex,ey);
       if(!circ.inside){circ.phi=Math.atan2(ey,ex);circ.r=Math.max(0.1,Math.min(0.3,r||0.22));circ.inside=true;}
       var tx=-Math.sin(circ.phi),ty=Math.cos(circ.phi),fwd=inp.x*tx+inp.y*ty,rad=inp.x*Math.cos(circ.phi)+inp.y*Math.sin(circ.phi);
-      var sprint=fwd>0.3?1.8:fwd<-0.3?0.55:1,om=0.95*sprint*(0.22/Math.max(0.1,circ.r));
+      var sprint=fwd>0.3?TUNE.v("mp.sprint"):fwd<-0.3?TUNE.v("mp.back"):1,om=TUNE.v("mp.circleSpeed")*sprint*(0.22/Math.max(0.1,circ.r));
       circ.phi+=om*dt;circ.acc+=om*dt;circ.r=Math.max(0.1,Math.min(0.3,circ.r+rad*0.22*dt));circ.sprint=sprint>1;
-      if(circ.acc>=Math.PI*2){circ.acc-=Math.PI*2;circ.lap++;add(150,me.tx*W,me.ty*H-50,"LAP","#4CC38A");}
-      toward(me,c.x+Math.cos(circ.phi)*circ.r,c.y+Math.sin(circ.phi)*circ.r*(c.ry/0.3),sprint>1?0.9:0.6,dt);
+      if(circ.acc>=Math.PI*2){circ.acc-=Math.PI*2;circ.lap++;add(TUNE.v("mp.lapPts"),me.tx*W,me.ty*H-50,"LAP","#4CC38A");}
+      toward(me,c.x+Math.cos(circ.phi)*circ.r,c.y+Math.sin(circ.phi)*circ.r*(c.ry/0.3),sprint>1?TUNE.v("mp.walkSprint"):TUNE.v("mp.walkIn"),dt);
     }
     if(phase!=="circle")circ.inside=false;
     /* knocks: your own speed, plus being shoved */
-    me.tx+=vx*dt;me.ty+=vy*dt;var dmp=Math.pow(0.04,dt);vx*=dmp;vy*=dmp;
+    me.tx+=vx*dt;me.ty+=vy*dt;var dmp=Math.pow(TUNE.v("mp.damp"),dt);vx*=dmp;vy*=dmp;
     me.tx=Math.max(0.03,Math.min(0.97,me.tx));me.ty=Math.max(f.top,Math.min(f.bot,me.ty));
     var mvx=lastMe?(me.tx-lastMe[0])/Math.max(dt,0.001):0,mvy=lastMe?(me.ty-lastMe[1])/Math.max(dt,0.001):0;
     /* bumping into people */
@@ -5153,7 +5157,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.45.2",SERVER_VERSION="";
+var PAGE_VERSION="1.46.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5637,5 +5641,6 @@ updHudBR();
 }
 })();
 </script>
+<script src="lab.js"></script>
 </body>
 </html>

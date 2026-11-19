@@ -553,3 +553,14 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Songs longer than 15 minutes are now charted for their first 15 minutes instead of failing.
 - If a file can't be read, the performer's round status says so, and the audience board shows "NO NOTES FOR THIS SONG" instead of sitting blank. If you ever see that, tell me the file type and length.
 - Server unchanged in behaviour (version bump only), but redeploy Render to keep versions matched.
+
+## v1.46.0 — Tuning lab
+
+Open `venue.html?practice&lab` (or the new **🔧 Tuning lab** link on the join screen). A panel opens on the right (bottom sheet on a phone).
+
+- Tabs: Walking, Step & Target dance, Note highway, Keepy uppy, Roller & Ice rink, Mosh pit. Each has a short explainer and every movement, timing and scoring number for that game, with what it does and its default.
+- **▶ Play … now** starts that game in practice with the first song. The panel stays open so you can change a slider and feel it straight away. Changed values turn yellow, ↺ puts one back.
+- Changes are saved on this device and apply everywhere you play on it, until you press **Reset everything**. 🔧 Lab button (top right) shows how many are changed.
+- **Share box:** **Copy settings** copies a text list of only what you changed, ending in a JSON line. Paste that to me and I bake the values in as the new defaults. You can also paste someone's settings into the box and press **Apply pasted**.
+- Check: change Keepy "Jump power" to 150, play Keepy uppy, jump: much taller. Copy, Reset everything, paste, Apply: the value comes back.
+- Server unchanged (version bump only). Redeploy Render to keep versions matched.
