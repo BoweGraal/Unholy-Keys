@@ -493,6 +493,8 @@ function resolveWsUrl(){
   return WS_URL;
 }
 var LIVE_URL = resolveWsUrl();
+/* an audience link can carry the room code (?room=ABCD): it's filled in on the join screen */
+window.addEventListener("load",function(){try{var rc=new URLSearchParams(location.search).get("room");if(rc&&/^[A-Za-z0-9]{4}$/.test(rc)){var ir=document.getElementById("inRoom");if(ir&&!ir.value)ir.value=rc.toUpperCase();}}catch(e){}});
 /* ── Which server: Render (the cloud one) or self-hosted (your own computer, a home tunnel) ──
    Worked out from the address, confirmed by the server itself (/health and when you connect: Render sets
    RENDER=true there). Shown as a badge, and in the version line at the bottom. */
@@ -5146,7 +5148,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.45.0",SERVER_VERSION="";
+var PAGE_VERSION="1.45.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}

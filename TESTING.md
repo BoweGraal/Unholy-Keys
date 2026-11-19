@@ -540,3 +540,9 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Character creator: the rows of colour squares are gone. Skin, Hair, Top and Bottoms each have one round colour button. Tap it: a window opens zoomed in on that part (the head for hair and skin, the body for the top, the legs for bottoms) with the standard colours, a colour square to drag across for any colour, the browser's colour picker, and a hex box. Done (or Esc / tap outside) closes it.
 - A picked colour travels with your character: everyone in the room sees it (needs the updated server).
 - New hair: **Flame spikes**, **Widow's peak**, **Long locks** (full fringe, locks down the sides, long behind), **Bob & headband**, **Side tail**, **Fluffy mop**, **Wild crop**. New standard hair colour: teal. New hat: **Goggles** (pushed up on the head).
+
+## Audience link when live (v1.45.1)
+- Go live: the live panel shows **Audience link** with **Copy** (and **Share** on phones). The link opens the venue on the same server you're on (a home show's tunnel address included) with your room code already filled in.
+- Jam mode: a **🔗** button next to the room in the audience panel copies it (shares it on a phone).
+- On your own server (home show), a pop-up reminds you to send the link.
+- `venue.html?room=ABCD` fills in the room code on the join screen.
