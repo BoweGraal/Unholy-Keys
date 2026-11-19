@@ -428,3 +428,11 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Pick it and start a round: the video plays on the Jumbotron from the top. The steps follow the video, and the round ends when the video ends.
 - On a phone: YouTube songs in the list play fine (tap ▶ on the video if asked). Adding new ones explains that it needs a computer.
 - If you hear silence or "Heard only silence": the tab audio wasn't shared. Try again and tick the box.
+
+## Performer hangs out between songs (v1.35.0)
+- Go live, open Jam and click **🚶 Hang out** (under Stage). The view switches to Stage and you step off the stage onto the floor (★ before your name).
+- Arrows or WASD walk; click a spot on the floor to walk there. No notes play while you're hanging out.
+- Press Enter (or type in the bar at the bottom) and press Enter again: the text shows over your head, over your head in the venue, and in everyone's chat as your name.
+- In the venue: the performer is in the crowd instead of on the stage, walking where you walk.
+- Esc or **🎤 Back on stage**: you're back at your instrument for everyone, and notes play again. Leaving jam also puts you back.
+- The audience can already talk (Enter or Talk) and free dance between songs (Dance → Free dance).
