@@ -500,3 +500,5 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - **The worm** reworked from a clip: hands planted, legs kick up behind, then the chest pushes up as the legs drop, once a beat, inching along. New **Dive in** move (replaces Hold): jump up arms out, dive onto the floor, worm, repeat.
 - New **💥 Street jam** style (the "=" key), from a clip of a guy dancing through town: **High knees** (prancing, fists pumping), **Strike a pose** (low squat, arm cocked up, leg kick on the 4), **Hop step** (hopping side to side, knee tucked), **Floor spin** (crouched, legs sweeping round), **Mix it up**.
 - New **🤖 Cyber goth** style (the "]" key), from an industrial dance clip: heavy wide stomps under every move, plus **Stomp & punch**, **Arm sweep**, **Hands up**, **Windmill**, **Mix it up**. Right dot pushed up doubles the arm speed.
+- Cyber goth from a second clip: **Arm roll** (forearms rolling at the chest) and **Chop** (lunging arm chops); Mix it up now runs all six. Moves 6 and 7 are on N and M.
+- Phone dance picker: styles split evenly down both sides as compact rows; the move buttons are one row along the bottom that scrolls sideways.
