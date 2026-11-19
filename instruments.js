@@ -14,7 +14,7 @@
   var KINDS=["grand","upright","organ","pipeorgan","synth","keytar","epiano","harpsichord","chip","accordion",
     "acoustic","electric","metal","jazzguitar","bass","banjo","sitar","shamisen","violin","cello","contrabass","harp",
     "trumpet","trombone","horn","tuba","sax","flute","clarinet","bassoon","panflute","ocarina","harmonica","bagpipe",
-    "mallets","glock","steeldrum","kalimba","musicbox","drum","timpani","zither","voice","choir","whistle","bottle","bells","glasses"];
+    "mallets","glock","steeldrum","kalimba","musicbox","drum","timpani","zither","voice","choir","whistle","bottle","bells","glasses","djdeck"];
 
   /* ---- which art for which instrument ---- */
   var RULES=[
@@ -22,6 +22,7 @@
     [/choir|voice|vocal|aahs|oohs/,"voice"],
     [/music.?box|celesta|lofi-bell/,"musicbox"],[/kalimba|mbira/,"kalimba"],
     [/steel.?drum/,"steeldrum"],[/glock/,"glock"],[/xylo|marimba|vibraphone|balafon|vibes|mallet|fm.?bell|edm-bell/,"mallets"],
+    [/\bedm-|supersaw|acid.?303|daft.?punk|deadmau5|trance.?lead|\bstrobe\b/,"djdeck"],   /* the EDM synths: a DJ booth */
     [/church|pipe.?organ|renaissance.?organ|calliope/,"pipeorgan"],[/organ/,"organ"],
     [/bass.?di\b/,"bass"],[/synth.?bass|sub.?bass/,"synth"],[/pad\b|\bpad:/,"synth"],
     [/timpani/,"timpani"],[/taiko|tom\b|melodic.?tom|synth.?drum|woodblock|orchestra.?hit|perc/,"drum"],
@@ -137,6 +138,27 @@
       fx=function(){if(on&&age<600)waves(g,x,ky-4*p,p,-Math.PI/2,1-age/600,"rgba(245,208,60,.7)");};
       break;}
 
+    /* ---------- the EDM synths: a DJ booth with two decks and a mixer, its front lit up. A note: a hand on a deck (scratching)
+       and the other on the mixer's faders. Nothing playing for a moment: both hands up to the crowd, like a DJ at the drop ---------- */
+    case "djdeck":{
+      var fr=Math.floor(now/90)%8,led=Math.floor(now/(60000/128))%2,DW=52,dy=y+4*p;
+      c=piece("dj"+fr+led,DW,16,function(r,ln,disc){
+        r(0,0,DW,5,"#1b1730");r(0,0,DW,1,"#3a3256");                                     /* the top */
+        [9,DW-10].forEach(function(cx,di){r(cx-7,0,14,5,"#2a2440");for(var yy=0;yy<3;yy++)r(cx-5+(yy===1?-1:0),1+yy,10+(yy===1?2:0),1,"#0d0b16");
+          var a=(fr/8)*Math.PI*2*(di?1:-1);r(Math.round(cx+Math.cos(a)*4),Math.round(2+Math.sin(a)*1),1,1,"#EDEDF5");r(cx,2,1,1,"#8a80b0");});
+        r(DW/2-7,0,14,5,"#2d2546");for(var f=0;f<4;f++){r(DW/2-5+f*3,1,1,3,"#0d0b16");r(DW/2-5+f*3,1+((fr+f*3)%3),1,1,"#F5D03C");}   /* the mixer */
+        r(0,5,DW,11,"#100c1c");                                                           /* the front, an LED strip along it */
+        r(1,6,DW-2,2,led?"#3DF2FF":"#FF3DA8");r(1,6,DW-2,1,led?"#B8FBFF":"#FFB0DD");
+        for(var k=0;k<6;k++)r(4+k*8,10,5,4,"#1d1730");
+      });
+      front=function(){blit(g,c,x,dy,p,DW/2,0,0);};
+      var quiet=!on&&rel>1800;
+      if(quiet){pose.armL=2.75+Math.sin(t*3)*0.12;pose.armR=-2.75+Math.sin(t*3)*0.12;pose.mouth=true;}   /* hands up! */
+      else{var left=(st.n||0)%2===0,scr=Math.sin(t*(on?22:4))*1.6*p,fad=(nrm(m,36,96)-0.5)*8*p,deckT=[x+(left?-17:17)*p+scr,dy+2*p],mixT=[x+fad,dy+2*p];
+        if(left)arms(deckT,mixT);else arms(mixT,deckT);}
+      fx=function(){g.save();g.globalCompositeOperation="lighter";var gc=led?"61,242,255":"255,61,168",gw=g.createLinearGradient(0,dy+6*p,0,dy-10*p);gw.addColorStop(0,"rgba("+gc+",.35)");gw.addColorStop(1,"rgba("+gc+",0)");
+        g.fillStyle=gw;g.fillRect(x-(DW/2)*p,dy-10*p,DW*p,10*p);g.restore();if(on&&age<500)waves(g,x,dy-6*p,p,-Math.PI/2,1-age/500,"rgba("+gc+",.8)");};
+      break;}
     /* ---------- a keytar on a strap: left hand on the neck, right hand along the keys ---------- */
     case "keytar":{
       var ktk=whiteIdx(m),kti=((ktk.w%14)+14)%14,kr=-0.35;
