@@ -2857,6 +2857,11 @@ var GAME=(function(){
       pixText(String(combo),CW/2,top+span*0.07,cp,"#fff","center",0.9);
       pixText("COMBO",CW/2,top+span*0.07+cp*8,Math.max(2,Math.round(cp*0.42)),"#B8A8F0","center",0.9);
     }
+    if(rnd&&!rnd.chart){   /* the performer's song couldn't be charted: say so, rather than leave an empty board */
+      var np=Math.max(2,Math.round(Math.min(CW/110,span/70)));
+      pixText("NO NOTES FOR THIS SONG",CW/2,top+span*0.4,np,"#fff","center",0.85);
+      pixText("THE PERFORMER'S FILE COULDN'T BE READ",CW/2,top+span*0.4+np*10,Math.max(2,Math.round(np*0.6)),"#B8A8F0","center",0.85);
+    }
     var ja=1-(now-judgeT)/560;
     if(judge&&ja>0){var jp=Math.max(2,Math.round(Math.min(CW/80,span/56)));g.globalAlpha=ja;pixText(judge.replace("!",""),CW/2,top+span*0.07+Math.max(3,Math.round(Math.min(CW/52,span/42)))*12-(1-ja)*px*3,jp,judgeCol==="#F5C518"?"#F5D03C":judgeCol,"center",1);g.globalAlpha=1;}
     /* holds: long bars */
@@ -5148,7 +5153,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.45.1",SERVER_VERSION="";
+var PAGE_VERSION="1.45.2",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}

@@ -546,3 +546,10 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Jam mode: a **🔗** button next to the room in the audience panel copies it (shares it on a phone).
 - On your own server (home show), a pop-up reminds you to send the link.
 - `venue.html?room=ABCD` fills in the room code on the join screen.
+
+## v1.45.2 — Note highway: no more silent empty board
+
+- Pick a song from your computer, go live, start a Note highway round. Notes should come down as before.
+- Songs longer than 15 minutes are now charted for their first 15 minutes instead of failing.
+- If a file can't be read, the performer's round status says so, and the audience board shows "NO NOTES FOR THIS SONG" instead of sitting blank. If you ever see that, tell me the file type and length.
+- Server unchanged in behaviour (version bump only), but redeploy Render to keep versions matched.

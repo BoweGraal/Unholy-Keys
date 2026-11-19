@@ -4233,7 +4233,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.45.1",SERVER_VERSION="";
+var PAGE_VERSION="1.45.2",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5511,18 +5511,21 @@ var ROUNDS=(function(){
     var src=f.file&&f.file.arrayBuffer?f.file.arrayBuffer():fetch(f.url).then(function(r){return r.arrayBuffer();});
     src.then(decode).then(function(buf){
       if(my!==job)return;
-      if(buf.duration>900)throw new Error("too long to check");
+      if(buf.duration>900){   /* a long mix: chart the first 15 minutes rather than give up */
+        var full=buf,lim=Math.floor(900*full.sampleRate);
+        buf={sampleRate:full.sampleRate,length:lim,numberOfChannels:full.numberOfChannels,duration:900,getChannelData:function(c){return full.getChannelData(c).subarray(0,lim);}};
+      }
       CHART.analyse(buf,{level:cfg.level,onProgress:function(p){if(my===job)fill.style.width=Math.round(p*100)+"%";}},function(chart){if(my===job)send(chart,my);});
     }).catch(function(e){
       console.warn("[Unholy Keys] could not analyse the song, using live detection:",e&&e.message);
-      if(my===job)send(null,my,true);
+      if(my===job)send(null,my,true,e&&e.message);
     });
   }
-  function send(chart,my,failed){
+  function send(chart,my,failed,why){
     if(my!==job||!cur)return;
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cfg.secs*1000;
     liveSend({type:"round-start",mode:cur.mode==="ice"?"skate":cur.mode,ice:cur.mode==="ice"?1:0,battle:!!cur.battle,title:cur.title,countdown:cfg.secs*1000,chart:chart});
-    status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file, so steps will follow the beat live. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
+    status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file"+(why?" ("+String(why).slice(0,60)+")":"")+", so there are no notes for the Note highway on this one. Try an mp3 or wav copy. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cfg.secs*1000);
     clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();
   }
