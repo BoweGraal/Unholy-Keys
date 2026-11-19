@@ -468,3 +468,45 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - **Stage view with a video**: the note lines now show over the video (like classic jam), not hidden under it.
 - **Cello**: leans back past the player's shoulder, so you can see them behind it.
 - **Show tab → Weather → Intensity** slider: light drizzle to a downpour (rain and storm), a few flakes to a blizzard (snow).
+
+## Render vs self-hosted badge (v1.38.1)
+- Performer page: a badge under Jam/Live: **☁️ Render server** or **🏠 Self-hosted · this computer / local network / home tunnel**. It also shows in the live panel next to the room code, in jam's audience panel header and in the version line.
+- Venue: the same badge on the join screen, and in the version line.
+- Render asleep: "waking up…" until it answers. Wrong address: "not reachable".
+- Self-hosting with `UK_HOST="Bowe's PC"` adds the name.
+
+## Keepy uppy (v1.39.0)
+- Live song menu or "When I play a backing track": pick **🎈 Keepy uppy**. Venue practice has it too.
+- A balloon, a ball, a feather and a second balloon drop onto the floor. Balloon drifts down, the ball drops fast and bounces a few times, the feather floats for ages.
+- Move with arrows / WASD / stick. Space (or JUMP) jumps; Space again in the air double jumps for more height.
+- Get under something and jump into it: it flies back up and away. Points pop over your head. Feather is worth the most, double-jump hits score double, hits in a row before it lands score more.
+- Two phones: one heads the balloon, the other sees it fly up the same way. The stage view shows the same things flying.
+- Something that lands sits on the floor for a moment, then drops in again from the top.
+
+## Rink upgrades, ice rink, hold timing (v1.40.0)
+- Roller rink: the disco ball drops in lit up (glowing, spots round the room) for the whole round, even if the show's disco is off.
+- New **⛸ Ice rink** round (live menu, "When I play a backing track", venue practice): same game on ice, snowbanks, figure skates, and it snows.
+- Phone/touch: press **JUMP** and a trick wheel opens round your thumb (SUPERMAN up, TUCK down, KICK left, SPLIT right). Slide to a trick and hold, slide to another to chain. Slide back to the middle (or let go) before you land or you bail.
+- Note highway holds: let go as the top of the bar reaches the line. On time = PERFECT/GREAT/GOOD like a tap. Letting go too early is LET GO; holding way past still counts as OK.
+- Note highway: no horizontal beat lines; notes fall faster.
+
+## Shuffle dance (v1.41.0)
+- Free dance: a new **👟 Shuffle** style (key 0 on a computer), worked out from a Melbourne shuffle clip.
+- Moves (Z/X/C/V): **Running man** (knee up on the "and", stomp and slide back on the beat), **T-step** (heel-toe swivel gliding sideways), **Spin**, **Mix it up** (running man → T-step right → T-step left → running man into a spin, every 4 bars).
+- Left dot: how far you travel and how low. Right dot: knee lift and arm swing.
+- Bots in free-dance rounds now do styles too, often the shuffle.
+- Also worked out from clips: **Running man → Classic** (knee right up, hands together at the chest pumping), **Running man → Moonwalk** (smooth glide back 4 beats, then 4 the other way; heel up and knee bent, swapping each beat), **Skank → Classic** (knees up crossing in front, elbows pumping) and a new **Skank → Kicks** (kick out to the side on the off-beat).
+- New **🧟 Thriller** style (the "-" key): **Zombie arms** (low lunge, both arms flung out to one side then the other), **Claw walk** (side steps, knees up, claw hands), **Shoulder pop**, **Mix it up**.
+- **The worm** reworked from a clip: hands planted, legs kick up behind, then the chest pushes up as the legs drop, once a beat, inching along. New **Dive in** move (replaces Hold): jump up arms out, dive onto the floor, worm, repeat.
+- New **💥 Street jam** style (the "=" key), from a clip of a guy dancing through town: **High knees** (prancing, fists pumping), **Strike a pose** (low squat, arm cocked up, leg kick on the 4), **Hop step** (hopping side to side, knee tucked), **Floor spin** (crouched, legs sweeping round), **Mix it up**.
+- New **🤖 Cyber goth** style (the "]" key), from an industrial dance clip: heavy wide stomps under every move, plus **Stomp & punch**, **Arm sweep**, **Hands up**, **Windmill**, **Mix it up**. Right dot pushed up doubles the arm speed.
+- Cyber goth from a second clip: **Arm roll** (forearms rolling at the chest) and **Chop** (lunging arm chops); Mix it up now runs all six. Moves 6 and 7 are on N and M.
+- Phone dance picker: styles split evenly down both sides as compact rows; the move buttons are one row along the bottom that scrolls sideways.
+- New **🤘 Headbang** style (the "[" key), from a metal band clip: **Headbang** (top half whips down on the beat, hair falls over the face, flies on the way back up), **Hair windmill**, **Air guitar**, **Rock on** (one arm straight up throwing horns while banging), **Mix it up**. Right dot right doubles the speed.
+- Characters can now bow their head (hair hangs over the face) and fling it back (hair flies up).
+- New **🔥 Lighters up** style (the "\" key), for the slow one: arm up holding a lit lighter with a flickering flame and warm glow, the crowd swaying every two beats. **Lighter sway**, **Phone light** (white torch glow), **Wave it**, **Both hands**.
+- **DJ booth:** pick any EDM synth (Supersaw, Acid 303, Daft Punk, Deadmau5, Trance, Strobe, Sub Bass, Warm Pad) and you stand behind a DJ booth: two decks, a mixer, an LED strip along the front flipping cyan/magenta on the beat. Playing: one hand scratching a deck, the other on the faders. Stop for a couple of seconds: both hands up to the crowd. (FM Bell stays on mallets.)
+- **Lights → EDM** (new show button): the room goes dark and washes cyan or magenta, flipping on the beat, with beams sweeping out over the crowd from behind the stage.
+- **Extras → 🌃 Neon night** (new show toggle): the room goes black, the stage is traced in glowing tube lights (truss, stage lip, a floor grid), everyone becomes a glowing outline in their shirt colour, and the crowd waves glow sticks. Works with any lights mode (try it with EDM).
+- **Lighters up → Glow sticks**: both arms waving glow sticks fast.
+- New **🥾 Techno march** style (the "'" key), from a street-parade clip: a heavy stomping march under everything, plus **March**, **Point** (arm thrust out at the crowd on the beat), **Arm swing** (big arcs across the chest), **Flex**, **Mix it up**. Made for the DJ booth and EDM lights.

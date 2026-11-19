@@ -36,7 +36,8 @@ function songList() {
 }
 function health() {
   var viewers = 0; Object.keys(rooms).forEach(function(k) { viewers += rooms[k].viewers.size; });
-  return { ok: true, service: "unholy-keys-relay", rooms: Object.keys(rooms).length, viewers: viewers,
+  /* version and host: which server this is (the pages show "Render" or "self-hosted" from it) */
+  return { ok: true, service: "unholy-keys-relay", version: VERSION, host: HOSTED, name: HOST_NAME, rooms: Object.keys(rooms).length, viewers: viewers,
     uptimeSeconds: Math.round((Date.now() - STARTED) / 1000), node: process.version,
     streamMBSentSinceStart: Math.round(STREAM_BYTES / 1e5) / 10 };
 }
@@ -230,7 +231,7 @@ function battleNow(rd) { var b = rd.battle; if (!b) return -1; var p = Date.now(
 
 function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
-  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle };
+  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1;
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
   if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
@@ -300,11 +301,11 @@ function roundFinish(code) {
 function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { n: r.roundN, mode: mode, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
     broadcast(code, roundPublic(r));
@@ -387,18 +388,21 @@ function castVote(ws, voter, target, weight) {
 }
 
 /* the show's effects, checked: anything unknown is dropped */
-var FX_LIGHTS = ["auto", "party", "strobe", "spot", "warm", "cool", "off"], FX_WEATHER = ["none", "rain", "storm", "snow"];
+var FX_LIGHTS = ["auto", "party", "edm", "strobe", "spot", "warm", "cool", "off"], FX_WEATHER = ["none", "rain", "storm", "snow"];
 var FX_CROWD = ["sparkle", "fire", "lasers", "float"];
 var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.38.0";
+var VERSION = "1.41.0";
+/* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
+var HOSTED = process.env.RENDER ? "render" : "self";
+var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
   return { lights: FX_LIGHTS.indexOf(f.lights) >= 0 ? f.lights : "auto", fog: lvl(f.fog), lasers: f.lasers ? 1 : 0, dark: lvl(f.dark),
-    weather: FX_WEATHER.indexOf(f.weather) >= 0 ? f.weather : "none", wx: f.wx === undefined ? 0.6 : lvl(f.wx), sunset: f.sunset ? 1 : 0, fire: f.fire ? 1 : 0, fireworks: f.fireworks ? 1 : 0,
+    weather: FX_WEATHER.indexOf(f.weather) >= 0 ? f.weather : "none", wx: f.wx === undefined ? 0.6 : lvl(f.wx), sunset: f.sunset ? 1 : 0, fire: f.fire ? 1 : 0, neon: f.neon ? 1 : 0, fireworks: f.fireworks ? 1 : 0,
     burst: Math.max(0, Math.floor(+f.burst || 0)) % 1e13,
     /* lights following the performer's playing; the Jumbotron (auto: down while a video plays); things that lower in */
     follow: f.follow ? 1 : 0, jumbo: f.jumbo === "down" || f.jumbo === "up" ? f.jumbo : "auto", disco: f.disco ? 1 : 0, banner: f.banner ? 1 : 0,
@@ -446,7 +450,7 @@ function onMessage(ws, raw, isBinary) {
     rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer", performerLook: look(msg.look) };
     ws.room = code;
     ws.role = "performer";
-    send(ws, { type: "room-created", room: code, version: VERSION });
+    send(ws, { type: "room-created", room: code, version: VERSION, host: HOSTED, hostName: HOST_NAME });
     console.log("Room created:", code);
     return;
   }
@@ -471,7 +475,7 @@ function onMessage(ws, raw, isBinary) {
 
     // Send room state to new viewer
     send(ws, {
-      type: "room-state", version: VERSION,
+      type: "room-state", version: VERSION, host: HOSTED, hostName: HOST_NAME,
       yourId: id,
       viewers: viewerList(roomCode),
       performerState: r.state,
@@ -550,6 +554,17 @@ function onMessage(ws, raw, isBinary) {
       broadcast(ws.room, { type: "react", id: ws.viewerId, k: msg.k }, ws);
       return;
     }
+    if (msg.type === "kick") {
+      /* keepy uppy: someone hit the balloon, ball or feather; pass its new flight on to everyone (numbers clamped) */
+      var krd = rooms[ws.room].round;
+      if (!krd || krd.mode !== "keepy" || krd.phase !== "play" || !allow(ws, "kick", 6, 4)) return;
+      var ko = intIn(msg.o, 0, 3, -1), kt = intIn(msg.t, 0, 3600000, -1), kx = unit(msg.x), ky = unit(msg.y);
+      var kn = function(v, lo, hi) { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, +v.toFixed(4))) : null; };
+      var kz = kn(msg.z, 0, 200), kvx = kn(msg.vx, -2, 2), kvy = kn(msg.vy, -2, 2), kvz = kn(msg.vz, 0, 200);
+      if (ko < 0 || kt < 0 || kx === null || ky === null || kz === null || kvx === null || kvy === null || kvz === null) return;
+      broadcast(ws.room, { type: "kick", id: ws.viewerId, o: ko, t: kt, x: kx, y: ky, z: kz, vx: kvx, vy: kvy, vz: kvz }, ws);
+      return;
+    }
     if (msg.type === "pos") {
       var x = unit(msg.x), y = unit(msg.y);
       if (x === null || y === null || !allow(ws, "pos", 20, 15)) return;
@@ -582,7 +597,7 @@ function onMessage(ws, raw, isBinary) {
       var fd = null;
       if (msg.fd && typeof msg.fd === "object") {
         var fs = Math.floor(+msg.fd.s), fm = Math.floor(+msg.fd.m), fc = [];
-        if (fs >= 0 && fs <= 8 && fm >= 0 && fm <= 7 && Array.isArray(msg.fd.c) && msg.fd.c.length === 4) {
+        if (fs >= 0 && fs <= 15 && fm >= 0 && fm <= 7 && Array.isArray(msg.fd.c) && msg.fd.c.length === 4) {
           for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
           if (fc) fd = { s: fs, m: fm, c: fc };
         }
@@ -600,7 +615,7 @@ function onMessage(ws, raw, isBinary) {
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
       if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
-      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
       if (srd.battle && msg.m !== undefined) {
         /* a battle match score: only from the two in the match that's on */
         var bk = battleNow(srd), bs = srd.battle.slots[msg.m | 0], be = srd.battle.entrants;

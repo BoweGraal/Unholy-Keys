@@ -129,6 +129,15 @@ In dance practice, **Add YouTube songs** plays each link once while the page lis
 
 The server creates the `yt-charts` branch the first time someone adds a song. Render and GitHub Pages only build from `main`, so adding songs never redeploys anything.
 
+## Render or Self-Hosted: Which Server Am I On?
+
+Both pages show a badge. On the performer page it sits under the Jam/Live buttons and in the live panel; on the venue it's on the join screen. The version line at the bottom shows it too.
+- **☁️ Render server**: the cloud one at unholy-keys.onrender.com. The free plan sleeps when idle, so the badge says "waking up…" for up to a minute.
+- **🏠 Self-hosted**: your own computer. It shows "this computer" for localhost, "local network" for a LAN address, or "home tunnel" for a trycloudflare.com address.
+- **"not reachable"**: nothing answered at that address.
+
+The server says which it is itself (Render sets `RENDER=true`). When self-hosting, you can name it: `UK_HOST="Bowe's PC" node server/server.js` shows "Self-hosted · this computer (Bowe's PC)".
+
 ## How It Works
 
 ```
