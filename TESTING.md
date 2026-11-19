@@ -489,3 +489,11 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - Phone/touch: press **JUMP** and a trick wheel opens round your thumb (SUPERMAN up, TUCK down, KICK left, SPLIT right). Slide to a trick and hold, slide to another to chain. Slide back to the middle (or let go) before you land or you bail.
 - Note highway holds: let go as the top of the bar reaches the line. On time = PERFECT/GREAT/GOOD like a tap. Letting go too early is LET GO; holding way past still counts as OK.
 - Note highway: no horizontal beat lines; notes fall faster.
+
+## Shuffle dance (v1.41.0)
+- Free dance: a new **👟 Shuffle** style (key 0 on a computer), worked out from a Melbourne shuffle clip.
+- Moves (Z/X/C/V): **Running man** (knee up on the "and", stomp and slide back on the beat), **T-step** (heel-toe swivel gliding sideways), **Spin**, **Mix it up** (running man → T-step right → T-step left → running man into a spin, every 4 bars).
+- Left dot: how far you travel and how low. Right dot: knee lift and arm swing.
+- Bots in free-dance rounds now do styles too, often the shuffle.
+- Also worked out from clips: **Running man → Classic** (knee right up, hands together at the chest pumping), **Running man → Moonwalk** (smooth glide back 4 beats, then 4 the other way; heel up and knee bent, swapping each beat), **Skank → Classic** (knees up crossing in front, elbows pumping) and a new **Skank → Kicks** (kick out to the side on the off-beat).
+- New **🧟 Thriller** style (the "-" key): **Zombie arms** (low lunge, both arms flung out to one side then the other), **Claw walk** (side steps, knees up, claw hands), **Shoulder pop**, **Mix it up**.

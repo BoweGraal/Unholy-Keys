@@ -625,10 +625,12 @@ var ART=(function(){
     {name:"Hands on knees",icon:"\uD83E\uDDB5",subs:["Knock knees","Bounce","Low","Lean back"],help:"Left dot: how low and how wide. Right dot: lean."},
     {name:"Shake it",icon:"\uD83C\uDF51",subs:["Wiggle","Drop it","Hands up","Fast"],help:"Left dot: sway and height. Right dot: lean and arms."},
     {name:"Running man",icon:"\uD83C\uDFC3",subs:["Classic","Fast","Moonwalk","Arms pump"],help:"Left dot moves you: up and down, and slide. Right dot: knee lift and arms."},
-    {name:"Skank",icon:"\uD83C\uDFBA",subs:["Classic","Windmill","Pogo","Elbows"],help:"Left dot: knee height and travel. Right dot: punches."},
+    {name:"Skank",icon:"\uD83C\uDFBA",subs:["Classic","Windmill","Pogo","Elbows","Kicks"],help:"Left dot: knee height and travel. Right dot: punches."},
     {name:"Robot",icon:"\uD83E\uDD16",subs:["Arms","Wave","Pop","Freeze"],help:"Each dot points an arm; it snaps like a robot."},
     {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop","Hold"],help:"Slide your thumbs up and down: left lifts the chest, right lifts the hips."},
-    {name:"Silly",icon:"\uD83E\uDD2A",subs:["Chicken","Sprinkler","YMCA","Floss","Macarena"],help:"Left dot: size and speed. Right dot: bounce."}
+    {name:"Silly",icon:"\uD83E\uDD2A",subs:["Chicken","Sprinkler","YMCA","Floss","Macarena"],help:"Left dot: size and speed. Right dot: bounce."},
+    {name:"Shuffle",icon:"\uD83D\uDC5F",subs:["Running man","T-step","Spin","Mix it up"],help:"Left dot: how far you travel and how low. Right dot: knee lift and arms."},
+    {name:"Thriller",icon:"\uD83E\uDDDF",subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left dot: how low and how wide. Right dot: lean and arm reach."}
   ];
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function dance(style,sub,c,bp){
@@ -660,14 +662,30 @@ var ART=(function(){
       if(by<-0.4&&sub!==2){o.armL=2.7;o.armR=-2.7;}
       break;}
     case 4:{ /* running man: one leg forward, the other sliding back, swapping each beat; the left dot moves you */
-      var lift=0.5+Math.max(0,-by)*0.7+(sub===1?0.25:0),fast=sub===1?2:1,q=Math.sin(bp*Math.PI*fast);
-      o.legL=q*lift;o.legR=-q*lift*0.7;o.bob=ay*5-Math.abs(q)*2;o.dx=ax*8+(sub===2?-q*3:0);
-      var pump=0.5+(bx+1)*0.4+(sub===3?0.6:0);o.armL=0.4-q*pump;o.armR=-0.4-q*pump;
+      /* (from a clip:) the knee comes right up on each beat while the standing foot slides back, hands together at the chest
+         pumping down as the knee rises, the body bouncing; the knees take turns */
+      var lift=0.5+Math.max(0,-by)*0.7+(sub===1?0.25:0),fast=sub===1?2:1,q=Math.sin(bp*Math.PI*fast),up=Math.abs(q),kn=Math.min(4.2,2.6+lift*1.6);
+      if(q>0){o.legL=up*0.35;o.lgL=7-up*kn;o.legR=-0.12-up*0.15;}else{o.legR=-up*0.35;o.lgR=7-up*kn;o.legL=0.12+up*0.15;}
+      o.bob=ay*5-up*2.5;o.dx=ax*8;
+      if(sub===2){   /* moonwalk (from a clip): a smooth glide backwards, one heel up with the knee bent, the flat foot sliding back,
+                        swapping every beat; arms hanging, head down, a little lean the way you face. 4 beats one way, 4 back */
+        var cyc=((bp%8)+8)%8,dir=cyc<4?-1:1,gl=cyc<4?cyc/4:(cyc-4)/4,ft=((bp%1)+1)%1,ease=ft*ft*(3-2*ft),onL=Math.floor(bp)%2===0;
+        o.dx=(dir<0?(1-2*gl):(-1+2*gl))*(6+(ax+1)*4);o.bob=ay*3;o.rot=-dir*0.08;
+        var bend=2.6*(1-Math.abs(ease-0.5)*0.6);
+        if(onL){o.legL=0.06+ease*0.08;o.lgL=7-bend;o.legR=-0.08-(1-ease)*0.12;o.lgR=7;}else{o.legR=-0.06-ease*0.08;o.lgR=7-bend;o.legL=0.08+(1-ease)*0.12;o.lgL=7;}
+        o.armL=0.18+Math.sin(bp*Math.PI)*0.05;o.armR=-0.18+Math.sin(bp*Math.PI)*0.05;o.alL=o.alR=undefined;
+        break;}
+      if(sub===3){var pump=0.5+(bx+1)*0.4+0.6;o.armL=0.4-q*pump;o.armR=-0.4-q*pump;}         /* arms pumping like running */
+      else{var hs=0.25+(bx+1)*0.2;o.armL=-0.95+up*hs;o.armR=0.95-up*hs;o.alL=o.alR=6;}      /* hands together at the chest, pumping */
       break;}
     case 5:{ /* skank: knees up high in turn, punching forward with the opposite arm */
-      var kh=0.7+Math.max(0,-ay)*0.6,qq=Math.sin(bp*Math.PI);
-      o.legL=Math.max(0,qq)*kh;o.legR=Math.min(0,qq)*kh;o.bob=-Math.abs(qq)*3;o.dx=ax*4*s1;
-      var pu=1.2+Math.max(0,-by)*0.8+(bx+1)*0.2;o.armL=qq<0?pu:0.6;o.armR=qq>0?-pu:-0.6;
+      /* (from a clip:) hunched over, knees up high in turn with the foot kicking across in front, elbows bent and pumping
+         opposite the knees, bouncing side to side down the floor */
+      var kh=0.7+Math.max(0,-ay)*0.6,qq=Math.sin(bp*Math.PI),uq=Math.abs(qq);
+      if(qq>0){o.legL=-uq*0.3*kh;o.lgL=7-uq*3.2*kh;o.legR=-0.15;}else{o.legR=uq*0.3*kh;o.lgR=7-uq*3.2*kh;o.legL=0.15;}   /* the foot crosses in front */
+      o.bob=1.5-uq*3;o.dx=ax*4*s1+qq*2;o.rot=qq*0.07;
+      var pu=1.2+Math.max(0,-by)*0.8+(bx+1)*0.2;o.armL=qq<0?pu:0.5;o.armR=qq>0?-pu:-0.5;o.alL=qq<0?6:8;o.alR=qq>0?6:8;
+      if(sub===4){var kk=(Math.floor(bp)%2===0);if(ph>0.35&&ph<0.85){if(kk){o.legL=1.05;o.lgL=7;o.legR=-0.1;o.lgR=7;}else{o.legR=-1.05;o.lgR=7;o.legL=0.1;o.lgL=7;}o.bob=0.5;}}   /* kick out to the side */
       if(sub===1){o.armL=bp*Math.PI*2%(Math.PI*2);o.armR=-o.armL;}                               /* windmill */
       if(sub===2){o.bob=-hop*8;o.legL=0.1;o.legR=-0.1;o.armL=2.6;o.armR=-2.6;}                    /* pogo */
       if(sub===3){o.armL=1.6+qq*0.5;o.armR=-1.6+qq*0.5;}                                         /* elbows */
@@ -686,6 +704,44 @@ var ART=(function(){
       if(sub===2){chest=hop;hips=hop;}                                                             /* flop */
       o.rot=dir*(Math.PI/2)+dir*(hips-chest)*0.35;o.bob=-Math.max(chest,hips)*4;
       o.armL=0.05;o.armR=-0.05;o.legL=0.04;o.legR=-0.04;
+      break;}
+    case 10:{ /* Thriller (from a clip of the zombie dance): low wide stance, both arms flung out to one side then the other,
+                 a clawed side-step with the knees pumping and the head bobbing, a shoulder pop */
+      var lw=1+Math.max(0,ay)*1.2,wd=0.45+(ax+1)*0.15,reach=1.35+Math.max(0,-by)*0.4,ln=0.1+bx*0.08,tm=sub;
+      if(sub===3){var br=Math.floor(bp/4)%3;tm=br;}
+      var sd=Math.floor(bp/2)%2?1:-1,pp2=((bp/2%1)+1)%1,snap=Math.min(1,pp2*4);
+      if(tm===0){   /* zombie arms: lunge to a side, both arms swinging out that way at shoulder height, then swap */
+        o.legL=wd;o.legR=-wd;o.bob=lw*2+(1-snap)*1.5;o.dx=sd*4*snap;o.rot=sd*(ln+0.12)*snap;
+        if(sd<0){o.armL=reach;o.armR=reach-0.35;}else{o.armR=-reach;o.armL=-(reach-0.35);}
+        o.alL=o.alR=9;
+      }else if(tm===1){   /* claw walk: side steps, knees up in turn, hands up like claws by the chest, head bobbing */
+        var cq=Math.sin(bp*Math.PI),cu=Math.abs(cq);
+        if(cq>0){o.lgL=7-cu*3;o.legL=0.25+cu*0.2;o.legR=-0.3;}else{o.lgR=7-cu*3;o.legR=-0.25-cu*0.2;o.legL=0.3;}
+        o.dx=Math.sin(bp*Math.PI*0.25)*8;o.bob=lw*1.5-cu*2;o.armL=1.9+cq*0.15;o.armR=-1.9+cq*0.15;o.alL=o.alR=5;o.rot=cq*0.05;
+      }else{   /* shoulder pop: feet wide and planted, one shoulder hitches up on each beat, arms hanging stiff */
+        var pop=Math.pow(1-ph,3);o.legL=wd*0.9;o.legR=-wd*0.9;o.bob=lw*1.5;o.rot=alt*0.1*pop;
+        o.armL=0.25+(alt>0?pop*0.5:0);o.armR=-0.25-(alt<0?pop*0.5:0);o.dx=alt*pop*1.5;
+      }
+      break;}
+    case 9:{ /* the shuffle (Melbourne shuffle / cutting shapes): quick footwork on the eighth notes, arms loose and low */
+      var trav=0.5+(ax+1)*0.6,low=Math.max(0,ay)*3,kl=0.55+Math.max(0,-by)*0.5+(bx+1)*0.05,arm=0.25+(bx+1)*0.25,mv=sub;
+      if(sub===3){var bar=Math.floor(bp/4)%4;mv=bar===0?0:bar===1?1:bar===2?1:(((bp%4)+4)%4>=2?2:0);if(bar===2)trav=-trav;}   /* running man, T-step right, T-step left, running man into a spin */
+      var e=bp*2,ep=((e%1)+1)%1,side=Math.floor(e)%2?1:-1;
+      if(mv===0){   /* running man: knee up on the "and", stomp down on the beat while the other foot slides back */
+        var up=Math.sin(ep*Math.PI);
+        if(side>0){o.legL=up*kl*0.6;o.lgL=7-up*3.5;o.legR=-0.18-(1-up)*0.25;}else{o.legR=-up*kl*0.6;o.lgR=7-up*3.5;o.legL=0.18+(1-up)*0.25;}   /* the knee comes up: a shorter leg */
+        o.bob=low-up*2.5+(1-up)*1;o.dx=Math.sin(bp*Math.PI*0.5)*2*trav;
+        o.armL=0.3+Math.max(0,side)*arm*0.8;o.armR=-0.3-Math.max(0,-side)*arm*0.8;
+      }else if(mv===1){   /* T-step: one foot taps, the other swivels heel-out then toe-out, gliding you sideways */
+        var sw=Math.sin(e*Math.PI);o.legL=0.15+Math.abs(sw)*0.45;o.legR=-0.15-Math.max(0,-sw)*0.2;
+        if(trav<0){var t3=o.legL;o.legL=-o.legR;o.legR=-t3;}
+        o.dx=((bp%4+4)%4/4-0.5)*14*trav;o.bob=low-Math.abs(sw)*1.5;o.rot=-0.06*Math.sign(trav);
+        o.armL=0.5+sw*arm*0.5;o.armR=-0.5+sw*arm*0.5;
+      }else{   /* spin: arms tuck in, feet together, a quick turn (shown as a blur of a twist) then pop back out */
+        var u=((bp%2)+2)%2/2,tw=Math.sin(u*Math.PI*4);
+        o.armL=0.45+tw*0.3;o.armR=-0.45+tw*0.3;o.legL=0.05;o.legR=-0.05;o.dx=tw*3;o.rot=tw*0.06;o.bob=low-Math.sin(u*Math.PI)*2;
+        if(u>0.8){o.armL=1.6;o.armR=-1.6;o.legL=0.35;o.legR=-0.35;o.mouth=true;}
+      }
       break;}
     case 8:{ /* silly: the classics, one move per beat */
       var size=0.7+(ax+1)*0.3,sp2=ay<-0.4?2:ay>0.4?0.5:1,bb=bp*sp2,bi=Math.floor(bb),pp=bb%1,bh=-Math.pow(1-pp,2)*(1+Math.max(0,-by)*4);
@@ -1034,6 +1090,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.40.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.41.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

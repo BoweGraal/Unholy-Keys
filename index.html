@@ -4208,7 +4208,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.40.0",SERVER_VERSION="";
+var PAGE_VERSION="1.41.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4285,7 +4285,7 @@ function audEvent(msg){
     var pp=AUD.people[id],pa=[];for(var pi=0;pi<4;pi++){var pn=+msg.a[pi];if(!isFinite(pn))return;pa.push(Math.max(-3.2,Math.min(3.2,pn/100)));}
     var nc=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));
     /* free dance styles: the dance, its move and the two dots (drawn here the same way the venue draws them) */
-    var f=msg.fd;pp.fd=f&&f.s>=1&&f.s<=8&&Array.isArray(f.c)&&f.c.length===4?{s:f.s|0,m:f.m|0,c:f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v))/100:0;})}:null;
+    var f=msg.fd;pp.fd=f&&f.s>=1&&f.s<=10&&Array.isArray(f.c)&&f.c.length===4?{s:f.s|0,m:f.m|0,c:f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v))/100:0;})}:null;
     if(!pp.fd||nc>(pp.combo||0))pp.hitT=Date.now();pp.pose=pa;pp.combo=nc;
     pp.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0}:null;   /* on the roller rink */
   }
@@ -4422,7 +4422,7 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
   }
   if(atKeys){var pl=glow?Math.sin(now*0.02):0;armL=-.55+pl*.18;armR=.55+pl*.18;mouth=glow;}
   var dxs=0,rot=0;
-  if(fd){var rg=ART.dance(fd.s,fd.m,fd.c,now/500);armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*p;dxs=rg.dx*p;rot=rg.rot;mouth=rg.mouth;}
+  if(fd){var rg=ART.dance(fd.s,fd.m,fd.c,now/500);armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*p;dxs=rg.dx*p;rot=rg.rot;mouth=rg.mouth;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;}
   /* a crowd surprise: float up; hand lasers point both arms at the stage */
   var cr=crowd&&crowd.kind?ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target):null;
   if(cr){y+=cr.lift;if(cr.armL!==undefined){armL=cr.armL;armR=cr.armR;fd=null;}}

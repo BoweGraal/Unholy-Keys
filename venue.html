@@ -1314,7 +1314,7 @@ var MAKER=ART.maker(document.getElementById("maker"),myLook,function(L){
 });
 /* a look from the network: 8 letters, or nothing (then dress them in their colour) */
 /* a free dance from the network: {s: dance 1-8, m: move, c: [4 dots, -100..100]} or null */
-function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=8)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
+function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=10)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
   var c=f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v)):0;});return{s:s,m:m,c:c};}
 function lookOf(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;name=String(name||"");for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return ART.looks.fromColor(color,h+1);}
 
@@ -1914,7 +1914,8 @@ document.addEventListener("keydown",function(e){
   if(GAME.mode==="free"){
     if(e.code==="Space"){e.preventDefault();if(!e.repeat)react("jump");return;}               /* Space jumps (Esc stops) */
     /* 1-9 pick a dance; Z X C V B its moves */
-    var dn=/^(Digit|Numpad)([1-9])$/.exec(e.code);if(dn){e.preventDefault();GAME.fdPick(+dn[2]-1);return;}
+    if((e.code==="Minus"||e.code==="NumpadSubtract")&&GAME.fStyle!==undefined&&ART.DANCES.length>10&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(10);return;}
+    var dn=/^(Digit|Numpad)([0-9])$/.exec(e.code);if(dn){e.preventDefault();var di=dn[2]==="0"?9:+dn[2]-1;if(di<ART.DANCES.length)GAME.fdPick(di);return;}
     var sk="KeyZ KeyX KeyC KeyV KeyB".split(" ").indexOf(e.code);if(sk>=0&&GAME.fStyle>0&&sk<ART.DANCES[GAME.fStyle].subs.length){e.preventDefault();GAME.fdSub(sk);return;}
     if(GAME.fdKey(e.code,true)){e.preventDefault();return;}                                    /* a dance picked: WASD and the arrows move the two dots */
     var lk=LIMBKEY[e.code];
@@ -5068,7 +5069,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.40.0",SERVER_VERSION="";
+var PAGE_VERSION="1.41.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5099,7 +5100,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     if(fd&&dance===4){
       /* a free dance style: worked out here from the dance, its move and the two dots (the same on every screen) */
       var rg=ART.dance(fd.s,fd.m,[fd.c[0]/100,fd.c[1]/100,fd.c[2]/100,fd.c[3]/100],GAME.beatPos());
-      armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;
+      armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
     }else{
     var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];
     bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
