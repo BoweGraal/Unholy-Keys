@@ -402,7 +402,7 @@ function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
   return { lights: FX_LIGHTS.indexOf(f.lights) >= 0 ? f.lights : "auto", fog: lvl(f.fog), lasers: f.lasers ? 1 : 0, dark: lvl(f.dark),
-    weather: FX_WEATHER.indexOf(f.weather) >= 0 ? f.weather : "none", wx: f.wx === undefined ? 0.6 : lvl(f.wx), sunset: f.sunset ? 1 : 0, fire: f.fire ? 1 : 0, fireworks: f.fireworks ? 1 : 0,
+    weather: FX_WEATHER.indexOf(f.weather) >= 0 ? f.weather : "none", wx: f.wx === undefined ? 0.6 : lvl(f.wx), sunset: f.sunset ? 1 : 0, fire: f.fire ? 1 : 0, neon: f.neon ? 1 : 0, fireworks: f.fireworks ? 1 : 0,
     burst: Math.max(0, Math.floor(+f.burst || 0)) % 1e13,
     /* lights following the performer's playing; the Jumbotron (auto: down while a video plays); things that lower in */
     follow: f.follow ? 1 : 0, jumbo: f.jumbo === "down" || f.jumbo === "up" ? f.jumbo : "auto", disco: f.disco ? 1 : 0, banner: f.banner ? 1 : 0,

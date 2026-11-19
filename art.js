@@ -151,8 +151,18 @@ var ART=(function(){
     og.drawImage(spr,-1,0);og.drawImage(spr,1,0);og.drawImage(spr,0,-1);og.drawImage(spr,0,1);
     og.globalCompositeOperation="source-in";og.fillStyle="#120D1E";og.fillRect(0,0,CWD,CHT);
     og.globalCompositeOperation="source-over";og.drawImage(spr,0,0);
+    if(NEON){   /* neon: just the edges, in a bright tube colour, the body a faint glow inside */
+      og.clearRect(0,0,CWD,CHT);og.globalCompositeOperation="source-over";
+      og.drawImage(spr,-1,0);og.drawImage(spr,1,0);og.drawImage(spr,0,-1);og.drawImage(spr,0,1);
+      og.globalCompositeOperation="destination-out";og.drawImage(spr,0,0);
+      og.globalCompositeOperation="source-in";og.fillStyle=neonCol(L);og.fillRect(0,0,CWD,CHT);
+      og.globalCompositeOperation="destination-over";og.globalAlpha=0.16;og.drawImage(spr,0,0);og.globalAlpha=1;
+      og.globalCompositeOperation="source-over";
+      var nh=Math.round(Math.max(0,st.head||0)*3);og.fillStyle="#FFFFFF";og.fillRect(OX-3,OY-11+nh,1,2);og.fillRect(OX+2,OY-11+nh,1,2);   /* the eyes still show */
+    }
     return out;
   }
+  function neonCol(L){var c=CLOTH[L.topCol]||CLOTH[0];return shade(c,0.45);}
   /* draw a character with its body centre at (x,y), each art pixel p screen pixels big.
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
@@ -160,11 +170,13 @@ var ART=(function(){
     var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,head:st.head||0,skates:st.skates==="ice"?"ice":!!st.skates};
     var c=drawSprite(L,s),q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
+    if(NEON){g.save();g.shadowColor=neonCol(L);g.shadowBlur=6*q;}
     if(st.rot){
       /* the whole body turned (the worm: lying on the floor), resting on the floor rather than floating */
       g.save();g.translate(Math.round(x+dx),Math.round(y+8*q*Math.abs(Math.sin(st.rot))+bob));g.rotate(st.rot);
       g.drawImage(c,-OX*q,-OY*q,CWD*q,CHT*q);g.restore();
     }else g.drawImage(c,Math.round(x+dx-OX*q),Math.round(y-OY*q+bob),CWD*q,CHT*q);
+    if(NEON)g.restore();
     g.imageSmoothingEnabled=was;
     if(st.prop)handProp(g,x,y,q,dx,bob,s,st);
   }
@@ -174,7 +186,12 @@ var ART=(function(){
     g.save();
     if(st.rot){g.translate(Math.round(x+dx),Math.round(y+8*q*Math.abs(Math.sin(st.rot))+bob));g.rotate(st.rot);}else g.translate(Math.round(x+dx),Math.round(y+bob));
     var X=hx*q,Y=hy*q,fl=0.75+0.25*Math.sin(t*23+x)*Math.sin(t*9.7);
-    if(st.prop==="phone"){
+    if(st.prop==="glowstick"){
+      var gc2=st.propCol||["#3DF2FF","#FF3DA8","#F5F23D","#4CFF8A"][Math.abs(Math.round(x))%4],ga=s.armR+Math.PI;
+      g.save();g.translate(X,Y);g.rotate(-ga*0.2);g.shadowColor=gc2;g.shadowBlur=q*6;g.fillStyle=gc2;g.fillRect(Math.round(-q),Math.round(-q*7),q*2,q*7);
+      g.shadowBlur=0;g.fillStyle="rgba(255,255,255,.75)";g.fillRect(Math.round(-q*0.5),Math.round(-q*6.5),q,q*6);g.restore();
+      g.globalCompositeOperation="lighter";var gg=g.createRadialGradient(X,Y-q*4,0,X,Y-q*4,q*12);gg.addColorStop(0,gc2+"55");gg.addColorStop(1,gc2+"00");g.fillStyle=gg;g.fillRect(X-q*12,Y-q*16,q*24,q*24);
+    }else if(st.prop==="phone"){
       g.globalCompositeOperation="lighter";var gr=g.createRadialGradient(X,Y-q*3,0,X,Y-q*3,q*16);gr.addColorStop(0,"rgba(230,240,255,.55)");gr.addColorStop(1,"rgba(230,240,255,0)");g.fillStyle=gr;g.fillRect(X-q*16,Y-q*19,q*32,q*32);
       g.globalCompositeOperation="source-over";g.fillStyle="#15121F";g.fillRect(Math.round(X-q*1.5),Math.round(Y-q*5),q*3,q*5);g.fillStyle="#EEF4FF";g.fillRect(Math.round(X-q),Math.round(Y-q*4.5),q*2,q*3.5);
     }else{
@@ -656,7 +673,7 @@ var ART=(function(){
     {name:"Street jam",icon:"\uD83D\uDCA5",subs:["High knees","Strike a pose","Hop step","Floor spin","Mix it up"],help:"Left dot: how low and how far you travel. Right dot: knee height and arms."},
     {name:"Cyber goth",icon:"\uD83E\uDD16",subs:["Stomp & punch","Arm sweep","Hands up","Windmill","Arm roll","Chop","Mix it up"],help:"Left dot: stomp width and how low. Right dot: arm size and speed."},
     {name:"Headbang",icon:"\uD83E\uDD18",subs:["Headbang","Hair windmill","Air guitar","Rock on","Mix it up"],help:"Left dot: stance width and how low. Right dot: how hard and how fast."},
-    {name:"Lighters up",icon:"\uD83D\uDD25",subs:["Lighter sway","Phone light","Wave it","Both hands"],help:"Left dot: how far you sway. Right dot: how high you hold it."}
+    {name:"Lighters up",icon:"\uD83D\uDD25",subs:["Lighter sway","Phone light","Wave it","Both hands","Glow sticks"],help:"Left dot: how far you sway. Right dot: how high you hold it."}
   ];
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function dance(style,sub,c,bp){
@@ -744,7 +761,8 @@ var ART=(function(){
                  swaying with the whole crowd, once every two beats */
       var sa=0.6+(ax+1)*0.5,hi=2.75+Math.max(0,-by)*0.25-Math.max(0,by)*0.6,sw5=Math.sin(bp*Math.PI*0.5);
       o.dx=sw5*3*sa;o.rot=sw5*0.07*sa;o.bob=0.5-Math.abs(Math.cos(bp*Math.PI*0.5))*0.8;o.legL=0.18+Math.max(0,sw5)*0.08;o.legR=-0.18+Math.min(0,sw5)*0.08;
-      o.armR=-hi+sw5*0.08;o.alR=9;o.armL=0.2+sw5*0.05;o.prop=sub===1?"phone":"lighter";
+      o.armR=-hi+sw5*0.08;o.alR=9;o.armL=0.2+sw5*0.05;o.prop=sub===1?"phone":sub===4?"glowstick":"lighter";
+      if(sub===4){var gs=Math.sin(bp*Math.PI*2);o.armR=-2.3+gs*0.7;o.alR=8;o.armL=2.3+gs*0.7;o.alL=8;o.bob=-Math.abs(gs)*1.5;}   /* glow sticks: waving fast, both arms */
       if(sub===2){o.armR=-hi+Math.sin(bp*Math.PI)*0.45;o.dx=sw5*2*sa;}                                /* waving it overhead */
       if(sub===3){o.armL=hi-0.15+sw5*0.06;o.alL=9;}                                                    /* both arms up */
       break;}
@@ -1065,8 +1083,9 @@ var ART=(function(){
   /* a game can force show effects on for itself (the rink's disco ball, snow on the ice) over the performer's */
   var FORCE=null;
   function forced(fx){return FORCE?Object.assign({},FX_DEFAULT,fx||{},FORCE):fx;}
+  var NEON=0;   /* neon night: set each frame by fxBack; characters are drawn as glowing outlines while it's on */
   function fxBack(g,W,H,lay,fx,st){
-    fx=forced(fx);if(!fx)return;
+    fx=forced(fx);NEON=fx&&fx.neon?1:0;if(!fx)return;
     easeDrops(fx,(st&&st.now)||Date.now());
     banner(g,W,H,lay.stageBottom*H,sceneP(W,H),fx.bannerText,st&&st.jumbo);
     var P=sceneP(W,H),sb=lay.stageBottom*H,now=st.now||Date.now(),i,x,y;
@@ -1089,6 +1108,22 @@ var ART=(function(){
       for(i=0;i<Math.ceil(fw/P);i++){var hh=(3+5*Math.abs(Math.sin(now*0.008+i*1.9))+3*Math.abs(Math.sin(now*0.013+i*0.7)))*P;
         g.fillStyle="#E8505B";g.fillRect(fx0+i*P,fy-hh,P,hh);g.fillStyle="#F5D03C";g.fillRect(fx0+i*P,fy-hh*0.55,P,hh*0.55);}
       g.fillStyle="rgba(40,30,40,.45)";for(i=0;i<6;i++){var ph=((now/3000)+i/6)%1;g.fillRect(fx0+fw*0.3+Math.sin(ph*6+i)*P*6-ph*P*14,fy-P*10-ph*sb*0.5,P*(6+ph*10),P*(4+ph*6));}
+    }
+    /* neon night: the room goes black and the stage is traced in glowing tube lights */
+    if(NEON){
+      var nsb=lay.stageBottom*H,nfb=lay.floorBottom*H,nP=sceneP(W,H),nt=((st&&st.now)||Date.now())/1000;
+      g.save();g.fillStyle="rgba(3,0,12,.86)";g.fillRect(0,0,W,H);
+      function tube(pts,col,wd){g.shadowColor=col;g.shadowBlur=nP*4;g.strokeStyle=col;g.lineWidth=Math.max(2,nP*0.9*(wd||1));g.beginPath();g.moveTo(pts[0][0],pts[0][1]);for(var k=1;k<pts.length;k++)g.lineTo(pts[k][0],pts[k][1]);g.stroke();
+        g.shadowBlur=0;g.strokeStyle="rgba(255,255,255,.7)";g.lineWidth=Math.max(1,nP*0.3);g.stroke();}
+      var pul=0.75+0.25*Math.sin(nt*2);
+      g.globalAlpha=pul;
+      tube([[0,nP*7],[W,nP*7]],"#3DF2FF");                                              /* the truss */
+      tube([[W*0.1,nP*7],[W*0.1,nsb]],"#3DF2FF");tube([[W*0.9,nP*7],[W*0.9,nsb]],"#3DF2FF");
+      tube([[0,nsb],[W,nsb]],"#FF3DA8",1.4);                                              /* the lip of the stage */
+      g.globalAlpha=0.5*pul;
+      for(var gx=-6;gx<=6;gx++)tube([[W/2+gx*W*0.06,nsb],[W/2+gx*W*0.16,nfb]],"#8A5CFF",0.6);   /* the floor grid running away from you */
+      for(var gy=1;gy<6;gy++){var yy=nsb+(nfb-nsb)*Math.pow(gy/6,1.6);tube([[0,yy],[W,yy]],"#8A5CFF",0.6);}
+      g.globalAlpha=1;g.restore();
     }
   }
   function px2(g,x,y,P,c){g.fillStyle=c;g.fillRect(Math.round(x/P)*P,Math.round(y/P)*P,P,P);}
@@ -1185,7 +1220,7 @@ var ART=(function(){
   /* the show's controls, with their defaults (also what the server accepts) */
   /* how heavy the weather is: the slider's 0-1 as a multiplier (0.6, the default, is the usual amount) */
   function wxAmt(fx){var w=fx&&fx.wx!==undefined?+fx.wx:0.6;if(!isFinite(w))w=0.6;return 0.15+Math.max(0,Math.min(1,w))*1.42;}
-  var FX_DEFAULT={wx:0.6,lights:"auto",fog:0,lasers:0,dark:0,weather:"none",sunset:0,fire:0,fireworks:0,burst:0,
+  var FX_DEFAULT={wx:0.6,neon:0,lights:"auto",fog:0,lasers:0,dark:0,weather:"none",sunset:0,fire:0,fireworks:0,burst:0,
     follow:0,jumbo:"auto",disco:0,banner:0,bannerText:"UNHOLY KEYS",balloonT:0,confettiT:0,crowd:"",crowdT:0,space:0,water:0};
   var CROWD_KINDS=["sparkle","fire","lasers","float"];
 
@@ -1206,6 +1241,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.41.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
+  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:keepyDraw},rink:rink,rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.41.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:keyboard,micStand:micStand,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
