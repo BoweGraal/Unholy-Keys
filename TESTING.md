@@ -564,3 +564,21 @@ Open `venue.html?practice&lab` (or the new **🔧 Tuning lab** link on the join 
 - **Share box:** **Copy settings** copies a text list of only what you changed, ending in a JSON line. Paste that to me and I bake the values in as the new defaults. You can also paste someone's settings into the box and press **Apply pasted**.
 - Check: change Keepy "Jump power" to 150, play Keepy uppy, jump: much taller. Copy, Reset everything, paste, Apply: the value comes back.
 - Server unchanged (version bump only). Redeploy Render to keep versions matched.
+
+## v1.47.0 — Graphics lab
+
+Open `gfx.html` (or the new **🎨 Graphics lab** link on the venue join screen). It works on its own, no server needed.
+
+**Stage & lights** (live preview with a performer and dancers, beat at 128 BPM)
+- Row under the picture: lights mode, weather, fog, darkness, lasers, fireworks, neon night, disco ball, sunset, fire, follow-the-notes, 💥 burst, BPM.
+- Side tabs: Stage lights, Weather & air, Lasers/strobe/fireworks, Neon & disco ball, Colour grade. Each value has a plain explanation, a default and a reset.
+- Colour grade (brightness, contrast, saturation, hue, sepia, blur) is a filter over the whole picture, and it also applies in the venue on this device.
+
+**Assets & animation**
+- Types: Character (pose by hand), Dance (every style and variation), Instrument (every kind, with a note slider), Prop (keyboard, mic, key panel, keepy objects, rinks, disco ball).
+- Dance frames: the loop is 4 beats. Left character = original, right = with your tweaks. Scrub to a frame, move the nudge sliders (arms, legs, bounce, sideways, tilt), **Save frame at this beat**. The change fades in and out around that beat and plays in the game on this device.
+- Each asset has brightness, contrast, saturation and hue sliders and a **Save this look**. Those saved looks are for sending to me: they appear in the share box, and I apply them to the artwork.
+
+**Sharing:** the share box lists everything changed plus JSON lines. **Copy changes** → paste to me; I lock them in as defaults. Paste a saved set and press **Apply pasted** to load it. **Reset everything** clears values, dance tweaks and asset looks.
+
+Server unchanged (version bump only); redeploy Render to keep versions matched.

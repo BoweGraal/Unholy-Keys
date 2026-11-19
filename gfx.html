@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Unholy Keys · Graphics lab</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#0d0a1c;color:#e8e4f8;font:13px system-ui,sans-serif}
+#app{display:flex;height:100%}
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#top{display:flex;gap:6px;align-items:center;padding:8px 10px;border-bottom:1px solid #2c2358;flex-wrap:wrap}
+#top b{font-size:15px;margin-right:8px}
+button,select,input[type=number]{background:#2d2360;color:#fff;border:1px solid #5a4cb0;border-radius:6px;padding:5px 9px;font:600 12px system-ui}
+button{cursor:pointer}button.on{background:#7F77DD;border-color:#fff}button.go{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:transparent}
+#view{flex:1;min-height:0;position:relative;overflow:auto;display:flex;align-items:center;justify-content:center}
+#cv{display:block;max-width:100%;max-height:100%}
+#fxrow,#assetrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 10px;border-top:1px solid #2c2358;font-size:12px}
+#fxrow label,#assetrow label{display:flex;align-items:center;gap:4px;white-space:nowrap}
+#side{width:350px;max-width:100vw;border-left:1px solid #4a3d8a;display:flex;flex-direction:column;background:rgba(14,10,30,.97)}
+#tabs{display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px}
+#body{flex:1;overflow:auto;padding:0 10px 10px}
+.about{background:#1d1640;border-radius:8px;padding:8px;margin:2px 0 8px;line-height:1.4;color:#cfc8f0}
+.row{border-top:1px solid #2c2358;padding:7px 0}.row .t{display:flex;align-items:center;gap:6px}.row .t span{flex:1;font-weight:700}
+.row.ch .t span{color:#F5C518}.row small{display:block;color:#9d95c8;margin:2px 0 4px;line-height:1.3}
+.row .c{display:flex;align-items:center;gap:6px}.row input[type=range]{flex:1;min-width:0}.row input[type=number]{width:74px}
+.row input[type=color]{width:44px;height:28px;padding:0;border:1px solid #5a4cb0;background:none}.row .d{font-size:11px;color:#7f77a8;white-space:nowrap}
+#foot{border-top:1px solid #3a2f6a;padding:8px 10px}#foot textarea{width:100%;height:84px;background:#120d28;color:#cfc8f0;border:1px solid #4a3d8a;border-radius:6px;font:11px ui-monospace,monospace;padding:5px}
+#foot .r{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}.chips button{padding:2px 7px}
+@media(max-width:800px){#app{flex-direction:column}#side{width:100%;height:55vh;border-left:0;border-top:1px solid #4a3d8a}}
+</style></head><body>
+<div id="app">
+ <div id="main">
+  <div id="top"><b>🎨 Graphics lab</b><button id="mStage" class="on">Stage &amp; lights</button><button id="mAssets">Assets &amp; animation</button><a href="venue.html" style="color:#9d95c8;margin-left:auto">← back to the venue</a></div>
+  <div id="view"><canvas id="cv"></canvas></div>
+  <div id="fxrow"></div>
+  <div id="assetrow" style="display:none"></div>
+ </div>
+ <div id="side"><div id="tabs"></div><div id="body"></div>
+  <div id="foot"><div>Share box: copy this to send me your changes, or paste a saved set here and press Apply.</div><textarea id="share" spellcheck="false"></textarea>
+   <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
+ </div>
+</div>
+<script src="gfx.js"></script>
+<script src="art.js"></script>
+<script src="instruments.js"></script>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id);};
+function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;}
+function fmt(n){return String(Math.round(n*100000)/100000);}
+var cv=$("cv"),g=cv.getContext("2d"),mode="stage",tab="lights";
+/* ---------- state ---------- */
+var FX={lights:"auto",fog:0,lasers:0,dark:0,weather:"none",sunset:0,fire:0,fireworks:0,burst:0,neon:0,disco:0,banner:0,follow:0};
+var SIM={bpm:128,playing:true,level:0.6,t0:performance.now()};
+var AS={cat:"dance",style:1,sub:0,q:0,play:true,speed:1,look:ART.looks.random(11),kind:"grand",midi:60,noteOn:true,
+  pose:{armL:0.15,armR:-0.15,legL:0,legR:0,bob:0,dx:0,rot:0},nudge:{armL:0,armR:0,legL:0,legR:0,bob:0,dx:0,rot:0},
+  bg:"#1a1433",zoom:1,f:{bright:1,contrast:1,sat:1,hue:0},prop:"keyboard"};
+var ASSETADJ={};try{ASSETADJ=JSON.parse(localStorage.getItem("uk_assetadj")||"{}");}catch(e){}
+function saveAdj(){try{localStorage.setItem("uk_assetadj",JSON.stringify(ASSETADJ));}catch(e){}}
+function assetKey(){return AS.cat==="dance"?"dance:"+AS.style+"."+AS.sub:AS.cat==="inst"?"inst:"+AS.kind:AS.cat==="prop"?"prop:"+AS.prop:"char";}
+function loadAdj(){var a=ASSETADJ[assetKey()];AS.f=a?{bright:a.bright||1,contrast:a.contrast||1,sat:a.sat||1,hue:a.hue||0}:{bright:1,contrast:1,sat:1,hue:0};}
+/* ---------- drawing ---------- */
+function size(){var v=$("view"),w=Math.max(300,v.clientWidth-8),h=Math.max(240,v.clientHeight-8);
+  if(mode==="stage"){var ww=Math.min(w,h*1.5),hh=ww/1.5;cv.width=Math.round(ww);cv.height=Math.round(hh);}
+  else{var s=Math.min(w,h);cv.width=Math.round(s);cv.height=Math.round(s*0.8);}
+  cv.style.width=cv.width+"px";cv.style.height=cv.height+"px";}
+var crew=[ART.looks.random(3),ART.looks.random(8),ART.looks.random(21),ART.looks.random(34),ART.looks.random(55)],perfLook=ART.looks.random(5);
+function beatPhase(now){var per=60000/SIM.bpm;return ((now-SIM.t0)%per)/per;}
+function drawStage(now){
+  var W=cv.width,H=cv.height,lay={stageBottom:0.30,floorBottom:0.78},ph=beatPhase(now),bp=(now-SIM.t0)/(60000/SIM.bpm),lv=SIM.level*(0.75+0.25*Math.sin(now/1700));
+  var fx=Object.assign({},ART.FX_DEFAULT,FX,{lights:FX.lights,fog:FX.fog});
+  fx.follow=FX.follow?1:0;
+  g.clearRect(0,0,W,H);g.fillStyle="#0d0a1c";g.fillRect(0,0,W,H);
+  var fol=FX.follow?{h:0.5+0.5*Math.sin(now/900),hue:Math.floor(now/500)%12*30,a:1}:null;
+  ART.scene(g,W,H,lay,{now:Date.now(),phase:ph,level:lv,playing:SIM.playing,hue:0,hueA:0,lights:FX.lights,fog:FX.fog,spotX:W/2,follow:fol});
+  ART.setForce(FX.disco?{disco:1}:null);
+  ART.fxBack(g,W,H,lay,fx,{now:Date.now(),jumbo:false});
+  var P=ART.sceneP(W,H),sb=0.30*H,fl0=0.30*H,fl1=0.78*H,i;
+  /* a performer on the stage and a few dancers on the floor, so you can see how the light falls on people */
+  ART.drawChar(g,W/2,sb-P*5,P,perfLook,ART.dance(0,0,[0,0,0,0],bp));
+  for(i=0;i<crew.length;i++){var d=ART.dance(1+(i%4),0,[0,0,0,0],bp);ART.drawChar(g,W*(0.18+i*0.16),fl0+(fl1-fl0)*(0.35+0.4*((i*0.37)%1)),P*1.1,crew[i],d);}
+  var holes=[{x:W/2,y:sb-P*5,r:Math.max(90,W*0.12)},{x:W*0.5,y:fl0+(fl1-fl0)*0.5,r:90}];
+  ART.fxFront(g,W,H,{stageBottom:0.30,floorBottom:0.78},fx,{now:Date.now(),phase:ph,holes:holes});
+}
+function pose(){
+  var p=AS.pose;return{armL:p.armL,armR:p.armR,legL:p.legL,legR:p.legR,bob:p.bob,dx:p.dx,rot:p.rot};
+}
+function drawAsset(now){
+  var W=cv.width,H=cv.height,P=Math.max(2,Math.round(H/55*AS.zoom)),cs=P;
+  g.clearRect(0,0,W,H);g.fillStyle=AS.bg;g.fillRect(0,0,W,H);
+  g.strokeStyle="rgba(255,255,255,.05)";for(var x=0;x<W;x+=P*8){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke();}for(var y=0;y<H;y+=P*8){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}
+  var bp=AS.q,cx=W/2,cy=H*0.62;
+  if(AS.cat==="char"){ART.drawChar(g,cx,cy,cs,AS.look,pose());}
+  else if(AS.cat==="dance"){
+    var c=[0,0,0,0],base=ART.base(AS.style,AS.sub,c,bp),tw=ART.dance(AS.style,AS.sub,c,bp);
+    ART.drawChar(g,W*0.3,cy,cs,AS.look,base);ART.drawChar(g,W*0.7,cy,cs,AS.look,tw);
+    /* the frame being edited: the tweaked pose plus the sliders' nudge, drawn big in the middle faintly */
+    g.fillStyle="rgba(255,255,255,.55)";g.font="12px system-ui";g.textAlign="center";g.fillText("original",W*0.3,H*0.12);g.fillText("with your tweaks"+(AS.nudgeOn?" + nudge":""),W*0.7,H*0.12);
+    if(AS.nudgeOn){var o2=Object.assign({},tw);ART.DTWEAK.fields.forEach(function(f){o2[f]=(o2[f]||0)+AS.nudge[f];});ART.drawChar(g,W*0.5,cy,cs,AS.look,o2);}
+  }else if(AS.cat==="inst"){
+    var st={midi:AS.midi,on:AS.noteOn,t0:now-((now/700)%1)*700,off:now-2000,now:now,n:8};
+    ART.INST.draw(g,cx,cy,cs,AS.look,AS.kind,st);
+  }else if(AS.cat==="prop"){
+    var pr=AS.prop;
+    if(pr==="keyboard")ART.keyboard(g,cx-cs*10,cy,cs,[Math.floor(now/300)%12],"#D354A0");
+    else if(pr==="mic")ART.micStand(g,cx,cy,cs);
+    else if(pr==="keypad"){ART.keyPad(g,cx-cs*13,H*0.25,cs,{mods:{space:true,d:false,e:false,three:false},dir:["up","right","down","left"][Math.floor(now/600)%4],col:"#1D9E75",modCols:{space:"#1D9E75",d:"#D85A30",e:"#EF9F27",three:"#5DCB42"},age:300});}
+    else if(pr==="balloon"||pr==="ball"||pr==="feather"){var Pf=function(x,y,z){return[x*W,y*H-z*2];};var t2=now/1000;
+      ART.KEEPY.draw(g,[{type:pr,s:{x:0.5,y:0.7,z:30+Math.sin(t2*2)*14,vx:0,vy:0,vz:0,t:0},down:0,streak:0}],Pf,cs*0.7,now);}
+    else if(pr==="rink"||pr==="ice"){var G=ART.rinkGeom(W,H*0.12,H*0.95);ART.rink(g,G,now,1,pr==="ice");}
+    else if(pr==="disco"){ART.setForce({disco:1});var lay0={stageBottom:0.30,floorBottom:0.78};ART.fxBack(g,W,H,lay0,{},{now:Date.now(),jumbo:false});ART.fxFront(g,W,H,lay0,{},{now:Date.now(),phase:beatPhase(now),holes:[]});ART.setForce(null);}
+  }
+}
+var last=0;
+function frame(now){
+  requestAnimationFrame(frame);
+  if(mode==="stage")drawStage(now);
+  else{
+    if(AS.play&&AS.cat==="dance"){AS.q=(AS.q+((now-(last||now))/(60000/SIM.bpm))*AS.speed)%4;var qs=$("qScrub");if(qs&&document.activeElement!==qs){qs.value=AS.q;$("qOut").textContent=AS.q.toFixed(2);}}
+    drawAsset(now);
+    cv.style.filter=[AS.f.bright!==1?"brightness("+AS.f.bright+")":"",AS.f.contrast!==1?"contrast("+AS.f.contrast+")":"",AS.f.sat!==1?"saturate("+AS.f.sat+")":"",AS.f.hue?"hue-rotate("+AS.f.hue+"deg)":""].join(" ").trim();
+  }
+  if(mode==="stage")cv.style.filter=GFX.filter();
+  last=now;
+}
+/* ---------- side panel: GFX groups ---------- */
+function groupPanel(grp){
+  var body=$("body");body.textContent="";var ab=mk("div","about",grp.about);var rg=mk("button","","Reset this section");rg.style.cssText="display:block;margin-top:8px";rg.onclick=function(){GFX.resetGroup(grp.id);build();};ab.appendChild(rg);body.appendChild(ab);
+  grp.vars.forEach(function(x){
+    var row=mk("div","row"+(GFX.has(x.k)?" ch":"")),t=mk("div","t");t.appendChild(mk("span","",x.label));
+    var rs=mk("button","","↺");rs.title="back to "+x.def;rs.onclick=function(){GFX.reset(x.k);build();};t.appendChild(rs);row.appendChild(t);row.appendChild(mk("small","",x.help));
+    var c=mk("div","c");
+    if(x.type==="color"){var ci=document.createElement("input");ci.type="color";ci.value=GFX.v(x.k);ci.oninput=function(){GFX.set(x.k,ci.value);row.className="row"+(GFX.has(x.k)?" ch":"");};c.appendChild(ci);c.appendChild(mk("span","d","default "+x.def));}
+    else{var sl=document.createElement("input"),nu=document.createElement("input");sl.type="range";sl.min=x.min;sl.max=x.max;sl.step=x.step;sl.value=GFX.v(x.k);nu.type="number";nu.min=x.min;nu.max=x.max;nu.step=x.step;nu.value=fmt(GFX.v(x.k));
+      sl.oninput=function(){GFX.set(x.k,+sl.value);nu.value=fmt(GFX.v(x.k));row.className="row"+(GFX.has(x.k)?" ch":"");};
+      nu.onchange=function(){GFX.set(x.k,+nu.value);sl.value=GFX.v(x.k);nu.value=fmt(GFX.v(x.k));row.className="row"+(GFX.has(x.k)?" ch":"");};
+      c.appendChild(sl);c.appendChild(nu);c.appendChild(mk("span","d","default "+fmt(x.def)+(x.unit?" "+x.unit:"")));}
+    row.appendChild(c);body.appendChild(row);});
+}
+/* ---------- assets panel ---------- */
+function slider(parent,label,help,val,min,max,step,on,def){
+  var row=mk("div","row"),t=mk("div","t");t.appendChild(mk("span","",label));row.appendChild(t);if(help)row.appendChild(mk("small","",help));
+  var c=mk("div","c"),sl=document.createElement("input"),nu=document.createElement("input");sl.type="range";sl.min=min;sl.max=max;sl.step=step;sl.value=val;nu.type="number";nu.min=min;nu.max=max;nu.step=step;nu.value=fmt(val);
+  sl.oninput=function(){nu.value=fmt(+sl.value);on(+sl.value);};nu.onchange=function(){sl.value=+nu.value;on(+nu.value);};
+  c.appendChild(sl);c.appendChild(nu);row.appendChild(c);parent.appendChild(row);return{sl:sl,nu:nu};
+}
+function adjPanel(body){
+  var h=mk("div","about");h.appendChild(mk("div","","Look of this asset: brightness, contrast, saturation and hue. These are saved against the asset's name and appear in the share box, so I can apply them to the artwork."));
+  var sv=mk("button","go","Save this look");sv.style.marginTop="8px";sv.onclick=function(){var f=AS.f,k=assetKey();if(f.bright===1&&f.contrast===1&&f.sat===1&&!f.hue)delete ASSETADJ[k];else ASSETADJ[k]={bright:f.bright,contrast:f.contrast,sat:f.sat,hue:f.hue};saveAdj();share();sv.textContent="Saved ✓";setTimeout(function(){sv.textContent="Save this look";},1200);};
+  var rs=mk("button","","Reset look");rs.style.cssText="margin:8px 0 0 6px";rs.onclick=function(){AS.f={bright:1,contrast:1,sat:1,hue:0};delete ASSETADJ[assetKey()];saveAdj();share();assetPanel();};
+  h.appendChild(sv);h.appendChild(rs);body.appendChild(h);
+  slider(body,"Brightness","1 is normal.",AS.f.bright,0.3,2.5,0.02,function(v){AS.f.bright=v;});
+  slider(body,"Contrast","",AS.f.contrast,0.3,2.5,0.02,function(v){AS.f.contrast=v;});
+  slider(body,"Saturation","0 is greyscale.",AS.f.sat,0,3,0.02,function(v){AS.f.sat=v;});
+  slider(body,"Hue shift","Rotates the colours.",AS.f.hue,-180,180,1,function(v){AS.f.hue=v;});
+}
+function poseSliders(body,obj,onchg){
+  var R={armL:[-3.3,3.3,"Left arm angle"],armR:[-3.3,3.3,"Right arm angle"],legL:[-1.2,1.2,"Left leg"],legR:[-1.2,1.2,"Right leg"],bob:[-12,12,"Body bounce (up/down)"],dx:[-14,14,"Sideways shift"],rot:[-0.6,0.6,"Body tilt"]};
+  ART.DTWEAK.fields.forEach(function(f){slider(body,R[f][2],"",obj[f],R[f][0],R[f][1],0.01,function(v){obj[f]=v;if(onchg)onchg();});});
+}
+function dtText(){var all=ART.DTWEAK.all(),lines=[],k;for(k in all)all[k].forEach(function(e){var n=ART.DANCES[+k.split(".")[0]];lines.push("DANCE "+(n?n.name:k)+" ("+k+") beat "+e.q+": "+ART.DTWEAK.fields.filter(function(f){return e[f];}).map(function(f){return f+" "+(e[f]>0?"+":"")+e[f];}).join(", "));});return lines;}
+function share(){
+  var ex=[],dl=dtText();if(dl.length){ex.push("[Dance frame tweaks]");ex=ex.concat(dl);ex.push("DANCE-JSON: "+JSON.stringify(ART.DTWEAK.all()));}
+  var ak=Object.keys(ASSETADJ);if(ak.length){ex.push("","[Asset looks]");ak.forEach(function(k){var a=ASSETADJ[k];ex.push("ASSET "+k+": brightness "+a.bright+", contrast "+a.contrast+", saturation "+a.sat+", hue "+a.hue);});ex.push("ASSET-JSON: "+JSON.stringify(ASSETADJ));}
+  var sh=$("share");if(document.activeElement!==sh)sh.value=GFX.exportText(ex.join("\n"));
+}
+function assetPanel(){
+  var body=$("body");body.textContent="";loadAdj();var row=$("assetrow");row.textContent="";
+  function sel(label,opts,val,on){var l=mk("label","",label+" "),s=document.createElement("select");opts.forEach(function(o){var e=document.createElement("option");e.value=o[0];e.textContent=o[1];s.appendChild(e);});s.value=val;s.onchange=function(){on(s.value);};l.appendChild(s);row.appendChild(l);return s;}
+  sel("Asset type",[["char","Character"],["dance","Dance"],["inst","Instrument"],["prop","Prop / object"]],AS.cat,function(v){AS.cat=v;assetPanel();});
+  if(AS.cat==="dance"){
+    sel("Dance",ART.DANCES.map(function(d,i){return[i,d.icon+" "+d.name];}).slice(1),AS.style,function(v){AS.style=+v;AS.sub=0;assetPanel();});
+    var subs=ART.DANCES[AS.style].subs||[];if(subs.length)sel("Variation",subs.map(function(s,i){return[i,s];}),AS.sub,function(v){AS.sub=+v;assetPanel();});
+  }
+  if(AS.cat==="inst")sel("Instrument",ART.INST.KINDS.map(function(k){return[k,k];}),AS.kind,function(v){AS.kind=v;assetPanel();});
+  if(AS.cat==="prop")sel("Object",[["keyboard","Keyboard"],["mic","Mic stand"],["keypad","Performer key panel"],["balloon","Keepy: balloon"],["ball","Keepy: ball"],["feather","Keepy: feather"],["rink","Roller rink"],["ice","Ice rink"],["disco","Disco ball"]],AS.prop,function(v){AS.prop=v;assetPanel();});
+  if(AS.cat!=="prop"){var rl=mk("button","","🎲 New character");rl.onclick=function(){AS.look=ART.looks.random((Math.random()*9999)|0);};row.appendChild(rl);}
+  var bgl=mk("label","","Background "),bgi=document.createElement("input");bgi.type="color";bgi.value=AS.bg;bgi.oninput=function(){AS.bg=bgi.value;};bgl.appendChild(bgi);row.appendChild(bgl);
+  var zl=mk("label","","Zoom "),zi=document.createElement("input");zi.type="range";zi.min=0.5;zi.max=2.5;zi.step=0.1;zi.value=AS.zoom;zi.oninput=function(){AS.zoom=+zi.value;};zl.appendChild(zi);row.appendChild(zl);
+  if(AS.cat==="char"){body.appendChild(mk("div","about","Pose a character by hand. Arm and leg angles are in radians; this is the same pose data every dance and game animation uses."));poseSliders(body,AS.pose);}
+  if(AS.cat==="dance"){
+    var d=ART.DANCES[AS.style],ab=mk("div","about");ab.appendChild(mk("div","","Each dance loops every 4 beats. Left character is the original, right is with your saved tweaks. Scrub to a frame, move the nudge sliders, then Save frame. The tweak fades in and out around that beat, and the animation plays with it everywhere on this device. "+(d.help||"")));
+    var pl=mk("button",AS.play?"on":"",AS.play?"⏸ Pause":"▶ Play");pl.style.marginTop="8px";pl.onclick=function(){AS.play=!AS.play;pl.textContent=AS.play?"⏸ Pause":"▶ Play";pl.className=AS.play?"on":"";};ab.appendChild(pl);body.appendChild(ab);
+    var qr=slider(body,"Frame (beat 0 to 4)","Scrub the loop. Playing moves this on its own.",AS.q,0,3.99,0.01,function(v){AS.play=false;pl.textContent="▶ Play";pl.className="";AS.q=v;$("qOut")&&($("qOut").textContent=v.toFixed(2));});qr.sl.id="qScrub";qr.nu.id="qOut";qr.nu.style.display="none";
+    var qo=mk("div","d","");qo.id="qOut";qo.textContent=AS.q.toFixed(2);qr.nu.parentNode.appendChild(qo);
+    slider(body,"Speed","Playback speed.",AS.speed,0.1,2,0.05,function(v){AS.speed=v;});
+    var kf=ART.DTWEAK.get(AS.style,AS.sub),chips=mk("div","chips");chips.appendChild(mk("span","d","Saved frames: "+(kf.length?"":"none")));
+    kf.forEach(function(e){var b=mk("button","","beat "+e.q);b.onclick=function(){AS.play=false;AS.q=e.q;ART.DTWEAK.fields.forEach(function(f){AS.nudge[f]=e[f]||0;});AS.nudgeOn=true;assetPanel();};chips.appendChild(b);});body.appendChild(chips);
+    var nd=mk("div","about","Nudge this frame: add to the pose at the frame above. Positive and negative both work. The middle character previews it."),sv=mk("button","go","Save frame at this beat");sv.style.marginTop="8px";
+    sv.onclick=function(){ART.DTWEAK.set(AS.style,AS.sub,AS.q,AS.nudge);AS.nudgeOn=false;AS.nudge={armL:0,armR:0,legL:0,legR:0,bob:0,dx:0,rot:0};share();assetPanel();};
+    var rm=mk("button","","Remove frame");rm.style.cssText="margin:8px 0 0 6px";rm.onclick=function(){ART.DTWEAK.set(AS.style,AS.sub,AS.q,{});AS.nudgeOn=false;share();assetPanel();};
+    var cl=mk("button","","Clear this dance's tweaks");cl.style.cssText="margin:8px 0 0 6px";cl.onclick=function(){ART.DTWEAK.clear(AS.style,AS.sub);share();assetPanel();};
+    nd.appendChild(sv);nd.appendChild(rm);nd.appendChild(cl);body.appendChild(nd);AS.nudgeOn=true;poseSliders(body,AS.nudge);
+    var cur=ART.dance(AS.style,AS.sub,[0,0,0,0],AS.q);body.appendChild(mk("div","d","Pose at this frame (with tweaks): "+ART.DTWEAK.fields.map(function(f){return f+" "+(cur[f]||0).toFixed(2);}).join(" · ")));
+  }
+  if(AS.cat==="inst"){
+    body.appendChild(mk("div","about","The instrument being played by the performer. Move the note up and down the range to see the hands move; turn the note off to see the resting pose."));
+    slider(body,"Note (MIDI)","Which note is playing, 36 low to 96 high.",AS.midi,36,96,1,function(v){AS.midi=v;});
+    var nb=mk("button",AS.noteOn?"on":"",AS.noteOn?"Note on":"Note off");nb.onclick=function(){AS.noteOn=!AS.noteOn;nb.textContent=AS.noteOn?"Note on":"Note off";nb.className=AS.noteOn?"on":"";};body.appendChild(nb);
+  }
+  if(AS.cat==="prop")body.appendChild(mk("div","about","Objects and set pieces. Use the look sliders below to try a different brightness or colour balance."));
+  adjPanel(body);
+  share();
+}
+/* ---------- stage panel: effect row ---------- */
+function fxRow(){
+  var r=$("fxrow");r.textContent="";
+  function sel(label,key,opts){var l=mk("label","",label+" "),s=document.createElement("select");opts.forEach(function(o){var e=document.createElement("option");e.value=o;e.textContent=o;s.appendChild(e);});s.value=FX[key];s.onchange=function(){FX[key]=s.value;};l.appendChild(s);r.appendChild(l);}
+  function tog(label,key){var b=mk("button",FX[key]?"on":"",label);b.onclick=function(){FX[key]=FX[key]?0:1;b.className=FX[key]?"on":"";};r.appendChild(b);}
+  sel("Lights","lights",["auto","party","warm","cool","spot","strobe","edm","off"]);
+  sel("Weather","weather",["none","rain","storm","snow"]);
+  var fl=mk("label","","Fog "),fi=document.createElement("input");fi.type="range";fi.min=0;fi.max=1;fi.step=0.05;fi.value=FX.fog;fi.oninput=function(){FX.fog=+fi.value;};fl.appendChild(fi);r.appendChild(fl);
+  var dl=mk("label","","Dark "),di=document.createElement("input");di.type="range";di.min=0;di.max=1;di.step=0.05;di.value=FX.dark;di.oninput=function(){FX.dark=+di.value;};dl.appendChild(di);r.appendChild(dl);
+  tog("Lasers","lasers");tog("Fireworks","fireworks");tog("Neon night","neon");tog("Disco ball","disco");tog("Sunset","sunset");tog("Fire","fire");tog("Follow the notes","follow");
+  var bu=mk("button","","💥 Burst");bu.onclick=function(){FX.burst=Date.now();};r.appendChild(bu);
+  var pl=mk("button",SIM.playing?"on":"","Music playing");pl.onclick=function(){SIM.playing=!SIM.playing;pl.className=SIM.playing?"on":"";};r.appendChild(pl);
+  var bl=mk("label","","BPM "),bi=document.createElement("input");bi.type="number";bi.min=60;bi.max=200;bi.value=SIM.bpm;bi.style.width="64px";bi.onchange=function(){SIM.bpm=Math.max(60,Math.min(200,+bi.value||128));};bl.appendChild(bi);r.appendChild(bl);
+}
+/* ---------- build ---------- */
+function build(){
+  var t=$("tabs");t.textContent="";
+  if(mode==="stage"){
+    GFX.groups.forEach(function(x){var b=mk("button",x.id===tab?"on":"",x.icon+" "+x.name);b.onclick=function(){tab=x.id;build();};t.appendChild(b);});
+    groupPanel(GFX.groups.filter(function(x){return x.id===tab;})[0]||GFX.groups[0]);share();
+  }else assetPanel();
+}
+function setMode(m){mode=m;$("mStage").className=m==="stage"?"on":"";$("mAssets").className=m==="assets"?"on":"";$("fxrow").style.display=m==="stage"?"flex":"none";$("assetrow").style.display=m==="assets"?"flex":"none";size();build();}
+$("mStage").onclick=function(){setMode("stage");};$("mAssets").onclick=function(){setMode("assets");};
+$("bCopy").onclick=function(){var ta=$("share");ta.value=ta.value;ta.select();var okc=false;try{okc=document.execCommand("copy");}catch(e){}
+  var done=function(){$("bCopy").textContent="Copied ✓";setTimeout(function(){$("bCopy").textContent="Copy changes";},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(done,function(){if(okc)done();});else if(okc)done();};
+$("bApply").onclick=function(){
+  var t=$("share").value,n=GFX.importText(t),m=/DANCE-JSON:\s*(\{[^\n]*\})/.exec(t),a=/ASSET-JSON:\s*(\{[^\n]*\})/.exec(t);
+  if(m){try{ART.DTWEAK.load(JSON.parse(m[1]));}catch(e){}}if(a){try{ASSETADJ=JSON.parse(a[1])||{};saveAdj();}catch(e){}}
+  $("bApply").textContent="Loaded";setTimeout(function(){$("bApply").textContent="Apply pasted";},1500);build();};
+$("bReset").onclick=function(){if(confirm("Put every graphics value, dance tweak and asset look back to its default?")){GFX.resetAll();ART.DTWEAK.clear();ASSETADJ={};saveAdj();build();}};
+GFX.onChange(share);window.addEventListener("resize",size);
+window.ukGfxLab=function(){return{mode:mode,tab:tab,as:AS,fx:FX,changed:GFX.changed(),dtweaks:ART.DTWEAK.count()};};
+size();fxRow();build();requestAnimationFrame(frame);
+})();
+</script></body></html>
