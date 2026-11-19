@@ -36,7 +36,8 @@ function songList() {
 }
 function health() {
   var viewers = 0; Object.keys(rooms).forEach(function(k) { viewers += rooms[k].viewers.size; });
-  return { ok: true, service: "unholy-keys-relay", rooms: Object.keys(rooms).length, viewers: viewers,
+  /* version and host: which server this is (the pages show "Render" or "self-hosted" from it) */
+  return { ok: true, service: "unholy-keys-relay", version: VERSION, host: HOSTED, name: HOST_NAME, rooms: Object.keys(rooms).length, viewers: viewers,
     uptimeSeconds: Math.round((Date.now() - STARTED) / 1000), node: process.version,
     streamMBSentSinceStart: Math.round(STREAM_BYTES / 1e5) / 10 };
 }
@@ -393,7 +394,10 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.38.0";
+var VERSION = "1.38.1";
+/* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
+var HOSTED = process.env.RENDER ? "render" : "self";
+var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
@@ -446,7 +450,7 @@ function onMessage(ws, raw, isBinary) {
     rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer", performerLook: look(msg.look) };
     ws.room = code;
     ws.role = "performer";
-    send(ws, { type: "room-created", room: code, version: VERSION });
+    send(ws, { type: "room-created", room: code, version: VERSION, host: HOSTED, hostName: HOST_NAME });
     console.log("Room created:", code);
     return;
   }
@@ -471,7 +475,7 @@ function onMessage(ws, raw, isBinary) {
 
     // Send room state to new viewer
     send(ws, {
-      type: "room-state", version: VERSION,
+      type: "room-state", version: VERSION, host: HOSTED, hostName: HOST_NAME,
       yourId: id,
       viewers: viewerList(roomCode),
       performerState: r.state,

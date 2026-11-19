@@ -468,3 +468,9 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - **Stage view with a video**: the note lines now show over the video (like classic jam), not hidden under it.
 - **Cello**: leans back past the player's shoulder, so you can see them behind it.
 - **Show tab → Weather → Intensity** slider: light drizzle to a downpour (rain and storm), a few flakes to a blizzard (snow).
+
+## Render vs self-hosted badge (v1.38.1)
+- Performer page: a badge under Jam/Live: **☁️ Render server** or **🏠 Self-hosted · this computer / local network / home tunnel**. It also shows in the live panel next to the room code, in jam's audience panel header and in the version line.
+- Venue: the same badge on the join screen, and in the version line.
+- Render asleep: "waking up…" until it answers. Wrong address: "not reachable".
+- Self-hosting with `UK_HOST="Bowe's PC"` adds the name.
