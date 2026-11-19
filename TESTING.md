@@ -413,3 +413,9 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 ## Performer in front of the Jumbotron (v1.32.1)
 - Jam → Stage view with a video playing (YouTube, a local video or a backing video): the performer, and any section players, stand in front of the video instead of behind it.
 - Venue with the Jumbotron down: the performer is drawn in front of the screen.
+
+## Site songs in practice (v1.33.0)
+- Put an MP3 in the repo's `songs` folder (see songs/README.md) and commit it. Open venue.html?practice: the song drop-down has an **Unholy Keys songs** group with it, titled from the file name (underscores become spaces).
+- Pick it: "Loading…" shows, then the title, and Start lights up.
+- Opened from the performer page, your Backing Tracks are listed under **Your Backing Tracks** below the site songs, and the first Backing Track is still picked automatically. Site songs only download when you pick one.
+- Running locally with `node server/server.js`, the folder is read straight from disk.

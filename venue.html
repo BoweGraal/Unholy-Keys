@@ -368,7 +368,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
       <select id="prBots"><option value="0">No other dancers</option><option value="3" selected>3 practice dancers</option><option value="8">8 practice dancers</option></select>
       <select id="prKind" title="A normal round, or a battle: 1 v 1s on the stage, knockout style"><option value="">Normal round</option><option value="battle">&#9876; Battle (1 v 1s)</option></select>
       <button id="prGo" disabled>Start round</button>
-      <div class="song" id="prSong">Pick a song from your computer to start.</div>
+      <div class="song" id="prSong">Pick a song from the list, or one from your computer.</div>
     </div>
     <div class="note" id="prNote">Arrow keys or the pad step, D F J K or drag in free dance, Esc or the X sits a round out. Points add up across practice rounds until you close the page.</div>
   </div>
@@ -3867,7 +3867,8 @@ var PRACTICE=(function(){
     if(/[?&]embed\b/.test(location.search))document.body.classList.add("embed");
     showGame();
     Array.prototype.forEach.call(document.querySelectorAll("#prGames button"),function(b){b.onclick=function(){b.blur();$("prMode").value=b.getAttribute("data-m");showGame();save();};});
-    $("prList").onchange=function(){var t=lib[+this.value];if(this.value!==""&&t)setSong(t.file,t.name);};
+    $("prList").onchange=function(){var t=lib[+this.value];if(this.value!==""&&t)pickTrack(t);};
+    loadRepoSongs();
     $("prFolder").onclick=function(){try{window.parent.postMessage({uk:"practice-pick"},location.origin);}catch(e){}};
     $("prFile").onchange=function(){if(this.files&&this.files[0]){setSong(this.files[0],this.files[0].name);$("prList").value="";}};
     $("prGo").onclick=function(){start();};
@@ -3875,19 +3876,63 @@ var PRACTICE=(function(){
     var host=window.parent!==window?window.parent:window.opener;
     if(host){try{host.postMessage({uk:"practice-ready"},location.origin);}catch(e){}}
   }
-  var lib=[];
+  var lib=[],REPO=[],TRACKS=[];
+  /* ---- the site's own songs: whatever is in the repo's /songs folder ----
+     From this app's own server, /songs/list.json lists the folder. On GitHub Pages (which can't list a folder)
+     GitHub's API lists it instead: drop a song in the folder and it shows up here, no list to keep. */
+  function repoInfo(){
+    var h=location.hostname,m=h.match(/^([^.]+)\.github\.io$/i),seg=location.pathname.split("/").filter(Boolean)[0];
+    if(m&&seg&&!/\.html$/i.test(seg))return{owner:m[1],repo:seg};
+    return{owner:"BoweGraal",repo:"Unholy-Keys"};
+  }
+  function songTitle(f){return f.replace(/\.[a-z0-9]+$/i,"").replace(/[_]+/g," ").replace(/\s+/g," ").trim();}
+  function loadRepoSongs(){
+    var EXT=/\.(mp3|ogg|m4a|wav|flac|aac|opus)$/i;
+    function useList(files){REPO=files.filter(function(f){return EXT.test(f.name);}).sort(function(a,b){return a.name.localeCompare(b.name);})
+      .map(function(f){return{name:songTitle(f.name),url:"songs/"+encodeURIComponent(f.name),alt:f.alt||null};});renderList();}
+    fetch("songs/list.json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(names){if(!Array.isArray(names))throw 0;useList(names.map(function(n){return{name:String(n)};}));})
+      .catch(function(){var ri=repoInfo();
+        return fetch("https://api.github.com/repos/"+ri.owner+"/"+ri.repo+"/contents/songs").then(function(r){if(!r.ok)throw 0;return r.json();})
+          .then(function(items){if(!Array.isArray(items))return;
+            /* on Pages the song is next to this page; elsewhere fall back to GitHub's raw file link */
+            useList(items.filter(function(it){return it&&it.type==="file";}).map(function(it){return{name:it.name,alt:it.download_url};}));});})
+      .catch(function(){});
+  }
+  /* the drop-down: the site's songs, then the performer's Backing Tracks (when opened from the performer page) */
+  function renderList(selName){
+    var sel=$("prList"),keep=sel.value!==""&&lib[+sel.value]?lib[+sel.value].name:null;sel.textContent="";
+    lib=REPO.concat(TRACKS);
+    var o0=document.createElement("option");o0.value="";o0.textContent=lib.length?"Pick a song ("+lib.length+")…":(document.body.classList.contains("embed")?"No Backing Tracks loaded":"Pick a song…");sel.appendChild(o0);
+    var pick=-1;
+    function group(label,list,off){if(!list.length)return;var gp=document.createElement("optgroup");gp.label=label;
+      list.forEach(function(t,i){var o=document.createElement("option");o.value=String(off+i);o.textContent=safeText(t.name,90);gp.appendChild(o);
+        if((selName&&t.name===selName)||(!selName&&keep&&t.name===keep))pick=off+i;});sel.appendChild(gp);}
+    group("Unholy Keys songs",REPO,0);group("Your Backing Tracks",TRACKS,REPO.length);
+    if(pick>=0)sel.value=String(pick);
+    return pick;
+  }
+  /* a song from the list: a Backing Track is already a file; a site song is downloaded when picked */
+  var pickSeq=0;
+  function pickTrack(t){
+    if(t.file){setSong(t.file,t.name);return;}
+    var my=++pickSeq;$("prSong").textContent="Loading "+t.name+"…";$("prGo").disabled=true;
+    function get(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.blob();});}
+    get(t.url).catch(function(e){if(t.alt)return get(t.alt);throw e;})
+      .then(function(b){if(my===pickSeq)setSong(b,t.name);})
+      .catch(function(){if(my===pickSeq){$("prSong").textContent="Couldn't load "+t.name+". Try another song.";}});
+  }
+  window.ukPracticeSongs=function(){return REPO.map(function(t){return t.name;});};
   function showGame(){var m=$("prMode").value;Array.prototype.forEach.call(document.querySelectorAll("#prGames button"),function(b){b.classList.toggle("on",b.getAttribute("data-m")===m);});}
   /* the performer page's Backing Tracks, sent over when practice opens */
   function setLib(tracks,selected){
-    lib=(tracks||[]).filter(function(t){return t&&t.file;}).slice(0,2000);
-    var sel=$("prList");sel.textContent="";
-    var o0=document.createElement("option");o0.value="";o0.textContent=lib.length?"Pick a song from your Backing Tracks ("+lib.length+")…":"No Backing Tracks loaded";sel.appendChild(o0);
-    var pick=-1;
-    lib.forEach(function(t,i){var o=document.createElement("option");o.value=String(i);o.textContent=safeText(t.name,90);sel.appendChild(o);if(selected&&t.name===selected)pick=i;});
+    TRACKS=(tracks||[]).filter(function(t){return t&&t.file;}).slice(0,2000);
+    var pick=renderList(selected);
     $("prFolder").style.display=document.body.classList.contains("embed")?"":"none";
     $("prFolder").textContent=lib.length?"📁 Change folder":"📁 Pick Backing Tracks folder";
-    if(pick<0&&!file&&lib.length)pick=0;
-    if(pick>=0){sel.value=String(pick);setSong(lib[pick].file,lib[pick].name);}
+    /* nothing picked yet: start on the first Backing Track (site songs download only when you pick one) */
+    if(pick<0&&!file&&TRACKS.length)pick=REPO.length;
+    if(pick>=0){$("prList").value=String(pick);pickTrack(lib[pick]);}
   }
   function save(){try{localStorage.setItem("uk_practice",JSON.stringify({kind:$("prKind").value,mode:$("prMode").value,secs:+$("prSecs").value,level:+$("prLevel").value,bots:+$("prBots").value}));}catch(e){}}
   window.addEventListener("message",function(e){
@@ -4465,7 +4510,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.32.1",SERVER_VERSION="";
+var PAGE_VERSION="1.33.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}

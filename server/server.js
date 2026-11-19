@@ -25,7 +25,14 @@ var STREAM_BYTES = 0;   /* stream data sent to viewers since the server started 
 var WEB_ROOT = path.resolve(__dirname, "..");
 var TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json",
   ".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif", ".svg": "image/svg+xml", ".ico": "image/x-icon",
-  ".wav": "audio/wav", ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".ogg": "audio/ogg" };
+  ".wav": "audio/wav", ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".ogg": "audio/ogg", ".flac": "audio/flac", ".aac": "audio/aac", ".opus": "audio/ogg", ".md": "text/plain; charset=utf-8" };
+/* the practice songs in /songs, for dance practice's song list (GitHub Pages can't list a folder, so the
+   page asks GitHub's API there; when the pages come from this server it asks here) */
+var SONG_EXT = /\.(mp3|ogg|m4a|wav|flac|aac|opus)$/i;
+function songList() {
+  try { return fs.readdirSync(path.join(WEB_ROOT, "songs")).filter(function(f) { return SONG_EXT.test(f) && f.charAt(0) !== "."; }).sort(); }
+  catch (e) { return []; }
+}
 function health() {
   var viewers = 0; Object.keys(rooms).forEach(function(k) { viewers += rooms[k].viewers.size; });
   return { ok: true, service: "unholy-keys-relay", rooms: Object.keys(rooms).length, viewers: viewers,
@@ -37,6 +44,10 @@ var server = http.createServer(function(req, res) {
   if (url === "/health") {
     res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" });
     return res.end(JSON.stringify(health()));
+  }
+  if (url === "/songs/list.json") {
+    res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-cache" });
+    return res.end(JSON.stringify(songList()));
   }
   var rel;
   try { rel = decodeURIComponent(url); } catch (e) { res.writeHead(400); return res.end("Bad request"); }
@@ -378,7 +389,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.32.1";
+var VERSION = "1.33.0";
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
