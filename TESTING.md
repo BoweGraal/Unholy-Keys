@@ -436,3 +436,8 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - In the venue: the performer is in the crowd instead of on the stage, walking where you walk.
 - Esc or **🎤 Back on stage**: you're back at your instrument for everyone, and notes play again. Leaving jam also puts you back.
 - The audience can already talk (Enter or Talk) and free dance between songs (Dance → Free dance).
+
+## Just-listen songs and room-filling bots (v1.36.0)
+- Music tab → Dance rounds → "When I play a backing track": **no game: everyone just listens & hangs out** (the default). The song plays, with no countdown and no game. The audience walks, talks, reacts, and can Dance → Free dance whenever they like.
+- **🤖 Fill the room with bots: up to N people** (2–8, remembered). Go live: bots join until the room has N people. Each real person who joins takes a bot's place, and when someone leaves a bot fills in. Set it to off and they all leave.
+- Bots have 🤖 in their names. They walk around, chat now and then (no two say the same line within 2 minutes), react while music plays, and sometimes free dance between songs. In rounds they dance, post decent (rarely winning) scores, vote in free-dance rounds and battles, and push in the mosh pit's wall of death.

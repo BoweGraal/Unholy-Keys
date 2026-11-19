@@ -391,7 +391,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.35.0";
+var VERSION = "1.36.0";
 function showFx(f) {
   if (!f || typeof f !== "object") return null;
   function lvl(v) { v = +v; return isFinite(v) ? Math.max(0, Math.min(1, Math.round(v * 100) / 100)) : 0; }
@@ -427,220 +427,232 @@ function allow(ws, key, burst, perSec) {
   s.n -= 1; return true;
 }
 
+/* one message from a connection (also used by the room-filling bots, whose "connections" live in this process) */
+function onMessage(ws, raw, isBinary) {
+  /* only the performer's stream packets may exceed 16 KB; anything else that large drops the sender */
+  if (isBinary && ws.role === "performer") { relayStream(ws, raw); return; }
+  if (raw.length > 16 * 1024) { try { ws.terminate(); } catch (e) {} return; }
+  if (isBinary) return;
+  var msg;
+  try { msg = JSON.parse(raw); } catch(e) { return; }
+  if (!msg || typeof msg !== "object" || typeof msg.type !== "string") return;
+
+  /* ── Performer creates room ── */
+  if (msg.type === "create-room") {
+    if (ws.role) return;                       // one role per connection
+    var code = genCode();                      // never a client-chosen code: that let anyone take over a live room
+    rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer", performerLook: look(msg.look) };
+    ws.room = code;
+    ws.role = "performer";
+    send(ws, { type: "room-created", room: code, version: VERSION });
+    console.log("Room created:", code);
+    return;
+  }
+
+  /* ── Audience joins room ── */
+  if (msg.type === "join-room") {
+    if (ws.role) return;
+    var roomCode = str(msg.room, 12).toUpperCase();
+    var r = rooms[roomCode];
+    if (!r) { send(ws, { type: "error", msg: "Room not found" }); return; }
+    if (r.viewers.size >= MAX_VIEWERS) { send(ws, { type: "error", msg: "Room is full" }); return; }
+    var id = genId();
+    ws.room = roomCode;
+    ws.role = "viewer";
+    ws.viewerId = id;
+    ws.viewerName = str(msg.name, 24) || "Anonymous";
+    ws.viewerColor = color(msg.color);
+    ws.viewerLook = look(msg.look);
+    var startX = +(0.25 + Math.random() * 0.5).toFixed(3);   // 0.25–0.75 normalized
+    var startY = +(0.35 + Math.random() * 0.30).toFixed(3); // 0.35–0.65 normalized
+    r.viewers.set(id, { ws: ws, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor, look: ws.viewerLook });
+
+    // Send room state to new viewer
+    send(ws, {
+      type: "room-state", version: VERSION,
+      yourId: id,
+      viewers: viewerList(roomCode),
+      performerState: r.state,
+      video: liveVideo(r),
+      stream: r.stream || null,
+      performer: { name: r.performerName || "Performer", look: r.performerLook || "" },
+      round: roundPublic(r),
+      totals: totalsList(r),
+      fx: r.fx || null,
+      perfPos: r.perfPos || null
+    });
+
+    // Notify everyone else
+    broadcast(roomCode, { type: "viewer-join", id: id, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor, look: ws.viewerLook }, ws);
+
+    // Tell performer viewer count
+    if (r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
+    if (!ws.bot) console.log(ws.viewerName, "joined room", roomCode, "(" + r.viewers.size + " viewers)");
+    if (r.botFill && !ws.bot) setImmediate(function() { BOTS.rebalance(roomCode); });   /* a real person: a bot makes room */
+    return;
+  }
+
+  /* ── Performer broadcasts ── */
+  if (ws.role === "performer" && ws.room && rooms[ws.room]) {
+    if (msg.type === "round-start" || msg.type === "round-play" || msg.type === "round-end" || msg.type === "round-vote" || msg.type === "round-bvote") { roundMessage(ws, msg); return; }
+    /* fill the room with bots up to this many people (0 = no bots) */
+    if (msg.type === "bots") { BOTS.setFill(ws.room, msg.fill); return; }
+    if (!PERFORMER_TYPES[msg.type]) return;
+    if (msg.type === "state") rooms[ws.room].state = msg;
+    if (msg.type === "video") { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); }
+    if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
+    if (msg.type === "show-fx") {
+      // the show's effects (lights, fog, lasers, darkness, weather, sunset, fire, fireworks): kept for latecomers
+      var fx = showFx(msg.fx); if (!fx) return;
+      rooms[ws.room].fx = fx;
+      broadcast(ws.room, { type: "show-fx", fx: fx }, ws);
+      return;
+    }
+    /* hanging out between songs: the performer walks the floor (on = off the stage, x/y where on the floor) */
+    if (msg.type === "perf-pos") {
+      var hx = unit(msg.x), hy = unit(msg.y);
+      if (hx === null || hy === null || !allow(ws, "ppos", 20, 15)) return;
+      rooms[ws.room].perfPos = { on: msg.on ? 1 : 0, x: hx, y: hy };
+      broadcast(ws.room, { type: "perf-pos", on: msg.on ? 1 : 0, x: hx, y: hy }, ws);
+      return;
+    }
+    /* the performer talking: everyone sees it in the chat and over the performer's head */
+    if (msg.type === "perf-chat") {
+      var ptext = str(msg.text, 300);
+      if (!ptext || !allow(ws, "chat", 5, 1)) return;
+      broadcast(ws.room, { type: "chat", id: "performer", viewerId: "performer", perf: 1, name: rooms[ws.room].performerName || "Performer", color: "#F5C518", text: ptext }, ws);
+      return;
+    }
+    if (msg.type === "perf-name") {
+      rooms[ws.room].performerName = str(msg.name, 24) || "Performer";
+      if (look(msg.look)) rooms[ws.room].performerLook = look(msg.look);
+      broadcast(ws.room, { type: "perf-name", name: rooms[ws.room].performerName, look: rooms[ws.room].performerLook || "" }, ws);
+      return;
+    }
+    broadcast(ws.room, msg, ws);
+    return;
+  }
+
+  /* ── Viewer messages: chat, position, dancing, dance poses, round scores and votes only ── */
+  if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
+    if (msg.type === "chat") {
+      var text = str(msg.text, 300);
+      if (!text || !allow(ws, "chat", 5, 1)) return;
+      broadcast(ws.room, { type: "chat", id: ws.viewerId, viewerId: ws.viewerId, name: ws.viewerName, color: ws.viewerColor, text: text }, ws);
+      return;
+    }
+    if (msg.type === "react") {
+      /* a quick reaction everyone sees on this dancer: jump, hearts, a big heart, applause, a whistle */
+      if (REACTS.indexOf(msg.k) < 0) return;
+      if (!allow(ws, "react", 8, 3) || (msg.k === "bigheart" && !allow(ws, "bigheart", 1, 0.25))) return;
+      broadcast(ws.room, { type: "react", id: ws.viewerId, k: msg.k }, ws);
+      return;
+    }
+    if (msg.type === "pos") {
+      var x = unit(msg.x), y = unit(msg.y);
+      if (x === null || y === null || !allow(ws, "pos", 20, 15)) return;
+      var v = rooms[ws.room].viewers.get(ws.viewerId);
+      if (v) { v.x = x; v.y = y; }
+      broadcast(ws.room, { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y }, ws);
+      return;
+    }
+    if (msg.type === "dance") {
+      // 0 = stopped, 1-3 = canned dances, 4 = free dance, 5 = step game
+      var style = Math.max(0, Math.min(5, Math.floor(+msg.style || 0)));
+      if (!allow(ws, "dance", 6, 2)) return;
+      var dv = rooms[ws.room].viewers.get(ws.viewerId);
+      if (dv) { dv.dance = style; if (style < 4) dv.pose = null; }
+      broadcast(ws.room, { type: "dance", id: ws.viewerId, style: style }, ws);
+      return;
+    }
+    if (msg.type === "pose") {
+      // limb angles for the dance games: [left arm, right arm, left leg, right leg] in hundredths of a radian,
+      // plus the step-game combo. Everything is clamped; nothing else in the message is passed on.
+      if (!Array.isArray(msg.a) || msg.a.length !== 4 || !allow(ws, "pose", 14, 12)) return;
+      var a = [];
+      for (var pi = 0; pi < 4; pi++) {
+        var n = Math.round(+msg.a[pi]);
+        if (!isFinite(n)) return;
+        a.push(Math.max(-320, Math.min(320, n)));
+      }
+      var combo = Math.max(0, Math.min(9999, Math.floor(+msg.c || 0)));
+      // free dance: which dance (0-8), which of its moves (0-7), and the two control dots (4 numbers, -100..100)
+      var fd = null;
+      if (msg.fd && typeof msg.fd === "object") {
+        var fs = Math.floor(+msg.fd.s), fm = Math.floor(+msg.fd.m), fc = [];
+        if (fs >= 0 && fs <= 8 && fm >= 0 && fm <= 7 && Array.isArray(msg.fd.c) && msg.fd.c.length === 4) {
+          for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
+          if (fc) fd = { s: fs, m: fm, c: fc };
+        }
+      }
+      var pv = rooms[ws.room].viewers.get(ws.viewerId);
+      if (pv) { pv.pose = a; pv.combo = combo; pv.fd = fd; var prd = rooms[ws.room].round; if (prd && prd.phase === "play") pv.danced = true; }
+      var pm = { type: "pose", id: ws.viewerId, a: a, c: combo }; if (fd) pm.fd = fd;
+      broadcast(ws.room, pm, ws);
+      return;
+    }
+    if (msg.type === "score") {
+      // a dancer's own running score for the current step or target round
+      var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
+      if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
+      var arrows = srd.chart ? srd.chart.arrows : 20000;
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+      if (srd.battle && msg.m !== undefined) {
+        /* a battle match score: only from the two in the match that's on */
+        var bk = battleNow(srd), bs = srd.battle.slots[msg.m | 0], be = srd.battle.entrants;
+        if (bk === (msg.m | 0) && bs && bs.w < 0) {
+          if (bs.a >= 0 && be[bs.a].id === ws.viewerId) bs.sa = sv.roundScore;
+          else if (bs.b >= 0 && be[bs.b].id === ws.viewerId) bs.sb = sv.roundScore;
+          else return;
+          var bm = { type: "bscore", n: srd.n, m: bk, sa: bs.sa, sb: bs.sb }; broadcast(ws.room, bm); if (rooms[ws.room].performer) send(rooms[ws.room].performer, bm);
+        }
+      }
+      return;
+    }
+    if (msg.type === "tug") {
+      /* the mosh pit's wall of death: taps for one side of the tug of war, counted only while it's on */
+      var trd = rooms[ws.room].round; if (!trd || trd.mode !== "mosh" || trd.phase !== "play" || !trd.chart || !trd.chart.drop || trd.tug.done) return;
+      var tp = Date.now() - trd.playAt, t0 = trd.chart.drop + TUG_AT;
+      if (tp < t0 - 400 || tp > t0 + TUG_MS + 400 || !allow(ws, "tug", 12, 7)) return;
+      var side = msg.side === 1 ? 1 : 0, tn = intIn(msg.k, 0, 6, 0); if (!tn) return;
+      trd.tug.s[side] += tn;
+      if (!trd.tugSend) trd.tugSend = setTimeout(function() { trd.tugSend = null; var m = { type: "tug", n: trd.n, s: trd.tug.s }; broadcast(ws.room, m); }, 200);
+      return;
+    }
+    if (msg.type === "vote") { castVote(ws, ws.viewerId, msg.id, 1); return; }
+    if (msg.type === "bvote") { if (allow(ws, "bvote", 6, 2)) battleVote(ws, ws.viewerId, msg.side, 1); return; }
+    return; // anything else from a viewer is dropped (it used to be relayed to the whole room as-is)
+  }
+}
+function onClose(ws) {
+  if (!ws.room) return;
+  if (ws.role === "performer" && rooms[ws.room] && rooms[ws.room].performer === ws) {
+    broadcast(ws.room, { type: "performer-left" });
+    console.log("Performer left, closing room", ws.room);
+    roundStop(rooms[ws.room]);
+    BOTS.stopRoom(ws.room);
+    delete rooms[ws.room];
+  }
+  if (ws.role === "viewer" && rooms[ws.room]) {
+    rooms[ws.room].viewers.delete(ws.viewerId);
+    broadcast(ws.room, { type: "viewer-leave", id: ws.viewerId });
+    var r = rooms[ws.room];
+    if (r && r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
+    if (r && r.botFill && !ws.bot) { var lc = ws.room; setImmediate(function() { BOTS.rebalance(lc); }); }   /* someone left: a bot can take their place */
+  }
+}
+
+/* bots that keep the room at the size the performer chose (see bots.js) */
+var BOTS = require("./bots.js")({ rooms: rooms, onMessage: onMessage, onClose: onClose, send: send });
+
 wss.on("connection", function(ws) {
   ws.isAlive = true;
   ws.on("pong", function() { ws.isAlive = true; });
   ws.on("error", function() {});
 
-  ws.on("message", function(raw, isBinary) {
-    /* only the performer's stream packets may exceed 16 KB; anything else that large drops the sender */
-    if (isBinary && ws.role === "performer") { relayStream(ws, raw); return; }
-    if (raw.length > 16 * 1024) { try { ws.terminate(); } catch (e) {} return; }
-    if (isBinary) return;
-    var msg;
-    try { msg = JSON.parse(raw); } catch(e) { return; }
-    if (!msg || typeof msg !== "object" || typeof msg.type !== "string") return;
+  ws.on("message", function(raw, isBinary) { onMessage(ws, raw, isBinary); });
 
-    /* ── Performer creates room ── */
-    if (msg.type === "create-room") {
-      if (ws.role) return;                       // one role per connection
-      var code = genCode();                      // never a client-chosen code: that let anyone take over a live room
-      rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer", performerLook: look(msg.look) };
-      ws.room = code;
-      ws.role = "performer";
-      send(ws, { type: "room-created", room: code, version: VERSION });
-      console.log("Room created:", code);
-      return;
-    }
-
-    /* ── Audience joins room ── */
-    if (msg.type === "join-room") {
-      if (ws.role) return;
-      var roomCode = str(msg.room, 12).toUpperCase();
-      var r = rooms[roomCode];
-      if (!r) { send(ws, { type: "error", msg: "Room not found" }); return; }
-      if (r.viewers.size >= MAX_VIEWERS) { send(ws, { type: "error", msg: "Room is full" }); return; }
-      var id = genId();
-      ws.room = roomCode;
-      ws.role = "viewer";
-      ws.viewerId = id;
-      ws.viewerName = str(msg.name, 24) || "Anonymous";
-      ws.viewerColor = color(msg.color);
-      ws.viewerLook = look(msg.look);
-      var startX = +(0.25 + Math.random() * 0.5).toFixed(3);   // 0.25–0.75 normalized
-      var startY = +(0.35 + Math.random() * 0.30).toFixed(3); // 0.35–0.65 normalized
-      r.viewers.set(id, { ws: ws, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor, look: ws.viewerLook });
-
-      // Send room state to new viewer
-      send(ws, {
-        type: "room-state", version: VERSION,
-        yourId: id,
-        viewers: viewerList(roomCode),
-        performerState: r.state,
-        video: liveVideo(r),
-        stream: r.stream || null,
-        performer: { name: r.performerName || "Performer", look: r.performerLook || "" },
-        round: roundPublic(r),
-        totals: totalsList(r),
-        fx: r.fx || null,
-        perfPos: r.perfPos || null
-      });
-
-      // Notify everyone else
-      broadcast(roomCode, { type: "viewer-join", id: id, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor, look: ws.viewerLook }, ws);
-
-      // Tell performer viewer count
-      if (r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
-      console.log(ws.viewerName, "joined room", roomCode, "(" + r.viewers.size + " viewers)");
-      return;
-    }
-
-    /* ── Performer broadcasts ── */
-    if (ws.role === "performer" && ws.room && rooms[ws.room]) {
-      if (msg.type === "round-start" || msg.type === "round-play" || msg.type === "round-end" || msg.type === "round-vote" || msg.type === "round-bvote") { roundMessage(ws, msg); return; }
-      if (!PERFORMER_TYPES[msg.type]) return;
-      if (msg.type === "state") rooms[ws.room].state = msg;
-      if (msg.type === "video") { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); }
-      if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
-      if (msg.type === "show-fx") {
-        // the show's effects (lights, fog, lasers, darkness, weather, sunset, fire, fireworks): kept for latecomers
-        var fx = showFx(msg.fx); if (!fx) return;
-        rooms[ws.room].fx = fx;
-        broadcast(ws.room, { type: "show-fx", fx: fx }, ws);
-        return;
-      }
-      /* hanging out between songs: the performer walks the floor (on = off the stage, x/y where on the floor) */
-      if (msg.type === "perf-pos") {
-        var hx = unit(msg.x), hy = unit(msg.y);
-        if (hx === null || hy === null || !allow(ws, "ppos", 20, 15)) return;
-        rooms[ws.room].perfPos = { on: msg.on ? 1 : 0, x: hx, y: hy };
-        broadcast(ws.room, { type: "perf-pos", on: msg.on ? 1 : 0, x: hx, y: hy }, ws);
-        return;
-      }
-      /* the performer talking: everyone sees it in the chat and over the performer's head */
-      if (msg.type === "perf-chat") {
-        var ptext = str(msg.text, 300);
-        if (!ptext || !allow(ws, "chat", 5, 1)) return;
-        broadcast(ws.room, { type: "chat", id: "performer", viewerId: "performer", perf: 1, name: rooms[ws.room].performerName || "Performer", color: "#F5C518", text: ptext }, ws);
-        return;
-      }
-      if (msg.type === "perf-name") {
-        rooms[ws.room].performerName = str(msg.name, 24) || "Performer";
-        if (look(msg.look)) rooms[ws.room].performerLook = look(msg.look);
-        broadcast(ws.room, { type: "perf-name", name: rooms[ws.room].performerName, look: rooms[ws.room].performerLook || "" }, ws);
-        return;
-      }
-      broadcast(ws.room, msg, ws);
-      return;
-    }
-
-    /* ── Viewer messages: chat, position, dancing, dance poses, round scores and votes only ── */
-    if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
-      if (msg.type === "chat") {
-        var text = str(msg.text, 300);
-        if (!text || !allow(ws, "chat", 5, 1)) return;
-        broadcast(ws.room, { type: "chat", id: ws.viewerId, viewerId: ws.viewerId, name: ws.viewerName, color: ws.viewerColor, text: text }, ws);
-        return;
-      }
-      if (msg.type === "react") {
-        /* a quick reaction everyone sees on this dancer: jump, hearts, a big heart, applause, a whistle */
-        if (REACTS.indexOf(msg.k) < 0) return;
-        if (!allow(ws, "react", 8, 3) || (msg.k === "bigheart" && !allow(ws, "bigheart", 1, 0.25))) return;
-        broadcast(ws.room, { type: "react", id: ws.viewerId, k: msg.k }, ws);
-        return;
-      }
-      if (msg.type === "pos") {
-        var x = unit(msg.x), y = unit(msg.y);
-        if (x === null || y === null || !allow(ws, "pos", 20, 15)) return;
-        var v = rooms[ws.room].viewers.get(ws.viewerId);
-        if (v) { v.x = x; v.y = y; }
-        broadcast(ws.room, { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y }, ws);
-        return;
-      }
-      if (msg.type === "dance") {
-        // 0 = stopped, 1-3 = canned dances, 4 = free dance, 5 = step game
-        var style = Math.max(0, Math.min(5, Math.floor(+msg.style || 0)));
-        if (!allow(ws, "dance", 6, 2)) return;
-        var dv = rooms[ws.room].viewers.get(ws.viewerId);
-        if (dv) { dv.dance = style; if (style < 4) dv.pose = null; }
-        broadcast(ws.room, { type: "dance", id: ws.viewerId, style: style }, ws);
-        return;
-      }
-      if (msg.type === "pose") {
-        // limb angles for the dance games: [left arm, right arm, left leg, right leg] in hundredths of a radian,
-        // plus the step-game combo. Everything is clamped; nothing else in the message is passed on.
-        if (!Array.isArray(msg.a) || msg.a.length !== 4 || !allow(ws, "pose", 14, 12)) return;
-        var a = [];
-        for (var pi = 0; pi < 4; pi++) {
-          var n = Math.round(+msg.a[pi]);
-          if (!isFinite(n)) return;
-          a.push(Math.max(-320, Math.min(320, n)));
-        }
-        var combo = Math.max(0, Math.min(9999, Math.floor(+msg.c || 0)));
-        // free dance: which dance (0-8), which of its moves (0-7), and the two control dots (4 numbers, -100..100)
-        var fd = null;
-        if (msg.fd && typeof msg.fd === "object") {
-          var fs = Math.floor(+msg.fd.s), fm = Math.floor(+msg.fd.m), fc = [];
-          if (fs >= 0 && fs <= 8 && fm >= 0 && fm <= 7 && Array.isArray(msg.fd.c) && msg.fd.c.length === 4) {
-            for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
-            if (fc) fd = { s: fs, m: fm, c: fc };
-          }
-        }
-        var pv = rooms[ws.room].viewers.get(ws.viewerId);
-        if (pv) { pv.pose = a; pv.combo = combo; pv.fd = fd; var prd = rooms[ws.room].round; if (prd && prd.phase === "play") pv.danced = true; }
-        var pm = { type: "pose", id: ws.viewerId, a: a, c: combo }; if (fd) pm.fd = fd;
-        broadcast(ws.room, pm, ws);
-        return;
-      }
-      if (msg.type === "score") {
-        // a dancer's own running score for the current step or target round
-        var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
-        if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
-        var arrows = srd.chart ? srd.chart.arrows : 20000;
-        sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
-        if (srd.battle && msg.m !== undefined) {
-          /* a battle match score: only from the two in the match that's on */
-          var bk = battleNow(srd), bs = srd.battle.slots[msg.m | 0], be = srd.battle.entrants;
-          if (bk === (msg.m | 0) && bs && bs.w < 0) {
-            if (bs.a >= 0 && be[bs.a].id === ws.viewerId) bs.sa = sv.roundScore;
-            else if (bs.b >= 0 && be[bs.b].id === ws.viewerId) bs.sb = sv.roundScore;
-            else return;
-            var bm = { type: "bscore", n: srd.n, m: bk, sa: bs.sa, sb: bs.sb }; broadcast(ws.room, bm); if (rooms[ws.room].performer) send(rooms[ws.room].performer, bm);
-          }
-        }
-        return;
-      }
-      if (msg.type === "tug") {
-        /* the mosh pit's wall of death: taps for one side of the tug of war, counted only while it's on */
-        var trd = rooms[ws.room].round; if (!trd || trd.mode !== "mosh" || trd.phase !== "play" || !trd.chart || !trd.chart.drop || trd.tug.done) return;
-        var tp = Date.now() - trd.playAt, t0 = trd.chart.drop + TUG_AT;
-        if (tp < t0 - 400 || tp > t0 + TUG_MS + 400 || !allow(ws, "tug", 12, 7)) return;
-        var side = msg.side === 1 ? 1 : 0, tn = intIn(msg.k, 0, 6, 0); if (!tn) return;
-        trd.tug.s[side] += tn;
-        if (!trd.tugSend) trd.tugSend = setTimeout(function() { trd.tugSend = null; var m = { type: "tug", n: trd.n, s: trd.tug.s }; broadcast(ws.room, m); }, 200);
-        return;
-      }
-      if (msg.type === "vote") { castVote(ws, ws.viewerId, msg.id, 1); return; }
-      if (msg.type === "bvote") { if (allow(ws, "bvote", 6, 2)) battleVote(ws, ws.viewerId, msg.side, 1); return; }
-      return; // anything else from a viewer is dropped (it used to be relayed to the whole room as-is)
-    }
-  });
-
-  ws.on("close", function() {
-    if (!ws.room) return;
-    if (ws.role === "performer" && rooms[ws.room] && rooms[ws.room].performer === ws) {
-      broadcast(ws.room, { type: "performer-left" });
-      console.log("Performer left, closing room", ws.room);
-      roundStop(rooms[ws.room]);
-      delete rooms[ws.room];
-    }
-    if (ws.role === "viewer" && rooms[ws.room]) {
-      rooms[ws.room].viewers.delete(ws.viewerId);
-      broadcast(ws.room, { type: "viewer-leave", id: ws.viewerId });
-      var r = rooms[ws.room];
-      if (r && r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
-    }
-  });
+  ws.on("close", function() { onClose(ws); });
 });
 
 // Heartbeat — drop dead connections
