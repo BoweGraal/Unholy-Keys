@@ -520,3 +520,4 @@ If the server itself crashed, also copy the last 20 lines of the `npm start` win
 - **⏺ Record show** (on the now-playing bar): press it while a song plays, then make stage changes as you like. End the song (or press it again) to save. Next time that song plays, your show plays back by itself at the same moments ("▶ Show ✕" on the bar; click it to delete the saved show). A saved show takes over from Auto stage.
 - **Sustain:** every session starts in Sustain, and Z / X / Ctrl / V no longer change the articulation. Change it in Setup → Play.
 - Jumbotron note lines: medium size (between the old small and big ones).
+- Bassoon redrawn: black body with silver keys and rings, a white cap on the bell, slimmer.

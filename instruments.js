@@ -343,16 +343,21 @@
       }else if(kind==="bassoon"){
         /* bassoon: the long body crosses you diagonally, boot at your right hip, bell up past your left shoulder;
            the thin silver bocal curves from the body to your lips; one hand low on the boot, the other high on the wing */
-        var bH=46;
-        c=piece("bsn"+(on?cl+(oct?"o":""):"x"),8,bH,function(r){r(1,0,5,3,"#a8603a");r(1,0,5,1,"#c8784a");r(2,3,3,bH-9,"#8a4a2a");r(4,9,2,bH-15,"#7a3e22");r(2,3,1,bH-9,"#a8603a");
-          r(1,bH-7,6,7,"#6a3418");r(1,bH-7,6,1,"#8a4a2a");r(1,bH-1,6,1,"#3a1a0c");r(2,14,4,1,"#C8C8D8");r(2,27,4,1,"#C8C8D8");r(1,bH-8,6,1,"#C8C8D8");
-          for(var hh=0;hh<6;hh++)r(3,17+hh*3.5,1,1,on&&hh<cl?"#3a1a0c":"#EDEDF5");if(oct)r(5,12,1,1,"#F5E8A0");});
-        var bA=[x-4*p,y+10*p+bob],brot=0.42,boc=at(bA[0],bA[1],p,4,bH,brot,5,bH-24);
-        front=function(){blit(g,c,bA[0],bA[1],p,4,bH,brot);
-          g.strokeStyle="#C8C8D8";g.lineWidth=Math.max(1,p*0.6);g.beginPath();g.moveTo(boc[0],boc[1]);g.quadraticCurveTo(x+6*p,y-12*p+bob,x+1*p,y-8*p+bob);g.stroke();
+        var bH=46,BK="#15121F",BK2="#2e2a40",SV="#DCDCEA",SV2="#9a98b0";   /* black wood, silver keys, a white cap on the bell */
+        c=piece("bsn2"+(on?cl+(oct?"o":""):"x"),6,bH,function(r){
+          r(1,0,3,2,"#F4F1FF");r(1,1,3,1,"#C9CEE0");                                       /* the cap */
+          r(1,2,3,bH-8,BK);r(1,2,1,bH-8,BK2);                                              /* the long joint, slim */
+          r(3,10,2,bH-17,BK);r(4,10,1,bH-17,BK2);                                          /* the wing joint alongside */
+          r(0,bH-7,5,7,BK);r(0,bH-7,1,7,BK2);r(0,bH-1,5,1,SV2);                            /* the boot */
+          r(1,12,3,1,SV);r(1,24,3,1,SV);r(0,bH-8,5,1,SV);r(3,10,2,1,SV);                   /* silver rings */
+          r(2,5,1,1,SV);r(4,14,1,6,SV2);r(4,22,1,5,SV2);r(1,bH-5,1,3,SV2);r(3,bH-4,2,1,SV);  /* rods and keys */
+          for(var hh=0;hh<6;hh++)r(2,16+hh*3.5,1,1,on&&hh<cl?SV2:SV);if(oct)r(4,11,1,1,"#F5E8A0");});
+        var bA=[x-4*p,y+10*p+bob],brot=0.42,boc=at(bA[0],bA[1],p,3,bH,brot,4,bH-24);
+        front=function(){blit(g,c,bA[0],bA[1],p,3,bH,brot);
+          g.strokeStyle=SV;g.lineWidth=Math.max(1,p*0.6);g.beginPath();g.moveTo(boc[0],boc[1]);g.quadraticCurveTo(x+6*p,y-12*p+bob,x+1*p,y-8*p+bob);g.stroke();
           g.fillStyle="#C8A060";g.fillRect(Math.round(x),Math.round(y-8.5*p+bob),Math.max(1,Math.round(p)),Math.max(1,Math.round(p)));};
-        arms(at(bA[0],bA[1],p,4,bH,brot,3,bH-12+(on?cl*0.3:0)),at(bA[0],bA[1],p,4,bH,brot,3,bH-31));
-        fx=function(){var bl=at(bA[0],bA[1],p,4,bH,brot,3,0);if(on)waves(g,bl[0],bl[1]-2*p,p,-Math.PI/2+brot,Math.max(0.35,1-age/900),"rgba(200,200,230,.7)");};
+        arms(at(bA[0],bA[1],p,3,bH,brot,2,bH-12+(on?cl*0.3:0)),at(bA[0],bA[1],p,3,bH,brot,2,bH-31));
+        fx=function(){var bl=at(bA[0],bA[1],p,3,bH,brot,2,0);if(on)waves(g,bl[0],bl[1]-2*p,p,-Math.PI/2+brot,Math.max(0.35,1-age/900),"rgba(200,200,230,.7)");};
       }else if(kind==="bottle"){
         /* blown bottle: held under the lips, blowing across the top; the air in it shimmers with the note */
         var lvl=Math.round(nrm(m,55,91)*6);
@@ -363,7 +368,7 @@
         fx=function(){if(on){g.strokeStyle="rgba(255,255,255,.7)";g.lineWidth=Math.max(1,p*0.5);for(var w=0;w<2;w++){var ph=((now/260)+w/2)%1;g.globalAlpha=1-ph;g.beginPath();g.moveTo(btA[0]-(1+ph*5)*p,btA[1]-(1+w)*p);g.lineTo(btA[0]-(3+ph*5)*p,btA[1]-(1+w)*p);g.stroke();}g.globalAlpha=1;}};
       }else{
         /* sax, clarinet (oboe, recorder): a pipe down from the mouth, hands one above the other */
-        var Lp=kind==="bassoon"?30:kind==="sax"?22:20,col=kind==="sax"?"#F5C518":kind==="bassoon"?"#8a4a2a":"#2A2238",keyC=kind==="sax"?"#F5E8A0":"#C8C8D8";
+        var Lp=kind==="bassoon"?30:kind==="sax"?22:20,col=kind==="sax"?"#F5C518":kind==="bassoon"?"#15121F":"#2A2238",keyC=kind==="sax"?"#F5E8A0":"#C8C8D8";
         c=piece(kind+(on?cl+(oct?"o":""):"x"),kind==="sax"?12:5,Lp,function(r,ln,disc){
           if(kind==="sax"){r(1,0,2,4,"#2A2238");r(1,3,3,14,col);r(2,15,4,3,col);r(4,13,4,5,col);r(6,9,5,6,col);r(7,9,4,1,"#E0A810");for(var hh=0;hh<6;hh++)r(3,5+hh*1.7,2,1,on&&hh<cl?"#C89810":keyC);if(oct)r(0,3,1,1,"#F5E8A0");}
           else{r(1,0,2,Lp-3,col);r(0,Lp-4,4,4,col);if(kind==="bassoon"){r(1,0,3,Lp-2,col);r(3,2,2,1,"#C8C8D8");}for(var hh2=0;hh2<6;hh2++)r(1.5,4+hh2*(Lp-9)/6,1,1,on&&hh2<cl?"#5a5670":keyC);}
