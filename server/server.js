@@ -312,11 +312,11 @@ function roundFinish(code) {
 function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
     broadcast(code, roundPublic(r));
@@ -405,7 +405,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.50.1";
+var VERSION = "1.51.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -634,7 +634,7 @@ function onMessage(ws, raw, isBinary) {
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
       if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
-      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
       if (srd.battle && msg.m !== undefined) {
         /* a battle match score: only from the two in the match that's on */
         var bk = battleNow(srd), bs = srd.battle.slots[msg.m | 0], be = srd.battle.entrants;
