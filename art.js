@@ -79,9 +79,11 @@ var ART=(function(){
   var spr=null,sg=null,out=null,og=null;
   function canv(w,h){var c=document.createElement("canvas");c.width=w;c.height=h;return c;}
   function init(){if(spr)return;spr=canv(CWD,CHT);sg=spr.getContext("2d");out=canv(CWD,CHT);og=out.getContext("2d");}
-  function px(x,y,w,h,c){sg.fillStyle=c;sg.fillRect(OX+x,OY+y,w,h);}
+  var SEC="",ISO=null,HIDECHAR=false;   /* ISO: draw only one part of a character (the pixel editor); SEC: the part being drawn */
+  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;sg.fillStyle=c;sg.fillRect(OX+x,OY+y,w,h);}
   /* a limb: a 3-pixel-wide strip from the joint along the angle, coloured in bands (cols = [[upTo, colour],...]) */
   function limb(jx,jy,a,len,cols,stripes){
+    if(ISO&&SEC!==ISO)return;
     var s=Math.sin(a),c=Math.cos(a),step=0.5;
     for(var t=0;t<len;t+=step){
       var col=cols[cols.length-1][1];for(var q=0;q<cols.length;q++)if(t<cols[q][0]){col=cols[q][1];break;}
@@ -96,6 +98,7 @@ var ART=(function(){
   }
   /* an 80s quad roller skate on a foot: white high-top boot with a hot pink stripe, a stopper, neon wheels */
   function skate(jx,jy,a,len,ice){
+    if(ISO&&SEC!==ISO)return;
     var fx=Math.round(OX+jx-Math.sin(a)*len),fy=Math.round(OY+jy+Math.cos(a)*len);
     if(ice){   /* figure skates: a white boot on a silver blade */
       sg.fillStyle="#F4F1FF";sg.fillRect(fx-2,fy-3,4,4);sg.fillStyle="#C9CEE0";sg.fillRect(fx-2,fy,4,1);
@@ -110,6 +113,7 @@ var ART=(function(){
     var skin=colOf(L,"skin"),hc=colOf(L,"hair"),tc=colOf(L,"top"),bc=colOf(L,"bot");
     var tcD=shade(tc,-0.25),tcL=shade(tc,0.25),bcD=shade(bc,-0.25),skD=shade(skin,-0.18),hcD=shade(hc,-0.3),shoe="#2A2238";
     var aL=st.armL,aR=st.armR,lL=st.legL,lR=st.legR,hd=st.head||0,hy=Math.round(Math.max(0,hd)*3);   /* head: bowed forward (1) or flung back (-1) */
+    SEC="hair";
     /* behind the head: afro, long hair, the hood */
     if(L.hair===5){px(-7,-19,14,9,hc);px(-6,-20,12,1,hc);px(-8,-17,1,6,hc);px(7,-17,1,6,hc);}
     if(L.hair===3){px(-6,-14,2,11,hc);px(4,-14,2,11,hc);}
@@ -146,8 +150,9 @@ var ART=(function(){
     function legC(cols,n){return cols.map(function(c){return [c[0]*n/7,c[1]];});}
     function strC(n){return legStripes?legStripes.map(function(q){return [q[0],q[1]*n/7,q[2]*n/7,q[3]];}):null;}
     var gL=Math.max(3,Math.min(7,st.legLenL||7)),gR=Math.max(3,Math.min(7,st.legLenR||7));
-    limb(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL));limb(2.5,4,lR,gR,legC(legColsR,gR),strC(gR));
-    if(st.skates){var ic=st.skates==="ice";skate(-2.5,4,lL,gL,ic);skate(2.5,4,lR,gR,ic);}
+    SEC="legL";limb(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(2.5,4,lR,gR,legC(legColsR,gR),strC(gR));
+    if(st.skates){var ic=st.skates==="ice";SEC="legL";skate(-2.5,4,lL,gL,ic);SEC="legR";skate(2.5,4,lR,gR,ic);}
+    SEC="top";
     /* torso */
     px(-5,-5,10,10,tc);
     if(L.top===4){for(var r=-4;r<5;r+=3)px(-5,r,10,1,tcL);}
@@ -173,6 +178,7 @@ var ART=(function(){
     if(T===18){px(-2,-3,4,3,WH);px(-1,0,2,1,WH);px(-2,-2,1,1,BLK);px(1,-2,1,1,BLK);}   /* band tee: a skull */
     if(T===19){px(-3,-3,2,2,GOLD);px(1,-3,3,1,tcD);px(-5,-5,2,1,tcL);px(3,-5,2,1,tcL);px(-5,3,10,1,BLK);px(-1,3,2,1,GOLD);}   /* uniform: badge, epaulettes, belt */
     if(T===20){px(-5,1,10,4,skin);px(4,1,1,4,skD);px(-1,2,1,1,skD);}   /* crop top: the midriff */
+    SEC="bottom";
     /* bottoms: the waistband, or a skirt */
     if(L.bottom===2){px(-6,4,12,3,bc);px(-6,6,12,1,bcD);}
     else if(L.bottom===5){px(-6,4,12,4,bc);px(-7,7,14,3,bc);px(-7,9,14,1,bcD);px(4,4,2,6,bcD);}   /* long dress, down past the knees */
@@ -186,12 +192,14 @@ var ART=(function(){
     /* an arm can be drawn shorter: reaching toward you (holding an instrument up to the mouth) */
     function armC(n){return sleeve?[[Math.min(sleeve,n-2)*n/9+0.01,armTop],[n,skin]]:[[n,skin]];}
     var nL=Math.max(3,Math.min(9,st.lenL||9)),nR=Math.max(3,Math.min(9,st.lenR||9));
-    limb(-6.5,-4.5,aL,nL,armC(nL));limb(6.5,-4.5,aR,nR,armC(nR));
+    SEC="armL";limb(-6.5,-4.5,aL,nL,armC(nL));SEC="armR";limb(6.5,-4.5,aR,nR,armC(nR));
+    SEC="head";
     /* head */
     px(-5,-14+hy,10,9,skin);px(4,-14+hy,1,9,skD);px(-5,-6+hy,10,1,skD);
     /* face: eyes, and an open mouth when singing or hitting a step */
     px(-3,-11+hy,1,2,"#15121F");px(2,-11+hy,1,2,"#15121F");
     if(st.mouth)px(-1,-8+hy,2,2,"#5A2A2A");else px(-1,-8+hy,2,1,skD);
+    SEC="hair";
     /* hair */
     var hair=L.hair;
     if(hair===1||hair===2||hair===3||hair===6){px(-5,-15+hy,10,3,hc);px(-5,-12+hy,1,2,hc);px(4,-12+hy,1,2,hc);px(-5,-15+hy,10,1,hcD);}
@@ -236,12 +244,14 @@ var ART=(function(){
     /* headbanging: bowed right down, the hair hangs over the face; flung back up, it flies */
     if(hd>0.55&&hair!==0&&hair!==4&&hair!==17){px(-5,-13+hy,10,6,hc);px(-6,-12+hy,1,6,hc);px(5,-12+hy,1,6,hc);px(-5,-7+hy,10,1,hcD);}
     if(hd<-0.3&&hair!==0){px(-5,-19,2,3,hc);px(-1,-20,2,4,hc);px(3,-19,2,3,hc);px(-7,-17,2,2,hc);px(5,-17,2,2,hc);}
+    SEC="extra";
     /* extras */
     var ex=L.extra;
     if(ex===1){px(-4,-11+hy,8,2,"#111018");px(-4,-11+hy,3,1,"#3a3650");}
     if(ex===2){px(-6,-16+hy,12,1,"#2A2238");px(-7,-12+hy,2,4,"#2A2238");px(5,-12+hy,2,4,"#2A2238");px(-7,-11+hy,1,2,"#E8505B");px(6,-11+hy,1,2,"#E8505B");}
     if(ex===3){px(-5,-17+hy,10,3,"#E8505B");px(-5,-14+hy,10,1,"#B83A44");px(-8,-14+hy,4,1,"#B83A44");}
     if(ex===4){px(-5,-14+hy,10,2,"#D354A0");px(-6,-13+hy,1,3,"#D354A0");}
+    SEC="face";
     /* face */
     var fc=L.face|0,whisk=hair===0?"#3a2a22":hcD;
     if(fc===1||fc===2||fc===3)px(-2,-9+hy,4,1,whisk);                                           /* moustache */
@@ -255,6 +265,7 @@ var ART=(function(){
     if(fc===7){px(-4,-9+hy,1,1,"#B06A40");px(-3,-8+hy,1,1,"#B06A40");px(2,-9+hy,1,1,"#B06A40");px(3,-8+hy,1,1,"#B06A40");}   /* freckles */
     if(fc===8){px(-4,-9+hy,2,1,"#F08AA0");px(2,-9+hy,2,1,"#F08AA0");}                         /* blush */
     if(fc===9){var sb2=shade(skin,-0.3);for(var sx2=-4;sx2<4;sx2+=2){px(sx2,-7+hy,1,1,sb2);px(sx2+1,-6+hy,1,1,sb2);}px(-5,-9+hy,1,1,sb2);px(4,-9+hy,1,1,sb2);}   /* stubble */
+    SEC="hat";
     /* hats */
     var ht=L.hat|0;
     if(ht===1){px(-6,-17+hy,12,3,"#F5D03C");px(-7,-14+hy,14,1,"#D8B020");px(-1,-18+hy,2,1,"#F5D03C");px(-4,-17+hy,2,1,"#FFF2A0");}   /* hard hat */
@@ -295,7 +306,7 @@ var ART=(function(){
   /* draw a character with its body centre at (x,y), each art pixel p screen pixels big.
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
-    st=st||{};if(!L)L=random(7);
+    if(HIDECHAR)return;st=st||{};if(!L)L=random(7);
     var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,head:st.head||0,skates:st.skates==="ice"?"ice":!!st.skates};
     var c=drawSprite(L,s),q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
@@ -1100,7 +1111,7 @@ var ART=(function(){
     load:function(o){PT=o&&typeof o==="object"?o:{};PC={};ptSave();},clear:function(){PT={};PC={};ptSave();},off:function(b){POFF=!!b;},
     count:function(){return Object.keys(PT).length;},
     at:function(g,key,x,y,p){var e=ptGet(key);if(!e||!e.c)return;var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(e.c,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.c.width*p,e.c.height*p);g.imageSmoothingEnabled=was;}};
-  function paintLayer(key,tx,ty,rot){var e=ptGet(key);if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(rot)sg.rotate(rot);
+  function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var e=ptGet(key);if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(rot)sg.rotate(rot);
     if(e.h){sg.globalCompositeOperation="destination-out";sg.drawImage(e.h,e.x0,e.y0);sg.globalCompositeOperation="source-over";}
     if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();}
   var DT={},DT_F=["armL","armR","legL","legR","bob","dx","rot"];
@@ -1499,6 +1510,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.50.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=keyboard(g,x,y,p,l,c);PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=micStand(g,x,y,p);PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.50.1",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=keyboard(g,x,y,p,l,c);PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=micStand(g,x,y,p);PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
