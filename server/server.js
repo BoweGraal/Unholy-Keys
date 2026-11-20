@@ -105,6 +105,7 @@ function genCode() {
   do { code = ""; for (var i = 0; i < 4; i++) code += CODE_LETTERS[Math.floor(Math.random() * CODE_LETTERS.length)]; } while (rooms[code]);
   return code;
 }
+var PERFORMER_GRACE = 60000;   /* how long a room waits for its performer to reconnect */
 function genId() { return Math.random().toString(36).substring(2, 10); }
 
 function str(v, max) { return (typeof v === "string" ? v : "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, max); }
@@ -407,7 +408,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.56.2";
+var VERSION = "1.56.3";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -461,15 +462,32 @@ function onMessage(ws, raw, isBinary) {
   if (msg.type === "create-room") {
     if (ws.role) return;                       // one role per connection
     var code = genCode();                      // never a client-chosen code: that let anyone take over a live room
-    rooms[code] = { performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer", performerLook: look(msg.look) };
+    rooms[code] = { key: genId() + genId(), performer: ws, viewers: new Map(), state: {}, video: null, round: null, roundN: 0, totals: {}, performerName: str(msg.name, 24) || "Performer", performerLook: look(msg.look) };
     ws.room = code;
     ws.role = "performer";
-    send(ws, { type: "room-created", room: code, version: VERSION, host: HOSTED, hostName: HOST_NAME });
+    send(ws, { type: "room-created", room: code, key: rooms[code].key, version: VERSION, host: HOSTED, hostName: HOST_NAME });
     console.log("Room created:", code);
     return;
   }
 
   /* ── Audience joins room ── */
+  /* ── Performer coming back after a dropped connection: same room, same audience, if they have the room's key ── */
+  if (msg.type === "end-room") { if (ws.role === "performer") ws.ending = true; return; }
+  if (msg.type === "resume-room") {
+    if (ws.role) return;
+    var rc = str(msg.room, 12).toUpperCase(), rr = rooms[rc];
+    if (!rr || !rr.key || str(msg.key, 40) !== rr.key) { send(ws, { type: "resume-failed" }); return; }
+    if (rr.performer && rr.performer !== ws) { var old = rr.performer; old.role = null; old.room = null; try { old.terminate(); } catch (e) {} }   /* a stale socket that hadn't noticed it was dead */
+    if (rr.goneT) { clearTimeout(rr.goneT); rr.goneT = null; }
+    rr.performer = ws; ws.room = rc; ws.role = "performer";
+    send(ws, { type: "room-resumed", room: rc, key: rr.key, version: VERSION, host: HOSTED, hostName: HOST_NAME });
+    rr.viewers.forEach(function(v, vid) { send(ws, { type: "viewer-join", id: vid, name: v.name, x: v.x, y: v.y, color: v.color, look: v.look }); });
+    send(ws, { type: "viewer-count", count: rr.viewers.size });
+    broadcast(rc, { type: "performer-back" });
+    console.log("Performer back in room", rc);
+    return;
+  }
+
   if (msg.type === "join-room") {
     if (ws.role) return;
     var roomCode = str(msg.room, 12).toUpperCase();
@@ -668,11 +686,21 @@ function onMessage(ws, raw, isBinary) {
 function onClose(ws) {
   if (!ws.room) return;
   if (ws.role === "performer" && rooms[ws.room] && rooms[ws.room].performer === ws) {
-    broadcast(ws.room, { type: "performer-left" });
-    console.log("Performer left, closing room", ws.room);
-    roundStop(rooms[ws.room]);
-    BOTS.stopRoom(ws.room);
-    delete rooms[ws.room];
+    /* a blip: keep the room (audience, round, scores) for a minute so the performer's page can reconnect */
+    var code = ws.room, r0 = rooms[code];
+    r0.performer = null;
+    if (ws.ending) { r0.goneT && clearTimeout(r0.goneT); broadcast(code, { type: "performer-left" }); roundStop(r0); BOTS.stopRoom(code); delete rooms[code]; return; }   /* they pressed Stop */
+    broadcast(code, { type: "performer-away" });
+    console.log("Performer dropped, holding room", code, "for", PERFORMER_GRACE / 1000, "s");
+    if (r0.goneT) clearTimeout(r0.goneT);
+    r0.goneT = setTimeout(function() {
+      var r1 = rooms[code]; if (!r1 || r1.performer) return;
+      broadcast(code, { type: "performer-left" });
+      console.log("Performer did not come back, closing room", code);
+      roundStop(r1);
+      BOTS.stopRoom(code);
+      delete rooms[code];
+    }, PERFORMER_GRACE);
   }
   if (ws.role === "viewer" && rooms[ws.room]) {
     rooms[ws.room].viewers.delete(ws.viewerId);
