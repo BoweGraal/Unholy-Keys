@@ -16,6 +16,23 @@ button{cursor:pointer}button.on{background:#7F77DD;border-color:#fff}button.go{b
 #pxfab{display:none;position:fixed;left:14px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:60;gap:10px;align-items:flex-end}.pxfs #pxfab{display:flex}
 #pxfab button{width:76px;height:76px;border-radius:38px;font-size:38px;line-height:1;padding:0;background:#3d2f86;color:#fff;border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.5)}#pxfab button+button{width:56px;height:56px;border-radius:28px;font-size:28px;border-color:#7a6cd0}
 #pxbar{display:none;background:#14102c;border-bottom:1px solid #3a2f6a}.pxfs #pxbar{display:block}
+.dfs #main{position:fixed;left:0;top:0;right:0;bottom:0;height:100vh;height:100dvh;z-index:50;background:#0d0a1c}.dfs #side,.dfs #top,.dfs #assetrow,.dfs #fxrow{display:none!important}
+#dnbar,#dntl,#dpad{display:none}.dfs #dnbar{display:flex}.dfs #dntl{display:flex}.dfs #dpad{display:grid}
+#dnbar{flex-wrap:wrap;gap:6px;padding:7px 8px;background:#14102c;border-bottom:1px solid #3a2f6a;align-items:center}
+#dnbar button{min-width:42px;height:40px;padding:0 10px;font-size:15px}#dnbar button.on{background:#7F77DD;border-color:#b9b2ff}#dnbar .nm{font:700 12px system-ui;color:#c9c0ee;margin-left:auto}
+#dntl{align-items:center;gap:6px;padding:8px 8px calc(10px + env(safe-area-inset-bottom));background:#14102c;border-top:1px solid #3a2f6a}
+#dntl>button{width:44px;height:44px;font-size:18px;padding:0;flex:none}
+#dnline{position:relative;flex:1;height:54px;margin:0 14px 0 10px;touch-action:none;cursor:pointer}
+#dnline .ln{position:absolute;left:0;right:0;top:26px;height:3px;background:#4a3f7a;border-radius:2px}
+#dnline .nt{position:absolute;top:16px;width:4px;height:22px;margin-left:-2px;background:#6a5ca8;border-radius:2px}
+#dnline .nt.beat{top:10px;height:34px;background:#9B7FE0}
+#dnline .nt.key::after{content:"";position:absolute;left:-5px;top:-14px;width:14px;height:14px;border-radius:50%;background:#FF3DA8;box-shadow:0 0 8px #FF3DA8}
+#dnline .nt.cur{background:#F5F23D;width:6px;margin-left:-3px}
+#dnline .bl{position:absolute;top:40px;font:700 10px system-ui;color:#9d95c8;transform:translateX(-50%)}
+#dnline .ph{position:absolute;top:4px;width:2px;height:46px;background:#3DF2FF;box-shadow:0 0 6px #3DF2FF;pointer-events:none}
+#dpad{position:fixed;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:60;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:4px}
+#dpad button{width:52px;height:52px;padding:0;font-size:20px;border-radius:12px;background:rgba(61,47,134,.92);border:2px solid #7a6cd0;color:#fff}
+#dpad .c{font-size:11px;font-weight:800;background:rgba(20,16,44,.9)}
 .pxfs #main{position:fixed;left:0;top:0;right:0;bottom:0;height:100vh;height:100dvh;z-index:50;background:#0d0a1c}.pxfs #side,.pxfs #top,.pxfs #assetrow,.pxfs #fxrow{display:none!important}
 .tools{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.tools button{padding:8px 11px;font-size:13px}
 #fxrow,#assetrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 10px;border-top:1px solid #2c2358;font-size:12px}
@@ -43,7 +60,10 @@ button{cursor:pointer}button.on{background:#7F77DD;border-color:#fff}button.go{b
   <div id="top"><b>🎨 Graphics lab</b><button id="mStage" class="on">Stage &amp; lights</button><button id="mAssets">Assets &amp; animation</button><a href="venue.html" style="color:#9d95c8;margin-left:auto">← back to the venue</a></div>
   <div id="pxbar"></div>
   <div id="pxfab"><button id="pxU" title="Undo">&#8630;</button><button id="pxR" title="Redo">&#8631;</button></div>
+  <div id="dnbar"></div>
   <div id="view"><canvas id="cv"></canvas></div>
+  <div id="dntl"><button id="dnPrev" title="Previous frame">◀</button><div id="dnline"></div><button id="dnNext" title="Next frame">▶</button></div>
+  <div id="dpad"><button data-d="rl" title="Turn anticlockwise">⟲</button><button data-d="up">▲</button><button data-d="rr" title="Turn clockwise">⟳</button><button data-d="lt">◀</button><button class="c" id="dpSel">ARM L</button><button data-d="rt">▶</button><span></span><button data-d="dn">▼</button><span></span></div>
   <div id="fxrow"></div>
   <div id="assetrow" style="display:none"></div>
  </div>
@@ -52,9 +72,9 @@ button{cursor:pointer}button.on{background:#7F77DD;border-color:#fff}button.go{b
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.54.4"></script>
-<script src="art.js?v=1.54.4"></script>
-<script src="instruments.js?v=1.54.4"></script>
+<script src="gfx.js?v=1.54.5"></script>
+<script src="art.js?v=1.54.5"></script>
+<script src="instruments.js?v=1.54.5"></script>
 <script>
 (function(){
 var $=function(id){return document.getElementById(id);};
@@ -76,6 +96,7 @@ function loadAdj(){var a=ASSETADJ[assetKey()];AS.f=a?{bright:a.bright||1,contras
 function size(){var v=$("view"),w=Math.max(300,v.clientWidth-8),h=Math.max(240,v.clientHeight-8);
   if(mode==="stage"){var ww=Math.min(w,h*1.5),hh=ww/1.5;cv.width=Math.round(ww);cv.height=Math.round(hh);}
   else if(AS.cat==="pixel"){pxFit();return;}
+  else if(AS.dfs){cv.width=Math.round(v.clientWidth);cv.height=Math.round(v.clientHeight);}
   else{var s=Math.min(w,h);cv.width=Math.round(s);cv.height=Math.round(s*0.8);}
   cv.style.maxWidth="";cv.style.maxHeight="";cv.style.touchAction="";cv.style.width=cv.width+"px";cv.style.height=cv.height+"px";}
 var crew=[ART.looks.random(3),ART.looks.random(8),ART.looks.random(21),ART.looks.random(34),ART.looks.random(55)],perfLook=ART.looks.random(5);
@@ -106,6 +127,7 @@ function drawAsset(now){
   g.strokeStyle="rgba(255,255,255,.05)";for(var x=0;x<W;x+=P*8){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke();}for(var y=0;y<H;y+=P*8){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}
   var bp=AS.q,cx=W/2,cy=H*0.62;
   if(AS.cat==="char"){ART.drawChar(g,cx,cy,cs,AS.look,pose());}
+  else if(AS.cat==="dance"&&AS.dfs){dnDraw(g,W,H);}
   else if(AS.cat==="dance"){
     var c=[0,0,0,0],base=ART.base(AS.style,AS.sub,c,bp),tw=ART.dance(AS.style,AS.sub,c,bp);
     ART.drawChar(g,W*0.3,cy,cs,AS.look,base);ART.drawChar(g,W*0.7,cy,cs,AS.look,tw);
@@ -132,6 +154,7 @@ function frame(now){
   if(mode==="stage")drawStage(now);
   else{
     if(AS.play&&AS.cat==="dance"){AS.q=(AS.q+((now-(last||now))/(60000/SIM.bpm))*AS.speed)%4;var qs=$("qScrub");if(qs&&document.activeElement!==qs){qs.value=AS.q;$("qOut").textContent=AS.q.toFixed(2);}}
+    if(AS.dfs)dnTick();
     drawAsset(now);
     cv.style.filter=AS.cat==="pixel"?"":[AS.f.bright!==1?"brightness("+AS.f.bright+")":"",AS.f.contrast!==1?"contrast("+AS.f.contrast+")":"",AS.f.sat!==1?"saturate("+AS.f.sat+")":"",AS.f.hue?"hue-rotate("+AS.f.hue+"deg)":""].join(" ").trim();
   }
@@ -305,6 +328,87 @@ function bindPixel(){
   document.addEventListener("fullscreenchange",function(){if(PX.fs&&!document.fullscreenElement){/* the browser left full screen (Esc): keep the editor big, the Exit button is still there */}});
   window.addEventListener("keydown",function(e){if(e.key==="Escape"&&PX.fs)pxFull(false);});
 }
+/* ================= full screen dance (gani) editor =================
+   16 frames per 4-beat loop (a notch every quarter beat). Drag a hand, foot or the body to pose it, or use the D pad for one pixel at a time.
+   Every change saves as a tweak at that frame (the same DTWEAK data the side panel uses). */
+var DN={N:16,fi:0,sel:"armL",ghost:true,undo:[],drag:null};
+var DN_LABEL={armL:"ARM L",armR:"ARM R",legL:"LEG L",legR:"LEG R",body:"BODY"};
+function dnQ(){return Math.round(DN.fi*(4/DN.N)*100)/100;}
+function dnEntry(){var q=dnQ(),list=ART.DTWEAK.get(AS.style,AS.sub);for(var i=0;i<list.length;i++)if(Math.abs(list[i].q-q)<0.001)return list[i];return null;}
+function dnVals(){var e=dnEntry(),o={};ART.DTWEAK.fields.forEach(function(f){o[f]=e&&e[f]||0;});return o;}
+function dnSet(vals){var e=dnEntry();ART.DTWEAK.set(AS.style,AS.sub,dnQ(),vals,e&&e.w);dnTimeline();share();}
+function dnSnap(){DN.undo.push(JSON.stringify(ART.DTWEAK.get(AS.style,AS.sub)));if(DN.undo.length>80)DN.undo.shift();}
+function dnUndo(){if(!DN.undo.length)return;var list=JSON.parse(DN.undo.pop());ART.DTWEAK.clear(AS.style,AS.sub);list.forEach(function(e){ART.DTWEAK.set(AS.style,AS.sub,e.q,e,e.w);});dnTimeline();share();}
+function dnGo(i){DN.fi=((i%DN.N)+DN.N)%DN.N;AS.play=false;AS.q=dnQ();dnBar();dnTimeline();}
+/* where everything is on screen: the character's centre, its scale, the shoulders/hips and the hands/feet */
+function dnGeo(W,H){var cs=Math.max(3,Math.round(Math.min(W/44,H/50)*AS.zoom)),cx=W*0.42,cy=H*0.55,p=ART.dance(AS.style,AS.sub,[0,0,0,0],AS.q),bob=Math.round((p.bob||0)*cs/cs)*cs,dx=Math.round((p.dx||0))*cs;
+  var J=ART.joints(cx+dx,cy,cs,bob),A=[p.armL,p.armR,p.legL,p.legR],ends=J.map(function(j,i){return[j[0]-Math.sin(A[i]||0)*ART.LIMB[i]*cs,j[1]+Math.cos(A[i]||0)*ART.LIMB[i]*cs];});
+  return{cs:cs,cx:cx,cy:cy,p:p,J:J,ends:ends,body:[cx+dx,cy-2*cs+bob]};}
+function dnPose(p,cs){var o=Object.assign({},p);o.bob=(p.bob||0)*cs;o.dx=(p.dx||0)*cs;return o;}
+function dnDraw(g,W,H){
+  var G=dnGeo(W,H),cs=G.cs;
+  g.strokeStyle="rgba(255,255,255,.06)";g.beginPath();g.moveTo(0,G.cy+12*cs);g.lineTo(W,G.cy+12*cs);g.stroke();
+  if(DN.ghost){g.globalAlpha=0.28;ART.drawChar(g,G.cx,G.cy,cs,AS.look,dnPose(ART.base(AS.style,AS.sub,[0,0,0,0],AS.q),cs));g.globalAlpha=1;}
+  ART.drawChar(g,G.cx,G.cy,cs,AS.look,dnPose(G.p,cs));
+  if(AS.play)return;
+  var keys=["armL","armR","legL","legR"];
+  keys.forEach(function(k,i){var e=G.ends[i],j=G.J[i],on=DN.sel===k;g.strokeStyle=on?"rgba(255,61,168,.8)":"rgba(255,255,255,.25)";g.lineWidth=on?3:1.5;g.beginPath();g.moveTo(j[0],j[1]);g.lineTo(e[0],e[1]);g.stroke();
+    g.beginPath();g.arc(e[0],e[1],on?13:10,0,6.3);g.fillStyle=on?"rgba(255,61,168,.55)":"rgba(127,119,221,.45)";g.fill();g.lineWidth=2;g.strokeStyle="#fff";g.stroke();});
+  var b=G.body,on=DN.sel==="body";g.fillStyle=on?"rgba(255,61,168,.55)":"rgba(61,242,255,.35)";g.strokeStyle="#fff";g.lineWidth=2;g.beginPath();g.rect(b[0]-12,b[1]-12,24,24);g.fill();g.stroke();
+  g.fillStyle="rgba(255,255,255,.8)";g.font="700 12px system-ui";g.textAlign="center";g.fillText("frame "+(DN.fi+1)+" / "+DN.N+" · beat "+dnQ().toFixed(2),W/2,22);
+}
+function dnTick(){var ph=document.querySelector("#dnline .ph");if(ph)ph.style.left=(AS.q/4*100)+"%";}
+function dnBar(){
+  var b=$("dnbar");b.textContent="";
+  var ex=mk("button","","✕");ex.title="Exit full screen";ex.onclick=function(){dnFull(false);};b.appendChild(ex);
+  var pl=mk("button",AS.play?"on":"",AS.play?"⏸":"▶");pl.title="Play / pause";pl.onclick=function(){if(AS.play){AS.play=false;DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();}else AS.play=true;dnBar();dnTimeline();};b.appendChild(pl);
+  ["armL","armR","legL","legR","body"].forEach(function(k){var c=mk("button",DN.sel===k?"on":"",{armL:"💪L",armR:"💪R",legL:"🦵L",legR:"🦵R",body:"🧍"}[k]);c.title=DN_LABEL[k];c.onclick=function(){DN.sel=k;dnBar();};b.appendChild(c);});
+  var gh=mk("button",DN.ghost?"on":"","👻");gh.title="Show the original faintly";gh.onclick=function(){DN.ghost=!DN.ghost;dnBar();};b.appendChild(gh);
+  var un=mk("button","","↶");un.title="Undo";un.onclick=dnUndo;b.appendChild(un);
+  var cl=mk("button","","🗑");cl.title="Clear this frame";cl.onclick=function(){dnSnap();dnSet({});};b.appendChild(cl);
+  var sp=mk("button","",AS.speed+"×");sp.title="Playback speed";sp.onclick=function(){var L=[0.25,0.5,1,1.5,2],i=L.indexOf(AS.speed);AS.speed=L[(i+1)%L.length];dnBar();};b.appendChild(sp);
+  var d=ART.DANCES[AS.style];b.appendChild(mk("span","nm",(d?d.icon+" "+d.name:"")+((d&&d.subs&&d.subs[AS.sub])?" · "+d.subs[AS.sub]:"")));
+  $("dpSel").textContent=DN_LABEL[DN.sel];
+}
+function dnTimeline(){
+  var L=$("dnline");if(!L)return;L.textContent="";L.appendChild(mk("div","ln"));var keys=ART.DTWEAK.get(AS.style,AS.sub).map(function(e){return Math.round(e.q*100)/100;});
+  for(var i=0;i<DN.N;i++){var q=Math.round(i*(4/DN.N)*100)/100,n=mk("div","nt"+(i%4===0?" beat":"")+(keys.indexOf(q)>=0?" key":"")+(!AS.play&&i===DN.fi?" cur":""));n.style.left=(i/DN.N*100)+"%";L.appendChild(n);
+    if(i%4===0){var bl=mk("div","bl","beat "+(i/4+1));bl.style.left=n.style.left;L.appendChild(bl);}}
+  var ph=mk("div","ph");ph.style.left=(AS.q/4*100)+"%";L.appendChild(ph);
+}
+function dnFull(on){AS.dfs=!!on;$("app").classList.toggle("dfs",AS.dfs);
+  if(AS.dfs){AS.play=false;DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();DN.undo=[];dnBar();dnTimeline();var de=document.documentElement;try{if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().catch(function(){});}catch(e){}}
+  else{try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen();}catch(e){}assetPanel();}
+  setTimeout(size,30);}
+/* move the selected part: a limb by its hand/foot (dx,dy in screen pixels), the body by its centre */
+function dnMove(part,dx,dy,abs){
+  var W=cv.width,H=cv.height,G=dnGeo(W,H),v=dnVals(),cs=G.cs;
+  if(part==="body"){v.dx=Math.round(((v.dx||0)+dx/cs)*100)/100;v.bob=Math.round(((v.bob||0)+dy/cs)*100)/100;}
+  else{var i=["armL","armR","legL","legR"].indexOf(part),j=G.J[i],e=abs||[G.ends[i][0]+dx,G.ends[i][1]+dy],want=Math.atan2(-(e[0]-j[0]),e[1]-j[1]),cur=G.p[part]||0,d=want-cur;d=Math.atan2(Math.sin(d),Math.cos(d));v[part]=Math.round(((v[part]||0)+d)*100)/100;}
+  dnSet(v);}
+function dnTurn(part,da){var v=dnVals();if(part==="body")v.rot=Math.round(((v.rot||0)+da)*100)/100;else v[part]=Math.round(((v[part]||0)+da)*100)/100;dnSet(v);}
+function bindDance(){
+  function pt(e){var r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];}
+  cv.addEventListener("pointerdown",function(e){if(!AS.dfs||AS.cat!=="dance")return;e.preventDefault();if(AS.play){AS.play=false;DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();dnBar();dnTimeline();}
+    var p=pt(e),G=dnGeo(cv.width,cv.height),best=null,bd=34;["armL","armR","legL","legR"].forEach(function(k,i){var d=Math.hypot(p[0]-G.ends[i][0],p[1]-G.ends[i][1]);if(d<bd){bd=d;best=k;}});
+    if(!best&&Math.hypot(p[0]-G.body[0],p[1]-G.body[1])<Math.max(40,G.cs*6))best="body";
+    if(!best)return;try{cv.setPointerCapture(e.pointerId);}catch(x){}DN.sel=best;dnBar();dnSnap();DN.drag={id:e.pointerId,last:p};});
+  cv.addEventListener("pointermove",function(e){if(!DN.drag||e.pointerId!==DN.drag.id)return;e.preventDefault();var p=pt(e);
+    if(DN.sel==="body"){dnMove("body",p[0]-DN.drag.last[0],p[1]-DN.drag.last[1]);}else dnMove(DN.sel,0,0,p);DN.drag.last=p;});
+  var up=function(e){if(DN.drag&&e.pointerId===DN.drag.id)DN.drag=null;};cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  /* the timeline: tap or drag along it to pick a frame */
+  var L=$("dnline"),scrub=function(e){var r=L.getBoundingClientRect(),f=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));dnGo(Math.round(f*DN.N)%DN.N);};
+  L.addEventListener("pointerdown",function(e){e.preventDefault();try{L.setPointerCapture(e.pointerId);}catch(x){}L._d=true;scrub(e);});
+  L.addEventListener("pointermove",function(e){if(L._d)scrub(e);});L.addEventListener("pointerup",function(){L._d=false;});L.addEventListener("pointercancel",function(){L._d=false;});
+  $("dnPrev").onclick=function(){dnGo((AS.play?Math.round(AS.q/(4/DN.N)):DN.fi)-1);};$("dnNext").onclick=function(){dnGo((AS.play?Math.round(AS.q/(4/DN.N)):DN.fi)+1);};
+  /* the D pad: one sprite pixel per press (hold to repeat); the turn buttons rotate a little */
+  Array.prototype.forEach.call(document.querySelectorAll("#dpad [data-d]"),function(btn){var rep=null,go=function(){var cs=dnGeo(cv.width,cv.height).cs,d=btn.dataset.d;
+      if(d==="rl")dnTurn(DN.sel,-0.05);else if(d==="rr")dnTurn(DN.sel,0.05);else dnMove(DN.sel,d==="lt"?-cs:d==="rt"?cs:0,d==="up"?-cs:d==="dn"?cs:0);};
+    btn.addEventListener("pointerdown",function(e){e.preventDefault();if(AS.play){AS.play=false;DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();dnBar();dnTimeline();}dnSnap();go();var n=0;rep=setInterval(function(){if(++n>3)go();},110);});
+    var stop=function(){clearInterval(rep);rep=null;};btn.addEventListener("pointerup",stop);btn.addEventListener("pointercancel",stop);btn.addEventListener("pointerleave",stop);});
+  $("dpSel").onclick=function(){var L2=["armL","armR","legL","legR","body"];DN.sel=L2[(L2.indexOf(DN.sel)+1)%L2.length];dnBar();};
+  window.addEventListener("keydown",function(e){if(!AS.dfs)return;if(e.key==="Escape")dnFull(false);else if(e.key===",")dnGo(DN.fi-1);else if(e.key===".")dnGo(DN.fi+1);else if(e.key===" "){e.preventDefault();AS.play=!AS.play;if(!AS.play){DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();}dnBar();dnTimeline();}});
+}
 function pixelRow(row){
   function sel(label,opts,val,on){var l=mk("label","",label+" "),s=document.createElement("select");opts.forEach(function(o){var e=document.createElement("option");e.value=o[0];e.textContent=o[1];s.appendChild(e);});s.value=val;s.onchange=function(){on(s.value);};l.appendChild(s);row.appendChild(l);}
   sel("Part",PARTS,PX.part,function(v){PX.part=v;PX.v=pxVariants(v)?pxVariants(v)[0][0]:0;pxSelect();assetPanel();});
@@ -379,6 +483,7 @@ function assetPanel(){
   if(AS.cat==="char"){body.appendChild(mk("div","about","Pose a character by hand. Arm and leg angles are in radians; this is the same pose data every dance and game animation uses."));poseSliders(body,AS.pose);}
   if(AS.cat==="dance"){
     var d=ART.DANCES[AS.style],ab=mk("div","about");ab.appendChild(mk("div","","Each dance loops every 4 beats. Left character is the original, right is with your saved tweaks. Scrub to a frame, move the nudge sliders, then Save frame. The tweak fades in and out around that beat, and the animation plays with it everywhere on this device. "+(d.help||"")));
+    var fsb=mk("button","go","⛶ Full screen editor");fsb.style.cssText="display:block;width:100%;padding:11px;font-size:14px;margin:0 0 8px";fsb.onclick=function(){dnFull(true);};body.insertBefore(fsb,body.firstChild);
     var pl=mk("button",AS.play?"on":"",AS.play?"⏸ Pause":"▶ Play");pl.style.marginTop="8px";pl.onclick=function(){AS.play=!AS.play;pl.textContent=AS.play?"⏸ Pause":"▶ Play";pl.className=AS.play?"on":"";};ab.appendChild(pl);body.appendChild(ab);
     var qr=slider(body,"Frame (beat 0 to 4)","Scrub the loop. Playing moves this on its own.",AS.q,0,3.99,0.01,function(v){AS.play=false;pl.textContent="▶ Play";pl.className="";AS.q=v;$("qOut")&&($("qOut").textContent=v.toFixed(2));});qr.sl.id="qScrub";qr.nu.id="qOut";qr.nu.style.display="none";
     var qo=mk("div","d","");qo.id="qOut";qo.textContent=AS.q.toFixed(2);qr.nu.parentNode.appendChild(qo);
@@ -437,7 +542,7 @@ $("bApply").onclick=function(){
   $("bApply").textContent="Loaded";setTimeout(function(){$("bApply").textContent="Apply pasted";},1500);build();};
 $("bReset").onclick=function(){if(confirm("Put every graphics value, dance tweak and asset look back to its default?")){GFX.resetAll();ART.DTWEAK.clear();ART.paint.clear();ASSETADJ={};saveAdj();build();}};
 GFX.onChange(share);window.addEventListener("resize",size);
-window.ukGfxLab=function(){return{mode:mode,tab:tab,as:AS,fx:FX,changed:GFX.changed(),dtweaks:ART.DTWEAK.count(),px:PX,pxSpec:function(){return PX.spec;},pxSelect:pxSelect};};
-bindPixel();size();fxRow();build();requestAnimationFrame(frame);
+window.ukGfxLab=function(){return{dn:DN,dnFull:dnFull,mode:mode,tab:tab,as:AS,fx:FX,changed:GFX.changed(),dtweaks:ART.DTWEAK.count(),px:PX,pxSpec:function(){return PX.spec;},pxSelect:pxSelect};};
+bindPixel();bindDance();size();fxRow();build();requestAnimationFrame(frame);
 })();
 </script></body></html>

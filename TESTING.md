@@ -702,3 +702,11 @@ Free dance (all in the free dance panel).
 - Works for every part: character parts (hair, hats, tops, arms...) and the instruments, keyboard and mic (for those the original drawing is skipped entirely once redrawn).
 - Undo brings the old picture back; Clear this layer goes back to the untouched original.
 - Check: Graphics lab > Assets > Pixel editor > pick a part > Redraw > draw over the faint copy > back to the venue and look at it on a character.
+
+## v1.54.5 - Dance animation: full screen editor
+- Graphics lab > Assets > Dance > **⛶ Full screen editor**.
+- **Timeline** across the bottom: the 4-beat loop as a line with 16 notches (a frame every quarter beat, tall notches on the beats). Pink dots mark frames you've changed. Tap or drag along it to pick a frame; ◀ ▶ step one frame.
+- **▶ Play** to test the loop (speed button cycles 0.25× to 2×). Space plays/pauses on a keyboard, comma / full stop step frames.
+- **Drag to pose**: drag a hand or foot handle to swing that arm or leg; drag the square on the body to move the whole body (sideways and bounce).
+- **D pad**: moves the selected part one pixel per press (hold to repeat); ⟲ ⟳ turn it a little (for the body that's the tilt). Tap the middle of the D pad, or the 💪 / 🦵 / 🧍 buttons, to pick the part.
+- 👻 shows the original dance faintly behind, ↶ undoes, 🗑 clears the frame. Every change saves straight away and goes out in the share box as DANCE-JSON, same as before.
