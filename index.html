@@ -9,9 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.56.4"></script>
-<script src="art.js?v=1.56.4"></script>
-<script src="instruments.js?v=1.56.4"></script>
+<script src="gfx.js?v=1.56.5"></script>
+<script src="art.js?v=1.56.5"></script>
+<script src="instruments.js?v=1.56.5"></script>
+<script src="kart.js?v=1.56.5"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -157,6 +158,8 @@ body.jset #app.jx #side-name{display:none}
 #jmR{position:absolute;inset:0;z-index:2;background:transparent;overflow:hidden}
 #jcv{position:absolute;top:0;left:0;pointer-events:none;opacity:0.55}
 /* jam stage view: the venue fills the screen; the video sits on the Jumbotron (placed by JAMSTAGE) */
+#jRace{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;image-rendering:pixelated}
+#jm.race #jRace{display:block}
 #jStage{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;image-rendering:pixelated}
 #jm.stage #jStage{display:block}
 /* stage view: the performer (and any section players) drawn on a layer above the video, so you stand in front of the Jumbotron */
@@ -761,7 +764,7 @@ body.jset .nav-item.jam-only{display:flex}
 </div>
 <div id="jm">
   <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
-  <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
+  <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><canvas id="jRace"></canvas><div id="jnd"></div>
     <button id="jStageBtn" title="Stage view: your venue, with the video on a Jumbotron">&#127967; Stage</button>
     <button id="jSongBtn" title="Start a song: pick it (your music, a video, or YouTube), pick the game, then start">&#127925; Start song</button>
     <div id="lsBar"><span class="ic" id="lsIc">&#127925;</span><div class="tt"><b id="lsTitle"></b><span id="lsSub"></span><div class="pg"><i id="lsPg"></i></div></div><button id="lsRec" title="Record show">&#9210;</button><button id="lsSaved" title="This song has a saved show, playing back now. Click to delete it" style="display:none">&#9654; Show &#10005;</button><button id="lsPause" title="Pause / resume (P)">&#10074;&#10074;</button><button id="lsEnd" title="End the song (and the round)">&#9632; End</button></div>
@@ -4273,7 +4276,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.56.4",SERVER_VERSION="";
+var PAGE_VERSION="1.56.5",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4352,7 +4355,7 @@ function audEvent(msg){
     /* free dance styles: the dance, its move and the two dots (drawn here the same way the venue draws them) */
     var f=msg.fd;pp.fd=f&&f.s>=1&&f.s<=15&&Array.isArray(f.c)&&f.c.length===4?{s:f.s|0,m:f.m|0,c:f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v))/100:0;})}:null;
     if(!pp.fd||nc>(pp.combo||0))pp.hitT=Date.now();pp.pose=pa;pp.combo=nc;
-    pp.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0}:null;   /* on the roller rink */
+    pp.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0,t:Math.max(0,Math.min(4,+msg.sk.t||0))}:null;   /* on the roller rink */
   }
   else if(msg.type==="kick"){KPS.kick(msg);}
   else if(msg.type==="chat"&&id&&AUD.people[id]){var q=AUD.people[id];q.said=Date.now();q.text=String(msg.text||"").slice(0,140);if(msg.color)q.color=audColor(msg.color,q.color);}
@@ -4969,7 +4972,31 @@ var JAMSTAGE=(function(){
   window.ukJamStage=function(){return{on:on,active:!!($("jm")&&$("jm").classList.contains("stage")),k:Math.round(k*100)/100,video:videoOn()};};
   return{init:init,set:set,apply:apply,get on(){return on;}};
 })();
-window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();});
+/* Mars Rally: while a race is on, you see the whole track from your UFO, everyone's kart on it and the top three picked out */
+var RACEVIEW=(function(){
+  var raf=0,cv=null,last=[],act=false,force=null,trk=null,trKey="";
+  function $(id){return document.getElementById(id);}
+  function racing(){if(force)return true;var c=typeof ROUNDS!=="undefined"&&ROUNDS.current;return !!(jamOn&&liveOn&&window.KART&&KART.overview&&c&&c.mode==="kart"&&(c.phase==="countdown"||c.phase==="play"));}
+  function apply(){var a=racing(),jm=$("jm");if(!jm)return;if(a!==act){act=a;jm.classList.toggle("race",a);}if(a&&!raf)raf=requestAnimationFrame(frame);}
+  function avatar(x,y,v,isMe,sc,pose,noName,dir){ART.drawChar(cv.getContext("2d"),x,y,sc,v.look||ART.looks.fromColor(v.color||"#888888",1),{armL:pose[0],armR:pose[1],legL:pose[2],legR:pose[3],dir:dir|0});}
+  function frame(){
+    raf=0;if(!racing()){apply();return;}
+    if(!cv)cv=$("jRace");
+    var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
+    if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+    var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
+    var rs=force?force():[];if(!force)Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p.sk||!p.sk.f)return;var w=KART.geo.dec(p.x,p.y);rs.push({id:id,name:p.name,color:p.color,look:p.look,x:w[0],y:w[1],h:p.sk.h,t:p.sk.t});});
+    var c=ROUNDS.current||{n:0,title:"test"},rk=c.n+":"+c.title;
+    if(rk!==trKey){trKey=rk;trk=null;try{trk=JSON.parse(localStorage.getItem("uk_track")||"null");}catch(e){}}   /* the track that went out with this round */
+    last=KART.overview(g,W,H,{track:trk,round:rk,racers:rs,avatar:avatar,beat:function(){return typeof STAGEFX!=="undefined"&&STAGEFX.beat?STAGEFX.beat():(performance.now()%500)/500;},
+      perf:function(ctx,x,y,s){perfDraw(ctx,x,y,s,performance.now(),null,null,0,true);}});
+    raf=requestAnimationFrame(frame);
+  }
+  window.ukRaceView=function(){return{on:act,standings:last};};
+  window.ukRaceTest=function(fn){force=fn||null;apply();};   /* tests: fn() returns the racers */
+  return{init:function(){setInterval(apply,400);},apply:apply};
+})();
+window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.init();});
 document.getElementById("jAudH").onclick=function(){AUD.min=!AUD.min;try{localStorage.setItem("uk_jaud_min",AUD.min?"1":"0");}catch(e){}document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";drawAud();};
 document.getElementById("jAudBig").onclick=function(e){e.stopPropagation();AUD.big=!AUD.big;if(AUD.min){AUD.min=false;document.getElementById("jAudMin").innerHTML="&#8211;";}try{localStorage.setItem("uk_jaud_big",AUD.big?"1":"0");localStorage.setItem("uk_jaud_min","0");}catch(x){}drawAud();};
 document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";

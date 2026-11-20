@@ -757,6 +757,12 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.56.5 - Performer sees the Mars Rally race
+
+During a Mars Rally round, jam mode switches to a race view: the whole track from above, with you playing on your UFO in the top left. Every racer's kart is on the track in real time, the top three have gold, silver and bronze rings with a 1/2/3 badge over their kart, and a standings list on the right shows everyone in order plus the leader's lap. It goes back to your normal view when the round ends.
+
+**Test it:** go live, pick Mars Rally with a few bots, start a song. Once the karts pop out (about 6 seconds into the race intro) you should see them move round the track and the standings reorder as they pass each other.
+
 ## v1.56.4 - Go live from jam mode
 
 Jam mode now has its own **🔴 Go live** button (next to Hang out), so you don't have to leave jam mode to start a show. Once you're live it turns into a pulsing **🔴 LIVE** badge (or **📡 Reconnecting…** during a blip). Clicking it while live asks before ending the show.

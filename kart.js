@@ -209,9 +209,10 @@
   /* ---- the space backdrop with the track floating in it, painted once (chunky) ---- */
   function rng(seed) { var s = seed >>> 0; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
   var BX0 = -100, BY0 = -100, BWW = 1200, BHH = 820, Q = 1.6;
-  function bake() {
+  function bake(m) {
     /* the painted area: the track plus a wide border of space; coarser pixels for very big tracks so phones can hold it */
-    BX0 = Math.floor(tr.box.x0 - 360); BY0 = Math.floor(tr.box.y0 - 360); BWW = Math.ceil(tr.box.x1 - tr.box.x0 + 720); BHH = Math.ceil(tr.box.y1 - tr.box.y0 + 720);
+    m = m || 360;
+    BX0 = Math.floor(tr.box.x0 - m); BY0 = Math.floor(tr.box.y0 - m); BWW = Math.ceil(tr.box.x1 - tr.box.x0 + 2 * m); BHH = Math.ceil(tr.box.y1 - tr.box.y0 + 2 * m);
     Q = Math.min(1.6, Math.sqrt(12e6 / (BWW * BHH)));
     var AREA = Math.min(6, BWW * BHH / (1200 * 820));
     var c = document.createElement("canvas"); c.width = Math.round(BWW * Q); c.height = Math.round(BHH * Q);
@@ -297,7 +298,10 @@
   }
   function ufo(ctx, tt, T_) {
     var sp = env.perfStage ? env.perfStage() : null; if (!sp) return; var p = perf(sp[0], sp[1]), drop = ease(tt / (1.0 * T_.S)); var y = p[1] + 62 - (1 - drop) * 340, x = p[0], now = performance.now();
-    ctx.save(); ctx.translate(x, y);
+    ufoAt(ctx, x, y, now, 1);
+  }
+  function ufoAt(ctx, x, y, now, sz) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(sz, sz);
     var gl = ctx.createRadialGradient(0, 18, 4, 0, 18, 110); gl.addColorStop(0, "rgba(61,242,255,.45)"); gl.addColorStop(1, "rgba(61,242,255,0)"); ctx.fillStyle = gl; ctx.fillRect(-110, -60, 220, 200);
     ctx.fillStyle = "#3a3f58"; ctx.beginPath(); ctx.ellipse(0, 0, 98, 22, 0, 0, 6.3); ctx.fill();
     ctx.fillStyle = "#6b7396"; ctx.beginPath(); ctx.ellipse(0, -4, 98, 18, 0, 3.14, 6.3); ctx.fill();
@@ -499,7 +503,7 @@
   }
   /* one kart: shadow, flames, the back half, the driver in the seat, the front half, sparks, name */
   function kart(ctx, k, now) {
-    var sc = toScreen(k.x, k.y), s = cam.z * (k.pop === undefined ? 1 : 0.3 + 0.7 * k.pop), fr = sheet(k.v.color || "#e33")[idx16(k.a)], lift = (k.air ? 6 : 0) * s, ks = s * 1.2;
+    var sc = toScreen(k.x, k.y), s = k.sc || cam.z * (k.pop === undefined ? 1 : 0.3 + 0.7 * k.pop), fr = sheet(k.v.color || "#e33")[idx16(k.a)], lift = (k.air ? 6 : 0) * s, ks = s * 1.2;
     ctx.save(); ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(sc[0], sc[1] + 2 * ks, 15 * ks, 9 * ks, 0, 0, 6.3); ctx.fill();
     var bx = sc[0] - OX * ks, by = sc[1] - OY * ks - lift;
@@ -528,10 +532,16 @@
     var tt = elapsed(), T_ = times(), now = performance.now(), vs = env.viewers(), myId = env.myId();
     if (tt < T_.fade) return;
     ctx.save(); ctx.translate(VW / 2 - cam.x * cam.z, VH / 2 - cam.y * cam.z); ctx.scale(cam.z, cam.z);
+    pads(ctx, now);
+    ctx.restore();
+    effects(ctx, tt, T_, now, vs, myId);
+  }
+  function pads(ctx, now) {
     tr.pads.forEach(function (pd) { var p = pointAt(tr, pd.d, pd.lat), hwp = pd.w, sc = hwp / 22; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = "rgba(20,10,40,.85)"; ctx.fillRect(-tr.padL / 2, -hwp, tr.padL, hwp * 2); ctx.scale(1, Math.min(1, sc));
       for (var c = 0; c < 3; c++) { var ph = ((now / 260 + c) % 3) / 3; ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillStyle = c % 2 ? "#3DF2FF" : "#F5F23D"; ctx.beginPath(); var xx = -tr.padL / 2 + ph * tr.padL; ctx.moveTo(xx - 6, -22); ctx.lineTo(xx + 5, 0); ctx.lineTo(xx - 6, 22); ctx.lineTo(xx - 1, 0); ctx.closePath(); ctx.fill(); }
       ctx.restore(); });
-    ctx.restore();
+  }
+  function effects(ctx, tt, T_, now, vs, myId) {
     /* drift sparks flying off, boost embers, landing dust */
     if (mk && mk.drift && !mk.air && Math.random() < 0.8) { var L = level(mk.charge); [-9, 9].forEach(function (o) { var wx = mk.x + Math.cos(mk.a) * -9 - Math.sin(mk.a) * o, wy = mk.y + Math.sin(mk.a) * -9 + Math.cos(mk.a) * o; fx.push({ x: wx, y: wy, vx: -mk.vx * 0.15 + (Math.random() - 0.5) * 60, vy: -mk.vy * 0.15 + (Math.random() - 0.5) * 60, t: now, life: 260, c: SPARK_COL[L], sz: 2 }); }); }
     if (mk && mk.boost > 0 && Math.random() < 0.7) fx.push({ x: mk.x - Math.cos(mk.a) * 14, y: mk.y - Math.sin(mk.a) * 14, vx: -mk.vx * 0.3 + (Math.random() - 0.5) * 20, vy: -mk.vy * 0.3 + (Math.random() - 0.5) * 20, t: now, life: 300, c: Math.random() < 0.5 ? "#FFB04A" : "#ff4a2b", sz: 3 });
@@ -614,6 +624,69 @@
   /* draw one kart + driver at a screen spot, for checking every angle */
   K.preview = function (ctx, x, y, a, v, z, turn) { var c0 = { x: cam.x, y: cam.y, z: cam.z }, w0 = VW, h0 = VH; VW = 0; VH = 0; cam.z = z || 2; cam.x = -x / cam.z; cam.y = -y / cam.z;
     try { kart(ctx, { x: 0, y: 0, a: a, v: v, me: false, turn: turn || 0, boost: 0, air: false, drifting: false }, performance.now()); } finally { cam.x = c0.x; cam.y = c0.y; cam.z = c0.z; VW = w0; VH = h0; } };
+  /* ================= the performer's view: the whole track from above, everyone on it, the top three picked out =================
+     o: { track (a builder track or null), round (changes = new race), racers: [{ id, name, color, look, x, y (world), h, t }],
+          avatar(x, y, v, isMe, scale, pose, noName, dir), perf(ctx, x, y, scale), beat() }
+     Returns the standings, leader first: [{ id, name, lap, place }]. */
+  var OV = null, MEDAL = ["#F5C518", "#C9D3E6", "#D9894A"];
+  K.overview = function (ctx, W, H, o) {
+    var key = JSON.stringify(o.track || null), now = performance.now();
+    if (!OV || OV.key !== key) OV = { key: key, tr: build(o.track), prog: {}, disp: {}, cv: null, round: null, last: now };
+    if (OV.round !== o.round) { OV.round = o.round; OV.prog = {}; OV.disp = {}; }
+    var dt = Math.min(0.1, (now - OV.last) / 1000); OV.last = now;
+    var S = [tr, PZ, BX0, BY0, BWW, BHH, Q, ROADP, MASK, cam, VW, VH, env];
+    tr = OV.tr; PZ = tr.plaza; VW = W; VH = H; env = { avatar: o.avatar, beat: o.beat };
+    var out = [];
+    try {
+      if (!OV.cv) { OV.cv = bake(Math.max(360, (tr.box.x1 - tr.box.x0) * 0.6, (tr.box.y1 - tr.box.y0) * 1.1)); OV.geo = [BX0, BY0, BWW, BHH, Q, ROADP, MASK]; }
+      BX0 = OV.geo[0]; BY0 = OV.geo[1]; BWW = OV.geo[2]; BHH = OV.geo[3]; Q = OV.geo[4]; ROADP = OV.geo[5]; MASK = OV.geo[6];
+      /* fit the whole track between the UFO on the left, the toolbar on top and the standings on the right */
+      var pl = Math.min(260, W * 0.17), pt = 100, pr = Math.min(230, W * 0.18), pb = 30, bw = tr.box.x1 - tr.box.x0, bh = tr.box.y1 - tr.box.y0;
+      var z = Math.min((W - pl - pr) / bw, (H - pt - pb) / bh);
+      cam = { z: z, x: (tr.box.x0 + tr.box.x1) / 2 - ((pl - pr) / 2) / z, y: (tr.box.y0 + tr.box.y1) / 2 - ((pt - pb) / 2) / z };
+      ctx.save(); ctx.imageSmoothingEnabled = false; ctx.fillStyle = "#07041a"; ctx.fillRect(0, 0, W, H);
+      ctx.translate(VW / 2 - cam.x * cam.z, VH / 2 - cam.y * cam.z); ctx.scale(cam.z, cam.z);
+      ctx.drawImage(OV.cv, BX0, BY0, BWW, BHH); floorGlow(ctx); startLine(ctx); pads(ctx, now);
+      ctx.restore();
+      /* where everyone is, smoothed between updates, and how far round they've got */
+      var seen = {}, ks = [];
+      (o.racers || []).forEach(function (r) {
+        seen[r.id] = 1; var d = OV.disp[r.id], a = ((r.h || 0) % 16) * STEP16;
+        if (!d || Math.hypot(r.x - d.x, r.y - d.y) > 240) d = OV.disp[r.id] = { x: r.x, y: r.y };
+        var kk = 1 - Math.exp(-dt * 10); d.x += (r.x - d.x) * kk; d.y += (r.y - d.y) * kk;
+        var p = OV.prog[r.id]; if (!p) { p = OV.prog[r.id] = new Prog(tr); p.reset(r.x, r.y); } else p.update(r.x, r.y);
+        var t = r.t || 0;
+        ks.push({ id: r.id, x: d.x, y: d.y, a: a, v: { name: r.name, color: r.color, look: r.look }, me: false, turn: 0, air: ((r.h || 0) % 32) >= 16, boost: t === 2 ? 1 : 0, drifting: t === 1 || t === 3 || t === 4, lvl: t === 3 ? 1 : t === 4 ? 2 : 0, acc: p.acc });
+      });
+      Object.keys(OV.disp).forEach(function (id) { if (!seen[id]) delete OV.disp[id]; });
+      ks.sort(function (p, q) { return q.acc - p.acc; });
+      ks.forEach(function (k, i) { k.place = i + 1; out.push({ id: k.id, name: k.v.name, place: i + 1, lap: Math.max(1, Math.floor(k.acc / tr.L) + 1) }); });
+      var ksz = clamp(cam.z * 1.15, 0.7, 1.4);
+      ks.slice().sort(function (p, q) { return p.y - q.y; }).forEach(function (k) {
+        var sc = toScreen(k.x, k.y), m = k.place <= 3 ? MEDAL[k.place - 1] : null;
+        if (m) { ctx.save(); ctx.globalAlpha = 0.35 + 0.25 * Math.sin(now / 180 + k.place); ctx.fillStyle = m; ctx.beginPath(); ctx.ellipse(sc[0], sc[1] + 2, 30 * ksz, 18 * ksz, 0, 0, 6.3); ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = m; ctx.lineWidth = 2.5; ctx.stroke(); ctx.restore(); }
+        k.sc = ksz; kart(ctx, k, now);
+        if (m) { var by = sc[1] - 46 * ksz; ctx.save(); ctx.fillStyle = m; ctx.strokeStyle = "rgba(0,0,0,.8)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sc[0], by, 11, 0, 6.3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#1a1200"; ctx.font = "900 13px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String(k.place), sc[0], by + 1); ctx.restore(); }
+      });
+      /* you, playing on your UFO in the corner */
+      var ux = Math.max(120, Math.min(pl * 0.62, W * 0.12)), uy = Math.max(190, H * 0.3) + Math.sin(now / 420) * 4, us = Math.max(0.8, Math.min(1.3, H / 700));
+      ufoAt(ctx, ux, uy + 52 * us, now, us);
+      if (o.perf) o.perf(ctx, ux, uy, 2.6 * us);
+      /* the standings */
+      var px = W - pr + 14, py = pt + 6, rw = pr - 28;
+      ctx.save(); ctx.fillStyle = "rgba(8,6,20,.82)"; ctx.strokeStyle = "rgba(61,242,255,.45)"; ctx.lineWidth = 1.5;
+      var n = Math.min(out.length, 10), ph = 40 + Math.max(1, n) * 26; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(px, py, rw, ph, 10); else ctx.rect(px, py, rw, ph); ctx.fill(); ctx.stroke();
+      ctx.textBaseline = "middle"; ctx.textAlign = "left"; ctx.font = "900 12px system-ui"; ctx.fillStyle = "#3DF2FF"; ctx.fillText("🏁 MARS RALLY" + (out.length ? "  ·  LAP " + out[0].lap : ""), px + 12, py + 20);
+      if (!out.length) { ctx.font = "700 12px system-ui"; ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.fillText("Racers getting into their karts…", px + 12, py + 46); }
+      for (var i = 0; i < n; i++) { var r = out[i], yy = py + 46 + i * 26, m2 = i < 3 ? MEDAL[i] : null;
+        if (m2) { ctx.fillStyle = m2; ctx.beginPath(); ctx.arc(px + 22, yy, 10, 0, 6.3); ctx.fill(); ctx.fillStyle = "#1a1200"; } else ctx.fillStyle = "rgba(255,255,255,.55)";
+        ctx.font = "900 12px system-ui"; ctx.textAlign = "center"; ctx.fillText(String(i + 1), px + 22, yy + 1);
+        ctx.textAlign = "left"; ctx.font = (i < 3 ? "800 14px" : "600 13px") + " system-ui"; ctx.fillStyle = m2 || "#ddd"; var nm = String(r.name || "?"); while (nm.length > 3 && ctx.measureText(nm).width > rw - 50) nm = nm.slice(0, -1); ctx.fillText(nm, px + 40, yy); }
+      ctx.restore();
+    } finally { tr = S[0]; PZ = S[1]; BX0 = S[2]; BY0 = S[3]; BWW = S[4]; BHH = S[5]; Q = S[6]; ROADP = S[7]; MASK = S[8]; cam = S[9]; VW = S[10]; VH = S[11]; env = S[12]; }
+    return out;
+  };
   K.bind = function (e) { env = e; };
   K.start = start; K.stop = stop; K.tick = tick; K.bg = bg; K.draw = draw; K.perf = perf; K.hide = hide; K.sheet = sheet;
   K.wire = function () {
