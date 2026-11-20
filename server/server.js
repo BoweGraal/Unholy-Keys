@@ -128,7 +128,6 @@ function broadcast(room, msg, exclude) {
    the song. Step and target rounds: each dancer's page reports its score and the highest wins.
    Free dance rounds: when the song ends everyone votes for a dancer (the performer's vote counts
    double). Placings earn show points (10, 7, 5, 3, then 1 for taking part) that add up all show. */
-var ROUND_POINTS = [10, 7, 5, 3];
 var VOTE_MS = +process.env.VOTE_MS || 20000;
 function intIn(v, lo, hi, def) { v = Math.floor(+v); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : def; }
 var SECTION_NAMES = ["intro", "verse", "chorus", "solo", "bridge", "breakdown", "finale", "outro"];
@@ -275,6 +274,16 @@ function roundStandings(code) {
   list.sort(function(a, b) { return b.score - a.score; });
   broadcast(code, { type: "round-scores", n: r.round.n, top: list.slice(0, 5), players: list.length });
 }
+/* every round hands out exactly 1000 show points, split by each player's share of the round's score, so a game
+   with big numbers counts the same as one with small numbers. Largest remainders get the leftover points so it adds up to 1000. */
+function share1000(list) {
+  var tot = 0; list.forEach(function(x) { tot += Math.max(0, +x.score || 0); });
+  var n = list.length; if (!n) return;
+  var raw = list.map(function(x) { return tot > 0 ? 1000 * Math.max(0, +x.score || 0) / tot : 1000 / n; });
+  var given = 0; list.forEach(function(x, i) { x.pts = Math.floor(raw[i]); given += x.pts; });
+  list.map(function(x, i) { return i; }).sort(function(a, b) { return (raw[b] - Math.floor(raw[b])) - (raw[a] - Math.floor(raw[a])); })
+    .slice(0, 1000 - given).forEach(function(i) { list[i].pts++; });
+}
 function roundFinish(code) {
   var r = rooms[code]; if (!r || !r.round) return;
   var rd = r.round; roundStop(r);
@@ -283,7 +292,8 @@ function roundFinish(code) {
   if (rd.isBattle) {
     /* battle: placed by how far each got in the bracket; the score shown is matches won */
     if (rd.battle) BATTLE.ranks(rd.battle).forEach(function(x) { var e = rd.battle.entrants[x.e]; list.push({ id: e.id, name: e.name, color: e.color, score: x.wins, bplace: x.place }); });
-    list.forEach(function(x) { x.place = x.bplace; x.pts = ROUND_POINTS[x.place] || 1; var key = x.name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: x.name, color: x.color, pts: 0, wins: 0 }); t.pts += x.pts; t.color = x.color; if (x.place === 0) t.wins++; });
+    share1000(list);
+    list.forEach(function(x) { x.place = x.bplace; var key = x.name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: x.name, color: x.color, pts: 0, wins: 0 }); t.pts += x.pts; t.color = x.color; if (x.place === 0) t.wins++; });
     rd.phase = "result";
     broadcast(code, { type: "round", phase: "result", n: rd.n, mode: rd.mode, battle: true, title: rd.title, players: list.length,
       ranking: list.slice(0, 10).map(function(x) { return { id: x.id, name: x.name, color: x.color, score: x.score, pts: x.pts, place: x.place + 1 }; }),
@@ -298,11 +308,11 @@ function roundFinish(code) {
     r.viewers.forEach(function(v, id) { if (v.roundScore > 0) list.push({ id: id, name: v.name, color: v.color, score: v.roundScore }); });
   }
   list.sort(function(a, b) { return b.score - a.score; });
-  /* equal scores share a placing; a free-dance dancer nobody voted for still gets the taking-part point */
+  share1000(list);
+  /* equal scores share a placing */
   for (var i = 0; i < list.length; i++) {
     var place = (i > 0 && list[i].score === list[i - 1].score) ? list[i - 1].place : i;
     list[i].place = place;
-    list[i].pts = (rd.mode === "free" && list[i].score === 0) ? 1 : (ROUND_POINTS[place] || 1);
     var key = list[i].name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: list[i].name, color: list[i].color, pts: 0, wins: 0 });
     t.pts += list[i].pts; t.color = list[i].color;
     if (place === 0 && list[i].score > 0) t.wins++;
@@ -408,7 +418,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.57.2";
+var VERSION = "1.57.3";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);

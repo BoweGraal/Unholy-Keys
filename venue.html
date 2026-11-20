@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.57.2"></script>
-<script src="gfx.js?v=1.57.2"></script>
-<script src="art.js?v=1.57.2"></script>
-<script src="instruments.js?v=1.57.2"></script>
-<script src="kart.js?v=1.57.2"></script>
+<script src="tune.js?v=1.57.3"></script>
+<script src="gfx.js?v=1.57.3"></script>
+<script src="art.js?v=1.57.3"></script>
+<script src="instruments.js?v=1.57.3"></script>
+<script src="kart.js?v=1.57.3"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -1867,6 +1867,16 @@ var BEAT=(function(){
    Talk opens the chat box; Dance toggles a dance everyone in the venue sees.
    ============================================================ */
 var held={up:false,down:false,left:false,right:false},myDance=0,lastMoveT=0;
+/* every round hands out exactly 1000 show points, split by each player's share of the round's score, so a game
+   with big numbers counts the same as one with small numbers. Largest remainders get the leftover points so it adds up to 1000. */
+function share1000(list) {
+  var tot = 0; list.forEach(function(x) { tot += Math.max(0, +x.score || 0); });
+  var n = list.length; if (!n) return;
+  var raw = list.map(function(x) { return tot > 0 ? 1000 * Math.max(0, +x.score || 0) / tot : 1000 / n; });
+  var given = 0; list.forEach(function(x, i) { x.pts = Math.floor(raw[i]); given += x.pts; });
+  list.map(function(x, i) { return i; }).sort(function(a, b) { return (raw[b] - Math.floor(raw[b])) - (raw[a] - Math.floor(raw[a])); })
+    .slice(0, 1000 - given).forEach(function(i) { list[i].pts++; });
+}
 function danceStyle(v){v=Math.floor(+v||0);return v>=1&&v<=5?v:0;}
 function safePose(a){if(!Array.isArray(a)||a.length!==4)return null;var o=[];for(var i=0;i<4;i++){var n=+a[i];if(!isFinite(n))return null;o.push(Math.max(-3.2,Math.min(3.2,n/100)));}return o;}
 function floorMaxY(){
@@ -4881,7 +4891,8 @@ var PRACTICE=(function(){
   function moshBonus(ids,pts){bots.forEach(function(b){if(ids.indexOf(b.id)>=0)b.score+=pts;});}
   function battleResult(my){
     var ranking=[];
-    if(plan)BATTLE.ranks(plan).forEach(function(x){var e=plan.entrants[x.e];ranking.push({id:e.id,name:e.name,score:x.wins,place:x.place+1,pts:[10,7,5,3][x.place]||1});});
+    if(plan)BATTLE.ranks(plan).forEach(function(x){var e=plan.entrants[x.e];ranking.push({id:e.id,name:e.name,score:x.wins,place:x.place+1,pts:0});});
+    share1000(ranking);
     ranking.forEach(function(r){var t=totals[r.name]||(totals[r.name]={name:r.name,pts:0,wins:0});t.pts+=r.pts;if(r.place===1)t.wins++;});
     var tl=Object.keys(totals).map(function(k){return totals[k];}).sort(function(a,b){return b.pts-a.pts||b.wins-a.wins;});
     ROUND.onMsg({type:"round",phase:"result",n:n,battle:true,ranking:ranking.slice(0,10),totals:tl.slice(0,10)});
@@ -4933,10 +4944,10 @@ var PRACTICE=(function(){
   function result(my,list,free){
     if(my!==job)return;
     list.sort(function(a,b){return b.score-a.score;});
-    var PTS=[10,7,5,3],ranking=[];
+    var ranking=[];share1000(list);
     list.forEach(function(x,i){
       var place=i>0&&x.score===list[i-1].score?ranking[i-1].place:i+1;
-      var pts=free&&x.score===0?1:(PTS[place-1]||1);
+      var pts=x.pts;
       ranking.push({id:x.id,name:x.name,score:x.score,pts:pts,place:place});
       var t=totals[x.name]||(totals[x.name]={name:x.name,pts:0,wins:0});t.pts+=pts;if(place===1&&x.score>0)t.wins++;
     });
@@ -5311,7 +5322,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.57.2",SERVER_VERSION="";
+var PAGE_VERSION="1.57.3",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5803,7 +5814,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.57.2"></script>
+<script src="lab.js?v=1.57.3"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

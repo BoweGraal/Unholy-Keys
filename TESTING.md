@@ -757,6 +757,18 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.57.3 - Every round is worth 1,000 show points
+
+Each round now splits exactly 1,000 show points between the players, by their share of that round's score. Before, show points went 10 / 7 / 5 / 3 / 1 by finishing place.
+- Example: scores of 2,651 / 2,449 / 1,889 / 1,459 in Mars Rally pay out 314 / 290 / 223 / 173. A step-dance round with scores of 957 / 729 / 628 / 436 pays 348 / 265 / 228 / 159.
+- A game with huge score numbers (Mars Rally) counts exactly the same as one with small ones, so being great at one game can't run away with the show. A close second still earns nearly as much as the winner.
+- Battles split by matches won; free dance by votes. If nobody scores at all, the 1,000 is shared equally.
+- Works the same in Dance practice.
+
+Needs a Render redeploy (server.js changed).
+
+**Test it:** play two different games with bots; each round's "+points" column adds up to 1,000, and the show totals add up to 1,000 per round played.
+
 ## v1.57.2 - Dance floor fills tall phone screens
 
 The floor used to stop at 78% of the screen height (room for the old, always-open chat log), which left a black band at the bottom on tall phones, most noticeably in the Home Screen app. It now runs down to the chat bar, or to the bottom of the screen in Dance practice.
