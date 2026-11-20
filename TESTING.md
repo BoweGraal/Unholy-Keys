@@ -757,6 +757,12 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.56.4 - Go live from jam mode
+
+Jam mode now has its own **🔴 Go live** button (next to Hang out), so you don't have to leave jam mode to start a show. Once you're live it turns into a pulsing **🔴 LIVE** badge (or **📡 Reconnecting…** during a blip). Clicking it while live asks before ending the show.
+
+**Test it:** enter jam mode, click Go live, check the audience panel appears and the button reads LIVE. Click it again and pick Cancel: the show keeps going.
+
 ## v1.56.3 - Reconnecting after a connection blip
 
 If the performer page loses its connection mid-show (Wi-Fi drop, phone switching networks, a server hiccup), the show no longer ends. The server holds the room, the audience, the round and the scores for a minute while the page reconnects on its own.
