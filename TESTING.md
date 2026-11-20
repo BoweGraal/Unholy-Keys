@@ -634,3 +634,8 @@ Free dance (all in the free dance panel).
 - Palettes show in full screen too: a dropdown, ＋, ✕ and the swatches on the third row.
 - **Zoom slider** is now smooth and shorter: the part fits the screen at about 40% of the way, the far right is 4x (it used to reach 10x, so 30% was already very close).
 - Check: Hair style > full screen > choose Sunset > tap colours and paint; ＋ to start your own palette.
+
+## v1.50.4 - Pixel editor: two-finger pinch zoom and move
+- Two fingers on the picture: pinch to zoom in and out, and drag to move around. The zoom slider, ✋ Drag and 💧 Pick colour buttons are gone. One finger paints as before; putting a second finger down cancels the pixel the first finger just made.
+- Mouse: the scroll wheel zooms around the pointer.
+- Check: full screen, pinch out, drag with two fingers, pinch in; confirm no stray pixels are painted while you do it.
