@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.57.3"></script>
-<script src="gfx.js?v=1.57.3"></script>
-<script src="art.js?v=1.57.3"></script>
-<script src="instruments.js?v=1.57.3"></script>
-<script src="kart.js?v=1.57.3"></script>
+<script src="tune.js?v=1.58.0"></script>
+<script src="gfx.js?v=1.58.0"></script>
+<script src="art.js?v=1.58.0"></script>
+<script src="instruments.js?v=1.58.0"></script>
+<script src="kart.js?v=1.58.0"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -103,6 +103,15 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 /* ── the part of the song (verse, chorus, solo...), announced as it starts ── */
 #partBanner{position:fixed;left:50%;top:26%;transform:translateX(-50%);z-index:22;pointer-events:none;font:900 clamp(24px,5.5vw,48px)/1 system-ui,sans-serif;color:#fff;text-shadow:0 0 18px #D354A0,0 3px 0 #000;white-space:nowrap;opacity:0}
 #partBanner.pop{animation:moshPop 2.2s ease-out forwards}
+/* ── dance walk race ── */
+#walkUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
+#walkUI.on{display:block}
+#wkBanner{position:absolute;left:50%;top:18%;transform:translateX(-50%);font:900 clamp(24px,5.5vw,50px)/1 system-ui,sans-serif;color:#fff;white-space:nowrap;opacity:0}
+#wkBanner.pop{animation:moshPop 2.2s ease-out forwards}
+#wkPad{position:absolute;right:max(16px,3vw);bottom:calc(var(--chatH) + 12px);width:min(300px,44vw,46vh);height:min(300px,44vw,46vh);pointer-events:auto;touch-action:none;cursor:none}
+#wkHint{position:absolute;right:16px;bottom:calc(var(--chatH) + min(300px,44vw,46vh) + 18px);width:min(300px,44vw,46vh);text-align:center;font:700 12px system-ui;color:rgba(255,255,255,.75);text-shadow:0 1px 2px #000}
+body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint{display:none}
+@media (max-width:520px){#wkPad{left:50%;right:auto;transform:translateX(-50%);width:min(78vw,40vh);height:min(78vw,40vh)}#wkHint{left:0;right:0;width:auto;bottom:calc(var(--chatH) + min(78vw,40vh) + 18px)}}
 /* ── keepy uppy ── */
 #keepyUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
 #keepyUI.on{display:block}
@@ -433,6 +442,7 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
   </div>
   <div id="moshUI"><div id="moshBanner">🤘 MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
   <div id="partBanner"></div>
+  <div id="walkUI"><div id="wkBanner"></div><div id="wkHint"></div><canvas id="wkPad"></canvas></div>
   <div id="keepyUI"><div id="kpBanner">🎈 KEEPY UPPY</div><div id="kpScore">0</div><div id="kpHint"></div><button id="kpJump" aria-label="Jump">JUMP<small>tap twice</small></button></div>
   <div id="skateUI"><div id="skBanner">🛼 ROLLER RINK</div><div id="skScore">0</div><div id="skSpeed"><i></i></div><div id="skTrick"></div><div id="skHint"></div><button id="skJump" aria-label="Jump">JUMP</button><div id="skWheel"><b data-t="1" style="left:50%;top:9%">SUPERMAN</b><b data-t="2" style="left:50%;top:91%">TUCK</b><b data-t="3" style="left:13%;top:50%">KICK</b><b data-t="4" style="left:87%;top:50%">SPLIT</b><i id="skKnob"></i></div></div>
   <div id="roundBox"></div>
@@ -451,6 +461,7 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
       <button data-m="ice">&#9976;&#65039; Ice rink</button>
       <button data-m="keepy">&#127880; Keepy uppy</button>
       <button data-m="kart">&#127949; Mars Rally</button>
+      <button data-m="walk">&#128131; Dance walk race</button>
     </div>
     <div class="r" style="margin-top:8px">
       <select id="prList" style="flex:1 1 220px;min-width:0"><option value="">Pick a song…</option></select>
@@ -465,7 +476,7 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
       <button id="prYtCancel">Stop adding</button>
     </div>
     <div class="r" style="margin-top:8px">
-      <select id="prMode" style="display:none"><option value="step">Step dance</option><option value="aim">Target dance</option><option value="keys">Note highway</option><option value="keys4">Note highway (4 keys)</option><option value="free">Free dance (vote)</option><option value="skate">Roller rink</option><option value="ice">Ice rink</option><option value="keepy">Keepy uppy</option><option value="kart">Mars Rally</option><option value="mosh">Mosh pit</option></select>
+      <select id="prMode" style="display:none"><option value="step">Step dance</option><option value="aim">Target dance</option><option value="keys">Note highway</option><option value="keys4">Note highway (4 keys)</option><option value="free">Free dance (vote)</option><option value="skate">Roller rink</option><option value="ice">Ice rink</option><option value="keepy">Keepy uppy</option><option value="kart">Mars Rally</option><option value="mosh">Mosh pit</option><option value="walk">Dance walk race</option></select>
       <select id="prSecs"><option value="5">5 s countdown</option><option value="10">10 s countdown</option><option value="20">20 s countdown</option><option value="30">30 s countdown</option></select>
       <select id="prLevel"><option value="0.7">Easy</option><option value="1" selected>Normal</option><option value="1.3">Hard</option></select>
       <select id="prBots"><option value="0">No other dancers</option><option value="3" selected>3 practice dancers</option><option value="8">8 practice dancers</option></select>
@@ -1595,7 +1606,7 @@ function handleMsg(msg){
   else if(t==="pose"){
     var pv=viewers[msg.id],pp=safePose(msg.a);
     if(pv&&pp&&msg.id!==myId){var nc=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pv.fd=safeFd(msg.fd);if(!pv.fd||nc>(pv.combo||0))pv.hitT=Date.now();pv.pose=pp;pv.combo=nc;
-      pv.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0,t:Math.max(0,Math.min(4,Math.floor(+msg.sk.t||0)))}:null;}
+      pv.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0,t:Math.max(0,Math.min(9,Math.floor(+msg.sk.t||0)))}:null;}
   }
   else if(t==="dance"){
     if(viewers[msg.id])viewers[msg.id].dance=danceStyle(msg.style);
@@ -1896,7 +1907,8 @@ function moveTick(){
   if(typeof MOSH!=="undefined"&&MOSH.drives()){requestAnimationFrame(moveTick);return;}
   if(typeof SKATE!=="undefined"&&SKATE.on){requestAnimationFrame(moveTick);return;}
   if(typeof KART!=="undefined"&&KART.on){requestAnimationFrame(moveTick);return;}   /* the kart drives itself */
-  if(typeof KEEPY!=="undefined"&&KEEPY.on){requestAnimationFrame(moveTick);return;}   /* keepy uppy moves you itself (and jumps) */   /* skating: momentum, not walking */   /* the wall of death and the circle pit move you */
+  if(typeof KEEPY!=="undefined"&&KEEPY.on){requestAnimationFrame(moveTick);return;}
+  if(typeof WALK!=="undefined"&&WALK.on){requestAnimationFrame(moveTick);return;}   /* the race walks you */   /* keepy uppy moves you itself (and jumps) */   /* skating: momentum, not walking */   /* the wall of death and the circle pit move you */
   if(mw&&mw.walk&&anyHeld())mw.walk=null;          /* the arrows take over */
   if(mw&&mw.walk){
     /* walking to where you tapped, at the same pace as the arrows */
@@ -2370,11 +2382,11 @@ var GAME=(function(){
   }
 
   function me(){return (myId&&viewers[myId])||null;}
-  function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;m.fd=mode==="free"?fdState():null;if(hit)m.hitT=Date.now();}
+  function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;m.fd=mode==="free"?fdState():mode==="walk"?WALK.fd():null;if(hit)m.hitT=Date.now();}
   function sendPose(force){
-    var now=Date.now(),fd=mode==="free"?fdState():null,msg=pose.map(function(a){return Math.round(a*100);});
+    var now=Date.now(),fd=mode==="free"?fdState():mode==="walk"?WALK.fd():null,msg=pose.map(function(a){return Math.round(a*100);});
     if(fd){var rg=ART.dance(fd.s,fd.m,fCtl,beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
-    var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():null;
+    var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():mode==="walk"?WALK.wire():null;
     var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(","):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
     if(key===lastSent&&!force&&(!sk||now-lastSend<1000))return;   /* in a game, resend now and then: someone who just (re)joined needs it */
     if(now-lastSend<90&&!force){if(!sendTimer)sendTimer=setTimeout(function(){sendTimer=null;sendPose();},95-(now-lastSend));return;}
@@ -3122,6 +3134,7 @@ var GAME=(function(){
     if(mode==="skate"){SKATE.tick();raf=requestAnimationFrame(tick);return;}
     if(mode==="keepy"){KEEPY.tick();raf=requestAnimationFrame(tick);return;}
     if(mode==="kart"){KART.tick();raf=requestAnimationFrame(tick);return;}
+    if(mode==="walk"){WALK.tick();raf=requestAnimationFrame(tick);return;}
     size();
     if(mode==="aim")drawAim(now);else if(mode==="keys")drawKeys(now);else drawStep(now);
     drawMe();
@@ -3130,27 +3143,28 @@ var GAME=(function(){
     raf=requestAnimationFrame(tick);
   }
   function start(m,round){
-    if(m!=="free"&&m!=="step"&&m!=="aim"&&m!=="keys"&&m!=="keys4"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart")return;
+    if(m!=="free"&&m!=="step"&&m!=="aim"&&m!=="keys"&&m!=="keys4"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart"&&m!=="walk")return;
     if(mode)stop(true);
     four=m==="keys4";if(four)m="keys";
     rnd=round||null;rndIdx=0;sentScore=-1;fCtl=[0,0,0,0];
     if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart)rnd.chart=easeChart(rnd.chart,rnd.diff);}clkOff=null;clkJumps=0;swoopEnd=-1e9;finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
-    mode=m;myDance=m==="free"||m==="mosh"||m==="skate"||m==="keepy"||m==="kart"?4:5;
+    mode=m;myDance=m==="free"||m==="mosh"||m==="skate"||m==="keepy"||m==="kart"||m==="walk"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
     pose=REST.slice();combo=0;keyT=[null,null,null,null];keyHeld=[false,false,false,false];grab={};
     notes=[];score=0;best=0;hits=0;misses=0;judge="";lastGen=-1;lastSlot=0;startT=performance.now();
     /* free dance happens on the floor itself; the other two games open their pad in the middle */
-    document.body.classList.toggle("gaming",m!=="free"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart");document.body.classList.toggle("gaming-step",m==="step");document.body.classList.toggle("gaming-free",m==="free");document.body.classList.toggle("gaming-keys",m==="keys");
-    document.getElementById("gamePanel").classList.toggle("on",m!=="free"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart");
+    document.body.classList.toggle("gaming",m!=="free"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart"&&m!=="walk");document.body.classList.toggle("gaming-step",m==="step");document.body.classList.toggle("gaming-free",m==="free");document.body.classList.toggle("gaming-keys",m==="keys");
+    document.getElementById("gamePanel").classList.toggle("on",m!=="free"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart"&&m!=="walk");
     if(m==="mosh")MOSH.start(rnd);
     if(m==="skate")SKATE.start(rnd);
     if(m==="keepy")KEEPY.start(rnd);
     if(m==="kart")KART.start(rnd);
+    if(m==="walk")WALK.start(rnd);
     lastFit=0;DEVICE.fit();
-    document.getElementById("gameTitle").textContent=m==="kart"?"🏍 Mars Rally":m==="keepy"?"🎈 Keepy uppy":m==="skate"?(ICE?"⛸ Ice rink":"🛼 Roller rink"):m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
+    document.getElementById("gameTitle").textContent=m==="walk"?"💃 Dance walk race":m==="kart"?"🏍 Mars Rally":m==="keepy"?"🎈 Keepy uppy":m==="skate"?(ICE?"⛸ Ice rink":"🛼 Roller rink"):m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
     if(m==="free")setTimeout(fdRender,0);
-    document.getElementById("moveHint").textContent=m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
+    document.getElementById("moveHint").textContent=m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
     var mm=me();if(mm)mm.dance=myDance;
@@ -3166,6 +3180,7 @@ var GAME=(function(){
     if(mode==="skate")SKATE.stop();
     if(mode==="keepy")KEEPY.stop();
     if(mode==="kart")KART.stop();
+    if(mode==="walk")WALK.stop();
     mode="";myDance=0;
     document.body.classList.remove("gaming","gaming-step","gaming-free","gaming-keys");
     document.getElementById("gamePanel").classList.remove("on");
@@ -3315,6 +3330,167 @@ var KEEPY=(function(){
   window.ukKeepyAt=function(x,y){var me=myId&&viewers[myId];if(me){me.tx=me.x=x;me.ty=me.y=y;}};
   window.ukKeepy=function(){return{on:on,score:score,z:Math.round(zp),jumps:jumps,objs:objs.map(function(o){return{type:o.type,x:+o.s.x.toFixed(3),y:+o.s.y.toFixed(3),z:Math.round(o.s.z),down:!!o.down,streak:o.streak||0};})};};
   return{start:start,stop:stop,tick:tick,jump:jump,onKick:onKick,draw:draw,wire:wire,looks:looks,get on(){return on;}};
+})();
+/* ============================================================
+   DANCE WALK RACE (the walk round)
+   Everyone lines up on the left of the floor and dance-walks to the finish line on the right. On your pad a circle
+   glides along an invisible path: keep your cursor (or finger) inside it to walk at full speed. Every 8 beats the
+   dance changes, and so does the path. Drift out and you slow down; stay out too long and you trip.
+   ============================================================ */
+var WALK=(function(){
+  var X0=0.06,X1=0.68,Y0=0.35,Y1=0.73,GO_BEAT=8,SEG=8;   /* the finish is left of the pad, so the pad never hides it */
+  /* each dance: its name, the free-dance moves the body does (ART.DANCES), the circle's colour and its path (u = 0..1 round the loop) */
+  function tri(t){t-=Math.floor(t);return 1-4*Math.abs(t-0.5);}
+  var BOX=[[-0.58,-0.55],[0.58,-0.55],[0.58,0.55],[-0.58,0.55]];
+  var STY=[
+    {name:"Sway",icon:"〰️",d:1,col:"#3DF2FF",p:function(u){return[0.72*Math.sin(u*6.283),0.14*Math.sin(u*12.566)];}},
+    {name:"Spin",icon:"🌀",d:11,col:"#D04DFF",p:function(u){return[0.6*Math.cos(u*6.283),0.6*Math.sin(u*6.283)];}},
+    {name:"Shuffle",icon:"👟",d:9,col:"#F5C518",p:function(u){return[0.72*tri(u),0.5*tri(u*2+0.25)];}},
+    {name:"Wave",icon:"🌊",d:3,col:"#4CC38A",p:function(u){return[0.72*Math.sin(u*6.283),0.48*Math.sin(u*12.566)];}},
+    {name:"Bounce",icon:"🤸",d:4,col:"#FF8A2B",p:function(u){return[0.28*Math.sin(u*6.283),0.62*Math.cos(u*12.566)];}},
+    {name:"Box step",icon:"🤖",d:6,col:"#FF4D6D",p:function(u){var s=(u-Math.floor(u))*4,i=Math.floor(s),f=s-i,a=BOX[i%4],b=BOX[(i+1)%4];return[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];}}];
+  var on=false,x=X0,y=0.56,laneY=0.56,fin=-1,place=0,tripUntil=0,outT=0,lastT=0,score=0,sentFin=false,cur=null,speedF=0,order=[0,1,2,3,4,5],roundN=0,finOrder=[],seen={},bots={},doneAsked=false,lastStyle=-1,lastCount=-1;
+  var pad=null,pg=null,PS=0;
+  function $(id){return document.getElementById(id);}
+  function T(k){return TUNE.v("wk."+k);}
+  function walkRound(){return GAME.mode==="walk"||(typeof ROUND!=="undefined"&&ROUND.mode==="walk");}
+  /* the song's beat, from the chart's beat times when there are some (the same on every screen) */
+  function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
+  function beatAt(pos){
+    var c=ROUND.chart&&ROUND.chart(),bs=c&&c.beats,per=c&&c.bpm?60000/c.bpm:500;
+    if(!bs||bs.length<2)return pos/per;
+    if(pos<=bs[0])return (pos-bs[0])/per;
+    var n=bs.length;if(pos>=bs[n-1])return n-1+(pos-bs[n-1])/per;
+    var lo=0,hi=n-1;while(hi-lo>1){var m=(lo+hi)>>1;if(bs[m]<=pos)lo=m;else hi=m;}
+    return lo+(pos-bs[lo])/Math.max(1,bs[hi]-bs[lo]);
+  }
+  function seg(b){return Math.max(0,Math.floor((b-GO_BEAT)/SEG));}
+  function styleAt(b){return order[seg(b)%order.length];}
+  /* where the circle is: on this dance's path, sliding over from the last one for the first beat of a change */
+  function circleAt(b){
+    var u=(b-GO_BEAT)/T("loopBeats"),si=styleAt(b),p=STY[si].p(u),into=b-GO_BEAT-seg(b)*SEG;
+    if(seg(b)>0&&into<1){var q=STY[order[(seg(b)-1)%order.length]].p(u),k=into*into*(3-2*into);p=[q[0]+(p[0]-q[0])*k,q[1]+(p[1]-q[1])*k];}
+    return p;
+  }
+  function shuffle(n){var o=[0,1,2,3,4,5],s=(n*9301+49297)%233280;for(var i=o.length-1;i>0;i--){s=(s*9301+49297)%233280;var j=Math.floor(s/233280*(i+1)),t=o[i];o[i]=o[j];o[j]=t;}return o;}
+  /* lanes: everyone in the room sorted the same way, so each screen puts each racer in the same lane */
+  function laneFor(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(4,Math.min(8,ids.length));return Y0+((i%n)+0.5)/n*(Y1-Y0);}
+  function banner(t,col){var b=$("wkBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#D04DFF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function start(round){
+    on=true;roundN=round?round.n:roundN+1;order=shuffle(roundN);x=X0;fin=-1;place=0;tripUntil=0;outT=0;score=0;sentFin=false;cur=null;speedF=0;finOrder=[];seen={};bots={};doneAsked=false;lastStyle=-1;lastCount=-1;
+    laneY=laneFor(myId);y=laneY;var me=myId&&viewers[myId];if(me){me.tx=me.x=x;me.ty=me.y=y;}
+    document.body.classList.add("gaming-walk");$("walkUI").classList.add("on");
+    pad=$("wkPad");pg=pad.getContext("2d");banner("💃 DANCE WALK RACE");
+  }
+  function stop(){on=false;document.body.classList.remove("gaming-walk");var u=$("walkUI");if(u)u.classList.remove("on");}
+  /* your cursor on the pad: mouse hover on a computer, your finger on a phone */
+  function padPt(e){var r=pad.getBoundingClientRect();return[((e.clientX-r.left)/r.width)*2-1,((e.clientY-r.top)/r.height)*2-1];}
+  function wirePad(){
+    var p=$("wkPad");if(!p||p._w)return;p._w=1;
+    p.addEventListener("pointermove",function(e){if(!on)return;cur=padPt(e);e.preventDefault();});
+    p.addEventListener("pointerdown",function(e){if(!on)return;cur=padPt(e);try{p.setPointerCapture(e.pointerId);}catch(x2){}e.preventDefault();});
+    p.addEventListener("pointerleave",function(e){if(e.pointerType==="mouse")cur=null;});
+    p.addEventListener("pointerup",function(e){if(e.pointerType!=="mouse")cur=null;});
+    p.addEventListener("pointercancel",function(){cur=null;});
+  }
+  function tick(){
+    if(!on)return;wirePad();
+    var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
+    var me=myId&&viewers[myId];if(!me)return;
+    var pos=songPos(),b=pos>-1e8?beatAt(pos):-99,going=b>=GO_BEAT,c=circleAt(b),r=T("radius");
+    /* the countdown on the beat, then the dance changes */
+    var cnt=Math.floor(b);if(b<GO_BEAT&&cnt!==lastCount&&cnt>=GO_BEAT-4){lastCount=cnt;banner(cnt===GO_BEAT-4?"READY…":String(GO_BEAT-cnt),"#F5C518");}
+    if(going){var si=styleAt(b);if(si!==lastStyle){lastStyle=si;banner((lastCount>=0&&seg(b)===0?"GO! ":"")+STY[si].icon+" "+STY[si].name.toUpperCase()+"!",STY[si].col);}}
+    /* how well you're keeping up: full speed inside the circle, slower the further out; stay out too long and you trip */
+    if(window.__wkFollow&&going)cur=[c[0]+0.05,c[1]];   /* tests: a perfect follower */
+    var d=cur?Math.hypot(cur[0]-c[0],cur[1]-c[1]):9,tripped=now<tripUntil,minS=T("minSpeed");
+    var f=d<=r?1:Math.max(minS,1-(d-r)/(r*1.6)*(1-minS));
+    if(going&&fin<0&&!tripped){
+      if(d>r*1.1)outT+=dt;else outT=Math.max(0,outT-dt*2);
+      if(outT>T("tripTime")){tripUntil=now+T("stun")*1000;outT=0;banner("💥 TRIPPED!","#FF4D6D");}
+    }
+    speedF+=((going&&fin<0&&!tripped?f:0)-speedF)*Math.min(1,dt*8);
+    if(going&&fin<0){x+=(X1-X0)/T("time")*speedF*dt;
+      if(x>=X1){x=X1;fin=pos;if(finOrder.indexOf(myId)<0)finOrder.push(myId);place=finOrder.indexOf(myId)+1;banner("🏁 FINISHED · "+ord(place)+"!","#F5C518");}}
+    /* score: distance, then a finish bonus that's bigger the sooner you got there */
+    /* score: up to 1000 for distance; over the line it's 1000 + 3000 / your place (1st 4000, 2nd 2500, 3rd 2000…).
+       In a show the server works out the places, so everyone agrees on them. */
+    var ns=fin>=0?1000+Math.round(3000/Math.max(1,place)):Math.round(1000*(x-X0)/(X1-X0));
+    if(ns!==score){GAME.moshPts(ns-score);score=ns;}
+    if(fin>=0&&!sentFin){sentFin=true;if(!PRACTICE.on)wsSend({type:"score",s:score,fin:1});}
+    me.tx=me.x=x;me.ty=me.y=laneY;sendPos(x,laneY);
+    me.sk=wire();
+    watchFinishers();
+    if(PRACTICE.on)botTick(dt,now,b,going);
+    drawPad(now,b,c,r,d,f,tripped);
+    var h=$("wkHint");if(h)h.textContent=!going?"Get your cursor in the circle: when it says GO, keep it there to dance-walk":fin>=0?"Finished! Dance it out while the others come in":tripped?"Tripped! Back on your feet in a moment…":outT>0.3?"Get back in the circle!":"Keep your cursor in the circle";
+  }
+  function beatPos(bi){var c=ROUND.chart(),bs=c&&c.beats,per=c&&c.bpm?60000/c.bpm:500;if(!bs||!bs.length)return bi*per;return bi<bs.length?bs[Math.max(0,Math.floor(bi))]:bs[bs.length-1]+(bi-bs.length+1)*per;}
+  function ord(n){return n+(n%10===1&&n%100!==11?"st":n%10===2&&n%100!==12?"nd":n%10===3&&n%100!==13?"rd":"th");}
+  /* the finish order, as each racer reaches the line on this screen */
+  function watchFinishers(){
+    Object.keys(viewers).forEach(function(id){if(id===myId||finOrder.indexOf(id)>=0)return;var v=viewers[id];if(!v||v===PH||v.dance!==4)return;
+      if((v.sk&&v.sk.h===1)||(v.x>=X1-0.004&&seen[id]))finOrder.push(id);if(v.x<X1-0.02)seen[id]=1;});
+    if(fin<0)place=0;
+    /* practice: when everyone's in, finish the round */
+    if(PRACTICE.on&&!doneAsked&&fin>=0){var all=Object.keys(bots).every(function(id){return bots[id].fin;});if(all){doneAsked=true;PRACTICE.walkDone();}}
+  }
+  /* practice: the practice dancers race too, each at their own pace, now and then losing the circle (and tripping) */
+  function botTick(dt,now,b,going){
+    Object.keys(viewers).filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id){
+      var v=viewers[id],bt=bots[id];
+      if(!bt){bt=bots[id]={x:X0,y:laneFor(id),sp:0.72+Math.random()*0.24,f:1,trip:0,fin:false,wob:Math.random()*6};}
+      if(going&&!bt.fin){
+        var t=now/1000;bt.f=Math.max(0.3,Math.min(1,bt.sp+0.25*Math.sin(t*0.9+bt.wob)));
+        if(!bt.trip&&Math.random()<dt*0.04*(1.2-bt.sp))bt.trip=now+T("stun")*1000;
+        if(bt.trip&&now>bt.trip)bt.trip=0;
+        if(!bt.trip)bt.x+=(X1-X0)/T("time")*bt.f*dt;
+        if(bt.x>=X1){bt.x=X1;bt.fin=true;if(finOrder.indexOf(id)<0)finOrder.push(id);PRACTICE.botScore(id,1000+Math.round(3000/(finOrder.indexOf(id)+1)));}
+        else PRACTICE.botScore(id,Math.round(1000*(bt.x-X0)/(X1-X0)));
+      }
+      v.tx=v.x=bt.x;v.ty=v.y=bt.y;v.dance=4;var si=going?styleAt(b):order[0];
+      v.fd=bt.fin?{s:14,m:0,c:[0,0,0,0]}:{s:STY[si].d,m:0,c:[0,0,0,0]};v.sk={h:bt.fin?1:0,f:bt.trip?1:0,t:si};
+    });
+  }
+  function drawPad(now,b,c,r,d,f,tripped){
+    if(!pad)return;var dpr=Math.min(2,window.devicePixelRatio||1),w=pad.clientWidth,hh=pad.clientHeight;
+    if(pad.width!==Math.round(w*dpr)||pad.height!==Math.round(hh*dpr)){pad.width=Math.round(w*dpr);pad.height=Math.round(hh*dpr);}
+    var g=pg;g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,hh);
+    var S=Math.min(w,hh)/2,cx=w/2,cy=hh/2,si=b>=GO_BEAT?styleAt(b):order[0],st=STY[si],beatK=1-((b%1)+1)%1;
+    var warn=Math.min(1,outT/T("tripTime"));
+    g.fillStyle="rgba(12,9,24,.78)";g.strokeStyle=warn>0.05?"rgba(255,"+Math.round(180-150*warn)+",60,"+(0.5+0.5*warn)+")":"rgba(255,255,255,.18)";g.lineWidth=2+3*warn;
+    g.beginPath();if(g.roundRect)g.roundRect(3,3,w-6,hh-6,18);else g.rect(3,3,w-6,hh-6);g.fill();g.stroke();
+    /* the circle: pulses on the beat, fills when you're in it */
+    var px=cx+c[0]*S,py=cy+c[1]*S,rp=r*S*(1+0.06*beatK),inside=d<=r;
+    g.save();g.globalAlpha=inside?0.35:0.12;g.fillStyle=st.col;g.beginPath();g.arc(px,py,rp,0,6.283);g.fill();g.restore();
+    g.strokeStyle=st.col;g.lineWidth=inside?5:3;g.shadowColor=st.col;g.shadowBlur=inside?18:6;g.beginPath();g.arc(px,py,rp,0,6.283);g.stroke();g.shadowBlur=0;
+    /* your cursor */
+    if(cur){var qx=cx+cur[0]*S,qy=cy+cur[1]*S;g.fillStyle=inside?"#fff":"rgba(255,255,255,.75)";g.beginPath();g.arc(qx,qy,6,0,6.283);g.fill();g.strokeStyle="rgba(0,0,0,.6)";g.lineWidth=2;g.stroke();}
+    /* the dance now, and what's coming */
+    g.textAlign="center";g.textBaseline="top";g.font="900 15px system-ui";g.fillStyle=st.col;g.fillText(st.icon+" "+st.name,cx,12);
+    var into=b-GO_BEAT-seg(b)*SEG;
+    if(b>=GO_BEAT&&into>=SEG-2){var nx=STY[order[(seg(b)+1)%order.length]];g.font="800 12px system-ui";g.fillStyle="rgba(255,255,255,.75)";g.fillText("Next: "+nx.icon+" "+nx.name+" in "+Math.ceil(SEG-into),cx,32);}
+    /* speed */
+    var bw=w-40,by=hh-20;g.fillStyle="rgba(255,255,255,.12)";g.fillRect(20,by,bw,7);g.fillStyle=tripped?"#FF4D6D":f>0.95?"#4CC38A":f>0.6?"#F5C518":"#FF8A2B";g.fillRect(20,by,bw*(tripped?0:speedF),7);
+  }
+  /* the start and finish lines on the floor, and place numbers once people finish */
+  function draw(g){
+    if(!walkRound())return;var gy0=Y0*H-34,gy1=Y1*H+18,fx=X1*W,sx=X0*W,sq=6;
+    g.save();g.globalAlpha=0.5;g.fillStyle="#fff";g.fillRect(sx-1,gy0,2,gy1-gy0);g.globalAlpha=0.85;
+    for(var yy=gy0,k=0;yy<gy1;yy+=sq,k++){g.fillStyle=k%2?"#fff":"#111";g.fillRect(fx-sq,yy,sq,sq);g.fillStyle=k%2?"#111":"#fff";g.fillRect(fx,yy,sq,sq);}
+    g.globalAlpha=1;g.font="900 12px system-ui";g.textAlign="center";g.fillStyle="#fff";g.fillText("FINISH",fx,gy0-6);
+    finOrder.slice(0,3).forEach(function(id,i){var v=viewers[id];if(!v)return;var vx=v.x*W,vy=v.y*H-62;g.fillStyle=["#F5C518","#C9D3E6","#D9894A"][i];g.beginPath();g.arc(vx,vy,10,0,6.283);g.fill();g.fillStyle="#1a1200";g.font="900 12px system-ui";g.textBaseline="middle";g.fillText(String(i+1),vx,vy+1);});
+    g.restore();
+  }
+  function wire(){var b=beatAt(songPos());return{h:fin>=0?1:0,f:performance.now()<tripUntil?1:0,t:b>=GO_BEAT?styleAt(b):order[0]};}
+  /* the body: the dance of the moment (a victory dance once you're in) */
+  function fd(){var b=beatAt(songPos()),si=b>=GO_BEAT?styleAt(b):order[0];return fin>=0?{s:14,m:0,c:[0,0,0,0]}:{s:STY[si].d,m:0,c:[0,0,0,0]};}
+  function looks(v,isMe,scl){var tr=isMe?performance.now()<tripUntil:!!(v.sk&&v.sk.f);return tr?{lift:6*scl,rot:1.45,ns:true}:null;}
+  function facing(v){return v.sk&&v.sk.h?0:1;}
+  window.ukWalk=function(){var b=beatAt(songPos());return{on:on,x:+x.toFixed(3),fin:fin,place:place,score:score,beat:+b.toFixed(2),style:b>=GO_BEAT?STY[styleAt(b)].name:"(not started)",cursor:cur,circle:circleAt(b),out:+outT.toFixed(2),tripped:performance.now()<tripUntil,finOrder:finOrder.slice()};};
+  window.ukWalkCursor=function(px,py){cur=px===null?null:[px,py];};      /* tests: put the cursor somewhere on the pad (-1..1) */
+  window.ukWalkFollow=function(on2){window.__wkFollow=!!on2;};
+  return{start:start,stop:stop,tick:tick,draw:draw,wire:wire,fd:fd,looks:looks,facing:facing,walkRound:walkRound,circleNow:function(){return circleAt(beatAt(songPos()));},get on(){return on;}};
 })();
 var SKATE=(function(){
   var TRICKS=["","SUPERMAN","TUCK","KICK","SPLIT"];          /* up, down, left, right */
@@ -3836,7 +4012,7 @@ var BATTLE = (function() {
 })();
 var ROUND=(function(){
   var rd=null,corr=0,lastD=null,playPerf=0,endAt=0,sat=false,totals=[],myVote="",timer=null,alignT=null,hideT=null,top=null,bi=0;
-  var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",keepy:"Keepy uppy",kart:"Mars Rally"},ORD=["1st","2nd","3rd"];
+  var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",walk:"Dance walk race",keepy:"Keepy uppy",kart:"Mars Rally"},ORD=["1st","2nd","3rd"];
   function ord(n){return ORD[n-1]||n+"th";}
   function box(){return document.getElementById("roundBox");}
   function mk(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
@@ -3894,7 +4070,7 @@ var ROUND=(function(){
     clearTimeout(hideT);hideT=null;
   }
   function hide(){var b=box();b.className="";b.textContent="";}
-  function lvl(){return rd.mode==="free"||rd.mode==="mosh"||rd.mode==="skate"||rd.mode==="keepy"||rd.mode==="kart"?"":" · "+GAME.DIFFS[GAME.diffOf(rd.n)];}
+  function lvl(){return rd.mode==="free"||rd.mode==="mosh"||rd.mode==="skate"||rd.mode==="keepy"||rd.mode==="kart"||rd.mode==="walk"?"":" · "+GAME.DIFFS[GAME.diffOf(rd.n)];}
   function head(){return mk("div","rb-head","Round "+rd.n+" · "+(rd.isBattle?"⚔ ":"")+(NAMES[rd.mode]||"Dance")+(rd.isBattle?" battle":"")+lvl());}
   function drawCountdown(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
@@ -4769,6 +4945,7 @@ var PRACTICE=(function(){
     bots.forEach(function(b){
       var v=viewers[b.id];if(!v)return;
       if(mode==="free"){v.pose=[Math.random()*3-0.6,-(Math.random()*3-0.6),Math.random()*1.8-0.9,Math.random()*1.8-0.9];return;}
+      if(mode==="walk"){v.dance=4;return;}      /* WALK races them */
       if(mode==="mosh"||mode==="skate"||mode==="keepy"||mode==="kart"){v.dance=4;if(Math.random()<0.5)b.score+=Math.round((4+16*b.skill)*Math.random());return;}      /* the mosh moves them (MOSH); here they just score */
       if(Math.random()<b.skill){b.combo++;b.score+=Math.round(perStep*(0.6+b.skill*0.4)*(1+Math.floor(b.combo/10)*0.1));}else b.combo=0;
       v.pose=POSES[Math.floor(Math.random()*4)];v.combo=b.combo;v.hitT=Date.now();
@@ -4785,7 +4962,7 @@ var PRACTICE=(function(){
     var my=++job;
     initAudio();save();
     try{Tone.start();Tone.getContext().rawContext.resume();}catch(e){}
-    mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart";plan=null;var secs=+$("prSecs").value,level=+$("prLevel").value;
+    mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk";plan=null;var secs=+$("prSecs").value,level=+$("prLevel").value;
     stopSong();makeBots(+$("prBots").value);
     document.body.classList.add("pr-busy");
     n++;
@@ -4823,7 +5000,7 @@ var PRACTICE=(function(){
   /* the song has started (lagMs until its first moment is heard): the round's clock, the dancers, the scoring */
   function afterStart(my,lagMs){
     playAt=performance.now()+lagMs;
-    viewers.me.dance=0;bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=mode==="free"||mode==="mosh"||mode==="skate"||mode==="keepy"||mode==="kart"||battle?4:5;});
+    viewers.me.dance=0;bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=mode==="free"||mode==="mosh"||mode==="skate"||mode==="keepy"||mode==="kart"||mode==="walk"||battle?4:5;});
     ROUND.onMsg({type:"round",phase:"play",n:n,ts0:null,pos:-lagMs});
     if(battle){battleStart(my);return;}
     /* free dance: lock in the spotlight 35% of the way through (at least 20 s in), as the server does in a show */
@@ -4970,9 +5147,15 @@ var PRACTICE=(function(){
     if(document.body.classList.contains("pr-busy")){stopAll();note("Round stopped.");return;}
     if(window.parent!==window){try{window.parent.postMessage({uk:"practice-close"},location.origin);}catch(x){}}
   });
+  /* tests: a dance walk race in practice with a steady 120 BPM beat and no song */
+  window.ukWalkTest=function(nb){var my=++job;makeBots(nb===undefined?3:nb);mode="walk";battle=false;n++;var beats=[];for(var i=0;i<600;i++)beats.push(i*500);
+    chart={bpm:120,beats:beats,steps:[],dur:300000};ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:"walk",chart:chart,ms:800,title:"Walk test"});
+    setTimeout(function(){if(my===job)afterStart(my,0);},800);};
   window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
   window.ukPracticeBattle=function(){return plan?pub():null;};
-  return{get on(){return on;},enter:enter,vote:vote,bvote:bvote,moshBonus:moshBonus};
+  return{get on(){return on;},enter:enter,vote:vote,bvote:bvote,moshBonus:moshBonus,
+     botScore:function(id,s){bots.forEach(function(b){if(b.id===id)b.score=s;});},
+     walkDone:function(){var my=job;setTimeout(function(){if(my===job)endRound(my);},3500);}};   /* dance walk race: everyone's over the line */
 })();
 
 /* ============================================================
@@ -5325,7 +5508,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.57.3",SERVER_VERSION="";
+var PAGE_VERSION="1.58.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5759,10 +5942,10 @@ function renderLoop(){
       var rpo=ART.reactPose(v.reacts,now,sc2),epo=ART.envPose(LAYV,H,vx,dyy,sc2,now,v.seed||0);
       AVO=rpo||epo?{r:rpo,e:epo}:null;
       var wk=v._walk||(v._walk={}),walking=ART.walkStep(wk,vx,vy,pnow,sc2);
-      var skl=v===PH?null:RINK?SKATE.looks(v,ids[i]===myId,sc2):keepyOn()?KEEPY.looks(v,ids[i]===myId,sc2):null;
+      var skl=v===PH?null:RINK?SKATE.looks(v,ids[i]===myId,sc2):keepyOn()?KEEPY.looks(v,ids[i]===myId,sc2):WALK.walkRound()&&v.dance===4?WALK.looks(v,ids[i]===myId,sc2):null;
       if(!cdn&&!ck||skl)ART.footShadow(ctx,vx,vy,sc2,(rpo?rpo.lift:0)+(epo?epo.lift:0)+(skl?skl.lift:0));
       if(skl)AVO=AVO?Object.assign(AVO,{sk:skl}):{sk:skl};
-      AVDIR=cdn||ck?0:(wk.face|0);   /* facing the way they walked (dancing faces the stage) */
+      AVDIR=WALK.walkRound()&&v.dance===4?WALK.facing(v):cdn||ck?0:(wk.face|0);   /* facing the way they walked (dancing faces the stage) */
       drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,skl?null:walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
       AVO=null;AVDIR=0;
       if(ck)ART.crowdFx(ctx,ck,vx,dyy,sc2,cAge,v.seed||0,hands,v._tg);
@@ -5798,7 +5981,7 @@ function renderLoop(){
   if(walkMark){var wa=1-(performance.now()-walkMark.t)/600;if(wa>0){ctx.save();ctx.globalAlpha=wa*0.8;ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(walkMark.x,walkMark.y,10+(1-wa)*14,(10+(1-wa)*14)*0.45,0,0,6.3);ctx.stroke();ctx.restore();}else walkMark=null;}
   /* the performer talking from the stage (when hanging out, their bubble is drawn with the crowd) */
   if(!PH.on&&PERF_AT&&PH.bubbleText&&(now-PH.bubbleTime)<5000){ctx.globalAlpha=Math.max(0,1-(now-PH.bubbleTime)/5000);drawBubble(PERF_AT[0],PERF_AT[1]-30,PH.bubbleText);ctx.globalAlpha=1;}
-  MOSH.draw(ctx);SKATE.draw(ctx);KEEPY.draw(ctx);if(KON)KART.draw(ctx);
+  MOSH.draw(ctx);SKATE.draw(ctx);KEEPY.draw(ctx);WALK.draw(ctx);if(KON)KART.draw(ctx);
   drawFxFront(bp,feat,perfPx,perfPy);
   GAME.drawHandles(ctx);
   /* standing behind the buttons: fade them so you can see yourself */
@@ -5817,7 +6000,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.57.3"></script>
+<script src="lab.js?v=1.58.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

@@ -114,6 +114,7 @@ module.exports = function(api) {
     var free = !rd || (playing && (rd.mode === "free" || rd.mode === "mosh" || rd.mode === "keepy"));
     if (playing && rd.mode === "skate") { skate(b, now); }
     if (playing && rd.mode === "kart") { kart(b, now, rd); }
+    if (playing && rd.mode === "walk") { walk(b, now, rd); }
     if (playing && rd.mode === "keepy") { if (!b.hopAt && Math.random() < 0.05) b.hopAt = now; var hu = b.hopAt ? (now - b.hopAt) / 900 : 0; if (hu >= 1) { b.hopAt = 0; hu = 0; } b.skH = b.hopAt ? Math.round(24 * 4 * hu * (1 - hu)) : 0; }
 
     /* wander about (not while playing a step, target or highway round: they're busy with the game) */
@@ -147,7 +148,7 @@ module.exports = function(api) {
   /* in a round: dance along, report a score (bots are decent, rarely great), vote in battles, push in the mosh */
   function round(b, now) {
     var rd = b.rd, pos = now - rd.playAt, ch = rd.chart, bpm = ch && ch.bpm || 120;
-    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.battle ? 4 : 5;
+    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.battle ? 4 : 5;
     if (!b.dancing || b.style !== style) { b.dancing = true; b.style = style; b.act({ type: "dance", style: style }); }
     pose(b, now, bpm);
     var slot = -1, bs = rd.b && rd.b.slots, be = rd.b && rd.b.entrants;
@@ -156,7 +157,7 @@ module.exports = function(api) {
       if ((s.a >= 0 && be[s.a] && be[s.a].id === b.viewerId) || (s.b >= 0 && be[s.b] && be[s.b].id === b.viewerId)) slot = k;
       else if (rd.mode === "free" && !b.bvoted[k] && pos > s.start + rnd(3000, (s.end - s.start) * 0.8)) { b.bvoted[k] = 1; b.act({ type: "bvote", side: Math.random() < 0.5 ? 0 : 1 }); }
     }
-    if (rd.mode !== "free" && now > b.scoreAt) {
+    if (rd.mode !== "free" && rd.mode !== "walk" && now > b.scoreAt) {
       /* a score that grows through the song at this bot's skill */
       var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, pos / dur));
       var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" ? 60000 : rd.mode === "keepy" ? 8000 : arrows * 100 * (1 + arrows / 100) * 0.55;
@@ -192,6 +193,38 @@ module.exports = function(api) {
     var pa = KG.pointAt(tr, k.d, 0).a; b.kh = ((Math.round(pa / (Math.PI / 8)) % 16) + 16) % 16;
     if (now - k.posAt > 120) { k.posAt = now; var p = KG.pointAt(tr, k.d, k.lat), e = KG.enc(p.x, p.y); b.x = +e[0].toFixed(4); b.y = +e[1].toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
   }
+  /* the dance walk race: line up in the same lane the players' screens use, wait for GO (beat 8), then dance-walk
+     to the finish at this bot's pace, losing the circle now and then (slower) and tripping once in a while.
+     The style order and lanes match venue.html's WALK exactly. */
+  var WK = { X0: 0.06, X1: 0.68, Y0: 0.35, Y1: 0.73, GO: 8, SEG: 8, D: [1, 11, 9, 3, 4, 6] };
+  function wkOrder(n) { var o = [0, 1, 2, 3, 4, 5], s = (n * 9301 + 49297) % 233280; for (var i = o.length - 1; i > 0; i--) { s = (s * 9301 + 49297) % 233280; var j = Math.floor(s / 233280 * (i + 1)), t = o[i]; o[i] = o[j]; o[j] = t; } return o; }
+  function wkBeat(rd, pos) {
+    var c = rd.chart, bs = c && c.beats, per = c && c.bpm ? 60000 / c.bpm : 500;
+    if (!bs || bs.length < 2) return pos / per;
+    if (pos <= bs[0]) return (pos - bs[0]) / per;
+    var n = bs.length; if (pos >= bs[n - 1]) return n - 1 + (pos - bs[n - 1]) / per;
+    var lo = 0, hi = n - 1; while (hi - lo > 1) { var m = (lo + hi) >> 1; if (bs[m] <= pos) lo = m; else hi = m; }
+    return lo + (pos - bs[lo]) / Math.max(1, bs[hi] - bs[lo]);
+  }
+  function walk(b, now, rd) {
+    var r = rooms[b.room]; if (!r) return;
+    if (!b.wk || b.wk.n !== rd.n) {
+      var ids = Array.from(r.viewers.keys()).sort(), i = Math.max(0, ids.indexOf(b.viewerId)), nl = Math.max(4, Math.min(8, ids.length));
+      b.wk = { n: rd.n, x: WK.X0, y: WK.Y0 + ((i % nl) + 0.5) / nl * (WK.Y1 - WK.Y0), sp: 0.6 + 0.35 * b.skill, ph: Math.random() * 6, t: now, trip: 0, fin: false, posAt: 0, scoreAt: 0, order: wkOrder(rd.n), si: 0 };
+    }
+    var w = b.wk, dt = Math.min(0.5, (now - w.t) / 1000); w.t = now;
+    var beat = wkBeat(rd, now - rd.playAt), going = beat >= WK.GO;
+    w.si = w.order[Math.max(0, Math.floor((beat - WK.GO) / WK.SEG)) % 6];
+    if (going && !w.fin) {
+      var f = Math.max(0.3, Math.min(1, w.sp + 0.25 * Math.sin(now / 1100 + w.ph)));
+      if (!w.trip && Math.random() < dt * 0.05 * (1.2 - w.sp)) w.trip = now + 1300;
+      if (w.trip && now > w.trip) w.trip = 0;
+      if (!w.trip) w.x += (WK.X1 - WK.X0) / 40 * f * dt;
+      if (w.x >= WK.X1) { w.x = WK.X1; w.fin = true; b.act({ type: "score", s: 4000, fin: 1 }); }
+      else if (now > w.scoreAt) { w.scoreAt = now + 2000; b.act({ type: "score", s: Math.round(1000 * (w.x - WK.X0) / (WK.X1 - WK.X0)) }); }
+    }
+    if (now - w.posAt > 150) { w.posAt = now; b.x = +w.x.toFixed(4); b.y = +w.y.toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
+  }
   /* a groove: arms and legs swinging on the beat, in this bot's own style (sent about five times a second) */
   function pose(b, now, bpm) {
     if (now - (b.poseAt || 0) < 190) return; b.poseAt = now;
@@ -201,6 +234,7 @@ module.exports = function(api) {
     /* free dance: each bot has a favourite style (the shuffle's popular) and switches move now and then */
     if (b.rd && b.rd.mode === "free") { if (!b.fds || Math.random() < 0.01) { b.fds = Math.random() < 0.35 ? 9 : 1 + Math.floor(Math.random() * 15); b.fdm = Math.floor(Math.random() * 4); } pm.fd = { s: b.fds, m: b.fdm, c: [0, 0, 0, 0] }; }
     if (b.rd && b.rd.mode === "kart") { pm.sk = { h: b.kh || 0, f: b.kf ? 1 : 0, t: 0 }; pm.a = [210, -210, 25, -25]; }
+    else if (b.rd && b.rd.mode === "walk" && b.wk) { pm.sk = { h: b.wk.fin ? 1 : 0, f: b.wk.trip ? 1 : 0, t: b.wk.si }; pm.fd = { s: b.wk.fin ? 14 : WK.D[b.wk.si], m: 0, c: [0, 0, 0, 0] }; }
     else if (b.rd && (b.rd.mode === "skate" || b.rd.mode === "keepy")) { pm.sk = { h: b.skH || 0, f: 0, t: b.skT || 0 }; if (b.skH) pm.a = [240, -240, 100, -100]; }
     b.act(pm);
   }

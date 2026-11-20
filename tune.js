@@ -43,6 +43,15 @@ var TUNE=(function(){
     V("hype.good","Hype gain, GOOD",0.012,0,0.2,0.002,"Hype per GOOD.",""),
     V("hype.miss","Hype loss, miss / let go",0.08,0,0.4,0.01,"Hype lost on a miss or letting go early.",""),
     V("hype.drift","Hype drift back",0.0008,0,0.01,0.0001,"How fast hype drifts back to its resting level each frame when nothing is happening.","")]},
+  {id:"walk",name:"Dance walk race",icon:"💃",mode:"walk",
+   about:"Race across the floor. Keep your cursor (or finger) in the circle as it moves along an invisible path to walk at full speed. The dance, and the circle's path, change every 8 beats. Out of the circle you slow down; stay out too long and you trip.",
+   vars:[
+    V("wk.time","Race time at full speed",40,15,120,1,"Seconds to cross the floor if you never leave the circle.","s"),
+    V("wk.radius","Circle size",0.26,0.1,0.5,0.01,"Radius of the circle, as a fraction of half the pad.",""),
+    V("wk.minSpeed","Slowest speed",0.25,0,0.8,0.01,"Your speed when you're well outside the circle, as a fraction of full speed.","×"),
+    V("wk.tripTime","Time out before tripping",1.4,0.4,4,0.1,"How long you can stay outside the circle before you trip.","s"),
+    V("wk.stun","Trip time",1.3,0.3,4,0.1,"How long a trip stops you.","s"),
+    V("wk.loopBeats","Beats per loop",4,2,8,1,"How many beats the circle takes to go once round its path. Lower is faster and harder.","beats")]},
   {id:"keepy",name:"Keepy uppy",icon:"🎈",mode:"keepy",
    about:"Keep balloons, balls and feathers off the floor. Get under one and head it up. Jump (Space) once for a hop, again in the air for a double jump that hits harder and scores double.",
    vars:[

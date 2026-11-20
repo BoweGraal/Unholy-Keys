@@ -757,6 +757,22 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.58.0 - New minigame: Dance walk race
+
+Everyone lines up on the left of the dance floor and dance-walks to the finish line.
+- **The pad:** a circle glides along an invisible path on your pad (bottom right; bottom middle on phones). Keep your cursor (or finger) inside it to walk at full speed.
+- **The dances:** every 8 beats the dance changes (Sway, Spin, Shuffle, Wave, Bounce, Box step) and so does the circle's path. The pad shows the dance now and warns you two beats before the next one. Your character does that dance as they walk.
+- **Slipping out:** outside the circle you slow down, the further out the slower. Stay out for about 1.4 seconds and you **trip** (1.3 seconds on the floor). The pad's border goes orange, then red, as you get close to tripping.
+- **Start:** "READY… 3, 2, 1, GO!" on the beat (the race starts on beat 8 of the song).
+- **Finish:** first across the line wins. The round ends by itself a few seconds after everyone's finished. Places are decided by the server, so every screen agrees.
+- **Scoring:** 1st 4,000, 2nd 2,500, 3rd 2,000, then 1,000 + 3,000 ÷ place. Anyone still racing at the end scores by distance (up to 1,000). Show points then split 1,000 per round as usual.
+- **Bots** race too, each at their own pace, and sometimes trip.
+- In your round picker and in Dance practice. **Tuning lab → Dance walk race** has sliders for race time (40 s at full speed), circle size, slowest speed, time out before tripping, trip time and how fast the circle loops.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** Dance practice → Dance walk race with a song. Then live with a couple of bots: race, slip out on purpose to trip, and check the round ends once everyone's in.
+
 ## v1.57.3 - Every round is worth 1,000 show points, with a high floor
 
 Each round now hands out exactly 1,000 show points (before: 10 / 7 / 5 / 3 / 1 by finishing place).
