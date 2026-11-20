@@ -616,3 +616,9 @@ Free dance (all in the free dance panel).
 - Edits save as you go and show in the game for everything that uses that part. Arms and legs are painted hanging straight down and turn with the dancing; head layers follow the head's bow.
 - Share box: pixel edits go out as `PIXELS-JSON`; paste back and Apply pasted loads them. Reset everything clears them.
 - Check: paint a few pixels on a hair style, go back to the venue practice and confirm characters with that hair show them while dancing.
+
+## v1.50.1 - Pixel editor: part on its own, full screen mode
+- The pixel editor now shows only the selected part floating on the checkerboard (the hair, hat, face, top, one arm or leg, or the instrument without the performer), not the whole character.
+- **⛶ Full screen editor** button: the editor fills the screen with a bar at the top: ✕ exit, pen, erase, hole, fill, pick colour, ✋ drag, undo, redo, zoom slider, colour and swatches, grid, mirror.
+- Zoom goes up to 10x. Use ✋ Drag, then drag on the picture to move around when zoomed in.
+- Check: pick Hair style > Mohawk, open full screen, zoom in, drag around, paint with the pen, undo, exit.
