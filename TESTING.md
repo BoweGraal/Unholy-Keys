@@ -757,6 +757,12 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.57.2 - Dance floor fills tall phone screens
+
+The floor used to stop at 78% of the screen height (room for the old, always-open chat log), which left a black band at the bottom on tall phones, most noticeably in the Home Screen app. It now runs down to the chat bar, or to the bottom of the screen in Dance practice.
+
+**Test it:** open the Home Screen app on the iPhone, in portrait and landscape, live and in Dance practice: no black band under the floor.
+
 ## v1.57.1 - Drift steering tightened
 
 Once a drift has landed, the stick can now only change the turn by 15% (was 35%), and that steering builds up over about two-thirds of a second instead of instantly. Land at a bad angle and you'll have to let go and recover, rather than steering out of it.
