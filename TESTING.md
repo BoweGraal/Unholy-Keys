@@ -769,6 +769,9 @@ Free dance (all in the free dance panel).
 **Audience screen**
 - The chat log is folded away by default; a **💬 Log** button next to the chat box opens it, with a count of new messages. The controls move down to use the space. It remembers if you leave it open.
 
+**Audience join screen**
+- Only what the audience needs: name, room code, character, Join, and Dance practice. The Tuning lab, Graphics lab and Track builder links moved to your Setup menu under **Creator tools** (they open in a new tab).
+
 **Characters**
 - Seen from behind, arms that reach forward now go behind the body instead of in front.
 
