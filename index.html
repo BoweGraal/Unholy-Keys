@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.56.5"></script>
-<script src="art.js?v=1.56.5"></script>
-<script src="instruments.js?v=1.56.5"></script>
-<script src="kart.js?v=1.56.5"></script>
+<script src="gfx.js?v=1.56.8"></script>
+<script src="art.js?v=1.56.8"></script>
+<script src="instruments.js?v=1.56.8"></script>
+<script src="kart.js?v=1.56.8"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -158,8 +158,14 @@ body.jset #app.jx #side-name{display:none}
 #jmR{position:absolute;inset:0;z-index:2;background:transparent;overflow:hidden}
 #jcv{position:absolute;top:0;left:0;pointer-events:none;opacity:0.55}
 /* jam stage view: the venue fills the screen; the video sits on the Jumbotron (placed by JAMSTAGE) */
-#jRace{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;image-rendering:pixelated}
-#jm.race #jRace{display:block}
+#jRace{display:block;opacity:0;visibility:hidden;transition:opacity .9s,visibility 0s .9s;position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;image-rendering:pixelated}
+#jm.race #jRace,#jm.race #jRaceTop{opacity:1;visibility:visible;transition:opacity .4s}   /* fades back to the stage when the race ends */
+#jRaceTop{display:block;opacity:0;visibility:hidden;transition:opacity .9s,visibility 0s .9s;position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:none;image-rendering:pixelated}
+#jm.race #jmV{z-index:6!important;transition:none}
+/* racing: track (5) < the song's video on the little Jumbotron (6) < you on your UFO (7) < the toolbar and the rest of the jam screen (8) */
+#jm.race #jmR{z-index:8}
+#jm.race #jcv,#jm.race #jStage,#jm.race #jFront{display:none!important}
+#jm.race #jmV iframe,#jm.race #jmV video{opacity:1!important}
 #jStage{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;image-rendering:pixelated}
 #jm.stage #jStage{display:block}
 /* stage view: the performer (and any section players) drawn on a layer above the video, so you stand in front of the Jumbotron */
@@ -233,6 +239,23 @@ body.jset #app.jx #side-name{display:none}
 #jLiveBtn{position:absolute;top:58px;right:395px;z-index:10;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#D354A0,#FF4444);border:none;border-radius:var(--r);color:#fff;box-shadow:0 2px 12px rgba(255,68,68,.35)}
 #jLiveBtn.on{background:rgba(255,68,68,.14);border:1px solid #FF4444;color:#ff8a8a;animation:jLivePulse 1.6s ease-in-out infinite}
 @keyframes jLivePulse{50%{box-shadow:0 0 16px rgba(255,68,68,.7)}}
+/* the jam toolbar: going live and fullscreen top right; everything else in one bar bottom left */
+#jTopBar{position:absolute;top:16px;right:20px;z-index:10;display:flex;gap:8px;align-items:center}
+#jBotBar{position:absolute;left:20px;bottom:14px;z-index:13;display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-width:calc(100% - 470px);padding:6px;border-radius:12px;background:rgba(14,11,26,.82);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#jTopBar>button,#jBotBar>button{position:static!important;top:auto!important;right:auto!important;left:auto!important;bottom:auto!important;margin:0!important;height:34px;box-sizing:border-box}
+#jm #lsBar,#jm #jHangBar{bottom:66px}
+#jm #jSetupBtn{top:auto!important;left:auto!important;right:20px;bottom:14px}
+#jm #jAud{bottom:66px}
+/* the quick instrument picker, top left */
+#jInstBtn{position:absolute;top:16px;left:20px;z-index:21;height:38px;padding:0 14px;font-size:13px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(135deg,rgba(216,90,48,.9),rgba(211,84,160,.9));border:1px solid rgba(255,255,255,.25);border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.4);max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#jInstPop{display:none;position:absolute;top:62px;left:20px;z-index:40;width:min(560px,calc(100vw - 40px));max-height:calc(100% - 150px);overflow-y:auto;padding:12px 14px;border-radius:12px;background:rgba(12,9,24,.96);border:1px solid rgba(255,255,255,.15);box-shadow:0 8px 40px rgba(0,0,0,.6)}
+#jInstPop.on{display:block}
+#jInstPop .ic{display:flex;align-items:center;gap:6px;margin:8px 0 6px;font:800 11px system-ui;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+#jInstPop .ic b{width:8px;height:8px;border-radius:50%}
+#jInstPop .ir{display:flex;flex-wrap:wrap;gap:6px}
+#jInstPop button{padding:6px 10px;font:600 12px system-ui;color:#eee;cursor:pointer;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px}
+#jInstPop button:hover{background:rgba(255,255,255,.14)}
+#jInstPop button.on{color:#fff;border-color:currentColor;background:rgba(255,255,255,.16)}
 #jStageBtn{position:absolute;top:20px;right:505px;z-index:10;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(127,119,221,.14);border:1px solid rgba(127,119,221,.45);border-radius:var(--r);color:#cfc9ff}
 #jFsBtn{position:absolute;top:20px;right:610px;z-index:10;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);color:#ddd}
 #jFsBtn:hover{border-color:var(--pk);color:#fff}
@@ -763,8 +786,8 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="jm">
-  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
-  <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><canvas id="jRace"></canvas><div id="jnd"></div>
+  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><canvas id="jRace"></canvas><canvas id="jRaceTop"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
     <button id="jStageBtn" title="Stage view: your venue, with the video on a Jumbotron">&#127967; Stage</button>
     <button id="jSongBtn" title="Start a song: pick it (your music, a video, or YouTube), pick the game, then start">&#127925; Start song</button>
     <div id="lsBar"><span class="ic" id="lsIc">&#127925;</span><div class="tt"><b id="lsTitle"></b><span id="lsSub"></span><div class="pg"><i id="lsPg"></i></div></div><button id="lsRec" title="Record show">&#9210;</button><button id="lsSaved" title="This song has a saved show, playing back now. Click to delete it" style="display:none">&#9654; Show &#10005;</button><button id="lsPause" title="Pause / resume (P)">&#10074;&#10074;</button><button id="lsEnd" title="End the song (and the round)">&#9632; End</button></div>
@@ -788,7 +811,8 @@ body.jset .nav-item.jam-only{display:flex}
     <button id="jLiveBtn" title="Go live: open a room so your audience can join">&#128308; Go live</button>
     <button id="jHangBtn" title="Hang out between songs: walk the floor with the arrows or WASD (or click where to go), Enter to talk, Esc to go back on stage">&#128694; Hang out</button>
     <div id="jHangBar"><input id="jHangSay" maxlength="200" autocomplete="off" placeholder="Say something to the room… (Enter)"><button id="jHangSend">Say</button><span>Arrows / WASD or click to walk · Esc back to the stage</span></div>
-    <button id="jFsBtn" title="Fullscreen (F11)">&#9974; Fullscreen</button>
+    <button id="jFsBtn" title="Fullscreen (F11)">&#9974; Fullscreen</button><div id="jTopBar"></div><div id="jBotBar"></div>
+    <button id="jInstBtn" title="Pick an instrument">&#127928; <span id="jInstName">Instrument</span> &#9662;</button><div id="jInstPop"></div>
     <button id="jx" style="display:none">ESC Exit</button>
     <button id="jSetupBtn" title="Set up anything: instruments, key, presets and effects, music, visuals (M)">&#9776; Setup <span class="hk">M</span></button>
     <button id="jfs" style="display:none;position:absolute;top:20px;right:130px;z-index:10;padding:8px 14px;font-size:11px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);color:#fff;text-transform:uppercase">&#9974; FS</button>
@@ -4276,7 +4300,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.56.5",SERVER_VERSION="";
+var PAGE_VERSION="1.56.8",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4952,7 +4976,7 @@ var JAMSTAGE=(function(){
     var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
     var jumbo=STAGEFX.fx.jumbo||"auto",want=jumbo!=="up";k+=((want?1:0)-k)*0.05;
     /* the Jumbotron hangs in the upper part of the stage; it drops in from above */
-    var SBH=0.44*H,y0=Math.round(Math.max(SBH*0.07,58)),hh=Math.min(SBH*0.8,SBH*0.97-y0),ww=Math.min(hh*16/9,W*0.66);hh=ww*9/16;
+    var SBH=0.44*H,y0=Math.round(Math.max(SBH*0.07,58)),hh=Math.min(SBH*0.64,SBH*0.97-y0),ww=Math.min(hh*16/9,W*0.66);hh=ww*9/16;
     /* (it starts below the jam toolbar so the toolbar's buttons stay clickable) */
     var drop=(1-(1-Math.pow(1-k,3)))*(y0+hh+60);
     var jt={x:Math.round(W/2-ww/2),y:Math.round(y0-drop),w:Math.round(ww),h:Math.round(hh),k:k},vid=videoOn();
@@ -4961,7 +4985,7 @@ var JAMSTAGE=(function(){
     if(fc){if(fc.width!==cv.width||fc.height!==cv.height){fc.width=cv.width;fc.height=cv.height;}fg=fc.getContext("2d");fg.setTransform(1,0,0,1,0,0);fg.clearRect(0,0,fc.width,fc.height);fg.setTransform(dpr,0,0,dpr,0,0);fg.imageSmoothingEnabled=false;}
     drawVenueTo(g,W,H,{stage:true,jt:jt,video:vid,front:vid&&k>0.02?fg:null});
     /* the video element sits exactly on the Jumbotron's screen */
-    var v=$("jmV");
+    var v=$("jm").classList.contains("race")?null:$("jmV");
     if(v){var key=jt.x+","+jt.y+","+jt.w+","+jt.h+","+(vid&&k>0.02);
       if(key!==last){last=key;v.style.left=jt.x+"px";v.style.top=jt.y+"px";v.style.width=jt.w+"px";v.style.height=jt.h+"px";v.style.right="auto";v.style.bottom="auto";v.style.visibility=vid&&k>0.02?"":"hidden";}}
     raf=requestAnimationFrame(frame);
@@ -4970,14 +4994,19 @@ var JAMSTAGE=(function(){
     Array.prototype.forEach.call(document.querySelectorAll("#jamViewBtns button"),function(x){x.onclick=function(){set(x.getAttribute("data-jv")==="stage");};});
     setInterval(apply,500);}
   window.ukJamStage=function(){return{on:on,active:!!($("jm")&&$("jm").classList.contains("stage")),k:Math.round(k*100)/100,video:videoOn()};};
-  return{init:init,set:set,apply:apply,get on(){return on;}};
+  return{init:init,set:set,apply:apply,get on(){return on;},videoOn:videoOn,forget:function(){last="";}};
 })();
 /* Mars Rally: while a race is on, you see the whole track from your UFO, everyone's kart on it and the top three picked out */
 var RACEVIEW=(function(){
-  var raf=0,cv=null,last=[],act=false,force=null,trk=null,trKey="";
+  var raf=0,cv=null,cvT=null,last=[],act=false,force=null,trk=null,trKey="",vkey="";
   function $(id){return document.getElementById(id);}
   function racing(){if(force)return true;var c=typeof ROUNDS!=="undefined"&&ROUNDS.current;return !!(jamOn&&liveOn&&window.KART&&KART.overview&&c&&c.mode==="kart"&&(c.phase==="countdown"||c.phase==="play"));}
-  function apply(){var a=racing(),jm=$("jm");if(!jm)return;if(a!==act){act=a;jm.classList.toggle("race",a);}if(a&&!raf)raf=requestAnimationFrame(frame);}
+  /* the song's video sits on the little Jumbotron behind you; put it back where it was afterwards */
+  function placeVideo(jt,vid){var v=$("jmV");if(!v)return;var k=jt&&vid?jt.x+","+jt.y+","+jt.w+","+jt.h:"off";if(k===vkey)return;vkey=k;
+    if(jt&&vid){v.style.left=jt.x+"px";v.style.top=jt.y+"px";v.style.width=jt.w+"px";v.style.height=jt.h+"px";v.style.right="auto";v.style.bottom="auto";v.style.visibility="";}
+    else v.style.visibility="hidden";}
+  function unplace(){var v=$("jmV");vkey="";if(!v)return;v.style.left=v.style.width=v.style.right=v.style.top=v.style.bottom=v.style.height="";v.style.visibility="";JAMSTAGE.forget();}
+  function apply(){var a=racing(),jm=$("jm");if(!jm)return;if(a!==act){act=a;jm.classList.toggle("race",a);if(!a)unplace();}if(a&&!raf)raf=requestAnimationFrame(frame);}
   function avatar(x,y,v,isMe,sc,pose,noName,dir){ART.drawChar(cv.getContext("2d"),x,y,sc,v.look||ART.looks.fromColor(v.color||"#888888",1),{armL:pose[0],armR:pose[1],legL:pose[2],legR:pose[3],dir:dir|0});}
   function frame(){
     raf=0;if(!racing()){apply();return;}
@@ -4985,18 +5014,38 @@ var RACEVIEW=(function(){
     var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
     if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
     var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
-    var rs=force?force():[];if(!force)Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p.sk||!p.sk.f)return;var w=KART.geo.dec(p.x,p.y);rs.push({id:id,name:p.name,color:p.color,look:p.look,x:w[0],y:w[1],h:p.sk.h,t:p.sk.t});});
+    if(!cvT)cvT=$("jRaceTop");if(cvT.width!==cv.width||cvT.height!==cv.height){cvT.width=cv.width;cvT.height=cv.height;}
+    var gt=cvT.getContext("2d");gt.setTransform(1,0,0,1,0,0);gt.clearRect(0,0,cvT.width,cvT.height);gt.setTransform(dpr,0,0,dpr,0,0);gt.imageSmoothingEnabled=false;
+    var vid=JAMSTAGE.videoOn();
+    var rs=typeof force==="function"?force():[];if(typeof force!=="function")Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p.sk||!p.sk.f)return;var w=KART.geo.dec(p.x,p.y);rs.push({id:id,name:p.name,color:p.color,look:p.look,x:w[0],y:w[1],h:p.sk.h,t:p.sk.t});});
     var c=ROUNDS.current||{n:0,title:"test"},rk=c.n+":"+c.title;
     if(rk!==trKey){trKey=rk;trk=null;try{trk=JSON.parse(localStorage.getItem("uk_track")||"null");}catch(e){}}   /* the track that went out with this round */
-    last=KART.overview(g,W,H,{track:trk,round:rk,racers:rs,avatar:avatar,beat:function(){return typeof STAGEFX!=="undefined"&&STAGEFX.beat?STAGEFX.beat():(performance.now()%500)/500;},
-      perf:function(ctx,x,y,s){perfDraw(ctx,x,y,s,performance.now(),null,null,0,true);}});
+    last=KART.overview(g,W,H,{front:gt,jumbo:vid,track:trk,round:rk,racers:rs,avatar:avatar,beat:function(){return typeof STAGEFX!=="undefined"&&STAGEFX.beat?STAGEFX.beat():(performance.now()%500)/500;},
+      perf:function(ctx,x,y,s){perfDraw(ctx,x,y,s,Date.now(),null,null,0,true);}});
+    placeVideo(last.jt,vid);
     raf=requestAnimationFrame(frame);
   }
   window.ukRaceView=function(){return{on:act,standings:last};};
   window.ukRaceTest=function(fn){force=fn||null;apply();};   /* tests: fn() returns the racers */
   return{init:function(){setInterval(apply,400);},apply:apply};
 })();
-window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.init();});
+window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.init();
+  var tb=document.getElementById("jTopBar"),bb=document.getElementById("jBotBar");
+  ["jLiveBtn","jFsBtn","jx"].forEach(function(id){var e=document.getElementById(id);if(e)tb.appendChild(e);});
+  /* quick instrument menu */
+  var ib=document.getElementById("jInstBtn"),ip=document.getElementById("jInstPop");
+  function iName(){var n=document.getElementById("jInstName"),ins=findInst(S.eng);if(n)n.textContent=ins?ins.l:"Instrument";}
+  function iFill(){ip.innerHTML="";CATS.forEach(function(cat){var h=document.createElement("div");h.className="ic";h.innerHTML='<b style="background:'+cat.c+'"></b>'+cat.l;ip.appendChild(h);
+    var r=document.createElement("div");r.className="ir";cat.items.forEach(function(ins){var b=document.createElement("button");b.textContent=ins.l;if(S.eng===ins.id){b.className="on";b.style.color=cat.c;}
+      b.onclick=function(e){e.stopPropagation();selInst(ins.id);iName();ip.classList.remove("on");};r.appendChild(b);});ip.appendChild(r);});}
+  ib.onclick=function(e){e.stopPropagation();if(ip.classList.contains("on")){ip.classList.remove("on");return;}iFill();ip.classList.add("on");};
+  ip.onclick=function(e){e.stopPropagation();};
+  document.addEventListener("click",function(){ip.classList.remove("on");});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ip.classList.contains("on")){ip.classList.remove("on");e.stopPropagation();}},true);
+  setInterval(iName,1000);iName();
+  ["jStageBtn","jVizFxBtn","jVizAltBtn","jVizCycBtn","jVizRandBtn","jPickBtn","jPlayStop","jSongBtn","jHangBtn"].forEach(function(id){var e=document.getElementById(id);if(e)bb.appendChild(e);});
+});
+document.addEventListener("contextmenu",function(e){var t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable))return;e.preventDefault();});   /* no browser menu over the game */
 document.getElementById("jAudH").onclick=function(){AUD.min=!AUD.min;try{localStorage.setItem("uk_jaud_min",AUD.min?"1":"0");}catch(e){}document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";drawAud();};
 document.getElementById("jAudBig").onclick=function(e){e.stopPropagation();AUD.big=!AUD.big;if(AUD.min){AUD.min=false;document.getElementById("jAudMin").innerHTML="&#8211;";}try{localStorage.setItem("uk_jaud_big",AUD.big?"1":"0");localStorage.setItem("uk_jaud_min","0");}catch(x){}drawAud();};
 document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";

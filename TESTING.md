@@ -757,6 +757,41 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.56.8 - Jam screen tidy-up, chat log folds away, back-view arms
+
+**Performer jam screen**
+- Top right: just **Go live** and **Fullscreen**.
+- Bottom left: one bar with Stage, FX, the visuals buttons, play controls, Start song and Hang out / Back on stage.
+- **Setup** moved to the bottom right (the audience panel sits above it when you're live).
+- New **🎸 instrument button** top left: shows what you're playing; click it for a menu of every instrument by family, click one to switch.
+- The Jumbotron is about 20% smaller, and the SPACE / D / E / 3 key panel sits just left of it instead of over the sign (on the audience screen too).
+
+**Audience screen**
+- The chat log is folded away by default; a **💬 Log** button next to the chat box opens it, with a count of new messages. The controls move down to use the space. It remembers if you leave it open.
+
+**Characters**
+- Seen from behind, arms that reach forward now go behind the body instead of in front.
+
+**Test it:** open jam mode and check the layout; click the instrument button and switch instruments; on the audience page send a few messages with the log closed (badge counts up), then open it.
+
+## v1.56.7 - After the race, karts after a blip, no right-click menu
+
+- **End of the race:** on the audience screen your UFO now flies you from the top-left corner back to the stage, sets you down and drops away, so you finish the song on stage. On your own screen the race view fades back to your stage view.
+- **Karts vanishing (Jed's report):** if a player's connection blipped mid-race, everyone else saw them as a faded figure on the start line for the rest of the race, and they saw everyone else that way too. Karts now re-announce themselves every second, so a rejoined player is back on everyone's track straight away.
+- **Right-click:** no browser menu on the performer page or the audience page (text boxes still have it, for paste).
+
+**Test it:** in a race on two phones, turn one phone's Wi-Fi off for a few seconds and back on: the other phone should see their kart come back within a couple of seconds. At the end of the round, watch the UFO bring the performer home.
+
+## v1.56.6 - Race view fixes
+
+- Your character no longer disappears from the UFO when you play a note.
+- Karts stay on the road: between position updates they now glide along the track instead of cutting straight across bends.
+- The 1/2/3 order is right from the start (a kart's first position before it reached the grid used to confuse the lap counter).
+- With Stage view on, the big Jumbotron and the stage copy of you no longer draw over the race.
+- If the song has a video, it plays on a little Jumbotron behind you in the top left.
+
+**Test it:** a Mars Rally round with a YouTube or video song, Stage view on. Play notes the whole time; watch karts round the hairpins; check the video sits behind you on the UFO.
+
 ## v1.56.5 - Performer sees the Mars Rally race
 
 During a Mars Rally round, jam mode switches to a race view: the whole track from above, with you playing on your UFO in the top left. Every racer's kart is on the track in real time, the top three have gold, silver and bronze rings with a 1/2/3 badge over their kart, and a standings list on the right shows everyone in order plus the leader's lap. It goes back to your normal view when the round ends.
