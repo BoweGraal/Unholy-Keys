@@ -757,6 +757,23 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.56.8 - Jam screen tidy-up, chat log folds away, back-view arms
+
+**Performer jam screen**
+- Top right: just **Go live** and **Fullscreen**.
+- Bottom left: one bar with Stage, FX, the visuals buttons, play controls, Start song and Hang out / Back on stage.
+- **Setup** moved to the bottom right (the audience panel sits above it when you're live).
+- New **🎸 instrument button** top left: shows what you're playing; click it for a menu of every instrument by family, click one to switch.
+- The Jumbotron is about 20% smaller, and the SPACE / D / E / 3 key panel sits just left of it instead of over the sign (on the audience screen too).
+
+**Audience screen**
+- The chat log is folded away by default; a **💬 Log** button next to the chat box opens it, with a count of new messages. The controls move down to use the space. It remembers if you leave it open.
+
+**Characters**
+- Seen from behind, arms that reach forward now go behind the body instead of in front.
+
+**Test it:** open jam mode and check the layout; click the instrument button and switch instruments; on the audience page send a few messages with the log closed (badge counts up), then open it.
+
 ## v1.56.7 - After the race, karts after a blip, no right-click menu
 
 - **End of the race:** on the audience screen your UFO now flies you from the top-left corner back to the stage, sets you down and drops away, so you finish the song on stage. On your own screen the race view fades back to your stage view.
