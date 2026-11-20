@@ -720,3 +720,9 @@ Free dance (all in the free dance panel).
   - **〰️ Curve**: drag out a straight line, then drag anywhere on it to bend it (as many times as you like). **✓ Done** (or Enter) keeps it, **✕ Drop curve** throws it away.
   - **⬠ Shapes**: pick a shape (rectangle, rounded, ellipse, triangles, diamond, pentagon, hexagon, four arrows, 4/5/6-point stars, heart, lightning) and drag out its box; it grows as you drag, like MS Paint. **◻ Outline / ◼ Filled** switches between the two.
 - **Right click = undo** on a computer (Ctrl+Z / Ctrl+Shift+Z work too). Right click also undoes in the full screen dance editor.
+
+## v1.54.7 - Pixel editor on a computer
+- No Full screen editor button on a computer (it's still there on phones and tablets).
+- The long help text above the tools is gone.
+- On a computer the part opens zoomed in a bit more (scroll wheel still zooms).
+- The drawing area is now a light grey and white checker on every device, so the pixels stand out (the cursor square is pink).
