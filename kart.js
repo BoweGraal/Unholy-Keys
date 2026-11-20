@@ -345,20 +345,18 @@
       k.charge += dt * (1 + 0.4 * Math.max(0, adj));
       if (!inp.drift || sp < vm * 0.25) endDrift(k);
     } else {
-      var fx = Math.cos(k.a), fy = Math.sin(k.a), vf = k.vx * fx + k.vy * fy, target = 0, braking = false;
+      /* no reverse: point the stick (or mouse) anywhere, even behind you, and the kart swings round that way and keeps going */
+      var fx = Math.cos(k.a), fy = Math.sin(k.a), vf = k.vx * fx + k.vy * fy, target = 0;
       if (inp.m > 0) {
-        var da = wrapA(inp.ta - k.a), turn = 0;
-        if (!k.rev && Math.abs(da) > 2.0 && vf < vm * 0.12) k.rev = true; else if (k.rev && Math.abs(da) < 1.2) k.rev = false;
-        if (k.rev) { turn = wrapA(inp.ta + Math.PI - k.a); target = -inp.m * vm * T("revSpeed"); }
-        else if (Math.abs(da) > 2.0) { braking = true; target = 0; turn = da * 0.3; }
-        else { turn = da; target = inp.m * vm * (1 - 0.3 * Math.min(1, Math.abs(da) / 1.6)); }
-        var rate = T("turn") * (0.35 + 0.65 * Math.min(1, Math.abs(vf) / (vm * 0.5)));
-        k.a += clamp(turn, -rate * dt, rate * dt);
+        var da = wrapA(inp.ta - k.a);
+        target = inp.m * vm * (1 - 0.3 * Math.min(1, Math.abs(da) / 1.6));
+        var rate = T("turn") * (0.6 + 0.4 * Math.min(1, Math.abs(vf) / (vm * 0.5)));
+        k.a += clamp(da, -rate * dt, rate * dt);
       }
       if (k.boost > 0) target = Math.max(target, cap);
       fx = Math.cos(k.a); fy = Math.sin(k.a); var rx = -fy, ry = fx; vf = k.vx * fx + k.vy * fy; var vl = k.vx * rx + k.vy * ry;
       if (target > vf) vf = Math.min(target, vf + T("accel") * (k.boost > 0 ? 2.2 : 1) * dt);
-      else if (target < vf) vf = Math.max(target, vf - (braking || (target < 0 && vf > 0) ? T("brake") : target < 0 ? T("accel") * 0.6 : T("coast")) * dt);
+      else if (target < vf) vf = Math.max(target, vf - (vf < 0 ? T("brake") : T("coast")) * dt);
       if (vf > cap) vf = cap + (vf - cap) * Math.pow(0.15, dt);
       vl *= Math.pow(T("grip"), dt);
       k.vx = fx * vf + rx * vl; k.vy = fy * vf + ry * vl;
@@ -379,9 +377,17 @@
     for (var i = 0; i < tr.pads.length; i++) { var pd = tr.pads[i], p = pointAt(tr, pd.d, pd.lat), dx = x - p.x, dy = y - p.y, al = dx * Math.cos(p.a) + dy * Math.sin(p.a), la = -dx * Math.sin(p.a) + dy * Math.cos(p.a); if (Math.abs(al) < tr.padL / 2 + 6 && Math.abs(la) < pd.w) return true; }
     return false;
   }
+  /* on a computer the mouse steers: your kart is the middle of the stick, the further away the pointer, the faster */
+  var MOUSE = { on: false, x: 0, y: 0, down: false };
+  function mouseStick() {
+    if (!MOUSE.on || !mk || !VW) return null; var sc = toScreen(mk.x, mk.y), dx = MOUSE.x - sc[0], dy = MOUSE.y - sc[1], d = Math.hypot(dx, dy);
+    if (d < 18) return { x: 0, y: 0 }; var m = Math.min(1, (d - 18) / 150); return { x: dx / d * m, y: dy / d * m };
+  }
   function input() {
-    var s = root.__kartStick || env.stick(), x = s.x, y = s.y, m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; m = 1; }
-    return { m: m > 0.2 ? (m - 0.2) / 0.8 : 0, ta: Math.atan2(y, x), drift: driftHold };
+    var s = root.__kartStick || env.stick();
+    if (!root.__kartStick && !s.x && !s.y) { var ms = mouseStick(); if (ms) s = ms; }
+    var x = s.x, y = s.y, m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; m = 1; }
+    return { m: m > 0.2 ? (m - 0.2) / 0.8 : 0, ta: Math.atan2(y, x), drift: driftHold || MOUSE.down };
   }
 
   /* ---- starting and stopping ---- */
@@ -562,6 +568,7 @@
     "#ktHint{position:absolute;left:50%;transform:translateX(-50%);bottom:250px;font:600 12px system-ui;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000;white-space:nowrap;opacity:0;transition:opacity .4s}#ktUI.ready #ktHint{opacity:1}" +
     ".ktB{position:absolute;border-radius:50%;pointer-events:auto;touch-action:none;color:#fff;font:900 18px system-ui;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;border:3px solid #ff3dd8;background:radial-gradient(circle,rgba(255,61,216,.45),rgba(20,8,30,.88));transform:translateY(110vh);transition:transform .6s cubic-bezier(.2,1.2,.4,1)}" +
     "#ktUI.ready .ktB{transform:none}.ktB small{font:600 10px system-ui;opacity:.75;margin-top:2px}.ktB.dn{background:radial-gradient(circle,rgba(61,242,255,.6),rgba(20,8,40,.9))}#ktUI.ready .ktB.dn{transform:scale(.93)}" +
+    "#ktSpeed{position:absolute;right:14px;top:236px;display:none;align-items:center;gap:6px;pointer-events:auto;background:rgba(18,14,34,.85);border:1px solid rgba(155,127,224,.5);border-radius:10px;padding:4px 8px;font:700 12px system-ui;color:#c9c0ee}#ktSpeed button{width:30px;height:28px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:#2a2440;color:#fff;font:800 16px system-ui;padding:0}#ktSpeed b{min-width:30px;text-align:center;color:#3DF2FF;font-size:15px}" +
     "#ktDrift{right:18px;bottom:140px;width:112px;height:112px}body.practice #ktDrift{bottom:60px}@media (pointer:fine){#ktDrift{width:88px;height:88px;font-size:15px;bottom:120px}}" +
     "body.gaming-kart #reactBar{display:none}body.gaming-kart #moveHint{display:none}body.gaming-kart #moveCtl{transition:transform .6s cubic-bezier(.2,1.2,.4,1)}body.gaming-kart:not(.kt-ready) #moveCtl{transform:translateY(110vh)}";
   function ui(show) {
@@ -573,13 +580,24 @@
         '<div id="ktLights"><div class="row"><b></b><b></b><b></b></div><div id="ktNum"></div><div id="ktGasCue">PUSH THE STICK!</div></div><div id="ktWrong">WRONG WAY!</div><div id="ktHint"></div>' +
         '<button class="ktB" id="ktDrift" aria-label="Drift">DRIFT<small>hop + hold</small></button>';
       document.body.appendChild(el);
+      /* the mouse: move to steer, hold the left button to drift (only over the game itself, not the buttons) */
+      if (window.matchMedia && matchMedia("(pointer:fine)").matches) {
+        window.addEventListener("mousemove", function (e) { if (!on) return; MOUSE.on = true; MOUSE.x = e.clientX; MOUSE.y = e.clientY; });
+        window.addEventListener("mousedown", function (e) { if (on && e.button === 0 && e.target && e.target.tagName === "CANVAS") { MOUSE.down = true; MOUSE.on = true; MOUSE.x = e.clientX; MOUSE.y = e.clientY; } });
+        window.addEventListener("mouseup", function (e) { if (e.button === 0) MOUSE.down = false; });
+        window.addEventListener("blur", function () { MOUSE.down = false; });
+      }
+      /* practice: lock in a top speed (saved, and it's the same setting as the Tuning lab's Top speed) */
+      var sp = document.createElement("div"); sp.id = "ktSpeed"; sp.innerHTML = '<span>Speed</span><button data-s="-10">−</button><b id="ktSpV"></b><button data-s="10">+</button>'; el.appendChild(sp);
+      Array.prototype.forEach.call(sp.querySelectorAll("button"), function (bt) { bt.addEventListener("click", function (e) { e.stopPropagation(); var v = clamp(Math.round(T("maxSpeed") + (+bt.dataset.s)), 70, 260); if (env.tuneSet) env.tuneSet("kt.maxSpeed", v); speedUI(); }); });
       var b = $("ktDrift"), pid = null;
       b.addEventListener("pointerdown", function (e) { e.preventDefault(); e.stopPropagation(); pid = e.pointerId; try { b.setPointerCapture(pid); } catch (x) {} b.classList.add("dn"); driftHold = true; });
       var up = function (e) { if (e.pointerId !== pid) return; pid = null; b.classList.remove("dn"); driftHold = false; }; b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("lostpointercapture", up);
     }
     el.classList.toggle("on", !!show); el.classList.remove("ready"); document.body.classList.toggle("gaming-kart", !!show); document.body.classList.remove("kt-ready");
-    if (show) { driftHold = false; var lg = $("ktLights"); if (lg) lg.style.display = "none"; }
+    if (show) { driftHold = false; MOUSE.down = false; MOUSE.on = false; var lg = $("ktLights"); if (lg) lg.style.display = "none"; speedUI(); }
   }
+  function speedUI() { var w = $("ktSpeed"); if (!w) return; w.style.display = env.practice && env.practice() ? "flex" : "none"; var v = $("ktSpV"); if (v) v.textContent = Math.round(T("maxSpeed")); }
   function banner(t) { var b = $("ktBanner"); if (!b) return; b.textContent = t; b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
   function hud() { var s = $("ktScore"); if (s) s.textContent = score.toLocaleString(); }
   function lights(lt) {
@@ -593,7 +611,7 @@
     var sp = $("ktSp"), dr = $("ktDr"); if (sp && sp.firstChild) sp.firstChild.style.width = Math.round(Math.min(1, mk.spd / (T("maxSpeed") * 1.3)) * 100) + "%";
     if (dr && dr.firstChild) { dr.firstChild.style.width = Math.round(Math.min(1, mk.charge / T("ultraT")) * 100) + "%"; dr.firstChild.style.background = SPARK_COL[level(mk.charge)]; }
     var w = $("ktWrong"); if (w) w.style.display = wrong > 0.6 ? "block" : "none";
-    var h = $("ktHint"); if (h) h.style.visibility = (tt > T_.go + 10 && !mk.air && !mk.drift) ? "hidden" : "visible"; if (h) h.textContent = mk.air ? "Swing the kart into the turn…" : mk.drift ? "Trim left / right · let go of DRIFT for the boost" : tt < T_.go ? "Push the stick when the 2 shows for a rocket start" : mk.spd < 30 ? "Push the stick the way you want to go · further = faster" : "Tap DRIFT to hop, swing into the turn, hold it through";
+    var h = $("ktHint"); if (h) h.style.visibility = (tt > T_.go + 10 && !mk.air && !mk.drift) ? "hidden" : "visible"; if (h) h.textContent = mk.air ? "Swing the kart into the turn…" : mk.drift ? "Trim left / right · let go of DRIFT for the boost" : tt < T_.go ? "Push the stick when the 2 shows for a rocket start" : mk.spd < 30 ? (MOUSE.on ? "Point the mouse where you want to go · further = faster" : "Push the stick the way you want to go · further = faster") : (MOUSE.on ? "Hold the left mouse button to hop and drift, swing into the turn" : "Tap DRIFT to hop, swing into the turn, hold it through");
   }
 
   /* draw one kart + driver at a screen spot, for checking every angle */

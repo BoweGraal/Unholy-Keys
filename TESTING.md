@@ -732,3 +732,8 @@ Free dance (all in the free dance panel).
 - Races work on big tracks too: the space backdrop, dance-floor road and the bots all follow the track wherever it is.
 - **Boost pads off to the side**: in Boost pad mode, tap the middle of the road for a full-width pad, or nearer an edge for a small pad right where you tapped. Pads keep their side when you reverse, move the start or redraw.
 - Server change: **redeploy Render** (positions now cover the bigger area; old and new pages can't race together, so everyone should reload).
+
+## v1.55.1 - Mars Rally: mouse steering, no reverse, practice speed
+- **Computer: the mouse steers.** Your kart is the middle of the stick: point the mouse where you want to go, and the further the pointer is from the kart, the faster you go. Hold the **left mouse button** to hop and drift (Space / Shift still work, and WASD / arrows still override the mouse while held).
+- **No reverse.** Point the stick or mouse behind you and the kart swings round that way at full turn speed and keeps driving.
+- **Practice speed**: a **Speed − / +** box under your place (practice only) sets the top speed in steps of 10 and remembers it. It's the same setting as Top speed in the Tuning lab, so it goes out in the lab's share text.
