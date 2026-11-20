@@ -639,3 +639,12 @@ Free dance (all in the free dance panel).
 - Two fingers on the picture: pinch to zoom in and out, and drag to move around. The zoom slider, ✋ Drag and 💧 Pick colour buttons are gone. One finger paints as before; putting a second finger down cancels the pixel the first finger just made.
 - Mouse: the scroll wheel zooms around the pointer.
 - Check: full screen, pinch out, drag with two fingers, pinch in; confirm no stray pixels are painted while you do it.
+
+## v1.51.0 - Mars Rally (kart mini game)
+- New round type: top-down bike racing round a Martian track. The performer stays in the top-left corner; everyone else rides. Three tracks (Olympus Loop, Valles Marineris, Dust Devil), picked by round number.
+- Controls: stick or A / D steers (gas is automatic), **DRIFT** button or Space/Shift (hold in a corner, let go for a blue or orange boost), **BRAKE** button or stick down / S. Yellow pads give a boost. Red dust beside the road slows you.
+- Points: distance covered, laps, boosts, overtakes, and time spent near the front. Place shows top right.
+- Practice: open Dance > **Mars Rally**, pick a song, Start. Performer view: Rounds > Mars Rally.
+- Tuning lab has a new **Mars Rally** group (speed, grip, drift, boost lengths, points).
+- Server change: **redeploy Render** so Mars Rally rounds and the practice bots work in live shows.
+- Check: start a round, wait for the lights, steer round a corner holding DRIFT, release for a boost; confirm lap counter and place update; on a phone held upright the track is on its side but right is still right.
