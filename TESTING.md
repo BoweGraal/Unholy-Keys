@@ -627,3 +627,10 @@ Free dance (all in the free dance panel).
 - **👤 Show body** (panel) / 👤 (full screen bar): draws the whole character, or the performer for instruments, faintly behind the part so you can line things up. It is reference only: it is never painted, filled or picked from.
 - Full screen: big **Undo** button bottom left with a smaller **Redo** beside it (they left the top bar).
 - Check: Hair style > Mohawk > full screen > 👤 shows the head and shoulders behind the mohawk; paint a pixel, tap Undo, tap Redo.
+
+## v1.50.3 - Pixel editor: palettes, saner zoom
+- **Palettes**: pick a ready-made set of 5-8 colours that go together (Neon night, Sunset, Skin tones, Hair naturals, Hair wild, Denim, Leather & rock, Pastel, Forest, Ocean, Retro arcade, Gold & steel, Greys) and tap a colour to paint with it.
+- **Your own palettes**: ＋ adds the current colour (on a ready-made set it makes your own copy first), New palette, Save picture colours (the colours already in the picture), ✕ then tap a colour to remove it, Delete palette. They are kept on this device and go out in the share box as PALETTES-JSON.
+- Palettes show in full screen too: a dropdown, ＋, ✕ and the swatches on the third row.
+- **Zoom slider** is now smooth and shorter: the part fits the screen at about 40% of the way, the far right is 4x (it used to reach 10x, so 30% was already very close).
+- Check: Hair style > full screen > choose Sunset > tap colours and paint; ＋ to start your own palette.
