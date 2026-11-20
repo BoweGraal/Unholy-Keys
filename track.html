@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Track builder · Unholy Keys</title>
+<script src="kart.js?v=1.54.0"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#07041a;color:#e8e4f4;font-family:system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#app{display:flex;flex-direction:column;height:100%}
+#bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;background:#120e22;border-bottom:1px solid rgba(155,127,224,.35)}
+#bar h1{font:800 15px system-ui;margin-right:6px;white-space:nowrap}
+button,.btn{background:#2a2440;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:7px 10px;font:700 13px system-ui;cursor:pointer;text-decoration:none;white-space:nowrap;touch-action:manipulation}
+button.on{background:#7F77DD;border-color:#b9b2ff}
+button.go,.btn.go{background:linear-gradient(135deg,#D354A0,#7F77DD);border:0}
+button:disabled{opacity:.35}
+#w{min-width:70px;text-align:center;font:700 12px system-ui;color:#c9c0ee}
+#name{background:#1b1630;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font:600 13px system-ui;padding:7px 9px;width:150px}
+#wrap{flex:1;position:relative;min-height:0}
+#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#status{padding:6px 10px;font:600 12px system-ui;background:#120e22;border-top:1px solid rgba(155,127,224,.35);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#status .bad{color:#ff6b6b}
+#status .good{color:#4CC38A}
+#help{position:absolute;left:10px;top:10px;max-width:min(420px,calc(100% - 20px));background:rgba(18,14,34,.88);border:1px solid rgba(155,127,224,.4);border-radius:10px;padding:9px 11px;font:500 12px/1.45 system-ui;color:#d8d2f0;pointer-events:none}
+#help b{color:#fff}
+#share{display:none;position:absolute;inset:auto 10px 10px 10px;background:#1b1630;border:1px solid rgba(155,127,224,.5);border-radius:12px;padding:10px}
+#share.on{display:block}
+#share textarea{width:100%;height:110px;background:#0e0a1c;color:#e8e4f4;border:1px solid rgba(255,255,255,.15);border-radius:8px;font:12px ui-monospace,monospace;padding:7px;margin:6px 0}
+#share .r{display:flex;gap:6px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar">
+    <h1>🏁 Track builder</h1>
+    <button id="mPts" class="on">✏️ Road</button>
+    <button id="mPads">⚡ Boost pads</button>
+    <button id="undo">↶ Undo</button>
+    <button id="del" disabled>🗑 Delete point</button>
+    <button id="startHere" disabled>🏁 Start here</button>
+    <button id="rev">⇄ Reverse</button>
+    <button id="wMinus">−</button><span id="w">Width 52</span><button id="wPlus">+</button>
+    <input id="name" maxlength="40" placeholder="Track name">
+    <button id="tmpl">Template</button>
+    <button id="shareBtn">📋 Share</button>
+    <a id="test" class="btn go" href="venue.html?practice&kartTest" target="_blank">▶ Test drive</a>
+  </div>
+  <div id="wrap">
+    <canvas id="cv"></canvas>
+    <div id="help"><b>Road:</b> drag the dots to shape the track. Tap an empty spot to add a dot there. Tap a dot to select it, then Delete or Start here.<br><b>Boost pads:</b> tap the road to add a pad, tap a pad to remove it.<br>Two fingers (or the mouse wheel) zoom and move. Everything saves by itself; Test drive and your next Mars Rally round use it.</div>
+    <div id="share"><b>Share box</b> · copy this to send me your track, or paste a track and press Apply.<textarea id="ta" spellcheck="false"></textarea><div class="r"><button id="copy" class="go">Copy</button><button id="apply">Apply pasted</button><button id="closeShare">Close</button></div></div>
+  </div>
+  <div id="status"></div>
+</div>
+<script>
+(function(){
+"use strict";
+var G=KART.geo,$=function(id){return document.getElementById(id);};
+var def=null,tr=null,gap=null,undo=[],mode="pts",sel=-1,cv=$("cv"),g=cv.getContext("2d"),view={s:1,ox:0,oy:0},fitted=false,helpT=0;
+function load(){try{var d=G.clean(JSON.parse(localStorage.getItem("uk_track")||"null"));if(d)return d;}catch(e){}return JSON.parse(JSON.stringify(G.TEMPLATE));}
+function save(){try{localStorage.setItem("uk_track",JSON.stringify(def));}catch(e){}}
+function rebuild(){def=G.clean(def)||JSON.parse(JSON.stringify(G.TEMPLATE));tr=G.build(def);gap=G.minGap(tr);$("w").textContent="Width "+def.hw;if(document.activeElement!==$("name"))$("name").value=def.name;status();draw();}
+function push(){undo.push(JSON.stringify(def));if(undo.length>80)undo.shift();}
+function changed(){rebuild();save();}
+function status(){
+  var s=$("status"),L=Math.round(tr.L);
+  s.innerHTML="<span>"+def.pts.length+" dots · lap "+L+" units (about "+Math.round(tr.L/135)+" s flat out) · "+def.pads.length+" boost pads</span>"+
+    (gap.ok?"<span class='good'>✓ Road is clear</span>":"<span class='bad'>⚠ The road overlaps itself at the red circle: pull those bits apart</span>")+"<span style='opacity:.6'>Saved on this device</span>";
+}
+/* ---- view: fit the world, or pinch/zoom ---- */
+function size(){var r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);g.setTransform(d,0,0,d,0,0);if(!fitted)fit();draw();}
+function fit(){var r=cv.getBoundingClientRect(),W=r.width,H=r.height,x0=-60,y0=-60,ww=1120,hh=740;view.s=Math.min(W/ww,H/hh);view.ox=(W-ww*view.s)/2-x0*view.s;view.oy=(H-hh*view.s)/2-y0*view.s;fitted=true;}
+function sx(x){return x*view.s+view.ox;}function sy(y){return y*view.s+view.oy;}
+function wx(px){return (px-view.ox)/view.s;}function wy(py){return (py-view.oy)/view.s;}
+/* ---- drawing: space, the floor-tile road, pads, the start, the dots ---- */
+function roadPath(){var P=new Path2D(),j,p,hw=tr.hw;for(j=0;j<=tr.M;j++){p=tr.P[j%tr.M];var x=p.x+Math.sin(p.a)*hw,y=p.y-Math.cos(p.a)*hw;if(j)P.lineTo(x,y);else P.moveTo(x,y);}
+  for(j=tr.M;j>=0;j--){p=tr.P[j%tr.M];P.lineTo(p.x-Math.sin(p.a)*hw,p.y+Math.cos(p.a)*hw);}P.closePath();
+  var Z=tr.plaza,c=Math.cos(Z.a),s=Math.sin(Z.a),f=function(u,v){return[Z.cx+u*c-v*s,Z.cy+u*s+v*c];},q=[f(-Z.hx,-Z.hy),f(Z.hx,-Z.hy),f(Z.hx,Z.hy),f(-Z.hx,Z.hy)];
+  P.moveTo(q[0][0],q[0][1]);for(j=1;j<4;j++)P.lineTo(q[j][0],q[j][1]);P.closePath();return P;}
+function draw(){
+  if(!tr)return;var r=cv.getBoundingClientRect(),W=r.width,H=r.height;
+  g.fillStyle="#07041a";g.fillRect(0,0,W,H);
+  g.save();g.translate(view.ox,view.oy);g.scale(view.s,view.s);
+  g.strokeStyle="rgba(155,127,224,.25)";g.lineWidth=2/view.s;g.setLineDash([8/view.s,8/view.s]);g.strokeRect(0,0,1000,620);g.setLineDash([]);
+  var RP=roadPath(),TS=13;
+  g.lineJoin="round";g.strokeStyle="#9B7FE0";g.lineWidth=9;g.stroke(RP);g.strokeStyle="#3a3058";g.lineWidth=5;g.stroke(RP);
+  g.save();g.clip(RP,"nonzero");g.fillStyle="#120e1e";g.fillRect(-100,-100,1200,820);
+  for(var ty=-104;ty<720;ty+=TS)for(var tx=-104;tx<1100;tx+=TS){g.fillStyle=((tx/TS+ty/TS)&1)?"#1a1430":"#161128";g.fillRect(tx,ty,TS-1,TS-1);}
+  g.restore();
+  /* pads */
+  tr.pads.forEach(function(d){var p=G.pointAt(tr,d,0);g.save();g.translate(p.x,p.y);g.rotate(p.a);g.fillStyle="rgba(20,10,40,.85)";g.fillRect(-tr.padL/2,-tr.padW,tr.padL,tr.padW*2);
+    g.fillStyle="#F5F23D";for(var c=0;c<2;c++){var xx=-6+c*10;g.beginPath();g.moveTo(xx-6,-20);g.lineTo(xx+5,0);g.lineTo(xx-6,20);g.lineTo(xx-1,0);g.closePath();g.fill();}g.restore();});
+  /* start line + direction arrow */
+  var s0=tr.P[0];g.save();g.translate(s0.x,s0.y);g.rotate(s0.a);var n=Math.ceil(tr.hw/6.5);
+  for(var rr=0;rr<2;rr++)for(var cc=-n;cc<n;cc++){g.fillStyle=(rr+cc)&1?"#e8e4f4":"#16121c";g.fillRect(rr*6.5-6.5,cc*6.5,6.5,6.5);}
+  g.fillStyle="#4CC38A";g.beginPath();g.moveTo(40,0);g.lineTo(18,-14);g.lineTo(18,14);g.closePath();g.fill();g.restore();
+  /* the line through the dots */
+  g.strokeStyle="rgba(255,255,255,.25)";g.lineWidth=1.5/view.s;g.beginPath();def.pts.forEach(function(p,i){if(i)g.lineTo(p[0],p[1]);else g.moveTo(p[0],p[1]);});g.closePath();g.stroke();
+  if(!gap.ok&&gap.at){g.strokeStyle="#ff4d4d";g.lineWidth=4/view.s;g.beginPath();g.arc(gap.at[0],gap.at[1],tr.hw+16,0,6.3);g.stroke();}
+  g.restore();
+  var R=Math.max(10,Math.min(16,9*view.s+6));
+  def.pts.forEach(function(p,i){var x=sx(p[0]),y=sy(p[1]);g.beginPath();g.arc(x,y,R,0,6.3);g.fillStyle=i===0?"#4CC38A":i===sel?"#D354A0":"rgba(127,119,221,.9)";g.fill();g.lineWidth=2;g.strokeStyle=i===sel?"#fff":"rgba(255,255,255,.7)";g.stroke();
+    g.fillStyle="#fff";g.font="800 "+Math.round(R*0.95)+"px system-ui";g.textAlign="center";g.textBaseline="middle";g.fillText(i===0?"S":String(i),x,y+1);});
+  if(mode==="pads"){g.fillStyle="rgba(245,242,61,.9)";g.font="800 13px system-ui";g.textAlign="left";g.textBaseline="top";g.fillText("Boost pad mode: tap the road",10,H-24);}
+}
+/* ---- editing ---- */
+function hitPt(px,py){var R=Math.max(14,Math.min(22,9*view.s+12)),best=-1,bd=1e9;def.pts.forEach(function(p,i){var d=Math.hypot(sx(p[0])-px,sy(p[1])-py);if(d<R&&d<bd){bd=d;best=i;}});return best;}
+function insertAt(x,y){var n=def.pts.length,best=0,bd=1e9;for(var i=0;i<n;i++){var a=def.pts[i],b=def.pts[(i+1)%n],dx=b[0]-a[0],dy=b[1]-a[1],L2=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/L2)),d=Math.hypot(a[0]+dx*t-x,a[1]+dy*t-y);if(d<bd){bd=d;best=i;}}
+  def.pts.splice(best+1,0,[Math.round(x),Math.round(y)]);return best+1;}
+function padsWorld(){return tr.pads.map(function(d){var p=G.pointAt(tr,d,0);return[p.x,p.y];});}
+function padsFrom(world){var t2=G.build(def);def.pads=world.map(function(p){return Math.round(G.project(t2,p[0],p[1]).d/t2.L*10000)/10000;});}
+function togglePad(x,y){var pr=G.project(tr,x,y);if(pr.dist>tr.hw+24)return false;
+  for(var i=0;i<tr.pads.length;i++){var dd=Math.abs(tr.pads[i]-pr.d);dd=Math.min(dd,tr.L-dd);if(dd<40){push();def.pads.splice(i,1);changed();return true;}}
+  if(def.pads.length>=16)return false;push();def.pads.push(Math.round(pr.d/tr.L*10000)/10000);changed();return true;}
+function select(i){sel=i;$("del").disabled=!(i>=0&&def.pts.length>4);$("startHere").disabled=!(i>0);draw();}
+/* ---- pointers: one finger edits, two fingers pinch and move ---- */
+var ptrs={},drag=null,pinch=null;
+cv.addEventListener("pointerdown",function(e){
+  cv.setPointerCapture(e.pointerId);var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;ptrs[e.pointerId]={x:px,y:py};
+  $("help").style.display="none";
+  var ids=Object.keys(ptrs);
+  if(ids.length===2){if(drag&&drag.moved)changed();drag=null;var a=ptrs[ids[0]],b=ptrs[ids[1]];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2,my:(a.y+b.y)/2};return;}
+  if(ids.length>2)return;
+  if(mode==="pads"){togglePad(wx(px),wy(py));return;}
+  var i=hitPt(px,py);
+  if(i>=0){push();drag={i:i,moved:false,sx:px,sy:py};select(i);}
+  else{push();var j=insertAt(wx(px),wy(py));select(j);drag={i:j,moved:true,sx:px,sy:py};changed();}
+});
+cv.addEventListener("pointermove",function(e){
+  if(!ptrs[e.pointerId])return;var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;ptrs[e.pointerId]={x:px,y:py};
+  var ids=Object.keys(ptrs);
+  if(pinch&&ids.length>=2){var a=ptrs[ids[0]],b=ptrs[ids[1]],d=Math.hypot(a.x-b.x,a.y-b.y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2,f=d/(pinch.d||1);
+    zoomAt(f,mx,my);view.ox+=mx-pinch.mx;view.oy+=my-pinch.my;pinch={d:d,mx:mx,my:my};draw();return;}
+  if(drag){if(Math.hypot(px-drag.sx,py-drag.sy)>4)drag.moved=true;if(drag.moved){def.pts[drag.i]=[Math.round(wx(px)),Math.round(wy(py))];tr=G.build(G.clean(def)||def);gap=G.minGap(tr);draw();status();}}
+});
+function up(e){if(!ptrs[e.pointerId])return;delete ptrs[e.pointerId];if(Object.keys(ptrs).length<2)pinch=null;if(drag){if(drag.moved)changed();else undo.pop();drag=null;}}
+cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+function zoomAt(f,mx,my){var ns=Math.max(0.2,Math.min(4,view.s*f));f=ns/view.s;view.ox=mx-(mx-view.ox)*f;view.oy=my-(my-view.oy)*f;view.s=ns;}
+cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect();zoomAt(Math.exp(-e.deltaY*0.0015),e.clientX-r.left,e.clientY-r.top);draw();},{passive:false});
+/* ---- buttons ---- */
+function setMode(m){mode=m;$("mPts").classList.toggle("on",m==="pts");$("mPads").classList.toggle("on",m==="pads");draw();}
+$("mPts").onclick=function(){setMode("pts");};$("mPads").onclick=function(){setMode("pads");select(-1);};
+$("undo").onclick=function(){if(!undo.length)return;def=JSON.parse(undo.pop());select(-1);changed();};
+$("del").onclick=function(){if(sel<0||def.pts.length<=4)return;push();var w=padsWorld();def.pts.splice(sel,1);padsFrom(w);select(-1);changed();};
+$("startHere").onclick=function(){if(sel<=0)return;push();var w=padsWorld();def.pts=def.pts.slice(sel).concat(def.pts.slice(0,sel));padsFrom(w);select(0);changed();};
+$("rev").onclick=function(){push();var w=padsWorld();def.pts=[def.pts[0]].concat(def.pts.slice(1).reverse());padsFrom(w);select(-1);changed();};
+$("wMinus").onclick=function(){push();def.hw=Math.max(30,def.hw-4);changed();};$("wPlus").onclick=function(){push();def.hw=Math.min(80,def.hw+4);changed();};
+$("name").oninput=function(){def.name=this.value||"Custom track";save();};
+$("tmpl").onclick=function(){if(!confirm("Start again from the template track? (Undo can bring yours back.)"))return;push();def=JSON.parse(JSON.stringify(G.TEMPLATE));select(-1);changed();};
+$("test").onclick=function(){save();};
+$("shareBtn").onclick=function(){$("ta").value="Mars Rally track: "+def.name+" ("+def.pts.length+" dots, "+def.pads.length+" boost pads)\nTRACK-JSON: "+JSON.stringify(def);$("share").classList.add("on");};
+$("closeShare").onclick=function(){$("share").classList.remove("on");};
+$("copy").onclick=function(){var ta=$("ta");ta.select();var ok=false;try{ok=document.execCommand("copy");}catch(e){}if(navigator.clipboard)navigator.clipboard.writeText(ta.value).catch(function(){});this.textContent="Copied ✓";var b=this;setTimeout(function(){b.textContent="Copy";},1500);};
+$("apply").onclick=function(){var t=$("ta").value,m=/TRACK-JSON:\s*(\{[\s\S]*\})/.exec(t)||/(\{[\s\S]*\})/.exec(t),d=null;try{d=G.clean(JSON.parse(m[1]));}catch(e){}
+  if(!d){this.textContent="Couldn't read that";var b=this;setTimeout(function(){b.textContent="Apply pasted";},1600);return;}push();def=d;select(-1);changed();$("share").classList.remove("on");};
+window.addEventListener("resize",function(){fitted=false;size();});
+window.ukTrack=function(){return{def:def,L:Math.round(tr.L),gap:Math.round(gap.gap),ok:gap.ok};};
+def=load();rebuild();size();
+})();
+</script>
+</body>
+</html>

@@ -183,7 +183,7 @@ module.exports = function(api) {
   /* Mars Rally: wait on the dance floor through the intro, then ride the same track the players see, at this bot's own pace */
   var KG = null; try { KG = require("../kart.js").geo; } catch (e) {}
   function kart(b, now, rd) {
-    if (!KG) return; var tr = KG.trackFor(rd.n);
+    if (!KG) return; if (!b.ktr || b.ktr.n !== rd.n) b.ktr = { n: rd.n, tr: KG.trackFor(rd.n, rd.track) }; var tr = b.ktr.tr;
     if (!b.kt || b.kt.n !== rd.n) { var g = KG.gridSlot(tr, Math.floor(Math.random() * 15)); b.kt = { n: rd.n, d: g.d, lat: g.lat, sp: 0.62 + Math.random() * 0.3, ph: Math.random() * 6, t: now, posAt: 0, pop: now + 5800, go: now + 9900 }; }
     var k = b.kt, dt = Math.min(0.5, (now - k.t) / 1000); k.t = now;
     if (now < k.pop) { b.kf = 0; b.kh = 0; return; }
