@@ -608,3 +608,11 @@ Free dance (all in the free dance panel).
 
 ## v1.49.2 - Graphics lab one tap away in practice mode
 - Practice mode now has a **🎨 Graphics** button under 🔧 Lab (top right). It opens the Graphics lab (stage lights, effects, assets and animation frames) in a new tab. Works on a phone.
+
+## v1.50.0 - Pixel editor (Graphics lab)
+- Graphics lab > Assets & animation > Asset type > **🖌 Pixel editor**. Pick a **Part**, then which one (for example Hair style: Mohawk), and paint it one pixel at a time.
+- Parts: hair style, hat, face, extras (shades etc), top, bottoms (hips), left/right arm, left/right leg, instrument (with the performer), keyboard, mic stand.
+- Tools: Pen, Erase paint, Hole (cut a pixel out; characters only), Fill, Pick (eyedropper), Scroll (pan on a phone). Also Mirror (head and body), Grid, Undo, Redo, Clear this layer, colour picker plus swatches of colours already in the picture.
+- Edits save as you go and show in the game for everything that uses that part. Arms and legs are painted hanging straight down and turn with the dancing; head layers follow the head's bow.
+- Share box: pixel edits go out as `PIXELS-JSON`; paste back and Apply pasted loads them. Reset everything clears them.
+- Check: paint a few pixels on a hair style, go back to the venue practice and confirm characters with that hair show them while dancing.
