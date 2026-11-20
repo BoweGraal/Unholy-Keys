@@ -757,17 +757,19 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
-## v1.57.3 - Every round is worth 1,000 show points
+## v1.57.3 - Every round is worth 1,000 show points, with a high floor
 
-Each round now splits exactly 1,000 show points between the players, by their share of that round's score. Before, show points went 10 / 7 / 5 / 3 / 1 by finishing place.
-- Example: scores of 2,651 / 2,449 / 1,889 / 1,459 in Mars Rally pay out 314 / 290 / 223 / 173. A step-dance round with scores of 957 / 729 / 628 / 436 pays 348 / 265 / 228 / 159.
-- A game with huge score numbers (Mars Rally) counts exactly the same as one with small ones, so being great at one game can't run away with the show. A close second still earns nearly as much as the winner.
-- Battles split by matches won; free dance by votes. If nobody scores at all, the 1,000 is shared equally.
-- Works the same in Dance practice.
+Each round now hands out exactly 1,000 show points (before: 10 / 7 / 5 / 3 / 1 by finishing place).
+- **40% is shared equally** by everyone who took part in the round, so nobody walks away with nothing.
+- **60% goes by score, softened** (square root), so a blowout win is worth only a bit more than a solid second.
+- Example: Mars Rally scores of 2,651 / 2,449 / 1,889 / 1,459 pay 269 / 263 / 243 / 225. A lopsided round of 3,000 / 800 / 500 / 100 still pays the last player 152.
+- A game with huge score numbers counts the same as one with small numbers.
+- Steady beats spiky: over three rounds, a player who wins one round big then flops finishes behind someone who's a solid second every time, and the gaps stay small enough that a slow starter can catch up.
+- Battles split by matches won; free dance by votes. Works the same in Dance practice.
 
 Needs a Render redeploy (server.js changed).
 
-**Test it:** play two different games with bots; each round's "+points" column adds up to 1,000, and the show totals add up to 1,000 per round played.
+**Test it:** play a few rounds with bots; each round's "+points" add up to 1,000, and the show standings stay close.
 
 ## v1.57.2 - Dance floor fills tall phone screens
 

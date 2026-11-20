@@ -274,12 +274,15 @@ function roundStandings(code) {
   list.sort(function(a, b) { return b.score - a.score; });
   broadcast(code, { type: "round-scores", n: r.round.n, top: list.slice(0, 5), players: list.length });
 }
-/* every round hands out exactly 1000 show points, split by each player's share of the round's score, so a game
-   with big numbers counts the same as one with small numbers. Largest remainders get the leftover points so it adds up to 1000. */
+/* every round hands out exactly 1000 show points:
+   - 40% is shared equally by everyone who took part, so nobody is ever left with nothing and a slow start isn't the end of you;
+   - 60% goes by score, but softened (square root), so a big win is worth only a bit more than a solid second and steady
+     rounds add up faster than the odd blowout. Largest remainders get the leftover points so it adds up to exactly 1000. */
+var SHARE_FLOOR = 0.4;
 function share1000(list) {
-  var tot = 0; list.forEach(function(x) { tot += Math.max(0, +x.score || 0); });
   var n = list.length; if (!n) return;
-  var raw = list.map(function(x) { return tot > 0 ? 1000 * Math.max(0, +x.score || 0) / tot : 1000 / n; });
+  var w = list.map(function(x) { return Math.sqrt(Math.max(0, +x.score || 0)); }), tw = 0; w.forEach(function(v) { tw += v; });
+  var raw = list.map(function(x, i) { return 1000 * (tw > 0 ? SHARE_FLOOR / n + (1 - SHARE_FLOOR) * w[i] / tw : 1 / n); });
   var given = 0; list.forEach(function(x, i) { x.pts = Math.floor(raw[i]); given += x.pts; });
   list.map(function(x, i) { return i; }).sort(function(a, b) { return (raw[b] - Math.floor(raw[b])) - (raw[a] - Math.floor(raw[a])); })
     .slice(0, 1000 - given).forEach(function(i) { list[i].pts++; });
