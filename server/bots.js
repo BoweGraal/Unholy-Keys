@@ -180,15 +180,17 @@ module.exports = function(api) {
     var u = s.air ? (now - s.air) / 1300 : 0; if (u >= 1) { s.air = 0; u = 0; }
     b.skH = s.air ? Math.round(26 * 4 * u * (1 - u)) : 0; b.skT = s.air ? 1 + (Math.floor(s.a * 3) % 4 + 4) % 4 : 0;
   }
-  /* Mars Rally: ride the same track the players see (kart.js has the track maths), at this bot's own pace */
+  /* Mars Rally: wait on the dance floor through the intro, then ride the same track the players see, at this bot's own pace */
   var KG = null; try { KG = require("../kart.js").geo; } catch (e) {}
   function kart(b, now, rd) {
     if (!KG) return; var tr = KG.trackFor(rd.n);
-    if (!b.kt || b.kt.n !== rd.n) { var slot = Math.floor(Math.random() * 15), g = KG.gridSlot(tr, slot); b.kt = { n: rd.n, d: g.d, lat: g.lat, sp: 0.62 + Math.random() * 0.3, ph: Math.random() * 6, t: now, posAt: 0, go: now + 3200 }; }
-    var k = b.kt, dt = Math.min(0.5, (now - k.t) / 1000); k.t = now; if (now < k.go) dt = 0;
-    var spd = KG.DEF.maxSpeed * k.sp; k.d += spd * dt; k.lat += (Math.sin(now / 900 + k.ph) * tr.hw * 0.5 - k.lat) * Math.min(1, dt * 2);
-    b.kh = Math.round(Math.min(1, spd * (dt > 0 ? 1 : 0) / (KG.DEF.maxSpeed * 1.45)) * 60);
-    if (now - k.posAt > 120) { k.posAt = now; var p = KG.pointAt(tr, k.d, k.lat); b.x = +(p.x / KG.W).toFixed(4); b.y = +(p.y / KG.H).toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
+    if (!b.kt || b.kt.n !== rd.n) { var g = KG.gridSlot(tr, Math.floor(Math.random() * 15)); b.kt = { n: rd.n, d: g.d, lat: g.lat, sp: 0.62 + Math.random() * 0.3, ph: Math.random() * 6, t: now, posAt: 0, pop: now + 5800, go: now + 9900 }; }
+    var k = b.kt, dt = Math.min(0.5, (now - k.t) / 1000); k.t = now;
+    if (now < k.pop) { b.kf = 0; b.kh = 0; return; }
+    b.kf = 1; var racing = now >= k.go; if (!racing) dt = 0;
+    var spd = racing ? KG.DEF.maxSpeed * k.sp : 0; k.d += spd * dt; k.lat += (Math.sin(now / 900 + k.ph) * tr.hw * 0.5 - k.lat) * Math.min(1, dt * 2);
+    b.kh = Math.round(Math.min(1, spd / (KG.DEF.maxSpeed * 1.45)) * 60);
+    if (now - k.posAt > 120) { k.posAt = now; var p = KG.pointAt(tr, k.d, k.lat), e = KG.enc(p.x, p.y); b.x = +e[0].toFixed(4); b.y = +e[1].toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
   }
   /* a groove: arms and legs swinging on the beat, in this bot's own style (sent about five times a second) */
   function pose(b, now, bpm) {
@@ -198,7 +200,7 @@ module.exports = function(api) {
     var pm = { type: "pose", a: a, c: Math.floor((b.score || 0) / 900) % 60 };
     /* free dance: each bot has a favourite style (the shuffle's popular) and switches move now and then */
     if (b.rd && b.rd.mode === "free") { if (!b.fds || Math.random() < 0.01) { b.fds = Math.random() < 0.35 ? 9 : 1 + Math.floor(Math.random() * 15); b.fdm = Math.floor(Math.random() * 4); } pm.fd = { s: b.fds, m: b.fdm, c: [0, 0, 0, 0] }; }
-    if (b.rd && b.rd.mode === "kart") { pm.sk = { h: b.kh || 0, f: 0, t: 0 }; pm.a = [210, -210, 25, -25]; }
+    if (b.rd && b.rd.mode === "kart") { pm.sk = { h: b.kh || 0, f: b.kf ? 1 : 0, t: 0 }; pm.a = [210, -210, 25, -25]; }
     else if (b.rd && (b.rd.mode === "skate" || b.rd.mode === "keepy")) { pm.sk = { h: b.skH || 0, f: 0, t: b.skT || 0 }; if (b.skH) pm.a = [240, -240, 100, -100]; }
     b.act(pm);
   }

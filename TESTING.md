@@ -641,10 +641,14 @@ Free dance (all in the free dance panel).
 - Check: full screen, pinch out, drag with two fingers, pinch in; confirm no stray pixels are painted while you do it.
 
 ## v1.51.0 - Mars Rally (kart mini game)
-- New round type: top-down bike racing round a Martian track. The performer stays in the top-left corner; everyone else rides. Three tracks (Olympus Loop, Valles Marineris, Dust Devil), picked by round number.
-- Controls: stick or A / D steers (gas is automatic), **DRIFT** button or Space/Shift (hold in a corner, let go for a blue or orange boost), **BRAKE** button or stick down / S. Yellow pads give a boost. Red dust beside the road slows you.
-- Points: distance covered, laps, boosts, overtakes, and time spent near the front. Place shows top right.
-- Practice: open Dance > **Mars Rally**, pick a song, Start. Performer view: Rounds > Mars Rally.
-- Tuning lab has a new **Mars Rally** group (speed, grip, drift, boost lengths, points).
-- Server change: **redeploy Render** so Mars Rally rounds and the practice bots work in live shows.
-- Check: start a round, wait for the lights, steer round a corner holding DRIFT, release for a boost; confirm lap counter and place update; on a phone held upright the track is on its side but right is still right.
+- First version (top-down bike race). Replaced by the v1.52.0 version below.
+
+## v1.52.0 - Mars Rally: UFO intro, space track, stick drives the direction
+- **Intro**: the round starts on the normal dance floor. A UFO drops under the performer and they fly to the top-left corner and play from there. The floor fades to space and the camera zooms out to show the dance floor is part of a neon track (track name shows), then everyone pops into a bike, the driving controls slide up and the camera drops in behind you.
+- **Dance floor** is a pulsing, beat-synced plaza the start line runs through. It stays under the grid all race.
+- **Lights**: 3, 2, 1, GO. **Hold GAS from the "2" and keep holding at GO for a rocket start** (about 1.4 s of boost). Holding it before the 2 shows floods the engine (a short stall).
+- **Controls**: push the left stick (or WASD / arrows) the way you want to drive; the bike swings round to face it. Hold **GAS** (or Space) to go. **DRIFT** (or Shift): hold it in a turn and let go for a blue or orange boost. **BRAKE** (or B). Yellow pads boost. Rails along the road and round the dance floor: you slide along them.
+- Camera follows you up close; the game no longer turns the track on its side for phones.
+- Tuning lab, Mars Rally group: new Intro speed (turn the intro down while testing), Rocket start length, Rail bounce, Turn speed. Auto gas is off by default.
+- Server change: **redeploy Render** (bots wait out the intro, then race).
+- Check: practice > Mars Rally > Start. Watch the intro (set Intro speed to 0.3 in the lab to test faster). Hold GAS from the 2 for the rocket start. Drive with the stick pointing round a corner and use DRIFT.
