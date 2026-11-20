@@ -690,3 +690,8 @@ Free dance (all in the free dance panel).
 
 ## v1.54.2 - Track builder: Reset track
 - The old "Template" button is now an orange **↺ Reset track** button. It puts back the original Dance Floor Snake exactly (dots, width, boost pads, name), re-centres the view and saves it. Undo brings your version back.
+
+## v1.54.3 - Track builder: Redraw
+- **✍️ Redraw**: the current track fades to a faint ghost and you draw a brand new one over it with one finger, all the way round, then lift. Your line becomes dots (about one every 85 units), smoothed to take out finger wobble, starting where you started and running the way you drew. Boost pads that still sit on the new road are kept; the rest are dropped.
+- Press **✕ Cancel redraw** to back out, or Undo afterwards to get the old track back. Two fingers still zoom and move while redrawing.
+- Check: Track builder > Redraw > draw a loop over the ghost > lift > drag a few dots to tidy up > Test drive.
