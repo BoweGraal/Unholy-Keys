@@ -757,6 +757,14 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.56.7 - After the race, karts after a blip, no right-click menu
+
+- **End of the race:** on the audience screen your UFO now flies you from the top-left corner back to the stage, sets you down and drops away, so you finish the song on stage. On your own screen the race view fades back to your stage view.
+- **Karts vanishing (Jed's report):** if a player's connection blipped mid-race, everyone else saw them as a faded figure on the start line for the rest of the race, and they saw everyone else that way too. Karts now re-announce themselves every second, so a rejoined player is back on everyone's track straight away.
+- **Right-click:** no browser menu on the performer page or the audience page (text boxes still have it, for paste).
+
+**Test it:** in a race on two phones, turn one phone's Wi-Fi off for a few seconds and back on: the other phone should see their kart come back within a couple of seconds. At the end of the round, watch the UFO bring the performer home.
+
 ## v1.56.6 - Race view fixes
 
 - Your character no longer disappears from the UFO when you play a note.

@@ -293,7 +293,9 @@
   }
   function perfCorner() { return [Math.max(105, VW * 0.14), Math.max(112, VH * 0.17)]; }
   function perf(sx, sy) {
-    if (!on) return null; var tt = elapsed(), T_ = times(), c = perfCorner();
+    if (!on) { var k = outroK(); if (k >= 1) return null; var c0 = perfCorner(), u0 = ease(Math.min(1, k / 0.72));   /* flying home */
+      return [c0[0] + (sx - c0[0]) * u0, c0[1] + (sy - c0[1]) * u0 - Math.sin(u0 * Math.PI) * 40]; }
+    var tt = elapsed(), T_ = times(), c = perfCorner();
     var u = ease((tt - 1.0 * T_.S) / (1.6 * T_.S)); return [sx + (c[0] - sx) * u, sy + (c[1] - sy) * u + Math.sin(performance.now() / 420) * 3];
   }
   function ufo(ctx, tt, T_) {
@@ -408,7 +410,16 @@
     cam.x = PZ.cx; cam.y = PZ.cy; cam.z = 2;
     ui(true); hud();
   }
-  function stop() { on = false; ui(false); }
+  /* when the race ends the UFO flies the performer back to the stage, sets them down and drops away; the song carries on */
+  var OUT_MS = 2400, outAt = 0;
+  function stop() { if (on && elapsed() >= times().fade) outAt = performance.now(); on = false; ui(false); }
+  function outroK() { return outAt ? (performance.now() - outAt) / OUT_MS : 1; }
+  K.outro = function () { var k = outroK(); if (k >= 1) outAt = 0; return k < 1; };
+  K.ufoOut = function (ctx, sx, sy) {     /* draws the UFO under the performer on the way home; sx, sy = their stage spot */
+    var k = outroK(); if (k >= 1) return; var p = perf(sx, sy); if (!p) return;
+    var drop = clamp((k - 0.72) / 0.28, 0, 1), now = performance.now();
+    ctx.save(); ctx.globalAlpha = 1 - drop; ufoAt(ctx, p[0], p[1] + 62 + drop * 70, now, 1 - drop * 0.3); ctx.restore();
+  };
   function savedTrack() { try { return clean(JSON.parse(localStorage.getItem("uk_track") || "null")); } catch (e) { return null; } }
   function tick() {
     if (!on) return;

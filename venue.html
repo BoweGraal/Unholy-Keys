@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.56.6"></script>
-<script src="gfx.js?v=1.56.6"></script>
-<script src="art.js?v=1.56.6"></script>
-<script src="instruments.js?v=1.56.6"></script>
-<script src="kart.js?v=1.56.6"></script>
+<script src="tune.js?v=1.56.7"></script>
+<script src="gfx.js?v=1.56.7"></script>
+<script src="art.js?v=1.56.7"></script>
+<script src="instruments.js?v=1.56.7"></script>
+<script src="kart.js?v=1.56.7"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -518,6 +518,7 @@ function resolveWsUrl(){
 }
 var LIVE_URL = resolveWsUrl();
 /* an audience link can carry the room code (?room=ABCD): it's filled in on the join screen */
+document.addEventListener("contextmenu",function(e){var t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable))return;e.preventDefault();});   /* no browser menu over the game */
 window.addEventListener("load",function(){try{var rc=new URLSearchParams(location.search).get("room");if(rc&&/^[A-Za-z0-9]{4}$/.test(rc)){var ir=document.getElementById("inRoom");if(ir&&!ir.value)ir.value=rc.toUpperCase();}}catch(e){}});
 /* ── Which server: Render (the cloud one) or self-hosted (your own computer, a home tunnel) ──
    Worked out from the address, confirmed by the server itself (/health and when you connect: Render sets
@@ -2352,7 +2353,7 @@ var GAME=(function(){
     if(fd){var rg=ART.dance(fd.s,fd.m,fCtl,beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
     var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():null;
     var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(","):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
-    if(key===lastSent&&!force)return;
+    if(key===lastSent&&!force&&(!sk||now-lastSend<1000))return;   /* in a game, resend now and then: someone who just (re)joined needs it */
     if(now-lastSend<90&&!force){if(!sendTimer)sendTimer=setTimeout(function(){sendTimer=null;sendPose();},95-(now-lastSend));return;}
     lastSend=now;lastSent=key;
     var pm={type:"pose",a:msg,c:combo};if(fd)pm.fd=fd;if(sk)pm.sk=sk;
@@ -5300,7 +5301,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.56.6",SERVER_VERSION="";
+var PAGE_VERSION="1.56.7",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5650,11 +5651,13 @@ function renderLoop(){
   if(JT.rect&&JT.k>0.01){var py2=Math.min(STAGE_BOTTOM*H-14*3,JT.rect.y+JT.rect.h+20+19*3);if(py2>perfPy)perfPy+=(py2-perfPy)*JT.k;}
   /* the roller rink: the performer plays on the island in the middle */
   if(rinkOn()){var RG=SKATE.geom();perfPx=RG.cx;perfPy=RG.cy+4;}
-  if(KON){window.__kartStage=[perfPx,perfPy];var KP=KART.perf(perfPx,perfPy);if(KP){perfPx=KP[0];perfPy=KP[1];perfShift=0;}}      /* the performer stays in the top-left corner */
+  var KOUT=!KON&&typeof KART!=="undefined"&&KART.outro&&KART.outro();   /* the race is over: the UFO flies the performer home */
+  if(KOUT)KART.ufoOut(ctx,perfPx,perfPy);
+  if(KON||KOUT){window.__kartStage=[perfPx,perfPy];var KP=KART.perf(perfPx,perfPy);if(KP){perfPx=KP[0];perfPy=KP[1];perfShift=0;}}      /* the performer stays in the top-left corner */
   PERF_AT=[perfPx,perfPy];
   if(spotK>0)drawCentreSpot(W/2,perfPy,spotK,feat);
   if(PH.on){var pfc0=document.getElementById("perfFront");if(pfc0)pfc0.getContext("2d").clearRect(0,0,pfc0.width,pfc0.height);}
-  if(KON||(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)&&!PH.on)){   /* hanging out: the performer is on the floor, not the stage */
+  if(KON||KOUT||(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)&&!PH.on)){   /* hanging out: the performer is on the floor, not the stage */
     var perfDim=bp&&W<640;if(perfDim){ctx.save();ctx.globalAlpha=0.35;}   /* small screens: the match needs the room */
     /* with the Jumbotron down, the performer goes on the layer above it, so they stand in front of the screen */
     var pfc=document.getElementById("perfFront"),mainCtx=ctx,useFront=pfc&&JT.k>0.02;
@@ -5787,7 +5790,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.56.6"></script>
+<script src="lab.js?v=1.56.7"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
