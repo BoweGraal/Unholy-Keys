@@ -725,3 +725,4 @@ Free dance (all in the free dance panel).
 - No Full screen editor button on a computer (it's still there on phones and tablets).
 - The long help text above the tools is gone.
 - On a computer the part opens zoomed in a bit more (scroll wheel still zooms).
+- The drawing area is now a light grey and white checker on every device, so the pixels stand out (the cursor square is pink).

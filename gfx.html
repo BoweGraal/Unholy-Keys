@@ -265,16 +265,16 @@ function drawPixel(now){
   var sp=PX.spec;if(!sp)return;var v=$("view"),sig=v.clientWidth+"x"+v.clientHeight+"|"+PX.zoom+"|"+sp.w+"x"+sp.h+"|"+PX.fs;
   if(sig!==PX.sig){PX.sig=sig;pxFit();}
   var c=PX.cell,W=cv.width,H=cv.height,x,y;pxRender();
-  g.clearRect(0,0,W,H);for(y=0;y<sp.h;y++)for(x=0;x<sp.w;x++){g.fillStyle=((x+y)&1)?"#241c4a":"#1c1640";g.fillRect(x*c,y*c,c,c);}
+  g.clearRect(0,0,W,H);for(y=0;y<sp.h;y++)for(x=0;x<sp.w;x++){g.fillStyle=((x+y)&1)?"#e6e6ea":"#f4f4f6";g.fillRect(x*c,y*c,c,c);}
   g.imageSmoothingEnabled=false;
   if(PX.ghostOn){if(!PX.ghostC)PX.ghostC=pxGhost();g.globalAlpha=0.38;g.drawImage(PX.ghostC,0,0,W,H);g.globalAlpha=1;}   /* redraw: the original, faint, to draw over */
   if(PX.ref&&sp.ref){var rg=PX.refc.getContext("2d");rg.clearRect(0,0,sp.w,sp.h);ART.paint.off(true);try{sp.ref(rg);}finally{ART.paint.off(false);}g.globalAlpha=0.38;g.drawImage(PX.refc,0,0,W,H);g.globalAlpha=1;}
   g.drawImage(PX.base,0,0,W,H);
-  if(PX.grid&&c>=6){g.strokeStyle="rgba(255,255,255,.10)";g.lineWidth=1;g.beginPath();for(x=0;x<=sp.w;x++){g.moveTo(x*c+.5,0);g.lineTo(x*c+.5,H);}for(y=0;y<=sp.h;y++){g.moveTo(0,y*c+.5);g.lineTo(W,y*c+.5);}g.stroke();}
+  if(PX.grid&&c>=6){g.strokeStyle="rgba(0,0,0,.10)";g.lineWidth=1;g.beginPath();for(x=0;x<=sp.w;x++){g.moveTo(x*c+.5,0);g.lineTo(x*c+.5,H);}for(y=0;y<=sp.h;y++){g.moveTo(0,y*c+.5);g.lineTo(W,y*c+.5);}g.stroke();}
   if(PX.mirror&&sp.sym){g.strokeStyle="rgba(245,197,24,.8)";g.lineWidth=1;g.setLineDash([4,4]);g.beginPath();g.moveTo(sp.ax*c+.5,0);g.lineTo(sp.ax*c+.5,H);g.stroke();g.setLineDash([]);}
   if(PX.preview){g.fillStyle=PX.col;g.globalAlpha=0.9;PX.preview.forEach(function(p){g.fillRect(p[0]*c,p[1]*c,c,c);});g.globalAlpha=1;}
-  if(PX.curve){var cu=PX.curve;[cu.a,cu.b].forEach(function(p){g.strokeStyle="#3DF2FF";g.lineWidth=2;g.strokeRect(p[0]*c+1,p[1]*c+1,c-2,c-2);});g.fillStyle="rgba(61,242,255,.9)";g.font="700 12px system-ui";g.textAlign="left";g.fillText("Drag on the line to bend it · ✓ Done (Enter) to keep it",6,H-8);}
-  if(PX.hover&&PX.tool!=="move"){g.strokeStyle="#fff";g.lineWidth=2;g.strokeRect(PX.hover[0]*c+1,PX.hover[1]*c+1,c-2,c-2);}
+  if(PX.curve){var cu=PX.curve;[cu.a,cu.b].forEach(function(p){g.strokeStyle="#3DF2FF";g.lineWidth=2;g.strokeRect(p[0]*c+1,p[1]*c+1,c-2,c-2);});g.fillStyle="#3a2f8a";g.font="700 12px system-ui";g.textAlign="left";g.fillText("Drag on the line to bend it · ✓ Done (Enter) to keep it",6,H-8);}
+  if(PX.hover&&PX.tool!=="move"){g.strokeStyle="#ff2fa0";g.lineWidth=2;g.strokeRect(PX.hover[0]*c+1,PX.hover[1]*c+1,c-2,c-2);}
 }
 function pxCell(e){var r=cv.getBoundingClientRect();return[Math.floor((e.clientX-r.left)*cv.width/r.width/PX.cell),Math.floor((e.clientY-r.top)*cv.height/r.height/PX.cell)];}
 function pxPut(cx,cy){var sp=PX.spec;if(cx<0||cy<0||cx>=sp.w||cy>=sp.h)return;var xs=[cx];if(PX.mirror&&sp.sym){var mx=2*sp.ax-1-cx;if(mx>=0&&mx<sp.w&&mx!==cx)xs.push(mx);}
