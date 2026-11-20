@@ -741,3 +741,24 @@ Free dance (all in the free dance panel).
 ## v1.55.2 - Performer page: character colour picker on top
 - The colour picker (skin, hair, top, bottoms) now opens in front of the "Your character on stage" window instead of behind it.
 - While that window or its colour picker is open, typing (like a hex colour) no longer plays notes or swaps the key (Shift used to pop up "alt key").
+
+## v1.55.3 - Your track is the base track
+- Mars Rally's built-in track (and the Track builder's ↺ Reset track) is now your Dance Floor Snake: 29 dots, 15 boost pads, about 41 s a lap flat out.
+- Anyone without their own saved track gets it. Server change: **redeploy Render** so the practice bots in live shows ride it too.
+## v1.56.0 - Characters can turn round (front, side, back, other side)
+- Every character now has four views: **front, facing right, back, facing left**. Every part has its side and back version: all 30 hair styles (long hair hangs down the back, ponytails and buns sit where they should), all 13 hats, glasses / beards / patches in profile, headphones and bandanas, every top (hoods hang at the back, the jersey has a number on the back, lab coats have tails), skirts, dresses and overall straps.
+- **Character maker** (join screen and the performer's character window): ⟲ ⟳ buttons on the preview, or drag sideways across it, to turn the character round.
+- **Mars Rally**: drivers face the way their kart points: you see their face coming towards you, their profile going sideways, and the back of their head driving away.
+- Pixel-editor paint still only shows on the front view for now.
+- Check: on the join screen tap ⟳ four times with a few different looks (try long hair, a ponytail, a hood, a cowboy hat).
+
+## v1.56.1 - Mars Rally top speed 260
+- Top speed is now **260** by default (was 135), for everyone and for the bots. The practice Speed box and the Tuning lab now go up to 400.
+- If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
+- Server change: **redeploy Render** so the live-show bots drive at the new speed.
+
+## v1.56.2 - Fix: live show dropping when a round starts
+- The bug: the server cut off any message over 16 KB. A round start carries the song's step chart (and for Mars Rally, your track), and for a longer song that's over 16 KB, so the server disconnected the performer the moment the round started. Everyone then lost the performer: no music, no round, and the performer page stopped seeing the audience.
+- The fix: the performer can now send up to 240 KB (everyone else stays capped at 16 KB). The server also logs when it drops an oversized message.
+- Server change: **redeploy Render** (this fix only works once the server is updated).
+- Check: go live, have someone join, start a round with a full-length song (try Mars Rally too). The round should count in and the music should play for them.

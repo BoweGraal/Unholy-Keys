@@ -407,7 +407,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.55.2";
+var VERSION = "1.56.2";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -448,9 +448,10 @@ function allow(ws, key, burst, perSec) {
 
 /* one message from a connection (also used by the room-filling bots, whose "connections" live in this process) */
 function onMessage(ws, raw, isBinary) {
-  /* only the performer's stream packets may exceed 16 KB; anything else that large drops the sender */
+  /* the performer's stream packets are big; so is the performer's round start (a long song's step chart, a custom kart track),
+     so the performer may send text up to 240 KB. Everyone else is capped at 16 KB, and anything larger drops the sender. */
   if (isBinary && ws.role === "performer") { relayStream(ws, raw); return; }
-  if (raw.length > 16 * 1024) { try { ws.terminate(); } catch (e) {} return; }
+  if (raw.length > (ws.role === "performer" ? 240 * 1024 : 16 * 1024)) { console.log("Dropped an oversized message (" + raw.length + " bytes) from a " + (ws.role || "new connection")); try { ws.terminate(); } catch (e) {} return; }
   if (isBinary) return;
   var msg;
   try { msg = JSON.parse(raw); } catch(e) { return; }

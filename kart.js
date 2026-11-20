@@ -11,7 +11,7 @@
   var WW = 1000, WH = 620;
 
   /* ---- numbers you can tweak in the Tuning lab (the lab's group "kt"); these are the fallbacks ---- */
-  var DEF = { maxSpeed: 135, accel: 130, brake: 260, coast: 70, wall: 0.35, turn: 3.4, grip: 0.002, revSpeed: 0.45,
+  var DEF = { maxSpeed: 260, accel: 130, brake: 260, coast: 70, wall: 0.35, turn: 3.4, grip: 0.002, revSpeed: 0.45,
     hop: 0.3, hopTurn: 7, driftK: 2.2, miniT: 0.8, turboT: 1.6, ultraT: 2.6, boost1: 0.7, boost2: 1.1, boost3: 1.6, boostMul: 1.4, padTime: 1.1, startBoost: 1.4, intro: 1,
     distPts: 40, lapPts: 400, rankPts: 6, passPts: 30, driftPts: 50, hw: 48 };
   var env = null;
@@ -20,9 +20,9 @@
   /* ================= geometry ================= */
   /* the template track (the Track builder starts from this): a snake down the floor and back up the left side.
      Control points go round in driving order; the first point is the start line, in the middle of the dance floor. */
-  var TEMPLATE = { name: "Dance Floor Snake", hw: 52, pads: [0.09, 0.33, 0.54, 0.77, 0.9],
-    pts: [[200, 90], [480, 85], [760, 90], [860, 95], [930, 170], [860, 250], [640, 250], [420, 250], [300, 255], [230, 330], [300, 410], [520, 410], [720, 410],
-          [860, 415], [930, 490], [860, 560], [600, 560], [300, 560], [140, 550], [90, 460], [90, 300], [100, 150], [140, 95]] };
+  var TEMPLATE = { name: "Dance Floor Snake", hw: 52,   /* Brian's design from the Track builder */
+    pads: [0.09,  0.33,  0.77,  0.9,  [0.3075,  29],  [0.3061,  -35],  [0.3837,  21],  0.423,  0.5751,  [0.4594,  34],  [0.489,  -38],  [0.5269,  33],  0.6217,  [0.6522,  18],  0.6847],
+    pts: [[200, 90], [445, 29], [576, -15], [782, 3], [1025, -148], [1179, -93], [1174, 60], [1002, 73], [766, 232], [608, 196], [420, 250], [295, 256], [214, 336], [298, 432], [534, 393], [696, 405], [850, 386], [1045, 302], [1257, 272], [1366, 507], [1214, 694], [881, 694], [495, 579], [300, 560], [140, 550], [90, 460], [90, 300], [100, 150], [140, 95]] };
   /* a track from the builder or the network: numbers checked and clamped, or null */
   var LIM0 = -4000, LIM1 = 5000, ENC0 = -4200, ENCS = 9400;
   function clean(d) {
@@ -506,16 +506,13 @@
     var back = Math.sin(k.a) < 0;                          /* facing up the screen: the exhausts are in front of the kart */
     if (k.boost && !back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks - lift, k.a, ks, now, k.boost > 1); });
     ctx.drawImage(fr.under, bx, by, FW * ks, FH * ks);
-    var seatX = sc[0] + fr.seat[0] * ks, seatY = sc[1] + fr.seat[1] * ks - lift, as = s * 0.78, cy = seatY + 2 * as, neck = cy - 9 * as, tn = clamp(k.turn || 0, -1, 1), pose = [0.55 - tn * 0.25, -0.55 - tn * 0.25, 0.2, -0.2];
-    /* body: sunk down into the seat, only the chest and arms show above the cockpit */
-    ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, neck, 80 * s, seatY - neck - 0.5 * as); ctx.clip();
-    env.avatar(seatX, cy, k.v, k.me, as, pose, true); ctx.restore();
-    /* head: turned into the corner (slid over, narrower on the far side, tipped a touch) */
-    ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, neck - 40 * s, 80 * s, 40 * s); ctx.clip();
-    ctx.translate(seatX + tn * 1.6 * as, neck); ctx.rotate(tn * 0.12); ctx.scale(1 - 0.16 * Math.abs(tn), 1); ctx.translate(-seatX, -neck);
-    env.avatar(seatX, cy, k.v, k.me, as, pose, true); ctx.restore();
-    /* driving away from you: you see the back of their head */
-    if (Math.sin(k.a) < -0.38 && env.hairCol) { var hc = env.hairCol(k.v); ctx.fillStyle = hc; ctx.fillRect(Math.round(seatX - 5 * as), Math.round(cy - 15 * as), Math.round(10 * as), Math.round(6 * as)); ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(Math.round(seatX - 5 * as), Math.round(cy - 10 * as), Math.round(10 * as), Math.round(1 * as)); }
+    /* the driver faces the way the kart points: front, side, back or the other side (real turned views of their character) */
+    var q4 = ((Math.round(k.a / (Math.PI / 2)) % 4) + 4) % 4, dir = [1, 0, 3, 2][q4], side = dir === 1 || dir === 3, tn = clamp(k.turn || 0, -1, 1);
+    var seatX = sc[0] + fr.seat[0] * ks, seatY = sc[1] + fr.seat[1] * ks - lift, as = s * 0.78, cy = seatY + 2 * as, neck = cy - 9 * as;
+    var pose = side ? [-1.15 + tn * 0.2, -1.0 + tn * 0.2, 0.2, -0.2] : [0.55 - tn * 0.25, -0.55 - tn * 0.25, 0.2, -0.2];
+    /* sunk down into the seat: only the head, chest and arms show above the cockpit */
+    ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, seatY - 60 * s, 80 * s, 60 * s - 0.5 * as); ctx.clip();
+    env.avatar(seatX, cy, k.v, k.me, as, pose, true, dir); ctx.restore();
     ctx.drawImage(fr.over, bx, by, FW * ks, FH * ks);
     if (k.boost && back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks - lift, k.a, ks, now, k.boost > 1); });
     if (k.lvl !== undefined && k.lvl >= 0 && k.drifting && !k.air) fr.rw.forEach(function (p, i) { spark(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks, ks, k.lvl, now, i); });
@@ -589,7 +586,7 @@
       }
       /* practice: lock in a top speed (saved, and it's the same setting as the Tuning lab's Top speed) */
       var sp = document.createElement("div"); sp.id = "ktSpeed"; sp.innerHTML = '<span>Speed</span><button data-s="-10">−</button><b id="ktSpV"></b><button data-s="10">+</button>'; el.appendChild(sp);
-      Array.prototype.forEach.call(sp.querySelectorAll("button"), function (bt) { bt.addEventListener("click", function (e) { e.stopPropagation(); var v = clamp(Math.round(T("maxSpeed") + (+bt.dataset.s)), 70, 260); if (env.tuneSet) env.tuneSet("kt.maxSpeed", v); speedUI(); }); });
+      Array.prototype.forEach.call(sp.querySelectorAll("button"), function (bt) { bt.addEventListener("click", function (e) { e.stopPropagation(); var v = clamp(Math.round(T("maxSpeed") + (+bt.dataset.s)), 70, 400); if (env.tuneSet) env.tuneSet("kt.maxSpeed", v); speedUI(); }); });
       var b = $("ktDrift"), pid = null;
       b.addEventListener("pointerdown", function (e) { e.preventDefault(); e.stopPropagation(); pid = e.pointerId; try { b.setPointerCapture(pid); } catch (x) {} b.classList.add("dn"); driftHold = true; });
       var up = function (e) { if (e.pointerId !== pid) return; pid = null; b.classList.remove("dn"); driftHold = false; }; b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("lostpointercapture", up);
