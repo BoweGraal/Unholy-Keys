@@ -160,7 +160,7 @@
         var pts = f.slice(0, 4).map(function (p) { return rot(p, c, s); }), cx = 0, cy = 0, cz = 0;
         pts.forEach(function (p) { cx += p[0] / 4; cy += p[1] / 4; cz += p[2] / 4; });
         var lit = 0.62 + 0.5 * Math.max(0, n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2]);
-        faces.push({ pts: pts.map(proj), depth: cy * SZ + cz * CY + (f[4][2] ? 0.01 : 0), fill: mul(col, lit) });
+        faces.push({ pts: pts.map(proj), depth: cy * SZ + cz * CY + (f[4][2] ? 0.01 : 0), ry: cy, fill: mul(col, lit) });
       });
     });
     faces.sort(function (a, b2) { return a.depth - b2.depth; });
@@ -177,7 +177,9 @@
       im.data.set(o); g.putImageData(im, 0, 0); return cv;
     }
     var sp = proj(seat), rw = [rot([-9, -9, 1], c, s), rot([-9, 9, 1], c, s)].map(proj), ex = [rot([-15, -2, 5], c, s), rot([-15, 2, 5], c, s)].map(proj);
-    return { under: layer(function (f) { return f.depth <= seatDepth; }), over: layer(function (f) { return f.depth > seatDepth; }), seat: [sp[0] - OX, sp[1] - OY], rw: rw.map(function (p) { return [p[0] - OX, p[1] - OY]; }), ex: ex.map(function (p) { return [p[0] - OX, p[1] - OY]; }) };
+    /* only the low parts well in front of the cockpit (nose, bumper, front wheels) are drawn over the driver; everything else goes under them */
+    var front = function (f) { return f.ry > seat[1] + 5; };
+    return { under: layer(function (f) { return !front(f); }), over: layer(front), seat: [sp[0] - OX, sp[1] - OY], rw: rw.map(function (p) { return [p[0] - OX, p[1] - OY]; }), ex: ex.map(function (p) { return [p[0] - OX, p[1] - OY]; }) };
   }
 
   /* ---- the timeline: UFO, fade to space, zoom out (about twice as far as the floor), pop into karts, lights ---- */
@@ -483,14 +485,14 @@
   }
   /* one kart: shadow, flames, the back half, the driver in the seat, the front half, sparks, name */
   function kart(ctx, k, now) {
-    var sc = toScreen(k.x, k.y), s = cam.z * (k.pop === undefined ? 1 : 0.3 + 0.7 * k.pop), fr = sheet(k.v.color || "#e33")[idx16(k.a)], lift = (k.air ? 6 : 0) * s;
+    var sc = toScreen(k.x, k.y), s = cam.z * (k.pop === undefined ? 1 : 0.3 + 0.7 * k.pop), fr = sheet(k.v.color || "#e33")[idx16(k.a)], lift = (k.air ? 6 : 0) * s, ks = s * 1.2;
     ctx.save(); ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(sc[0], sc[1] + 2 * s, 15 * s, 9 * s, 0, 0, 6.3); ctx.fill();
-    var bx = sc[0] - OX * s, by = sc[1] - OY * s - lift;
+    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(sc[0], sc[1] + 2 * ks, 15 * ks, 9 * ks, 0, 0, 6.3); ctx.fill();
+    var bx = sc[0] - OX * ks, by = sc[1] - OY * ks - lift;
     var back = Math.sin(k.a) < 0;                          /* facing up the screen: the exhausts are in front of the kart */
-    if (k.boost && !back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * s, sc[1] + p[1] * s - lift, k.a, s, now, k.boost > 1); });
-    ctx.drawImage(fr.under, bx, by, FW * s, FH * s);
-    var seatX = sc[0] + fr.seat[0] * s, seatY = sc[1] + fr.seat[1] * s - lift, as = s * 0.85, cy = seatY + 1 * as, neck = cy - 9 * as, tn = clamp(k.turn || 0, -1, 1), pose = [0.55 - tn * 0.25, -0.55 - tn * 0.25, 0.2, -0.2];
+    if (k.boost && !back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks - lift, k.a, ks, now, k.boost > 1); });
+    ctx.drawImage(fr.under, bx, by, FW * ks, FH * ks);
+    var seatX = sc[0] + fr.seat[0] * ks, seatY = sc[1] + fr.seat[1] * ks - lift, as = s * 0.78, cy = seatY + 2 * as, neck = cy - 9 * as, tn = clamp(k.turn || 0, -1, 1), pose = [0.55 - tn * 0.25, -0.55 - tn * 0.25, 0.2, -0.2];
     /* body: sunk down into the seat, only the chest and arms show above the cockpit */
     ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, neck, 80 * s, seatY - neck - 0.5 * as); ctx.clip();
     env.avatar(seatX, cy, k.v, k.me, as, pose, true); ctx.restore();
@@ -498,10 +500,12 @@
     ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, neck - 40 * s, 80 * s, 40 * s); ctx.clip();
     ctx.translate(seatX + tn * 1.6 * as, neck); ctx.rotate(tn * 0.12); ctx.scale(1 - 0.16 * Math.abs(tn), 1); ctx.translate(-seatX, -neck);
     env.avatar(seatX, cy, k.v, k.me, as, pose, true); ctx.restore();
-    ctx.drawImage(fr.over, bx, by, FW * s, FH * s);
-    if (k.boost && back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * s, sc[1] + p[1] * s - lift, k.a, s, now, k.boost > 1); });
-    if (k.lvl !== undefined && k.lvl >= 0 && k.drifting && !k.air) fr.rw.forEach(function (p, i) { spark(ctx, sc[0] + p[0] * s, sc[1] + p[1] * s, s, k.lvl, now, i); });
-    if (k.v.name) { ctx.font = "800 " + Math.round(clamp(10 * s, 10, 15)) + "px system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,.75)"; var ny = sc[1] + 16 * s; ctx.strokeText(k.v.name, sc[0], ny); ctx.fillStyle = k.me ? "#F5C518" : "#fff"; ctx.fillText(k.v.name, sc[0], ny); }
+    /* driving away from you: you see the back of their head */
+    if (Math.sin(k.a) < -0.38 && env.hairCol) { var hc = env.hairCol(k.v); ctx.fillStyle = hc; ctx.fillRect(Math.round(seatX - 5 * as), Math.round(cy - 15 * as), Math.round(10 * as), Math.round(6 * as)); ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(Math.round(seatX - 5 * as), Math.round(cy - 10 * as), Math.round(10 * as), Math.round(1 * as)); }
+    ctx.drawImage(fr.over, bx, by, FW * ks, FH * ks);
+    if (k.boost && back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks - lift, k.a, ks, now, k.boost > 1); });
+    if (k.lvl !== undefined && k.lvl >= 0 && k.drifting && !k.air) fr.rw.forEach(function (p, i) { spark(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks, ks, k.lvl, now, i); });
+    if (k.v.name) { ctx.font = "800 " + Math.round(clamp(10 * s, 10, 15)) + "px system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,.75)"; var ny = sc[1] + 16 * ks; ctx.strokeText(k.v.name, sc[0], ny); ctx.fillStyle = k.me ? "#F5C518" : "#fff"; ctx.fillText(k.v.name, sc[0], ny); }
     ctx.restore();
   }
   function dancer(ctx, v, isMe, w, tt) {
@@ -584,6 +588,9 @@
     var h = $("ktHint"); if (h) h.style.visibility = (tt > T_.go + 10 && !mk.air && !mk.drift) ? "hidden" : "visible"; if (h) h.textContent = mk.air ? "Swing the kart into the turn…" : mk.drift ? "Trim left / right · let go of DRIFT for the boost" : tt < T_.go ? "Push the stick when the 2 shows for a rocket start" : mk.spd < 30 ? "Push the stick the way you want to go · further = faster" : "Tap DRIFT to hop, swing into the turn, hold it through";
   }
 
+  /* draw one kart + driver at a screen spot, for checking every angle */
+  K.preview = function (ctx, x, y, a, v, z, turn) { var c0 = { x: cam.x, y: cam.y, z: cam.z }, w0 = VW, h0 = VH; VW = 0; VH = 0; cam.z = z || 2; cam.x = -x / cam.z; cam.y = -y / cam.z;
+    try { kart(ctx, { x: 0, y: 0, a: a, v: v, me: false, turn: turn || 0, boost: 0, air: false, drifting: false }, performance.now()); } finally { cam.x = c0.x; cam.y = c0.y; cam.z = c0.z; VW = w0; VH = h0; } };
   K.bind = function (e) { env = e; };
   K.start = start; K.stop = stop; K.tick = tick; K.bg = bg; K.draw = draw; K.perf = perf; K.hide = hide; K.sheet = sheet;
   K.wire = function () {

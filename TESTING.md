@@ -681,3 +681,9 @@ Free dance (all in the free dance panel).
 - **Test drive** opens practice and starts Mars Rally on your track straight away, with 3 practice drivers.
 - Live shows: the performer page sends your saved track with each Mars Rally round, so everyone races the track you built. Server change: **redeploy Render**.
 - Check: open the Track builder, move a few dots, add a pad, press Test drive.
+
+## v1.54.1 - Karts: driver sits properly at every angle
+- Checked all 16 kart angles with a driver in. The seat back no longer covers the driver's face (side views); only the low parts in front of the cockpit (nose, bumper, front wheels, or the spoiler when driving away) are drawn over them.
+- The kart is 20% bigger and the driver sits lower, so they're in it rather than standing on it.
+- Driving away from you shows the back of the driver's head instead of their face.
+- Check: practice > Mars Rally, drive a full lap and watch your driver as the kart points left, right, up and down.
