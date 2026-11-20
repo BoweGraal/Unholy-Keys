@@ -656,3 +656,7 @@ Free dance (all in the free dance panel).
 ## v1.52.1 - Stop old scripts being cached
 - Every page now loads its scripts with the version on the end (kart.js?v=1.52.1), so a phone can't keep running an old kart.js or art.js after an update.
 - Check: open the venue after a deploy and confirm there is no red "Out of date" line at the bottom and Mars Rally starts with the UFO intro.
+
+## v1.52.2 - Bigger character on the join screen
+- Phones: the character preview now sits on top, about twice as big, with the options underneath. Computers: the preview box is bigger too.
+- Check: open the venue on a phone and confirm the character fills the box above the Skin / Hair / Top options.
