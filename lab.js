@@ -4,6 +4,7 @@
   if(typeof TUNE==="undefined"||!/[?&]practice\b/.test(location.search))return;
   var css=document.createElement("style");css.textContent=
   "#labBtn{position:fixed;top:8px;right:8px;z-index:9000;background:#2a1f4d;color:#fff;border:1px solid #7F77DD;border-radius:8px;padding:6px 10px;font:700 13px system-ui;cursor:pointer}"+
+  "#gfxBtn{position:fixed;top:46px;right:8px;z-index:9000;background:#2a1f4d;color:#fff;border:1px solid #D354A0;border-radius:8px;padding:6px 10px;font:700 13px system-ui;text-decoration:none}"+
   "#labBtn b{background:#D354A0;border-radius:9px;padding:0 6px;margin-left:5px;font-size:11px}"+
   "#lab{position:fixed;top:0;right:0;bottom:0;width:340px;max-width:100vw;z-index:9001;background:rgba(14,10,30,.97);color:#e8e4f8;font:13px system-ui;display:none;flex-direction:column;border-left:1px solid #4a3d8a}"+
   "#lab.on{display:flex}#lab *{box-sizing:border-box}"+
@@ -23,6 +24,7 @@
   document.head.appendChild(css);
   function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;}
   var btn=mk("button","","🔧 Lab");btn.id="labBtn";document.body.appendChild(btn);
+  var gb=mk("a","","🎨 Graphics");gb.id="gfxBtn";gb.href="gfx.html";gb.target="_blank";document.body.appendChild(gb);
   var cnt=mk("b","",""),box=mk("div");box.id="lab";document.body.appendChild(box);btn.appendChild(cnt);
   var cur=TUNE.groups[0].id,ta,body,tabs;
   function group(){return TUNE.groups.filter(function(g){return g.id===cur;})[0]||TUNE.groups[0];}

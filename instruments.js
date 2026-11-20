@@ -507,5 +507,5 @@
       if(s2t.on&&(st.now||Date.now())<s2t.t0)s2t.on=false;
       draw(g,x+X[i],y+Y[i],p*S[i],ART.looks.random(101+i*17),kinds[i],s2t);}
   }
-  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:function(g,x,y,p,look,kind,st){return ART.withAdj("inst:"+kind,g,function(){return draw(g,x,y,p,look,kind,st);});},KINDS:KINDS,VERSION:"1.49.1"};
+  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:function(g,x,y,p,look,kind,st){return ART.withAdj("inst:"+kind,g,function(){return draw(g,x,y,p,look,kind,st);});},KINDS:KINDS,VERSION:"1.49.2"};
 })();
