@@ -24,12 +24,15 @@
     pts: [[200, 90], [480, 85], [760, 90], [860, 95], [930, 170], [860, 250], [640, 250], [420, 250], [300, 255], [230, 330], [300, 410], [520, 410], [720, 410],
           [860, 415], [930, 490], [860, 560], [600, 560], [300, 560], [140, 550], [90, 460], [90, 300], [100, 150], [140, 95]] };
   /* a track from the builder or the network: numbers checked and clamped, or null */
+  var LIM0 = -4000, LIM1 = 5000, ENC0 = -4200, ENCS = 9400;
   function clean(d) {
     if (!d || typeof d !== "object" || !Array.isArray(d.pts)) return null;
-    var pts = d.pts.filter(function (p) { return Array.isArray(p) && isFinite(+p[0]) && isFinite(+p[1]); }).slice(0, 80).map(function (p) { return [Math.round(Math.max(-40, Math.min(1040, +p[0]))), Math.round(Math.max(-40, Math.min(660, +p[1])))]; });
+    var pts = d.pts.filter(function (p) { return Array.isArray(p) && isFinite(+p[0]) && isFinite(+p[1]); }).slice(0, 200).map(function (p) { return [Math.round(Math.max(LIM0, Math.min(LIM1, +p[0]))), Math.round(Math.max(LIM0, Math.min(LIM1, +p[1])))]; });
     if (pts.length < 4) return null;
-    var pads = Array.isArray(d.pads) ? d.pads.filter(function (f) { return isFinite(+f); }).slice(0, 16).map(function (f) { return Math.round(Math.max(0, Math.min(0.9999, +f)) * 10000) / 10000; }) : [];
-    return { name: String(d.name || "Custom track").slice(0, 40), hw: Math.round(Math.max(30, Math.min(80, +d.hw || 52))), pads: pads, pts: pts };
+    /* a boost pad is a fraction of the way round (in the middle of the road), or [fraction, sideways offset] for one off to the side */
+    var hw0 = Math.round(Math.max(30, Math.min(80, +d.hw || 52)));
+    var pads = Array.isArray(d.pads) ? d.pads.map(function (f) { var fr = Array.isArray(f) ? +f[0] : +f, la = Array.isArray(f) ? +f[1] : 0; if (!isFinite(fr)) return null; fr = Math.round(Math.max(0, Math.min(0.9999, fr)) * 10000) / 10000; la = isFinite(la) ? Math.round(Math.max(-(hw0 - 14), Math.min(hw0 - 14, la))) : 0; return la ? [fr, la] : fr; }).filter(function (f) { return f !== null; }).slice(0, 24) : [];
+    return { name: String(d.name || "Custom track").slice(0, 40), hw: hw0, pads: pads, pts: pts };
   }
   function build(def) {
     def = clean(def) || clean(TEMPLATE);
@@ -51,7 +54,7 @@
       P.push({ x: s0[0] + (s1[0] - s0[0]) * fr, y: s0[1] + (s1[1] - s0[1]) * fr, d: d, a: 0 });
     }
     for (i = 0; i < M; i++) { var q0 = P[(i + M - 1) % M], q1 = P[(i + 1) % M]; P[i].a = Math.atan2(q1.y - q0.y, q1.x - q0.x); }
-    var tr = { name: def.name, def: def, P: P, L: L, M: M, hw: def.hw, pads: def.pads.map(function (f) { return f * L; }), padW: Math.min(38, def.hw - 10), padL: 30 };
+    var tr = { name: def.name, def: def, P: P, L: L, M: M, hw: def.hw, pads: def.pads.map(function (f) { var la = Array.isArray(f) ? f[1] : 0; return { d: (Array.isArray(f) ? f[0] : f) * L, lat: la, w: la ? 16 : Math.min(38, def.hw - 10) }; }), padW: Math.min(38, def.hw - 10), padL: 30 };
     /* the dance floor: a wide plaza the start line runs through, turned to face the way the track starts */
     var s = P[0]; tr.plaza = { cx: s.x, cy: s.y, a: s.a, hx: 150, hy: Math.max(95, def.hw + 40) };
     var bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9; P.forEach(function (q) { bx0 = Math.min(bx0, q.x); bx1 = Math.max(bx1, q.x); by0 = Math.min(by0, q.y); by1 = Math.max(by1, q.y); });
@@ -96,8 +99,9 @@
   function gridSlot(tr, k) { var row = Math.min(7, Math.floor(k / 3)) + (k >= 24 ? (k - 24) * 0.05 : 0), col = k % 3 - 1; return { d: tr.L - 28 - row * 40, lat: col * tr.hw * 0.68 }; }
 
   /* positions travel as 0..1 of the world plus a margin, so karts can drive a little past the edge of the 1000 x 620 map */
-  function enc(x, y) { return [(x + 100) / 1200, (y + 100) / 820]; }
-  function dec(nx, ny) { return [nx * 1200 - 100, ny * 820 - 100]; }
+  /* tracks can be drawn anywhere from -4000 to 5000 (the builder is an endless canvas); positions travel as 0..1 of that, about 1 unit precise */
+  function enc(x, y) { return [(x - ENC0) / ENCS, (y - ENC0) / ENCS]; }
+  function dec(nx, ny) { return [nx * ENCS + ENC0, ny * ENCS + ENC0]; }
   /* the dance floor: a wide pulsing plaza the start line runs through (every track starts heading east) */
   var GEO = { W: WW, H: WH, tracks: TR, trackFor: trackFor, pointAt: pointAt, project: project, Prog: Prog, gridSlot: gridSlot, DEF: DEF, enc: enc, dec: dec, build: build, clean: clean, minGap: minGap, TEMPLATE: TEMPLATE };
   if (typeof module !== "undefined" && module.exports) module.exports = { geo: GEO };
@@ -206,18 +210,22 @@
   function rng(seed) { var s = seed >>> 0; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
   var BX0 = -100, BY0 = -100, BWW = 1200, BHH = 820, Q = 1.6;
   function bake() {
+    /* the painted area: the track plus a wide border of space; coarser pixels for very big tracks so phones can hold it */
+    BX0 = Math.floor(tr.box.x0 - 360); BY0 = Math.floor(tr.box.y0 - 360); BWW = Math.ceil(tr.box.x1 - tr.box.x0 + 720); BHH = Math.ceil(tr.box.y1 - tr.box.y0 + 720);
+    Q = Math.min(1.6, Math.sqrt(12e6 / (BWW * BHH)));
+    var AREA = Math.min(6, BWW * BHH / (1200 * 820));
     var c = document.createElement("canvas"); c.width = Math.round(BWW * Q); c.height = Math.round(BHH * Q);
     var g = c.getContext("2d"), R = rng(11 + trIdx * 131), i;
     g.fillStyle = "#07041a"; g.fillRect(0, 0, c.width, c.height);
     g.setTransform(Q, 0, 0, Q, -BX0 * Q, -BY0 * Q);
     var far = function (x, y, pad) { return project(tr, x, y).dist > tr.hw + pad; };
-    for (i = 0; i < 9; i++) { var nx = BX0 + R() * BWW, ny = BY0 + R() * BHH, nr = 120 + R() * 200, gr = g.createRadialGradient(nx, ny, 0, nx, ny, nr); var cc = [[120, 40, 170], [30, 120, 170], [190, 50, 120]][i % 3]; gr.addColorStop(0, "rgba(" + cc + ",.28)"); gr.addColorStop(1, "rgba(" + cc + ",0)"); g.fillStyle = gr; g.fillRect(nx - nr, ny - nr, nr * 2, nr * 2); }
-    for (i = 0; i < 1500; i++) { var sx = BX0 + R() * BWW, sy = BY0 + R() * BHH, b = R(); g.fillStyle = b > 0.93 ? "#ffd9a0" : b > 0.8 ? "#a9d4ff" : "rgba(255,255,255," + (0.35 + R() * 0.5) + ")"; var sz = b > 0.97 ? 2.6 : 1 + R() * 1.2; g.fillRect(sx, sy, sz, sz); }
-    var mxp = 1090, myp = 700, mr = 190, mg = g.createRadialGradient(mxp - 50, myp - 60, 10, mxp, myp, mr); mg.addColorStop(0, "#e07a45"); mg.addColorStop(0.7, "#a8421f"); mg.addColorStop(1, "#4a1a10");
+    for (i = 0; i < Math.round(9 * AREA); i++) { var nx = BX0 + R() * BWW, ny = BY0 + R() * BHH, nr = 120 + R() * 200, gr = g.createRadialGradient(nx, ny, 0, nx, ny, nr); var cc = [[120, 40, 170], [30, 120, 170], [190, 50, 120]][i % 3]; gr.addColorStop(0, "rgba(" + cc + ",.28)"); gr.addColorStop(1, "rgba(" + cc + ",0)"); g.fillStyle = gr; g.fillRect(nx - nr, ny - nr, nr * 2, nr * 2); }
+    for (i = 0; i < Math.round(1500 * AREA); i++) { var sx = BX0 + R() * BWW, sy = BY0 + R() * BHH, b = R(); g.fillStyle = b > 0.93 ? "#ffd9a0" : b > 0.8 ? "#a9d4ff" : "rgba(255,255,255," + (0.35 + R() * 0.5) + ")"; var sz = b > 0.97 ? 2.6 : 1 + R() * 1.2; g.fillRect(sx, sy, sz, sz); }
+    var mxp = tr.box.x1 + 150, myp = tr.box.y1 + 140, mr = 190, mg = g.createRadialGradient(mxp - 50, myp - 60, 10, mxp, myp, mr); mg.addColorStop(0, "#e07a45"); mg.addColorStop(0.7, "#a8421f"); mg.addColorStop(1, "#4a1a10");
     g.fillStyle = mg; g.beginPath(); g.arc(mxp, myp, mr, 0, 6.3); g.fill();
     g.fillStyle = "rgba(90,30,16,.45)"; for (i = 0; i < 9; i++) { g.beginPath(); g.ellipse(mxp - 160 + R() * 150, myp - 150 + R() * 130, 8 + R() * 22, 5 + R() * 10, R() * 3, 0, 6.3); g.fill(); }
-    g.fillStyle = "#cfd3e6"; g.beginPath(); g.arc(-60, 60, 34, 0, 6.3); g.fill(); g.fillStyle = "rgba(60,60,90,.4)"; g.beginPath(); g.arc(-50, 52, 12, 0, 6.3); g.fill();
-    for (i = 0; i < 26; i++) { var rx = BX0 + R() * BWW, ry = BY0 + R() * BHH; if (!far(rx, ry, 40) || (rx > 880 && ry > 520) || (rx < 0 && ry < 120)) continue; g.fillStyle = "#4a3a58"; g.beginPath(); g.ellipse(rx, ry, 4 + R() * 9, 3 + R() * 6, R() * 3, 0, 6.3); g.fill(); g.fillStyle = "#7a6890"; g.fillRect(rx - 2, ry - 2, 3, 2); }
+    var mnx = tr.box.x0 - 90, mny = tr.box.y0 + 120; g.fillStyle = "#cfd3e6"; g.beginPath(); g.arc(mnx, mny, 34, 0, 6.3); g.fill(); g.fillStyle = "rgba(60,60,90,.4)"; g.beginPath(); g.arc(mnx + 10, mny - 8, 12, 0, 6.3); g.fill();
+    for (i = 0; i < Math.round(26 * AREA); i++) { var rx = BX0 + R() * BWW, ry = BY0 + R() * BHH; if (!far(rx, ry, 40) || Math.hypot(rx - mxp, ry - myp) < mr + 20 || Math.hypot(rx - mnx, ry - mny) < 50) continue; g.fillStyle = "#4a3a58"; g.beginPath(); g.ellipse(rx, ry, 4 + R() * 9, 3 + R() * 6, R() * 3, 0, 6.3); g.fill(); g.fillStyle = "#7a6890"; g.fillRect(rx - 2, ry - 2, 3, 2); }
     /* the road and the plaza are the dance floor itself: dark checker tiles with a lighter top edge, like the venue floor */
     ROADP = roadPath(); var TS = 13;
     /* the edges first (twice as wide), so the tiles cover their inner half and only the outside border shows */
@@ -368,7 +376,7 @@
     k.x = cx; k.y = cy;
   }
   function onPad(x, y) {
-    for (var i = 0; i < tr.pads.length; i++) { var p = pointAt(tr, tr.pads[i], 0), dx = x - p.x, dy = y - p.y, al = dx * Math.cos(p.a) + dy * Math.sin(p.a), la = -dx * Math.sin(p.a) + dy * Math.cos(p.a); if (Math.abs(al) < tr.padL / 2 + 6 && Math.abs(la) < tr.padW) return true; }
+    for (var i = 0; i < tr.pads.length; i++) { var pd = tr.pads[i], p = pointAt(tr, pd.d, pd.lat), dx = x - p.x, dy = y - p.y, al = dx * Math.cos(p.a) + dy * Math.sin(p.a), la = -dx * Math.sin(p.a) + dy * Math.cos(p.a); if (Math.abs(al) < tr.padL / 2 + 6 && Math.abs(la) < pd.w) return true; }
     return false;
   }
   function input() {
@@ -517,7 +525,7 @@
     var tt = elapsed(), T_ = times(), now = performance.now(), vs = env.viewers(), myId = env.myId();
     if (tt < T_.fade) return;
     ctx.save(); ctx.translate(VW / 2 - cam.x * cam.z, VH / 2 - cam.y * cam.z); ctx.scale(cam.z, cam.z);
-    tr.pads.forEach(function (d) { var p = pointAt(tr, d, 0); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = "rgba(20,10,40,.85)"; ctx.fillRect(-tr.padL / 2, -tr.padW, tr.padL, tr.padW * 2);
+    tr.pads.forEach(function (pd) { var p = pointAt(tr, pd.d, pd.lat), hwp = pd.w, sc = hwp / 22; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = "rgba(20,10,40,.85)"; ctx.fillRect(-tr.padL / 2, -hwp, tr.padL, hwp * 2); ctx.scale(1, Math.min(1, sc));
       for (var c = 0; c < 3; c++) { var ph = ((now / 260 + c) % 3) / 3; ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillStyle = c % 2 ? "#3DF2FF" : "#F5F23D"; ctx.beginPath(); var xx = -tr.padL / 2 + ph * tr.padL; ctx.moveTo(xx - 6, -22); ctx.lineTo(xx + 5, 0); ctx.lineTo(xx - 6, 22); ctx.lineTo(xx - 1, 0); ctx.closePath(); ctx.fill(); }
       ctx.restore(); });
     ctx.restore();
