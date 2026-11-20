@@ -622,3 +622,8 @@ Free dance (all in the free dance panel).
 - **⛶ Full screen editor** button: the editor fills the screen with a bar at the top: ✕ exit, pen, erase, hole, fill, pick colour, ✋ drag, undo, redo, zoom slider, colour and swatches, grid, mirror.
 - Zoom goes up to 10x. Use ✋ Drag, then drag on the picture to move around when zoomed in.
 - Check: pick Hair style > Mohawk, open full screen, zoom in, drag around, paint with the pen, undo, exit.
+
+## v1.50.2 - Pixel editor: body reference, big undo button
+- **👤 Show body** (panel) / 👤 (full screen bar): draws the whole character, or the performer for instruments, faintly behind the part so you can line things up. It is reference only: it is never painted, filled or picked from.
+- Full screen: big **Undo** button bottom left with a smaller **Redo** beside it (they left the top bar).
+- Check: Hair style > Mohawk > full screen > 👤 shows the head and shoulders behind the mohawk; paint a pixel, tap Undo, tap Redo.
