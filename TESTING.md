@@ -671,3 +671,13 @@ Free dance (all in the free dance panel).
 - Tuning lab Mars Rally group rebuilt for the new controls (hop time, hop swing speed, drift tightness, spark charge times, three turbo lengths, reverse speed).
 - Server change: **redeploy Render** (bots now send which way their kart faces).
 - Check: practice > Mars Rally. Drive with the stick only. At a corner tap and hold DRIFT, swing the stick into the corner while it's in the air, hold through the turn until the sparks go orange, let go.
+
+## v1.54.0 - Mars Rally: dance-floor road, driver in the seat, Track builder
+- **The road is the dance floor**: the same dark checker tiles as the venue floor, glowing in waves on the beat, with the floor's edge lines. The start plaza and the road are one floor.
+- **Driver**: sits down in the kart (head, chest and arms above the cockpit), hands on the wheel, and turns their head into each corner.
+- **Camera**: the race view is 1.4x further out than the dance floor (the intro starts at floor size and pulls back 1.4x).
+- **New template track** "Dance Floor Snake": snakes down the floor in four hairpins and runs back up the left side; about 27 s a lap flat out, 5 boost pads.
+- **Track builder** (join screen, or the 🏁 Track button in practice): drag the dots, tap an empty spot to add one, select a dot to delete it or make it the start, reverse direction, change road width, tap the road in Boost pad mode to add or remove pads. Warns in red if the road overlaps itself. Saves on this device by itself. Share copies a TRACK-JSON line to send me; paste one and Apply to load it.
+- **Test drive** opens practice and starts Mars Rally on your track straight away, with 3 practice drivers.
+- Live shows: the performer page sends your saved track with each Mars Rally round, so everyone races the track you built. Server change: **redeploy Render**.
+- Check: open the Track builder, move a few dots, add a pad, press Test drive.

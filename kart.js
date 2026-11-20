@@ -18,16 +18,21 @@
   function T(k) { if (k === "intro" && typeof root.__kartIntro === "number") return root.__kartIntro; var v = env && env.tune ? env.tune("kt." + k) : undefined; return typeof v === "number" && isFinite(v) ? v : DEF[k]; }
 
   /* ================= geometry ================= */
-  /* the control points go round clockwise; the top-left corner (where the performer sits) is always left clear */
-  var DEFS = [
-    { name: "Olympus Loop", pads: [0.17, 0.5, 0.83],
-      pts: [[520, 90], [760, 100], [900, 200], [880, 340], [780, 420], [820, 520], [640, 560], [430, 520], [330, 430], [210, 470], [110, 400], [130, 290], [270, 240], [350, 160], [430, 95]] },
-    { name: "Valles Marineris", pads: [0.12, 0.4, 0.66, 0.9],
-      pts: [[500, 80], [700, 80], [880, 130], [920, 260], [800, 300], [680, 260], [600, 330], [700, 420], [880, 450], [900, 540], [700, 570], [500, 520], [400, 430], [300, 520], [150, 540], [90, 430], [160, 350], [280, 300], [340, 210], [420, 120]] },
-    { name: "Dust Devil", pads: [0.1, 0.45, 0.75],
-      pts: [[560, 100], [800, 90], [920, 190], [860, 300], [700, 320], [560, 260], [450, 335], [560, 445], [760, 455], [880, 515], [760, 570], [520, 560], [330, 540], [150, 520], [80, 400], [180, 320], [290, 390], [340, 270], [290, 200], [400, 110]] }
-  ];
+  /* the template track (the Track builder starts from this): a snake down the floor and back up the left side.
+     Control points go round in driving order; the first point is the start line, in the middle of the dance floor. */
+  var TEMPLATE = { name: "Dance Floor Snake", hw: 52, pads: [0.09, 0.33, 0.54, 0.77, 0.9],
+    pts: [[200, 90], [480, 85], [760, 90], [860, 95], [930, 170], [860, 250], [640, 250], [420, 250], [300, 255], [230, 330], [300, 410], [520, 410], [720, 410],
+          [860, 415], [930, 490], [860, 560], [600, 560], [300, 560], [140, 550], [90, 460], [90, 300], [100, 150], [140, 95]] };
+  /* a track from the builder or the network: numbers checked and clamped, or null */
+  function clean(d) {
+    if (!d || typeof d !== "object" || !Array.isArray(d.pts)) return null;
+    var pts = d.pts.filter(function (p) { return Array.isArray(p) && isFinite(+p[0]) && isFinite(+p[1]); }).slice(0, 80).map(function (p) { return [Math.round(Math.max(-40, Math.min(1040, +p[0]))), Math.round(Math.max(-40, Math.min(660, +p[1])))]; });
+    if (pts.length < 4) return null;
+    var pads = Array.isArray(d.pads) ? d.pads.filter(function (f) { return isFinite(+f); }).slice(0, 16).map(function (f) { return Math.round(Math.max(0, Math.min(0.9999, +f)) * 10000) / 10000; }) : [];
+    return { name: String(d.name || "Custom track").slice(0, 40), hw: Math.round(Math.max(30, Math.min(80, +d.hw || 52))), pads: pads, pts: pts };
+  }
   function build(def) {
+    def = clean(def) || clean(TEMPLATE);
     var pts = def.pts, n = pts.length, raw = [], i, k;
     for (i = 0; i < n; i++) {
       var p0 = pts[(i + n - 1) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
@@ -39,17 +44,31 @@
     }
     var R = raw.length, cum = [0], L = 0;
     for (i = 0; i < R; i++) { var a = raw[i], b = raw[(i + 1) % R]; L += Math.hypot(b[0] - a[0], b[1] - a[1]); cum.push(L); }
-    var M = Math.round(L / 6), P = [], j = 0;
+    var M = Math.max(40, Math.round(L / 6)), P = [], j = 0;
     for (i = 0; i < M; i++) {
       var d = i * L / M; while (j < R - 1 && cum[j + 1] < d) j++;
       var s0 = raw[j], s1 = raw[(j + 1) % R], fr = (d - cum[j]) / ((cum[j + 1] - cum[j]) || 1);
       P.push({ x: s0[0] + (s1[0] - s0[0]) * fr, y: s0[1] + (s1[1] - s0[1]) * fr, d: d, a: 0 });
     }
     for (i = 0; i < M; i++) { var q0 = P[(i + M - 1) % M], q1 = P[(i + 1) % M]; P[i].a = Math.atan2(q1.y - q0.y, q1.x - q0.x); }
-    return { name: def.name, P: P, L: L, M: M, hw: 48, pads: def.pads.map(function (f) { return f * L; }), padW: 38, padL: 30 };
+    var tr = { name: def.name, def: def, P: P, L: L, M: M, hw: def.hw, pads: def.pads.map(function (f) { return f * L; }), padW: Math.min(38, def.hw - 10), padL: 30 };
+    /* the dance floor: a wide plaza the start line runs through, turned to face the way the track starts */
+    var s = P[0]; tr.plaza = { cx: s.x, cy: s.y, a: s.a, hx: 150, hy: Math.max(95, def.hw + 40) };
+    var bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9; P.forEach(function (q) { bx0 = Math.min(bx0, q.x); bx1 = Math.max(bx1, q.x); by0 = Math.min(by0, q.y); by1 = Math.max(by1, q.y); });
+    tr.box = { x0: bx0 - 60, y0: by0 - 60, x1: bx1 + 60, y1: by1 + 60 };
+    return tr;
   }
-  var TR = DEFS.map(build);
-  function trackFor(n) { return TR[((n | 0) % TR.length + TR.length) % TR.length]; }
+  /* the narrowest gap between two bits of road that aren't next to each other (under 2 x width + a bit = they overlap) */
+  function minGap(tr) {
+    var P = tr.P, best = 1e9, at = null, st = Math.max(1, Math.round(tr.M / 300));
+    for (var i = 0; i < P.length; i += st) for (var j = i + st; j < P.length; j += st) {
+      var dd = Math.abs(P[i].d - P[j].d); dd = Math.min(dd, tr.L - dd); if (dd < tr.hw * 4 + 60) continue;
+      var e = Math.hypot(P[i].x - P[j].x, P[i].y - P[j].y); if (e < best) { best = e; at = [(P[i].x + P[j].x) / 2, (P[i].y + P[j].y) / 2]; }
+    }
+    return { gap: best, at: at, ok: best >= tr.hw * 2 + 8 };
+  }
+  var TR = [build(TEMPLATE)];
+  function trackFor(n, def) { return def ? build(def) : TR[0]; }
   /* where a point d along the track (and lat to the side) is */
   function pointAt(tr, d, lat) {
     var M = tr.M, f = ((d % tr.L) + tr.L) % tr.L / tr.L * M, i = Math.floor(f) % M, fr = f - Math.floor(f), A = tr.P[i], B = tr.P[(i + 1) % M];
@@ -80,8 +99,7 @@
   function enc(x, y) { return [(x + 100) / 1200, (y + 100) / 820]; }
   function dec(nx, ny) { return [nx * 1200 - 100, ny * 820 - 100]; }
   /* the dance floor: a wide pulsing plaza the start line runs through (every track starts heading east) */
-  TR.forEach(function (t) { var p = t.P[0]; t.plaza = { x0: p.x - 150, x1: p.x + 150, y0: p.y - 95, y1: p.y + 95, cx: p.x, cy: p.y }; var bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9; t.P.forEach(function (q) { bx0 = Math.min(bx0, q.x); bx1 = Math.max(bx1, q.x); by0 = Math.min(by0, q.y); by1 = Math.max(by1, q.y); }); t.box = { x0: bx0 - 60, y0: by0 - 60, x1: bx1 + 60, y1: by1 + 60 }; });
-  var GEO = { W: WW, H: WH, tracks: TR, trackFor: trackFor, pointAt: pointAt, project: project, Prog: Prog, gridSlot: gridSlot, DEF: DEF, enc: enc, dec: dec };
+  var GEO = { W: WW, H: WH, tracks: TR, trackFor: trackFor, pointAt: pointAt, project: project, Prog: Prog, gridSlot: gridSlot, DEF: DEF, enc: enc, dec: dec, build: build, clean: clean, minGap: minGap, TEMPLATE: TEMPLATE };
   if (typeof module !== "undefined" && module.exports) module.exports = { geo: GEO };
 
   /* ================= everything below needs a browser ================= */
@@ -90,7 +108,7 @@
   root.KART = K;
   if (!hasDom) return;
 
-  var on = false, rnd = null, tr = TR[0], trIdx = 0, PZ = TR[0].plaza, me = null, mk = null, myP = null, remotes = {}, bots = {}, fx = [], pops = [], introPos = {};
+  var on = false, rnd = null, tr = TR[0], trIdx = 0, MASK = null, ROADP = null, PZ = TR[0].plaza, me = null, mk = null, myP = null, remotes = {}, bots = {}, fx = [], pops = [], introPos = {};
   var startAt = 0, lastT = 0, score = 0, rank = 1, nKarts = 1, rankAcc = 0, lastRankChg = 0, wrong = 0, distAcc = 0, stall = 0, lastBan = false;
   var driftHold = false, gasPress = null, wasGas = false, camB = null, poppedAt = -1, sentGo = false;
   var cam = { x: 500, y: 310, z: 1 }, bgCv = null, bgKey = "";
@@ -172,11 +190,11 @@
 
   /* ---- the camera ---- */
   var VW = 0, VH = 0;
-  function raceZoom() { return clamp(Math.min(VW, VH) / 360, 1.05, 1.8); }
+  function raceZoom() { return 1.68; }        /* your character at about 1/1.4 of their size on the dance floor */
   function toScreen(x, y) { return [(x - cam.x) * cam.z + VW / 2, (y - cam.y) * cam.z + VH / 2]; }
   function fromScreen(sx, sy, c) { c = c || cam; return [c.x + (sx - VW / 2) / c.z, c.y + (sy - VH / 2) / c.z]; }
   function camUpdate(t, T_, dt) {
-    var zr = raceZoom(), z0 = zr * 2, mx = mk ? mk.x : PZ.cx, my = mk ? mk.y : PZ.cy;
+    var zr = raceZoom(), z0 = zr * 1.4, mx = mk ? mk.x : PZ.cx, my = mk ? mk.y : PZ.cy;
     if (t < T_.out) { cam.z = z0; cam.x = PZ.cx; cam.y = PZ.cy; if (!camB) camB = { x: cam.x, y: cam.y, z: cam.z }; }
     else if (t < T_.zend) { var u = ease((t - T_.out) / (T_.zend - T_.out)); cam.z = Math.exp(Math.log(z0) + (Math.log(zr) - Math.log(z0)) * u); cam.x = PZ.cx + (mx - PZ.cx) * u; cam.y = PZ.cy + (my - PZ.cy) * u; }
     else { cam.z = zr; var k = 1 - Math.exp(-dt * 7); cam.x += (mx + (mk ? mk.vx : 0) * 0.25 - cam.x) * k; cam.y += (my + (mk ? mk.vy : 0) * 0.25 - cam.y) * k; }
@@ -198,43 +216,68 @@
     g.fillStyle = "rgba(90,30,16,.45)"; for (i = 0; i < 9; i++) { g.beginPath(); g.ellipse(mxp - 160 + R() * 150, myp - 150 + R() * 130, 8 + R() * 22, 5 + R() * 10, R() * 3, 0, 6.3); g.fill(); }
     g.fillStyle = "#cfd3e6"; g.beginPath(); g.arc(-60, 60, 34, 0, 6.3); g.fill(); g.fillStyle = "rgba(60,60,90,.4)"; g.beginPath(); g.arc(-50, 52, 12, 0, 6.3); g.fill();
     for (i = 0; i < 26; i++) { var rx = BX0 + R() * BWW, ry = BY0 + R() * BHH; if (!far(rx, ry, 40) || (rx > 880 && ry > 520) || (rx < 0 && ry < 120)) continue; g.fillStyle = "#4a3a58"; g.beginPath(); g.ellipse(rx, ry, 4 + R() * 9, 3 + R() * 6, R() * 3, 0, 6.3); g.fill(); g.fillStyle = "#7a6890"; g.fillRect(rx - 2, ry - 2, 3, 2); }
-    g.lineJoin = "round";
-    var path = function (lat) { g.beginPath(); for (var j = 0; j <= tr.M; j++) { var p = tr.P[j % tr.M], x = p.x - Math.sin(p.a) * lat, y = p.y + Math.cos(p.a) * lat; if (j) g.lineTo(x, y); else g.moveTo(x, y); } };
-    path(0); g.strokeStyle = "rgba(255,61,216,.14)"; g.lineWidth = tr.hw * 2 + 40; g.stroke();
-    path(0); g.strokeStyle = "rgba(61,242,255,.18)"; g.lineWidth = tr.hw * 2 + 20; g.stroke();
-    path(0); g.strokeStyle = "#2a2340"; g.lineWidth = tr.hw * 2; g.stroke();
-    path(0); g.strokeStyle = "rgba(255,255,255,.22)"; g.lineWidth = 2.2; g.setLineDash([12, 16]); g.stroke(); g.setLineDash([]);
-    path(-tr.hw + 2); g.strokeStyle = "#ff3dd8"; g.lineWidth = 3.2; g.stroke();
-    path(tr.hw - 2); g.strokeStyle = "#3df2ff"; g.lineWidth = 3.2; g.stroke();
-    path(-tr.hw + 2); g.strokeStyle = "rgba(255,61,216,.3)"; g.lineWidth = 8; g.stroke();
-    path(tr.hw - 2); g.strokeStyle = "rgba(61,242,255,.3)"; g.lineWidth = 8; g.stroke();
+    /* the road and the plaza are the dance floor itself: dark checker tiles with a lighter top edge, like the venue floor */
+    ROADP = roadPath(); var TS = 13;
+    /* the edges first (twice as wide), so the tiles cover their inner half and only the outside border shows */
+    g.lineJoin = "round"; g.strokeStyle = "rgba(155,127,224,.18)"; g.lineWidth = 24; g.stroke(ROADP);
+    g.strokeStyle = "#9B7FE0"; g.lineWidth = 9; g.stroke(ROADP); g.strokeStyle = "#3a3058"; g.lineWidth = 5; g.stroke(ROADP);
+    g.save(); g.clip(ROADP, "nonzero");
+    g.fillStyle = "#120e1e"; g.fillRect(BX0, BY0, BWW, BHH);
+    for (var ty = Math.floor(BY0 / TS) * TS; ty < BY0 + BHH; ty += TS) for (var tx = Math.floor(BX0 / TS) * TS; tx < BX0 + BWW; tx += TS) {
+      g.fillStyle = ((tx / TS + ty / TS) & 1) ? "#1a1430" : "#161128"; g.fillRect(tx, ty, TS - 1, TS - 1); g.fillStyle = "#211a3a"; g.fillRect(tx, ty, TS - 1, 1.2);
+    }
+    g.restore();
+    /* the edges: the floor's front edge and the stage-edge glow line */
+    /* which tiles are floor (for the glow that pulses with the beat) */
+    MASK = { TS: TS, x0: Math.floor(BX0 / TS) * TS, y0: Math.floor(BY0 / TS) * TS, cols: Math.ceil(BWW / TS) + 1, rows: Math.ceil(BHH / TS) + 1, on: null };
+    MASK.on = new Uint8Array(MASK.cols * MASK.rows);
+    for (var r2 = 0; r2 < MASK.rows; r2++) for (var c2 = 0; c2 < MASK.cols; c2++) { var cx2 = MASK.x0 + c2 * TS + TS / 2, cy2 = MASK.y0 + r2 * TS + TS / 2; if (inPlaza(cx2, cy2, 0) || project(tr, cx2, cy2).dist < tr.hw) MASK.on[r2 * MASK.cols + c2] = 1; }
     return c;
+  }
+  /* the outline of the road (left edge out, right edge back) plus the plaza, as one shape */
+  function roadPath() {
+    var P = new Path2D(), j, p;
+    for (j = 0; j <= tr.M; j++) { p = tr.P[j % tr.M]; var x = p.x + Math.sin(p.a) * tr.hw, y = p.y - Math.cos(p.a) * tr.hw; if (j) P.lineTo(x, y); else P.moveTo(x, y); }
+    for (j = tr.M; j >= 0; j--) { p = tr.P[j % tr.M]; P.lineTo(p.x - Math.sin(p.a) * tr.hw, p.y + Math.cos(p.a) * tr.hw); }
+    P.closePath();
+    var c0 = fromPZ(-PZ.hx, -PZ.hy), c1 = fromPZ(PZ.hx, -PZ.hy), c2 = fromPZ(PZ.hx, PZ.hy), c3 = fromPZ(-PZ.hx, PZ.hy);
+    P.moveTo(c0[0], c0[1]); P.lineTo(c1[0], c1[1]); P.lineTo(c2[0], c2[1]); P.lineTo(c3[0], c3[1]); P.closePath();
+    return P;
   }
   function bg(ctx, W, H) {
     if (!on) return;
     VW = W; VH = H; var tt = elapsed(), T_ = times();
-    var key = trIdx + ":" + tr.name; if (key !== bgKey) { bgCv = bake(); bgKey = key; }
+    var key = trIdx + ":" + tr.name + ":" + Math.round(tr.L); if (key !== bgKey) { bgCv = bake(); bgKey = key; }
     var a = ease((tt - T_.fade) / (0.5 * T_.S));
     if (a > 0) {
       ctx.save(); ctx.globalAlpha = a; ctx.imageSmoothingEnabled = false;
       ctx.fillStyle = "#07041a"; ctx.fillRect(0, 0, W, H);
       ctx.translate(VW / 2 - cam.x * cam.z, VH / 2 - cam.y * cam.z); ctx.scale(cam.z, cam.z);
       ctx.drawImage(bgCv, BX0, BY0, BWW, BHH);
-      plaza(ctx); ctx.restore();
+      floorGlow(ctx); startLine(ctx); ctx.restore();
     }
     ufo(ctx, tt, T_);
   }
-  function plaza(ctx) {
-    var ph = env.beat ? env.beat() : 0, pulse = Math.pow(1 - clamp(ph, 0, 1), 2.2), cell = 20, tm = performance.now();
-    ctx.fillStyle = "#14081f"; ctx.fillRect(PZ.x0, PZ.y0, PZ.x1 - PZ.x0, PZ.y1 - PZ.y0);
-    var cols = Math.round((PZ.x1 - PZ.x0) / cell), rows = Math.round((PZ.y1 - PZ.y0) / cell), pal = ["#ff2fa0", "#2fe3ff", "#8a3dff", "#ffd23d"], step = Math.floor(tm / 480);
-    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
-      ctx.globalAlpha = clamp(0.34 + 0.5 * pulse * ((c + r) % 2 ? 1 : 0.55) + 0.14 * Math.sin(tm / 260 + c * 0.7 + r * 0.55), 0.15, 1);
-      ctx.fillStyle = pal[(c + r + step) % 4]; ctx.fillRect(PZ.x0 + c * cell + 1, PZ.y0 + r * cell + 1, cell - 2, cell - 2);
+  /* the tiles light up in waves on the beat, the same way the venue floor does */
+  var TILECOL = ["#E8505B", "#F0A040", "#F5D03C", "#4CC38A", "#4A9BE8", "#9B7FE0", "#D354A0"];
+  function floorGlow(ctx) {
+    if (!MASK || !ROADP) return;
+    var ph = env.beat ? env.beat() : 0.5, beat = Math.pow(1 - clamp(ph, 0, 1), 2), t = performance.now() / 1000, TS = MASK.TS;
+    var x0 = cam.x - VW / 2 / cam.z, x1 = cam.x + VW / 2 / cam.z, y0 = cam.y - VH / 2 / cam.z, y1 = cam.y + VH / 2 / cam.z;
+    var c0 = Math.max(0, Math.floor((x0 - MASK.x0) / TS)), c1 = Math.min(MASK.cols - 1, Math.ceil((x1 - MASK.x0) / TS)), r0 = Math.max(0, Math.floor((y0 - MASK.y0) / TS)), r1 = Math.min(MASK.rows - 1, Math.ceil((y1 - MASK.y0) / TS));
+    ctx.save(); ctx.clip(ROADP, "nonzero");
+    for (var r = r0; r <= r1; r++) for (var c = c0; c <= c1; c++) {
+      if (!MASK.on[r * MASK.cols + c]) continue;
+      var gx = c, gy = r, wave = Math.sin(gx * 0.9 + gy * 0.6 - t * 2.2) * 0.5 + 0.5, n = ((gx * 7 + gy * 13) % 11) / 11;
+      var a = (0.03 + 0.13 * beat * (n > 0.6 ? 1 : 0.25)) * (0.4 + 0.6 * wave) * 0.96; if (a < 0.035) continue;
+      ctx.globalAlpha = Math.min(0.2, a); ctx.fillStyle = TILECOL[(gx + gy + Math.floor(t * 0.5)) % 7]; ctx.fillRect(MASK.x0 + c * TS, MASK.y0 + r * TS + 1, TS - 1, TS - 2);
     }
-    ctx.globalAlpha = 1; ctx.shadowColor = "#3df2ff"; ctx.shadowBlur = 10 + 14 * pulse; ctx.strokeStyle = "#3df2ff"; ctx.lineWidth = 3; ctx.strokeRect(PZ.x0, PZ.y0, PZ.x1 - PZ.x0, PZ.y1 - PZ.y0); ctx.shadowBlur = 0;
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
+  function startLine(ctx) {
     var s0 = tr.P[0]; ctx.save(); ctx.translate(s0.x, s0.y); ctx.rotate(s0.a);
-    for (var rr = 0; rr < 2; rr++) for (var cc = -6; cc < 6; cc++) { ctx.fillStyle = (rr + cc) & 1 ? "#fff" : "#16121c"; ctx.fillRect(rr * 8 - 8, cc * 8, 8, 8); }
+    var n = Math.ceil(tr.hw / 6.5);
+    for (var rr = 0; rr < 2; rr++) for (var cc = -n; cc < n; cc++) { ctx.fillStyle = (rr + cc) & 1 ? "#e8e4f4" : "#16121c"; ctx.fillRect(rr * 6.5 - 6.5, cc * 6.5, 6.5, 6.5); }
     ctx.restore();
   }
   function perfCorner() { return [Math.max(105, VW * 0.14), Math.max(112, VH * 0.17)]; }
@@ -255,7 +298,9 @@
 
   /* ================= physics: the stick is speed and direction; DRIFT hops ================= */
   function newKart(x, y, a) { return { x: x, y: y, a: a, vx: 0, vy: 0, air: 0, drift: 0, slip: 0, omega: 0, charge: 0, boost: 0, rev: false, ev: "", pi: undefined, spd: 0, hopT: 0 }; }
-  function inPlaza(x, y, m) { return x > PZ.x0 - m && x < PZ.x1 + m && y > PZ.y0 - m && y < PZ.y1 + m; }
+  function toPZ(x, y) { var dx = x - PZ.cx, dy = y - PZ.cy, c = Math.cos(PZ.a), s = Math.sin(PZ.a); return [dx * c + dy * s, -dx * s + dy * c]; }
+  function fromPZ(u, v) { var c = Math.cos(PZ.a), s = Math.sin(PZ.a); return [PZ.cx + u * c - v * s, PZ.cy + u * s + v * c]; }
+  function inPlaza(x, y, m) { var l = toPZ(x, y); return Math.abs(l[0]) < PZ.hx + m && Math.abs(l[1]) < PZ.hy + m; }
   function level(ch) { return ch >= T("ultraT") ? 3 : ch >= T("turboT") ? 2 : ch >= T("miniT") ? 1 : 0; }
   function hop(k) { if (k.air > 0 || k.drift || performance.now() - k.hopT < 150) return; k.air = T("hop"); k.airMax = k.air; k.hopT = performance.now(); }
   function land(k, inp) {
@@ -309,11 +354,12 @@
       k.vx = fx * vf + rx * vl; k.vy = fy * vf + ry * vl;
     }
     k.x += k.vx * dt; k.y += k.vy * dt; walls(k); k.spd = Math.hypot(k.vx, k.vy);
+    var dA = wrapA(k.a - (k.lastA === undefined ? k.a : k.lastA)) / Math.max(dt, 0.001); k.lastA = k.a; k.turn = (k.turn || 0) + (clamp(dA / 2.5, -1, 1) - (k.turn || 0)) * Math.min(1, dt * 8);
   }
   function walls(k) {
     var pr = project(tr, k.x, k.y, k.pi); k.pi = pr.i; k.lat = pr.lat; k.pa = pr.a;
     var lim = tr.hw - 4; if (inPlaza(k.x, k.y, -6) || Math.abs(pr.lat) <= lim) return;
-    var c1x = clamp(k.x, PZ.x0 + 6, PZ.x1 - 6), c1y = clamp(k.y, PZ.y0 + 6, PZ.y1 - 6), d1 = Math.hypot(k.x - c1x, k.y - c1y);
+    var lp = toPZ(k.x, k.y), cp = fromPZ(clamp(lp[0], -PZ.hx + 6, PZ.hx - 6), clamp(lp[1], -PZ.hy + 6, PZ.hy - 6)), c1x = cp[0], c1y = cp[1], d1 = Math.hypot(k.x - c1x, k.y - c1y);
     var lat = clamp(pr.lat, -lim, lim), nx = -Math.sin(pr.a), ny = Math.cos(pr.a), d2 = Math.abs(pr.lat - lat), c2x = k.x - nx * (pr.lat - lat), c2y = k.y - ny * (pr.lat - lat);
     var cx = d1 < d2 ? c1x : c2x, cy = d1 < d2 ? c1y : c2y, d = Math.max(0.001, Math.min(d1, d2)), qx = (cx - k.x) / d, qy = (cy - k.y) / d, vn = k.vx * qx + k.vy * qy;
     if (vn < 0) { k.vx -= (1 + T("wall")) * vn * qx; k.vy -= (1 + T("wall")) * vn * qy; k.vx *= 0.97; k.vy *= 0.97; k.hit = performance.now(); }
@@ -334,16 +380,16 @@
   function start(round) {
     on = true; rnd = round || null; score = 0; rank = 1; nKarts = 1; rankAcc = 0; fx = []; pops = []; remotes = {}; bots = {}; introPos = {}; wrong = 0; distAcc = 0; stall = 0;
     gasPress = null; wasGas = false; camB = null; poppedAt = -1; sentGo = false; lastBan = false; driftHold = false;
-    var forced = typeof root.__kartTrack === "number" ? root.__kartTrack : null;
-    trIdx = forced !== null ? forced : ((rnd && rnd.n !== undefined ? rnd.n : Math.floor(Math.random() * 3)) % TR.length + TR.length) % TR.length; tr = TR[trIdx]; PZ = tr.plaza; bgKey = "";
+    /* the track: the performer's (sent with the round), else this device's own from the Track builder, else the template */
+    var def = rnd && rnd.track ? clean(rnd.track) : null; if (!def) def = savedTrack();
+    tr = def ? build(def) : TR[0]; trIdx = def ? 1 : 0; PZ = tr.plaza; bgKey = "";
     me = env.me(); startAt = performance.now(); lastT = 0;
     var sp = slotPos(env.myId()); mk = newKart(sp.x, sp.y, sp.a); myP = new Prog(tr); myP.reset(sp.x, sp.y);
     cam.x = PZ.cx; cam.y = PZ.cy; cam.z = 2;
     ui(true); hud();
   }
   function stop() { on = false; ui(false); }
-
-  /* ---- each frame ---- */
+  function savedTrack() { try { return clean(JSON.parse(localStorage.getItem("uk_track") || "null")); } catch (e) { return null; } }
   function tick() {
     if (!on) return;
     var now = performance.now(), dt = Math.min(0.05, (now - (lastT || now)) / 1000); lastT = now;
@@ -405,7 +451,7 @@
     r.v = v; var dx = world.x - r.x, dy = world.y - r.y;
     if (race !== r.race || Math.hypot(dx, dy) > 220) { if (race && !r.race) r.a = pointAt(tr, 0, 0).a; r.x = world.x; r.y = world.y; r.P.reset(r.x, r.y); dx = dy = 0; r.race = race; }
     var f = 1 - Math.exp(-dt * 10); r.x += dx * f; r.y += dy * f;
-    if (race && v.sk) { var h = v.sk.h | 0, ta = (h % 16) * STEP16; r.a += wrapA(ta - r.a) * Math.min(1, dt * 14); r.air = (h & 16) ? 1 : 0; r.lvl = v.sk.t; }
+    if (race && v.sk) { var h = v.sk.h | 0, ta = (h % 16) * STEP16, da = wrapA(ta - r.a); r.turn = (r.turn || 0) + (clamp(da * 2, -1, 1) - (r.turn || 0)) * Math.min(1, dt * 6); r.a += da * Math.min(1, dt * 14); r.air = (h & 16) ? 1 : 0; r.lvl = v.sk.t; }
     if (race) r.P.update(r.x, r.y); return r;
   }
   function botMove(id, v, dt, now, tt, T_) {
@@ -444,10 +490,14 @@
     var back = Math.sin(k.a) < 0;                          /* facing up the screen: the exhausts are in front of the kart */
     if (k.boost && !back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * s, sc[1] + p[1] * s - lift, k.a, s, now, k.boost > 1); });
     ctx.drawImage(fr.under, bx, by, FW * s, FH * s);
-    var seatX = sc[0] + fr.seat[0] * s, seatY = sc[1] + fr.seat[1] * s - lift, as = s * 0.85;
-    ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, seatY - 60 * s, 80 * s, 60 * s + 1.5 * s); ctx.clip();
-    env.avatar(seatX, seatY - 4 * as, k.v, k.me, as, [1.9 + (k.lean || 0) * 0.4, -1.9 + (k.lean || 0) * 0.4, 0.6, -0.6], true);
-    ctx.restore();
+    var seatX = sc[0] + fr.seat[0] * s, seatY = sc[1] + fr.seat[1] * s - lift, as = s * 0.85, cy = seatY + 1 * as, neck = cy - 9 * as, tn = clamp(k.turn || 0, -1, 1), pose = [0.55 - tn * 0.25, -0.55 - tn * 0.25, 0.2, -0.2];
+    /* body: sunk down into the seat, only the chest and arms show above the cockpit */
+    ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, neck, 80 * s, seatY - neck - 0.5 * as); ctx.clip();
+    env.avatar(seatX, cy, k.v, k.me, as, pose, true); ctx.restore();
+    /* head: turned into the corner (slid over, narrower on the far side, tipped a touch) */
+    ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, neck - 40 * s, 80 * s, 40 * s); ctx.clip();
+    ctx.translate(seatX + tn * 1.6 * as, neck); ctx.rotate(tn * 0.12); ctx.scale(1 - 0.16 * Math.abs(tn), 1); ctx.translate(-seatX, -neck);
+    env.avatar(seatX, cy, k.v, k.me, as, pose, true); ctx.restore();
     ctx.drawImage(fr.over, bx, by, FW * s, FH * s);
     if (k.boost && back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * s, sc[1] + p[1] * s - lift, k.a, s, now, k.boost > 1); });
     if (k.lvl !== undefined && k.lvl >= 0 && k.drifting && !k.air) fr.rw.forEach(function (p, i) { spark(ctx, sc[0] + p[0] * s, sc[1] + p[1] * s, s, k.lvl, now, i); });
@@ -474,10 +524,10 @@
     var all = [], popK = clamp((tt - T_.pop) / (0.8 * T_.S), 0, 1);
     Object.keys(vs).forEach(function (id) {
       var v = vs[id], isMe = id === myId; if (!isMe && v.dance !== 4) return;
-      if (isMe) { if (tt < T_.pop) all.push({ dance: true, v: v, me: true, w: introPos[id] || { x: PZ.cx, y: PZ.cy } }); else all.push({ x: mk.x, y: mk.y, a: mk.a, v: v, me: true, boost: mk.boost > 0 ? (mk.boost > 1 ? 2 : 1) : 0, air: mk.air > 0, drifting: !!mk.drift, lvl: level(mk.charge), lean: mk.drift ? mk.drift : 0, pop: popK }); return; }
+      if (isMe) { if (tt < T_.pop) all.push({ dance: true, v: v, me: true, w: introPos[id] || { x: PZ.cx, y: PZ.cy } }); else all.push({ x: mk.x, y: mk.y, a: mk.a, turn: mk.turn, v: v, me: true, boost: mk.boost > 0 ? (mk.boost > 1 ? 2 : 1) : 0, air: mk.air > 0, drifting: !!mk.drift, lvl: level(mk.charge), lean: mk.drift ? mk.drift : 0, pop: popK }); return; }
       var r = remotes[id]; if (!r) return;
       if (!r.race) all.push({ dance: true, v: v, me: false, w: introPos[id] || { x: r.x, y: r.y } });
-      else { var t = v.sk ? v.sk.t : 0; all.push({ x: r.x, y: r.y, a: r.a, v: v, me: false, boost: t === 2 ? 1 : 0, air: !!r.air, drifting: t === 1 || t === 3 || t === 4, lvl: t === 3 ? 1 : t === 4 ? 2 : 0, pop: popK }); }
+      else { var t = v.sk ? v.sk.t : 0; all.push({ x: r.x, y: r.y, a: r.a, turn: r.turn, v: v, me: false, boost: t === 2 ? 1 : 0, air: !!r.air, drifting: t === 1 || t === 3 || t === 4, lvl: t === 3 ? 1 : t === 4 ? 2 : 0, pop: popK }); }
     });
     all.sort(function (p, q) { return (p.dance ? p.w.y : p.y) - (q.dance ? q.w.y : q.y); });
     all.forEach(function (k) { if (k.dance) dancer(ctx, k.v, k.me, k.w, tt); else { if (k.pop < 1) { var s = toScreen(k.x, k.y); ctx.strokeStyle = "rgba(61,242,255," + (1 - k.pop) + ")"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(s[0], s[1], (0.4 + k.pop) * 34 * cam.z, 0, 6.3); ctx.stroke(); } kart(ctx, k, now); } });
@@ -489,9 +539,9 @@
   /* ---- the on-screen bits ---- */
   var CSS = "#ktUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none;font-family:system-ui,sans-serif}#ktUI.on{display:block}" +
     "#ktBanner{position:absolute;left:50%;top:22%;transform:translateX(-50%);font:900 clamp(26px,6vw,54px)/1 system-ui;color:#fff;text-shadow:0 0 16px #3df2ff,0 0 30px #ff3dd8,0 3px 0 #000;white-space:nowrap;opacity:0;letter-spacing:2px}#ktBanner.pop{animation:moshPop 2.2s ease-out forwards}" +
-    "#ktRank{position:absolute;right:14px;top:84px;text-align:right;font:900 30px/1 system-ui;color:#F5F23D;text-shadow:0 0 10px #ff3dd8,0 2px 0 #000;opacity:0;transition:opacity .4s}#ktRank small{display:block;font:800 13px system-ui;color:#fff;margin-top:3px;letter-spacing:1px}" +
-    "#ktScore{position:absolute;right:14px;top:138px;font:900 18px system-ui;color:#3DF2FF;text-shadow:0 2px 0 #000;opacity:0;transition:opacity .4s}#ktScore::before{content:'🏎 ';font-size:15px}" +
-    "#ktBars{position:absolute;right:14px;top:166px;width:150px;opacity:0;transition:opacity .4s}#ktBars div{height:8px;border-radius:4px;background:rgba(0,0,0,.55);border:1px solid rgba(61,242,255,.6);overflow:hidden;margin-bottom:5px}#ktBars i{display:block;height:100%;width:0}" +
+    "#ktRank{position:absolute;right:14px;top:126px;text-align:right;font:900 30px/1 system-ui;color:#F5F23D;text-shadow:0 0 10px #ff3dd8,0 2px 0 #000;opacity:0;transition:opacity .4s}#ktRank small{display:block;font:800 13px system-ui;color:#fff;margin-top:3px;letter-spacing:1px}" +
+    "#ktScore{position:absolute;right:14px;top:180px;font:900 18px system-ui;color:#3DF2FF;text-shadow:0 2px 0 #000;opacity:0;transition:opacity .4s}#ktScore::before{content:'🏎 ';font-size:15px}" +
+    "#ktBars{position:absolute;right:14px;top:208px;width:150px;opacity:0;transition:opacity .4s}#ktBars div{height:8px;border-radius:4px;background:rgba(0,0,0,.55);border:1px solid rgba(61,242,255,.6);overflow:hidden;margin-bottom:5px}#ktBars i{display:block;height:100%;width:0}" +
     "#ktUI.ready #ktRank,#ktUI.ready #ktScore,#ktUI.ready #ktBars{opacity:1}" +
     "#ktSp i{background:linear-gradient(90deg,#3DF2FF,#F5F23D,#ff3dd8)}#ktDr i{background:#fff}" +
     "#ktLights{position:absolute;left:50%;top:30%;transform:translateX(-50%);display:none;gap:14px;flex-direction:column;align-items:center}#ktLights .row{display:flex;gap:14px}#ktLights b{width:34px;height:34px;border-radius:50%;background:#2a1a1a;border:3px solid #000}#ktLights b.r{background:#ff2b2b;box-shadow:0 0 18px #ff2b2b}#ktLights b.g{background:#2bff6a;box-shadow:0 0 22px #2bff6a}" +
