@@ -690,3 +690,33 @@ Free dance (all in the free dance panel).
 
 ## v1.54.2 - Track builder: Reset track
 - The old "Template" button is now an orange **↺ Reset track** button. It puts back the original Dance Floor Snake exactly (dots, width, boost pads, name), re-centres the view and saves it. Undo brings your version back.
+
+## v1.54.3 - Track builder: Redraw
+- **✍️ Redraw**: the current track fades to a faint ghost and you draw a brand new one over it with one finger, all the way round, then lift. Your line becomes dots (about one every 85 units), smoothed to take out finger wobble, starting where you started and running the way you drew. Boost pads that still sit on the new road are kept; the rest are dropped.
+- Press **✕ Cancel redraw** to back out, or Undo afterwards to get the old track back. Two fingers still zoom and move while redrawing.
+- Check: Track builder > Redraw > draw a loop over the ghost > lift > drag a few dots to tidy up > Test drive.
+
+## v1.54.4 - Pixel editor: Redraw
+- **✍️ Redraw** (side panel and the full screen bar): wipes the part you're editing to nothing and shows the original faintly underneath, so you draw it fresh over the top. Your new pixels are all that shows in the game.
+- **👻 Faint original** turns that faint copy on and off. The colour swatches show the original's colours while it's on, so you can pick them.
+- Works for every part: character parts (hair, hats, tops, arms...) and the instruments, keyboard and mic (for those the original drawing is skipped entirely once redrawn).
+- Undo brings the old picture back; Clear this layer goes back to the untouched original.
+- Check: Graphics lab > Assets > Pixel editor > pick a part > Redraw > draw over the faint copy > back to the venue and look at it on a character.
+
+## v1.54.5 - Dance animation: full screen editor
+- Graphics lab > Assets > Dance > **⛶ Full screen editor**.
+- **Timeline** across the bottom: the 4-beat loop as a line with 16 notches (a frame every quarter beat, tall notches on the beats). Pink dots mark frames you've changed. Tap or drag along it to pick a frame; ◀ ▶ step one frame.
+- **▶ Play** to test the loop (speed button cycles 0.25× to 2×). Space plays/pauses on a keyboard, comma / full stop step frames.
+- **Drag to pose**: drag a hand or foot handle to swing that arm or leg; drag the square on the body to move the whole body (sideways and bounce).
+- **D pad**: moves the selected part one pixel per press (hold to repeat); ⟲ ⟳ turn it a little (for the body that's the tilt). Tap the middle of the D pad, or the 💪 / 🦵 / 🧍 buttons, to pick the part.
+- 👻 shows the original dance faintly behind, ↶ undoes, 🗑 clears the frame. Every change saves straight away and goes out in the share box as DANCE-JSON, same as before.
+
+## v1.54.6 - Graphics lab tabs, pixel editor tools
+- Top tabs are now **Stage & Lights / Animations / Pixel Editor**.
+- **No more automatic black border round your paint**: pixels you paint aren't outlined by the game; you draw any outline yourself.
+- **Erase works on the original picture** too (it used to only remove your own paint), including the original's black outline pixels, and on the instruments, keyboard and mic.
+- The Hole tool is gone (Erase does that now). New tools:
+  - **📏 Line**: drag from one end to the other; it stays dead straight.
+  - **〰️ Curve**: drag out a straight line, then drag anywhere on it to bend it (as many times as you like). **✓ Done** (or Enter) keeps it, **✕ Drop curve** throws it away.
+  - **⬠ Shapes**: pick a shape (rectangle, rounded, ellipse, triangles, diamond, pentagon, hexagon, four arrows, 4/5/6-point stars, heart, lightning) and drag out its box; it grows as you drag, like MS Paint. **◻ Outline / ◼ Filled** switches between the two.
+- **Right click = undo** on a computer (Ctrl+Z / Ctrl+Shift+Z work too). Right click also undoes in the full screen dance editor.

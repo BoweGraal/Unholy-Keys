@@ -79,6 +79,9 @@ var ART=(function(){
   var spr=null,sg=null,out=null,og=null;
   function canv(w,h){var c=document.createElement("canvas");c.width=w;c.height=h;return c;}
   function init(){if(spr)return;spr=canv(CWD,CHT);sg=spr.getContext("2d");out=canv(CWD,CHT);og=out.getContext("2d");}
+  /* painted pixels and erased pixels are kept on two masks, so the automatic outline leaves them alone */
+  var pmk=null,pmg=null,hmk=null,hmg=null,tmk=null,tmg=null,MUSED=false;
+  function masks(){if(!pmk){pmk=canv(CWD,CHT);pmg=pmk.getContext("2d");hmk=canv(CWD,CHT);hmg=hmk.getContext("2d");tmk=canv(CWD,CHT);tmg=tmk.getContext("2d");}}
   var SEC="",ISO=null,HIDECHAR=false;   /* ISO: draw only one part of a character (the pixel editor); SEC: the part being drawn */
   function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;sg.fillStyle=c;sg.fillRect(OX+x,OY+y,w,h);}
   /* a limb: a 3-pixel-wide strip from the joint along the angle, coloured in bands (cols = [[upTo, colour],...]) */
@@ -109,7 +112,7 @@ var ART=(function(){
   }
   function drawSprite(L,st){
     init();
-    sg.clearRect(0,0,CWD,CHT);
+    sg.clearRect(0,0,CWD,CHT);if(MUSED){pmg.clearRect(0,0,CWD,CHT);hmg.clearRect(0,0,CWD,CHT);MUSED=false;}
     var skin=colOf(L,"skin"),hc=colOf(L,"hair"),tc=colOf(L,"top"),bc=colOf(L,"bot");
     var tcD=shade(tc,-0.25),tcL=shade(tc,0.25),bcD=shade(bc,-0.25),skD=shade(skin,-0.18),hcD=shade(hc,-0.3),shoe="#2A2238";
     var aL=st.armL,aR=st.armR,lL=st.legL,lR=st.legR,hd=st.head||0,hy=Math.round(Math.max(0,hd)*3);   /* head: bowed forward (1) or flung back (-1) */
@@ -288,8 +291,10 @@ var ART=(function(){
     paintLayer("legL",Math.round(OX-2.5),OY+4,lL);paintLayer("legR",Math.round(OX+2.5),OY+4,lR);
     /* outline: a dark silhouette one pixel out all round, under the colours */
     og.globalCompositeOperation="source-over";og.clearRect(0,0,CWD,CHT);
-    og.drawImage(spr,-1,0);og.drawImage(spr,1,0);og.drawImage(spr,0,-1);og.drawImage(spr,0,1);
+    var osrc=spr;if(MUSED){tmg.globalCompositeOperation="source-over";tmg.clearRect(0,0,CWD,CHT);tmg.drawImage(spr,0,0);tmg.globalCompositeOperation="destination-out";tmg.drawImage(pmk,0,0);tmg.globalCompositeOperation="source-over";osrc=tmk;}   /* painted pixels get no automatic outline */
+    og.drawImage(osrc,-1,0);og.drawImage(osrc,1,0);og.drawImage(osrc,0,-1);og.drawImage(osrc,0,1);
     og.globalCompositeOperation="source-in";og.fillStyle="#120D1E";og.fillRect(0,0,CWD,CHT);
+    if(MUSED){og.globalCompositeOperation="destination-out";og.drawImage(hmk,0,0);}   /* and erased pixels stay erased, even where the outline would go */
     og.globalCompositeOperation="source-over";og.drawImage(spr,0,0);
     if(NEON){   /* neon: just the edges, in a bright tube colour, the body a faint glow inside */
       og.clearRect(0,0,CWD,CHT);og.globalCompositeOperation="source-over";
@@ -1106,14 +1111,25 @@ var ART=(function(){
     if(!P.length)return null;var w=x1-x0+1,h=y1-y0+1,c=document.createElement("canvas"),hc=null,cg,hg,any=false;c.width=w;c.height=h;cg=c.getContext("2d");
     P.forEach(function(e){if(e[2]==="0"){if(!hc){hc=document.createElement("canvas");hc.width=w;hc.height=h;hg=hc.getContext("2d");hg.fillStyle="#000";}hg.fillRect(e[0]-x0,e[1]-y0,1,1);}else{cg.fillStyle=e[2];cg.fillRect(e[0]-x0,e[1]-y0,1,1);any=true;}});
     return{c:any?c:null,h:hc,x0:x0,y0:y0};}
+  var DUMMYG=null,HOLEC=null;
   function ptGet(key){if(POFF)return null;if(!(key in PC))PC[key]=ptBuild(key);return PC[key];}
   var PAINT={get:function(k){return PT[k];},set:function(k,m,nosave){if(m&&Object.keys(m).length)PT[k]=m;else delete PT[k];delete PC[k];if(!nosave)ptSave();},save:ptSave,all:function(){return PT;},
     load:function(o){PT=o&&typeof o==="object"?o:{};PC={};ptSave();},clear:function(){PT={};PC={};ptSave();},off:function(b){POFF=!!b;},
     count:function(){return Object.keys(PT).length;},
+    replaced:function(k){return !POFF&&!!(PT[k]&&PT[k]["!"]);},   /* redrawn from scratch: the original art is skipped, only the paint shows */
+    dummy:function(){if(!DUMMYG){var dc=document.createElement("canvas");dc.width=dc.height=1;DUMMYG=dc.getContext("2d");}return DUMMYG;},
+    /* instruments, keyboard, mic: erased pixels. The prop is drawn on a spare canvas, the holes cut out, then copied across */
+    holes:function(key,g,x,y,p,fn){var e=POFF?null:ptGet(key);if(!e||!e.h||!g.canvas||!g.getTransform)return fn(g);
+      var cvs=g.canvas,oc=HOLEC||(HOLEC=document.createElement("canvas"));if(oc.width!==cvs.width||oc.height!==cvs.height){oc.width=cvs.width;oc.height=cvs.height;}
+      var o=oc.getContext("2d");o.setTransform(1,0,0,1,0,0);o.globalCompositeOperation="source-over";o.clearRect(0,0,oc.width,oc.height);o.setTransform(g.getTransform());o.imageSmoothingEnabled=false;
+      var r=fn(o);o.globalCompositeOperation="destination-out";o.drawImage(e.h,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.h.width*p,e.h.height*p);o.globalCompositeOperation="source-over";
+      g.save();g.setTransform(1,0,0,1,0,0);var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(oc,0,0);g.imageSmoothingEnabled=was;g.restore();return r;},
     at:function(g,key,x,y,p){var e=ptGet(key);if(!e||!e.c)return;var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(e.c,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.c.width*p,e.c.height*p);g.imageSmoothingEnabled=was;}};
   function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var e=ptGet(key);if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(rot)sg.rotate(rot);
     if(e.h){sg.globalCompositeOperation="destination-out";sg.drawImage(e.h,e.x0,e.y0);sg.globalCompositeOperation="source-over";}
-    if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();}
+    if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();
+    masks();MUSED=true;[[pmg,e.c],[hmg,e.h]].forEach(function(m){if(!m[1])return;m[0].save();m[0].imageSmoothingEnabled=false;m[0].translate(tx,ty);if(rot)m[0].rotate(rot);m[0].drawImage(m[1],e.x0,e.y0);m[0].restore();});
+    if(e.c){hmg.save();hmg.translate(tx,ty);if(rot)hmg.rotate(rot);hmg.globalCompositeOperation="destination-out";hmg.drawImage(e.c,e.x0,e.y0);hmg.restore();}}
   var DT={},DT_F=["armL","armR","legL","legR","bob","dx","rot"];
   try{var dts=JSON.parse(localStorage.getItem("uk_dtweak")||"{}");if(dts&&typeof dts==="object")DT=dts;}catch(e){}
   function dtSave(){try{localStorage.setItem("uk_dtweak",JSON.stringify(DT));}catch(e){}}
@@ -1510,6 +1526,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.54.2",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=keyboard(g,x,y,p,l,c);PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=micStand(g,x,y,p);PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.54.6",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
