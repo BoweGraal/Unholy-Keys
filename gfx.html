@@ -10,7 +10,9 @@
 button,select,input[type=number]{background:#2d2360;color:#fff;border:1px solid #5a4cb0;border-radius:6px;padding:5px 9px;font:600 12px system-ui}
 button{cursor:pointer}button.on{background:#7F77DD;border-color:#fff}button.go{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:transparent}
 #view{flex:1;min-height:0;position:relative;overflow:auto;display:flex;align-items:center;justify-content:center}
-#cv{display:block;max-width:100%;max-height:100%}
+#cv{display:block;max-width:100%;max-height:100%;margin:auto;flex:none}
+.sw{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}.sw i{width:26px;height:26px;border-radius:5px;border:2px solid #4a3d8a;cursor:pointer;display:block}.sw i.on{border-color:#fff}
+.tools{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.tools button{padding:8px 11px;font-size:13px}
 #fxrow,#assetrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 10px;border-top:1px solid #2c2358;font-size:12px}
 #fxrow label,#assetrow label{display:flex;align-items:center;gap:4px;white-space:nowrap}
 #side{width:350px;max-width:100vw;border-left:1px solid #4a3d8a;display:flex;flex-direction:column;background:rgba(14,10,30,.97)}
@@ -66,8 +68,9 @@ function loadAdj(){var a=ASSETADJ[assetKey()];AS.f=a?{bright:a.bright||1,contras
 /* ---------- drawing ---------- */
 function size(){var v=$("view"),w=Math.max(300,v.clientWidth-8),h=Math.max(240,v.clientHeight-8);
   if(mode==="stage"){var ww=Math.min(w,h*1.5),hh=ww/1.5;cv.width=Math.round(ww);cv.height=Math.round(hh);}
+  else if(AS.cat==="pixel"){pxFit();return;}
   else{var s=Math.min(w,h);cv.width=Math.round(s);cv.height=Math.round(s*0.8);}
-  cv.style.width=cv.width+"px";cv.style.height=cv.height+"px";}
+  cv.style.maxWidth="";cv.style.maxHeight="";cv.style.touchAction="";cv.style.width=cv.width+"px";cv.style.height=cv.height+"px";}
 var crew=[ART.looks.random(3),ART.looks.random(8),ART.looks.random(21),ART.looks.random(34),ART.looks.random(55)],perfLook=ART.looks.random(5);
 function beatPhase(now){var per=60000/SIM.bpm;return ((now-SIM.t0)%per)/per;}
 function drawStage(now){
@@ -90,6 +93,7 @@ function pose(){
   var p=AS.pose;return{armL:p.armL,armR:p.armR,legL:p.legL,legR:p.legR,bob:p.bob,dx:p.dx,rot:p.rot};
 }
 function drawAsset(now){
+  if(AS.cat==="pixel"){drawPixel(now);return;}
   var W=cv.width,H=cv.height,P=Math.max(2,Math.round(H/55*AS.zoom)),cs=P;
   g.clearRect(0,0,W,H);g.fillStyle=AS.bg;g.fillRect(0,0,W,H);
   g.strokeStyle="rgba(255,255,255,.05)";for(var x=0;x<W;x+=P*8){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke();}for(var y=0;y<H;y+=P*8){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}
@@ -122,7 +126,7 @@ function frame(now){
   else{
     if(AS.play&&AS.cat==="dance"){AS.q=(AS.q+((now-(last||now))/(60000/SIM.bpm))*AS.speed)%4;var qs=$("qScrub");if(qs&&document.activeElement!==qs){qs.value=AS.q;$("qOut").textContent=AS.q.toFixed(2);}}
     drawAsset(now);
-    cv.style.filter=[AS.f.bright!==1?"brightness("+AS.f.bright+")":"",AS.f.contrast!==1?"contrast("+AS.f.contrast+")":"",AS.f.sat!==1?"saturate("+AS.f.sat+")":"",AS.f.hue?"hue-rotate("+AS.f.hue+"deg)":""].join(" ").trim();
+    cv.style.filter=AS.cat==="pixel"?"":[AS.f.bright!==1?"brightness("+AS.f.bright+")":"",AS.f.contrast!==1?"contrast("+AS.f.contrast+")":"",AS.f.sat!==1?"saturate("+AS.f.sat+")":"",AS.f.hue?"hue-rotate("+AS.f.hue+"deg)":""].join(" ").trim();
   }
   if(mode==="stage")cv.style.filter=GFX.filter();
   last=now;
@@ -140,6 +144,100 @@ function groupPanel(grp){
       nu.onchange=function(){GFX.set(x.k,+nu.value);sl.value=GFX.v(x.k);nu.value=fmt(GFX.v(x.k));row.className="row"+(GFX.has(x.k)?" ch":"");};
       c.appendChild(sl);c.appendChild(nu);c.appendChild(mk("span","d","default "+fmt(x.def)+(x.unit?" "+x.unit:"")));}
     row.appendChild(c);body.appendChild(row);});
+}
+/* ---------- pixel editor ---------- */
+var PX={part:"hair",v:1,tool:"pen",col:"#ff3da8",mirror:false,grid:true,undo:[],redo:[],map:{},spec:null,base:null,bg:null,hover:null,cell:8,sig:"",down:false,last:null,sw:null};
+var PARTS=[["hair","Head · Hair style"],["hat","Head · Hat"],["face","Head · Face"],["extra","Head · Extras (shades…)"],["top","Body · Top"],["bottom","Body · Bottoms (hips)"],["armL","Limb · Left arm"],["armR","Limb · Right arm"],["legL","Limb · Left leg"],["legR","Limb · Right leg"],["inst","Instrument (with performer)"],["keyboard","Prop · Keyboard"],["mic","Prop · Mic stand"]];
+var CH={hair:{r:[9,0,20,22],a:[19,23]},hat:{r:[9,0,20,22],a:[19,23]},face:{r:[9,0,20,22],a:[19,23]},extra:{r:[9,0,20,22],a:[19,23]},top:{r:[10,11,18,19],a:[19,23]},bottom:{r:[10,24,18,16],a:[19,23]},
+  armL:{r:[6,15,14,17],a:[13,19]},armR:{r:[18,15,14,17],a:[26,19]},legL:{r:[9,25,14,15],a:[17,27]},legR:{r:[15,25,14,15],a:[22,27]}};
+var BB={};
+function pxVariants(p){if(p==="inst")return ART.INST.KINDS.map(function(k){return[k,k];});var o=ART.looks.OPTS[p];return o&&o.names?o.names.map(function(n,i){return[i,n];}):null;}
+function pxDrawer(p,v){
+  if(CH[p]){var c=CH[p];return function(g2,ox,oy){var L=Object.assign({},AS.look);if(p==="hair"){L.hair=v;L.hat=0;L.extra=0;}if(p==="hat")L.hat=v;if(p==="face")L.face=v;if(p==="extra")L.extra=v;if(p==="top")L.top=v;if(p==="bottom")L.bottom=v;
+    ART.drawChar(g2,19-c.r[0],23-c.r[1],1,L,{armL:0,armR:0,legL:0,legR:0});};}
+  if(p==="inst")return function(g2,ox,oy){ART.INST.draw(g2,ox,oy,1,AS.look,v,{midi:60,on:false,now:Date.now(),off:0,t0:0,n:8});};
+  if(p==="keyboard")return function(g2,ox,oy){ART.keyboard(g2,ox,oy,1,[-1],"#D354A0");};
+  return function(g2,ox,oy){ART.micStand(g2,ox,oy,1);};
+}
+function pxSelect(){
+  var p=PX.part,vs=pxVariants(p),v=vs?(vs.some(function(x){return String(x[0])===String(PX.v);})?PX.v:vs[0][0]):0;PX.v=v;
+  var key=p==="hair"||p==="hat"||p==="face"||p==="extra"||p==="top"||p==="bottom"?p+":"+v:p==="inst"?"inst:"+v:p;
+  var d=pxDrawer(p,v),sp;
+  if(CH[p]){var c=CH[p];sp={key:key,w:c.r[2],h:c.r[3],ax:c.a[0]-c.r[0],ay:c.a[1]-c.r[1],hole:true,draw:d,sym:p!=="armL"&&p!=="armR"&&p!=="legL"&&p!=="legR"};}
+  else{var bk=p+":"+v;if(!BB[bk]){var t=document.createElement("canvas");t.width=t.height=300;var tg=t.getContext("2d");ART.paint.off(true);d(tg,150,150);ART.paint.off(false);
+      var id=tg.getImageData(0,0,300,300).data,x0=999,y0=999,x1=-1,y1=-1,x,y;for(y=0;y<300;y++)for(x=0;x<300;x++)if(id[(y*300+x)*4+3]>0){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+      BB[bk]=x1<0?[-10,-10,10,10]:[x0-150,y0-150,x1-150,y1-150];}
+    var b=BB[bk];sp={key:key,w:b[2]-b[0]+13,h:b[3]-b[1]+13,ax:-b[0]+6,ay:-b[1]+6,hole:false,draw:function(g2){d(g2,sp.ax,sp.ay);},sym:false};}
+  PX.spec=sp;PX.map=JSON.parse(JSON.stringify(ART.paint.get(key)||{}));PX.undo=[];PX.redo=[];PX.base=document.createElement("canvas");PX.base.width=sp.w;PX.base.height=sp.h;PX.sig="";
+  if(PX.tool==="hole"&&!sp.hole)PX.tool="pen";
+}
+function pxFit(){
+  var sp=PX.spec;if(!sp){pxSelect();sp=PX.spec;}var v=$("view"),w=Math.max(200,v.clientWidth-8),h=Math.max(160,v.clientHeight-8);
+  var cell=Math.max(3,Math.floor(Math.min(w/sp.w,h/sp.h)*AS.zoom));PX.cell=cell;
+  cv.width=sp.w*cell;cv.height=sp.h*cell;cv.style.width=cv.width+"px";cv.style.height=cv.height+"px";cv.style.maxWidth="none";cv.style.maxHeight="none";cv.style.touchAction=PX.tool==="move"?"auto":"none";
+}
+function pxRender(){var sp=PX.spec,b=PX.base.getContext("2d");b.clearRect(0,0,sp.w,sp.h);sp.draw(b);}
+function drawPixel(now){
+  var sp=PX.spec;if(!sp)return;var sig=cv.parentNode.clientWidth+"x"+cv.parentNode.clientHeight+"|"+AS.zoom+"|"+sp.w+"x"+sp.h+"|"+PX.tool;
+  if(sig!==PX.sig){PX.sig=sig;pxFit();}
+  var c=PX.cell,W=cv.width,H=cv.height,x,y;pxRender();
+  /* a checkerboard behind, so transparent pixels read as transparent */
+  g.clearRect(0,0,W,H);for(y=0;y<sp.h;y++)for(x=0;x<sp.w;x++){g.fillStyle=((x+y)&1)?"#241c4a":"#1c1640";g.fillRect(x*c,y*c,c,c);}
+  g.imageSmoothingEnabled=false;g.drawImage(PX.base,0,0,W,H);
+  if(PX.grid&&c>=6){g.strokeStyle="rgba(255,255,255,.10)";g.lineWidth=1;g.beginPath();for(x=0;x<=sp.w;x++){g.moveTo(x*c+.5,0);g.lineTo(x*c+.5,H);}for(y=0;y<=sp.h;y++){g.moveTo(0,y*c+.5);g.lineTo(W,y*c+.5);}g.stroke();}
+  g.strokeStyle="rgba(245,197,24,.8)";g.lineWidth=1;g.setLineDash([4,4]);g.beginPath();if(PX.mirror&&sp.sym){g.moveTo(sp.ax*c+.5,0);g.lineTo(sp.ax*c+.5,H);}g.stroke();g.setLineDash([]);
+  if(PX.hover){g.strokeStyle="#fff";g.lineWidth=2;g.strokeRect(PX.hover[0]*c+1,PX.hover[1]*c+1,c-2,c-2);}
+}
+function pxCell(e){var r=cv.getBoundingClientRect();return[Math.floor((e.clientX-r.left)*cv.width/r.width/PX.cell),Math.floor((e.clientY-r.top)*cv.height/r.height/PX.cell)];}
+function pxPut(cx,cy){var sp=PX.spec;if(cx<0||cy<0||cx>=sp.w||cy>=sp.h)return;var xs=[cx];if(PX.mirror&&sp.sym){var mx=2*sp.ax-1-cx;if(mx>=0&&mx<sp.w&&mx!==cx)xs.push(mx);}
+  xs.forEach(function(x){var k=(x-sp.ax)+","+(cy-sp.ay);if(PX.tool==="pen")PX.map[k]=PX.col;else if(PX.tool==="erase")delete PX.map[k];else if(PX.tool==="hole"&&sp.hole)PX.map[k]="0";});}
+function pxLine(a,b){var dx=Math.abs(b[0]-a[0]),dy=Math.abs(b[1]-a[1]),sx=a[0]<b[0]?1:-1,sy=a[1]<b[1]?1:-1,err=dx-dy,x=a[0],y=a[1],n=0;while(n++<400){pxPut(x,y);if(x===b[0]&&y===b[1])break;var e2=2*err;if(e2>-dy){err-=dy;x+=sx;}if(e2<dx){err+=dx;y+=sy;}}}
+function pxCommit(nosave){ART.paint.set(PX.spec.key,PX.map,nosave);}
+function pxSnap(){PX.undo.push(JSON.stringify(PX.map));if(PX.undo.length>60)PX.undo.shift();PX.redo=[];}
+function pxPixel(cx,cy){pxRender();return PX.base.getContext("2d").getImageData(cx,cy,1,1).data;}
+function hex(d){return"#"+[d[0],d[1],d[2]].map(function(n){return(n<16?"0":"")+n.toString(16);}).join("");}
+function pxFill(cx,cy){var sp=PX.spec;if(cx<0||cy<0||cx>=sp.w||cy>=sp.h)return;pxRender();var im=PX.base.getContext("2d").getImageData(0,0,sp.w,sp.h),d=im.data,i0=(cy*sp.w+cx)*4,t=[d[i0],d[i0+1],d[i0+2],d[i0+3]];
+  if(t[3]>0&&hex(t)===PX.col.toLowerCase())return;var seen=new Uint8Array(sp.w*sp.h),st=[[cx,cy]],n=0;
+  while(st.length&&n<4000){var p=st.pop(),x=p[0],y=p[1];if(x<0||y<0||x>=sp.w||y>=sp.h)continue;var ii=y*sp.w+x;if(seen[ii])continue;seen[ii]=1;var j=ii*4;if(d[j]!==t[0]||d[j+1]!==t[1]||d[j+2]!==t[2]||d[j+3]!==t[3])continue;
+    n++;PX.map[(x-sp.ax)+","+(y-sp.ay)]=PX.col;st.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);}}
+function pxSwatches(){if(!PX.sw)return;PX.sw.textContent="";pxRender();var sp=PX.spec,d=PX.base.getContext("2d").getImageData(0,0,sp.w,sp.h).data,cnt={},i;for(i=0;i<d.length;i+=4)if(d[i+3]>200){var h=hex([d[i],d[i+1],d[i+2]]);cnt[h]=(cnt[h]||0)+1;}
+  Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).slice(0,16).forEach(function(h){var e=document.createElement("i");e.style.background=h;e.className=h===PX.col.toLowerCase()?"on":"";e.onclick=function(){PX.col=h;if(PX.ci)PX.ci.value=h;pxSwatches();};PX.sw.appendChild(e);});}
+function bindPixel(){
+  cv.onpointerdown=function(e){if(mode!=="assets"||AS.cat!=="pixel"||PX.tool==="move")return;e.preventDefault();try{cv.setPointerCapture(e.pointerId);}catch(x){}var c=pxCell(e);PX.hover=c;
+    if(PX.tool==="pick"){var sp=PX.spec;if(c[0]>=0&&c[1]>=0&&c[0]<sp.w&&c[1]<sp.h){var d=pxPixel(c[0],c[1]);if(d[3]>0){PX.col=hex(d);if(PX.ci)PX.ci.value=PX.col;PX.tool="pen";pxPanelTools();}}pxSwatches();return;}
+    pxSnap();if(PX.tool==="fill"){pxFill(c[0],c[1]);pxCommit();pxSwatches();share();return;}
+    PX.down=true;PX.last=c;pxPut(c[0],c[1]);pxCommit(true);};
+  cv.onpointermove=function(e){if(AS.cat!=="pixel")return;var c=pxCell(e);PX.hover=c;if(!PX.down)return;e.preventDefault();pxLine(PX.last,c);PX.last=c;pxCommit(true);};
+  var up=function(){if(PX.down){PX.down=false;pxCommit();pxSwatches();share();}};
+  cv.onpointerup=up;cv.onpointercancel=up;cv.onpointerleave=function(){PX.hover=null;};
+}
+function pxPanelTools(){var t=$("pxTools");if(!t)return;Array.prototype.forEach.call(t.querySelectorAll("button[data-t]"),function(b){b.className=b.dataset.t===PX.tool?"on":"";});cv.style.touchAction=PX.tool==="move"?"auto":"none";}
+function pixelRow(row){
+  function sel(label,opts,val,on){var l=mk("label","",label+" "),s=document.createElement("select");opts.forEach(function(o){var e=document.createElement("option");e.value=o[0];e.textContent=o[1];s.appendChild(e);});s.value=val;s.onchange=function(){on(s.value);};l.appendChild(s);row.appendChild(l);}
+  sel("Part",PARTS,PX.part,function(v){PX.part=v;PX.v=pxVariants(v)?pxVariants(v)[0][0]:0;pxSelect();size();assetPanel();});
+  var vs=pxVariants(PX.part);if(vs)sel(PX.part==="inst"?"Instrument":"Which",vs,PX.v,function(v){PX.v=v;pxSelect();size();assetPanel();});
+}
+function pixelPanel(body){
+  if(!PX.spec)pxSelect();var sp=PX.spec,about=mk("div","about");
+  about.appendChild(mk("div","","Pick a part above, then paint it one pixel at a time. Edits save as you go and show up in the game for every character or instrument that uses this part: the hair style, hat, face or top you picked, or every left arm, and so on. Arms and legs are painted hanging straight down and turn with the dancing. Head layers follow the head's bow."));
+  if(PX.part==="hat"&&+PX.v===0||PX.part==="extra"&&+PX.v===0)about.appendChild(mk("div","","Careful: this is the \"nothing\" option. Anything painted here would show on everyone who has no "+(PX.part==="hat"?"hat":"extra")+"."));
+  body.appendChild(about);
+  var tl=mk("div","tools");tl.id="pxTools";
+  [["pen","✏️ Pen"],["erase","🧽 Erase paint"],["hole","🕳 Hole"],["fill","🪣 Fill"],["pick","💧 Pick"],["move","✋ Scroll"]].forEach(function(t){if(t[0]==="hole"&&!sp.hole)return;var b=mk("button","",t[1]);b.dataset.t=t[0];b.onclick=function(){PX.tool=t[0];pxPanelTools();};tl.appendChild(b);});
+  body.appendChild(tl);pxPanelTools();
+  var cr=mk("div","row"),cc=mk("div","c"),ci=document.createElement("input");ci.type="color";ci.value=PX.col;ci.oninput=function(){PX.col=ci.value;if(PX.tool!=="pen"&&PX.tool!=="fill"){PX.tool="pen";pxPanelTools();}pxSwatches();};PX.ci=ci;
+  cc.appendChild(mk("span","","Colour"));cc.appendChild(ci);cc.appendChild(mk("span","d","or tap a colour already in the picture"));cr.appendChild(cc);body.appendChild(cr);
+  var sw=mk("div","sw");PX.sw=sw;body.appendChild(sw);
+  var tg=mk("div","tools");
+  var gb=mk("button",PX.grid?"on":"","Grid");gb.onclick=function(){PX.grid=!PX.grid;gb.className=PX.grid?"on":"";};tg.appendChild(gb);
+  if(sp.sym){var mb=mk("button",PX.mirror?"on":"","Mirror left/right");mb.onclick=function(){PX.mirror=!PX.mirror;mb.className=PX.mirror?"on":"";};tg.appendChild(mb);}
+  var un=mk("button","","↶ Undo");un.onclick=function(){if(!PX.undo.length)return;PX.redo.push(JSON.stringify(PX.map));PX.map=JSON.parse(PX.undo.pop());pxCommit();pxSwatches();share();};
+  var re=mk("button","","↷ Redo");re.onclick=function(){if(!PX.redo.length)return;PX.undo.push(JSON.stringify(PX.map));PX.map=JSON.parse(PX.redo.pop());pxCommit();pxSwatches();share();};
+  var cl=mk("button","","Clear this layer");cl.onclick=function(){if(!Object.keys(PX.map).length)return;pxSnap();PX.map={};pxCommit();pxSwatches();share();};
+  tg.appendChild(un);tg.appendChild(re);tg.appendChild(cl);body.appendChild(tg);
+  if(PX.part==="armL"||PX.part==="armR"||PX.part==="legL"||PX.part==="legR"){var o=PX.part.slice(0,-1)+(PX.part.slice(-1)==="L"?"R":"L"),mr=mk("button","","Copy to the other side (mirrored)");mr.onclick=function(){var m2={},k;for(k in PX.map){var q=k.split(",");m2[(-1-(+q[0]))+","+q[1]]=PX.map[k];}ART.paint.set(o,m2);share();mr.textContent="Copied ✓";setTimeout(function(){mr.textContent="Copy to the other side (mirrored)";},1400);};body.appendChild(mr);}
+  body.appendChild(mk("div","d","Layer: "+sp.key+" · "+sp.w+" by "+sp.h+" pixels. In the share box these go out as PIXELS-JSON."));
+  pxSwatches();
 }
 /* ---------- assets panel ---------- */
 function slider(parent,label,help,val,min,max,step,on,def){
@@ -166,12 +264,13 @@ function dtText(){var all=ART.DTWEAK.all(),lines=[],k;for(k in all)all[k].forEac
 function share(){
   var ex=[],dl=dtText();if(dl.length){ex.push("[Dance frame tweaks]");ex=ex.concat(dl);ex.push("DANCE-JSON: "+JSON.stringify(ART.DTWEAK.all()));}
   var ak=Object.keys(ASSETADJ);if(ak.length){ex.push("","[Asset looks]");ak.forEach(function(k){var a=ASSETADJ[k];ex.push("ASSET "+k+": brightness "+a.bright+", contrast "+a.contrast+", saturation "+a.sat+", hue "+a.hue);});ex.push("ASSET-JSON: "+JSON.stringify(ASSETADJ));}
+  var pk=ART.paint.all(),pn=Object.keys(pk);if(pn.length){ex.push("","[Pixel edits]");pn.forEach(function(k){ex.push("PIXELS "+k+": "+Object.keys(pk[k]).length+" pixels");});ex.push("PIXELS-JSON: "+JSON.stringify(pk));}
   var sh=$("share");if(document.activeElement!==sh)sh.value=GFX.exportText(ex.join("\n"));
 }
 function assetPanel(){
   var body=$("body");body.textContent="";loadAdj();var row=$("assetrow");row.textContent="";
   function sel(label,opts,val,on){var l=mk("label","",label+" "),s=document.createElement("select");opts.forEach(function(o){var e=document.createElement("option");e.value=o[0];e.textContent=o[1];s.appendChild(e);});s.value=val;s.onchange=function(){on(s.value);};l.appendChild(s);row.appendChild(l);return s;}
-  sel("Asset type",[["char","Character"],["dance","Dance"],["inst","Instrument"],["prop","Prop / object"]],AS.cat,function(v){AS.cat=v;assetPanel();});
+  sel("Asset type",[["pixel","🖌 Pixel editor"],["char","Character"],["dance","Dance"],["inst","Instrument"],["prop","Prop / object"]],AS.cat,function(v){AS.cat=v;assetPanel();});
   if(AS.cat==="dance"){
     sel("Dance",ART.DANCES.map(function(d,i){return[i,d.icon+" "+d.name];}).slice(1),AS.style,function(v){AS.style=+v;AS.sub=0;assetPanel();});
     var subs=ART.DANCES[AS.style].subs||[];if(subs.length)sel("Variation",subs.map(function(s,i){return[i,s];}),AS.sub,function(v){AS.sub=+v;assetPanel();});
@@ -180,7 +279,8 @@ function assetPanel(){
   if(AS.cat==="prop")sel("Object",[["keyboard","Keyboard"],["mic","Mic stand"],["keypad","Performer key panel"],["balloon","Keepy: balloon"],["ball","Keepy: ball"],["feather","Keepy: feather"],["rink","Roller rink"],["ice","Ice rink"],["disco","Disco ball"]],AS.prop,function(v){AS.prop=v;assetPanel();});
   if(AS.cat!=="prop"){var rl=mk("button","","🎲 New character");rl.onclick=function(){AS.look=ART.looks.random((Math.random()*9999)|0);};row.appendChild(rl);}
   var bgl=mk("label","","Background "),bgi=document.createElement("input");bgi.type="color";bgi.value=AS.bg;bgi.oninput=function(){AS.bg=bgi.value;};bgl.appendChild(bgi);row.appendChild(bgl);
-  var zl=mk("label","","Zoom "),zi=document.createElement("input");zi.type="range";zi.min=0.5;zi.max=2.5;zi.step=0.1;zi.value=AS.zoom;zi.oninput=function(){AS.zoom=+zi.value;};zl.appendChild(zi);row.appendChild(zl);
+  var zl=mk("label","","Zoom "),zi=document.createElement("input");zi.type="range";zi.min=0.5;zi.max=2.5;zi.step=0.1;zi.value=AS.zoom;zi.oninput=function(){AS.zoom=+zi.value;if(AS.cat==="pixel")size();};zl.appendChild(zi);row.appendChild(zl);
+  if(AS.cat==="pixel"){var pr=mk("div","tools");body.appendChild(pr);pixelRow(pr);pixelPanel(body);share();return;}
   if(AS.cat==="char"){body.appendChild(mk("div","about","Pose a character by hand. Arm and leg angles are in radians; this is the same pose data every dance and game animation uses."));poseSliders(body,AS.pose);}
   if(AS.cat==="dance"){
     var d=ART.DANCES[AS.style],ab=mk("div","about");ab.appendChild(mk("div","","Each dance loops every 4 beats. Left character is the original, right is with your saved tweaks. Scrub to a frame, move the nudge sliders, then Save frame. The tweak fades in and out around that beat, and the animation plays with it everywhere on this device. "+(d.help||"")));
@@ -237,10 +337,11 @@ $("bTxt").onclick=function(){$("foot").classList.toggle("open");};
 $("bApply").onclick=function(){
   var t=$("share").value,n=GFX.importText(t),m=/DANCE-JSON:\s*(\{[^\n]*\})/.exec(t),a=/ASSET-JSON:\s*(\{[^\n]*\})/.exec(t);
   if(m){try{ART.DTWEAK.load(JSON.parse(m[1]));}catch(e){}}if(a){try{ASSETADJ=JSON.parse(a[1])||{};saveAdj();}catch(e){}}
+  var pj=/PIXELS-JSON:\s*(\{[^\n]*\})/.exec(t);if(pj){try{ART.paint.load(JSON.parse(pj[1]));}catch(e){}}
   $("bApply").textContent="Loaded";setTimeout(function(){$("bApply").textContent="Apply pasted";},1500);build();};
-$("bReset").onclick=function(){if(confirm("Put every graphics value, dance tweak and asset look back to its default?")){GFX.resetAll();ART.DTWEAK.clear();ASSETADJ={};saveAdj();build();}};
+$("bReset").onclick=function(){if(confirm("Put every graphics value, dance tweak and asset look back to its default?")){GFX.resetAll();ART.DTWEAK.clear();ART.paint.clear();ASSETADJ={};saveAdj();build();}};
 GFX.onChange(share);window.addEventListener("resize",size);
-window.ukGfxLab=function(){return{mode:mode,tab:tab,as:AS,fx:FX,changed:GFX.changed(),dtweaks:ART.DTWEAK.count()};};
-size();fxRow();build();requestAnimationFrame(frame);
+window.ukGfxLab=function(){return{mode:mode,tab:tab,as:AS,fx:FX,changed:GFX.changed(),dtweaks:ART.DTWEAK.count(),px:PX,pxSpec:function(){return PX.spec;},pxSelect:pxSelect};};
+bindPixel();size();fxRow();build();requestAnimationFrame(frame);
 })();
 </script></body></html>
