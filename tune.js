@@ -80,7 +80,7 @@ var TUNE=(function(){
   {id:"kart",name:"Mars Rally (kart)",icon:"🏍",mode:"kart",
    about:"Space kart racing on the dance floor. The stick (or the mouse on a computer) is speed and direction; point behind you and the kart swings round. Tap DRIFT to hop, swing into the turn, land at a good angle and hold it; let go for a boost. Points for distance, laps, boosts, overtakes and running near the front.",
    vars:[
-    V("kt.maxSpeed","Top speed",135,70,260,5,"Track units per second with the stick pushed all the way (a lap is 2000 to 3000 units).",""),
+    V("kt.maxSpeed","Top speed",260,70,400,5,"Track units per second with the stick pushed all the way (a lap is 2000 to 3000 units).",""),
     V("kt.accel","Acceleration",130,40,400,5,"How fast you pick up speed.",""),
     V("kt.coast","Coasting slow-down",70,10,300,5,"How fast you slow down with the stick let go.",""),
     V("kt.turn","Turn speed",3.4,1,7,0.1,"How fast the kart swings round to face where the stick points (radians per second).",""),

@@ -751,3 +751,8 @@ Free dance (all in the free dance panel).
 - **Mars Rally**: drivers face the way their kart points: you see their face coming towards you, their profile going sideways, and the back of their head driving away.
 - Pixel-editor paint still only shows on the front view for now.
 - Check: on the join screen tap ⟳ four times with a few different looks (try long hair, a ponytail, a hood, a cowboy hat).
+
+## v1.56.1 - Mars Rally top speed 260
+- Top speed is now **260** by default (was 135), for everyone and for the bots. The practice Speed box and the Tuning lab now go up to 400.
+- If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
+- Server change: **redeploy Render** so the live-show bots drive at the new speed.

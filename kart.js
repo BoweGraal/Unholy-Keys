@@ -11,7 +11,7 @@
   var WW = 1000, WH = 620;
 
   /* ---- numbers you can tweak in the Tuning lab (the lab's group "kt"); these are the fallbacks ---- */
-  var DEF = { maxSpeed: 135, accel: 130, brake: 260, coast: 70, wall: 0.35, turn: 3.4, grip: 0.002, revSpeed: 0.45,
+  var DEF = { maxSpeed: 260, accel: 130, brake: 260, coast: 70, wall: 0.35, turn: 3.4, grip: 0.002, revSpeed: 0.45,
     hop: 0.3, hopTurn: 7, driftK: 2.2, miniT: 0.8, turboT: 1.6, ultraT: 2.6, boost1: 0.7, boost2: 1.1, boost3: 1.6, boostMul: 1.4, padTime: 1.1, startBoost: 1.4, intro: 1,
     distPts: 40, lapPts: 400, rankPts: 6, passPts: 30, driftPts: 50, hw: 48 };
   var env = null;
@@ -586,7 +586,7 @@
       }
       /* practice: lock in a top speed (saved, and it's the same setting as the Tuning lab's Top speed) */
       var sp = document.createElement("div"); sp.id = "ktSpeed"; sp.innerHTML = '<span>Speed</span><button data-s="-10">−</button><b id="ktSpV"></b><button data-s="10">+</button>'; el.appendChild(sp);
-      Array.prototype.forEach.call(sp.querySelectorAll("button"), function (bt) { bt.addEventListener("click", function (e) { e.stopPropagation(); var v = clamp(Math.round(T("maxSpeed") + (+bt.dataset.s)), 70, 260); if (env.tuneSet) env.tuneSet("kt.maxSpeed", v); speedUI(); }); });
+      Array.prototype.forEach.call(sp.querySelectorAll("button"), function (bt) { bt.addEventListener("click", function (e) { e.stopPropagation(); var v = clamp(Math.round(T("maxSpeed") + (+bt.dataset.s)), 70, 400); if (env.tuneSet) env.tuneSet("kt.maxSpeed", v); speedUI(); }); });
       var b = $("ktDrift"), pid = null;
       b.addEventListener("pointerdown", function (e) { e.preventDefault(); e.stopPropagation(); pid = e.pointerId; try { b.setPointerCapture(pid); } catch (x) {} b.classList.add("dn"); driftHold = true; });
       var up = function (e) { if (e.pointerId !== pid) return; pid = null; b.classList.remove("dn"); driftHold = false; }; b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("lostpointercapture", up);
