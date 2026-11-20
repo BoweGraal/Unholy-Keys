@@ -757,6 +757,14 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.57.1 - Drift steering tightened
+
+Once a drift has landed, the stick can now only change the turn by 15% (was 35%), and that steering builds up over about two-thirds of a second instead of instantly. Land at a bad angle and you'll have to let go and recover, rather than steering out of it.
+
+Two new Tuning lab sliders under Mars Rally if you want to adjust it: **Drift steering** (how much, default 0.15) and **Drift steering speed** (how fast it builds, default 1.5/s).
+
+**Test it:** practice a Mars Rally, land a drift too sharp for a corner, and try to steer it wider: you shouldn't make the turn.
+
 ## v1.57.0 - Stage button, characters face the way they walk, audience screen trimmed
 
 **Performer jam screen**

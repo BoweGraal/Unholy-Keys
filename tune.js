@@ -89,6 +89,8 @@ var TUNE=(function(){
     V("kt.hop","Drift hop time",0.3,0.1,0.8,0.02,"How long the kart is in the air after you press DRIFT.","s"),
     V("kt.hopTurn","Hop swing speed",7,2,14,0.5,"How fast you can swing the kart round while it's in the air.","rad/s"),
     V("kt.driftK","Drift tightness",2.2,0.8,4,0.1,"How tight the locked drift turns for the angle you land at.",""),
+    V("kt.driftTrim","Drift steering",0.15,0,0.6,0.01,"How much the stick can tighten or widen a drift after you land it (0.15 = 15%). Lower means the landing angle matters more.",""),
+    V("kt.trimRate","Drift steering speed",1.5,0.3,6,0.1,"How quickly that steering builds up. Lower means you can't rescue a bad landing quickly.","/s"),
     V("kt.miniT","Blue spark charge",0.8,0.3,3,0.1,"Seconds of drifting for blue sparks (mini-turbo).","s"),
     V("kt.turboT","Orange spark charge",1.6,0.6,5,0.1,"Seconds of drifting for orange sparks (super turbo).","s"),
     V("kt.ultraT","Purple spark charge",2.6,1,7,0.1,"Seconds of drifting for purple sparks (ultra turbo).","s"),
