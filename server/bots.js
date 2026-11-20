@@ -189,7 +189,7 @@ module.exports = function(api) {
     if (now < k.pop) { b.kf = 0; b.kh = 0; return; }
     b.kf = 1; var racing = now >= k.go; if (!racing) dt = 0;
     var spd = racing ? KG.DEF.maxSpeed * k.sp : 0; k.d += spd * dt; k.lat += (Math.sin(now / 900 + k.ph) * tr.hw * 0.5 - k.lat) * Math.min(1, dt * 2);
-    b.kh = Math.round(Math.min(1, spd / (KG.DEF.maxSpeed * 1.45)) * 60);
+    var pa = KG.pointAt(tr, k.d, 0).a; b.kh = ((Math.round(pa / (Math.PI / 8)) % 16) + 16) % 16;
     if (now - k.posAt > 120) { k.posAt = now; var p = KG.pointAt(tr, k.d, k.lat), e = KG.enc(p.x, p.y); b.x = +e[0].toFixed(4); b.y = +e[1].toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
   }
   /* a groove: arms and legs swinging on the beat, in this bot's own style (sent about five times a second) */

@@ -660,3 +660,14 @@ Free dance (all in the free dance panel).
 ## v1.52.2 - Bigger character on the join screen
 - Phones: the character preview now sits on top, about twice as big, with the options underneath. Computers: the preview box is bigger too.
 - Check: open the venue on a phone and confirm the character fills the box above the Skin / Hair / Top options.
+
+## v1.53.0 - Mars Rally: real karts, stick throttle, hop drift
+- **Karts**: a pixel-art kart sprite sheet with 16 turning angles (built from 3D boxes, shaded and outlined), in each player's colour, with your character sitting in the cockpit.
+- **Stick = speed and direction**: push the way you want to go, further is faster. Pull the opposite way to brake; keep holding and you reverse. No GAS or BRAKE buttons any more, so there's nothing to juggle with DRIFT.
+- **Drift**: tap DRIFT (Space / Shift) and the kart hops. While it's in the air, swing it into the turn with the stick. The angle you land at locks the turn; left / right trims it a little. Keep holding DRIFT to charge sparks (blue, orange, purple) and let go for the matching boost. Land at a bad angle and you'll have to let go early to make the corner.
+- **Effects**: animated drift sparks at the back wheels, exhaust flames and embers while boosting, dust when you land.
+- **Camera**: the intro now only zooms out to about twice the dance floor distance, and the race stays at that distance.
+- **Rocket start**: push the stick when the 2 lights up and keep it pushed at GO.
+- Tuning lab Mars Rally group rebuilt for the new controls (hop time, hop swing speed, drift tightness, spark charge times, three turbo lengths, reverse speed).
+- Server change: **redeploy Render** (bots now send which way their kart faces).
+- Check: practice > Mars Rally. Drive with the stick only. At a corner tap and hold DRIFT, swing the stick into the corner while it's in the air, hold through the turn until the sparks go orange, let go.
