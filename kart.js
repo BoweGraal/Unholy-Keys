@@ -651,10 +651,22 @@
       /* where everyone is, smoothed between updates, and how far round they've got */
       var seen = {}, ks = [];
       (o.racers || []).forEach(function (r) {
-        seen[r.id] = 1; var d = OV.disp[r.id], a = ((r.h || 0) % 16) * STEP16;
-        if (!d || Math.hypot(r.x - d.x, r.y - d.y) > 240) d = OV.disp[r.id] = { x: r.x, y: r.y };
-        var kk = 1 - Math.exp(-dt * 10); d.x += (r.x - d.x) * kk; d.y += (r.y - d.y) * kk;
-        var p = OV.prog[r.id]; if (!p) { p = OV.prog[r.id] = new Prog(tr); p.reset(r.x, r.y); } else p.update(r.x, r.y);
+        seen[r.id] = 1; var a = ((r.h || 0) % 16) * STEP16;
+        var p = OV.prog[r.id], pr;
+        /* a big jump (their first racing position, or a respawn): find them again from scratch, keeping the laps they'd done */
+        if (!p || Math.hypot(r.x - p.lx, r.y - p.ly) > 200) { var laps = p ? Math.floor(p.acc / tr.L + 0.5) * tr.L : 0; p = OV.prog[r.id] = new Prog(tr); pr = p.reset(r.x, r.y); if (laps > 0) p.acc += laps; if (OV.disp[r.id]) delete OV.disp[r.id]; }
+        else pr = p.update(r.x, r.y);
+        p.lx = r.x; p.ly = r.y;
+        /* smoothed ALONG the road (distance round + sideways), with the speed carried between updates,
+           so karts follow the bends instead of cutting straight across them */
+        var d = OV.disp[r.id], lat = clamp(pr.lat, -PZ.hy, PZ.hy);
+        if (!d) d = OV.disp[r.id] = { acc: p.acc, lat: lat, tAcc: p.acc, at: now, v: 0 };
+        if (p.acc !== d.tAcc) { var gap = (now - d.at) / 1000; if (gap > 0.02) d.v = clamp((p.acc - d.tAcc) / gap, -50, 600); d.tAcc = p.acc; d.at = now; }
+        var want = d.tAcc + d.v * Math.min(0.3, (now - d.at) / 1000);
+        if (Math.abs(want - d.acc) > 300) d.acc = want; else d.acc += (want - d.acc) * (1 - Math.exp(-dt * 14));
+        d.lat += (lat - d.lat) * (1 - Math.exp(-dt * 8));
+        var wp = Math.abs(lat) > tr.hw + 10 ? { x: r.x, y: r.y } : pointAt(tr, d.acc, d.lat);   /* out on the dance floor's wide bits: just where they are */
+        d.x = wp.x; d.y = wp.y;
         var t = r.t || 0;
         ks.push({ id: r.id, x: d.x, y: d.y, a: a, v: { name: r.name, color: r.color, look: r.look }, me: false, turn: 0, air: ((r.h || 0) % 32) >= 16, boost: t === 2 ? 1 : 0, drifting: t === 1 || t === 3 || t === 4, lvl: t === 3 ? 1 : t === 4 ? 2 : 0, acc: p.acc });
       });
@@ -669,10 +681,20 @@
         if (m) { var by = sc[1] - 46 * ksz; ctx.save(); ctx.fillStyle = m; ctx.strokeStyle = "rgba(0,0,0,.8)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sc[0], by, 11, 0, 6.3); ctx.fill(); ctx.stroke();
           ctx.fillStyle = "#1a1200"; ctx.font = "900 13px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String(k.place), sc[0], by + 1); ctx.restore(); }
       });
-      /* you, playing on your UFO in the corner */
-      var ux = Math.max(120, Math.min(pl * 0.62, W * 0.12)), uy = Math.max(190, H * 0.3) + Math.sin(now / 420) * 4, us = Math.max(0.8, Math.min(1.3, H / 700));
-      ufoAt(ctx, ux, uy + 52 * us, now, us);
-      if (o.perf) o.perf(ctx, ux, uy, 2.6 * us);
+      /* you, playing on your UFO in the corner, with the song's video on a little Jumbotron behind you when there is one */
+      var ux = Math.max(120, Math.min(pl * 0.62, W * 0.12)), uy0 = Math.max(190, H * 0.3), uy = uy0 + Math.sin(now / 420) * 4, us = Math.max(0.8, Math.min(1.3, H / 700));
+      if (o.jumbo) {
+        var jw = Math.round(Math.min(300, Math.max(200, pl * 1.15))), jh = Math.round(jw * 9 / 16), jx = Math.round(Math.max(12, ux - jw / 2)), jy = Math.round(uy0 - 30 * us - jh);
+        if (jy < 62) jy = 62;
+        OV.jt = { x: jx, y: jy, w: jw, h: jh };
+        ctx.save(); ctx.fillStyle = "#3a3f58"; ctx.fillRect(jx - 6, jy - 6, jw + 12, jh + 12); ctx.fillStyle = "#000"; ctx.fillRect(jx, jy, jw, jh);
+        ctx.fillStyle = "#6b7396"; ctx.fillRect(ux - 3, jy + jh + 6, 6, uy0 - jy - jh + 30 * us);              /* the mast down to the UFO */
+        for (var li = 0; li < 8; li++) { ctx.fillStyle = (Math.floor(now / 200) + li) % 2 ? "#ff3dd8" : "#3df2ff"; ctx.fillRect(jx - 4 + li * (jw + 4) / 7, jy - 5, 4, 3); }
+        ctx.restore();
+      } else OV.jt = null;
+      var fc = o.front || ctx;
+      ufoAt(fc, ux, uy + 52 * us, now, us);
+      if (o.perf) o.perf(fc, ux, uy, 2.6 * us);
       /* the standings */
       var px = W - pr + 14, py = pt + 6, rw = pr - 28;
       ctx.save(); ctx.fillStyle = "rgba(8,6,20,.82)"; ctx.strokeStyle = "rgba(61,242,255,.45)"; ctx.lineWidth = 1.5;
@@ -685,6 +707,7 @@
         ctx.textAlign = "left"; ctx.font = (i < 3 ? "800 14px" : "600 13px") + " system-ui"; ctx.fillStyle = m2 || "#ddd"; var nm = String(r.name || "?"); while (nm.length > 3 && ctx.measureText(nm).width > rw - 50) nm = nm.slice(0, -1); ctx.fillText(nm, px + 40, yy); }
       ctx.restore();
     } finally { tr = S[0]; PZ = S[1]; BX0 = S[2]; BY0 = S[3]; BWW = S[4]; BHH = S[5]; Q = S[6]; ROADP = S[7]; MASK = S[8]; cam = S[9]; VW = S[10]; VH = S[11]; env = S[12]; }
+    out.jt = OV.jt;
     return out;
   };
   K.bind = function (e) { env = e; };

@@ -757,6 +757,16 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.56.6 - Race view fixes
+
+- Your character no longer disappears from the UFO when you play a note.
+- Karts stay on the road: between position updates they now glide along the track instead of cutting straight across bends.
+- The 1/2/3 order is right from the start (a kart's first position before it reached the grid used to confuse the lap counter).
+- With Stage view on, the big Jumbotron and the stage copy of you no longer draw over the race.
+- If the song has a video, it plays on a little Jumbotron behind you in the top left.
+
+**Test it:** a Mars Rally round with a YouTube or video song, Stage view on. Play notes the whole time; watch karts round the hairpins; check the video sits behind you on the UFO.
+
 ## v1.56.5 - Performer sees the Mars Rally race
 
 During a Mars Rally round, jam mode switches to a race view: the whole track from above, with you playing on your UFO in the top left. Every racer's kart is on the track in real time, the top three have gold, silver and bronze rings with a 1/2/3 badge over their kart, and a standings list on the right shows everyone in order plus the leader's lap. It goes back to your normal view when the round ends.

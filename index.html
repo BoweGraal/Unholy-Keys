@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.56.5"></script>
-<script src="art.js?v=1.56.5"></script>
-<script src="instruments.js?v=1.56.5"></script>
-<script src="kart.js?v=1.56.5"></script>
+<script src="gfx.js?v=1.56.6"></script>
+<script src="art.js?v=1.56.6"></script>
+<script src="instruments.js?v=1.56.6"></script>
+<script src="kart.js?v=1.56.6"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -159,7 +159,13 @@ body.jset #app.jx #side-name{display:none}
 #jcv{position:absolute;top:0;left:0;pointer-events:none;opacity:0.55}
 /* jam stage view: the venue fills the screen; the video sits on the Jumbotron (placed by JAMSTAGE) */
 #jRace{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;image-rendering:pixelated}
-#jm.race #jRace{display:block}
+#jm.race #jRace,#jm.race #jRaceTop{display:block}
+#jRaceTop{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:none;image-rendering:pixelated}
+#jm.race #jmV{z-index:6!important;transition:none}
+/* racing: track (5) < the song's video on the little Jumbotron (6) < you on your UFO (7) < the toolbar and the rest of the jam screen (8) */
+#jm.race #jmR{z-index:8}
+#jm.race #jcv,#jm.race #jStage,#jm.race #jFront{display:none!important}
+#jm.race #jmV iframe,#jm.race #jmV video{opacity:1!important}
 #jStage{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;image-rendering:pixelated}
 #jm.stage #jStage{display:block}
 /* stage view: the performer (and any section players) drawn on a layer above the video, so you stand in front of the Jumbotron */
@@ -763,8 +769,8 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="jm">
-  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
-  <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><canvas id="jRace"></canvas><div id="jnd"></div>
+  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><canvas id="jRace"></canvas><canvas id="jRaceTop"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
     <button id="jStageBtn" title="Stage view: your venue, with the video on a Jumbotron">&#127967; Stage</button>
     <button id="jSongBtn" title="Start a song: pick it (your music, a video, or YouTube), pick the game, then start">&#127925; Start song</button>
     <div id="lsBar"><span class="ic" id="lsIc">&#127925;</span><div class="tt"><b id="lsTitle"></b><span id="lsSub"></span><div class="pg"><i id="lsPg"></i></div></div><button id="lsRec" title="Record show">&#9210;</button><button id="lsSaved" title="This song has a saved show, playing back now. Click to delete it" style="display:none">&#9654; Show &#10005;</button><button id="lsPause" title="Pause / resume (P)">&#10074;&#10074;</button><button id="lsEnd" title="End the song (and the round)">&#9632; End</button></div>
@@ -4276,7 +4282,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.56.5",SERVER_VERSION="";
+var PAGE_VERSION="1.56.6",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4961,7 +4967,7 @@ var JAMSTAGE=(function(){
     if(fc){if(fc.width!==cv.width||fc.height!==cv.height){fc.width=cv.width;fc.height=cv.height;}fg=fc.getContext("2d");fg.setTransform(1,0,0,1,0,0);fg.clearRect(0,0,fc.width,fc.height);fg.setTransform(dpr,0,0,dpr,0,0);fg.imageSmoothingEnabled=false;}
     drawVenueTo(g,W,H,{stage:true,jt:jt,video:vid,front:vid&&k>0.02?fg:null});
     /* the video element sits exactly on the Jumbotron's screen */
-    var v=$("jmV");
+    var v=$("jm").classList.contains("race")?null:$("jmV");
     if(v){var key=jt.x+","+jt.y+","+jt.w+","+jt.h+","+(vid&&k>0.02);
       if(key!==last){last=key;v.style.left=jt.x+"px";v.style.top=jt.y+"px";v.style.width=jt.w+"px";v.style.height=jt.h+"px";v.style.right="auto";v.style.bottom="auto";v.style.visibility=vid&&k>0.02?"":"hidden";}}
     raf=requestAnimationFrame(frame);
@@ -4970,14 +4976,19 @@ var JAMSTAGE=(function(){
     Array.prototype.forEach.call(document.querySelectorAll("#jamViewBtns button"),function(x){x.onclick=function(){set(x.getAttribute("data-jv")==="stage");};});
     setInterval(apply,500);}
   window.ukJamStage=function(){return{on:on,active:!!($("jm")&&$("jm").classList.contains("stage")),k:Math.round(k*100)/100,video:videoOn()};};
-  return{init:init,set:set,apply:apply,get on(){return on;}};
+  return{init:init,set:set,apply:apply,get on(){return on;},videoOn:videoOn,forget:function(){last="";}};
 })();
 /* Mars Rally: while a race is on, you see the whole track from your UFO, everyone's kart on it and the top three picked out */
 var RACEVIEW=(function(){
-  var raf=0,cv=null,last=[],act=false,force=null,trk=null,trKey="";
+  var raf=0,cv=null,cvT=null,last=[],act=false,force=null,trk=null,trKey="",vkey="";
   function $(id){return document.getElementById(id);}
   function racing(){if(force)return true;var c=typeof ROUNDS!=="undefined"&&ROUNDS.current;return !!(jamOn&&liveOn&&window.KART&&KART.overview&&c&&c.mode==="kart"&&(c.phase==="countdown"||c.phase==="play"));}
-  function apply(){var a=racing(),jm=$("jm");if(!jm)return;if(a!==act){act=a;jm.classList.toggle("race",a);}if(a&&!raf)raf=requestAnimationFrame(frame);}
+  /* the song's video sits on the little Jumbotron behind you; put it back where it was afterwards */
+  function placeVideo(jt,vid){var v=$("jmV");if(!v)return;var k=jt&&vid?jt.x+","+jt.y+","+jt.w+","+jt.h:"off";if(k===vkey)return;vkey=k;
+    if(jt&&vid){v.style.left=jt.x+"px";v.style.top=jt.y+"px";v.style.width=jt.w+"px";v.style.height=jt.h+"px";v.style.right="auto";v.style.bottom="auto";v.style.visibility="";}
+    else v.style.visibility="hidden";}
+  function unplace(){var v=$("jmV");vkey="";if(!v)return;v.style.left=v.style.width=v.style.right=v.style.top=v.style.bottom=v.style.height="";v.style.visibility="";JAMSTAGE.forget();}
+  function apply(){var a=racing(),jm=$("jm");if(!jm)return;if(a!==act){act=a;jm.classList.toggle("race",a);if(!a)unplace();}if(a&&!raf)raf=requestAnimationFrame(frame);}
   function avatar(x,y,v,isMe,sc,pose,noName,dir){ART.drawChar(cv.getContext("2d"),x,y,sc,v.look||ART.looks.fromColor(v.color||"#888888",1),{armL:pose[0],armR:pose[1],legL:pose[2],legR:pose[3],dir:dir|0});}
   function frame(){
     raf=0;if(!racing()){apply();return;}
@@ -4985,11 +4996,15 @@ var RACEVIEW=(function(){
     var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
     if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
     var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
-    var rs=force?force():[];if(!force)Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p.sk||!p.sk.f)return;var w=KART.geo.dec(p.x,p.y);rs.push({id:id,name:p.name,color:p.color,look:p.look,x:w[0],y:w[1],h:p.sk.h,t:p.sk.t});});
+    if(!cvT)cvT=$("jRaceTop");if(cvT.width!==cv.width||cvT.height!==cv.height){cvT.width=cv.width;cvT.height=cv.height;}
+    var gt=cvT.getContext("2d");gt.setTransform(1,0,0,1,0,0);gt.clearRect(0,0,cvT.width,cvT.height);gt.setTransform(dpr,0,0,dpr,0,0);gt.imageSmoothingEnabled=false;
+    var vid=JAMSTAGE.videoOn();
+    var rs=typeof force==="function"?force():[];if(typeof force!=="function")Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p.sk||!p.sk.f)return;var w=KART.geo.dec(p.x,p.y);rs.push({id:id,name:p.name,color:p.color,look:p.look,x:w[0],y:w[1],h:p.sk.h,t:p.sk.t});});
     var c=ROUNDS.current||{n:0,title:"test"},rk=c.n+":"+c.title;
     if(rk!==trKey){trKey=rk;trk=null;try{trk=JSON.parse(localStorage.getItem("uk_track")||"null");}catch(e){}}   /* the track that went out with this round */
-    last=KART.overview(g,W,H,{track:trk,round:rk,racers:rs,avatar:avatar,beat:function(){return typeof STAGEFX!=="undefined"&&STAGEFX.beat?STAGEFX.beat():(performance.now()%500)/500;},
-      perf:function(ctx,x,y,s){perfDraw(ctx,x,y,s,performance.now(),null,null,0,true);}});
+    last=KART.overview(g,W,H,{front:gt,jumbo:vid,track:trk,round:rk,racers:rs,avatar:avatar,beat:function(){return typeof STAGEFX!=="undefined"&&STAGEFX.beat?STAGEFX.beat():(performance.now()%500)/500;},
+      perf:function(ctx,x,y,s){perfDraw(ctx,x,y,s,Date.now(),null,null,0,true);}});
+    placeVideo(last.jt,vid);
     raf=requestAnimationFrame(frame);
   }
   window.ukRaceView=function(){return{on:act,standings:last};};
