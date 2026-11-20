@@ -9,9 +9,9 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.56.2"></script>
-<script src="art.js?v=1.56.2"></script>
-<script src="instruments.js?v=1.56.2"></script>
+<script src="gfx.js?v=1.56.4"></script>
+<script src="art.js?v=1.56.4"></script>
+<script src="instruments.js?v=1.56.4"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -227,6 +227,9 @@ body.jset #app.jx #side-name{display:none}
 #lsBar .pg{height:3px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}#lsBar .pg i{display:block;height:100%;width:0;background:linear-gradient(90deg,#D354A0,#7F77DD)}
 #lsBar button{font:700 13px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 12px;cursor:pointer}
 #lsBar #lsEnd{background:rgba(224,80,80,.25);border-color:rgba(224,80,80,.6)}
+#jLiveBtn{position:absolute;top:58px;right:395px;z-index:10;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#D354A0,#FF4444);border:none;border-radius:var(--r);color:#fff;box-shadow:0 2px 12px rgba(255,68,68,.35)}
+#jLiveBtn.on{background:rgba(255,68,68,.14);border:1px solid #FF4444;color:#ff8a8a;animation:jLivePulse 1.6s ease-in-out infinite}
+@keyframes jLivePulse{50%{box-shadow:0 0 16px rgba(255,68,68,.7)}}
 #jStageBtn{position:absolute;top:20px;right:505px;z-index:10;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(127,119,221,.14);border:1px solid rgba(127,119,221,.45);border-radius:var(--r);color:#cfc9ff}
 #jFsBtn{position:absolute;top:20px;right:610px;z-index:10;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);color:#ddd}
 #jFsBtn:hover{border-color:var(--pk);color:#fff}
@@ -779,6 +782,7 @@ body.jset .nav-item.jam-only{display:flex}
       <div class="note" id="lsNote"></div>
       <button id="lsStart" disabled>&#9654; Start</button>
     </div></div>
+    <button id="jLiveBtn" title="Go live: open a room so your audience can join">&#128308; Go live</button>
     <button id="jHangBtn" title="Hang out between songs: walk the floor with the arrows or WASD (or click where to go), Enter to talk, Esc to go back on stage">&#128694; Hang out</button>
     <div id="jHangBar"><input id="jHangSay" maxlength="200" autocomplete="off" placeholder="Say something to the room… (Enter)"><button id="jHangSend">Say</button><span>Arrows / WASD or click to walk · Esc back to the stage</span></div>
     <button id="jFsBtn" title="Fullscreen (F11)">&#9974; Fullscreen</button>
@@ -4173,6 +4177,7 @@ function perfLookStr(){return ART.looks.pack(perfLook);}
   });
   el.addEventListener("keydown",function(e){if(e.key==="Enter")el.blur();});
 })();
+var LIVERC={room:null,key:null,until:0,n:0,t:0};   /* reconnecting after a blip */
 function liveSend(msg){if(liveOn&&liveWs&&liveWs.readyState===1)try{liveWs.send(JSON.stringify(msg));}catch(e){}}
 function goLive(){
   if(liveOn){endLive();return;}
@@ -4192,8 +4197,31 @@ function goLive(){
   liveWs.onopen=function(){
     liveWs.send(JSON.stringify({type:"create-room",name:stageName(),look:perfLookStr()}));
   };
-  liveWs.onmessage=function(e){
+  /* a dropped connection mid-show: keep the show going and reconnect to the same room (the server holds it for a minute) */
+  function liveReconnect(){
+    if(!liveOn)return;liveWs=null;
+    if(!LIVERC.until){LIVERC.until=Date.now()+55000;showJamToast("📡 Connection blip: reconnecting…","#F5C518",3000);}
+    document.getElementById("bLive").textContent="Reconnecting";
+    if(Date.now()>LIVERC.until){LIVERC.until=0;endLive();showJamToast("Lost the connection: the show has ended","#E8505B",4000);return;}
+    clearTimeout(LIVERC.t);LIVERC.t=setTimeout(function(){
+      if(!liveOn||liveWs)return;var w;try{w=new WebSocket(LIVE_URL);}catch(e){liveReconnect();return;}
+      w.onopen=function(){liveWs=w;w.send(JSON.stringify({type:"resume-room",room:LIVERC.room,key:LIVERC.key}));};
+      w.onmessage=liveMsg;
+      w.onclose=function(){if(liveWs===w||!liveWs){liveWs=null;liveReconnect();}};
+      w.onerror=function(){};
+    },LIVERC.n++?2000:600);
+  }
+  function liveMsg(e){
     var msg;try{msg=JSON.parse(e.data);}catch(x){return;}
+    if(msg.type==="resume-failed"){LIVERC.until=0;endLive();showJamToast("Couldn't get back into the room: the show has ended","#E8505B",4000);return;}
+    if(msg.type==="room-resumed"){LIVERC.until=0;LIVERC.n=0;
+      document.getElementById("bLive").textContent="LIVE";audReset();
+      liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
+      var vm2=videoMsg();if(vm2)liveSend(vm2);STAGEFX.resend();STREAM.announce();
+      showJamToast("📡 Reconnected: the show carries on","#3CCB8A",2500);
+      liveWs.onclose=function(){if(liveOn)liveReconnect();};
+      return;}
+    if(msg.type==="room-created"){LIVERC.room=msg.room;LIVERC.key=msg.key||null;LIVERC.until=0;LIVERC.n=0;}
     if(msg.type==="room-created"){SRV.reported(msg.host,msg.hostName);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
       liveOn=true;
       document.getElementById("livePnl").style.display="block";
@@ -4216,27 +4244,36 @@ function goLive(){
     if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
     if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();}
     if(msg.type==="bots-info")BOTFILL.info(msg);
-  };
-  liveWs.onclose=function(){if(liveOn)endLive();else liveFail();};
+  }
+  liveWs.onmessage=liveMsg;
+  liveWs.onclose=function(){if(liveOn&&LIVERC.key)liveReconnect();else if(liveOn)endLive();else liveFail();};
   liveWs.onerror=function(){liveFail();};
 }
 function endLive(){
+  clearTimeout(LIVERC.t);LIVERC.until=0;LIVERC.key=null;
   STREAM.stop();
   liveOn=false;setTimeout(paintAudienceLink,0);
   ROUNDS.reset();
-  if(liveWs)try{liveWs.close();}catch(e){}
+  if(liveWs){try{if(liveWs.readyState===1)liveWs.send('{"type":"end-room"}');}catch(e){}liveWs.onclose=null;try{liveWs.close();}catch(e){}}   /* tell the server it's on purpose, so the audience isn't told "reconnecting" */
   liveWs=null;
   document.getElementById("livePnl").style.display="none";
   document.getElementById("bLive").textContent="Live";
   document.getElementById("bLive").style.animation="";
 }
 document.getElementById("bLive").onclick=function(){goLive();};
+/* the same Live button in jam mode (the main one is hidden there); it mirrors the main button's state */
+(function(){var jb=document.getElementById("jLiveBtn"),mb=document.getElementById("bLive");
+  function sync(){var t=mb.textContent.trim(),on=liveOn||t==="Reconnecting";jb.classList.toggle("on",on);
+    jb.innerHTML=t==="LIVE"?"&#128308; LIVE":t==="Live"?"&#128308; Go live":t==="Reconnecting"?"&#128225; Reconnecting…":t;
+    jb.title=on?"You're live. Click to end the show":"Go live: open a room so your audience can join";}
+  jb.onclick=function(){if(liveOn&&!confirm("End the live show for everyone?"))return;goLive();};
+  new MutationObserver(sync).observe(mb,{childList:true,characterData:true,subtree:true});sync();})();
 document.getElementById("liveStop").onclick=function(){endLive();};
 
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.56.2",SERVER_VERSION="";
+var PAGE_VERSION="1.56.4",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}

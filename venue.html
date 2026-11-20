@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.56.2"></script>
-<script src="gfx.js?v=1.56.2"></script>
-<script src="art.js?v=1.56.2"></script>
-<script src="instruments.js?v=1.56.2"></script>
-<script src="kart.js?v=1.56.2"></script>
+<script src="tune.js?v=1.56.4"></script>
+<script src="gfx.js?v=1.56.4"></script>
+<script src="art.js?v=1.56.4"></script>
+<script src="instruments.js?v=1.56.4"></script>
+<script src="kart.js?v=1.56.4"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -347,6 +347,8 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
   background:rgba(10,10,15,.6);padding:6px 12px;border-radius:var(--r)}
 #hudBR{position:fixed;bottom:210px;right:14px;z-index:15;font-size:11px;color:var(--tx3);
   background:rgba(10,10,15,.6);padding:6px 12px;border-radius:var(--r);text-align:right;line-height:1.5}
+#perfAway{display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:31;background:rgba(20,16,32,.92);border:2px solid #F5C518;color:#F5C518;font:bold 13px monospace;padding:6px 14px;border-radius:8px;pointer-events:none;animation:pawBlink 1s steps(2) infinite}
+@keyframes pawBlink{50%{opacity:.55}}
 #perfLeft{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);z-index:30;
   display:none;font-size:22px;font-weight:700;color:var(--pk);
   background:rgba(10,10,15,.8);padding:16px 32px;border-radius:12px;border:1px solid var(--pk)}
@@ -391,6 +393,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
   <div id="hudTL">Room: <span id="hudRoom">---</span></div>
   <div id="hudTR">Viewers: <span id="hudCount">0</span></div>
   <div id="hudBR"></div>
+  <div id="perfAway">📡 Performer reconnecting…</div>
   <div id="perfLeft">Performer has left the stage</div>
   <div id="moveHint">Arrows or WASD to walk &middot; Enter to talk &middot; Space to dance</div>
   <!-- free dance: dance buttons down both edges, the dance's own moves along the bottom, two control dots in the middle -->
@@ -1469,7 +1472,7 @@ function onFloorDown(e){
 /* ============================================================
    WEBSOCKET
    ============================================================ */
-var lastPosSend=0;
+var lastPosSend=0,RECON={n:0};
 function connectWS(){
   try{
     ws=new WebSocket(LIVE_URL);
@@ -1477,7 +1480,7 @@ function connectWS(){
     console.log("WS connect error",e);
     return;
   }
-  ws.onopen=function(){
+  ws.onopen=function(){RECON.n=0;
     wsReady=true;
     ws.send(JSON.stringify({type:"join-room",room:roomCode,name:myName,color:myColor,look:ART.looks.pack(myLook)}));
   };
@@ -1491,7 +1494,7 @@ function connectWS(){
   ws.onclose=function(){
     if(ws!==sock)return; /* an older socket closing must not restart a newer one */
     wsReady=false;
-    if(!stopReconnect)setTimeout(function(){if(!stopReconnect)connectWS();},3000);
+    RECON.n++;if(!stopReconnect)setTimeout(function(){if(!stopReconnect)connectWS();},RECON.n<3?1200:3000);   /* quick first retries after a blip */
   };
   ws.onerror=function(){wsReady=false;console.warn("[Unholy Keys] Could not reach the live relay server at "+LIVE_URL+" (retrying every 3s)");};
 }
@@ -1645,7 +1648,9 @@ function handleMsg(msg){
       viewers[msg.viewerId].bubbleTime=Date.now();
     }
   }
-  else if(t==="performer-left"){PH.on=false;
+  else if(t==="performer-away"){var pa=document.getElementById("perfAway");if(pa)pa.style.display="block";}   /* their connection blipped: they'll be back */
+  else if(t==="performer-back"){var pb=document.getElementById("perfAway");if(pb)pb.style.display="none";}
+  else if(t==="performer-left"){PH.on=false;var pz=document.getElementById("perfAway");if(pz)pz.style.display="none";
     document.getElementById("perfLeft").style.display="block";
     setTimeout(function(){document.getElementById("perfLeft").style.display="none";},5000);
     silenceNote();
@@ -5295,7 +5300,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.56.2",SERVER_VERSION="";
+var PAGE_VERSION="1.56.4",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5782,7 +5787,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.56.2"></script>
+<script src="lab.js?v=1.56.4"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

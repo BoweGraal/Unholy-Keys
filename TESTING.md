@@ -757,6 +757,30 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.56.4 - Go live from jam mode
+
+Jam mode now has its own **🔴 Go live** button (next to Hang out), so you don't have to leave jam mode to start a show. Once you're live it turns into a pulsing **🔴 LIVE** badge (or **📡 Reconnecting…** during a blip). Clicking it while live asks before ending the show.
+
+**Test it:** enter jam mode, click Go live, check the audience panel appears and the button reads LIVE. Click it again and pick Cancel: the show keeps going.
+
+## v1.56.3 - Reconnecting after a connection blip
+
+If the performer page loses its connection mid-show (Wi-Fi drop, phone switching networks, a server hiccup), the show no longer ends. The server holds the room, the audience, the round and the scores for a minute while the page reconnects on its own.
+
+**What you see:**
+- Performer: a yellow "Connection blip: reconnecting…" toast and the Live button reads **Reconnecting**. When it gets back in, a green "Reconnected" toast appears and the button reads **LIVE** again.
+- Audience: a blinking "📡 Performer reconnecting…" banner at the top, which disappears when the performer is back. Nobody gets kicked.
+- If the performer can't get back within a minute, the show ends as before ("Performer has left the stage").
+- Pressing **Stop** still ends the show straight away for everyone.
+
+**Test it:**
+1. Go live and join from a phone or a second tab.
+2. On the performer computer, turn Wi-Fi off for 5 to 10 seconds, then back on.
+3. The audience tab should show the banner, then clear it. The performer's audience list and the round carry on.
+4. Press Stop: the audience should see "Performer has left the stage" immediately.
+
+Needs a Render redeploy (server.js changed).
+
 ## v1.56.2 - Fix: live show dropping when a round starts
 - The bug: the server cut off any message over 16 KB. A round start carries the song's step chart (and for Mars Rally, your track), and for a longer song that's over 16 KB, so the server disconnected the performer the moment the round started. Everyone then lost the performer: no music, no round, and the performer page stopped seeing the audience.
 - The fix: the performer can now send up to 240 KB (everyone else stays capped at 16 KB). The server also logs when it drops an oversized message.
