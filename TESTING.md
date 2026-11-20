@@ -757,6 +757,23 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.57.0 - Stage button, characters face the way they walk, audience screen trimmed
+
+**Performer jam screen**
+- The **Stage** button in the bottom bar now opens the stage effects (lights, weather, fog, Jumbotron, banner, balloon drop, confetti, crowd moments) in a pop-up. Click outside or press Esc to close.
+- Switching between the classic jam view and the stage view moved to **Setup → Stage view: On/Off**.
+
+**Characters face the way they walk** (audience screen, and your Hang out view)
+- Walk right and they turn right, walk left and they turn left, walk up and you see their back, walk down and they face you.
+- When they stop, they keep facing the way they were going. Dancing turns them back to face the stage.
+
+**Audience screen**
+- The join screen shows only name, room code, character, Join and Dance practice. (This was meant to ship in v1.56.8 but missed the merge.)
+- Dance practice no longer shows the Lab / Graphics / Track buttons. They appear only when you open the Tuning lab from your Setup menu, or test-drive from the Track builder.
+- Tuning lab, Graphics lab and Track builder are in your Setup menu under **Creator tools**.
+
+**Test it:** in jam mode click Stage and change the lights; Setup → Stage view toggles the view. On the audience page or in Dance practice, walk in each direction and stop.
+
 ## v1.56.9 - Caps Lock no longer toggles chords
 
 Caps Lock does nothing in the game now. To use chord mode, open Setup → Play and click the **Chord mode** badge (it reads "Off -- click to turn on"); click it again to turn chords off.
@@ -772,6 +789,9 @@ Caps Lock does nothing in the game now. To use chord mode, open Setup → Play a
 
 **Audience screen**
 - The chat log is folded away by default; a **💬 Log** button next to the chat box opens it, with a count of new messages. The controls move down to use the space. It remembers if you leave it open.
+
+**Audience join screen**
+- Only what the audience needs: name, room code, character, Join, and Dance practice. The Tuning lab, Graphics lab and Track builder links moved to your Setup menu under **Creator tools** (they open in a new tab).
 
 **Characters**
 - Seen from behind, arms that reach forward now go behind the body instead of in front.
