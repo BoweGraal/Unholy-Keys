@@ -710,3 +710,13 @@ Free dance (all in the free dance panel).
 - **Drag to pose**: drag a hand or foot handle to swing that arm or leg; drag the square on the body to move the whole body (sideways and bounce).
 - **D pad**: moves the selected part one pixel per press (hold to repeat); ⟲ ⟳ turn it a little (for the body that's the tilt). Tap the middle of the D pad, or the 💪 / 🦵 / 🧍 buttons, to pick the part.
 - 👻 shows the original dance faintly behind, ↶ undoes, 🗑 clears the frame. Every change saves straight away and goes out in the share box as DANCE-JSON, same as before.
+
+## v1.54.6 - Graphics lab tabs, pixel editor tools
+- Top tabs are now **Stage & Lights / Animations / Pixel Editor**.
+- **No more automatic black border round your paint**: pixels you paint aren't outlined by the game; you draw any outline yourself.
+- **Erase works on the original picture** too (it used to only remove your own paint), including the original's black outline pixels, and on the instruments, keyboard and mic.
+- The Hole tool is gone (Erase does that now). New tools:
+  - **📏 Line**: drag from one end to the other; it stays dead straight.
+  - **〰️ Curve**: drag out a straight line, then drag anywhere on it to bend it (as many times as you like). **✓ Done** (or Enter) keeps it, **✕ Drop curve** throws it away.
+  - **⬠ Shapes**: pick a shape (rectangle, rounded, ellipse, triangles, diamond, pentagon, hexagon, four arrows, 4/5/6-point stars, heart, lightning) and drag out its box; it grows as you drag, like MS Paint. **◻ Outline / ◼ Filled** switches between the two.
+- **Right click = undo** on a computer (Ctrl+Z / Ctrl+Shift+Z work too). Right click also undoes in the full screen dance editor.
