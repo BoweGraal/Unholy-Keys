@@ -687,3 +687,6 @@ Free dance (all in the free dance panel).
 - The kart is 20% bigger and the driver sits lower, so they're in it rather than standing on it.
 - Driving away from you shows the back of the driver's head instead of their face.
 - Check: practice > Mars Rally, drive a full lap and watch your driver as the kart points left, right, up and down.
+
+## v1.54.2 - Track builder: Reset track
+- The old "Template" button is now an orange **↺ Reset track** button. It puts back the original Dance Floor Snake exactly (dots, width, boost pads, name), re-centres the view and saves it. Undo brings your version back.
