@@ -605,3 +605,6 @@ Free dance (all in the free dance panel).
 - On a phone (narrow screen or touch) the menu starts closed. On a computer it starts open. Tap Dance to open or close it.
 - Pressing **Start round** closes the menu. The button hides during a round and returns after.
 - The Tuning lab's Play button opens the menu if it needs a song picked first.
+
+## v1.49.2 - Graphics lab one tap away in practice mode
+- Practice mode now has a **🎨 Graphics** button under 🔧 Lab (top right). It opens the Graphics lab (stage lights, effects, assets and animation frames) in a new tab. Works on a phone.
