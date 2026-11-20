@@ -506,16 +506,13 @@
     var back = Math.sin(k.a) < 0;                          /* facing up the screen: the exhausts are in front of the kart */
     if (k.boost && !back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks - lift, k.a, ks, now, k.boost > 1); });
     ctx.drawImage(fr.under, bx, by, FW * ks, FH * ks);
-    var seatX = sc[0] + fr.seat[0] * ks, seatY = sc[1] + fr.seat[1] * ks - lift, as = s * 0.78, cy = seatY + 2 * as, neck = cy - 9 * as, tn = clamp(k.turn || 0, -1, 1), pose = [0.55 - tn * 0.25, -0.55 - tn * 0.25, 0.2, -0.2];
-    /* body: sunk down into the seat, only the chest and arms show above the cockpit */
-    ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, neck, 80 * s, seatY - neck - 0.5 * as); ctx.clip();
-    env.avatar(seatX, cy, k.v, k.me, as, pose, true); ctx.restore();
-    /* head: turned into the corner (slid over, narrower on the far side, tipped a touch) */
-    ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, neck - 40 * s, 80 * s, 40 * s); ctx.clip();
-    ctx.translate(seatX + tn * 1.6 * as, neck); ctx.rotate(tn * 0.12); ctx.scale(1 - 0.16 * Math.abs(tn), 1); ctx.translate(-seatX, -neck);
-    env.avatar(seatX, cy, k.v, k.me, as, pose, true); ctx.restore();
-    /* driving away from you: you see the back of their head */
-    if (Math.sin(k.a) < -0.38 && env.hairCol) { var hc = env.hairCol(k.v); ctx.fillStyle = hc; ctx.fillRect(Math.round(seatX - 5 * as), Math.round(cy - 15 * as), Math.round(10 * as), Math.round(6 * as)); ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(Math.round(seatX - 5 * as), Math.round(cy - 10 * as), Math.round(10 * as), Math.round(1 * as)); }
+    /* the driver faces the way the kart points: front, side, back or the other side (real turned views of their character) */
+    var q4 = ((Math.round(k.a / (Math.PI / 2)) % 4) + 4) % 4, dir = [1, 0, 3, 2][q4], side = dir === 1 || dir === 3, tn = clamp(k.turn || 0, -1, 1);
+    var seatX = sc[0] + fr.seat[0] * ks, seatY = sc[1] + fr.seat[1] * ks - lift, as = s * 0.78, cy = seatY + 2 * as, neck = cy - 9 * as;
+    var pose = side ? [-1.15 + tn * 0.2, -1.0 + tn * 0.2, 0.2, -0.2] : [0.55 - tn * 0.25, -0.55 - tn * 0.25, 0.2, -0.2];
+    /* sunk down into the seat: only the head, chest and arms show above the cockpit */
+    ctx.save(); ctx.beginPath(); ctx.rect(seatX - 40 * s, seatY - 60 * s, 80 * s, 60 * s - 0.5 * as); ctx.clip();
+    env.avatar(seatX, cy, k.v, k.me, as, pose, true, dir); ctx.restore();
     ctx.drawImage(fr.over, bx, by, FW * ks, FH * ks);
     if (k.boost && back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks - lift, k.a, ks, now, k.boost > 1); });
     if (k.lvl !== undefined && k.lvl >= 0 && k.drifting && !k.air) fr.rw.forEach(function (p, i) { spark(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks, ks, k.lvl, now, i); });

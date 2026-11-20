@@ -745,3 +745,9 @@ Free dance (all in the free dance panel).
 ## v1.55.3 - Your track is the base track
 - Mars Rally's built-in track (and the Track builder's ↺ Reset track) is now your Dance Floor Snake: 29 dots, 15 boost pads, about 41 s a lap flat out.
 - Anyone without their own saved track gets it. Server change: **redeploy Render** so the practice bots in live shows ride it too.
+## v1.56.0 - Characters can turn round (front, side, back, other side)
+- Every character now has four views: **front, facing right, back, facing left**. Every part has its side and back version: all 30 hair styles (long hair hangs down the back, ponytails and buns sit where they should), all 13 hats, glasses / beards / patches in profile, headphones and bandanas, every top (hoods hang at the back, the jersey has a number on the back, lab coats have tails), skirts, dresses and overall straps.
+- **Character maker** (join screen and the performer's character window): ⟲ ⟳ buttons on the preview, or drag sideways across it, to turn the character round.
+- **Mars Rally**: drivers face the way their kart points: you see their face coming towards you, their profile going sideways, and the back of their head driving away.
+- Pixel-editor paint still only shows on the front view for now.
+- Check: on the join screen tap ⟳ four times with a few different looks (try long hair, a ponytail, a hood, a cowboy hat).
