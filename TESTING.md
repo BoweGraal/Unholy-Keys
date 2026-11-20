@@ -652,3 +652,7 @@ Free dance (all in the free dance panel).
 - Tuning lab, Mars Rally group: new Intro speed (turn the intro down while testing), Rocket start length, Rail bounce, Turn speed. Auto gas is off by default.
 - Server change: **redeploy Render** (bots wait out the intro, then race).
 - Check: practice > Mars Rally > Start. Watch the intro (set Intro speed to 0.3 in the lab to test faster). Hold GAS from the 2 for the rocket start. Drive with the stick pointing round a corner and use DRIFT.
+
+## v1.52.1 - Stop old scripts being cached
+- Every page now loads its scripts with the version on the end (kart.js?v=1.52.1), so a phone can't keep running an old kart.js or art.js after an update.
+- Check: open the venue after a deploy and confirm there is no red "Out of date" line at the bottom and Mars Rally starts with the UFO intro.
