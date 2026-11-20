@@ -695,3 +695,10 @@ Free dance (all in the free dance panel).
 - **✍️ Redraw**: the current track fades to a faint ghost and you draw a brand new one over it with one finger, all the way round, then lift. Your line becomes dots (about one every 85 units), smoothed to take out finger wobble, starting where you started and running the way you drew. Boost pads that still sit on the new road are kept; the rest are dropped.
 - Press **✕ Cancel redraw** to back out, or Undo afterwards to get the old track back. Two fingers still zoom and move while redrawing.
 - Check: Track builder > Redraw > draw a loop over the ghost > lift > drag a few dots to tidy up > Test drive.
+
+## v1.54.4 - Pixel editor: Redraw
+- **✍️ Redraw** (side panel and the full screen bar): wipes the part you're editing to nothing and shows the original faintly underneath, so you draw it fresh over the top. Your new pixels are all that shows in the game.
+- **👻 Faint original** turns that faint copy on and off. The colour swatches show the original's colours while it's on, so you can pick them.
+- Works for every part: character parts (hair, hats, tops, arms...) and the instruments, keyboard and mic (for those the original drawing is skipped entirely once redrawn).
+- Undo brings the old picture back; Clear this layer goes back to the untouched original.
+- Check: Graphics lab > Assets > Pixel editor > pick a part > Redraw > draw over the faint copy > back to the venue and look at it on a character.

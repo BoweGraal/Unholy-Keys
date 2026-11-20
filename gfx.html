@@ -52,9 +52,9 @@ button{cursor:pointer}button.on{background:#7F77DD;border-color:#fff}button.go{b
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.54.3"></script>
-<script src="art.js?v=1.54.3"></script>
-<script src="instruments.js?v=1.54.3"></script>
+<script src="gfx.js?v=1.54.4"></script>
+<script src="art.js?v=1.54.4"></script>
+<script src="instruments.js?v=1.54.4"></script>
 <script>
 (function(){
 var $=function(id){return document.getElementById(id);};
@@ -207,7 +207,7 @@ function pxSelect(){
       var id=tg.getImageData(0,0,300,300).data,x0=999,y0=999,x1=-1,y1=-1,x,y;for(y=0;y<300;y++)for(x=0;x<300;x++)if(id[(y*300+x)*4+3]>0){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
       BB[bk]=x1<0?[-10,-10,10,10]:[x0-150,y0-150,x1-150,y1-150];}
     var b=BB[bk];sp={key:key,w:b[2]-b[0]+13,h:b[3]-b[1]+13,ax:-b[0]+6,ay:-b[1]+6,hole:false,draw:function(g2){d(g2,sp.ax,sp.ay);},sym:false,ref:p==="inst"?function(g2){ART.INST.draw(g2,sp.ax,sp.ay,1,AS.look,v,{midi:60,on:false,now:Date.now(),off:0,t0:0,n:8});}:null};}
-  PX.spec=sp;PX.map=JSON.parse(JSON.stringify(ART.paint.get(key)||{}));PX.undo=[];PX.redo=[];PX.base=document.createElement("canvas");PX.base.width=sp.w;PX.base.height=sp.h;PX.refc=document.createElement("canvas");PX.refc.width=sp.w;PX.refc.height=sp.h;PX.sig="";if(!sp.ref)PX.ref=false;
+  PX.spec=sp;PX.map=JSON.parse(JSON.stringify(ART.paint.get(key)||{}));PX.undo=[];PX.redo=[];PX.base=document.createElement("canvas");PX.base.width=sp.w;PX.base.height=sp.h;PX.refc=document.createElement("canvas");PX.refc.width=sp.w;PX.refc.height=sp.h;PX.sig="";if(!sp.ref)PX.ref=false;PX.ghostC=null;PX.ghostOn=!!(PX.map["!"]||Object.keys(PX.map).some(function(k){return PX.map[k]==="0";})&&Object.keys(PX.map).filter(function(k){return PX.map[k]==="0";}).length>30);
   if(PX.tool==="hole"&&!sp.hole)PX.tool="pen";
 }
 function pxFit(){
@@ -222,6 +222,7 @@ function drawPixel(now){
   var c=PX.cell,W=cv.width,H=cv.height,x,y;pxRender();
   g.clearRect(0,0,W,H);for(y=0;y<sp.h;y++)for(x=0;x<sp.w;x++){g.fillStyle=((x+y)&1)?"#241c4a":"#1c1640";g.fillRect(x*c,y*c,c,c);}
   g.imageSmoothingEnabled=false;
+  if(PX.ghostOn){if(!PX.ghostC)PX.ghostC=pxGhost();g.globalAlpha=0.38;g.drawImage(PX.ghostC,0,0,W,H);g.globalAlpha=1;}   /* redraw: the original, faint, to draw over */
   if(PX.ref&&sp.ref){var rg=PX.refc.getContext("2d");rg.clearRect(0,0,sp.w,sp.h);ART.paint.off(true);try{sp.ref(rg);}finally{ART.paint.off(false);}g.globalAlpha=0.38;g.drawImage(PX.refc,0,0,W,H);g.globalAlpha=1;}
   g.drawImage(PX.base,0,0,W,H);
   if(PX.grid&&c>=6){g.strokeStyle="rgba(255,255,255,.10)";g.lineWidth=1;g.beginPath();for(x=0;x<=sp.w;x++){g.moveTo(x*c+.5,0);g.lineTo(x*c+.5,H);}for(y=0;y<=sp.h;y++){g.moveTo(0,y*c+.5);g.lineTo(W,y*c+.5);}g.stroke();}
@@ -243,14 +244,21 @@ function pxFill(cx,cy){var sp=PX.spec;if(cx<0||cy<0||cx>=sp.w||cy>=sp.h)return;p
 /* shared controls: the side panel and the full screen bar both use these */
 function pxTool(t){PX.tool=t;pxStates();}
 function pxStates(){Array.prototype.forEach.call(document.querySelectorAll("[data-t]"),function(b){b.className=b.dataset.t===PX.tool?"on":"";});
-  Array.prototype.forEach.call(document.querySelectorAll("[data-px=ref]"),function(b){b.className=PX.ref?"on":"";});Array.prototype.forEach.call(document.querySelectorAll("[data-px=grid]"),function(b){b.className=PX.grid?"on":"";});Array.prototype.forEach.call(document.querySelectorAll("[data-px=mirror]"),function(b){b.className=PX.mirror?"on":"";});}
+  Array.prototype.forEach.call(document.querySelectorAll("[data-px=ref]"),function(b){b.className=PX.ref?"on":"";});Array.prototype.forEach.call(document.querySelectorAll("[data-px=ghost]"),function(b){b.className=PX.ghostOn?"on":"";});Array.prototype.forEach.call(document.querySelectorAll("[data-px=grid]"),function(b){b.className=PX.grid?"on":"";});Array.prototype.forEach.call(document.querySelectorAll("[data-px=mirror]"),function(b){b.className=PX.mirror?"on":"";});}
 function pxColor(h){PX.col=h;Array.prototype.forEach.call(document.querySelectorAll("input[data-col]"),function(i){i.value=h;});pxSwatches();palRender();}
 function zS(z){return Math.round(100*Math.log(z/0.4)/Math.LN10);}function sZ(v){return 0.4*Math.pow(10,v/100);}
 function pxZoom(z){PX.zoom=z;Array.prototype.forEach.call(document.querySelectorAll("input[data-zoom]"),function(i){i.value=zS(z);});}
 function pxUndo(){if(!PX.undo.length)return;PX.redo.push(JSON.stringify(PX.map));PX.map=JSON.parse(PX.undo.pop());pxCommit();pxSwatches();share();}
 function pxRedo(){if(!PX.redo.length)return;PX.undo.push(JSON.stringify(PX.map));PX.map=JSON.parse(PX.redo.pop());pxCommit();pxSwatches();share();}
-function pxClear(){if(!Object.keys(PX.map).length)return;pxSnap();PX.map={};pxCommit();pxSwatches();share();}
-function pxSwatches(){var els=document.querySelectorAll(".sw");if(!els.length||!PX.spec)return;pxRender();var sp=PX.spec,d=PX.base.getContext("2d").getImageData(0,0,sp.w,sp.h).data,cnt={},i;for(i=0;i<d.length;i+=4)if(d[i+3]>200){var h=hex([d[i],d[i+1],d[i+2]]);cnt[h]=(cnt[h]||0)+1;}
+/* redraw: the part as it was originally drawn (no edits) */
+function pxGhost(){var sp=PX.spec,c=document.createElement("canvas");c.width=sp.w;c.height=sp.h;var cg=c.getContext("2d");ART.paint.off(true);try{sp.draw(cg);}finally{ART.paint.off(false);}return c;}
+/* redraw: wipe the part to nothing and show the original faintly underneath, so you draw it fresh over the top */
+function pxRedraw(){var sp=PX.spec;pxSnap();var c=pxGhost();PX.ghostC=c;PX.ghostOn=true;var m={};
+  if(sp.hole){var d=c.getContext("2d").getImageData(0,0,sp.w,sp.h).data;for(var y=0;y<sp.h;y++)for(var x=0;x<sp.w;x++)if(d[(y*sp.w+x)*4+3]>0)m[(x-sp.ax)+","+(y-sp.ay)]="0";}
+  else m["!"]="1";
+  PX.map=m;if(PX.tool==="erase"||PX.tool==="hole")PX.tool="pen";pxCommit();pxSwatches();share();pxStates();}
+function pxClear(){if(!Object.keys(PX.map).length)return;pxSnap();PX.map={};PX.ghostOn=false;pxStates();pxCommit();pxSwatches();share();}
+function pxSwatches(){var els=document.querySelectorAll(".sw");if(!els.length||!PX.spec)return;pxRender();var sp=PX.spec,d=(PX.ghostOn?(PX.ghostC||(PX.ghostC=pxGhost())):PX.base).getContext("2d").getImageData(0,0,sp.w,sp.h).data,cnt={},i;for(i=0;i<d.length;i+=4)if(d[i+3]>200){var h=hex([d[i],d[i+1],d[i+2]]);cnt[h]=(cnt[h]||0)+1;}
   var list=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).slice(0,16);PX.picCols=list.slice();
   Array.prototype.forEach.call(els,function(el){el.textContent="";list.forEach(function(h){var e=document.createElement("i");e.style.background=h;e.className=h===PX.col.toLowerCase()?"on":"";e.onclick=function(){pxColor(h);if(PX.tool!=="pen"&&PX.tool!=="fill"){pxTool("pen");}};el.appendChild(e);});});}
 function pxToggle(k){PX[k]=!PX[k];pxStates();}
@@ -261,6 +269,8 @@ function pxBar(){
   var ex=mk("button","","✕");ex.title="Exit full screen";ex.onclick=function(){pxFull(false);};r1.appendChild(ex);
   TOOLS.forEach(function(t){if(t[0]==="hole"&&!sp.hole)return;var bt=mk("button","",t[2]);bt.dataset.t=t[0];bt.title=t[1];bt.onclick=function(){pxTool(t[0]);};r1.appendChild(bt);});
   if(sp.ref){var rb=mk("button","","👤");rb.title="Show the body for reference";rb.dataset.px="ref";rb.onclick=function(){pxToggle("ref");};r1.appendChild(rb);}
+  var rdb=mk("button","","✍️ Redraw");rdb.title="Wipe this part and draw it fresh over a faint copy";rdb.onclick=pxRedraw;r1.appendChild(rdb);
+  var gh=mk("button","","👻");gh.title="Show / hide the faint original";gh.dataset.px="ghost";gh.onclick=function(){pxToggle("ghostOn");};r1.appendChild(gh);
   var ci=document.createElement("input");ci.type="color";ci.value=PX.col;ci.dataset.col="1";ci.oninput=function(){PX.col=ci.value;if(PX.tool!=="pen"&&PX.tool!=="fill")pxTool("pen");pxColor(ci.value);};r2.appendChild(ci);
   var sw=mk("div","sw");r2.appendChild(sw);
   var zl=mk("label","","🔍 "),zi=document.createElement("input");zi.type="range";zi.min=0;zi.max=100;zi.step=1;zi.value=zS(PX.zoom);zi.dataset.zoom="1";zi.style.width="110px";zi.oninput=function(){pxZoom(sZ(+zi.value));};
@@ -317,7 +327,8 @@ function pixelPanel(body){
   if(sp.ref){var rb=mk("button","",PX.part==="inst"?"👤 Show performer":"👤 Show body");rb.dataset.px="ref";rb.onclick=function(){pxToggle("ref");};tg.appendChild(rb);}
   if(sp.sym){var mb=mk("button","","Mirror left/right");mb.dataset.px="mirror";mb.onclick=function(){pxToggle("mirror");};tg.appendChild(mb);}
   var un=mk("button","","↶ Undo");un.onclick=pxUndo;var re=mk("button","","↷ Redo");re.onclick=pxRedo;var cl=mk("button","","Clear this layer");cl.onclick=pxClear;
-  tg.appendChild(un);tg.appendChild(re);tg.appendChild(cl);body.appendChild(tg);
+  var rdb=mk("button","","✍️ Redraw");rdb.title="Wipe this part and draw it fresh over a faint copy of the original";rdb.onclick=pxRedraw;var gh=mk("button","","👻 Faint original");gh.dataset.px="ghost";gh.onclick=function(){pxToggle("ghostOn");};
+  tg.appendChild(un);tg.appendChild(re);tg.appendChild(cl);tg.appendChild(rdb);tg.appendChild(gh);body.appendChild(tg);
   if(PX.part==="armL"||PX.part==="armR"||PX.part==="legL"||PX.part==="legR"){var o=PX.part.slice(0,-1)+(PX.part.slice(-1)==="L"?"R":"L"),mr=mk("button","","Copy to the other side (mirrored)");mr.onclick=function(){var m2={},k;for(k in PX.map){var q=k.split(",");m2[(-1-(+q[0]))+","+q[1]]=PX.map[k];}ART.paint.set(o,m2);share();mr.textContent="Copied ✓";setTimeout(function(){mr.textContent="Copy to the other side (mirrored)";},1400);};body.appendChild(mr);}
   body.appendChild(mk("div","d","Layer: "+sp.key+" · "+sp.w+" by "+sp.h+" pixels. In the share box these go out as PIXELS-JSON."));
   pxStates();pxSwatches();
