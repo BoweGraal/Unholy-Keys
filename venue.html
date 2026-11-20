@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.54.0"></script>
-<script src="gfx.js?v=1.54.0"></script>
-<script src="art.js?v=1.54.0"></script>
-<script src="instruments.js?v=1.54.0"></script>
-<script src="kart.js?v=1.54.0"></script>
+<script src="tune.js?v=1.54.1"></script>
+<script src="gfx.js?v=1.54.1"></script>
+<script src="art.js?v=1.54.1"></script>
+<script src="instruments.js?v=1.54.1"></script>
+<script src="kart.js?v=1.54.1"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -3408,6 +3408,7 @@ KART.bind({
   tune:function(k){return TUNE.v(k);},
   beat:function(){return BEAT.phase(performance.now());},
   perfStage:function(){return window.__kartStage||null;},
+  hairCol:function(v){var L=v.look||lookOf(null,v.color,v.name);return ART.looks.colOf(L,"hair");},
   sendPos:function(x,y){sendPos(x,y);},
   pts:function(n){GAME.moshPts(n);},
   pose:function(p){GAME.moshPose(p);},
@@ -3415,6 +3416,7 @@ KART.bind({
     return{x:x,y:y};},
   avatar:function(x,y,v,isMe,sc,pose,noName){if(!v.look)v.look=lookOf(null,v.color,v.name);if(v.seed===undefined)v.seed=((v.name||"x").charCodeAt(0)||0)%7;drawAvatar(x,y,v.color,noName?"":v.name,sc,false,false,null,4,v.seed,isMe,pose,9999,v.look,null);}
 });
+window.ukKartSheet=function(z,turn){var c=document.createElement("canvas");c.width=1200;c.height=340;var old=ctx;ctx=c.getContext("2d");ctx.fillStyle="#161128";ctx.fillRect(0,0,1200,340);var me=viewers[myId]||{};var vv={name:"",color:"#E8963C",look:me.look,seed:1};try{for(var i=0;i<16;i++)KART.preview(ctx,70+(i%8)*145,110+Math.floor(i/8)*165,i*Math.PI/8,vv,z||2.6,turn||0);}finally{ctx=old;}return c.toDataURL();};
 window.ukKartTest=function(track,nbots,intro){if(intro!==undefined)window.__kartIntro=intro;var C=["#3CCB8A","#5FB4F0","#D354A0","#F5C518","#FF7A2B"];for(var i=0;i<(nbots||0);i++)viewers["bot"+i]={name:"Bot"+(i+1),color:C[i%5],x:0.5,y:0.5,tx:0.5,ty:0.5,dance:4,look:null};GAME.start("kart",{n:track|0});};
 var MOSH=(function(){
   var TUG_AT=800,TUG_MS=10000;                           /* the same as the server */
@@ -5291,7 +5293,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.54.0",SERVER_VERSION="";
+var PAGE_VERSION="1.54.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5778,7 +5780,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.54.0"></script>
+<script src="lab.js?v=1.54.1"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
