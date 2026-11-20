@@ -741,3 +741,7 @@ Free dance (all in the free dance panel).
 ## v1.55.2 - Performer page: character colour picker on top
 - The colour picker (skin, hair, top, bottoms) now opens in front of the "Your character on stage" window instead of behind it.
 - While that window or its colour picker is open, typing (like a hex colour) no longer plays notes or swaps the key (Shift used to pop up "alt key").
+
+## v1.55.3 - Your track is the base track
+- Mars Rally's built-in track (and the Track builder's ↺ Reset track) is now your Dance Floor Snake: 29 dots, 15 boost pads, about 41 s a lap flat out.
+- Anyone without their own saved track gets it. Server change: **redeploy Render** so the practice bots in live shows ride it too.

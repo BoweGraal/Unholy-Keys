@@ -20,9 +20,9 @@
   /* ================= geometry ================= */
   /* the template track (the Track builder starts from this): a snake down the floor and back up the left side.
      Control points go round in driving order; the first point is the start line, in the middle of the dance floor. */
-  var TEMPLATE = { name: "Dance Floor Snake", hw: 52, pads: [0.09, 0.33, 0.54, 0.77, 0.9],
-    pts: [[200, 90], [480, 85], [760, 90], [860, 95], [930, 170], [860, 250], [640, 250], [420, 250], [300, 255], [230, 330], [300, 410], [520, 410], [720, 410],
-          [860, 415], [930, 490], [860, 560], [600, 560], [300, 560], [140, 550], [90, 460], [90, 300], [100, 150], [140, 95]] };
+  var TEMPLATE = { name: "Dance Floor Snake", hw: 52,   /* Brian's design from the Track builder */
+    pads: [0.09,  0.33,  0.77,  0.9,  [0.3075,  29],  [0.3061,  -35],  [0.3837,  21],  0.423,  0.5751,  [0.4594,  34],  [0.489,  -38],  [0.5269,  33],  0.6217,  [0.6522,  18],  0.6847],
+    pts: [[200, 90], [445, 29], [576, -15], [782, 3], [1025, -148], [1179, -93], [1174, 60], [1002, 73], [766, 232], [608, 196], [420, 250], [295, 256], [214, 336], [298, 432], [534, 393], [696, 405], [850, 386], [1045, 302], [1257, 272], [1366, 507], [1214, 694], [881, 694], [495, 579], [300, 560], [140, 550], [90, 460], [90, 300], [100, 150], [140, 95]] };
   /* a track from the builder or the network: numbers checked and clamped, or null */
   var LIM0 = -4000, LIM1 = 5000, ENC0 = -4200, ENCS = 9400;
   function clean(d) {
