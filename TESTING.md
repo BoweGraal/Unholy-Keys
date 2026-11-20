@@ -756,3 +756,9 @@ Free dance (all in the free dance panel).
 - Top speed is now **260** by default (was 135), for everyone and for the bots. The practice Speed box and the Tuning lab now go up to 400.
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
+
+## v1.56.2 - Fix: live show dropping when a round starts
+- The bug: the server cut off any message over 16 KB. A round start carries the song's step chart (and for Mars Rally, your track), and for a longer song that's over 16 KB, so the server disconnected the performer the moment the round started. Everyone then lost the performer: no music, no round, and the performer page stopped seeing the audience.
+- The fix: the performer can now send up to 240 KB (everyone else stays capped at 16 KB). The server also logs when it drops an oversized message.
+- Server change: **redeploy Render** (this fix only works once the server is updated).
+- Check: go live, have someone join, start a round with a full-length song (try Mars Rally too). The round should count in and the music should play for them.
