@@ -726,3 +726,9 @@ Free dance (all in the free dance panel).
 - The long help text above the tools is gone.
 - On a computer the part opens zoomed in a bit more (scroll wheel still zooms).
 - The drawing area is now a light grey and white checker on every device, so the pixels stand out (the cursor square is pink).
+
+## v1.55.0 - Track builder: endless canvas, side boost pads
+- **Endless canvas**: dots can go anywhere (about 9000 x 9000 units, the old map was 1000 x 620). A faint grid shows the space. Two fingers zoom and move; on a computer the wheel zooms and right-drag (or Space + drag) moves. **🔍 Fit** shows the whole track. Up to 200 dots.
+- Races work on big tracks too: the space backdrop, dance-floor road and the bots all follow the track wherever it is.
+- **Boost pads off to the side**: in Boost pad mode, tap the middle of the road for a full-width pad, or nearer an edge for a small pad right where you tapped. Pads keep their side when you reverse, move the start or redraw.
+- Server change: **redeploy Render** (positions now cover the bigger area; old and new pages can't race together, so everyone should reload).
