@@ -757,6 +757,10 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.56.9 - Caps Lock no longer toggles chords
+
+Caps Lock does nothing in the game now. To use chord mode, open Setup → Play and click the **Chord mode** badge (it reads "Off -- click to turn on"); click it again to turn chords off.
+
 ## v1.56.8 - Jam screen tidy-up, chat log folds away, back-view arms
 
 **Performer jam screen**
