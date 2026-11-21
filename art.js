@@ -888,6 +888,35 @@ var ART=(function(){
   /* draw a sprite standing on (cx, cy) at a whole-number pixel size k, so it stays crisp */
   SK.blit=function(g,name,cx,cy,k,c1,c2,flip){var s=SK.sprite(name,c1,c2);if(!s)return;var w=s.width*k,h=s.height*k;g.save();g.imageSmoothingEnabled=false;
     if(flip){g.translate(Math.round(cx),0);g.scale(-1,1);g.drawImage(s,Math.round(-w/2),Math.round(cy-h),w,h);}else g.drawImage(s,Math.round(cx-w/2),Math.round(cy-h),w,h);g.restore();};
+  /* the ski lift down the side of the run: two cables overhead (with their shadows on the snow), a pylon every so often
+     down the mountain, and empty chairs going back up. o = {cx: screen x of the lift, H, sy: world y -> screen y,
+     y0, y1: the world rows on screen, s: art pixel size, now}. The performer's chair is drawn by liftChair. */
+  SK.LIFT_GAP=520;
+  SK.lift=function(g,o){var s=o.s,cx=Math.round(o.cx),H=o.H,up=cx-7*s,dn=cx+7*s,P=Math.max(2,Math.round(s));
+    g.save();g.imageSmoothingEnabled=false;
+    /* shadows on the snow, down and to the right */
+    g.fillStyle="rgba(120,140,175,.28)";g.fillRect(up+9*s,0,P,H);g.fillRect(dn+9*s,0,P,H);
+    /* pylons */
+    var t0=Math.floor(o.y0/SK.LIFT_GAP)*SK.LIFT_GAP;
+    for(var ty=t0;ty<o.y1+SK.LIFT_GAP;ty+=SK.LIFT_GAP){var Y=Math.round(o.sy(ty));if(Y<-60||Y>H+60)continue;
+      g.fillStyle="rgba(120,140,175,.35)";g.fillRect(cx+4*s,Y+2*s,3*s,22*s);                       /* its shadow */
+      g.fillStyle="#3a4256";g.fillRect(cx-2*s,Y,4*s,26*s);g.fillStyle="#59637d";g.fillRect(cx-2*s,Y,1*s,26*s);   /* the pole, down to the snow */
+      g.fillStyle="#2a3044";g.fillRect(cx-10*s,Y-2*s,20*s,4*s);g.fillStyle="#7d88a6";g.fillRect(cx-10*s,Y-2*s,20*s,1*s);   /* the crossbar */
+      g.fillStyle="#cfd8e8";g.fillRect(cx-6*s,Y+24*s,12*s,3*s);}                                   /* snow piled at the foot */
+    /* empty chairs riding back up */
+    var per=210,off=(o.now*0.09)%per;
+    for(var cy=-per+off;cy<H+per;cy+=per){var Y2=Math.round(H-cy);SK.liftChair(g,up,Y2,s*0.8,false,true);}
+    /* the cables */
+    g.fillStyle="#1d2333";g.fillRect(up-Math.floor(P/2),0,P,H);g.fillRect(dn-Math.floor(P/2),0,P,H);
+    g.restore();};
+  /* a chair hanging from the cable at x; y is where a rider's hips sit. back: the hanger, frame and bench (draw the rider after);
+     front: the safety bar across their lap (draw it after the rider). empty: no rider, so draw it all at once. */
+  SK.liftChair=function(g,x,y,s,front,empty){x=Math.round(x);y=Math.round(y);
+    if(!front||empty){g.fillStyle="#1d2333";g.fillRect(x-s,y-30*s,2*s,26*s);                       /* the hanger */
+      g.fillStyle="#2a3044";g.fillRect(x-11*s,y-5*s,22*s,2*s);                                         /* the back rest */
+      g.fillStyle="#E8505B";g.fillRect(x-11*s,y-3*s,22*s,5*s);g.fillStyle="#b8323d";g.fillRect(x-11*s,y+s,22*s,s);   /* the bench */
+      g.fillStyle="#1d2333";g.fillRect(x-12*s,y-5*s,s,8*s);g.fillRect(x+11*s,y-5*s,s,8*s);}            /* the side rails */
+    if(front||empty){g.fillStyle="#1d2333";g.fillRect(x-10*s,y+3*s,20*s,s);g.fillRect(x-10*s,y-2*s,s,5*s);g.fillRect(x+9*s,y-2*s,s,5*s);}};
   SK.px=function(z,s){return Math.max(2,Math.round(z*(s||1)*1.6));};
   /* skis in pixel art: they snap between set angles (every 30 degrees), drawn cell by cell on the pixel grid, the way a
      sprite swaps frames, and the character's facing follows the same frame (dirFor) */
@@ -2190,6 +2219,28 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.73.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  /* ---------- pixel art on-screen controls: the joystick base and knob are drawn small, pixel by pixel, and shown scaled up
+     with crisp pixels (image-rendering: pixelated), so they match the game art. Each returns a data URL (browser only). ---------- */
+  var UI=(function(){
+    var cache={};
+    function grid(n,fn){if(typeof document==="undefined")return "";var c=document.createElement("canvas");c.width=c.height=n;var g=c.getContext("2d");
+      for(var y=0;y<n;y++)for(var x=0;x<n;x++){var col=fn(x,y);if(col){g.fillStyle=col;g.fillRect(x,y,1,1);}}return c.toDataURL();}
+    /* a round stick base: dark outline, a coloured rim, a dark well, a faint inner ring and four arrow notches */
+    function stick(rim){rim=rim||"#7F77DD";var k="s"+rim;if(cache[k])return cache[k];var n=31,c=(n-1)/2,R=c+0.5;
+      return cache[k]=grid(n,function(x,y){var dx=x-c,dy=y-c,d=Math.sqrt(dx*dx+dy*dy);if(d>R)return null;if(d>R-1.2)return "#0b0818";
+        if(d>R-3.2)return (dx+dy<-4)?shade(rim,30):(dx+dy>4)?shade(rim,-35):rim;
+        var ax=Math.abs(dx),ay=Math.abs(dy);
+        /* arrow notches pointing out */
+        if((ay<=c-4-ax&&ax>=c-6&&ax<=c-4)||(ax<=c-4-ay&&ay>=c-6&&ay<=c-4))return "rgba(255,255,255,.55)";
+        if(Math.abs(d-6.5)<0.6)return "rgba(255,255,255,.10)";
+        return d<7?"rgba(34,28,58,.92)":"rgba(18,14,34,.88)";});}
+    /* a round knob: outline, flat colour, a light pixel band top left and a dark one bottom right */
+    function knob(col){col=col||"#E85AA8";var k="k"+col;if(cache[k])return cache[k];var n=13,c=(n-1)/2,R=c+0.5;
+      return cache[k]=grid(n,function(x,y){var dx=x-c,dy=y-c,d=Math.sqrt(dx*dx+dy*dy);if(d>R)return null;if(d>R-1.1)return "#1a0b18";
+        if(dx+dy<-5&&d>R-2.6)return shade(col,55);if(dx+dy>4&&d>R-2.6)return shade(col,-45);if(dx<-1&&dy<-1&&d<2.2)return "#ffffff";return col;});}
+    function shade(h,amt){var v=parseInt(h.slice(1),16),r=(v>>16)+amt,g=((v>>8)&255)+amt,b=(v&255)+amt;function cl(q){return Math.max(0,Math.min(255,q));}return "rgb("+cl(r)+","+cl(g)+","+cl(b)+")";}
+    return{stick:stick,knob:knob};
+  })();
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.75.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

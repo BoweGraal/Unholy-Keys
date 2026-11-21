@@ -757,6 +757,48 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.75.0 - 8 directions in every game, the performer rides a ski lift
+
+8 directions (audience and performer screens):
+- Before, anyone in a game round faced the front, because a game counts as dancing. In the roller rink, ice rink, Keepy uppy, Mosh pit and free dance, players now face the way they're moving, diagonals included.
+- Skaters keep their heading when they slow down. In the other games, standing still faces the stage.
+- Mars Rally drivers turn with the kart in 8 directions (before: 4).
+- Already 8-direction: Capture the flag, Ski (downhill angles), and walking around between rounds.
+- Side-on by design: the Half pipe and the Dance walk race.
+- The dance games (Step, Target, Note highway) still face the stage.
+
+Ski lift:
+- A ski lift runs down the left side of the run. It has two cables with shadows on the snow, a pylon every so often, and empty red chairs going back up.
+- The performer sits on a chair coming down the mountain alongside you, easing along to stay level with you. On the performer's follow view, the chair stays level with the leader.
+- There's no performer in practice, but the lift is still drawn there.
+
+Page-only change: no Render redeploy needed.
+
+**Test it:** in practice, try the roller rink and Keepy uppy. Skate or run around and check your character turns to face each of the 8 directions. Then run a live Ski round: the performer should ride a lift chair beside you on the audience screen and beside the leader on yours.
+
+## v1.74.0 - Everyone can see each other in every game, pixel art buttons and joystick
+
+I ran every game live (performer page, an audience page, 6 bots) and checked both screens mid-round.
+
+What was wrong, and what changed:
+- **Ski and Capture the flag:** the audience couldn't see the performer at all, because the game covers the whole screen. The performer now plays in the top left corner of those games, the same way they ride the UFO in Mars Rally. Nothing is drawn there in practice, where there's no performer.
+- **Step / Target / Note highway rounds:** the performer stepped left to make room for your big dancer and ended up under the round info box. They now step right.
+- **Half pipe:** the performer stood behind the SUPER meter and trick callouts. They now stand off to the right of the stage.
+- **Free dance:** the round info box covered the top of the dance list on the left. The list moves down.
+- **Mars Rally and Ski:** the round info goes back to the top middle there, clear of the performer in the corner. The sign isn't visible in those games anyway.
+- **Capture the flag:** the round info sits under the team score, and the arena starts lower to make room. Phones get extra room for it.
+- **Performer page (stage view):** the faint arrow and SPACE/D/E/3 key indicators sat in the middle of the floor over the dancers during games. They're hidden while a round is on (the stage has its own controller that lights up).
+- All 14 games already showed every player to the performer in real time; no change needed there.
+
+Pixel art controls (audience page):
+- The joystick is now a real pixel drawing: a round base with a rim and arrow notches, and a round knob, shown with crisp pixels. The rim turns pink while you hold it. The skating knob uses the same knob.
+- Every button (Leave practice, Dance, Talk, Stop, Log, Send, fullscreen, the free dance list, reactions, round and vote buttons, practice menu) has square notched corners, a flat colour with a hard bevel, and the pixel font. Gradients on the "on" buttons are now a flat pink.
+- The dance walk pad is a pixel panel with notched corners and a pixel font.
+
+Page-only change: no Render redeploy needed.
+
+**Test it:** start a live show with bots and play Ski and Capture the flag. The performer should be top left on the audience screen. In a Step round, the performer should stand to the right of your big dancer. On a phone, check the joystick and buttons look pixelated.
+
 ## v1.73.0 - Half pipe: cleaner screen
 
 - The pipe is a bit smaller: narrower and with lower walls.
