@@ -433,7 +433,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.61.0";
+var VERSION = "1.63.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -635,7 +635,10 @@ function onMessage(ws, raw, isBinary) {
       if (x === null || y === null || !allow(ws, "pos", 20, 15)) return;
       var v = rooms[ws.room].viewers.get(ws.viewerId);
       if (v) { v.x = x; v.y = y; }
-      broadcast(ws.room, { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y }, ws);
+      var pm2 = { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y };
+      if (msg.z !== undefined) pm2.z = unit(msg.z) || 0;                       /* half pipe: how high in the air (0..1) */
+      if (msg.r !== undefined) pm2.r = intIn(msg.r, -1440, 1440, 0);           /* and how far they've spun (degrees) */
+      broadcast(ws.room, pm2, ws);
       return;
     }
     if (msg.type === "dance") {
