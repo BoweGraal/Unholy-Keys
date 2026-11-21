@@ -735,21 +735,44 @@ var ART=(function(){
   PP.state=function(A,sg,b,wallPx,halfW){
     var s=sg*Math.sin(Math.PI*b/PP.BPC),u=A*s,air=Math.abs(u)>1,z=air?(Math.abs(u)-1)/(PP.AMAX-1):0,uu=air?(u<0?-1:1):u,vel=sg*Math.cos(Math.PI*b/PP.BPC);
     return{u:uu,x:PP.xOf(uu),air:air,z:z,h:PP.prof(Math.abs(uu)),ang:air?0:Math.atan(PP.slope(uu)*wallPx/Math.max(1,halfW)),dir:vel>=0?1:3};};
-  /* the pipe itself: o = {W, X(x frac) -> px, Yd(y frac) -> px, wall px, beat} */
+  /* the pipe itself, built from dance-floor tiles bent round the curve: o = {W, X(x frac) -> px, Yd(y frac) -> px, wall px, beat}.
+     Tiles keep the same size along the surface, so on the walls they stand up like the floor folded upward. */
+  var PPGLOW=["#D354A0","#7F77DD","#3DF2FF","#F5C518"];
+  function ppHash(a,b){var h=Math.sin(a*12.9898+b*78.233)*43758.5453;return h-Math.floor(h);}
   PP.draw=function(g,o){
-    var WP=o.wall,cols=56,rows=7,yb=o.Yd(PP.Y0-0.04),yf=o.Yd(PP.Y1+0.03),glow=Math.pow(1-((o.beat%1)+1)%1,3),W=o.W;
-    for(var i=0;i<cols;i++){
-      var u0=-1+2*i/cols,u1=-1+2*(i+1)/cols,xa=o.X(PP.xOf(u0)),xb=o.X(PP.xOf(u1))+1,um=(u0+u1)/2,p=PP.prof(Math.abs(um))*WP,sl=Math.min(1,Math.abs(PP.slope(um))/4);
-      for(var j=0;j<rows;j++){var ya=yb+(yf-yb)*j/rows-p,yh=(yf-yb)/rows+1;g.fillStyle=(i+j)%2?"#1a1430":"#120e1e";g.fillRect(xa,ya,xb-xa,yh);
-        if((i*7+j*3)%11===0){g.globalAlpha=0.25*glow;g.fillStyle="#D354A0";g.fillRect(xa,ya,xb-xa,yh);g.globalAlpha=1;}}
-      if(sl>0){g.globalAlpha=0.35*sl;g.fillStyle="#000";g.fillRect(xa,yb-p,xb-xa,yf-yb);g.globalAlpha=1;}
-      if(p>0.5){var gr=g.createLinearGradient(0,yf-p,0,yf);gr.addColorStop(0,"#2c2346");gr.addColorStop(1,"#0d0a18");g.fillStyle=gr;g.fillRect(xa,yf-p,xb-xa,p);}
+    var WP=o.wall,rows=6,yb=Math.round(o.Yd(PP.Y0-0.04)),yf=Math.round(o.Yd(PP.Y1+0.03)),W=o.W,glow=Math.pow(1-((o.beat%1)+1)%1,3),bt=Math.floor(o.beat);
+    /* the curve in screen pixels, and the distance along it */
+    var N=160,us=[],xs=[],hs=[],ss=[0];
+    for(var i=0;i<=N;i++){var u=-1+2*i/N;us.push(u);xs.push(o.X(PP.xOf(u)));hs.push(PP.prof(Math.abs(u))*WP);if(i)ss.push(ss[i-1]+Math.hypot(xs[i]-xs[i-1],hs[i]-hs[i-1]));}
+    var S=ss[N],T=Math.max(10,(yf-yb)/rows),nT=Math.max(8,Math.round(S/T)),k=0;
+    function at(sv){while(k<N&&ss[k+1]<sv)k++;while(k>0&&ss[k]>sv)k--;var f=(sv-ss[k])/Math.max(0.001,ss[k+1]-ss[k]);return[xs[k]+(xs[k+1]-xs[k])*f,hs[k]+(hs[k+1]-hs[k])*f];}
+    /* the front face first (under the riding surface): dark panel with pixel stripes */
+    g.fillStyle="#1c1630";g.beginPath();g.moveTo(xs[0],yf);for(var q=0;q<=N;q++)g.lineTo(xs[q],yf-hs[q]);g.lineTo(xs[N],yf);g.closePath();g.fill();
+    g.fillStyle="#241d3d";for(var sy2=yf-4;sy2>yf-WP;sy2-=6)for(var q2=0;q2<N;q2++)if(yf-hs[q2]<sy2)g.fillRect(Math.round(xs[q2]),sy2,Math.ceil(xs[q2+1]-xs[q2])+1,2);
+    /* the tiles */
+    for(var t=0;t<nT;t++){
+      var A=at(S*t/nT),B=at(S*(t+1)/nT),sl=Math.min(1,Math.abs(B[1]-A[1])/Math.max(1,Math.abs(B[0]-A[0]))/3);
+      for(var j=0;j<rows;j++){
+        var ya=yb+(yf-yb)*j/rows,yz=yb+(yf-yb)*(j+1)/rows;
+        g.beginPath();g.moveTo(Math.round(A[0]),Math.round(ya-A[1]));g.lineTo(Math.round(B[0]),Math.round(ya-B[1]));g.lineTo(Math.round(B[0]),Math.round(yz-B[1]));g.lineTo(Math.round(A[0]),Math.round(yz-A[1]));g.closePath();
+        var hsh=ppHash(t,j);g.fillStyle=(t+j)%2?"#1a1430":"#120e1e";g.fill();
+        if(hsh<0.16){g.globalAlpha=(0.15+0.4*glow)*(((bt+t+j)%3===0)?1:0.4);g.fillStyle=PPGLOW[Math.floor(hsh*25)%4];g.fill();g.globalAlpha=1;}
+        if(sl>0.05){g.globalAlpha=0.3*sl;g.fillStyle="#000";g.fill();g.globalAlpha=1;}
+        g.strokeStyle="#0a0714";g.lineWidth=1;g.stroke();
+      }
     }
-    g.strokeStyle="#9B7FE0";g.lineWidth=2;g.beginPath();for(var q=0;q<=cols;q++){var uq=-1+2*q/cols,xq=o.X(PP.xOf(uq)),yq=yf-PP.prof(Math.abs(uq))*WP;if(q)g.lineTo(xq,yq);else g.moveTo(xq,yq);}g.stroke();
-    [-1,1].forEach(function(sd){var xc=o.X(PP.xOf(sd));g.fillStyle="#3a3058";g.fillRect(sd<0?0:xc,yb-WP,sd<0?xc:W-xc,yf-yb);
-      g.fillStyle="#2a2240";g.fillRect(sd<0?0:xc,yf-WP,sd<0?xc:W-xc,WP);
-      g.strokeStyle="#d8d8e8";g.lineWidth=4;g.beginPath();g.moveTo(xc,yb-WP);g.lineTo(xc,yf-WP);g.stroke();});
+    /* the decks beyond the lips: flat dance floor, up at the top of the walls */
+    [-1,1].forEach(function(sd){var xc=Math.round(o.X(PP.xOf(sd))),x0=sd<0?0:xc,x1=sd<0?xc:W,tw=T;
+      for(var j2=0;j2<rows;j2++){var ya2=Math.round(yb+(yf-yb)*j2/rows-WP),yh=Math.round((yf-yb)/rows);
+        for(var xx=x0,c2=0;xx<x1;xx+=tw,c2++){g.fillStyle=(c2+j2)%2?"#1a1430":"#120e1e";g.fillRect(Math.round(xx),ya2,Math.ceil(Math.min(tw,x1-xx)),yh);g.strokeStyle="#0a0714";g.strokeRect(Math.round(xx)+0.5,ya2+0.5,Math.ceil(Math.min(tw,x1-xx))-1,yh-1);}}
+      g.fillStyle="#2a2240";g.fillRect(x0,yf-WP,x1-x0,WP);g.fillStyle="#352b52";for(var sy3=yf-WP+3;sy3<yf;sy3+=6)g.fillRect(x0,sy3,x1-x0,2);
+      /* the coping: a metal rail along the lip */
+      g.fillStyle="#d8d8e8";g.fillRect(xc-2,yb-WP,4,yf-yb);g.fillStyle="#8a8aa0";g.fillRect(xc+1,yb-WP,1,yf-yb);});
+    g.strokeStyle="#9B7FE0";g.lineWidth=2;g.beginPath();for(var q3=0;q3<=N;q3+=2){if(q3)g.lineTo(Math.round(xs[q3]),Math.round(yf-hs[q3]));else g.moveTo(Math.round(xs[q3]),Math.round(yf-hs[q3]));}g.stroke();
   };
+  /* groups of 4 or 5 share a pipe: everyone sorted the same way, dealt round the groups; your lane is your place in your group */
+  PP.group=function(ids,id){ids=ids.slice().sort();var n=ids.length,G=Math.max(1,Math.ceil(n/5)),i=Math.max(0,ids.indexOf(id)),gi=i%G,mem=ids.filter(function(x,k){return k%G===gi;}),li=mem.indexOf(id),m=Math.max(3,mem.length);
+    return{g:gi,G:G,members:mem,y:PP.Y0+((li<0?0:li)+0.5)/m*(PP.Y1-PP.Y0)};};
   /* a skateboard: flips over on a kickflip or heelflip */
   PP.board=function(g,x,y,ang,sc,tk,p,col){
     g.save();g.translate(x,y);g.rotate(ang);

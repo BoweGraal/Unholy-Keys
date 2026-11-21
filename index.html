@@ -4386,7 +4386,7 @@ function audLook(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;n
 function audEvent(msg){
   var id=msg.id||msg.viewerId;
   if(msg.type==="viewer-join"&&id){AUD.people[id]={look:audLook(msg.look,msg.color,msg.name),name:String(msg.name||"").slice(0,24),color:audColor(msg.color,"#888888"),x:+msg.x||.5,y:+msg.y||.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};}
-  else if(msg.type==="pos"&&id){var p=AUD.people[id];if(!p)p=AUD.people[id]={name:String(msg.name||""),color:"#888888",x:.5,y:.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};p.x=+msg.x||p.x;p.y=+msg.y||p.y;}
+  else if(msg.type==="pos"&&id){var p=AUD.people[id];if(!p)p=AUD.people[id]={name:String(msg.name||""),color:"#888888",x:.5,y:.5,dx:+msg.x||.5,dy:+msg.y||.5,said:0,text:"",dance:0,seed:Math.random()*6};p.x=+msg.x||p.x;p.y=+msg.y||p.y;if(msg.z!==undefined)p.pz=Math.max(0,Math.min(1,+msg.z||0));if(msg.r!==undefined)p.pr=Math.max(-1440,Math.min(1440,+msg.r||0));}
   else if(msg.type==="viewer-leave"&&id){delete AUD.people[id];}
   else if(msg.type==="react"&&id&&AUD.people[id]&&ART.REACTS.indexOf(msg.k)>=0){var rl=AUD.people[id].reacts||(AUD.people[id].reacts=[]);rl.push({k:msg.k,t:Date.now()});if(rl.length>8)rl.splice(0,rl.length-8);AUD.rx.push({k:msg.k,t:Date.now()});if(AUD.rx.length>200)AUD.rx.splice(0,AUD.rx.length-200);}
   else if(msg.type==="dance"&&id){if(AUD.people[id]){var dp=AUD.people[id];dp.dance=Math.max(0,Math.min(5,Math.floor(+msg.style||0)));if(dp.dance<4){dp.pose=null;dp.poseCur=null;dp.combo=0;}}}
@@ -4397,7 +4397,7 @@ function audEvent(msg){
     /* free dance styles: the dance, its move and the two dots (drawn here the same way the venue draws them) */
     var f=msg.fd;pp.fd=f&&f.s>=1&&f.s<=15&&Array.isArray(f.c)&&f.c.length===4?{s:f.s|0,m:f.m|0,c:f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v))/100:0;})}:null;
     if(!pp.fd||nc>(pp.combo||0))pp.hitT=Date.now();pp.pose=pa;pp.combo=nc;
-    pp.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0,t:Math.max(0,Math.min(4,+msg.sk.t||0))}:null;   /* on the roller rink */
+    pp.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0,t:Math.max(0,Math.min(9,+msg.sk.t||0))}:null;   /* on the roller rink */
   }
   else if(msg.type==="kick"){KPS.kick(msg);}
   else if(msg.type==="chat"&&id&&AUD.people[id]){var q=AUD.people[id];q.said=Date.now();q.text=String(msg.text||"").slice(0,140);if(msg.color)q.color=audColor(msg.color,q.color);}
@@ -4669,8 +4669,11 @@ function drawVenueTo(g,W,H,opts){
   var plist=ids.map(function(id){return AUD.people[id];});
   if(stage&&HANG.on){var hp=HANG.p;hp.name="\u2605 "+stageName();hp.look=perfLook;hp.dx=hp.x;hp.dy=hp.y;plist.push(hp);}
   if(PPG){var ppIds=ids.slice();plist.forEach(function(p){p._pp=null;if(p.hang||p.dance!==4)return;var id=null;for(var q=0;q<ppIds.length;q++)if(AUD.people[ppIds[q]]===p){id=ppIds[q];break;}if(!id)return;
-    var ln=ART.PIPE.lane(ppIds,id),A=(p.sk&&p.sk.h?p.sk.h:12)/25,tk=p.sk?p.sk.t|0:0;if(tk!==p._ppTk){p._ppTk=tk;p._ppT0=now;}
-    var st=ART.PIPE.state(A,ln.s,PPG.beat,PPG.wall,PPG.halfW);p.x=p.dx=st.x;p.y=p.dy=ln.y;p._pp={st:st,tk:tk,bail:!!(p.sk&&p.sk.f)};});}
+    /* everyone rolls at their own pace now: where they are (x), how high (pz) and how far they've spun (pr) come with their position */
+    var ln=ART.PIPE.lane(ppIds,id),tk=p.sk?p.sk.t|0:0,sm=p._ppS||(p._ppS={x:p.x||0.5,z:0,r:0});sm.x+=((p.x||0.5)-sm.x)*0.3;sm.z+=((p.pz||0)-sm.z)*0.35;sm.r+=((p.pr||0)-sm.r)*0.35;
+    var uu=Math.max(-1,Math.min(1,(sm.x-0.5)/((ART.PIPE.XR-ART.PIPE.XL)/2))),air=sm.z>0.01;
+    var st={x:sm.x,h:ART.PIPE.prof(Math.abs(uu)),z:sm.z,ang:(air?0:Math.atan(ART.PIPE.slope(uu)*PPG.wall/Math.max(1,PPG.halfW)))+sm.r*Math.PI/180,dir:0};
+    p.dx=sm.x;p.y=p.dy=ln.y;p._pp={st:st,tk:0,bail:!!(p.sk&&p.sk.f)};});}
   plist.sort(function(a,b){return a.dy-b.dy;});
   var heads=[];
   plist.forEach(function(p){
@@ -4690,7 +4693,7 @@ function drawVenueTo(g,W,H,opts){
     AUDSK=RINKG&&!p.hang?Object.assign({h:0,f:0},p.sk||{},{ice:rc0.mode==="ice"}):KPS.on()&&!p.hang&&p.sk?{h:p.sk.h,f:0,ns:1}:null;
     AUDDIR=p.dance||AUDSK||(crowd&&crowd.kind)?0:(p._walk.face|0);   /* facing the way they walked; dancing faces the stage */
     var ppS=null;
-    if(p._pp&&PPG){var ps=p._pp,ptr=ps.tk&&ART.PIPE.TR[ps.tk],pprog=ptr?Math.min(1,(now-(p._ppT0||now))/1000/ptr.dur):0,prot=ps.bail?1.45:ps.st.ang+(ps.tk===4?pprog*Math.PI*2:0);
+    if(p._pp&&PPG){var ps=p._pp,ptr=null,pprog=0,prot=ps.bail?1.45:ps.st.ang;
       ppS={lift:ps.st.h*PPG.wall+ps.st.z*PPG.air+4,rot:prot,tk:ps.tk,prog:pprog};AUDSK={px:ppS.lift,rot:prot,ns:1};AUDDIR=ps.st.dir;}
     else if(WKG&&p.dance===4){AUDSK={h:0,f:p.sk&&p.sk.f?1:0,ns:1};AUDDIR=p.sk&&p.sk.h?0:1;}   /* walk race: facing the finish (or the crowd once they're in), flat out when tripped */
     var headY=audPerson(g,x,y,p.color,p.name,sc,p.dance,p.seed,false,now,null,AUDSK?null:walking,pz,now-(p.hitT||0),p.look,false,p.dance===4?p.fd:null,cw);

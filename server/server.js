@@ -635,7 +635,10 @@ function onMessage(ws, raw, isBinary) {
       if (x === null || y === null || !allow(ws, "pos", 20, 15)) return;
       var v = rooms[ws.room].viewers.get(ws.viewerId);
       if (v) { v.x = x; v.y = y; }
-      broadcast(ws.room, { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y }, ws);
+      var pm2 = { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y };
+      if (msg.z !== undefined) pm2.z = unit(msg.z) || 0;                       /* half pipe: how high in the air (0..1) */
+      if (msg.r !== undefined) pm2.r = intIn(msg.r, -1440, 1440, 0);           /* and how far they've spun (degrees) */
+      broadcast(ws.room, pm2, ws);
       return;
     }
     if (msg.type === "dance") {
