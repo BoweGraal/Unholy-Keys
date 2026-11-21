@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.79.0"></script>
-<script src="art.js?v=1.79.0"></script>
-<script src="instruments.js?v=1.79.0"></script>
-<script src="kart.js?v=1.79.0"></script>
+<script src="gfx.js?v=1.79.1"></script>
+<script src="art.js?v=1.79.1"></script>
+<script src="instruments.js?v=1.79.1"></script>
+<script src="kart.js?v=1.79.1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2102,9 +2102,17 @@ function initMobileSlider(){
   zc.addEventListener("pointermove",function(e){var h=mbZ.held.filter(function(h){return h[0]===e.pointerId;})[0];if(!h)return;var r=zoneAt(e);if(r&&r!==h[1]){h[1]=r;mbApplyMods();}});      /* slide between zones */
   ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){zc.addEventListener(ev,function(e){var n=mbZ.held.length;mbZ.held=mbZ.held.filter(function(h){return h[0]!==e.pointerId;});if(mbZ.held.length!==n)mbApplyMods();});});
   var pad=document.getElementById("mb-pad");
-  pad.addEventListener("pointerdown",function(e){e.preventDefault();initAudio();if(mbP.id!==null)return;mbP.id=e.pointerId;try{pad.setPointerCapture(e.pointerId);}catch(x){}pad.classList.add("held");mbP.dir=null;mbPlayDir(mbDirAt(e));});
+  pad.addEventListener("pointerdown",function(e){e.preventDefault();initAudio();if(mbP.id!==null){mbP.id=null;mbP.dir=null;}   /* a lost "finger up" must never lock the circle: a new press takes over */
+    mbP.id=e.pointerId;try{pad.setPointerCapture(e.pointerId);}catch(x){}pad.classList.add("held");mbP.dir=null;mbPlayDir(mbDirAt(e));});
   pad.addEventListener("pointermove",function(e){if(e.pointerId!==mbP.id)return;mbPlayDir(mbDirAt(e));});
   ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){pad.addEventListener(ev,function(e){if(e.pointerId!==mbP.id)return;mbP.id=null;pad.classList.remove("held");mbPlayDir(null);});});
+  /* iOS sometimes never sends the finger-up (a system swipe, a call, switching apps): let go of everything when that happens */
+  function mbLetGo(){var had=mbP.id!==null||mbZ.held.length>0;mbP.id=null;pad.classList.remove("held");if(mbP.dir)mbPlayDir(null);if(mbZ.held.length){mbZ.held=[];mbApplyMods();}return had;}
+  ["pointerup","pointercancel"].forEach(function(ev){window.addEventListener(ev,function(e){if(e.pointerId===mbP.id){mbP.id=null;pad.classList.remove("held");mbPlayDir(null);}var n=mbZ.held.length;mbZ.held=mbZ.held.filter(function(h){return h[0]!==e.pointerId;});if(mbZ.held.length!==n)mbApplyMods();});});
+  window.addEventListener("touchend",function(e){if(!e.touches||!e.touches.length)mbLetGo();},{passive:true});
+  window.addEventListener("touchcancel",mbLetGo,{passive:true});
+  window.addEventListener("blur",mbLetGo);window.addEventListener("pagehide",mbLetGo);window.addEventListener("orientationchange",mbLetGo);
+  document.addEventListener("visibilitychange",function(){if(document.hidden)mbLetGo();});
   [zc,pad].forEach(function(el){el.addEventListener("contextmenu",function(e){e.preventDefault();});});
   document.getElementById("mb-octUp").onclick=function(){mbOct(1);};
   document.getElementById("mb-octDn").onclick=function(){mbOct(-1);};
@@ -4397,7 +4405,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.79.0",SERVER_VERSION="";
+var PAGE_VERSION="1.79.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
