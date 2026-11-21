@@ -269,7 +269,12 @@ module.exports = function(api) {
   /* ski: start in a lane at the top, then (from beat 8) follow the slalom line down at this bot's pace, sometimes crashing.
      The course's line, lanes and position encoding match venue.html's SKI exactly. */
   function skiHalfW(y) { return 110 + Math.min(1, Math.max(0, y) / 650) * 560; }
-  function skiLine(y, sd) { return Math.sin(y / 620 + sd) * skiHalfW(y) * 0.42 + Math.sin(y / 233 + sd * 2) * 40 * Math.min(1, y / 650); }
+  function skiBase(y, sd) { return Math.sin(y / 620 + sd) * skiHalfW(y) * 0.42 + Math.sin(y / 233 + sd * 2) * 40 * Math.min(1, y / 650); }
+  /* straight through the opening slalom of each flag zone, then back into the wave (matches ART.SKI.lineX) */
+  function skiLine(y, sd) {
+    if (y < 300) return skiBase(y, sd); var per = 1600 + 900, b0 = 300 + Math.floor((y - 300) / per) * per, t = y - b0, BE = 5 * 210 + 60;
+    if (t > BE + 300) return skiBase(y, sd); var hv = skiBase(b0, sd); if (t <= BE) return hv; var w = (t - BE) / 300; w = w * w * (3 - 2 * w); return hv + (skiBase(y, sd) - hv) * w;
+  }
   /* with a designer course: the line through its gates (matches ART.SKI.lineAt) */
   function skiLineAt(course, y, sd) {
     if (!course) return skiLine(y, sd); var gs = course.objs.filter(function(q) { return q[0] === "gate"; }); if (!gs.length) return 0;

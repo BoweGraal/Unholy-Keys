@@ -1500,3 +1500,10 @@ Needs a Render redeploy (server.js changed).
 4. Console: `EXPLAIN.show("pipe")` shows any game's card without starting a round.
 
 **Update (same version): the card no longer covers the performer.** It sits below the stage, so the performer stays in view when a game starts partway through a song (the second game in a set). On a wide screen it lays out as demo on the left, text on the right. The round title strip is hidden while the card is up.
+
+## v1.79.13 - Ski: smaller skier, bigger mountain, a plain slalom to open each flag zone
+- The skier and their skis are drawn smaller, and the mountain (trees, flags, ramps, snow) is a bit bigger.
+- Each flag zone now opens with **5 plain flags, left, right, left, right**, on a dead straight line and 210 apart (they were 150), with the flags further out to each side, so there's room to weave. Then the line eases back into the wave and the usual closer flags follow (the flag zone is longer, to fit both).
+- Server change: the ski bots follow the same straight line. **Redeploy Render.**
+
+**Test it:** practice → Ski. After GO, the first flags in the zone should alternate sides down a straight run. Check the skier looks smaller on a phone and a computer, and that you can weave through without clipping flags.

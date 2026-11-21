@@ -856,11 +856,17 @@ var ART=(function(){
     c.peaks=pk;c.dur=Math.max(chart.dur||0,end+14001);return c;
   };
   /* the made-up mountain comes in layers: a flag zone (slalom gates) then a jump zone (a line of ramps and moguls), over and over */
-  SK.Z0=300;SK.ZFLAG=1300;SK.ZJUMP=900;
+  SK.Z0=300;SK.ZFLAG=1600;SK.ZJUMP=900;
+  /* each flag zone opens with a plain slalom: SK.NB flags, SK.SPB apart, alternating left and right along a dead straight line */
+  SK.NB=5;SK.SPB=210;SK.BOREND=SK.NB*SK.SPB+60;
   SK.zoneAt=function(yy){if(yy<SK.Z0)return{k:"start",y0:-1e9,y1:SK.Z0,i:-1};var per=SK.ZFLAG+SK.ZJUMP,i=Math.floor((yy-SK.Z0)/per),b=SK.Z0+i*per,m=yy-b;
     return m<SK.ZFLAG?{k:"flag",y0:b,y1:b+SK.ZFLAG,i:i}:{k:"jump",y0:b+SK.ZFLAG,y1:b+per,i:i};};
   SK.halfW=function(yy){return 110+Math.min(1,Math.max(0,yy)/650)*560;};
-  SK.lineX=function(yy,sd){return Math.sin(yy/620+sd)*SK.halfW(yy)*0.42+Math.sin(yy/233+sd*2)*40*Math.min(1,yy/650);};
+  function skBase(yy,sd){return Math.sin(yy/620+sd)*SK.halfW(yy)*0.42+Math.sin(yy/233+sd*2)*40*Math.min(1,yy/650);}
+  /* the line down the mountain: wavy, except it runs straight through the opening slalom of every flag zone, then eases back into the wave */
+  SK.lineX=function(yy,sd){
+    if(yy<SK.Z0)return skBase(yy,sd);var per=SK.ZFLAG+SK.ZJUMP,b=SK.Z0+Math.floor((yy-SK.Z0)/per)*per,t=yy-b;
+    if(t>SK.BOREND+300)return skBase(yy,sd);var hv=skBase(b,sd);if(t<=SK.BOREND)return hv;var w=(t-SK.BOREND)/300;w=w*w*(3-2*w);return hv+(skBase(yy,sd)-hv)*w;};
   function skRng(s){return function(){s=(s*16807)%2147483647;return (s-1)/2147483646;};}
   /* a course from the Ski designer: {name, len, objs:[[kind, x, y, size]...]}; it repeats every len down the mountain */
   SK.KINDS={gate:1,tree:1,rock:1,ramp:1,mogul:1};
@@ -879,10 +885,13 @@ var ART=(function(){
       /* zone markers across the run where each zone starts */
       var per=SK.ZFLAG+SK.ZJUMP;for(var zb=SK.Z0+Math.max(0,Math.floor((y0-SK.Z0)/per))*per;zb<y0+SK.CH;zb+=per){[zb,zb+SK.ZFLAG].forEach(function(zy,zk){if(zy>=y0&&zy<y0+SK.CH)o.push({k:"zone",x:0,y:zy,z:zk?"jump":"flag"});});}
       /* flag zones: gates down the line, a little tighter than before */
-      var GD=150;
-      /* single slalom flags, swapping sides of the line: the arrow on the flag (and the carved divot beside it) shows which side to pass */
-      for(var gy=Math.ceil(y0/GD)*GD;gy<y0+SK.CH;gy+=GD){var zn=SK.zoneAt(gy);if(zn.k!=="flag"||gy<zn.y0+90||gy>zn.y1-60)continue;var gi=Math.round(gy/GD),sd=gi%2?1:-1,pass=-sd;
-        o.push({k:"flag",x:SK.lineX(gy,seed)+sd*34,y:gy,id:gi,pass:pass,col:pass<0?"#E8505B":"#3B7BE8"});}
+      /* single slalom flags, swapping sides of the line: the arrow on the flag (and the carved divot beside it) shows which side to pass.
+         Each flag zone starts with SK.NB plain left-right flags, far enough apart (SK.SPB) to weave between, then the usual closer ones */
+      for(var zi=Math.max(0,Math.floor((y0-SK.Z0-SK.ZFLAG)/per));SK.Z0+zi*per<y0+SK.CH;zi++){var zb2=SK.Z0+zi*per,fl=[],q2;
+        for(q2=0;q2<SK.NB;q2++)fl.push(zb2+120+q2*SK.SPB);
+        for(q2=120+(SK.NB-1)*SK.SPB+150;q2<=SK.ZFLAG-60;q2+=150)fl.push(zb2+q2);
+        fl.forEach(function(gy,n){if(gy<y0||gy>=y0+SK.CH)return;var sd=n%2?1:-1,pass=-sd;
+          o.push({k:"flag",x:SK.lineX(gy,seed)+sd*(n<SK.NB?50:34),y:gy,id:Math.round(gy),pass:pass,col:pass<0?"#E8505B":"#3B7BE8"});});}
       /* jump zones: a run of ramps along the line, swapping sides, with moguls between */
       for(var ry2=Math.ceil(y0/230)*230;ry2<y0+SK.CH;ry2+=230){var zr=SK.zoneAt(ry2);if(zr.k!=="jump"||ry2<zr.y0+120||ry2>zr.y1-80)continue;var side2=Math.round(ry2/230)%2?-1:1;o.push({k:"ramp",x:SK.lineX(ry2,seed)+side2*26,y:ry2});
         if(r()<0.8){var my2=ry2+90+r()*60;o.push({k:"mogul",x:SK.lineX(my2,seed)+(r()*2-1)*70,y:my2});}}
@@ -2303,6 +2312,6 @@ var ART=(function(){
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.79.12",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.79.13",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
