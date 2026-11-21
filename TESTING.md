@@ -1467,3 +1467,13 @@ Needs a Render redeploy (server.js changed).
 - The fix: the performer can now send up to 240 KB (everyone else stays capped at 16 KB). The server also logs when it drops an oversized message.
 - Server change: **redeploy Render** (this fix only works once the server is updated).
 - Check: go live, have someone join, start a round with a full-length song (try Mars Rally too). The round should count in and the music should play for them.
+
+## v1.79.10 - Half pipe: closer camera, less turning
+- The camera is in tighter: skaters and boards are drawn 50% bigger, the walls are taller and the pipe fills the full width of the screen.
+- Less turning: everyone keeps facing the stage instead of flipping left and right at each wall, the board tilts only a third as far up the walls, and the leaning pose is calmer.
+- In-air spinning (left stick) is unchanged, since the tricks depend on it.
+
+**Test it:**
+1. Open venue.html?practice, run the half pipe test (`ukPipeTest(3)` in the console), on a computer and on a phone.
+2. Watch yourself swing from wall to wall: you should stay big, face forward, and the board should only tilt slightly.
+3. Do a trick and spin in the air with the left stick: spinning and landing still work.
