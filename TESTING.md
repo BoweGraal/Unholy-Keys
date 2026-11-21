@@ -757,6 +757,15 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.69.1 - Ski: pixel skis that turn in frames, a smaller hop
+
+- **Skis:** they're now pixel art that snaps between 7 set angles (every 30 degrees), like a sprite swapping frames, instead of smoothly rotating rectangles. The skier's facing follows the same frame: front when going straight down, three-quarter for a gentle turn, side-on for a hard turn. A spin trick shows the skis clicking round through the frames. Your stage follow view matches.
+- **Hop:** shorter (0.28 s in the air, was 0.35) with a gentler sideways shove, and it no longer adds any speed. Only landing in a divot (SWOOP) speeds you up. A cut still scores CUT and briefly skips the carving slowdown.
+
+No server changes.
+
+**Test it:** practice → Ski. Turn gently and hard both ways and watch the skis click between angles.
+
 ## v1.69.0 - Capture the flag (first version) and the Capture the flag designer
 
 A new minigame: **🚩 Capture the flag**. Pick it in Start song (or the crowd vote), or in dance practice.
