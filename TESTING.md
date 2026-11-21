@@ -757,6 +757,25 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.64.0 - Two games per song, crowd vote, full show, pixel boost pads
+
+**Pick up to 2 games per song** (Start song menu, step 2). Tap a game to add it; tap again to take it off. Numbered badges show the order.
+- The song starts right away with everyone in free dance. The first game starts after an intro (15 to 30 s, longer on long songs).
+- Each game runs for 2:30 at most. With two games there's a break of at least 20 s between them, which is when the first game's results show. Whatever's left of the song is free dance at the end.
+- If the song is too short for two games of at least 40 s, only the first one is played.
+- Free dance and Battle still take the whole song, the same as before.
+- The bar at the bottom shows what's on ("Free dance · Half pipe next"), and the round panel counts down to the next game.
+
+**Crowd vote:** pick 🗳 Crowd vote instead of a game (tap it twice to have the crowd pick both games). About 15 s before that game's countdown, everyone gets a panel with 3 games to choose from, with live vote counts. The game with the most votes is played; a tie is decided at random, and so is a vote nobody joins. Bots vote too.
+
+**Full show:** tick 🎪 Full show and a game that's been played won't be offered in the crowd vote again. Once every game has been played, they all come back. ↺ New show starts the list over. The menu shows how many have been played so far.
+
+**Mars Rally boost pads** are now pixel art on the track's pixel grid, with the chevrons sweeping across them in steps.
+
+Needs a Render redeploy (server.js changed: the crowd vote).
+
+**Test it:** go live with bots, open Start song, pick Crowd vote + Half pipe, and play a song of 3 minutes or more. You should get free dance, then the vote, then the winning game, a break with the results, then Half pipe, then free dance to the end.
+
 ## v1.63.1 - Half pipe: beat bar and a bigger, shallower pipe
 
 - **Beat bar** along the bottom of the screen (above the pad and stick on phones): blocks slide in from both sides and meet in the box on every beat, so you can see when to tap BEAT. Every 4th beat is a bigger yellow block. The box flashes green when you hit the beat and turns gold with SWIPE! when it's time to swipe.
