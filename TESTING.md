@@ -757,6 +757,16 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.63.1 - Half pipe: beat bar and a bigger, shallower pipe
+
+- **Beat bar** along the bottom of the screen (above the pad and stick on phones): blocks slide in from both sides and meet in the box on every beat, so you can see when to tap BEAT. Every 4th beat is a bigger yellow block. The box flashes green when you hit the beat and turns gold with SWIPE! when it's time to swipe.
+- **Bigger pipe:** it's wider (nearly the full screen), deeper front to back (9 rows of tiles instead of 6), and the walls are lower.
+- Bots ride all the way up the wider walls.
+
+Needs a Render redeploy (bots.js changed).
+
+**Test it:** practice → Half pipe. Tap BEAT as the blocks meet in the box; the box should flash green on each hit.
+
 ## v1.63.0 - Pixel art sweep
 
 Everything round, glowing or blended in the games is now drawn the pixel-art way:

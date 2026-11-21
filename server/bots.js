@@ -250,7 +250,7 @@ module.exports = function(api) {
     }
     if (now - p.posAt > 150) {
       p.posAt = now; var uu = p.air ? p.air.side : Math.min(0.995, p.A) * Math.sin(p.phi), z = p.air ? Math.sin(Math.PI * Math.min(1, (now - p.air.t0) / 1000 / p.air.dur)) * p.air.h / 1.4 : 0;
-      b.x = +(0.5 + uu * 0.42).toFixed(4); b.y = 0.6; b.act({ type: "pos", x: b.x, y: b.y, z: +z.toFixed(3), r: Math.round(p.r) });
+      b.x = +(0.5 + uu * 0.46).toFixed(4); b.y = 0.6; b.act({ type: "pos", x: b.x, y: b.y, z: +z.toFixed(3), r: Math.round(p.r) });
     }
     if (now > p.scoreAt) { p.scoreAt = now + 2000; b.act({ type: "score", s: p.score }); }
   }
