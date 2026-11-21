@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.79.4"></script>
-<script src="art.js?v=1.79.4"></script>
-<script src="instruments.js?v=1.79.4"></script>
-<script src="kart.js?v=1.79.4"></script>
+<script src="gfx.js?v=1.79.5"></script>
+<script src="art.js?v=1.79.5"></script>
+<script src="instruments.js?v=1.79.5"></script>
+<script src="kart.js?v=1.79.5"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -646,7 +646,18 @@ body.jset .nav-item.jam-only{display:flex}
         </div>
         <button id="mixAutoBtn" class="btn" style="padding:5px 14px;font-size:12px;background:var(--pu);border-color:var(--pu);color:#fff;margin-bottom:14px" title="Play backing track for ~1s then click — auto-sets keys to front-and-center level">&#10024; Auto-Align</button>
       </div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:2px">Play your track for ~1s &#8594; click <b>Auto-Align</b> to match keys volume to the song&#39;s vocal range (front &amp; center, not dominating).</div>
+      <div id="alBox" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bg4)">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button id="alToggle" class="btn" style="padding:6px 14px;font-size:12px" title="Keep your instrument at the right level for whatever song is playing">Auto level: Off</button>
+          <span id="alSeg" style="display:inline-flex;gap:4px">
+            <button class="btn" data-al="-6" style="padding:6px 10px;font-size:12px" title="Sits inside the track, like a backing vocal">Blend</button>
+            <button class="btn" data-al="-2" style="padding:6px 10px;font-size:12px" title="Sits on top of the mix, like a lead singer">Lead singer</button>
+            <button class="btn" data-al="2" style="padding:6px 10px;font-size:12px" title="Cuts through, like a solo guitarist">Solo</button>
+          </span>
+        </div>
+        <div id="alInfo" style="font-size:11px;color:var(--tx3);margin-top:6px">Sets your volume by itself while a backing track or video plays, so you sit where a lead singer or solo guitarist would.</div>
+      </div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:8px">Play your track for ~1s &#8594; click <b>Auto-Align</b> to match keys volume to the song&#39;s vocal range (front &amp; center, not dominating).</div>
   </div>
   <div class="sl">Dance rounds <span class="bdg" style="background:var(--bg3);color:var(--tx3)">live shows</span></div>
   <div class="pnl" id="roundPanel">
@@ -1578,6 +1589,7 @@ var chordShape="Triad",harmOn=false,harmInterval="5th",strumOn=false,strumSpeed=
 var activeSlot=-1;
 var activeChordVoices=[],activeHarmVoice=null;
 var started=false,audioReady=false;
+var alMeter=null;
 var masterVol,fxTrim,rev,cho,dist,lim,analyser,pdWah,pdDly,pdTre,pdCrush;
 var backingAudio=null,backingGain=null,backingAnalyser=null,backingSource=null;
 var vidGain=null,vidAnalyser=null,vidSource=null;
@@ -1642,7 +1654,7 @@ var layout=buildLayout();
 function initAudio(){if(started)return;started=true;
   /* iPhone: without this, web audio follows the ringer switch and is silent when the phone is on silent */
   try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
-  Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);fxTrim=new Tone.Volume(fxTrimDb()).connect(masterVol);rev=new Tone.Reverb({decay:FXS.rv.decay,wet:S.fxR}).connect(fxTrim);
+  Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);try{alMeter=new Tone.Meter({smoothing:.6,normalRange:false});masterVol.connect(alMeter);}catch(e){}analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);fxTrim=new Tone.Volume(fxTrimDb()).connect(masterVol);rev=new Tone.Reverb({decay:FXS.rv.decay,wet:S.fxR}).connect(fxTrim);
   /* ── Native Tone.js pedal board: cho → AutoWah → Delay → Tremolo → BitCrusher → rev ── */
   pdCrush=new Tone.BitCrusher({bits:FXS.crush.bits,wet:S.pdCrush}).connect(rev);
   pdTre=new Tone.Tremolo({frequency:FXS.tre.frequency,depth:FXS.tre.depth,wet:S.pdTre}).start().connect(pdCrush);
@@ -3681,6 +3693,79 @@ function autoAlignMix(){
   },700);
 }
 
+/* ── Auto level ──
+   While a backing track or a video plays, keep your instrument where a lead singer or a solo guitarist would sit:
+   1. the track's level is measured as it plays (short-term average, after the Track / Video slider, so what you hear);
+   2. your instrument's own level is learned from the notes you play (measured at the master, per instrument, so a
+      loud synth and a quiet flute both end up in the right place);
+   3. the Keys volume is nudged toward (track level + the chosen offset). Blend -6 dB, Lead singer -2 dB, Solo +2 dB.
+   It only changes the volume between notes, and moves a little at a time. If you move the Keys slider (or the - and =
+   keys) while it's on, that becomes your new offset, so you can still nudge it. YouTube can't be measured from the page. */
+var AL={on:false,off:-2,inst:{},p:null,key:"",lastVol:null,note:null,t0:0,quietAt:0,info:""};
+try{var _al=JSON.parse(localStorage.getItem("uk_autolevel")||"{}");AL.on=!!_al.on;if(typeof _al.off==="number")AL.off=Math.max(-12,Math.min(8,_al.off));if(_al.inst&&typeof _al.inst==="object")AL.inst=_al.inst;}catch(e){}
+function alSave(){try{localStorage.setItem("uk_autolevel",JSON.stringify({on:AL.on,off:AL.off,inst:AL.inst}));}catch(e){}}
+function alSource(){
+  if(backingAnalyser&&backingAudio&&backingAudio.src&&!backingAudio.paused)return{ana:backingAnalyser,g:MIX.track,key:"b"+backingAudio.src};
+  var jv=document.getElementById("jmVid");
+  if(vidAnalyser&&jv&&jv.src&&!jv.paused)return{ana:vidAnalyser,g:MIX.vid,key:"v"+jv.src};
+  return null;
+}
+function alTrackDb(){return AL.p===null?null:10*Math.log10(AL.p+1e-12);}
+function alUi(){
+  var tg=document.getElementById("alToggle");if(tg){tg.textContent="Auto level: "+(AL.on?"On":"Off");tg.style.background=AL.on?"var(--tl)":"";tg.style.borderColor=AL.on?"var(--tl)":"";tg.style.color=AL.on?"#fff":"";}
+  Array.prototype.forEach.call(document.querySelectorAll("#alSeg [data-al]"),function(b){var on=AL.on&&Math.abs(+b.getAttribute("data-al")-AL.off)<0.75;b.style.background=on?"var(--pu)":"";b.style.borderColor=on?"var(--pu)":"";b.style.color=on?"#fff":"";b.style.opacity=AL.on?"1":".5";});
+  var inf=document.getElementById("alInfo");if(inf)inf.textContent=AL.info||"Sets your volume by itself while a backing track or video plays, so you sit where a lead singer or solo guitarist would.";
+}
+function alApplyVol(v){
+  S.vol=parseFloat(v.toFixed(3));AL.lastVol=S.vol;
+  if(audioReady&&!activeVoice)masterVol.volume.value=Tone.gainToDb(S.vol*getPowerVol());
+  updJamVol();
+  var sl=document.getElementById("mixKeys");if(sl)sl.value=S.vol;
+  var kl=document.getElementById("mixKeysLbl");if(kl)kl.textContent=Math.round(S.vol*100)+"%";
+  var sv=document.getElementById("sV");if(sv)sv.value=S.vol;
+}
+/* every 60 ms: the track's level, and the level of the note you're playing */
+function alSample(){
+  var src=alSource();
+  if(src){
+    if(AL.key!==src.key){AL.key=src.key;AL.p=null;}
+    var buf=src.ana._alBuf||(src.ana._alBuf=new Float32Array(src.ana.fftSize));src.ana.getFloatTimeDomainData(buf);
+    var ss=0;for(var i=0;i<buf.length;i++)ss+=buf[i]*buf[i];
+    var x=ss/buf.length*src.g*src.g;                                   /* power as heard, after the fader */
+    if(x>3e-6){AL.p=AL.p===null?x:AL.p+(x-AL.p)*(AL.p===null?1:(x>AL.p?0.05:0.02));}   /* up a little faster than down; silence is ignored */
+  }else{AL.key="";}
+  /* the note: its loudest moment at the master, once the attack has passed */
+  if(typeof alMeter!=="undefined"&&alMeter&&audioReady){
+    var now=Date.now(),on=!!(activeVoice&&activeNoteKey);
+    if(on&&(!AL.note||AL.note.k!==activeNoteKey)){alFinishNote();AL.note={k:activeNoteKey,t:now,g:masterVol.volume.value,max:-200};}
+    if(AL.note&&on&&now-AL.note.t>120){var m=alMeter.getValue();if(typeof m==="object")m=m[0];if(m>AL.note.max)AL.note.max=m;}
+    if(!on&&AL.note)alFinishNote();
+  }
+}
+function alFinishNote(){
+  var n=AL.note;AL.note=null;if(!n||n.max<-60)return;
+  var intrinsic=n.max-n.g;if(!(intrinsic>-40&&intrinsic<20))return;
+  var id=S.eng,old=AL.inst[id];AL.inst[id]=old===undefined?intrinsic:old*0.6+intrinsic*0.4;
+  AL.learn=(AL.learn||0)+1;if(AL.learn%6===0)alSave();
+}
+/* every 400 ms: nudge the Keys volume toward the target */
+function alTick(){
+  if(!AL.on||!audioReady)return;
+  if(AL.lastVol!==null&&Math.abs(S.vol-AL.lastVol)>0.004){   /* you moved it: that's your new offset */
+    AL.off=Math.max(-12,Math.min(8,AL.off+20*Math.log10(Math.max(0.02,S.vol)/Math.max(0.02,AL.lastVol))));AL.lastVol=S.vol;alSave();}
+  var td=alTrackDb();
+  if(td===null||!alSource()){AL.info="Waiting for a backing track or video to play.";alUi();return;}
+  var intr=AL.inst[S.eng],known=intr!==undefined;if(!known)intr=-10;
+  var want=td+AL.off,gain=Math.pow(10,(want-intr)/20),vol=gain/getPowerVol(),tgt=Math.max(0.05,Math.min(1,vol));
+  if(!activeVoice){var d=tgt-S.vol;if(Math.abs(d)>0.01)alApplyVol(S.vol+Math.max(-0.06,Math.min(0.06,d)));else if(AL.lastVol===null)AL.lastVol=S.vol;}
+  AL.info="Track "+td.toFixed(0)+" dB, you aim at "+want.toFixed(0)+" dB, Keys volume "+Math.round(S.vol*100)+"%"+(vol>1.05?" (maxed out: turn the track down)":"")+(known?"":". Play a few notes and it will learn this instrument.");
+  alUi();
+}
+setInterval(alSample,60);setInterval(alTick,400);
+window.ukAuto=function(){return{on:AL.on,off:AL.off,track:alTrackDb(),inst:AL.inst,vol:S.vol,info:AL.info,src:!!alSource()};};
+window.ukAudioTest={init:function(){initAudio();},play:function(m){playNote("t",m);},stop:function(){silenceNote();},back:function(){return backingAudio;}};
+window.ukAutoSet=function(on,off,vol){AL.on=!!on;if(off!==undefined)AL.off=off;if(vol!==undefined)S.vol=vol;AL.lastVol=S.vol;alUi();};
+
 var MET=(function(){var iv=null,beat=0;function tick(){var dot=document.getElementById("metD");dot.style.background=beat===0?"var(--pk)":"var(--tl)";setTimeout(function(){dot.style.background="var(--bg4)";},100);if(audioReady){var o=new Tone.Synth({oscillator:{type:"sine"},envelope:{attack:.001,decay:.05,sustain:0,release:.01}}).connect(masterVol);o.triggerAttackRelease(beat===0?880:660,"32n");setTimeout(function(){try{o.dispose();}catch(e){}},200);}beat=(beat+1)%4;}return{toggle:function(){var btn=document.getElementById("metB");if(iv){clearInterval(iv);iv=null;btn.textContent="Start";btn.classList.remove("on");return;}initAudio();btn.textContent="Stop";btn.classList.add("on");beat=0;tick();var bpm=+document.getElementById("metV").value||120;iv=setInterval(tick,60000/bpm);document.getElementById("metV").onchange=function(){if(!iv)return;clearInterval(iv);iv=setInterval(tick,60000/(+this.value||120));};}};})();
 
 var REC=(function(){var layers=[],notes=[],start=0,recording=false,playing=false;var timeouts=[],loopLen=0,loopStart=0,phAnim=null;var curNote=null;var LC=["#D354A0","#7F77DD","#1D9E75","#D85A30","#378ADD","#EF9F27","#D4537E","#5DCB42"];function playLoopNote(midi,instId,dur){if(!audioReady)return;var ins=findInst(instId);if(!ins)return;var nn=Tone.Frequency(midi,"midi").toNote();var durS=Math.max(0.05,(dur||200)/1000);if(ins.t==="samp"){var sp=samplers[instId];if(!sp)return;sp.triggerAttackRelease(nn,durS);}else{var s=ins.mk();s.connect(dist);s.triggerAttackRelease(nn,durS);setTimeout(function(){try{s.dispose();}catch(e){}},Math.max(800,dur||200)+500);}}function _active(){var solo=false;for(var i=0;i<layers.length;i++)if(layers[i].solo){solo=true;break;}var a=[];for(var i=0;i<layers.length;i++){if(solo?layers[i].solo:!layers[i].muted)a.push(layers[i]);}return a;}  function _schedule(){if(!playing)return;var active=_active();active.forEach(function(lay){lay.notes.forEach(function(note){var t=setTimeout(function(){if(!playing)return;playLoopNote(note.midi,lay.inst,note.dur||200);},note.time%loopLen);timeouts.push(t);});});var lt=setTimeout(function(){if(!playing)return;loopStart=Date.now();_schedule();},loopLen);timeouts.push(lt);}function _startPh(){var ph=document.getElementById("rcPh");function tick(){if(!playing){ph.style.opacity="0";return;}ph.style.left=((Date.now()-loopStart)%loopLen/loopLen*100)+"%";phAnim=requestAnimationFrame(tick);}tick();}function _updStatus(){var s=document.getElementById("recS");if(!layers.length){s.textContent="No layers";return;}var tn=0;layers.forEach(function(l){tn+=l.notes.length;});s.textContent=layers.length+" layer"+(layers.length>1?"s":"")+" / "+tn+" notes / "+(loopLen/1000).toFixed(1)+"s";}function _renderLayers(){var c=document.getElementById("layBox");c.innerHTML="";layers.forEach(function(L,i){var el=document.createElement("div");el.style.cssText="display:flex;align-items:center;gap:8px;padding:5px 10px;margin-bottom:3px;border-radius:6px;background:var(--bg3);border:1px solid "+(L.muted?"var(--bg4)":L.c+"44");el.innerHTML='<span style="width:8px;height:8px;border-radius:50%;background:'+L.c+';opacity:'+(L.muted?.3:1)+'"></span><span style="font-size:12px;font-weight:600;flex:1;color:'+(L.muted?'var(--tx3)':'var(--tx)')+'">'+L.instL+' <span style="font-weight:400;font-size:11px;color:var(--tx3)">('+L.notes.length+')</span></span><span class="btn" style="padding:2px 8px;font-size:10px;'+(L.muted?'background:var(--co);color:#fff':'')+'" data-m="1">M</span><span class="btn" style="padding:2px 8px;font-size:10px;'+(L.solo?'background:var(--am);color:#111':'')+'" data-s="1">S</span><span class="btn" style="padding:2px 8px;font-size:10px" data-x="1">X</span>';(function(ii,layer){el.onclick=function(e){var t=e.target;if(t.getAttribute("data-m")){layer.muted=!layer.muted;layer.solo=false;_renderLayers();}else if(t.getAttribute("data-s")){layer.solo=!layer.solo;if(layer.solo)layer.muted=false;_renderLayers();}else if(t.getAttribute("data-x")){stopAll();layers.splice(ii,1);if(!layers.length)loopLen=0;_renderLayers();_drawTimeline();_updStatus();}};})(i,L);c.appendChild(el);});}function _drawTimeline(){var cv=document.getElementById("rcv"),ctx=cv.getContext("2d");var r=cv.parentElement.getBoundingClientRect();cv.width=r.width*2;cv.height=r.height*2;ctx.scale(2,2);var w=r.width,h=r.height;ctx.clearRect(0,0,w,h);if(!layers.length)return;var tT=loopLen||1,mn=999,mx=0;layers.forEach(function(l){l.notes.forEach(function(n){if(n.midi<mn)mn=n.midi;if(n.midi>mx)mx=n.midi;});});if(mn>mx){mn=60;mx=72;}mn-=2;mx+=2;var rng=mx-mn||1;layers.forEach(function(L){ctx.globalAlpha=L.muted?.15:.8;L.notes.forEach(function(n){ctx.fillStyle=L.c;ART.PX.disc(ctx,(n.time/tT)*w,h-((n.midi-mn)/rng)*h,3);});});ctx.globalAlpha=1;}function stopAll(){playing=false;timeouts.forEach(function(t){clearTimeout(t);});timeouts=[];if(phAnim){cancelAnimationFrame(phAnim);phAnim=null;}document.getElementById("rcPh").style.opacity="0";document.getElementById("recP").classList.remove("on");document.getElementById("recP").textContent="Play all";_updStatus();}return{recording:false,notes:[],start:0,get _playing(){return playing;},get _layerCount(){return layers.length;},get _layers(){return layers;},_loopPct:function(){if(!playing||!loopLen)return 0;return((Date.now()-loopStart)%loopLen)/loopLen;},
@@ -4429,7 +4514,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.79.4",SERVER_VERSION="";
+var PAGE_VERSION="1.79.5",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6557,6 +6642,9 @@ initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updMod
     var vl=document.getElementById("mixVidLbl");if(vl)vl.textContent=Math.round(v*100)+"%";
   };
   var _mxA=document.getElementById("mixAutoBtn");if(_mxA)_mxA.onclick=function(){autoAlignMix();};
+  var _alT=document.getElementById("alToggle");if(_alT)_alT.onclick=function(){initAudio();AL.on=!AL.on;AL.lastVol=S.vol;if(!AL.on)AL.info="";alSave();alUi();showJamToast("Auto level "+(AL.on?"on":"off"),"#1D9E75");};
+  Array.prototype.forEach.call(document.querySelectorAll("#alSeg [data-al]"),function(b){b.onclick=function(){initAudio();AL.off=+b.getAttribute("data-al");if(!AL.on){AL.on=true;}AL.lastVol=S.vol;alSave();alUi();alTick();};});
+  alUi();
   /* show the remembered levels and apply the video level to YouTube */
   if(_mxT){_mxT.value=MIX.track;var _tl0=document.getElementById("mixTrackLbl");if(_tl0)_tl0.textContent=Math.round(MIX.track*100)+"%";}
   if(_mxV){_mxV.value=MIX.vid;var _vl0=document.getElementById("mixVidLbl");if(_vl0)_vl0.textContent=Math.round(MIX.vid*100)+"%";}

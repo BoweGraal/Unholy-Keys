@@ -757,6 +757,17 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.5 - Auto level for playing along with songs
+
+1. Open the Volume panel. There is a new **Auto level** button with three positions: **Blend** (sits inside the track), **Lead singer**, **Solo** (cuts through).
+2. Start a backing track, turn Auto level on and play a few notes. Your Keys volume moves by itself to sit at the chosen spot against the song. The line under the buttons shows what it is doing.
+3. Switch to a much quieter or louder song: your volume follows within a couple of seconds. It only changes between notes, never mid-note.
+4. Drag the Keys slider while it is on: that becomes your new offset, and it keeps it from then on.
+5. It learns each instrument's own loudness from the notes you play, so a loud synth and a quiet flute both land in the right place. The first few notes of a new instrument are a rough guess.
+6. YouTube audio can not be measured from the page, so Auto level only works with uploaded tracks and video files.
+
+Tested with real Tone.js: a -26 dB song brought the Keys to 23%, a -8 dB song pinned it at the top, and Solo sat about 4 dB above Lead singer.
+
 ## v1.79.4 - Effects: why the wah sounded bad, and 3 tested presets
 
 **What was wrong.** I rendered every preset offline (a plucked guitar, a strummed guitar and a saw synth) and measured it. Anything with the auto-wah came out about 9 to 10 dB louder than the dry sound and clipped (up to 4% of the samples), because the wah had a built-in 20 dB boost. That's the harsh, loud "sweep". The master limiter doesn't catch it, so anything over full scale just distorts. The crush and lo-fi presets were also 3 to 7 dB louder than dry.
