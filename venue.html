@@ -37,13 +37,13 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #joinScreen .jv{display:none}
 #joinScreen[data-view=menu] .jv-menu,#joinScreen[data-view=join] .jv-join,#joinScreen[data-view=char] .jv-char{display:flex}
 .jv-menu{flex-direction:column;align-items:center;gap:14px;width:100%;max-width:360px}
-#menuChar{width:220px;height:200px;image-rendering:pixelated;cursor:pointer}
+#menuChar{width:220px;height:230px;image-rendering:pixelated;cursor:pointer}
 .jv-menu #inName{width:100%;background:#120e22;border:2px solid #3a3058;color:#fff;padding:10px 12px;font:700 15px 'Silkscreen',ui-monospace,monospace;text-align:center;outline:none;border-radius:0}
 .jv-menu #inName:focus{border-color:#D354A0}
 .mm-btns{display:flex;flex-direction:column;gap:10px;width:100%}
 .mm-btn{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;padding:13px 14px 12px;color:#fff;border:0;cursor:pointer;font-size:17px!important;background:#2a2440}
 .mm-btn small{font:600 11px system-ui,sans-serif!important;letter-spacing:0;opacity:.8;text-transform:none}
-.mm-join{background:#c8407e!important}.mm-prac{background:#5b4fc4!important}.mm-char{background:#2a2440!important}
+.mm-join{background:#c8407e!important}.mm-prac{background:#5b4fc4!important}.mm-char{background:#2a2440!important}.mm-inst{background:#1f5f6e!important}
 .mm-btn:active{transform:translateY(2px)}
 .mm-back{background:transparent;color:#aaa5c8;border:0;cursor:pointer;font-size:12px!important;padding:6px;box-shadow:none!important;align-self:center}
 .jv-join,.jv-char{max-width:420px}
@@ -537,12 +537,13 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
   <div style="text-align:center;margin:-4px 0 6px"><span id="srvTag" class="srv-badge"></span></div>
   <!-- the main menu: your character on a little stage, and three ways in -->
   <div class="jv jv-menu">
-    <canvas id="menuChar" width="220" height="200" aria-label="Your character"></canvas>
+    <canvas id="menuChar" width="220" height="230" aria-label="Your character"></canvas>
     <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off" aria-label="Your name">
     <div class="mm-btns">
       <button class="mm-btn mm-join" id="mmJoin">&#9654; Join game<small>enter a room code</small></button>
       <button class="mm-btn mm-prac" id="mmPrac">&#128378; Practice<small>the practice zone, no show needed</small></button>
       <button class="mm-btn mm-char" id="mmChar">&#127912; Character<small>change your look</small></button>
+      <button class="mm-btn mm-inst" id="mmInst">&#127929; Instrument<small>play the phone instrument</small></button>
     </div>
   </div>
   <!-- join a show -->
@@ -1557,17 +1558,18 @@ var MENU=(function(){
   function frame(){raf=0;if(js.classList.contains("hidden")||js.getAttribute("data-view")!=="menu")return;
     var W=cv.width,H=cv.height,now=performance.now(),b=now/500,ph=b*Math.PI;g.imageSmoothingEnabled=false;g.clearRect(0,0,W,H);
     /* a little stage with a spotlight */
-    g.fillStyle="#1d1733";g.fillRect(20,150,180,26);g.fillStyle="#3a3058";g.fillRect(20,150,180,4);g.fillStyle="#120e22";g.fillRect(20,176,180,6);
-    for(var i=0;i<6;i++){g.fillStyle=["#D354A0","#7F77DD","#3DF2FF","#F5C518","#4CC38A","#E8505B"][(i+Math.floor(b))%6];g.globalAlpha=0.5;g.fillRect(28+i*30,160,22,8);}g.globalAlpha=1;
-    g.fillStyle="rgba(245,197,24,.10)";g.beginPath();g.moveTo(90,0);g.lineTo(130,0);g.lineTo(170,152);g.lineTo(50,152);g.fill();
-    var sw=Math.sin(ph),p=5,dir=Math.floor(now/2400)%8;
-    ART.drawChar(g,110,150-12*p-Math.abs(sw)*4,p,myLook,{armL:0.9+sw*0.9,armR:-0.9+sw*0.9,legL:sw*0.25,legR:-sw*0.25,bob:Math.abs(sw)*2,dir:[0,4,1,5,2,6,3,7][dir]});
+    g.fillStyle="#1d1733";g.fillRect(20,180,180,26);g.fillStyle="#3a3058";g.fillRect(20,180,180,4);g.fillStyle="#120e22";g.fillRect(20,206,180,6);
+    for(var i=0;i<6;i++){g.fillStyle=["#D354A0","#7F77DD","#3DF2FF","#F5C518","#4CC38A","#E8505B"][(i+Math.floor(b))%6];g.globalAlpha=0.5;g.fillRect(28+i*30,190,22,8);}g.globalAlpha=1;
+    g.fillStyle="rgba(245,197,24,.10)";g.beginPath();g.moveTo(90,0);g.lineTo(130,0);g.lineTo(170,182);g.lineTo(50,182);g.fill();
+    var sw=Math.sin(ph),p=4,dir=Math.floor(now/2400)%8;
+    ART.drawChar(g,110,180-12*p-Math.abs(sw)*4,p,myLook,{armL:0.9+sw*0.9,armR:-0.9+sw*0.9,legL:sw*0.25,legR:-sw*0.25,bob:Math.abs(sw)*2,dir:[0,4,1,5,2,6,3,7][dir]});
     raf=requestAnimationFrame(frame);}
   function loop(){if(!raf)raf=requestAnimationFrame(frame);}
   try{var nm=localStorage.getItem("uk_name");if(nm)document.getElementById("inName").value=nm;}catch(e){}
-  document.getElementById("inName").addEventListener("change",saveName);
+  document.getElementById("inName").addEventListener("input",saveName);document.getElementById("inName").addEventListener("change",saveName);
   document.getElementById("mmJoin").onclick=function(){saveName();view("join");};
   document.getElementById("mmChar").onclick=function(){view("char");};
+  document.getElementById("mmInst").onclick=function(){saveName();location.href="index.html?instrument";};
   cv.onclick=function(){view("char");};
   document.getElementById("mmPrac").onclick=function(){saveName();try{history.replaceState(null,"","?practice");}catch(e){}PRACTICE.enter();};
   Array.prototype.forEach.call(js.querySelectorAll("[data-to]"),function(b){b.onclick=function(){view(b.getAttribute("data-to"));};});
