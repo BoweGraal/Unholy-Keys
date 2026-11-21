@@ -1517,3 +1517,10 @@ Needs a Render redeploy (server.js changed).
 - Server change: the ski bots use the new zone length. **Redeploy Render.**
 
 **Test it:** practice → Ski, in a jump zone. Roll up a ramp and tap HOP at the start, middle and very end: the jump should get bigger each time. Skip the hop and you still get a decent jump.
+
+## v1.79.15 — half pipe overhaul
+- Phone: camera follows you so only the pipe side you're on shows; skater faces 8 directions when moving diagonally.
+- Skater pushes off with a foot on the flat; crouches (angle locked) from the incline line until leaving the ground.
+- Left stick = power/height (quicker work = higher jump); a gauge each side shows jump strength; power resets after each jump/bail. Jumps and skating are slower.
+- Grind: hold right stick down (or up) as you reach the lip, slide along the rail, balance with the left stick, flick right stick sideways/up for moves, release to hop off. Falls off past the red zone.
+- Check: practice pipe test, hold right stick down at the lip → BALANCE meter, points; super meter resets on use.

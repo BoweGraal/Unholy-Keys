@@ -58,7 +58,7 @@ var TUNE=(function(){
   {id:"pipe",name:"Half pipe",icon:"🛹",mode:"pipe",
    about:"Groups of 4 or 5 share a half pipe, each rolling at their own pace. Tap BEAT (Space) on the beat to build momentum; lean with the left stick (A/D). At the top of the ramp, swipe: the direction picks a dance trick, how hard sets the height. In the air, spin with the stick to line the board up with the wall, and add style with 1–4. Clean landings fill the SUPER meter.",
    vars:[
-    V("pp.cross","Time to cross the pipe",2.2,1,4,0.1,"Seconds to roll from one wall to the other. Higher is slower.","s"),
+    V("pp.cross","Time to cross the pipe",2.8,1,4,0.1,"Seconds to roll from one wall to the other. Higher is slower.","s"),
     V("pp.window","Beat timing window",0.2,0.05,0.5,0.01,"How far from the beat (in beats) a BEAT press still counts.","beats"),
     V("pp.cruise","Cruising speed",1.0,0.6,1.6,0.05,"The momentum you roll up to on your own (0.95 or more reaches the lip).",""),
     V("pp.boost","Boost pad kick",0.3,0.05,0.8,0.05,"How much momentum the lit boost pad adds when you roll over it.",""),
