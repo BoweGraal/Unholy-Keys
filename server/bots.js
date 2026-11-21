@@ -118,6 +118,7 @@ module.exports = function(api) {
     if (playing && rd.mode === "pipe") { pipe(b, now, rd); }
     if (playing && rd.mode === "ski") { ski(b, now, rd); }
     if (playing && rd.mode === "mosh") { mosh(b, now, rd); }
+    if (playing && rd.mode === "ctf") { ctf(b, now, rd); }
     if (playing && rd.mode === "keepy") { if (!b.hopAt && Math.random() < 0.05) b.hopAt = now; var hu = b.hopAt ? (now - b.hopAt) / 900 : 0; if (hu >= 1) { b.hopAt = 0; hu = 0; } b.skH = b.hopAt ? Math.round(24 * 4 * hu * (1 - hu)) : 0; }
 
     /* wander about (not while playing a step, target or highway round: they're busy with the game) */
@@ -151,7 +152,7 @@ module.exports = function(api) {
   /* in a round: dance along, report a score (bots are decent, rarely great), vote in battles, push in the mosh */
   function round(b, now) {
     var rd = b.rd, pos = now - rd.playAt, ch = rd.chart, bpm = ch && ch.bpm || 120;
-    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.mode === "ski" || rd.battle ? 4 : 5;
+    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.mode === "ski" || rd.mode === "ctf" || rd.battle ? 4 : 5;
     if (!b.dancing || b.style !== style) { b.dancing = true; b.style = style; b.act({ type: "dance", style: style }); }
     pose(b, now, bpm);
     var slot = -1, bs = rd.b && rd.b.slots, be = rd.b && rd.b.entrants;
@@ -160,7 +161,7 @@ module.exports = function(api) {
       if ((s.a >= 0 && be[s.a] && be[s.a].id === b.viewerId) || (s.b >= 0 && be[s.b] && be[s.b].id === b.viewerId)) slot = k;
       else if (rd.mode === "free" && !b.bvoted[k] && pos > s.start + rnd(3000, (s.end - s.start) * 0.8)) { b.bvoted[k] = 1; b.act({ type: "bvote", side: Math.random() < 0.5 ? 0 : 1 }); }
     }
-    if (rd.mode !== "free" && rd.mode !== "walk" && rd.mode !== "ski" && rd.mode !== "pipe" && rd.mode !== "mosh" && now > b.scoreAt) {
+    if (rd.mode !== "free" && rd.mode !== "walk" && rd.mode !== "ski" && rd.mode !== "pipe" && rd.mode !== "mosh" && rd.mode !== "ctf" && now > b.scoreAt) {
       /* a score that grows through the song at this bot's skill */
       if (b.rs0n !== rd.n) { b.rs0n = rd.n; b.rs0 = pos; b.score = 0; }   /* a game can start part way into the song (two games per song) */
       var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, (pos - b.rs0) / Math.max(60000, Math.min(150000, dur - b.rs0))));
@@ -315,6 +316,27 @@ module.exports = function(api) {
     if (now - m.posAt > 150) { m.posAt = now; b.act({ type: "pos", x: +b.x.toFixed(4), y: +b.y.toFixed(4) }); }
     if (now > m.scoreAt) { m.scoreAt = now + 2000; b.score = m.score; b.act({ type: "score", s: m.score }); }
     b.moshPh = ph;
+  }
+  /* capture the flag: the server's own game (rooms[...].round.ctf) tells the bot everything. Some go for the flag, some
+     stay back to defend; carriers run home; anyone sees a thief on their side and chases. Boost pads shove them like players. */
+  function ctf(b, now, rd) {
+    var r = rooms[b.room], srd = r && r.round, C = ARTX && ARTX.CTF; if (!srd || !srd.ctf || !C) return;
+    var c = srd.ctf, I = c.I, st = c.st, id = b.viewerId, t = C.teamOf(st, id);
+    if (!b.cf || b.cf.n !== rd.n) { var sp = C.spawnOf(I, st, id), mates = Object.keys(st.teams).filter(function(k) { return st.teams[k] === t; }).sort();
+      b.cf = { n: rd.n, x: sp[0], y: sp[1], t: now, wp: null, wpAt: 0, posAt: 0, tagSeen: 0, push: [0, 0], role: mates.indexOf(id) % 3 === 2 ? "d" : "a", jit: Math.random() * 6 }; }
+    var k = b.cf, dt = Math.min(0.25, (now - k.t) / 1000); k.t = now;
+    if (st.tagged[id] && st.tagged[id] !== k.tagSeen) { k.tagSeen = st.tagged[id]; var s2 = C.spawnOf(I, st, id); k.x = s2[0]; k.y = s2[1]; k.wp = null; k.push = [0, 0]; k.hold = now + 1500; }
+    var going = wkBeat(rd, now - rd.playAt) >= 8 && !(k.hold && now < k.hold);
+    if (going) {
+      var goal = C.botGoal(st, I, id, k.x, k.y, k.role);
+      if (!k.wp || now > k.wpAt) { k.wp = C.path(I, k.x, k.y, goal[0], goal[1]); k.wpAt = now + 250; }
+      var av = C.botAvoid(st, I, id, k.x, k.y);
+      var dx = k.wp[0] - k.x + av[0] * 1.6, dy = k.wp[1] - k.y + av[1] * 1.6, d = Math.hypot(dx, dy) || 1, sp2 = C.SPEED * (0.7 + 0.3 * b.skill) * (C.carrying(st, id) >= 0 ? C.CARRY : 1);
+      var pd = I.pad(k.x, k.y); if (pd) { k.push = [pd[0] * C.SPEED * C.PAD, pd[1] * C.SPEED * C.PAD]; }
+      C.move(I, k, (dx / d * sp2 + k.push[0]) * dt + Math.sin(now / 700 + k.jit) * 0.01, (dy / d * sp2 + k.push[1]) * dt);
+      var dm = Math.pow(0.08, dt); k.push = [k.push[0] * dm, k.push[1] * dm];
+    }
+    if (now - k.posAt > 110) { k.posAt = now; b.x = +(k.x / I.w).toFixed(4); b.y = +(k.y / I.h).toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
   }
   /* a groove: arms and legs swinging on the beat, in this bot's own style (sent about five times a second) */
   function pose(b, now, bpm) {

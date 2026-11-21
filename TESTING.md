@@ -757,6 +757,28 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.69.0 - Capture the flag (first version) and the Capture the flag designer
+
+A new minigame: **🚩 Capture the flag**. Pick it in Start song (or the crowd vote), or in dance practice.
+- **The arena:** the floor turns into a top-down arena of dance-floor tiles with walls, a red base on one side and a blue base on the other. Everyone is put on a team (red or blue, evened out) and starts at their team's spawn. The count-in is 8 beats, then GO.
+- **Moving:** arrow keys / WASD, or the stick on a phone.
+- **Boost pads** (yellow chevrons) shove you hard the way they point.
+- **The flags:** run into the other team's base to grab their flag (+100), then bring it back to your own base while your own flag is at home to score a capture (+500, and the team scores a point).
+- **Tagging:** bump into someone from the other team while they're on your half and they're sent back to their spawn (+150, or +250 if they had your flag, which goes straight back to your base).
+- The server referees everything, so all screens agree on who has which flag.
+- **Stage view:** the whole arena fills your screen with everyone in it, team colours under their feet, the flags, who's carrying what, everyone's points over their heads and RED 0 - 0 BLUE at the top.
+- **Bots** play it properly: some attack, some defend, carriers run home, and anyone chases a thief on their side. Bots on the other team's half also dodge defenders.
+
+**Capture the flag designer:** Setup → Creator tools → Capture the flag designer (ctf.html).
+- Paint walls, floor, boost pads (click Boost again to turn it: ▶ ▼ ◀ ▲), the red and blue bases, and the red and blue spawns. Drag to paint; right-click rubs out.
+- 🪞 **Mirror** (on by default) copies everything to the other side with the teams swapped, so arenas come out fair.
+- Small / Medium / Large / Huge sizes, Undo (Ctrl+Z), a name, ↺ Reset (back to the starting arena "Twin Forts"), 🗑 Clear, 📋 Share, and ▶ Test run (a practice game on your arena).
+- It saves on your device, and your arena goes out with every Capture the flag round you start.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** practice → Capture the flag. Then make an arena in the designer, press Test run, and finally go live with bots and start a Capture the flag round.
+
 ## v1.68.1 - Dance editor: previous frame outline, copy and paste frames
 
 - In the full-screen dance editor (Graphics lab), the previous frame's pose now shows as a see-through white outline behind the character, so you can pose each frame against the one before (onion skinning).

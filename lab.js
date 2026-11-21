@@ -2,7 +2,7 @@
    with a short explainer, a Play button, and a share box to copy your settings or paste someone else's. */
 (function(){
   /* only for the creator: opened from the performer's Setup menu (?practice&lab) or a Track builder test drive; plain Dance practice doesn't get it */
-  if(typeof TUNE==="undefined"||!/[?&]practice\b/.test(location.search)||!/[?&](lab|kartTest|skiTest)\b/.test(location.search))return;
+  if(typeof TUNE==="undefined"||!/[?&]practice\b/.test(location.search)||!/[?&](lab|kartTest|skiTest|ctfTest)\b/.test(location.search))return;
   var css=document.createElement("style");css.textContent=
   "#labBtn{position:fixed;top:8px;right:8px;z-index:9000;background:#2a1f4d;color:#fff;border:1px solid #7F77DD;border-radius:8px;padding:6px 10px;font:700 13px system-ui;cursor:pointer}"+
   "#gfxBtn{position:fixed;top:46px;right:8px;z-index:9000;background:#2a1f4d;color:#fff;border:1px solid #D354A0;border-radius:8px;padding:6px 10px;font:700 13px system-ui;text-decoration:none}"+
