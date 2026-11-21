@@ -234,10 +234,19 @@ module.exports = function(api) {
      Sends where it is (x), how high (z) and how far it's spun (r) with each position, like the players do. */
   var PPD = [0, 11, 10, 6, 9];
   function pipe(b, now, rd) {
-    if (!b.pp || b.pp.n !== rd.n) b.pp = { n: rd.n, phi: Math.random() * 6, A: 0.3, air: null, r: 0, bail: 0, lb: -1, score: 0, posAt: 0, scoreAt: 0, t: now };
+    var PPA = ARTX && ARTX.PIPE, r0 = rooms[b.room];
+    if (!b.pp || b.pp.n !== rd.n) b.pp = { n: rd.n, phi: Math.random() * 6, A: 0.3, air: null, r: 0, bail: 0, lb: -1, score: 0, posAt: 0, scoreAt: 0, t: now, pu: 0,
+      lane: PPA && r0 ? PPA.group(Array.from(r0.viewers.keys()), b.viewerId).y : 0.6 };
     var p = b.pp, dt = Math.min(0.5, (now - p.t) / 1000); p.t = now;
-    var bi = Math.floor(wkBeat(rd, now - rd.playAt));
-    if (bi !== p.lb) { p.lb = bi; if (!p.air && now > p.bail) p.A = Math.random() < 0.45 + 0.5 * b.skill ? Math.min(1.8, p.A + 0.045) : Math.max(0.25, p.A - 0.02); }
+    var bf = wkBeat(rd, now - rd.playAt);
+    /* speed rolls up to cruising by itself; the lit boost pad (they take turns on the beat) adds more */
+    if (!p.air && now > p.bail) { if (p.A < 1) p.A = Math.min(1, p.A + 0.14 * dt); else p.A = Math.max(1, p.A - 0.06 * dt); }
+    if (PPA && !p.air && now > p.bail) {
+      var uc = Math.min(0.995, p.A) * Math.sin(p.phi), live = PPA.livePad(bf + (Math.abs(uc) > 0.3 ? 0.5 : 0)), ty = Math.random() < b.skill + 0.2 ? PPA.padY(live) : p.lane;
+      p.lane += Math.max(-0.42 * dt, Math.min(0.42 * dt, ty - p.lane));
+      if (p.pu * uc < 0) { var lv = PPA.livePad(bf); if (Math.abs(p.lane - PPA.padY(lv)) < PPA.PAD_H / 2 * (PPA.Y1 - PPA.Y0) + 0.02) p.A = Math.min(1.8, p.A + 0.3); }
+      p.pu = uc;
+    }
     if (p.air) {
       p.r += p.air.spin * dt;
       if ((now - p.air.t0) / 1000 >= p.air.dur) {
@@ -253,7 +262,7 @@ module.exports = function(api) {
     }
     if (now - p.posAt > 150) {
       p.posAt = now; var uu = p.air ? p.air.side : Math.min(0.995, p.A) * Math.sin(p.phi), z = p.air ? Math.sin(Math.PI * Math.min(1, (now - p.air.t0) / 1000 / p.air.dur)) * p.air.h / 1.4 : 0;
-      b.x = +(0.5 + uu * 0.46).toFixed(4); b.y = 0.6; b.act({ type: "pos", x: b.x, y: b.y, z: +z.toFixed(3), r: Math.round(p.r) });
+      b.x = +(0.5 + uu * 0.46).toFixed(4); b.y = +p.lane.toFixed(4); b.act({ type: "pos", x: b.x, y: b.y, z: +z.toFixed(3), r: Math.round(p.r) });
     }
     if (now > p.scoreAt) { p.scoreAt = now + 2000; b.act({ type: "score", s: p.score }); }
   }

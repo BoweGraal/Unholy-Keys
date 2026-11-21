@@ -757,6 +757,20 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.71.0 - Half pipe: no more pumping, two sticks, beat boost pads
+
+- **Speed is automatic:** you roll up to cruising speed on your own, enough to reach the lip. There's no pumping any more.
+- **Boost pads:** two pads sit on the flat in the middle of the pipe, one near the back and one near the front. They take turns on the beat: back on even beats, front on odd beats. The lit one glows yellow and pulses, the other goes dark. Roll over the lit pad as you cross the middle for BOOST!: extra speed, so your next jump goes higher. Hitting the dark one does nothing (NOT LIT). Extra speed eases back down to cruising if you stop hitting boosts. The disco ball (moved to the bottom left, or the top on a phone) keeps time so you can plan it.
+- **Left stick:** up and down moves you between the back and front of the pipe to line up with the lit pad. Left and right lean you on the ramp and spin you in the air. On a computer that's W/S and A/D.
+- **Right stick:** the TRICKS stick, always there. Draw a move ending with a flick up (Headspin ↑, Thriller ← ↑, Robot → ↑, Shuffle ↓ ↑, Boogie loop ↑). A harder flick goes higher. On a computer, drag the mouse, or use the arrow keys in order ending with ↑ (Space is a quick Headspin).
+- Skaters now show where they really are front to back, on your stage view too.
+- **Bots:** they chase the lit pad and get the boosts as well.
+- New Tuning lab values: Cruising speed, Boost pad kick and Boost fade.
+
+Needs a Render redeploy (bots.js changed).
+
+**Test it:** practice → Half pipe. Use W/S (or the left stick) to sit on the lit pad as you cross the middle, then flick a trick at the lip.
+
 ## v1.70.0 - Half pipe: pump to build speed, draw your trick on the stick
 
 - **PUMP:** the right-hand button is now PUMP. Every tap pumps your feet once (you can see the knees go), so tapping fast builds speed fast. It doesn't matter if you're on the beat. Momentum slowly fades if you stop. Space pumps too.
