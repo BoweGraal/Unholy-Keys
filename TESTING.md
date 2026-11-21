@@ -757,6 +757,18 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.64.1 - Half pipe: the beat pulses out of a disco ball
+
+- The beat bar is replaced by a pixel disco ball at the bottom of the screen (above the pad and stick on phones).
+- On every beat a ring of light and sparks bursts out of the ball and its mirrors flash. Every 4th beat the burst is bigger and yellow.
+- A white ring closes in on the ball and touches it right on the next beat, so you can see the timing coming.
+- Hit the beat and the burst turns green with NICE!. When it's time to swipe, the ball glows gold with SWIPE!.
+- The whole pipe pulses harder with the beat: more of the glowing tiles light up, they flash brighter, and the floor gets a coloured wash on each beat.
+
+No server changes.
+
+**Test it:** practice → Half pipe. Tap BEAT as the white ring touches the ball; the burst should go green.
+
 ## v1.64.0 - Two games per song, crowd vote, full show, pixel boost pads
 
 **Pick up to 2 games per song** (Start song menu, step 2). Tap a game to add it; tap again to take it off. Numbered badges show the order.
