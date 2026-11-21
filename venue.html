@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.65.0"></script>
-<script src="gfx.js?v=1.65.0"></script>
-<script src="art.js?v=1.65.0"></script>
-<script src="instruments.js?v=1.65.0"></script>
-<script src="kart.js?v=1.65.0"></script>
+<script src="tune.js?v=1.66.0"></script>
+<script src="gfx.js?v=1.66.0"></script>
+<script src="art.js?v=1.66.0"></script>
+<script src="instruments.js?v=1.66.0"></script>
+<script src="kart.js?v=1.66.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3296,7 +3296,7 @@ var GAME=(function(){
     lastFit=0;DEVICE.fit();
     document.getElementById("gameTitle").textContent=m==="ski"?"⛷ Ski":m==="pipe"?"🛹 Half pipe":m==="walk"?"💃 Dance walk race":m==="kart"?"🏍 Mars Rally":m==="keepy"?"🎈 Keepy uppy":m==="skate"?(ICE?"⛸ Ice rink":"🛼 Roller rink"):m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
     if(m==="free")setTimeout(fdRender,0);
-    document.getElementById("moveHint").textContent=m==="ski"?"Point to steer down the mountain; go between the flags; Space to hop":m==="pipe"?"Tap BEAT (Space) on the beat to build speed · swipe at the lip for a dance trick · A/D to lean and spin · 1–4 for style":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
+    document.getElementById("moveHint").textContent=m==="ski"?"Point to steer down the mountain; flag zones then jump zones; Space pops you up so you can cut onto a new line":m==="pipe"?"Tap BEAT (Space) on the beat to build speed · swipe at the lip for a dance trick · A/D to lean and spin · 1–4 for style":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
     var mm=me();if(mm)mm.dance=myDance;
@@ -3836,6 +3836,7 @@ var SKI=(function(){
   var TRK=[null,{name:"360",pts:300,dur:0.45,col:"#D04DFF"},{name:"Backflip",pts:350,dur:0.55,col:"#3DF2FF"},{name:"Daffy",pts:200,dur:0.35,col:"#F5C518"}];
   var KEYTR={ArrowLeft:1,KeyA:1,ArrowUp:2,KeyW:2,ArrowRight:3,KeyD:3};
   var TOUCHY=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
+  var hopAir=false,a0=0,cutGrace=0,zoneK="",hopPush=0,puffs=[];
   var on=false,seed=1,x=0,y=-24,a=0,ta=0,v=0,air=0,airMax=0,crashUntil=0,trick=null,score=0,combo=0,dist=0,lastT=0,pointer=null,keyTurn=0,chunks={},passed={},trail=[],pops=[],lastCount=-1,goShown=false,lane=0,camX=0,others={},bots={},tilted=false,fadeK=0,roundN=0;
   var cv=null,g=null;
   function $(id){return document.getElementById(id);}
@@ -3857,24 +3858,28 @@ var SKI=(function(){
   function start(round){
     on=true;roundN=round?round.n:roundN+1;seed=SK.seedFor(roundN);
     course=SK.clean(round&&round.ski);if(!course&&PRACTICE.on){try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}}chunks={};passed={};trail=[];pops=[];others={};bots={};
-    x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
+    hopAir=false;cutGrace=0;hopPush=0;puffs=[];x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
     cv=$("skiCv");g=cv.getContext("2d");document.body.classList.add("gaming-ski");$("skiUI").classList.add("on");hud();banner("⛷ SKI!");
   }
   function stop(){on=false;document.body.classList.remove("gaming-ski");var u=$("skiUI");if(u)u.classList.remove("on");var c=$("skiCv");if(c)c.classList.remove("on");}
-  function jump(){if(!on||air>0||performance.now()<crashUntil||v<20)return;air=airMax=T("hop");}
+  /* a hop: while you're up you can swing the skis round fast, so you land on a new line (a cut) and keep your speed */
+  function jump(){if(!on||air>0||performance.now()<crashUntil||v<20)return;air=airMax=T("hop");hopAir=true;a0=a;
+    /* the pop: a little kick of speed, and a shove sideways the way you're steering (or already sliding) */
+    var sd=Math.abs(ta-a)>0.08?Math.sign(ta-a):Math.abs(a)>0.08?Math.sign(a):0;hopPush=sd*T("hopPush");v=Math.min(T("maxSpeed")*1.1,v+T("hopBoost"));
+    puffs.push({x:x,y:y,t:performance.now()});}
   function doTrick(k){if(!on||air<=0.05||trick||performance.now()<crashUntil)return;trick={k:k,t0:performance.now()};}
   function key(code,down){
     if(!on)return false;
-    if(code==="ArrowLeft"||code==="KeyA"){keyTurn=down?-1:(keyTurn===-1?0:keyTurn);if(down&&air>0)doTrick(1);return true;}
-    if(code==="ArrowRight"||code==="KeyD"){keyTurn=down?1:(keyTurn===1?0:keyTurn);if(down&&air>0)doTrick(3);return true;}
-    if(code==="ArrowUp"||code==="KeyW"){if(down&&air>0)doTrick(2);return true;}
+    if(code==="ArrowLeft"||code==="KeyA"){if(down)pointer=null;keyTurn=down?-1:(keyTurn===-1?0:keyTurn);if(down&&air>0&&!hopAir)doTrick(1);return true;}
+    if(code==="ArrowRight"||code==="KeyD"){if(down)pointer=null;keyTurn=down?1:(keyTurn===1?0:keyTurn);if(down&&air>0&&!hopAir)doTrick(3);return true;}
+    if(code==="ArrowUp"||code==="KeyW"){if(down&&air>0&&!hopAir)doTrick(2);return true;}
     if(code==="ArrowDown"||code==="KeyS"){if(down){keyTurn=0;ta=0;pointer=null;}return true;}
     if(code==="Space"){if(down)jump();return true;}
     return false;
   }
   function crash(why){if(performance.now()<crashUntil)return;crashUntil=performance.now()+T("crash")*1000;v=0;air=0;trick=null;combo=0;banner("💥 "+why,"#FF4D6D");hud();}
   function addPts(n,txt,col){var m=1+0.1*combo,got=Math.round(n*m);score+=got;GAME.moshPts(got);pops.push({x:x,y:y,t:performance.now(),txt:txt+" +"+got,col:col});hud();}
-  function view(){var z=Math.max(1.3,Math.min(2.6,Math.min(W/620,H/430)));return{z:z,sx:function(wx){return W/2+(wx-camX)*z;},sy:function(wy){return H*(H>W*1.2?0.5:0.42)+(wy-y)*z;}};}   /* you sit a little above the middle, clear of the round banner */
+  function view(){var z=Math.max(1.3,Math.min(2.6,Math.min(W/620,H/430)))*(1-0.14*Math.min(1,v/Math.max(1,T("maxSpeed"))));return{z:z,sx:function(wx){return W/2+(wx-camX)*z;},sy:function(wy){return H*(H>W*1.2?0.5:0.42)+(wy-y)*z;}};}   /* you sit a little above the middle, clear of the round banner */
   function tick(){
     if(!on)return;
     var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
@@ -3885,25 +3890,28 @@ var SKI=(function(){
     /* steering: toward the pointer (relative to you on screen), or the arrow keys */
     var V=view();
     if(pointer){var dx=pointer[0]-V.sx(x),dy=pointer[1]-V.sy(y);ta=dy<=4?(dx<0?-1.5:1.5):Math.max(-1.5,Math.min(1.5,Math.atan2(dx,dy)));}
-    if(keyTurn)ta=Math.max(-1.5,Math.min(1.5,ta+keyTurn*2.6*dt));
+    if(keyTurn)ta=Math.max(-1.5,Math.min(1.5,ta+keyTurn*(air>0&&hopAir?7:2.6)*dt));   /* mid-hop the keys swing you round fast: that's the cut */
     /* the left stick: push the way you want to go (down is fastest, sideways carves, up stops you) */
     if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.2){pointer=null;ta=joy.y<=0.05?(joy.x<0?-1.5:1.5):Math.max(-1.5,Math.min(1.5,Math.atan2(joy.x,joy.y)));}
-    if(!crashed&&air<=0){var da=ta-a,rt=T("turn")*dt;a+=Math.max(-rt,Math.min(rt,da));}
+    if(!crashed&&(air<=0||hopAir)){var da=ta-a,rt=T("turn")*dt*(air>0?3.5:1);a+=Math.max(-rt,Math.min(rt,da));}
     /* speed: gravity down the fall line, drag, and carving across slows you */
-    if(going&&!crashed){var acc=T("accel")*Math.cos(a)-v*(T("accel")/T("maxSpeed"));if(air<=0)acc-=Math.pow(Math.abs(Math.sin(a)),2)*60;v=Math.max(0,v+acc*dt);}
+    if(going&&!crashed){var acc=T("accel")*Math.cos(a)-v*(T("accel")/T("maxSpeed"));if(air<=0&&now>cutGrace)acc-=Math.pow(Math.abs(Math.sin(a)),2)*45;v=Math.max(0,v+acc*dt);}
     var py=y;
-    if(going&&!crashed){x+=Math.sin(a)*v*dt;y+=Math.cos(a)*v*dt;}
+    if(going&&!crashed){x+=Math.sin(a)*v*dt;y+=Math.cos(a)*v*dt;if(air>0&&hopAir)x+=hopPush*dt*(air/Math.max(0.01,airMax));}
     x=Math.max(-halfW(y)-260,Math.min(halfW(y)+260,x));
     /* air: a hop, or off a ramp; tricks in the air; land mid-trick and you crash */
-    if(air>0){air-=dt;if(trick&&(now-trick.t0)/1000>=TRK[trick.k].dur){addPts(TRK[trick.k].pts*(1+airMax),TRK[trick.k].name,TRK[trick.k].col);combo++;trick=null;}
-      if(air<=0){air=0;if(trick)crash("WIPEOUT!");}}
+    if(air>0){air-=dt;if(trick&&(now-trick.t0)/1000>=TRK[trick.k].dur){addPts(TRK[trick.k].pts*(1+airMax)*(!course&&SK.zoneAt(y).k==="jump"?1.5:1),TRK[trick.k].name,TRK[trick.k].col);combo++;trick=null;}
+      if(air<=0){air=0;if(trick)crash("WIPEOUT!");
+        else if(hopAir&&Math.abs(a-a0)>0.5){v=Math.min(T("maxSpeed")*1.1,v*1.06+12);cutGrace=now+400;addPts(25,"CUT","#3DF2FF");}
+        hopAir=false;}}
     /* what you hit, what you passed */
     if(going&&!crashed){
       objsNear(Math.min(py,y)-30,Math.max(py,y)+30).forEach(function(o){
         var dx2=x-o.x,dy2=y-o.y;
         if(o.k==="gate"){if(py<o.y&&y>=o.y&&!passed[o.id]){passed[o.id]=1;if(Math.abs(x-o.x)<=GATE_W){combo++;addPts(T("gatePts"),"GATE",o.col==="#E8505B"?"#FF7A85":"#7FB0FF");}else{combo=0;hud();banner("MISSED GATE","#aaa");}}return;}
-        if(o.k==="ramp"){if(air<=0&&Math.abs(dx2)<22&&Math.abs(dy2)<8&&v>40){air=airMax=T("rampAir")*Math.min(1.3,v/T("maxSpeed")+0.3);banner("AIR!","#3DF2FF");}return;}
-        if(o.k==="mogul"){if(air<=0&&Math.hypot(dx2,dy2*1.6)<12&&v>60){air=airMax=0.28;}return;}
+        if(o.k==="zone"){if(py<o.y&&y>=o.y)banner(o.z==="jump"?"🚀 JUMP ZONE":"🚩 FLAG ZONE",o.z==="jump"?"#3DF2FF":"#FF7A85");return;}
+        if(o.k==="ramp"){if(air<=0&&Math.abs(dx2)<22&&Math.abs(dy2)<8&&v>40){air=airMax=T("rampAir")*Math.min(1.3,v/T("maxSpeed")+0.3);hopAir=false;banner("AIR!","#3DF2FF");}return;}
+        if(o.k==="mogul"){if(air<=0&&Math.hypot(dx2,dy2*1.6)<12&&v>60){air=airMax=0.28;hopAir=false;}return;}
         if(air>0&&o.k==="rock")return;                       /* jump over rocks */
         var rr=o.k==="tree"?7*o.s:9*o.s;if(Math.hypot(dx2,dy2*1.4)<rr+5)crash(o.k==="tree"?"TREE!":"ROCK!");
       });
@@ -3914,7 +3922,7 @@ var SKI=(function(){
     var e=enc();me.tx=me.x=e[0];me.ty=me.y=e[1];sendPos(e[0],e[1]);me.sk=wire();
     GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:trick&&trick.k===3?[2.9,-0.4,0.9,-0.9]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
     if(PRACTICE.on)botTick(dt,now,going);
-    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy":(TOUCHY?"Left stick to steer · HOP · go between the flags":"Point to steer · Space to hop · go between the flags");
+    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: hit the ramps and trick in the air (tricks worth ×1.5)":TOUCHY?"Left stick to steer · HOP to pop and cut · go between the flags":"Point to steer · Space to pop and cut · go between the flags");
   }
   /* practice: the practice skiers follow the slalom line at their own pace, now and then crashing */
   function botTick(dt,now,going){
@@ -3963,6 +3971,9 @@ var SKI=(function(){
       var s=it.sk,st=s.v.sk||{},t=st.t|0,ang=t<=6?(t-3)*Math.PI/6:0;
       skier(V.sx(s.x),V.sy(it.y),s.v,false,ang,t===7||t===8?0.7:0,t===9||!!st.f,t===8?1:0,(now%450)/450,z,s.v.name);
     });
+    /* the pop's puff of snow: pixel flecks bursting out where you took off */
+    puffs=puffs.filter(function(pf){var age=(now-pf.t)/1000;if(age>0.5)return false;var kp=SK.px(V.z),cx=V.sx(pf.x),cy=V.sy(pf.y);g.globalAlpha=1-age/0.5;g.fillStyle="#ffffff";
+      for(var q=0;q<10;q++){var an=q*0.63,d=(4+age*46)*V.z;g.fillRect(Math.round((cx+Math.cos(an)*d)/kp)*kp,Math.round((cy+Math.sin(an)*d*0.5)/kp)*kp,kp,kp);}g.globalAlpha=1;return true;});
     pops=pops.filter(function(pp){var age=(now-pp.t)/1000;if(age>1.1)return false;g.globalAlpha=1-age/1.1;g.font="900 16px system-ui";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.6)";var px=V.sx(pp.x),py=V.sy(pp.y)-60-age*30;g.strokeText(pp.txt,px,py);g.fillStyle=pp.col;g.fillText(pp.txt,px,py);return true;});g.globalAlpha=1;
     /* speed */
     var sp=$("skiSpeed");if(sp)sp.textContent=Math.round(v*0.36)+" km/h";
@@ -5993,7 +6004,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.65.0",SERVER_VERSION="";
+var PAGE_VERSION="1.66.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6487,7 +6498,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.65.0"></script>
+<script src="lab.js?v=1.66.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
