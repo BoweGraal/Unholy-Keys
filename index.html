@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.79.3"></script>
-<script src="art.js?v=1.79.3"></script>
-<script src="instruments.js?v=1.79.3"></script>
-<script src="kart.js?v=1.79.3"></script>
+<script src="gfx.js?v=1.79.4"></script>
+<script src="art.js?v=1.79.4"></script>
+<script src="instruments.js?v=1.79.4"></script>
+<script src="kart.js?v=1.79.4"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1578,7 +1578,7 @@ var chordShape="Triad",harmOn=false,harmInterval="5th",strumOn=false,strumSpeed=
 var activeSlot=-1;
 var activeChordVoices=[],activeHarmVoice=null;
 var started=false,audioReady=false;
-var masterVol,rev,cho,dist,lim,analyser,pdWah,pdDly,pdTre,pdCrush;
+var masterVol,fxTrim,rev,cho,dist,lim,analyser,pdWah,pdDly,pdTre,pdCrush;
 var backingAudio=null,backingGain=null,backingAnalyser=null,backingSource=null;
 var vidGain=null,vidAnalyser=null,vidSource=null;
 /* music levels from the Volume panel, remembered on this browser */
@@ -1593,11 +1593,13 @@ var _fxPreset={rev:0,cho:0,dist:0};
    Saved with the session so a reload rebuilds the chain exactly as it was left. Before this,
    only the mix amounts came back and every effect silently reverted to its default settings,
    so e.g. Studio Vocal reloaded with a chorus twice as deep as the preset's. */
-var FXS={rv:{decay:2.5},ch:{frequency:1.5,delayTime:3.5,depth:.7},dt:{distortion:.3},wah:{baseFrequency:100,octaves:6,sensitivity:-30},dly:{delayTime:"8n",feedback:.25},tre:{frequency:5,depth:.5},crush:{bits:8}};
+var FXS={rv:{decay:2.5},ch:{frequency:1.5,delayTime:3.5,depth:.7},dt:{distortion:.3},wah:{baseFrequency:100,octaves:6,sensitivity:-30,Q:2.5,gain:4,follower:.1},dly:{delayTime:"8n",feedback:.25},tre:{frequency:5,depth:.5},crush:{bits:8}};
 var _savedPerfPreset=-1;
 function fxsMerge(src){if(!src)return;Object.keys(FXS).forEach(function(k){if(!src[k])return;Object.keys(FXS[k]).forEach(function(q){if(src[k][q]!==undefined&&src[k][q]!==null)FXS[k][q]=src[k][q];});});}
 /* A manual effect change means the highlighted performance preset no longer describes the sound */
-function fxTouched(){if(typeof activePerfPreset!=="undefined"&&activePerfPreset>=0&&typeof renderPerfPresets==="function")renderPerfPresets();}
+/* a preset can carry a loudness trim (dB) so it sits level with the dry sound; touching any effect by hand drops it */
+function fxTrimDb(){var pr=(typeof PERF_PRESETS!=="undefined"&&typeof activePerfPreset!=="undefined")?PERF_PRESETS[activePerfPreset]:null;return pr&&pr.trim||0;}
+function fxTouched(){if(typeof activePerfPreset!=="undefined"&&activePerfPreset>=0&&typeof renderPerfPresets==="function"){if(fxTrim)fxTrim.volume.rampTo(0,.3);renderPerfPresets();}}
 /* Sessions saved before FXS existed: recover the settings from whichever performance preset
    matches the saved mix amounts, else from the effect dropdown selections. */
 function fxsFromLegacySession(){
@@ -1640,12 +1642,12 @@ var layout=buildLayout();
 function initAudio(){if(started)return;started=true;
   /* iPhone: without this, web audio follows the ringer switch and is silent when the phone is on silent */
   try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
-  Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);rev=new Tone.Reverb({decay:FXS.rv.decay,wet:S.fxR}).connect(masterVol);
+  Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);fxTrim=new Tone.Volume(fxTrimDb()).connect(masterVol);rev=new Tone.Reverb({decay:FXS.rv.decay,wet:S.fxR}).connect(fxTrim);
   /* ── Native Tone.js pedal board: cho → AutoWah → Delay → Tremolo → BitCrusher → rev ── */
   pdCrush=new Tone.BitCrusher({bits:FXS.crush.bits,wet:S.pdCrush}).connect(rev);
   pdTre=new Tone.Tremolo({frequency:FXS.tre.frequency,depth:FXS.tre.depth,wet:S.pdTre}).start().connect(pdCrush);
   pdDly=new Tone.FeedbackDelay({delayTime:FXS.dly.delayTime,feedback:FXS.dly.feedback,wet:S.pdDly}).connect(pdTre);
-  pdWah=new Tone.AutoWah({baseFrequency:FXS.wah.baseFrequency,octaves:FXS.wah.octaves,sensitivity:FXS.wah.sensitivity,Q:2,gain:20,wet:S.pdWah}).connect(pdDly);
+  pdWah=new Tone.AutoWah({baseFrequency:FXS.wah.baseFrequency,octaves:FXS.wah.octaves,sensitivity:FXS.wah.sensitivity,Q:FXS.wah.Q,gain:FXS.wah.gain,follower:FXS.wah.follower,wet:S.pdWah}).connect(pdDly);
   cho=new Tone.Chorus({frequency:FXS.ch.frequency,delayTime:FXS.ch.delayTime,depth:FXS.ch.depth,wet:S.fxC}).start().connect(pdWah);
   dist=new Tone.Distortion({distortion:FXS.dt.distortion,wet:S.fxDi}).connect(cho);
   /* ── Backing track + video audio chain ── */
@@ -1989,7 +1991,7 @@ var FXP={
   ]
 };
 function applyFxPreset(type,idx){initAudio();var pr=FXP[type][idx].p;fxsMerge(type==="rev"?{rv:pr}:type==="cho"?{ch:pr}:{dt:pr});if(type==="rev"&&rev){rev.decay=pr.decay;rev.wet.value=pr.wet;S.fxR=pr.wet;}if(type==="cho"&&cho){cho.frequency.value=pr.frequency;cho.delayTime=pr.delayTime;cho.depth=pr.depth;cho.wet.value=pr.wet;S.fxC=pr.wet;}if(type==="dist"&&dist){dist.distortion=pr.distortion;dist.wet.value=pr.wet;S.fxDi=pr.wet;}_fxPreset[type]=idx;fxTouched();renderFx();saveSession();}
-function applyPdPreset(id,type,idx){var pr=(FXP[type]||[])[idx];if(!pr)return;var p=pr.p;fxsMerge(id==="pdWah"?{wah:p}:id==="pdDly"?{dly:p}:id==="pdTre"?{tre:p}:{crush:p});if(id==="pdWah"&&pdWah){pdWah.baseFrequency=p.baseFrequency;pdWah.octaves=p.octaves;pdWah.sensitivity=p.sensitivity;pdWah.wet.value=p.wet;S.pdWah=p.wet;}if(id==="pdDly"&&pdDly){pdDly.delayTime.value=p.delayTime;pdDly.feedback.value=p.feedback;pdDly.wet.value=p.wet;S.pdDly=p.wet;}if(id==="pdTre"&&pdTre){try{pdTre.frequency.value=p.frequency;}catch(e){}try{pdTre.depth.value=p.depth;}catch(e){}pdTre.wet.value=p.wet;S.pdTre=p.wet;}if(id==="pdCrush"&&pdCrush){/* bits is a Tone Param: assigning a number replaced the Param and left the crusher at its old depth */if(pdCrush.bits&&typeof pdCrush.bits==="object")pdCrush.bits.value=p.bits;else pdCrush.bits=p.bits;pdCrush.wet.value=p.wet;S.pdCrush=p.wet;}_pdPreset[id]=idx;fxTouched();renderFx();saveSession();}
+function applyPdPreset(id,type,idx){var pr=(FXP[type]||[])[idx];if(!pr)return;var p=pr.p;fxsMerge(id==="pdWah"?{wah:Object.assign({Q:2.5,gain:4,follower:.1},p)}:id==="pdDly"?{dly:p}:id==="pdTre"?{tre:p}:{crush:p});if(id==="pdWah"&&pdWah){pdWah.baseFrequency=p.baseFrequency;pdWah.octaves=p.octaves;pdWah.sensitivity=p.sensitivity;try{pdWah.Q.value=2.5;pdWah.gain.value=4;pdWah.follower=.1;}catch(e){}pdWah.wet.value=p.wet;S.pdWah=p.wet;}if(id==="pdDly"&&pdDly){pdDly.delayTime.value=p.delayTime;pdDly.feedback.value=p.feedback;pdDly.wet.value=p.wet;S.pdDly=p.wet;}if(id==="pdTre"&&pdTre){try{pdTre.frequency.value=p.frequency;}catch(e){}try{pdTre.depth.value=p.depth;}catch(e){}pdTre.wet.value=p.wet;S.pdTre=p.wet;}if(id==="pdCrush"&&pdCrush){/* bits is a Tone Param: assigning a number replaced the Param and left the crusher at its old depth */if(pdCrush.bits&&typeof pdCrush.bits==="object")pdCrush.bits.value=p.bits;else pdCrush.bits=p.bits;pdCrush.wet.value=p.wet;S.pdCrush=p.wet;}_pdPreset[id]=idx;fxTouched();renderFx();saveSession();}
 function togglePedalBoard(){var anyOn=(S.pdWah>0||S.pdDly>0||S.pdTre>0||S.pdCrush>0);var _boardWasOn=anyOn;if(anyOn){if(S.pdWah>0)_pdSaved.wah=S.pdWah;if(S.pdDly>0)_pdSaved.dly=S.pdDly;if(S.pdTre>0)_pdSaved.tre=S.pdTre;if(S.pdCrush>0)_pdSaved.crush=S.pdCrush;S.pdWah=0;S.pdDly=0;S.pdTre=0;S.pdCrush=0;if(pdWah)pdWah.wet.value=0;if(pdDly)pdDly.wet.value=0;if(pdTre)pdTre.wet.value=0;if(pdCrush)pdCrush.wet.value=0;}else{S.pdWah=_pdSaved.wah;S.pdDly=_pdSaved.dly;S.pdTre=_pdSaved.tre;S.pdCrush=_pdSaved.crush;if(pdWah)pdWah.wet.value=S.pdWah;if(pdDly)pdDly.wet.value=S.pdDly;if(pdTre)pdTre.wet.value=S.pdTre;if(pdCrush)pdCrush.wet.value=S.pdCrush;}fxTouched();renderFx();saveSession();showJamToast(_boardWasOn?"Board OFF":"Board ON","#D354A0");}
 function togglePedal(id){var obj=id==="pdWah"?pdWah:id==="pdDly"?pdDly:id==="pdTre"?pdTre:pdCrush;var key=id==="pdWah"?"wah":id==="pdDly"?"dly":id==="pdTre"?"tre":"crush";if(!obj)return;if(S[id]>0){_pdSaved[key]=S[id];S[id]=0;}else{S[id]=_pdSaved[key]||.6;}obj.wet.value=S[id];fxTouched();renderFx();saveSession();}
 function renderFx(){var c=document.getElementById("fxBox");c.innerHTML="";
@@ -3874,14 +3876,14 @@ var PERF_PRESETS=[
   {l:"Studio Vocal",c:"#7F77DD",mode:null,chord:null,harm:null,strum:null,
     rv:{decay:2,wet:.28},ch:{frequency:1,delayTime:3,depth:.35,wet:.15},dt:{distortion:.3,wet:0},
     pd:{wah:0,pha:0,tre:0,crush:0}},
-  {l:"Lo-fi Chikk",c:"#97C459",mode:null,chord:null,harm:null,strum:null,
+  {l:"Lo-fi Chikk",c:"#97C459",trim:-3,mode:null,chord:null,harm:null,strum:null,
     rv:{decay:1.5,wet:.18},ch:{frequency:.4,delayTime:6,depth:.5,wet:.2},dt:{distortion:.25,wet:.25},
     pd:{wah:0,pha:0,tre:0,crush:.45}},
   {l:"80s Synth",c:"#D354A0",mode:null,chord:null,harm:null,strum:null,
     rv:{decay:1.8,wet:.28},ch:{frequency:2.5,delayTime:3,depth:.6,wet:.4},dt:{distortion:.3,wet:0},
     pd:{wah:0,dly:0,tre:.55,crush:0}},
   /* ── Pedal Board Presets ── */
-  {l:"Funk Machine",c:"#EF9F27",mode:null,chord:null,harm:null,strum:null,
+  {l:"Funk Machine",c:"#EF9F27",trim:-4,mode:null,chord:null,harm:null,strum:null,
     rv:{decay:1.2,wet:.12},ch:{frequency:1.5,delayTime:3.5,depth:.7,wet:0},dt:{distortion:.3,wet:.15},
     pd:{wah:.85,dly:0,tre:0,crush:0}},
   {l:"Ambient Echo",c:"#378ADD",mode:null,chord:null,harm:null,strum:null,
@@ -3890,15 +3892,29 @@ var PERF_PRESETS=[
   {l:"Tremolo Clean",c:"#1D9E75",mode:null,chord:null,harm:null,strum:null,
     rv:{decay:2,wet:.22},ch:{frequency:1,delayTime:3,depth:.3,wet:.15},dt:{distortion:.3,wet:0},
     pd:{wah:0,dly:0,tre:.7,crush:0}},
-  {l:"Crushed Lo-fi",c:"#D85A30",mode:null,chord:null,harm:null,strum:null,
+  {l:"Crushed Lo-fi",c:"#D85A30",trim:-3,mode:null,chord:null,harm:null,strum:null,
     rv:{decay:1.5,wet:.18},ch:{frequency:.4,delayTime:6,depth:.5,wet:.2},dt:{distortion:.2,wet:.2},
     pd:{wah:0,dly:0,tre:0,crush:.7}},
   {l:"Guitar Sustain",c:"#C9A84C",mode:"sustain",chord:null,harm:null,strum:null,
     rv:{decay:3.2,wet:.32},ch:{frequency:1.2,delayTime:3.5,depth:.45,wet:.25},dt:{distortion:.15,wet:.12},
     pd:{wah:0,dly:.4,tre:0,crush:0}},
-  {l:"Full Board",c:"#9370DB",mode:null,chord:null,harm:null,strum:null,
+  {l:"Full Board",c:"#9370DB",trim:-6,mode:null,chord:null,harm:null,strum:null,
     rv:{decay:2,wet:.22},ch:{frequency:1.2,delayTime:3,depth:.5,wet:.2},dt:{distortion:.2,wet:.15},
     pd:{wah:.6,dly:.35,tre:.5,crush:.2}}
+  /* ── Tested presets: rendered offline with a plucked guitar, a strummed guitar and a saw synth, and levelled to the dry
+     sound (within about 2 dB, nothing clipping). "trim" is the loudness trim in dB. ── */
+  ,{l:"Guitar Sweep",c:"#E8A33D",trim:-4.5,mode:null,chord:null,harm:null,strum:null,
+    rv:{decay:2.2,wet:.2},ch:{frequency:1.1,delayTime:3.5,depth:.35,wet:.15},dt:{distortion:.18,wet:.12},
+    wah:{baseFrequency:200,octaves:4.5,sensitivity:-22,Q:3.5,gain:2,follower:.15},dly:{delayTime:"8n.",feedback:.28},
+    pd:{wah:.7,dly:.18,tre:0,crush:0}},
+  {l:"Dreamy Hall",c:"#6FA8FF",trim:1,mode:null,chord:null,harm:null,strum:null,
+    rv:{decay:4.5,wet:.32},ch:{frequency:.5,delayTime:5,depth:.6,wet:.3},dt:{distortion:.3,wet:0},
+    dly:{delayTime:"8n.",feedback:.35},
+    pd:{wah:0,dly:.25,tre:0,crush:0}},
+  {l:"Warm Tube",c:"#E8704A",trim:-3.5,mode:null,chord:null,harm:null,strum:null,
+    rv:{decay:1.6,wet:.18},ch:{frequency:1.2,delayTime:3,depth:.3,wet:.12},dt:{distortion:.22,wet:.3},
+    dly:{delayTime:.085,feedback:.12},tre:{frequency:4.2,depth:.35},
+    pd:{wah:0,dly:.14,tre:.25,crush:0}}
 ];function applyPerfPreset(idx){
   var pr=PERF_PRESETS[idx];if(!pr)return;
   /* Mode (skip if null = FX-only preset) */
@@ -3916,6 +3932,14 @@ var PERF_PRESETS=[
   if(cho){cho.frequency.value=pr.ch.frequency;cho.delayTime=pr.ch.delayTime;cho.depth=pr.ch.depth;cho.wet.value=pr.ch.wet;S.fxC=pr.ch.wet;}
   if(dist){dist.distortion=pr.dt.distortion;dist.wet.value=pr.dt.wet;S.fxDi=pr.dt.wet;}
   if(pr.pd){if(pdWah){S.pdWah=pr.pd.wah||0;pdWah.wet.value=S.pdWah;}if(pdDly){S.pdDly=pr.pd.dly||0;pdDly.wet.value=S.pdDly;}if(pdTre){S.pdTre=pr.pd.tre||0;pdTre.wet.value=S.pdTre;}if(pdCrush){S.pdCrush=pr.pd.crush||0;pdCrush.wet.value=S.pdCrush;}}
+  /* the pedal parameters a preset can set (anything it leaves out goes back to the default), and its loudness trim */
+  var wp=Object.assign({baseFrequency:100,octaves:6,sensitivity:-30,Q:2.5,gain:4,follower:.1},pr.wah||{}),dp=Object.assign({delayTime:"8n",feedback:.25},pr.dly||{}),tp=Object.assign({frequency:5,depth:.5},pr.tre||{}),cp=Object.assign({bits:8},pr.crush||{});
+  fxsMerge({wah:wp,dly:dp,tre:tp,crush:cp});
+  if(pdWah){try{pdWah.baseFrequency=wp.baseFrequency;pdWah.octaves=wp.octaves;pdWah.sensitivity=wp.sensitivity;pdWah.Q.value=wp.Q;pdWah.gain.value=wp.gain;pdWah.follower=wp.follower;}catch(e){}}
+  if(pdDly){try{pdDly.delayTime.value=dp.delayTime;pdDly.feedback.value=dp.feedback;}catch(e){}}
+  if(pdTre){try{pdTre.frequency.value=tp.frequency;pdTre.depth.value=tp.depth;}catch(e){}}
+  if(pdCrush){try{if(pdCrush.bits&&typeof pdCrush.bits==="object")pdCrush.bits.value=cp.bits;else pdCrush.bits=cp.bits;}catch(e){}}
+  if(fxTrim)fxTrim.volume.rampTo(pr.trim||0,.15);
   renderFx();renderPerfPresets(idx);updJamPresetLbl();saveSession();
 }
 var activePerfPreset=-1;
@@ -4405,7 +4429,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.79.3",SERVER_VERSION="";
+var PAGE_VERSION="1.79.4",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -4431,6 +4455,7 @@ function perfDraw(g,x,y,p,now,crowd,lay,H,named,demo){
   if(lay)ART.envFx(g,lay,H,x,y,p,now,2);
   if(named){var nm=(typeof stageName==="function"?stageName():"You");g.font="600 "+Math.round(10.5*Math.min(p,1.4))+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="top";var ny=y+12*p+6*p;g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(nm,x,ny);g.fillStyle="#F5C518";g.fillText(nm,x,ny);g.textBaseline="alphabetic";}
 }
+window.ukFx=function(){return{preset:activePerfPreset,trim:fxTrim?fxTrim.volume.value:null,wah:pdWah?{base:pdWah.baseFrequency,oct:pdWah.octaves,sens:pdWah.sensitivity,Q:pdWah.Q.value,gain:pdWah.gain.value,wet:pdWah.wet.value}:null,dly:pdDly?{wet:pdDly.wet.value,fb:pdDly.feedback.value}:null,names:PERF_PRESETS.map(function(p){return p.l;})};};
 window.ukPerfKind=function(){return{id:S.eng,kind:perfKind(),band:PKIND.band,playing:PPLAY.on,midi:PPLAY.midi};};
 window.ukInstKinds=function(){var by={},ids={};allInst.forEach(function(i){var k=ART.INST.kindOf(i.id,i.l);(by[k]=by[k]||[]).push(i.l);if(!ids[k])ids[k]=i.id;});return{n:allInst.length,by:by,ids:ids};};      /* for testing: which art each instrument gets */
 window.ukSelInst=function(id){selInst(id);return S.eng;};
