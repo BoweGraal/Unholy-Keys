@@ -757,6 +757,14 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.1 - Phone instrument: the circle can't get stuck
+
+- Fixed: on iPhone the circle could stay stuck on one note, and pressing again did nothing, when the "finger up" never arrived (a system swipe, switching apps, a call). Now a new press always takes over, and everything is let go when the screen loses focus, the phone turns, the page is hidden, or the last finger lifts anywhere on the screen. The zones get the same protection.
+
+How to check: hold the circle, swipe up from the bottom edge or pull down the control centre, come back: no note should be stuck. Press the circle again and it should play.
+
+Page-only change: no Render redeploy needed.
+
 ## v1.79.0 - Phone instrument in pixel art, with your character on stage
 
 Open the phone instrument (main menu **Instrument**, or the phone button on the performer page).
