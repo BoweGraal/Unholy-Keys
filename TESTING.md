@@ -757,6 +757,22 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.63.0 - Pixel art sweep
+
+Everything round, glowing or blended in the games is now drawn the pixel-art way:
+- **Circles and ovals** (walk-race circles, target-dance notes, shadows under feet, medals, UFO, roller rink rails and centre line, moon and planets) are stepped pixel shapes on the same pixel grid as the stage.
+- **Gradients** (spotlight pools, glows, sky, water, fog) step through flat bands instead of blending smoothly.
+- **Soft glows** around the walk circle and rink rails are now chunky pixel halos.
+- **Mars Rally**: the whole track is painted in big pixels, with every floor tile exactly 4 x 4 pixels.
+- **Jam visualizers** and the phone-mode glow behind the pads are drawn at the stage's pixel size and scaled up blocky.
+- **Note blocks** in the jam piano roll have notched pixel corners.
+- **In-game text and buttons**: banners (SHUFFLE!, MISSED GATE, SUPER MOVE), scores and combos use a pixel font (Silkscreen) with hard drop shadows. The BEAT, HOP, JUMP, DRIFT and trick buttons and the joystick have notched square corners.
+- Menus, chat and setup screens are unchanged, so they stay easy to read.
+
+No server changes.
+
+**Test it:** open practice and try Dance walk race, Half pipe, Ski, Mars Rally and Roller rink. Nothing should look smooth or blurry in the game itself. Then go into Jam mode in classic view: the visualizer behind you should be chunky pixels.
+
 ## v1.62.0 - Half pipe v2
 
 The half pipe is rebuilt from scratch around your request.
