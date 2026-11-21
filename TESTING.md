@@ -1537,3 +1537,6 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.19
 - Kart: Speed -/+ box removed from the game screen (Tuning lab still sets it).
 - Practice: top "Leave practice" button hidden while a minigame is on (the bottom STOP does the job).
+
+## v1.79.20
+- Practice minigames: the "Viewers: N" counter is hidden (players on screen are untouched).
