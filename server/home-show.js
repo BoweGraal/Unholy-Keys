@@ -23,6 +23,22 @@ function stop(code) {
 }
 process.on("SIGINT", function() { line("\nEnding the home show."); stop(0); });
 
+/* 0. an old show still running in the background (a closed window can leave its server behind): stop it, so this
+      one gets the port and everyone gets the new code */
+function freePort() {
+  var cp = require("child_process"), pids = {};
+  try {
+    if (process.platform === "win32") {
+      cp.execSync("netstat -ano -p tcp", { encoding: "utf8" }).split(/\r?\n/).forEach(function(l) {
+        var m = l.trim().split(/\s+/); if (m.length >= 5 && /LISTENING/i.test(m[3]) && new RegExp(":" + PORT + "$").test(m[1]) && +m[4] && +m[4] !== process.pid) pids[m[4]] = 1; });
+      Object.keys(pids).forEach(function(p) { try { cp.execSync("taskkill /PID " + p + " /F", { stdio: "ignore" }); line("Stopped an old show that was still running in the background (process " + p + ")."); } catch (e) {} });
+    } else {
+      cp.execSync("lsof -ti tcp:" + PORT + " -sTCP:LISTEN", { encoding: "utf8" }).split(/\s+/).filter(Boolean).forEach(function(p) { if (+p !== process.pid) { try { process.kill(+p); line("Stopped an old show that was still running in the background (process " + p + ")."); } catch (e) {} } });
+    }
+  } catch (e) {}
+}
+freePort();
+
 /* 1. the relay server */
 var srv = spawn(process.execPath, [__dirname + "/server.js"], { env: Object.assign({}, process.env, { PORT: String(PORT) }), stdio: ["ignore", "pipe", "pipe"] });
 children.push(srv);
