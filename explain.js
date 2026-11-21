@@ -186,9 +186,9 @@ var EXPLAIN=(function(){
   var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:function(t){d_skate(t,true);},keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf};
 
   /* ---------- the card ---------- */
-  var CSS="#explain{display:none;position:fixed;inset:0;z-index:60;background:rgba(8,6,16,.88);align-items:center;justify-content:center;padding:10px;box-sizing:border-box;-webkit-tap-highlight-color:transparent}"+
-    "#explain.on{display:flex}"+
-    "#explain .xc{width:min(560px,100%);max-height:100%;overflow:auto;background:#14102a;border:2px solid #D354A0;box-shadow:0 0 0 2px #0008,0 0 28px rgba(211,84,160,.35);padding:12px 14px 12px;box-sizing:border-box;color:#fff;font:500 13px/1.45 system-ui,sans-serif}"+
+  var CSS="#explain{display:none;position:fixed;left:0;right:0;bottom:0;top:0;z-index:60;background:none;pointer-events:none;align-items:flex-start;justify-content:center;padding:4px 10px 10px;box-sizing:border-box;-webkit-tap-highlight-color:transparent}"+
+    "#explain.on{display:flex}body.explain-on #roundBox{visibility:hidden}"+
+    "#explain .xc{pointer-events:auto;width:min(560px,100%);max-height:100%;overflow:auto;background:#14102a;border:2px solid #D354A0;box-shadow:0 0 0 2px #0008,0 0 28px rgba(211,84,160,.35);padding:12px 14px 12px;box-sizing:border-box;color:#fff;font:500 13px/1.45 system-ui,sans-serif}"+
     "#explain .xh{display:flex;align-items:center;gap:8px;margin-bottom:8px}"+
     "#explain .xt{font:700 16px 'Silkscreen',system-ui,sans-serif;letter-spacing:.5px;color:#F5C518;flex:1;line-height:1.2}"+
     "#explain .xs{background:#0006;border:1px solid #fff4;color:#fff;font:600 12px system-ui,sans-serif;padding:6px 10px;border-radius:6px;cursor:pointer}"+
@@ -201,7 +201,8 @@ var EXPLAIN=(function(){
     "#explain .xp{margin-top:10px;display:flex;align-items:center;gap:10px}"+
     "#explain .xbar{flex:1;height:8px;background:#2a2540;border:1px solid #0008}#explain .xbar i{display:block;height:100%;background:#D354A0;width:0}"+
     "#explain .xn{font:700 12px 'Silkscreen',system-ui,sans-serif;color:#fff;min-width:78px;text-align:right}"+
-    "@media (max-width:560px){#explain{align-items:flex-start;padding:46px 8px 8px}#explain .xcols{grid-template-columns:1fr}#explain .xt{font-size:14px}#explain .xc{font-size:12.5px;padding:10px 12px}}";
+    "@media (min-width:760px) and (orientation:landscape){#explain .xc{width:min(860px,100%);display:grid;grid-template-columns:46% 1fr;column-gap:14px;align-content:start}#explain .xh,#explain .xp{grid-column:1/-1}#explain canvas{grid-column:1;grid-row:2/4;align-self:start}#explain .xg{grid-column:2;grid-row:2;margin-top:0}#explain .xcols{grid-column:2;grid-row:3;grid-template-columns:1fr}}"+
+    "@media (max-width:560px){#explain{padding:4px 8px 8px}#explain .xcols{grid-template-columns:1fr}#explain .xt{font-size:14px}#explain .xc{font-size:12.5px;padding:10px 12px}}";
   function build(){
     if(root)return;
     var st=document.createElement("style");st.textContent=CSS;document.head.appendChild(st);
@@ -230,9 +231,11 @@ var EXPLAIN=(function(){
       var rules=inf.rules.slice();root.querySelector(".xb").textContent=opts.battle?"⚔ Battle round: everyone free dances, then 1 v 1s on the stage. "+(m==="free"?"The room votes each match.":"The higher score goes through."):"";
       fill(".xrules",rules);
     }
-    if(!on){on=true;root.classList.add("on");raf=requestAnimationFrame(frame);}
+    /* sit below the stage so the performer stays in view while the card is up */
+    var sb=typeof STAGE_BOTTOM!=="undefined"?STAGE_BOTTOM:0.3;root.style.top=Math.round(sb*innerHeight+6)+"px";
+    if(!on){on=true;root.classList.add("on");document.body.classList.add("explain-on");raf=requestAnimationFrame(frame);}
   }
-  function hide(){on=false;if(raf)cancelAnimationFrame(raf);raf=0;if(root)root.classList.remove("on");}
+  function hide(){on=false;if(raf)cancelAnimationFrame(raf);raf=0;if(root)root.classList.remove("on");document.body.classList.remove("explain-on");}
   function tick(mode,secs,key,opts){
     left=secs;
     if(!(secs>SHOW_MIN&&secs<=SHOW_MAX)||dismissed[key]||!INFO[mode==="skate"&&opts&&opts.ice?"ice":mode]){if(on)hide();return;}
