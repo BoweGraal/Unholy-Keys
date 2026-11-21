@@ -43,6 +43,13 @@ var TUNE=(function(){
     V("hype.good","Hype gain, GOOD",0.012,0,0.2,0.002,"Hype per GOOD.",""),
     V("hype.miss","Hype loss, miss / let go",0.08,0,0.4,0.01,"Hype lost on a miss or letting go early.",""),
     V("hype.drift","Hype drift back",0.0008,0,0.01,0.0001,"How fast hype drifts back to its resting level each frame when nothing is happening.","")]},
+  {id:"pipe",name:"Half pipe",icon:"🛹",mode:"pipe",
+   about:"Everyone skates one big half pipe. You cross from wall to wall every 2 beats; pump (Space or PUMP) as you pass the bottom, on the beat, to go higher. Over the lip you're in the air: an arrow does a trick. Land it to score (clean landings in a row build a combo); still mid-trick when you come down and you bail.",
+   vars:[
+    V("pp.window","Pump timing window",0.3,0.1,0.8,0.05,"How far from the bottom of the swing (in beats) a pump still counts.","beats"),
+    V("pp.pump","Pump power",0.17,0.05,0.5,0.01,"How much higher one good pump takes you.",""),
+    V("pp.decay","Height lost per missed pump",0.07,0,0.3,0.01,"How much height you lose on a swing you didn't pump.",""),
+    V("pp.bail","Bail time",1.2,0.4,3,0.1,"How long a bail keeps you down.","s")]},
   {id:"walk",name:"Dance walk race",icon:"💃",mode:"walk",
    about:"Race across the floor. Keep your cursor (or finger) in the circle as it moves along an invisible path to walk at full speed. The dance, and the circle's path, change every 8 beats. Out of the circle you slow down; stay out too long and you trip.",
    vars:[

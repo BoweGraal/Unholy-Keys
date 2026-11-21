@@ -757,6 +757,20 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.59.0 - New minigame: Half pipe
+
+The dance floor bends up into one wide half pipe (it warps up over a couple of seconds when the round starts, and flattens again after) and everyone skates it at once, each in their own lane.
+- **Riding:** you swing from wall to wall in time with the music, one crossing every 2 beats.
+- **Pumping:** press **Space** or the big **PUMP** button as you pass the bottom, on the beat, to go higher. The bar at the bottom fills as the moment comes; the meter beside PUMP shows how high you're swinging. "PERFECT PUMP" for spot on; pumping at the wrong time ("OFF BEAT") or skipping a swing loses a little height.
+- **Air and tricks:** swing high enough and you fly over the lip. In the air, an arrow (or the trick buttons) does a trick: ⬅ Kickflip, ➡ Heelflip, ⬆ Indy grab, ⬇ 360. You can fit two near the top of a big swing.
+- **Landing:** finish the trick before you come down and it scores (more for higher air). Clean landings in a row build a **combo** multiplier (×1.25, ×1.5, …). Still mid-trick when you land and you **bail**: you go flat, lose your combo and drop most of your height.
+- **Bots** skate too: pumping mostly on the beat, throwing tricks, sometimes bailing.
+- In your round picker and Dance practice. **Tuning lab → Half pipe**: pump timing window, pump power, height lost per missed pump, bail time.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** Dance practice → Half pipe with a song. Pump on the beat until you're getting air, try each trick, and try a trick right before landing to see a bail. Then live with a couple of bots.
+
 ## v1.58.0 - New minigame: Dance walk race
 
 Everyone lines up on the left of the dance floor and dance-walks to the finish line.
