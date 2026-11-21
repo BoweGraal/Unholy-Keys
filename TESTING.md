@@ -757,6 +757,54 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.7 - Presets for each type of instrument
+
+Every instrument now shows its own sounds on its picker page: **Studio** plus 3 to 5 presets made for that type of instrument. The generic presets (Lo-fi, 80s Synth, Funk Machine, Guitar Sweep, Dreamy Hall, Warm Tube and the rest) are still there under "More sounds".
+
+| Type | Presets |
+|---|---|
+| Piano, harpsichord | Concert Hall, Warm Felt, Bar Piano, Tape Keys, Dreamy Piano |
+| Electric piano | Rhodes Tremolo, Chorus Dream, Warm Drive, Slap Echo, Neo Soul |
+| Organ | Cathedral, Rock Organ, Gospel Warm |
+| Accordion, harmonica, bagpipe | Cafe Room, Blues Harp, Wide Squeeze, Folk Hall, Wobble |
+| Synths, keytar, chip, EDM | 80s Chorus, Sweep Lead, Wide Pad, Arp Echo, Gritty |
+| Electric / distorted / jazz guitar | Edge of Breakup, Crunch Lead, Funk Wah, Ambient Swell, Surf Spring |
+| Acoustic guitar, banjo, sitar, harp, zither | Studio Wood, Shimmer Stereo, Nashville, Cavern |
+| Bass | Tight Studio, Drive Pick, Fretless Chorus, Dub Echo |
+| Violin, cello, double bass | Concert Hall, Warm Section, Chamber, Folk Fiddle, Haunted |
+| Trumpet, trombone, horn, tuba | Big Hall, Warm Section, Jazz Club, Fanfare, Mariachi Slap |
+| Sax, clarinet, bassoon | Smoky Club, Breathy Hall, Late Night Echo, Gritty Tenor, Wide Section |
+| Flute, pan flute, ocarina, whistle | Open Air, Folk Hall, Breathy Lo-fi |
+| Mallets, bells, music box, kalimba, steel drum | Glass Hall, Music Box Echo, Dreamy Shimmer, Lo-fi Chimes, Island Tremolo |
+| Drums, timpani | Tight Room, Big Hall Hits, Lo-fi Break, Dub Space, Crunch |
+| Voice, choir | Studio Vocal, Cathedral Choir, Ethereal, Slap Back Retro, Robot Choir |
+
+How they were tested: all 12 existing presets plus 80 new candidates (69 passed) were rendered offline with the real Tone.js against a stand-in sound for each of 15 instrument types (about 520 renders). The real instrument samples can not be downloaded from the build machine, so the stand-ins are synthesized voices with the right character (a plucked string for guitar, a slow-attack saw for strings and so on). Each preset's loudness was matched to the dry sound (the trim in the table is measured, within 1.5 dB), and presets whose peaks jumped more than 3 dB above the dry sound were dropped. Those were mostly the long-echo versions on loud sustained sounds: Rotary Slow / Fast on organ, Funk Wah on bass, Dreamy Flute and Canyon Echo on flute, Cinematic Swell on strings, Clean Chorus on electric guitar and Campfire on acoustic guitar.
+
+What this does NOT prove: nobody has listened to these on the real samples yet. Please try them and tell me which ones sound wrong, and I will change or replace them.
+
+1. Setup tab > Browse instruments > pick any instrument > tap each sound.
+2. Check the volume stays about the same from sound to sound.
+
+## v1.79.6 - New instrument picker with favourites
+
+1. Setup tab, Instrument section: a card shows your current instrument with **Browse instruments** and **Favourites** buttons (the old list is under "Show the classic list"). The performer's instrument button and the phone's favourites screen ("Browse all instruments") open the same picker.
+2. Pick a family tile (Keys, Synths, Guitar & Bass, Strings, Brass, Woodwinds, Mallets & Bells, Drums & Perc, Voices, or Everything). Filters sit at the top: collection chips, type chips, and a search box that looks through every instrument. **Back** steps up one level.
+3. Tap an instrument: it plays a short phrase. On its page tap **Studio**, **Guitar Sweep**, **Dreamy Hall** or **Warm Tube** to hear it with that sound (the other presets are the small chips below). Prev / Next flips through the list.
+4. Tap a numbered slot to save instrument + sound as a favourite. Slots are the same 1-9 hotkeys as before, and loading one now also restores its sound.
+5. **Favourites** tile: tap a slot to play it, or Remove it.
+
+## v1.79.5 - Auto level for playing along with songs
+
+1. Open the Volume panel. There is a new **Auto level** button with three positions: **Blend** (sits inside the track), **Lead singer**, **Solo** (cuts through).
+2. Start a backing track, turn Auto level on and play a few notes. Your Keys volume moves by itself to sit at the chosen spot against the song. The line under the buttons shows what it is doing.
+3. Switch to a much quieter or louder song: your volume follows within a couple of seconds. It only changes between notes, never mid-note.
+4. Drag the Keys slider while it is on: that becomes your new offset, and it keeps it from then on.
+5. It learns each instrument's own loudness from the notes you play, so a loud synth and a quiet flute both land in the right place. The first few notes of a new instrument are a rough guess.
+6. YouTube audio can not be measured from the page, so Auto level only works with uploaded tracks and video files.
+
+Tested with real Tone.js: a -26 dB song brought the Keys to 23%, a -8 dB song pinned it at the top, and Solo sat about 4 dB above Lead singer.
+
 ## v1.79.4 - Effects: why the wah sounded bad, and 3 tested presets
 
 **What was wrong.** I rendered every preset offline (a plucked guitar, a strummed guitar and a saw synth) and measured it. Anything with the auto-wah came out about 9 to 10 dB louder than the dry sound and clipped (up to 4% of the samples), because the wah had a built-in 20 dB boost. That's the harsh, loud "sweep". The master limiter doesn't catch it, so anything over full scale just distorts. The crush and lo-fi presets were also 3 to 7 dB louder than dry.

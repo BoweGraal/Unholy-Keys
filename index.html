@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.79.4"></script>
-<script src="art.js?v=1.79.4"></script>
-<script src="instruments.js?v=1.79.4"></script>
-<script src="kart.js?v=1.79.4"></script>
+<script src="gfx.js?v=1.79.7"></script>
+<script src="art.js?v=1.79.7"></script>
+<script src="instruments.js?v=1.79.7"></script>
+<script src="kart.js?v=1.79.7"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -373,6 +373,43 @@ a.nav-item{text-decoration:none}
 #mb-pad .mb-x{position:absolute;left:50%;top:50%;width:142%;height:3px;background:rgba(255,255,255,.10);transform-origin:center;pointer-events:none}
 #mb-knob{position:absolute;width:52px;height:52px;margin:-26px 0 0 -26px;background:var(--uiKnob,#D354A0) center/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;left:50%;top:50%;opacity:0;transition:opacity .1s}
 #mb-pad.held #mb-knob{opacity:1}
+
+/* ── Instrument picker ── */
+#ukPick{display:none;position:fixed;inset:0;z-index:99990;background:#0b0818;color:#f1eeff;flex-direction:column;font-family:'Silkscreen',ui-monospace,monospace;-webkit-tap-highlight-color:transparent}
+#ukPick.on{display:flex}
+#ukPick *{box-sizing:border-box}
+#ukPick .pkTop{display:flex;gap:8px;align-items:center;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));background:#171030;border-bottom:3px solid #000}
+#ukPick .pkTitle{flex:1;min-width:0;font:700 14px 'Silkscreen',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:2px 2px 0 #000}
+#ukPick button,#ukPick .pkB{font:700 12px 'Silkscreen',monospace;color:#f1eeff;background:#2a2150;border:0;padding:10px 12px;cursor:pointer;box-shadow:inset -3px -3px 0 #140f2c,inset 3px 3px 0 #4a3d86;touch-action:manipulation}
+#ukPick button:active{transform:translate(1px,1px)}
+#ukPick button.on{background:#c8407e;box-shadow:inset -3px -3px 0 #8d2a58,inset 3px 3px 0 #e46aa1}
+#ukPick button:disabled{opacity:.4}
+#ukPick .pkSearch{padding:8px 12px 0}
+#ukPick input{width:100%;font:700 13px 'Silkscreen',monospace;color:#f1eeff;background:#0b0818;border:3px solid #2a2150;padding:9px 10px;outline:none}
+#ukPick input:focus{border-color:#c8407e}
+#ukPick .pkChips{display:flex;gap:6px;overflow-x:auto;padding:8px 12px 2px;scrollbar-width:none;flex-shrink:0}
+#ukPick .pkChips::-webkit-scrollbar{display:none}
+#ukPick .pkChips button{white-space:nowrap;padding:7px 10px;font-size:11px;flex-shrink:0}
+#ukPick .pkChips small{opacity:.6;margin-left:4px}
+#ukPick .pkBody{flex:1;overflow-y:auto;padding:12px;padding-bottom:max(18px,env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+#ukPick .pkGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+#ukPick .pkGrid.sm{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+#ukPick .pkTile{display:flex;flex-direction:column;gap:6px;align-items:flex-start;justify-content:flex-end;min-height:84px;padding:12px 10px;text-align:left;line-height:1.25;word-break:break-word}
+#ukPick .pkTile b{font-size:13px}
+#ukPick .pkTile small{font-size:10px;color:#a6a0c4}
+#ukPick .pkTile.on small{color:#ffe3f0}
+#ukPick .pkTile .pkIc{width:26px;height:26px;image-rendering:pixelated}
+#ukPick .pkH{margin:16px 0 8px;font:700 11px 'Silkscreen',monospace;color:#a6a0c4;letter-spacing:.5px}
+#ukPick .pkBig{font:700 20px 'Silkscreen',monospace;margin:4px 0 2px;text-shadow:2px 2px 0 #000}
+#ukPick .pkSub{font-size:11px;color:#a6a0c4;margin-bottom:8px}
+#ukPick .pkRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#ukPick .pkFx{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;min-height:74px;padding:10px;line-height:1.25}
+#ukPick .pkFx small{font-size:10px;color:#a6a0c4}
+#ukPick .pkFx.on small{color:#ffe3f0}
+#ukPick .pkSlot{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;min-height:64px;padding:8px;font-size:11px;line-height:1.25;overflow:hidden}
+#ukPick .pkSlot small{font-size:10px;color:#a6a0c4}
+#ukPick .pkSlot.on small{color:#ffe3f0}
+#ukPick .pkNote{font-size:11px;color:#a6a0c4;margin-top:8px;min-height:14px}
 /* the hotkey favourites */
 #mb-favs{display:none;position:absolute;inset:0;z-index:5;background:rgba(10,8,18,.94);align-items:center;justify-content:center;padding:20px}
 #mb-favs.on{display:flex}
@@ -646,7 +683,18 @@ body.jset .nav-item.jam-only{display:flex}
         </div>
         <button id="mixAutoBtn" class="btn" style="padding:5px 14px;font-size:12px;background:var(--pu);border-color:var(--pu);color:#fff;margin-bottom:14px" title="Play backing track for ~1s then click — auto-sets keys to front-and-center level">&#10024; Auto-Align</button>
       </div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:2px">Play your track for ~1s &#8594; click <b>Auto-Align</b> to match keys volume to the song&#39;s vocal range (front &amp; center, not dominating).</div>
+      <div id="alBox" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bg4)">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button id="alToggle" class="btn" style="padding:6px 14px;font-size:12px" title="Keep your instrument at the right level for whatever song is playing">Auto level: Off</button>
+          <span id="alSeg" style="display:inline-flex;gap:4px">
+            <button class="btn" data-al="-6" style="padding:6px 10px;font-size:12px" title="Sits inside the track, like a backing vocal">Blend</button>
+            <button class="btn" data-al="-2" style="padding:6px 10px;font-size:12px" title="Sits on top of the mix, like a lead singer">Lead singer</button>
+            <button class="btn" data-al="2" style="padding:6px 10px;font-size:12px" title="Cuts through, like a solo guitarist">Solo</button>
+          </span>
+        </div>
+        <div id="alInfo" style="font-size:11px;color:var(--tx3);margin-top:6px">Sets your volume by itself while a backing track or video plays, so you sit where a lead singer or solo guitarist would.</div>
+      </div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:8px">Play your track for ~1s &#8594; click <b>Auto-Align</b> to match keys volume to the song&#39;s vocal range (front &amp; center, not dominating).</div>
   </div>
   <div class="sl">Dance rounds <span class="bdg" style="background:var(--bg3);color:var(--tx3)">live shows</span></div>
   <div class="pnl" id="roundPanel">
@@ -698,10 +746,16 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
   </div>
   <div class="app-section" id="sec-inst">
+  <div class="sl">Instrument <span id="iBdg" class="bdg"></span></div>
+  <div id="pkCard" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px;margin-bottom:10px;background:var(--bg3);border:1px solid var(--bg4);border-radius:var(--r)">
+    <div style="flex:1;min-width:140px"><div id="pkCurName" style="font-size:16px;font-weight:800">Instrument</div><div id="pkCurSub" style="font-size:11px;color:var(--tx3);margin-top:2px"></div></div>
+    <button id="pkOpenBtn" class="btn" style="padding:10px 16px;font-size:13px;font-weight:700">Browse instruments</button>
+    <button id="pkFavBtn" class="btn" style="padding:10px 16px;font-size:13px;font-weight:700">&#9733; Favourites</button>
+  </div>
+  <details id="classicInst"><summary style="cursor:pointer;font-size:11px;color:var(--tx3);margin-bottom:8px">Show the classic list</summary>
   <input type="text" id="inst-search" placeholder="Search instruments by name..." oninput="filterInstruments(this.value)">
   <div id="instCols"></div>
-  <div class="sl">Instrument <span id="iBdg" class="bdg"></span></div>
-  <div id="instBox"></div>
+  <div id="instBox"></div></details>
   </div>
   <div class="app-section" id="sec-play-grid">
   <div class="sl">Note history</div>
@@ -1578,6 +1632,7 @@ var chordShape="Triad",harmOn=false,harmInterval="5th",strumOn=false,strumSpeed=
 var activeSlot=-1;
 var activeChordVoices=[],activeHarmVoice=null;
 var started=false,audioReady=false;
+var alMeter=null;
 var masterVol,fxTrim,rev,cho,dist,lim,analyser,pdWah,pdDly,pdTre,pdCrush;
 var backingAudio=null,backingGain=null,backingAnalyser=null,backingSource=null;
 var vidGain=null,vidAnalyser=null,vidSource=null;
@@ -1642,7 +1697,7 @@ var layout=buildLayout();
 function initAudio(){if(started)return;started=true;
   /* iPhone: without this, web audio follows the ringer switch and is silent when the phone is on silent */
   try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
-  Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);fxTrim=new Tone.Volume(fxTrimDb()).connect(masterVol);rev=new Tone.Reverb({decay:FXS.rv.decay,wet:S.fxR}).connect(fxTrim);
+  Tone.start();lim=new Tone.Limiter(-1).toDestination();masterVol=new Tone.Volume(0).connect(lim);try{alMeter=new Tone.Meter({smoothing:.6,normalRange:false});masterVol.connect(alMeter);}catch(e){}analyser=new Tone.Analyser("fft",256);masterVol.connect(analyser);fxTrim=new Tone.Volume(fxTrimDb()).connect(masterVol);rev=new Tone.Reverb({decay:FXS.rv.decay,wet:S.fxR}).connect(fxTrim);
   /* ── Native Tone.js pedal board: cho → AutoWah → Delay → Tremolo → BitCrusher → rev ── */
   pdCrush=new Tone.BitCrusher({bits:FXS.crush.bits,wet:S.pdCrush}).connect(rev);
   pdTre=new Tone.Tremolo({frequency:FXS.tre.frequency,depth:FXS.tre.depth,wet:S.pdTre}).start().connect(pdCrush);
@@ -1845,7 +1900,7 @@ function applyNatOct(id){
 }
 function selInst(id){var ins=findInst(id);if(!ins)return;if(ins.t==="samp"&&!samplers[id]){initAudio();loadSamp(id);}S.eng=id;applyNatOct(id);
   var matched=false;for(var _i=0;_i<9;_i++){if(hkSlots[_i]===id){activeSlot=_i;matched=true;break;}}if(!matched)activeSlot=-1;
-  renderInst();updBdg();updJInfo();renderHkGrid();
+  renderInst();updBdg();updJInfo();renderHkGrid();if(typeof pkCard==="function")pkCard();
   if(jamOn){renderJamHkStrip();var jSel=document.getElementById("jInstSel");if(jSel)jSel.value=id;showJamToast(ins.l,"#EF9F27");}mbInstLabel();saveSession();}
 function updBdg(){var b=document.getElementById("iBdg"),ins=findInst(S.eng);if(!ins||!b)return;if(ins.t==="samp"){if(loading[ins.id]){b.style.cssText="background:#F5C51833;color:#F5C518";b.textContent="Loading "+ins.l+"...";}else if(samplers[ins.id]){b.style.cssText="background:#1D9E7533;color:#1D9E75";b.textContent=ins.l+" (VST)";}else{b.style.cssText="background:#F5C51833;color:#F5C518";b.textContent=ins.l;}}else{b.style.cssText="background:"+ins.catC+"33;color:"+ins.catC;b.textContent=ins.l;}}
 function updModInd(){var el=document.getElementById("modInd"),mod=getMod();if(!el)return;el.textContent=RLBL[mod];el.style.cssText="background:"+RCLR[mod]+"22;color:"+RCLR[mod];updJamHud();}
@@ -2093,6 +2148,7 @@ function mbFavs(open){
   var gd=document.getElementById("mb-favGrid");gd.innerHTML="";
   for(var i=0;i<9;i++){(function(i){var id=hkSlots[i],ins=id?findInst(id):null,b=document.createElement("button");b.innerHTML="<small>"+(i+1)+"</small>"+(ins?ins.l:"Empty");b.disabled=!ins;if(ins&&id===S.eng)b.className="on";
     b.onclick=function(e){e.stopPropagation();handleNumpad(i+1);mbInstLabel();mbFavs(false);};gd.appendChild(b);})(i);}
+  var bw=document.createElement("button");bw.id="mb-browse";bw.style.cssText="grid-column:1/-1;padding:14px!important;font-size:13px!important";bw.textContent="Browse all instruments";bw.onclick=function(e){e.stopPropagation();mbFavs(false);pkOpen();};gd.appendChild(bw);
 }
 function mbOct(d){var o=S.oct+d;if(o<1||o>7)return;S.oct=o;if(typeof rememberOct==="function")rememberOct();rebuild();saveSession();if(mbP.dir){activeNoteKey=null;refreshNote();}mbPaint();}
 function initMobileSlider(){
@@ -3681,6 +3737,79 @@ function autoAlignMix(){
   },700);
 }
 
+/* ── Auto level ──
+   While a backing track or a video plays, keep your instrument where a lead singer or a solo guitarist would sit:
+   1. the track's level is measured as it plays (short-term average, after the Track / Video slider, so what you hear);
+   2. your instrument's own level is learned from the notes you play (measured at the master, per instrument, so a
+      loud synth and a quiet flute both end up in the right place);
+   3. the Keys volume is nudged toward (track level + the chosen offset). Blend -6 dB, Lead singer -2 dB, Solo +2 dB.
+   It only changes the volume between notes, and moves a little at a time. If you move the Keys slider (or the - and =
+   keys) while it's on, that becomes your new offset, so you can still nudge it. YouTube can't be measured from the page. */
+var AL={on:false,off:-2,inst:{},p:null,key:"",lastVol:null,note:null,t0:0,quietAt:0,info:""};
+try{var _al=JSON.parse(localStorage.getItem("uk_autolevel")||"{}");AL.on=!!_al.on;if(typeof _al.off==="number")AL.off=Math.max(-12,Math.min(8,_al.off));if(_al.inst&&typeof _al.inst==="object")AL.inst=_al.inst;}catch(e){}
+function alSave(){try{localStorage.setItem("uk_autolevel",JSON.stringify({on:AL.on,off:AL.off,inst:AL.inst}));}catch(e){}}
+function alSource(){
+  if(backingAnalyser&&backingAudio&&backingAudio.src&&!backingAudio.paused)return{ana:backingAnalyser,g:MIX.track,key:"b"+backingAudio.src};
+  var jv=document.getElementById("jmVid");
+  if(vidAnalyser&&jv&&jv.src&&!jv.paused)return{ana:vidAnalyser,g:MIX.vid,key:"v"+jv.src};
+  return null;
+}
+function alTrackDb(){return AL.p===null?null:10*Math.log10(AL.p+1e-12);}
+function alUi(){
+  var tg=document.getElementById("alToggle");if(tg){tg.textContent="Auto level: "+(AL.on?"On":"Off");tg.style.background=AL.on?"var(--tl)":"";tg.style.borderColor=AL.on?"var(--tl)":"";tg.style.color=AL.on?"#fff":"";}
+  Array.prototype.forEach.call(document.querySelectorAll("#alSeg [data-al]"),function(b){var on=AL.on&&Math.abs(+b.getAttribute("data-al")-AL.off)<0.75;b.style.background=on?"var(--pu)":"";b.style.borderColor=on?"var(--pu)":"";b.style.color=on?"#fff":"";b.style.opacity=AL.on?"1":".5";});
+  var inf=document.getElementById("alInfo");if(inf)inf.textContent=AL.info||"Sets your volume by itself while a backing track or video plays, so you sit where a lead singer or solo guitarist would.";
+}
+function alApplyVol(v){
+  S.vol=parseFloat(v.toFixed(3));AL.lastVol=S.vol;
+  if(audioReady&&!activeVoice)masterVol.volume.value=Tone.gainToDb(S.vol*getPowerVol());
+  updJamVol();
+  var sl=document.getElementById("mixKeys");if(sl)sl.value=S.vol;
+  var kl=document.getElementById("mixKeysLbl");if(kl)kl.textContent=Math.round(S.vol*100)+"%";
+  var sv=document.getElementById("sV");if(sv)sv.value=S.vol;
+}
+/* every 60 ms: the track's level, and the level of the note you're playing */
+function alSample(){
+  var src=alSource();
+  if(src){
+    if(AL.key!==src.key){AL.key=src.key;AL.p=null;}
+    var buf=src.ana._alBuf||(src.ana._alBuf=new Float32Array(src.ana.fftSize));src.ana.getFloatTimeDomainData(buf);
+    var ss=0;for(var i=0;i<buf.length;i++)ss+=buf[i]*buf[i];
+    var x=ss/buf.length*src.g*src.g;                                   /* power as heard, after the fader */
+    if(x>3e-6){AL.p=AL.p===null?x:AL.p+(x-AL.p)*(AL.p===null?1:(x>AL.p?0.05:0.02));}   /* up a little faster than down; silence is ignored */
+  }else{AL.key="";}
+  /* the note: its loudest moment at the master, once the attack has passed */
+  if(typeof alMeter!=="undefined"&&alMeter&&audioReady){
+    var now=Date.now(),on=!!(activeVoice&&activeNoteKey);
+    if(on&&(!AL.note||AL.note.k!==activeNoteKey)){alFinishNote();AL.note={k:activeNoteKey,t:now,g:masterVol.volume.value,max:-200};}
+    if(AL.note&&on&&now-AL.note.t>120){var m=alMeter.getValue();if(typeof m==="object")m=m[0];if(m>AL.note.max)AL.note.max=m;}
+    if(!on&&AL.note)alFinishNote();
+  }
+}
+function alFinishNote(){
+  var n=AL.note;AL.note=null;if(!n||n.max<-60)return;
+  var intrinsic=n.max-n.g;if(!(intrinsic>-40&&intrinsic<20))return;
+  var id=S.eng,old=AL.inst[id];AL.inst[id]=old===undefined?intrinsic:old*0.6+intrinsic*0.4;
+  AL.learn=(AL.learn||0)+1;if(AL.learn%6===0)alSave();
+}
+/* every 400 ms: nudge the Keys volume toward the target */
+function alTick(){
+  if(!AL.on||!audioReady)return;
+  if(AL.lastVol!==null&&Math.abs(S.vol-AL.lastVol)>0.004){   /* you moved it: that's your new offset */
+    AL.off=Math.max(-12,Math.min(8,AL.off+20*Math.log10(Math.max(0.02,S.vol)/Math.max(0.02,AL.lastVol))));AL.lastVol=S.vol;alSave();}
+  var td=alTrackDb();
+  if(td===null||!alSource()){AL.info="Waiting for a backing track or video to play.";alUi();return;}
+  var intr=AL.inst[S.eng],known=intr!==undefined;if(!known)intr=-10;
+  var want=td+AL.off,gain=Math.pow(10,(want-intr)/20),vol=gain/getPowerVol(),tgt=Math.max(0.05,Math.min(1,vol));
+  if(!activeVoice){var d=tgt-S.vol;if(Math.abs(d)>0.01)alApplyVol(S.vol+Math.max(-0.06,Math.min(0.06,d)));else if(AL.lastVol===null)AL.lastVol=S.vol;}
+  AL.info="Track "+td.toFixed(0)+" dB, you aim at "+want.toFixed(0)+" dB, Keys volume "+Math.round(S.vol*100)+"%"+(vol>1.05?" (maxed out: turn the track down)":"")+(known?"":". Play a few notes and it will learn this instrument.");
+  alUi();
+}
+setInterval(alSample,60);setInterval(alTick,400);
+window.ukAuto=function(){return{on:AL.on,off:AL.off,track:alTrackDb(),inst:AL.inst,vol:S.vol,info:AL.info,src:!!alSource()};};
+window.ukAudioTest={init:function(){initAudio();},play:function(m){playNote("t",m);},stop:function(){silenceNote();},back:function(){return backingAudio;}};
+window.ukAutoSet=function(on,off,vol){AL.on=!!on;if(off!==undefined)AL.off=off;if(vol!==undefined)S.vol=vol;AL.lastVol=S.vol;alUi();};
+
 var MET=(function(){var iv=null,beat=0;function tick(){var dot=document.getElementById("metD");dot.style.background=beat===0?"var(--pk)":"var(--tl)";setTimeout(function(){dot.style.background="var(--bg4)";},100);if(audioReady){var o=new Tone.Synth({oscillator:{type:"sine"},envelope:{attack:.001,decay:.05,sustain:0,release:.01}}).connect(masterVol);o.triggerAttackRelease(beat===0?880:660,"32n");setTimeout(function(){try{o.dispose();}catch(e){}},200);}beat=(beat+1)%4;}return{toggle:function(){var btn=document.getElementById("metB");if(iv){clearInterval(iv);iv=null;btn.textContent="Start";btn.classList.remove("on");return;}initAudio();btn.textContent="Stop";btn.classList.add("on");beat=0;tick();var bpm=+document.getElementById("metV").value||120;iv=setInterval(tick,60000/bpm);document.getElementById("metV").onchange=function(){if(!iv)return;clearInterval(iv);iv=setInterval(tick,60000/(+this.value||120));};}};})();
 
 var REC=(function(){var layers=[],notes=[],start=0,recording=false,playing=false;var timeouts=[],loopLen=0,loopStart=0,phAnim=null;var curNote=null;var LC=["#D354A0","#7F77DD","#1D9E75","#D85A30","#378ADD","#EF9F27","#D4537E","#5DCB42"];function playLoopNote(midi,instId,dur){if(!audioReady)return;var ins=findInst(instId);if(!ins)return;var nn=Tone.Frequency(midi,"midi").toNote();var durS=Math.max(0.05,(dur||200)/1000);if(ins.t==="samp"){var sp=samplers[instId];if(!sp)return;sp.triggerAttackRelease(nn,durS);}else{var s=ins.mk();s.connect(dist);s.triggerAttackRelease(nn,durS);setTimeout(function(){try{s.dispose();}catch(e){}},Math.max(800,dur||200)+500);}}function _active(){var solo=false;for(var i=0;i<layers.length;i++)if(layers[i].solo){solo=true;break;}var a=[];for(var i=0;i<layers.length;i++){if(solo?layers[i].solo:!layers[i].muted)a.push(layers[i]);}return a;}  function _schedule(){if(!playing)return;var active=_active();active.forEach(function(lay){lay.notes.forEach(function(note){var t=setTimeout(function(){if(!playing)return;playLoopNote(note.midi,lay.inst,note.dur||200);},note.time%loopLen);timeouts.push(t);});});var lt=setTimeout(function(){if(!playing)return;loopStart=Date.now();_schedule();},loopLen);timeouts.push(lt);}function _startPh(){var ph=document.getElementById("rcPh");function tick(){if(!playing){ph.style.opacity="0";return;}ph.style.left=((Date.now()-loopStart)%loopLen/loopLen*100)+"%";phAnim=requestAnimationFrame(tick);}tick();}function _updStatus(){var s=document.getElementById("recS");if(!layers.length){s.textContent="No layers";return;}var tn=0;layers.forEach(function(l){tn+=l.notes.length;});s.textContent=layers.length+" layer"+(layers.length>1?"s":"")+" / "+tn+" notes / "+(loopLen/1000).toFixed(1)+"s";}function _renderLayers(){var c=document.getElementById("layBox");c.innerHTML="";layers.forEach(function(L,i){var el=document.createElement("div");el.style.cssText="display:flex;align-items:center;gap:8px;padding:5px 10px;margin-bottom:3px;border-radius:6px;background:var(--bg3);border:1px solid "+(L.muted?"var(--bg4)":L.c+"44");el.innerHTML='<span style="width:8px;height:8px;border-radius:50%;background:'+L.c+';opacity:'+(L.muted?.3:1)+'"></span><span style="font-size:12px;font-weight:600;flex:1;color:'+(L.muted?'var(--tx3)':'var(--tx)')+'">'+L.instL+' <span style="font-weight:400;font-size:11px;color:var(--tx3)">('+L.notes.length+')</span></span><span class="btn" style="padding:2px 8px;font-size:10px;'+(L.muted?'background:var(--co);color:#fff':'')+'" data-m="1">M</span><span class="btn" style="padding:2px 8px;font-size:10px;'+(L.solo?'background:var(--am);color:#111':'')+'" data-s="1">S</span><span class="btn" style="padding:2px 8px;font-size:10px" data-x="1">X</span>';(function(ii,layer){el.onclick=function(e){var t=e.target;if(t.getAttribute("data-m")){layer.muted=!layer.muted;layer.solo=false;_renderLayers();}else if(t.getAttribute("data-s")){layer.solo=!layer.solo;if(layer.solo)layer.muted=false;_renderLayers();}else if(t.getAttribute("data-x")){stopAll();layers.splice(ii,1);if(!layers.length)loopLen=0;_renderLayers();_drawTimeline();_updStatus();}};})(i,L);c.appendChild(el);});}function _drawTimeline(){var cv=document.getElementById("rcv"),ctx=cv.getContext("2d");var r=cv.parentElement.getBoundingClientRect();cv.width=r.width*2;cv.height=r.height*2;ctx.scale(2,2);var w=r.width,h=r.height;ctx.clearRect(0,0,w,h);if(!layers.length)return;var tT=loopLen||1,mn=999,mx=0;layers.forEach(function(l){l.notes.forEach(function(n){if(n.midi<mn)mn=n.midi;if(n.midi>mx)mx=n.midi;});});if(mn>mx){mn=60;mx=72;}mn-=2;mx+=2;var rng=mx-mn||1;layers.forEach(function(L){ctx.globalAlpha=L.muted?.15:.8;L.notes.forEach(function(n){ctx.fillStyle=L.c;ART.PX.disc(ctx,(n.time/tT)*w,h-((n.midi-mn)/rng)*h,3);});});ctx.globalAlpha=1;}function stopAll(){playing=false;timeouts.forEach(function(t){clearTimeout(t);});timeouts=[];if(phAnim){cancelAnimationFrame(phAnim);phAnim=null;}document.getElementById("rcPh").style.opacity="0";document.getElementById("recP").classList.remove("on");document.getElementById("recP").textContent="Play all";_updStatus();}return{recording:false,notes:[],start:0,get _playing(){return playing;},get _layerCount(){return layers.length;},get _layers(){return layers;},_loopPct:function(){if(!playing||!loopLen)return 0;return((Date.now()-loopStart)%loopLen)/loopLen;},
@@ -3915,6 +4044,77 @@ var PERF_PRESETS=[
     rv:{decay:1.6,wet:.18},ch:{frequency:1.2,delayTime:3,depth:.3,wet:.12},dt:{distortion:.22,wet:.3},
     dly:{delayTime:.085,feedback:.12},tre:{frequency:4.2,depth:.35},
     pd:{wah:0,dly:.14,tre:.25,crush:0}}
+,
+  /* per-instrument-type presets: tested per family with loudness matched to the dry sound (see TESTING.md v1.79.7) */
+  {"l":"Concert Hall","c":"#6FA8FF","fam":"piano","d":"Big room, long soft tail","trim":0.3,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":4.2,"wet":0.3},"ch":{"frequency":0.3,"delayTime":4,"depth":0.4,"wet":0.08},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Warm Felt","c":"#C9A84C","fam":"piano","d":"Soft, rounded, a touch of warmth","trim":-0.6,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.4,"wet":0.14},"ch":{"frequency":0.4,"delayTime":4,"depth":0.4,"wet":0.1},"dt":{"distortion":0.12,"wet":0.08},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Bar Piano","c":"#EF9F27","fam":"piano","d":"Small room with a little slap","trim":0.8,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.1,"wet":0.16},"ch":{"frequency":1.2,"delayTime":3,"depth":0.4,"wet":0.15},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.12,"tre":0,"crush":0},"dly":{"delayTime":0.11,"feedback":0.12}},
+  {"l":"Tape Keys","c":"#97C459","fam":"piano","d":"Old tape wobble and hiss","trim":-2.9,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.5,"wet":0.15},"ch":{"frequency":0.5,"delayTime":6,"depth":0.5,"wet":0.25},"dt":{"distortion":0.15,"wet":0.1},"pd":{"wah":0,"dly":0,"tre":0,"crush":0.18},"crush":{"bits":10}},
+  {"l":"Dreamy Piano","c":"#8E5CF0","fam":"piano","d":"Long hall with a floating echo","trim":1.2,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":5,"wet":0.38},"ch":{"frequency":0.4,"delayTime":5,"depth":0.5,"wet":0.2},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.22,"tre":0,"crush":0},"dly":{"delayTime":"8n.","feedback":0.35}},
+  {"l":"Rhodes Tremolo","c":"#1D9E75","fam":"epiano","d":"Classic electric piano tremolo","trim":-0.2,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.6,"wet":0.16},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0.55,"crush":0},"tre":{"frequency":4.5,"depth":0.45}},
+  {"l":"Chorus Dream","c":"#8E5CF0","fam":"epiano","d":"Wide, watery chorus","trim":2,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2.4,"wet":0.22},"ch":{"frequency":0.9,"delayTime":3.5,"depth":0.6,"wet":0.4},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Warm Drive","c":"#E8704A","fam":"epiano","d":"Gently overdriven and warm","trim":-1.7,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.4,"wet":0.14},"ch":{"frequency":0.6,"delayTime":4,"depth":0.4,"wet":0.15},"dt":{"distortion":0.22,"wet":0.16},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Slap Echo","c":"#378ADD","fam":"epiano","d":"Quick single echo","trim":0.8,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.8,"wet":0.18},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.2,"tre":0,"crush":0},"dly":{"delayTime":0.12,"feedback":0.2}},
+  {"l":"Neo Soul","c":"#D354A0","fam":"epiano","d":"Slow chorus, soft wobble, roomy","trim":0.7,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3,"wet":0.26},"ch":{"frequency":0.5,"delayTime":5,"depth":0.6,"wet":0.3},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0.25,"crush":0},"tre":{"frequency":3.2,"depth":0.3}},
+  {"l":"Cathedral","c":"#6FA8FF","fam":"organ","d":"Huge stone room","trim":1.7,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":6,"wet":0.4},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Rock Organ","c":"#D85A30","fam":"organ","d":"Overdriven rock organ","trim":0.4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.4,"wet":0.12},"ch":{"frequency":5,"delayTime":2.5,"depth":0.5,"wet":0.3},"dt":{"distortion":0.35,"wet":0.3},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Gospel Warm","c":"#C9A84C","fam":"organ","d":"Warm chorus, big room","trim":1,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3,"wet":0.24},"ch":{"frequency":0.7,"delayTime":4,"depth":0.6,"wet":0.3},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Cafe Room","c":"#C9A84C","fam":"reed","d":"Small cafe, light chorus","trim":1,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.3,"wet":0.16},"ch":{"frequency":0.6,"delayTime":4,"depth":0.5,"wet":0.2},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Blues Harp","c":"#D85A30","fam":"reed","d":"Gritty harp amp with a quick echo","trim":-0.6,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1,"wet":0.14},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.4,"wet":0.35},"pd":{"wah":0,"dly":0.14,"tre":0,"crush":0},"dly":{"delayTime":0.1,"feedback":0.12}},
+  {"l":"Wide Squeeze","c":"#8E5CF0","fam":"reed","d":"Wide, thick, old-world","trim":1.5,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2,"wet":0.2},"ch":{"frequency":1.5,"delayTime":3,"depth":0.8,"wet":0.45},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Folk Hall","c":"#6FA8FF","fam":"reed","d":"Open hall for folk tunes","trim":0.8,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3,"wet":0.26},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Wobble","c":"#1D9E75","fam":"reed","d":"Gentle tremolo wobble","trim":-0.4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.8,"wet":0.18},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0.4,"crush":0},"tre":{"frequency":5.5,"depth":0.3}},
+  {"l":"80s Chorus","c":"#D354A0","fam":"synth","d":"Lush chorus and room","trim":2.6,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2,"wet":0.25},"ch":{"frequency":2.2,"delayTime":3,"depth":0.6,"wet":0.45},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Sweep Lead","c":"#EF9F27","fam":"synth","d":"Slow filter sweep with echo","trim":-2.9,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.8,"wet":0.18},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0.4,"dly":0.28,"tre":0,"crush":0},"wah":{"baseFrequency":180,"octaves":4,"sensitivity":-24,"Q":2.5,"gain":3,"follower":0.18},"dly":{"delayTime":"8n.","feedback":0.3}},
+  {"l":"Wide Pad","c":"#8E5CF0","fam":"synth","d":"Huge wide chorus and long tail","trim":2.8,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":5,"wet":0.4},"ch":{"frequency":0.4,"delayTime":6,"depth":0.8,"wet":0.5},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Arp Echo","c":"#378ADD","fam":"synth","d":"Dotted echo for arpeggios","trim":0,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.5,"wet":0.15},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.34,"tre":0,"crush":0},"dly":{"delayTime":"8n.","feedback":0.4}},
+  {"l":"Gritty","c":"#D85A30","fam":"synth","d":"Crunchy, crushed and driven","trim":-4.7,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.2,"wet":0.1},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.35,"wet":0.3},"pd":{"wah":0,"dly":0,"tre":0,"crush":0.22},"crush":{"bits":6}},
+  {"l":"Edge of Breakup","c":"#E8704A","fam":"eguitar","d":"Just starting to bite, with slap echo","trim":-1.1,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.6,"wet":0.15},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.22,"wet":0.2},"pd":{"wah":0,"dly":0.15,"tre":0,"crush":0},"dly":{"delayTime":0.09,"feedback":0.1}},
+  {"l":"Crunch Lead","c":"#D85A30","fam":"eguitar","d":"Crunchy lead with dotted echo","trim":-4.3,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.8,"wet":0.18},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.5,"wet":0.4},"pd":{"wah":0,"dly":0.22,"tre":0,"crush":0},"dly":{"delayTime":"8n.","feedback":0.3}},
+  {"l":"Funk Wah","c":"#EF9F27","fam":"eguitar","d":"Rhythmic wah, funk ready","trim":-3.4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.2,"wet":0.12},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.15,"wet":0.1},"pd":{"wah":0.5,"dly":0,"tre":0,"crush":0},"wah":{"baseFrequency":160,"octaves":4,"sensitivity":-26,"Q":3,"gain":3,"follower":0.12}},
+  {"l":"Ambient Swell","c":"#378ADD","fam":"eguitar","d":"Long wash of echo and reverb","trim":0,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":5,"wet":0.4},"ch":{"frequency":0.4,"delayTime":5,"depth":0.5,"wet":0.25},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.34,"tre":0,"crush":0},"dly":{"delayTime":"8n.","feedback":0.4}},
+  {"l":"Surf Spring","c":"#6FA8FF","fam":"eguitar","d":"Spring reverb and trem","trim":1.3,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3,"wet":0.3},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0.5,"crush":0},"tre":{"frequency":5,"depth":0.55}},
+  {"l":"Studio Wood","c":"#C9A84C","fam":"acguitar","d":"Close and natural","trim":-0.4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.4,"wet":0.14},"ch":{"frequency":0.5,"delayTime":4,"depth":0.4,"wet":0.08},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Shimmer Stereo","c":"#8E5CF0","fam":"acguitar","d":"Wide shimmering strings","trim":-1.8,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3.5,"wet":0.3},"ch":{"frequency":0.8,"delayTime":4,"depth":0.5,"wet":0.3},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Nashville","c":"#97C459","fam":"acguitar","d":"Tight slap echo, country polish","trim":0.6,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.6,"wet":0.16},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.15,"tre":0,"crush":0},"dly":{"delayTime":0.09,"feedback":0.1}},
+  {"l":"Cavern","c":"#378ADD","fam":"acguitar","d":"Huge cave with echoes","trim":0.4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":6,"wet":0.35},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.32,"tre":0,"crush":0},"dly":{"delayTime":"8n.","feedback":0.4}},
+  {"l":"Tight Studio","c":"#C9A84C","fam":"bass","d":"Tight and punchy","trim":-0.8,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":0.6,"wet":0.05},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.15,"wet":0.1},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Drive Pick","c":"#D85A30","fam":"bass","d":"Driven pick attack","trim":-2.2,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":0.8,"wet":0.06},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.45,"wet":0.3},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Fretless Chorus","c":"#1D9E75","fam":"bass","d":"Soft chorus, singing sustain","trim":0.6,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.2,"wet":0.08},"ch":{"frequency":0.7,"delayTime":4,"depth":0.5,"wet":0.3},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Dub Echo","c":"#378ADD","fam":"bass","d":"Deep echo for dub lines","trim":0.2,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2,"wet":0.12},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.3,"tre":0,"crush":0},"dly":{"delayTime":"8n.","feedback":0.45}},
+  {"l":"Concert Hall","c":"#6FA8FF","fam":"bowed","d":"Big room, long soft tail","trim":1.3,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":4.5,"wet":0.34},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Warm Section","c":"#C9A84C","fam":"bowed","d":"Chorus gives an ensemble feel","trim":1.6,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3,"wet":0.26},"ch":{"frequency":0.5,"delayTime":5,"depth":0.5,"wet":0.3},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Chamber","c":"#97C459","fam":"bowed","d":"Intimate chamber room","trim":0.3,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2,"wet":0.2},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Folk Fiddle","c":"#E8704A","fam":"bowed","d":"Close, a bit raw","trim":-0.3,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.2,"wet":0.12},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.1,"wet":0.06},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Haunted","c":"#D354A0","fam":"bowed","d":"Eerie tremolo and echo","trim":0.7,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":5,"wet":0.4},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.3,"tre":0.3,"crush":0},"dly":{"delayTime":"4n","feedback":0.4},"tre":{"frequency":5,"depth":0.3}},
+  {"l":"Big Hall","c":"#6FA8FF","fam":"brass","d":"Concert hall reverb","trim":0.8,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3.6,"wet":0.3},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Warm Section","c":"#C9A84C","fam":"brass","d":"Chorus gives an ensemble feel","trim":0.7,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2.4,"wet":0.22},"ch":{"frequency":0.4,"delayTime":5,"depth":0.4,"wet":0.25},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Jazz Club","c":"#EF9F27","fam":"brass","d":"Small club with a slap","trim":0.2,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1,"wet":0.14},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.12,"tre":0,"crush":0},"dly":{"delayTime":0.09,"feedback":0.15}},
+  {"l":"Fanfare","c":"#D85A30","fam":"brass","d":"Long ceremonial hall","trim":1.7,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":4.5,"wet":0.34},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Mariachi Slap","c":"#97C459","fam":"brass","d":"Bright room with a quick echo","trim":-0.4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.6,"wet":0.2},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.18,"tre":0,"crush":0},"dly":{"delayTime":0.12,"feedback":0.15}},
+  {"l":"Smoky Club","c":"#C9A84C","fam":"sax","d":"Warm club sound, a hint of grit","trim":0,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.8,"wet":0.22},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.12,"wet":0.1},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Breathy Hall","c":"#6FA8FF","fam":"sax","d":"Air and hall","trim":0.7,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3.5,"wet":0.3},"ch":{"frequency":0.4,"delayTime":5,"depth":0.4,"wet":0.1},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Late Night Echo","c":"#8E5CF0","fam":"sax","d":"Dotted echo, after hours","trim":0.5,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2.5,"wet":0.22},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.25,"tre":0,"crush":0},"dly":{"delayTime":"8n.","feedback":0.3}},
+  {"l":"Gritty Tenor","c":"#D85A30","fam":"sax","d":"Edge and growl","trim":-1,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.4,"wet":0.14},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0.22},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Wide Section","c":"#1D9E75","fam":"sax","d":"Chorus for a section feel","trim":1.1,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2,"wet":0.2},"ch":{"frequency":0.6,"delayTime":4,"depth":0.5,"wet":0.3},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Open Air","c":"#6FA8FF","fam":"flute","d":"Big and outdoors","trim":0.2,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":4,"wet":0.3},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Folk Hall","c":"#C9A84C","fam":"flute","d":"Open hall for folk tunes","trim":0.3,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2.4,"wet":0.2},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Breathy Lo-fi","c":"#97C459","fam":"flute","d":"Soft and a little worn","trim":-2.4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.6,"wet":0.16},"ch":{"frequency":0.3,"delayTime":6,"depth":0.5,"wet":0.2},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0.14},"crush":{"bits":10}},
+  {"l":"Glass Hall","c":"#6FA8FF","fam":"mallet","d":"Ringing hall","trim":1.9,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":4.5,"wet":0.34},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Music Box Echo","c":"#D354A0","fam":"mallet","d":"Quick tinkling echoes","trim":0.5,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3,"wet":0.28},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.28,"tre":0,"crush":0},"dly":{"delayTime":0.2,"feedback":0.4}},
+  {"l":"Dreamy Shimmer","c":"#8E5CF0","fam":"mallet","d":"Wide, glowing","trim":0.5,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":5,"wet":0.38},"ch":{"frequency":0.6,"delayTime":5,"depth":0.6,"wet":0.4},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Lo-fi Chimes","c":"#97C459","fam":"mallet","d":"Old cassette chimes","trim":-2.4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.8,"wet":0.2},"ch":{"frequency":0.3,"delayTime":6,"depth":0.5,"wet":0.25},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0.25},"crush":{"bits":9}},
+  {"l":"Island Tremolo","c":"#1D9E75","fam":"mallet","d":"Warm island tremolo","trim":-0.3,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2,"wet":0.2},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0.45,"crush":0},"tre":{"frequency":4,"depth":0.5}},
+  {"l":"Tight Room","c":"#C9A84C","fam":"drum","d":"Close and punchy","trim":0.1,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":0.6,"wet":0.08},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Big Hall Hits","c":"#6FA8FF","fam":"drum","d":"Huge room hits","trim":0.9,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":3.2,"wet":0.3},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Lo-fi Break","c":"#97C459","fam":"drum","d":"Crushed breakbeat","trim":-4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1,"wet":0.1},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.2,"wet":0.2},"pd":{"wah":0,"dly":0,"tre":0,"crush":0.4},"crush":{"bits":7}},
+  {"l":"Dub Space","c":"#378ADD","fam":"drum","d":"Deep echoes","trim":0.1,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2.5,"wet":0.2},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.3,"tre":0,"crush":0},"dly":{"delayTime":"8n.","feedback":0.5}},
+  {"l":"Crunch","c":"#D85A30","fam":"drum","d":"Driven and crunchy","trim":-1.9,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":0.8,"wet":0.08},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.5,"wet":0.35},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Studio Vocal","c":"#7F77DD","fam":"voice","d":"Polished and present","trim":0.9,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":2,"wet":0.26},"ch":{"frequency":1,"delayTime":3,"depth":0.35,"wet":0.1},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Cathedral Choir","c":"#6FA8FF","fam":"voice","d":"Huge stone room","trim":2.3,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":6,"wet":0.45},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0}},
+  {"l":"Ethereal","c":"#8E5CF0","fam":"voice","d":"Wide, floating, heavenly","trim":2.7,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":5,"wet":0.4},"ch":{"frequency":0.4,"delayTime":5,"depth":0.6,"wet":0.4},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.2,"tre":0,"crush":0},"dly":{"delayTime":"8n.","feedback":0.3}},
+  {"l":"Slap Back Retro","c":"#EF9F27","fam":"voice","d":"50s slapback echo","trim":0.4,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.4,"wet":0.14},"ch":{"frequency":1.5,"delayTime":3.5,"depth":0.7,"wet":0},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0.22,"tre":0,"crush":0},"dly":{"delayTime":0.09,"feedback":0.2}},
+  {"l":"Robot Choir","c":"#D354A0","fam":"voice","d":"Crushed, wobbly, strange","trim":-1.5,"mode":null,"chord":null,"harm":null,"strum":null,"rv":{"decay":1.6,"wet":0.16},"ch":{"frequency":0.4,"delayTime":6,"depth":0.7,"wet":0.4},"dt":{"distortion":0.3,"wet":0},"pd":{"wah":0,"dly":0,"tre":0,"crush":0.35},"crush":{"bits":6}}
 ];function applyPerfPreset(idx){
   var pr=PERF_PRESETS[idx];if(!pr)return;
   /* Mode (skip if null = FX-only preset) */
@@ -3947,6 +4147,7 @@ function renderPerfPresets(sel){
   activePerfPreset=sel===undefined?-1:sel;
   var box=document.getElementById("perfPresetBox");if(!box)return;box.innerHTML="";
   PERF_PRESETS.forEach(function(pr,i){
+    if(pr.fam)return;
     var b=document.createElement("div");b.className="btn";
     var isOn=i===activePerfPreset;
     b.style.cssText="padding:5px 12px;font-size:12px;border-left:3px solid "+pr.c+";"+(isOn?"background:"+pr.c+"33;border-color:"+pr.c+";color:#fff":"");
@@ -3987,11 +4188,11 @@ function renderHkGrid(){
         });
         sel.appendChild(grp);
       });
-      sel.onchange=function(){hkSlots[idx]=this.value||null;try{localStorage.setItem("hk_instruments",JSON.stringify(hkSlots));}catch(e){}renderJamHkStrip();};
+      sel.onchange=function(){hkSlots[idx]=this.value||null;hkFx[idx]=null;hkSave();renderJamHkStrip();};
       var setBtn=document.createElement("div");setBtn.className="btn";
       setBtn.style.cssText="padding:2px 8px;font-size:10px;flex-shrink:0";
       setBtn.textContent="Set";setBtn.title="Assign current instrument";
-      setBtn.onclick=function(){hkSlots[idx]=S.eng;try{localStorage.setItem("hk_instruments",JSON.stringify(hkSlots));}catch(e){}renderHkGrid();renderJamHkStrip();};
+      setBtn.onclick=function(){hkSlots[idx]=S.eng;hkFx[idx]=activePerfPreset>=0?activePerfPreset:null;hkSave();renderHkGrid();renderJamHkStrip();};
       el.appendChild(num);el.appendChild(sel);el.appendChild(setBtn);c.appendChild(el);
     })(i);
   }
@@ -4005,8 +4206,172 @@ function handleNumpad(n){
   activeSlot=n-1;
   renderHkGrid();
   renderJamHkStrip();
+  if(hkFx[n-1]!==null&&hkFx[n-1]!==undefined&&PERF_PRESETS[hkFx[n-1]])applyPerfPreset(hkFx[n-1]);
   var ins=findInst(instId);showJamToast((ins?ins.l:"Slot "+n)+" ["+n+"]","#1D9E75");
 }
+
+/* ── Instrument picker ──
+   Family tiles (Keys, Guitar & Bass, Strings, Brass...) -> the instruments in that family, with filters on top
+   (collection, type, search) and a Back button -> one instrument: hear it, pick Studio or one of the three new
+   effect presets and hear that, then drop it into one of your 9 favourite slots (slot number = hotkey 1-9). */
+var hkFx=lsJSON("hk_slot_fx",[null,null,null,null,null,null,null,null,null]);while(hkFx.length<9)hkFx.push(null);
+function hkSave(){try{localStorage.setItem("hk_instruments",JSON.stringify(hkSlots));localStorage.setItem("hk_slot_fx",JSON.stringify(hkFx));}catch(e){}}
+var PK_FAMS=[
+  {id:"keys",l:"Keys",k:"grand upright organ pipeorgan epiano harpsichord accordion",c:"#DAA520"},
+  {id:"synth",l:"Synths",k:"synth keytar chip djdeck",c:"#8E5CF0"},
+  {id:"guitar",l:"Guitar & Bass",k:"acoustic electric metal jazzguitar bass banjo sitar shamisen",c:"#D85A30"},
+  {id:"strings",l:"Strings",k:"violin cello contrabass harp zither",c:"#2E8B57"},
+  {id:"brass",l:"Brass",k:"trumpet trombone horn tuba",c:"#E0A020"},
+  {id:"wind",l:"Woodwinds",k:"sax flute clarinet bassoon panflute ocarina harmonica bagpipe whistle bottle",c:"#4682B4"},
+  {id:"mallet",l:"Mallets & Bells",k:"mallets glock steeldrum kalimba musicbox bells glasses",c:"#1D9E75"},
+  {id:"drum",l:"Drums & Perc",k:"drum timpani",c:"#C8407E"},
+  {id:"voice",l:"Voices",k:"voice choir",c:"#D354A0"}];
+var PK_KL={grand:"Grand piano",upright:"Upright",organ:"Organ",pipeorgan:"Pipe organ",epiano:"Electric piano",harpsichord:"Harpsichord",accordion:"Accordion",synth:"Synth",keytar:"Keytar",chip:"8-bit",djdeck:"DJ / EDM",acoustic:"Acoustic",electric:"Electric",metal:"Distortion",jazzguitar:"Jazz",bass:"Bass",banjo:"Banjo / lute",sitar:"Sitar",shamisen:"Shamisen",violin:"Violin",cello:"Cello",contrabass:"Double bass",harp:"Harp",zither:"Zither / koto",trumpet:"Trumpet",trombone:"Trombone",horn:"Horn",tuba:"Tuba",sax:"Sax",flute:"Flute",clarinet:"Clarinet",bassoon:"Bassoon / oboe",panflute:"Pan flute",ocarina:"Ocarina",harmonica:"Harmonica",bagpipe:"Bagpipe",whistle:"Whistle",bottle:"Bottle",mallets:"Marimba / vibes",glock:"Glockenspiel",steeldrum:"Steel drum",kalimba:"Kalimba",musicbox:"Music box",bells:"Bells",glasses:"Glass",drum:"Drums",timpani:"Timpani",voice:"Voice",choir:"Choir"};
+var PK_GROUP={grand:"piano",upright:"piano",harpsichord:"piano",epiano:"epiano",organ:"organ",pipeorgan:"organ",accordion:"reed",harmonica:"reed",bagpipe:"reed",
+  synth:"synth",keytar:"synth",chip:"synth",djdeck:"synth",electric:"eguitar",metal:"eguitar",jazzguitar:"eguitar",acoustic:"acguitar",banjo:"acguitar",sitar:"acguitar",shamisen:"acguitar",zither:"acguitar",harp:"acguitar",
+  bass:"bass",violin:"bowed",cello:"bowed",contrabass:"bowed",trumpet:"brass",trombone:"brass",horn:"brass",tuba:"brass",sax:"sax",clarinet:"sax",bassoon:"sax",
+  flute:"flute",panflute:"flute",ocarina:"flute",whistle:"flute",bottle:"flute",mallets:"mallet",glock:"mallet",steeldrum:"mallet",kalimba:"mallet",musicbox:"mallet",bells:"mallet",glasses:"mallet",drum:"drum",timpani:"drum",voice:"voice",choir:"voice"};
+var PK={view:"fam",fam:null,col:"all",kind:"all",q:"",id:null,from:"list",timers:[],kinds:null};
+function pkKind(ins){if(!PK.kinds)PK.kinds={};var k=PK.kinds[ins.id];if(!k){try{k=ART.INST.kindOf(ins.id,ins.l);}catch(e){k="synth";}PK.kinds[ins.id]=k;}return k;}
+function pkFamOf(ins){var k=pkKind(ins);for(var i=0;i<PK_FAMS.length;i++)if((" "+PK_FAMS[i].k+" ").indexOf(" "+k+" ")>=0)return PK_FAMS[i];return PK_FAMS[0];}
+function pkList(){
+  var q=PK.q.trim().toLowerCase();
+  return allInst.filter(function(ins){
+    if(PK.fam&&!q&&pkFamOf(ins).id!==PK.fam)return false;
+    if(PK.col!=="all"&&ins.col!==PK.col)return false;
+    if(PK.kind!=="all"&&pkKind(ins)!==PK.kind)return false;
+    if(q&&(ins.l+" "+PK_KL[pkKind(ins)]+" "+pkFamOf(ins).l).toLowerCase().indexOf(q)<0)return false;
+    return true;});
+}
+function pkEl(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!==undefined)e.innerHTML=h;return e;}
+function pkEsc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+function pkStop(){PK.timers.forEach(clearTimeout);PK.timers=[];}
+/* the presets for this kind of instrument: Studio first, then the ones tested for its type */
+function pkPresetIdx(ins){var g=PK_GROUP[ins?pkKind(ins):""]||"synth",out=[{n:"Studio",i:0,c:"#888",d:"Clean and dry, nothing added"}];
+  for(var i=0;i<PERF_PRESETS.length;i++)if(PERF_PRESETS[i].fam===g)out.push({n:PERF_PRESETS[i].l,i:i,c:PERF_PRESETS[i].c,d:PERF_PRESETS[i].d||""});return out;}
+/* a short phrase so you can hear the instrument and the preset */
+function pkDemo(){
+  pkStop();initAudio();var id=S.eng,ins=findInst(id);if(!ins)return;
+  var note=document.getElementById("pkNote");
+  if(ins.t==="samp"&&!samplers[id]){loadSamp(id);}
+  var t0=Date.now();
+  (function wait(){
+    if(PK.view!=="inst"&&PK.view!=="fav")return;
+    if(ins.t==="samp"&&!samplers[id]){if(Date.now()-t0>9000){if(note)note.textContent="Could not load this one. Check your connection.";return;}if(note)note.textContent="Loading sound...";PK.timers.push(setTimeout(wait,200));return;}
+    if(note)note.textContent="";
+    var ms=[];DIRS.forEach(function(d){var m=layout[REGS[0]+"-"+d];if(typeof m==="number")ms.push(m);});ms.sort(function(a,b){return a-b;});
+    var seq=ms.length>=5?[ms[0],ms[2],ms[4],ms[ms.length-1],ms[4],ms[2]]:ms;
+    seq.forEach(function(m,i){PK.timers.push(setTimeout(function(){playNote("pk",m);},i*300));PK.timers.push(setTimeout(function(){silenceNote();},i*300+260));});
+  })();
+}
+function pkUse(id,fx){selInst(id);if(fx!==undefined&&fx!==null){initAudio();applyPerfPreset(fx);}}
+function pkRender(){
+  var root=document.getElementById("ukPick");root.innerHTML="";
+  var top=pkEl("div","pkTop"),back=pkEl("button","","&#9664; Back"),title=pkEl("div","pkTitle"),x=pkEl("button","","&#10005;");
+  back.id="pkBack";x.id="pkClose";
+  back.onclick=pkBack;x.onclick=pkClose;
+  var famO=PK.fam?PK_FAMS.filter(function(f){return f.id===PK.fam;})[0]:null;
+  title.textContent=PK.view==="fam"?"Pick an instrument":PK.view==="fav"?"Favourites":PK.view==="list"?(PK.q?"Search":famO?famO.l:"All"):((findInst(PK.id)||{}).l||"");
+  if(PK.view!=="fam")top.appendChild(back);top.appendChild(title);top.appendChild(x);root.appendChild(top);
+  if(PK.view==="fam"||PK.view==="list"){
+    var sw=pkEl("div","pkSearch"),inp=document.createElement("input");inp.type="text";inp.id="pkSearch";inp.placeholder="Search all instruments";inp.value=PK.q;inp.setAttribute("autocomplete","off");
+    inp.oninput=function(){var v=this.value;PK.q=v;if(v.trim()){if(PK.view!=="list"){PK.view="list";PK.from="fam";PK.fam=null;}}else if(PK.view==="list"&&PK.from==="fam"&&!PK.fam){PK.view="fam";}
+      var pos=v.length;pkRender();var n=document.getElementById("pkSearch");if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}};
+    sw.appendChild(inp);root.appendChild(sw);
+  }
+  var body=pkEl("div","pkBody");body.id="pkBody";
+  if(PK.view==="fam")pkFamView(root,body);else if(PK.view==="list")pkListView(root,body);else if(PK.view==="fav")pkFavView(body);else pkInstView(body);
+  root.appendChild(body);
+}
+function pkFamView(root,body){
+  var cnt={};allInst.forEach(function(i){var f=pkFamOf(i).id;cnt[f]=(cnt[f]||0)+1;});
+  var g=pkEl("div","pkGrid");
+  var fv=pkEl("button","pkTile","<b>&#9733; Favourites</b><small>Your 9 slots</small>");fv.id="pkFavTile";fv.onclick=function(){PK.view="fav";pkRender();};g.appendChild(fv);
+  PK_FAMS.forEach(function(f){if(!cnt[f.id])return;var b=pkEl("button","pkTile","<b>"+f.l+"</b><small>"+cnt[f.id]+" instruments</small>");b.setAttribute("data-fam",f.id);b.style.borderTop="6px solid "+f.c;b.style.paddingTop="8px";
+    b.onclick=function(){PK.fam=f.id;PK.col="all";PK.kind="all";PK.view="list";PK.from="fam";pkRender();body.scrollTop=0;};g.appendChild(b);});
+  var all=pkEl("button","pkTile","<b>Everything</b><small>"+allInst.length+" instruments</small>");all.id="pkAll";all.onclick=function(){PK.fam=null;PK.col="all";PK.kind="all";PK.view="list";PK.from="fam";pkRender();};g.appendChild(all);
+  body.appendChild(g);
+}
+function pkChips(root,items,cur,on,lbl){
+  var r=pkEl("div","pkChips");r.setAttribute("data-row",lbl);
+  items.forEach(function(it){var b=pkEl("button",cur===it.id?"on":"",pkEsc(it.l)+(it.n!==undefined?"<small>"+it.n+"</small>":""));b.setAttribute("data-v",it.id);b.onclick=function(){on(it.id);};r.appendChild(b);});
+  root.appendChild(r);
+}
+function pkListView(root,body){
+  var q=PK.q.trim().toLowerCase();
+  /* the filters: collection, then type, counted against everything else that is set */
+  var base=allInst.filter(function(ins){return(!PK.fam||q||pkFamOf(ins).id===PK.fam)&&(!q||(ins.l+" "+PK_KL[pkKind(ins)]+" "+pkFamOf(ins).l).toLowerCase().indexOf(q)>=0);});
+  var cc={},kc={};base.forEach(function(i){if(PK.kind==="all"||pkKind(i)===PK.kind)cc[i.col]=(cc[i.col]||0)+1;if(PK.col==="all"||i.col===PK.col){var k=pkKind(i);kc[k]=(kc[k]||0)+1;}});
+  var colItems=[{id:"all",l:"All collections"}];COLS.forEach(function(c){if(c.id!=="all"&&cc[c.id])colItems.push({id:c.id,l:c.l,n:cc[c.id]});});
+  if(colItems.length>2||PK.col!=="all")pkChips(root,colItems,PK.col,function(v){PK.col=v;pkRender();},"col");
+  var kinds=Object.keys(kc).sort(function(a,b){return kc[b]-kc[a];});
+  if(kinds.length>1||PK.kind!=="all"){var ki=[{id:"all",l:"All types"}];kinds.forEach(function(k){ki.push({id:k,l:PK_KL[k]||k,n:kc[k]});});pkChips(root,ki,PK.kind,function(v){PK.kind=v;pkRender();},"kind");}
+  var list=pkList();
+  if(!list.length){body.appendChild(pkEl("div","pkSub","Nothing matches. Clear a filter or search for something else."));return;}
+  var g=pkEl("div","pkGrid sm");
+  list.forEach(function(ins){
+    var fav=hkSlots.indexOf(ins.id)>=0,cur=S.eng===ins.id;
+    var b=pkEl("button","pkTile"+(cur?" on":""),"<b>"+(fav?"&#9733; ":"")+pkEsc(ins.l)+"</b><small>"+pkEsc(PK_KL[pkKind(ins)]||"")+(ins.t==="samp"&&samplers[ins.id]?" &middot; ready":"")+"</small>");
+    b.setAttribute("data-id",ins.id);b.style.borderTop="6px solid "+(ins.catC||"#888");b.style.paddingTop="8px";
+    b.onclick=function(){initAudio();selInst(ins.id);PK.id=ins.id;PK.view="inst";pkRender();pkDemo();};g.appendChild(b);});
+  body.appendChild(g);
+}
+function pkInstView(body){
+  var ins=findInst(PK.id);if(!ins){PK.view="list";pkRender();return;}
+  var list=pkList(),ix=-1;for(var i=0;i<list.length;i++)if(list[i].id===ins.id){ix=i;break;}
+  body.appendChild(pkEl("div","pkBig",pkEsc(ins.l)));
+  body.appendChild(pkEl("div","pkSub",pkEsc((PK_KL[pkKind(ins)]||"")+" - "+pkFamOf(ins).l)));
+  var nav=pkEl("div","pkRow");
+  var pv=pkEl("button","","&#9664; Prev"),pl=pkEl("button","","&#9654; Play again"),nx=pkEl("button","","Next &#9654;");pl.id="pkPlay";pv.id="pkPrev";nx.id="pkNext";
+  function go(d){if(!list.length)return;var j=(ix+d+list.length)%list.length,n=list[j];initAudio();selInst(n.id);PK.id=n.id;pkRender();pkDemo();}
+  pv.onclick=function(){go(-1);};nx.onclick=function(){go(1);};pl.onclick=function(){pkDemo();};
+  if(list.length>1)nav.appendChild(pv);nav.appendChild(pl);if(list.length>1)nav.appendChild(nx);body.appendChild(nav);
+  var nt=pkEl("div","pkNote");nt.id="pkNote";body.appendChild(nt);
+  body.appendChild(pkEl("div","pkH","SOUNDS FOR THIS INSTRUMENT: TAP ONE TO HEAR IT"));
+  var g=pkEl("div","pkGrid"),cur=activePerfPreset;
+  pkPresetIdx(ins).forEach(function(pr){var b=pkEl("button","pkFx"+(cur===pr.i?" on":""),"<b>"+pkEsc(pr.n)+"</b><small>"+pkEsc(pr.d)+"</small>");b.setAttribute("data-fx",pr.i);b.style.borderLeft="6px solid "+pr.c;
+    b.onclick=function(){initAudio();applyPerfPreset(pr.i);pkRender();pkDemo();};g.appendChild(b);});
+  body.appendChild(g);
+  /* every other preset */
+  var oth=pkEl("div","pkChips");oth.style.padding="10px 0 0";oth.style.flexWrap="wrap";oth.style.overflow="visible";var shown={};pkPresetIdx(ins).forEach(function(p){shown[p.i]=1;});
+  PERF_PRESETS.forEach(function(pr,i){if(shown[i]||pr.fam)return;var b=pkEl("button",cur===i?"on":"",pkEsc(pr.l));b.setAttribute("data-fx",i);b.onclick=function(){initAudio();applyPerfPreset(i);pkRender();pkDemo();};oth.appendChild(b);});
+  body.appendChild(pkEl("div","pkH","MORE SOUNDS (WORK ON ANYTHING)"));
+  body.appendChild(oth);
+  body.appendChild(pkEl("div","pkH","ADD TO FAVOURITES: PICK A SLOT (HOTKEY 1-9)"));
+  var sg=pkEl("div","pkGrid sm");
+  for(var k=0;k<9;k++)(function(k){var cid=hkSlots[k],ci=cid?findInst(cid):null,mine=cid===ins.id&&hkFx[k]===(activePerfPreset>=0?activePerfPreset:null);
+    var b=pkEl("button","pkSlot"+(mine?" on":""),"<b>"+(k+1)+"</b>"+(ci?pkEsc(ci.l):"Empty")+"<small>"+(ci&&hkFx[k]!==null&&PERF_PRESETS[hkFx[k]]?pkEsc(PERF_PRESETS[hkFx[k]].l):ci?"no preset":"")+"</small>");
+    b.setAttribute("data-slot",k);
+    b.onclick=function(){hkSlots[k]=ins.id;hkFx[k]=activePerfPreset>=0?activePerfPreset:null;hkSave();activeSlot=k;renderHkGrid();renderJamHkStrip();showJamToast("Saved to slot "+(k+1),"#EF9F27");pkRender();};sg.appendChild(b);})(k);
+  body.appendChild(sg);
+  var use=pkEl("div","pkRow");use.style.marginTop="16px";var ub=pkEl("button","on","Use this instrument");ub.id="pkUse";ub.onclick=pkClose;use.appendChild(ub);body.appendChild(use);
+}
+function pkFavView(body){
+  body.appendChild(pkEl("div","pkSub","Tap a slot to play it. The same slots work as hotkeys 1-9 (and on the phone)."));
+  var g=pkEl("div","pkGrid");
+  for(var k=0;k<9;k++)(function(k){var id=hkSlots[k],ins=id?findInst(id):null,fx=hkFx[k];
+    var b=pkEl("button","pkSlot"+(ins&&ins.id===S.eng&&activeSlot===k?" on":""),"<b>"+(k+1)+"</b>"+(ins?pkEsc(ins.l):"Empty")+"<small>"+(ins?(fx!==null&&PERF_PRESETS[fx]?pkEsc(PERF_PRESETS[fx].l):"no preset"):"Pick one from the list")+"</small>");
+    b.setAttribute("data-slot",k);b.style.minHeight="84px";
+    b.onclick=function(){if(!ins){PK.view="fam";pkRender();return;}handleNumpad(k+1);pkRender();pkDemo();};g.appendChild(b);
+    if(ins){var rm=pkEl("button","","Remove "+(k+1));rm.style.fontSize="10px";rm.style.padding="6px";rm.onclick=function(){hkSlots[k]=null;hkFx[k]=null;hkSave();renderHkGrid();renderJamHkStrip();pkRender();};g.appendChild(rm);}
+  })(k);
+  body.appendChild(g);
+}
+function pkBack(){pkStop();silenceNote();
+  if(PK.view==="inst"){PK.view="list";}
+  else if(PK.view==="fav"){PK.view="fam";}
+  else if(PK.view==="list"){PK.q="";PK.col="all";PK.kind="all";PK.fam=null;PK.view="fam";}
+  else{pkClose();return;}
+  pkRender();}
+function pkOpen(opts){opts=opts||{};PK.q="";PK.col="all";PK.kind="all";PK.fam=null;PK.view="fam";
+  if(opts.fav)PK.view="fav";
+  var cur=findInst(S.eng);if(cur&&!opts.fav){PK.fam=pkFamOf(cur).id;PK.view="list";PK.from="fam";}
+  var r=document.getElementById("ukPick");r.classList.add("on");pkRender();
+  var b=document.getElementById("pkBody");if(b&&cur){var el=b.querySelector('[data-id="'+S.eng+'"]');if(el)el.scrollIntoView({block:"center"});}}
+function pkClose(){pkStop();silenceNote();var r=document.getElementById("ukPick");r.classList.remove("on");r.innerHTML="";
+  var n=document.getElementById("jInstName"),ins=findInst(S.eng);if(n)n.textContent=ins?ins.l:"Instrument";mbInstLabel();pkCard();}
+function pkCard(){var n=document.getElementById("pkCurName"),ins=findInst(S.eng);if(n)n.textContent=ins?ins.l:"Instrument";var m=document.getElementById("pkCurSub");if(m)m.textContent=ins?(PK_KL[pkKind(ins)]||"")+" - "+pkFamOf(ins).l:"";}
+window.ukPick={show:function(id){var ins=findInst(id);if(!ins)return false;initAudio();selInst(id);PK.id=id;PK.fam=pkFamOf(ins).id;PK.col="all";PK.kind="all";PK.q="";PK.view="inst";document.getElementById("ukPick").classList.add("on");pkRender();return true;},open:pkOpen,close:pkClose,state:function(){return{view:PK.view,fam:PK.fam,col:PK.col,kind:PK.kind,q:PK.q,id:PK.id,open:document.getElementById("ukPick").classList.contains("on")};},fx:function(){return hkFx.slice();},slots:function(){return hkSlots.slice();}};
 
 function renderJamHkStrip(){
   var c=document.getElementById("jHkStrip");if(!c)return;c.innerHTML="";
@@ -4429,7 +4794,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.79.4",SERVER_VERSION="";
+var PAGE_VERSION="1.79.7",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5386,7 +5751,7 @@ window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.i
   function iFill(){ip.innerHTML="";CATS.forEach(function(cat){var h=document.createElement("div");h.className="ic";h.innerHTML='<b style="background:'+cat.c+'"></b>'+cat.l;ip.appendChild(h);
     var r=document.createElement("div");r.className="ir";cat.items.forEach(function(ins){var b=document.createElement("button");b.textContent=ins.l;if(S.eng===ins.id){b.className="on";b.style.color=cat.c;}
       b.onclick=function(e){e.stopPropagation();selInst(ins.id);iName();ip.classList.remove("on");};r.appendChild(b);});ip.appendChild(r);});}
-  ib.onclick=function(e){e.stopPropagation();if(ip.classList.contains("on")){ip.classList.remove("on");return;}iFill();ip.classList.add("on");};
+  ib.onclick=function(e){e.stopPropagation();ip.classList.remove("on");pkOpen();};
   ip.onclick=function(e){e.stopPropagation();};
   document.addEventListener("click",function(){ip.classList.remove("on");});
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ip.classList.contains("on")){ip.classList.remove("on");e.stopPropagation();}},true);
@@ -6427,6 +6792,7 @@ rebuild=function(){
   liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
 };
 
+var _pkO=document.getElementById("pkOpenBtn");if(_pkO)_pkO.onclick=function(){pkOpen();};var _pkF=document.getElementById("pkFavBtn");if(_pkF)_pkF.onclick=function(){pkOpen({fav:true});};pkCard();
 initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updModInd();initPowerSlider();initMobileSlider();document.getElementById("fsBtn").onclick=function(){toggleFullscreen(document.documentElement);};document.getElementById("jFsBtn").onclick=function(){toggleFullscreen(document.documentElement);};document.getElementById("fsTip").onclick=function(){this.classList.remove("on");};initChordUI();renderHkGrid();renderRelKeys();setTimeout(initHist,100);YT.renderFavs();PRESETS.renderSel();SETLIST.renderListSel();LOCAL.initSel();BACKING.initSel();VIZFX.init();SHOW.init();loadSession();
 /* ── Show Builder + Drawer wiring ── */
 (function(){
@@ -6557,6 +6923,9 @@ initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updMod
     var vl=document.getElementById("mixVidLbl");if(vl)vl.textContent=Math.round(v*100)+"%";
   };
   var _mxA=document.getElementById("mixAutoBtn");if(_mxA)_mxA.onclick=function(){autoAlignMix();};
+  var _alT=document.getElementById("alToggle");if(_alT)_alT.onclick=function(){initAudio();AL.on=!AL.on;AL.lastVol=S.vol;if(!AL.on)AL.info="";alSave();alUi();showJamToast("Auto level "+(AL.on?"on":"off"),"#1D9E75");};
+  Array.prototype.forEach.call(document.querySelectorAll("#alSeg [data-al]"),function(b){b.onclick=function(){initAudio();AL.off=+b.getAttribute("data-al");if(!AL.on){AL.on=true;}AL.lastVol=S.vol;alSave();alUi();alTick();};});
+  alUi();
   /* show the remembered levels and apply the video level to YouTube */
   if(_mxT){_mxT.value=MIX.track;var _tl0=document.getElementById("mixTrackLbl");if(_tl0)_tl0.textContent=Math.round(MIX.track*100)+"%";}
   if(_mxV){_mxV.value=MIX.vid;var _vl0=document.getElementById("mixVidLbl");if(_vl0)_vl0.textContent=Math.round(MIX.vid*100)+"%";}
@@ -6678,5 +7047,6 @@ window.togglePedalBoard=togglePedalBoard;window.exportLocalStorage=exportLocalSt
 }catch(e){console.error("BOOT ERROR:",e);document.body.innerHTML="<pre style='color:red;padding:20px'>"+e.stack+"</pre>";}
 })();
 </script>
+<div id="ukPick" role="dialog" aria-label="Pick an instrument"></div>
 </body>
 </html>
