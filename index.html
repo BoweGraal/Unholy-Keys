@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.75.0"></script>
-<script src="art.js?v=1.75.0"></script>
-<script src="instruments.js?v=1.75.0"></script>
-<script src="kart.js?v=1.75.0"></script>
+<script src="gfx.js?v=1.77.0"></script>
+<script src="art.js?v=1.77.0"></script>
+<script src="instruments.js?v=1.77.0"></script>
+<script src="kart.js?v=1.77.0"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -4331,7 +4331,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.75.0",SERVER_VERSION="";
+var PAGE_VERSION="1.77.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5183,13 +5183,13 @@ var CTFVIEW=(function(){
   function $(id){return document.getElementById(id);}
   function on(){var c=typeof ROUNDS!=="undefined"&&ROUNDS.current;return !!(jamOn&&liveOn&&c&&c.mode==="ctf"&&(c.phase==="countdown"||c.phase==="play"));}
   function apply(){var a=on(),jm=$("jm");if(!jm)return;if(a!==act){act=a;jm.classList.toggle("ctfv",a);if(!a){map=null;sm={};}}if(a&&!raf)raf=requestAnimationFrame(frame);}
-  function msg(m){if(m.map){var mm=C.clean(m.map);if(mm){map=mm;I=C.info(map);}}if(m.teams)st.teams=m.teams;if(m.flags)st.flags=m.flags;if(m.caps)st.caps=m.caps;}
+  function msg(m){if(m.map){var mm=C.clean(m.map);if(mm){map=mm;I=C.info(map);}}if(m.teams)st.teams=m.teams;if(m.flags)st.flags=m.flags;if(m.caps)st.caps=m.caps;if(m.rf){var dn=Date.now();st.refill=m.rf.map(function(ms){return ms>0?dn-(C.REFILL_MS-ms):0;});}}
   function frame(){
     raf=0;if(!on()){apply();return;}
     if(!cv)cv=$("jCtf");var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
     if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
     var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;g.fillStyle="#07041a";g.fillRect(0,0,W,H);
-    if(!map){try{map=C.clean(JSON.parse(localStorage.getItem("uk_ctf")||"null"));}catch(e){}if(!map)map=C.clean(C.defaultMap());I=C.info(map);}
+    if(!map){try{map=C.clean(C.upgrade(JSON.parse(localStorage.getItem("uk_ctf")||"null")));}catch(e){}if(!map)map=C.clean(C.defaultMap());I=C.info(map);}
     var V=C.fit(I,W,H,70,64),now=performance.now(),P=Math.max(2,Math.round(V.s/7));
     C.draw(g,map,I,V,now,st.flags.length?st:null);
     var list=[];Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p||p.dance!==4)return;var s=sm[id]||(sm[id]={x:p.x*I.w,y:p.y*I.h,f:0}),tx=p.x*I.w,ty=p.y*I.h,dx=tx-s.x,dy=ty-s.y;
@@ -5897,7 +5897,7 @@ var ROUNDS=(function(){
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cdS;
     var ktTrack=null;if(cur.mode==="kart"){try{ktTrack=JSON.parse(localStorage.getItem("uk_track")||"null");}catch(e){}}
     var skCourse=null;if(cur.mode==="ski"){try{skCourse=JSON.parse(localStorage.getItem("uk_ski")||"null");}catch(e){}}
-    var ctfMap=null;if(cur.mode==="ctf"){try{ctfMap=JSON.parse(localStorage.getItem("uk_ctf")||"null");}catch(e){}}
+    var ctfMap=null;if(cur.mode==="ctf"){try{ctfMap=ART.CTF.upgrade(JSON.parse(localStorage.getItem("uk_ctf")||"null"));}catch(e){}}
     liveSend({type:"round-start",track:ktTrack,ski:skCourse,ctf:ctfMap,mode:cur.mode==="ice"?"skate":cur.mode,ice:cur.mode==="ice"?1:0,battle:!!cur.battle,title:cur.title,countdown:cdS,chart:chart});
     status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file"+(why?" ("+String(why).slice(0,60)+")":"")+", so there are no notes for the Note highway on this one. Try an mp3 or wav copy. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cdS);

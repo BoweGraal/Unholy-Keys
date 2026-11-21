@@ -757,6 +757,38 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.77.0 - Main menu
+
+- The first screen is now a main menu. Your character dances on a little stage and turns through all 8 directions, with your name under it and three buttons:
+  - **Join game:** goes to the room code screen, then Enter venue.
+  - **Practice:** goes straight into the practice zone, with no reload.
+  - **Character:** opens the character maker. Done brings you back. Tapping your character on the menu also opens it.
+- Your name is remembered on this device.
+- A link with a room code in it (?room=ABCD) opens straight on the room code screen.
+- If you get disconnected, you land back on the room code screen with the message.
+- The logo is pixel art, and the join and character panels have square corners.
+
+Page-only change: no Render redeploy needed.
+
+**Test it:** open venue.html. Change your character and press Done, then Practice, then Leave practice. Your name and character should still be there. Then try Join game with a room code from a live show.
+
+## v1.76.0 - Capture the flag sprint and refills, a stand-in performer in practice, one Dance button
+
+Capture the flag:
+- **Sprint:** hold the SPRINT button (bottom right), Space or Shift to run 60% faster. It drains a meter in about 2.4 s, and the meter charges back up over about 9 s. You need 30% charge to start a sprint, so it has to charge first. The button fills up as it charges and is dim until it's ready.
+- **Sprint refills:** cyan lightning bolts on the map. Run over one and your meter is full at once. It comes back 10 seconds later, with a ring that fills up while you wait. The server referees who got it, so everyone sees the same thing.
+- **Twin Forts rebalanced:** the boost pad strips in the top and bottom lanes are now refills, and there are two more refills in the middle. That leaves 6 refills and 14 boost pads (was 26 pads). Boost pads stay in the middle lane and by the forts. If your saved copy is the untouched old Twin Forts, it upgrades by itself. If you've edited it, it's kept as it is.
+- **Map designer:** new "⚡ Sprint refill" tool. The status line counts refills.
+- **Bots:** they sprint when carrying the flag, chasing a thief, or on a long run with a full meter. When they're low, they grab a refill if one is close.
+
+Practice:
+- A stand-in performer ("Stand-in") is on stage in every practice game, playing a riff on the beat. That includes riding the ski lift and standing in the Capture the flag corner.
+- There's now one Dance button: the one by the stick opens and closes the practice menu. The extra top-left Dance button is gone.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** practice → Capture the flag. Hold Space while running to check the meter drains, refills, and that it's dim until 30%. Run over a ⚡ to fill it. Check the Stand-in is on stage in a few games.
+
 ## v1.75.0 - 8 directions in every game, the performer rides a ski lift
 
 8 directions (audience and performer screens):

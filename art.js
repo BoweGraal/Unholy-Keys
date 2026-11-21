@@ -656,20 +656,26 @@ var ART=(function(){
      A map is a grid of tiles {name, w, h, t}: t is w*h characters, row by row:
        .  floor      #  wall      > < ^ v  boost pad (shoves you that way)
        R  red base (red's flag sits in the middle of these)     B  blue base
-       r  red spawn  b  blue spawn
+       r  red spawn  b  blue spawn          s  sprint refill (fills your sprint meter; back after a while)
+     Sprint: hold the sprint button to run faster. It drains a meter that charges back up slowly, and you need some
+     charge to start. The refill pick-ups fill it at once.
      Positions are in tiles (x across, y down); on the wire they're fractions of the map (0..1). */
-  var CTF={CH:".#><^vRBrb",TEAM:["#E8505B","#3B7BE8"],TNAME:["RED","BLUE"],SPEED:6.2,CARRY:0.85,PAD:2.4,TAG_R:0.75,TAKE_R:0.9,CAP_R:1.2};
+  var CTF={CH:".#><^vRBrbs",TEAM:["#E8505B","#3B7BE8"],TNAME:["RED","BLUE"],SPEED:6.2,CARRY:0.85,PAD:2.4,TAG_R:0.75,TAKE_R:0.9,CAP_R:1.2,
+    SPRINT:1.6,STAM:2.4,CHARGE:9,SPRINT_MIN:0.3,REFILL_MS:10000,REFILL_R:0.8};
+  /* the built-in arena before sprint refills (a copy saved on this device that still matches is upgraded to the new one) */
+  CTF.OLD_TWIN="#########################################......................................##............#............#............##.rr.........#.>>>....<<<.#.........bb.##.rr.........#.....##.....#.........bb.##.....>......#.....##.....#......<.....##......####..#.....##.....#..####......##............#...>....<...#............##......#........................#......##......#........................#......##.RRR............##..##............BBB.##.RRR............##..##............BBB.##.RRR.....>>>....##..##....<<<.....BBB.##.RRR............##..##............BBB.##......#........................#......##......#.........>....<.........#......##......#.....#............#.....#......##......####..#.....##.....#..####......##.....>......#.....##.....#......<.....##.rr.........#.....##.....#.........bb.##.rr.........#.>>>....<<<.#.........bb.##............#............#............##......................................#########################################";
+  CTF.upgrade=function(m){if(m&&m.w===40&&m.h===24&&m.t===CTF.OLD_TWIN)return CTF.defaultMap();return m;};
   /* the built-in arena: Brian's Twin Forts, from the designer */
   CTF.defaultMap=function(){return{name:"Twin Forts",w:40,h:24,t:[
     "########################################",
     "#......................................#",
     "#............#............#............#",
-    "#.rr.........#.>>>....<<<.#.........bb.#",
+    "#.rr.........#..s......s..#.........bb.#",
     "#.rr.........#.....##.....#.........bb.#",
     "#.....>......#.....##.....#......<.....#",
     "#......####..#.....##.....#..####......#",
     "#............#...>....<...#............#",
-    "#......#........................#......#",
+    "#......#.......s........s.......#......#",
     "#......#........................#......#",
     "#.RRR............##..##............BBB.#",
     "#.RRR............##..##............BBB.#",
@@ -681,7 +687,7 @@ var ART=(function(){
     "#......####..#.....##.....#..####......#",
     "#.....>......#.....##.....#......<.....#",
     "#.rr.........#.....##.....#.........bb.#",
-    "#.rr.........#.>>>....<<<.#.........bb.#",
+    "#.rr.........#..s......s..#.........bb.#",
     "#............#............#............#",
     "#......................................#",
     "########################################"].join("")};};
@@ -694,11 +700,11 @@ var ART=(function(){
   /* what a map works out to: where each flag sits, the spawn spots, and quick tile lookups (cached) */
   CTF.info=function(m){
     for(var k=0;k<CTFI.length;k++)if(CTFI[k].m===m)return CTFI[k].i;
-    var w=m.w,h=m.h,base=[[0,0,0],[0,0,0]],sp=[[],[]],i;
-    for(i=0;i<m.t.length;i++){var c=m.t[i],x=i%w+0.5,y=((i/w)|0)+0.5;if(c==="R"){base[0][0]+=x;base[0][1]+=y;base[0][2]++;}if(c==="B"){base[1][0]+=x;base[1][1]+=y;base[1][2]++;}if(c==="r")sp[0].push([x,y]);if(c==="b")sp[1].push([x,y]);}
+    var w=m.w,h=m.h,base=[[0,0,0],[0,0,0]],sp=[[],[]],rf=[],i;
+    for(i=0;i<m.t.length;i++){var c=m.t[i],x=i%w+0.5,y=((i/w)|0)+0.5;if(c==="R"){base[0][0]+=x;base[0][1]+=y;base[0][2]++;}if(c==="B"){base[1][0]+=x;base[1][1]+=y;base[1][2]++;}if(c==="r")sp[0].push([x,y]);if(c==="b")sp[1].push([x,y]);if(c==="s")rf.push([x,y]);}
     var bs=base.map(function(b){return b[2]?[b[0]/b[2],b[1]/b[2]]:[w/2,h/2];});
     [0,1].forEach(function(t){if(!sp[t].length)sp[t].push(bs[t].slice());});
-    var I={w:w,h:h,base:bs,spawn:sp,
+    var I={w:w,h:h,base:bs,spawn:sp,refills:rf,
       at:function(x,y){x=Math.floor(x);y=Math.floor(y);if(x<0||y<0||x>=w||y>=h)return "#";return m.t[y*w+x];},
       solid:function(x,y){return I.at(x,y)==="#";},
       pad:function(x,y){var c=I.at(x,y);return c===">"?[1,0]:c==="<"?[-1,0]:c==="^"?[0,-1]:c==="v"?[0,1]:null;},
@@ -709,7 +715,7 @@ var ART=(function(){
     function hit(x,y){return I.solid(x-r,y-r)||I.solid(x+r,y-r)||I.solid(x-r,y+r)||I.solid(x+r,y+r);}
     var n=Math.ceil(Math.max(Math.abs(dx),Math.abs(dy))/0.25)||1;for(var s=0;s<n;s++){if(!hit(p.x+dx/n,p.y))p.x+=dx/n;if(!hit(p.x,p.y+dy/n))p.y+=dy/n;}return p;};
   /* the game state; the server keeps the real one and everyone else mirrors it */
-  CTF.newState=function(I,ids){var st={teams:{},flags:[{t:0,x:I.base[0][0],y:I.base[0][1],at:null},{t:1,x:I.base[1][0],y:I.base[1][1],at:null}],caps:[0,0],score:{},pos:{},cool:{},tagged:{}};
+  CTF.newState=function(I,ids){var st={teams:{},flags:[{t:0,x:I.base[0][0],y:I.base[0][1],at:null},{t:1,x:I.base[1][0],y:I.base[1][1],at:null}],caps:[0,0],score:{},pos:{},cool:{},tagged:{},refill:I.refills.map(function(){return 0;})};
     (ids||[]).slice().sort().forEach(function(id,k){st.teams[id]=k%2;});return st;};
   CTF.teamOf=function(st,id){if(st.teams[id]===undefined){var n=[0,0];for(var k in st.teams)n[st.teams[k]]++;st.teams[id]=n[0]<=n[1]?0:1;}return st.teams[id];};
   CTF.spawnOf=function(I,st,id){var t=CTF.teamOf(st,id),ids=Object.keys(st.teams).filter(function(k){return st.teams[k]===t;}).sort(),s=I.spawn[t];return s[Math.max(0,ids.indexOf(id))%s.length].slice();};
@@ -719,6 +725,9 @@ var ART=(function(){
     var t=CTF.teamOf(st,id),ev=[],mine=st.flags[t],theirs=st.flags[1-t],add=function(n,who){st.score[who]=(st.score[who]||0)+n;};
     if(st.tagged[id]&&now-st.tagged[id]<1500)return ev;        /* just tagged: on the way back to spawn */
     st.pos[id]=[x,y,now];
+    /* sprint refills: run over one that's there and it's yours (it comes back after REFILL_MS) */
+    if(!st.refill)st.refill=I.refills.map(function(){return 0;});
+    for(var ri=0;ri<I.refills.length;ri++){var rp=I.refills[ri];if(now-(st.refill[ri]||0)>=CTF.REFILL_MS&&Math.hypot(x-rp[0],y-rp[1])<CTF.REFILL_R){st.refill[ri]=now;ev.push({k:"refill",id:id,i:ri});}}
     var cf=CTF.carrying(st,id);
     if(cf>=0){st.flags[cf].x=x;st.flags[cf].y=y;
       if(mine.at===null&&Math.hypot(x-I.base[t][0],y-I.base[t][1])<CTF.CAP_R){st.caps[t]++;add(500,id);var fl=st.flags[cf];fl.at=null;fl.x=I.base[fl.t][0];fl.y=I.base[fl.t][1];ev.push({k:"cap",id:id,t:t});}}
@@ -730,6 +739,15 @@ var ART=(function(){
       if(vf>=0){var f2=st.flags[vf];f2.at=null;f2.x=I.base[f2.t][0];f2.y=I.base[f2.t][1];}
       st.tagged[victim]=now;add(vf>=0?250:150,tagger);ev.push({k:"tag",id:victim,by:tagger,carrier:vf>=0});if(victim===id)break;}
     return ev;};
+  /* the sprint meter s = {e: 0..1, on}: holding sprint with enough charge runs you faster and drains it; otherwise it charges.
+     Returns the speed multiplier for this step. */
+  CTF.sprint=function(s,want,dt){if(want&&s.e>0&&(s.on||s.e>=CTF.SPRINT_MIN)){s.on=true;s.e=Math.max(0,s.e-dt/CTF.STAM);if(s.e<=0)s.on=false;}
+    else{s.on=false;s.e=Math.min(1,s.e+dt/CTF.CHARGE);}return s.on?CTF.SPRINT:1;};
+  /* how long until refill i is back (ms, 0 = it's there) */
+  CTF.refillLeft=function(st,i,now){var t=st.refill&&st.refill[i]||0;return t?Math.max(0,CTF.REFILL_MS-(now-t)):0;};
+  /* a bot's sprint: when it has the flag, is chasing a thief or a carrier is near, or has a long run ahead on a full meter */
+  CTF.botSprint=function(st,I,id,x,y,goal,s){var t=CTF.teamOf(st,id);if(CTF.carrying(st,id)>=0)return true;if(st.flags[t].at)return true;
+    return s.e>0.95&&Math.hypot(goal[0]-x,goal[1]-y)>9;};
   /* a shortest path step through the grid (for the bots): the next tile centre to head for on the way from a to b */
   CTF.path=function(I,ax,ay,bx,by){
     var w=I.w,h=I.h,sx=Math.floor(ax),sy=Math.floor(ay),tx=Math.floor(bx),ty=Math.floor(by);if(sx===tx&&sy===ty)return[bx,by];
@@ -744,10 +762,13 @@ var ART=(function(){
     var nxt=clear?two:one;return[(nxt%w)+0.5,((nxt/w)|0)+0.5];};
   /* a bot's plan: carrying a flag, run it home; a carrier from the other team about, chase them on your half; otherwise
      some go for the flag and some stay back near home */
-  CTF.botGoal=function(st,I,id,x,y,role){
+  CTF.botGoal=function(st,I,id,x,y,role,e){
     var t=CTF.teamOf(st,id),cf=CTF.carrying(st,id);
     if(cf>=0)return I.base[t];
     var thief=st.flags[t].at;if(thief&&st.pos[thief]){var tp=st.pos[thief];return[tp[0],tp[1]];}
+    /* low on sprint with a refill close by that's there: grab it on the way */
+    if(e!==undefined&&e<0.35){var now=Date.now(),bi=-1,bd2=7;for(var ri=0;ri<I.refills.length;ri++){if(CTF.refillLeft(st,ri,now))continue;var dd=Math.hypot(I.refills[ri][0]-x,I.refills[ri][1]-y);if(dd<bd2){bd2=dd;bi=ri;}}
+      if(bi>=0)return I.refills[bi];}
     if(role==="d"){var best=null,bd=1e9;for(var o in st.pos){if(st.teams[o]===t)continue;var q=st.pos[o];if(I.side(q[0],q[1])!==t)continue;var d=Math.hypot(q[0]-x,q[1]-y);if(d<bd){bd=d;best=[q[0],q[1]];}}
       if(best)return best;return[I.base[t][0]+(t?-4:4),I.base[t][1]+Math.sin(Date.now()/1500)*3];}
     var f=st.flags[1-t];return[f.x,f.y];};
@@ -769,7 +790,9 @@ var ART=(function(){
       var pd=I.pad(x,y);if(pd){g.fillStyle="#2b2050";g.fillRect(X+P,Y+P,s-2*P,s-2*P);g.fillStyle="#F5F23D";
         for(var k=0;k<2;k++){var o=((ph/8+k*0.5)%1)*s-s*0.25,cx=X+s/2+pd[0]*(o-s*0.25),cy=Y+s/2+pd[1]*(o-s*0.25);
           for(var q=-2;q<=2;q++){var ax=cx-pd[0]*Math.abs(q)*P+pd[1]*q*P,ay=cy-pd[1]*Math.abs(q)*P+pd[0]*q*P;if(ax>X&&ax<X+s-P&&ay>Y&&ay<Y+s-P)g.fillRect(Math.round(ax),Math.round(ay),P,P);}}}
-      if(c==="r"||c==="b"){g.fillStyle=c==="r"?"rgba(232,80,91,.35)":"rgba(59,123,232,.35)";g.fillRect(X+2*P,Y+2*P,s-4*P,s-4*P);}}
+      if(c==="r"||c==="b"){g.fillStyle=c==="r"?"rgba(232,80,91,.35)":"rgba(59,123,232,.35)";g.fillRect(X+2*P,Y+2*P,s-4*P,s-4*P);}
+      if(c==="s"){var ri2=-1;for(var qq=0;qq<I.refills.length;qq++)if(Math.floor(I.refills[qq][0])===x&&Math.floor(I.refills[qq][1])===y){ri2=qq;break;}
+        CTF.refillIcon(g,X+s/2,Y+s/2,s,now,st?CTF.refillLeft(st,ri2,Date.now()):0);}}
     /* walls on top: raised blocks with a lit top edge and a shadow below */
     for(y=0;y<I.h;y++)for(x=0;x<I.w;x++){if(m.t[y*I.w+x]!=="#")continue;var X2=v.ox+x*s,Y2=v.oy+y*s;
       g.fillStyle="#3a3058";g.fillRect(X2,Y2-P*2,s,s);g.fillStyle="#5a4a88";g.fillRect(X2,Y2-P*2,s,P);g.fillStyle="#241c3a";g.fillRect(X2,Y2+s-P*2,s,P*2);
@@ -778,6 +801,14 @@ var ART=(function(){
     [0,1].forEach(function(t){var b=I.base[t];g.strokeStyle=CTF.TEAM[t];g.lineWidth=P;g.globalAlpha=0.6+0.3*Math.sin(now/250);PX.ring(g,v.X(b[0]),v.Y(b[1]),CTF.CAP_R*s,P,P);g.globalAlpha=1;});
     if(st)st.flags.forEach(function(f){if(f.at===null)CTF.flag(g,v.X(f.x),v.Y(f.y),f.t,s,now);});
   };
+  /* a sprint refill: a cyan lightning bolt bobbing over a glowing pad; once taken, a dim pad with a clock ring filling back up */
+  CTF.refillIcon=function(g,x,y,s,now,left){var P=Math.max(1,Math.round(s/8));x=Math.round(x);y=Math.round(y);
+    g.fillStyle="#0e2a36";g.fillRect(x-3*P,y-3*P,6*P,6*P);
+    if(left>0){var k=1-left/CTF.REFILL_MS;g.fillStyle="rgba(61,242,255,.35)";var n=Math.round(k*16);for(var i=0;i<n;i++){var a=-Math.PI/2+i/16*Math.PI*2;g.fillRect(Math.round(x+Math.cos(a)*3.4*P-P/2),Math.round(y+Math.sin(a)*3.4*P-P/2),P,P);}return;}
+    var gl=0.35+0.25*Math.sin(now/200);g.globalAlpha=gl;g.fillStyle="#3DF2FF";g.fillRect(x-4*P,y-4*P,8*P,8*P);g.globalAlpha=1;
+    var by=Math.round(Math.sin(now/260)*P),B=[[1,-4],[0,-3],[1,-3],[-1,-2],[0,-2],[-1,-1],[0,-1],[1,-1],[2,-1],[0,0],[1,0],[-1,1],[0,1],[-1,2],[-2,3]];
+    g.fillStyle="#0b0818";B.forEach(function(q){g.fillRect(x+q[0]*P+P,y+q[1]*P+by+P,P,P);});
+    g.fillStyle="#3DF2FF";B.forEach(function(q){g.fillRect(x+q[0]*P,y+q[1]*P+by,P,P);});g.fillStyle="#fff";g.fillRect(x+P,y-4*P+by,P,P);};
   /* a flag on a pole, waving */
   CTF.flag=function(g,x,y,t,s,now){var P=Math.max(1,Math.round(s/8)),h=s*1.4,col=CTF.TEAM[t],dk=t?"#24509c":"#a8323b";x=Math.round(x);y=Math.round(y);
     g.fillStyle="rgba(0,0,0,.35)";g.fillRect(x-P*2,y,P*5,P);g.fillStyle="#d8d8e4";g.fillRect(x,y-h,P,h);
@@ -2241,6 +2272,6 @@ var ART=(function(){
     function shade(h,amt){var v=parseInt(h.slice(1),16),r=(v>>16)+amt,g=((v>>8)&255)+amt,b=(v&255)+amt;function cl(q){return Math.max(0,Math.min(255,q));}return "rgb("+cl(r)+","+cl(g)+","+cl(b)+")";}
     return{stick:stick,knob:knob};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.75.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.77.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

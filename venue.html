@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.75.0"></script>
-<script src="gfx.js?v=1.75.0"></script>
-<script src="art.js?v=1.75.0"></script>
-<script src="instruments.js?v=1.75.0"></script>
-<script src="kart.js?v=1.75.0"></script>
+<script src="tune.js?v=1.77.0"></script>
+<script src="gfx.js?v=1.77.0"></script>
+<script src="art.js?v=1.77.0"></script>
+<script src="instruments.js?v=1.77.0"></script>
+<script src="kart.js?v=1.77.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -33,6 +33,24 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #vFsTip{display:none;position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9500;width:min(420px,90vw);background:#1c1830;border:1px solid #D354A0;color:#fff;font:13px/1.45 system-ui;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 #vFsTip.on{display:block}
 #joinScreen.hidden{display:none}
+/* main menu views: menu (character + three buttons), join (room code), char (the character maker) */
+#joinScreen .jv{display:none}
+#joinScreen[data-view=menu] .jv-menu,#joinScreen[data-view=join] .jv-join,#joinScreen[data-view=char] .jv-char{display:flex}
+.jv-menu{flex-direction:column;align-items:center;gap:14px;width:100%;max-width:360px}
+#menuChar{width:220px;height:200px;image-rendering:pixelated;cursor:pointer}
+.jv-menu #inName{width:100%;background:#120e22;border:2px solid #3a3058;color:#fff;padding:10px 12px;font:700 15px 'Silkscreen',ui-monospace,monospace;text-align:center;outline:none;border-radius:0}
+.jv-menu #inName:focus{border-color:#D354A0}
+.mm-btns{display:flex;flex-direction:column;gap:10px;width:100%}
+.mm-btn{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;padding:13px 14px 12px;color:#fff;border:0;cursor:pointer;font-size:17px!important;background:#2a2440}
+.mm-btn small{font:600 11px system-ui,sans-serif!important;letter-spacing:0;opacity:.8;text-transform:none}
+.mm-join{background:#c8407e!important}.mm-prac{background:#5b4fc4!important}.mm-char{background:#2a2440!important}
+.mm-btn:active{transform:translateY(2px)}
+.mm-back{background:transparent;color:#aaa5c8;border:0;cursor:pointer;font-size:12px!important;padding:6px;box-shadow:none!important;align-self:center}
+.jv-join,.jv-char{max-width:420px}
+#joinScreen .join-logo{font:700 clamp(34px,10vw,52px)/1 'Silkscreen',ui-monospace,monospace;letter-spacing:1px;text-shadow:4px 4px 0 #000;text-align:center}
+#joinScreen .join-sub{font-family:'Silkscreen',ui-monospace,monospace;margin-bottom:6px}
+#joinScreen .join-box,#joinScreen .join-box input[type=text],#maker *{border-radius:0!important}
+#joinScreen .join-box{box-shadow:4px 4px 0 rgba(0,0,0,.55)}
 .join-logo{font-size:42px;font-weight:700;letter-spacing:-1px;margin-bottom:4px}
 .join-logo b{color:var(--pk)}
 .join-sub{font-size:14px;color:var(--tx2);margin-bottom:20px;letter-spacing:2px;text-transform:uppercase}
@@ -109,6 +127,14 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #ctfCv.on{display:block}
 #ctfUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
 #ctfUI.on{display:block}
+/* the sprint button: a pixel pad that fills up as the meter charges; dim until there's enough charge to start */
+#ctfSprint{position:absolute;right:16px;bottom:calc(var(--chatH) + 14px);width:104px;height:104px;pointer-events:auto;touch-action:none;background:#173a48!important;border:0;color:#fff;overflow:hidden;opacity:.55;
+  clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px)!important;box-shadow:inset -5px -5px 0 rgba(0,0,0,.35),inset 5px 5px 0 rgba(255,255,255,.18)!important}
+#ctfSprint i{position:absolute;left:0;right:0;bottom:0;height:100%;background:repeating-linear-gradient(0deg,#2bb8c9 0 6px,#3DF2FF 6px 12px);opacity:.55}
+#ctfSprint b{position:relative;display:block;font:700 15px 'Silkscreen',ui-monospace,monospace;text-shadow:2px 2px 0 #000}
+#ctfSprint span{position:relative;display:block;font:700 9px 'Silkscreen',ui-monospace,monospace;opacity:.85}
+#ctfSprint.ready{opacity:1}#ctfSprint.on{background:#3DF2FF!important;color:#082028}#ctfSprint.on b{text-shadow:none}#ctfSprint.dn{transform:scale(.95)}
+@media (pointer:fine){#ctfSprint{width:84px;height:84px}}
 #ctfBanner{position:absolute;left:50%;top:22%;transform:translateX(-50%);font:700 clamp(22px,5vw,46px)/1 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:4px 4px 0 #000;white-space:nowrap;opacity:0}
 #ctfBanner.pop{animation:moshPop 2.2s ease-out forwards}
 #ctfScore{position:absolute;left:50%;top:14px;transform:translateX(-50%);font:700 22px 'Silkscreen',ui-monospace,monospace;text-shadow:3px 3px 0 #000;white-space:nowrap}
@@ -386,7 +412,8 @@ body.practice #prExit{display:block}
 #prExit:hover{border-color:#E8505B;background:rgba(232,80,91,.3)}
 #prBar{display:none;position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:25;width:min(560px,94vw);box-sizing:border-box;padding:10px 14px;background:rgba(14,11,26,.93);border:1px solid rgba(245,197,24,.45);border-radius:14px;color:#fff;font:500 12px system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #prDance{display:none;position:fixed;left:12px;top:58px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;background:rgba(20,18,32,.88);border:1px solid rgba(245,197,24,.7);cursor:pointer}
-body.practice #prDance{display:block}body.practice.pr-busy #prDance{display:none}body.practice.pr-open #prDance{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:#fff}
+body.practice #prDance{display:none}   /* one Dance button: the one by the stick opens the practice menu */
+body.practice.pr-busy #prDance{display:none}body.practice.pr-open #prDance{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:#fff}
 body.practice #prBar{display:none}body.practice.pr-open #prBar{display:block;top:104px;max-height:calc(100vh - 150px);overflow:auto}
 body.practice.pr-busy #prBar,body.practice.pr-busy.pr-open #prBar{display:none}
 #prBar .h{font:700 11px system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:#F5C518;margin-bottom:8px}
@@ -504,26 +531,34 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
 <!-- JOIN SCREEN -->
 <button id="vFsBtn" title="Fullscreen">&#9974;</button>
 <div id="vFsTip">On iPhone, Safari can't make a web page fullscreen. For a fullscreen app: tap <b>Share</b>, then <b>Add to Home Screen</b>, and open it from your home screen.</div>
-<div id="joinScreen">
+<div id="joinScreen" data-view="menu">
   <div class="join-logo"><b>Unholy</b> Keys</div>
   <div class="join-sub">Live Venue</div>
-  <div style="text-align:center;margin:-4px 0 10px"><span id="srvTag" class="srv-badge"></span></div>
-  <a class="join-practice-btn" href="?practice">&#128378; Dance practice <small style="font-weight:500;opacity:.75">no show needed</small></a>
-  <div class="join-box">
-    <div>
-      <label>Display Name</label>
-      <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off">
+  <div style="text-align:center;margin:-4px 0 6px"><span id="srvTag" class="srv-badge"></span></div>
+  <!-- the main menu: your character on a little stage, and three ways in -->
+  <div class="jv jv-menu">
+    <canvas id="menuChar" width="220" height="200" aria-label="Your character"></canvas>
+    <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off" aria-label="Your name">
+    <div class="mm-btns">
+      <button class="mm-btn mm-join" id="mmJoin">&#9654; Join game<small>enter a room code</small></button>
+      <button class="mm-btn mm-prac" id="mmPrac">&#128378; Practice<small>the practice zone, no show needed</small></button>
+      <button class="mm-btn mm-char" id="mmChar">&#127912; Character<small>change your look</small></button>
     </div>
+  </div>
+  <!-- join a show -->
+  <div class="jv jv-join join-box">
     <div>
       <label>Room Code</label>
       <input type="text" id="inRoom" placeholder="4 letters" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase;letter-spacing:4px">
     </div>
-    <div>
-      <label>Your character</label>
-      <div id="maker"></div>
-    </div>
     <button id="enterBtn">Enter Venue</button>
     <div id="joinErr" style="font-size:12px;color:#D85A30;display:none"></div>
+    <button class="mm-back" data-to="menu">&#9664; Back</button>
+  </div>
+  <!-- your character -->
+  <div class="jv jv-char join-box">
+    <div id="maker"></div>
+    <button class="mm-btn mm-join" data-to="menu">&#10003; Done</button>
   </div>
 </div>
 
@@ -574,7 +609,7 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
   <div id="partBanner"></div>
   <canvas id="skiCv"></canvas>
   <canvas id="ctfCv"></canvas>
-  <div id="ctfUI"><div id="ctfBanner"></div><div id="ctfScore"></div><div id="ctfTeam"></div><div id="ctfHint"></div></div>
+  <div id="ctfUI"><div id="ctfBanner"></div><div id="ctfScore"></div><div id="ctfTeam"></div><div id="ctfHint"></div><button id="ctfSprint" aria-label="Sprint"><i></i><b>SPRINT</b><span>hold</span></button></div>
   <div id="skiUI"><div id="skiBanner"></div><div id="skiScore">0</div><div id="skiCombo"></div><div id="skiSpeed"></div><div id="skiHint"></div>
     <button id="skiJump">HOP<small>Space</small></button>
     <div id="skiTricks"><button data-t="1"><b>&#11013;</b>360</button><button data-t="2"><b>&#11014;</b>Backflip</button><button data-t="3"><b>&#10145;</b>Daffy</button></div>
@@ -1514,6 +1549,33 @@ var MAKER=ART.maker(document.getElementById("maker"),myLook,function(L){
   myLook=L;myColor=ART.looks.topColor(L);
   try{localStorage.setItem("uk_look",ART.looks.pack(L));}catch(e){}
 });
+/* the main menu: switch views, remember your name, and your character dancing on a little stage */
+var MENU=(function(){
+  var js=document.getElementById("joinScreen"),cv=document.getElementById("menuChar"),g=cv.getContext("2d"),raf=0;
+  function view(v){js.setAttribute("data-view",v);if(v==="join"){var r=document.getElementById("inRoom");if(r&&!r.value)setTimeout(function(){try{r.focus();}catch(e){}},50);}if(v==="menu")loop();}
+  function saveName(){try{localStorage.setItem("uk_name",document.getElementById("inName").value.trim());}catch(e){}}
+  function frame(){raf=0;if(js.classList.contains("hidden")||js.getAttribute("data-view")!=="menu")return;
+    var W=cv.width,H=cv.height,now=performance.now(),b=now/500,ph=b*Math.PI;g.imageSmoothingEnabled=false;g.clearRect(0,0,W,H);
+    /* a little stage with a spotlight */
+    g.fillStyle="#1d1733";g.fillRect(20,150,180,26);g.fillStyle="#3a3058";g.fillRect(20,150,180,4);g.fillStyle="#120e22";g.fillRect(20,176,180,6);
+    for(var i=0;i<6;i++){g.fillStyle=["#D354A0","#7F77DD","#3DF2FF","#F5C518","#4CC38A","#E8505B"][(i+Math.floor(b))%6];g.globalAlpha=0.5;g.fillRect(28+i*30,160,22,8);}g.globalAlpha=1;
+    g.fillStyle="rgba(245,197,24,.10)";g.beginPath();g.moveTo(90,0);g.lineTo(130,0);g.lineTo(170,152);g.lineTo(50,152);g.fill();
+    var sw=Math.sin(ph),p=5,dir=Math.floor(now/2400)%8;
+    ART.drawChar(g,110,150-12*p-Math.abs(sw)*4,p,myLook,{armL:0.9+sw*0.9,armR:-0.9+sw*0.9,legL:sw*0.25,legR:-sw*0.25,bob:Math.abs(sw)*2,dir:[0,4,1,5,2,6,3,7][dir]});
+    raf=requestAnimationFrame(frame);}
+  function loop(){if(!raf)raf=requestAnimationFrame(frame);}
+  try{var nm=localStorage.getItem("uk_name");if(nm)document.getElementById("inName").value=nm;}catch(e){}
+  document.getElementById("inName").addEventListener("change",saveName);
+  document.getElementById("mmJoin").onclick=function(){saveName();view("join");};
+  document.getElementById("mmChar").onclick=function(){view("char");};
+  cv.onclick=function(){view("char");};
+  document.getElementById("mmPrac").onclick=function(){saveName();try{history.replaceState(null,"","?practice");}catch(e){}PRACTICE.enter();};
+  Array.prototype.forEach.call(js.querySelectorAll("[data-to]"),function(b){b.onclick=function(){view(b.getAttribute("data-to"));};});
+  /* a link with a room code goes straight to joining */
+  try{if(/[?&]room=/.test(location.search))view("join");}catch(e){}
+  loop();
+  return{view:view,loop:loop};
+})();
 /* a look from the network: 8 letters, or nothing (then dress them in their colour) */
 /* a free dance from the network: {s: dance 1-8, m: move, c: [4 dots, -100..100]} or null */
 function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=15)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
@@ -1524,7 +1586,7 @@ if(/[?&]practice\b/.test(location.search))setTimeout(function(){PRACTICE.enter()
 document.getElementById("enterBtn").addEventListener("click",function(){
   var name=document.getElementById("inName").value.trim();
   var room=document.getElementById("inRoom").value.trim();
-  if(!name){showJoinErr("Please enter a display name");return;}
+  if(!name){MENU.view("menu");var nI=document.getElementById("inName");nI.placeholder="Type your name first";try{nI.focus();}catch(e){}return;}
   if(!room){showJoinErr("Please enter a room code");return;}
   myName=name;
   myColor=ART.looks.topColor(myLook);
@@ -1584,7 +1646,7 @@ function backToJoin(msg){
   silenceNote();isPerformerPlaying=false;
   document.getElementById("venue").classList.remove("on");
   document.getElementById("joinScreen").classList.remove("hidden");
-  showJoinErr(msg);
+  MENU.view("join");showJoinErr(msg);
 }
 
 /* ============================================================
@@ -3363,7 +3425,7 @@ var GAME=(function(){
     lastFit=0;DEVICE.fit();
     document.getElementById("gameTitle").textContent=m==="ctf"?"🚩 Capture the flag":m==="ski"?"⛷ Ski":m==="pipe"?"🛹 Half pipe":m==="walk"?"💃 Dance walk race":m==="kart"?"🏍 Mars Rally":m==="keepy"?"🎈 Keepy uppy":m==="skate"?(ICE?"⛸ Ice rink":"🛼 Roller rink"):m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
     if(m==="free")setTimeout(fdRender,0);
-    document.getElementById("moveHint").textContent=m==="ctf"?"Arrows / WASD or the stick to run · grab their flag, bring it home · tag them on your half":m==="ski"?"Point to steer down the mountain; flag zones then jump zones; Space pops you up so you can cut onto a new line":m==="pipe"?"Tap BEAT (Space) on the beat to build speed · swipe at the lip for a dance trick · A/D to lean and spin":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
+    document.getElementById("moveHint").textContent=m==="ctf"?"Arrows / WASD or the stick to run · hold SPRINT (Space) · grab their flag, bring it home · tag them on your half":m==="ski"?"Point to steer down the mountain; flag zones then jump zones; Space pops you up so you can cut onto a new line":m==="pipe"?"Tap BEAT (Space) on the beat to build speed · swipe at the lip for a dance trick · A/D to lean and spin":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
     var mm=me();if(mm)mm.dance=myDance;
@@ -3399,7 +3461,7 @@ var GAME=(function(){
     if(mode){stop();if(ROUND.active())ROUND.sitOut();}
     else if(ROUND.active())ROUND.join();          /* a round is on: Dance joins it */
     /* no round on: in Dance practice, open the practice panel to pick a game; at a show, just start dancing (the old game list is gone) */
-    else if(typeof PRACTICE!=="undefined"&&PRACTICE.on){closeMenu();document.body.classList.add("pr-open");}
+    else if(typeof PRACTICE!=="undefined"&&PRACTICE.on){closeMenu();document.body.classList.toggle("pr-open");}
     else{closeMenu();start("free");}
   }
 
@@ -4159,7 +4221,7 @@ var SKI=(function(){
    rules are in art.js, ART.CTF); in practice they run here, with the practice dancers as bots.
    ============================================================ */
 var CTFG=(function(){
-  var C=ART.CTF,on=false,map=null,I=null,st=null,me={x:0,y:0},push=[0,0],hold=0,lastT=0,team=0,others={},bots={},banT=0,roundN=0,face=0,cv=null,g=null,GO_BEAT=8;
+  var C=ART.CTF,spr={e:1,on:false},sprWant=false,on=false,map=null,I=null,st=null,me={x:0,y:0},push=[0,0],hold=0,lastT=0,team=0,others={},bots={},banT=0,roundN=0,face=0,cv=null,g=null,GO_BEAT=8;
   function $(id){return document.getElementById(id);}
   function ctfRound(){return GAME.mode==="ctf"||(typeof ROUND!=="undefined"&&ROUND.mode==="ctf");}
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
@@ -4169,27 +4231,36 @@ var CTFG=(function(){
     var t=$("ctfTeam");if(t){t.textContent="You're on "+C.TNAME[team];t.style.color=C.TEAM[team];}}
   function start(round){
     on=true;roundN=round?round.n:roundN+1;var rc=round&&round.ctf;
-    map=rc&&rc.map?C.clean(rc.map):null;if(!map&&PRACTICE.on){try{map=C.clean(JSON.parse(localStorage.getItem("uk_ctf")||"null"));}catch(e){map=null;}}if(!map)map=C.clean(C.defaultMap());
+    map=rc&&rc.map?C.clean(rc.map):null;if(!map&&PRACTICE.on){try{map=C.clean(C.upgrade(JSON.parse(localStorage.getItem("uk_ctf")||"null")));}catch(e){map=null;}}if(!map)map=C.clean(C.defaultMap());
     I=C.info(map);st=C.newState(I,Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}));
     if(rc){if(rc.teams)st.teams=rc.teams;if(rc.flags)st.flags=rc.flags;if(rc.caps)st.caps=rc.caps;}
-    team=C.teamOf(st,myId);var sp=C.spawnOf(I,st,myId);me={x:sp[0],y:sp[1]};push=[0,0];hold=0;others={};bots={};
+    team=C.teamOf(st,myId);var sp=C.spawnOf(I,st,myId);me={x:sp[0],y:sp[1]};push=[0,0];hold=0;others={};bots={};spr={e:1,on:false};sprWant=false;wireSprint();
     cv=$("ctfCv");g=cv.getContext("2d");cv.classList.add("on");document.body.classList.add("gaming-ctf");$("ctfUI").classList.add("on");hud();banner("🚩 CAPTURE THE FLAG","#F5C518");
   }
   function stop(){on=false;document.body.classList.remove("gaming-ctf");var u=$("ctfUI");if(u)u.classList.remove("on");var c=$("ctfCv");if(c)c.classList.remove("on");}
+  /* the sprint button (bottom right) and Space / Shift: hold to sprint while the meter has charge */
+  function sprintHud(){var b=$("ctfSprint");if(!b)return;var f=b.querySelector("i");if(f)f.style.height=Math.round(spr.e*100)+"%";b.classList.toggle("ready",spr.e>=C.SPRINT_MIN||spr.on);b.classList.toggle("on",spr.on);}
+  function wireSprint(){var b=$("ctfSprint");if(!b||b._w)return;b._w=1;
+    var dn=function(e){e.preventDefault();sprWant=true;b.classList.add("dn");try{b.setPointerCapture(e.pointerId);}catch(x){}},up=function(){sprWant=false;b.classList.remove("dn");};
+    b.addEventListener("pointerdown",dn);b.addEventListener("pointerup",up);b.addEventListener("pointercancel",up);b.addEventListener("contextmenu",function(e){e.preventDefault();});
+    document.addEventListener("keydown",function(e){if(on&&(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight"))sprWant=true;});
+    document.addEventListener("keyup",function(e){if(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight")sprWant=false;});}
   function respawn(){var sp=C.spawnOf(I,st,myId);me.x=sp[0];me.y=sp[1];push=[0,0];hold=performance.now()+1500;}
   function nameOf(id){return id===myId?"You":(viewers[id]&&viewers[id].name)||"Someone";}
   function events(ev){(ev||[]).forEach(function(e){
     if(e.k==="take")banner((e.id===myId?"YOU HAVE":C.TNAME[e.t]+" HAS")+" THE FLAG!",C.TEAM[e.t]);
     else if(e.k==="cap"){banner(C.TNAME[e.t]+" SCORES! 🚩",C.TEAM[e.t]);if(e.id===myId&&PRACTICE.on)GAME.moshPts(500);}
+    else if(e.k==="refill"&&e.id===myId){spr.e=1;banner("⚡ SPRINT REFILLED","#3DF2FF");}
     else if(e.k==="tag"){if(e.id===myId){respawn();banner(e.carrier?"TAGGED! FLAG RETURNED":"TAGGED! BACK TO SPAWN","#fff");}else if(e.by===myId)banner(e.carrier?"FLAG SAVED!":"TAGGED "+nameOf(e.id).toUpperCase(),C.TEAM[team]);}
     if(PRACTICE.on&&e.id===myId&&e.k==="take")GAME.moshPts(100);if(PRACTICE.on&&e.by===myId)GAME.moshPts(e.carrier?250:150);});hud();}
   /* from the server */
-  function onMsg(m){if(!on||!st)return;if(m.teams)st.teams=m.teams;if(m.flags)st.flags=m.flags;if(m.caps)st.caps=m.caps;team=C.teamOf(st,myId);events(m.ev);}
+  function onMsg(m){if(!on||!st)return;if(m.teams)st.teams=m.teams;if(m.flags)st.flags=m.flags;if(m.caps)st.caps=m.caps;if(m.rf){var dn=Date.now();st.refill=m.rf.map(function(ms){return ms>0?dn-(C.REFILL_MS-ms):0;});}team=C.teamOf(st,myId);events(m.ev);}
   function input(){var x=(held.right?1:0)-(held.left?1:0),y=(held.down?1:0)-(held.up?1:0);if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){x=joy.x;y=joy.y;}var mm=Math.hypot(x,y);if(mm>1){x/=mm;y/=mm;}return{x:x,y:y};}
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
     var going=beat()>=GO_BEAT;
-    if(going&&now>hold){var inp=input(),sp=C.SPEED*(C.carrying(st,myId)>=0?C.CARRY:1),pd=I.pad(me.x,me.y);
+    var sm=C.sprint(spr,sprWant&&going&&now>hold&&Math.hypot(input().x,input().y)>0.2,dt);sprintHud();
+    if(going&&now>hold){var inp=input(),sp=C.SPEED*(C.carrying(st,myId)>=0?C.CARRY:1)*sm,pd=I.pad(me.x,me.y);
       if(pd)push=[pd[0]*C.SPEED*C.PAD,pd[1]*C.SPEED*C.PAD];
       C.move(I,me,(inp.x*sp+push[0])*dt,(inp.y*sp+push[1])*dt);var dm=Math.pow(0.08,dt);push=[push[0]*dm,push[1]*dm];
       if(Math.hypot(inp.x,inp.y)>0.2)face=ART.face8(inp.x,inp.y,face);}
@@ -4200,12 +4271,12 @@ var CTFG=(function(){
   /* practice: the practice dancers play, with the same brains as the server's bots */
   function botTick(dt,now){
     Object.keys(viewers).forEach(function(id){if(id.indexOf("bot")!==0)return;var v=viewers[id],b=bots[id];C.teamOf(st,id);
-      if(!b){var sp=C.spawnOf(I,st,id),mates=Object.keys(st.teams).filter(function(k){return st.teams[k]===st.teams[id];}).sort();b=bots[id]={x:sp[0],y:sp[1],wp:null,wpAt:0,push:[0,0],role:mates.indexOf(id)%3===2?"d":"a",hold:0,tag:0};}
+      if(!b){var sp=C.spawnOf(I,st,id),mates=Object.keys(st.teams).filter(function(k){return st.teams[k]===st.teams[id];}).sort();b=bots[id]={x:sp[0],y:sp[1],wp:null,wpAt:0,push:[0,0],role:mates.indexOf(id)%3===2?"d":"a",hold:0,tag:0,sp:{e:1,on:false}};}
       if(st.tagged[id]&&st.tagged[id]!==b.tag){b.tag=st.tagged[id];var s2=C.spawnOf(I,st,id);b.x=s2[0];b.y=s2[1];b.hold=now+1500;b.wp=null;}
-      if(now>b.hold){var goal=C.botGoal(st,I,id,b.x,b.y,b.role);if(!b.wp||now>b.wpAt){b.wp=C.path(I,b.x,b.y,goal[0],goal[1]);b.wpAt=now+250;}
-        var av=C.botAvoid(st,I,id,b.x,b.y),dx=b.wp[0]-b.x+av[0]*1.6,dy=b.wp[1]-b.y+av[1]*1.6,d=Math.hypot(dx,dy)||1,sp2=C.SPEED*0.8*(C.carrying(st,id)>=0?C.CARRY:1),pd=I.pad(b.x,b.y);if(pd)b.push=[pd[0]*C.SPEED*C.PAD,pd[1]*C.SPEED*C.PAD];
+      if(now>b.hold){var goal=C.botGoal(st,I,id,b.x,b.y,b.role,b.sp.e),bsm=C.sprint(b.sp,C.botSprint(st,I,id,b.x,b.y,goal,b.sp),dt);if(!b.wp||now>b.wpAt){b.wp=C.path(I,b.x,b.y,goal[0],goal[1]);b.wpAt=now+250;}
+        var av=C.botAvoid(st,I,id,b.x,b.y),dx=b.wp[0]-b.x+av[0]*1.6,dy=b.wp[1]-b.y+av[1]*1.6,d=Math.hypot(dx,dy)||1,sp2=C.SPEED*0.8*(C.carrying(st,id)>=0?C.CARRY:1)*bsm,pd=I.pad(b.x,b.y);if(pd)b.push=[pd[0]*C.SPEED*C.PAD,pd[1]*C.SPEED*C.PAD];
         C.move(I,b,(dx/d*sp2+b.push[0])*dt,(dy/d*sp2+b.push[1])*dt);var dm=Math.pow(0.08,dt);b.push=[b.push[0]*dm,b.push[1]*dm];}
-      v.x=v.tx=b.x/I.w;v.y=v.ty=b.y/I.h;v.dance=4;events(C.step(st,I,id,b.x,b.y,Date.now()));});
+      v.x=v.tx=b.x/I.w;v.y=v.ty=b.y/I.h;v.dance=4;var bev=C.step(st,I,id,b.x,b.y,Date.now());bev.forEach(function(e){if(e.k==="refill")b.sp.e=1;});events(bev);});
   }
   function draw(){
     var show=ctfRound()&&on,c=$("ctfCv");if(!c)return;c.classList.toggle("on",show);if(!show)return;
@@ -4213,7 +4284,7 @@ var CTFG=(function(){
     g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;g.fillStyle="#07041a";g.fillRect(0,0,Wc,Hc);
     var chatH=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--chatH"))||56,V=C.fit(I,Wc,Hc,Wc<641?240:124,chatH+8),now=performance.now();
     C.draw(g,map,I,V,now,st);
-    perfInset(g,78,70);   /* the performer, top left above the arena */
+    perfInset(g,78,82);   /* the performer, top left above the arena */
     /* everyone in the game, back to front */
     var list=[];Object.keys(viewers).forEach(function(id){var vv=viewers[id];if(!vv||vv===PH)return;if(id!==myId&&vv.dance!==4)return;
       var o=others[id]||(others[id]={x:vv.x*I.w,y:vv.y*I.h,f:0});var tx=id===myId?me.x:vv.x*I.w,ty=id===myId?me.y:vv.y*I.h;
@@ -4229,9 +4300,9 @@ var CTFG=(function(){
     /* the count in */
     var b=beat();if(b<GO_BEAT){var n=Math.ceil(GO_BEAT-b);ART.pixText(g,b<0?"GET READY":n<=4?String(n):"GET READY",Wc/2,Hc*0.42,Math.max(3,Math.round(V.s/5)),"#fff","center","#000");}
     else if(b<GO_BEAT+1.5)ART.pixText(g,"GO!",Wc/2,Hc*0.42,Math.max(4,Math.round(V.s/4)),"#F5C518","center","#000");
-    var hn=$("ctfHint");if(hn){var cf2=C.carrying(st,myId);hn.textContent=now<hold?"Tagged! Back in a moment…":cf2>=0?"You've got the flag! Get it back to your base":st.flags[team].at?"They've got your flag! Tag the carrier on your half":"Grab the "+C.TNAME[1-team].toLowerCase()+" flag · tag anyone on your half · boost pads shove you";}
+    var hn=$("ctfHint");if(hn){var cf2=C.carrying(st,myId);hn.textContent=now<hold?"Tagged! Back in a moment…":cf2>=0?"You've got the flag! Get it back to your base":st.flags[team].at?"They've got your flag! Tag the carrier on your half":"Grab the "+C.TNAME[1-team].toLowerCase()+" flag · tag anyone on your half · hold SPRINT (Space) · ⚡ refills fill it";}
   }
-  window.ukCtf=function(){return{on:on,me:{x:+me.x.toFixed(2),y:+me.y.toFixed(2)},team:team,caps:st&&st.caps,flags:st&&st.flags,score:st&&st.score,teams:st&&st.teams};};
+  window.ukCtf=function(){return{spr:{e:+spr.e.toFixed(2),on:spr.on},refill:st&&st.refill,on:on,me:{x:+me.x.toFixed(2),y:+me.y.toFixed(2)},team:team,caps:st&&st.caps,flags:st&&st.flags,score:st&&st.score,teams:st&&st.teams};};
   window.ukCtfTest=function(nb){window.__testMode="ctf";ukWalkTest(nb===undefined?5:nb);};
   return{start:start,stop:stop,tick:tick,draw:draw,onMsg:onMsg,ctfRound:ctfRound,get on(){return on;}};
 })();
@@ -5403,7 +5474,7 @@ var PRACTICE=(function(){
     document.getElementById("venue").classList.add("on");
     document.getElementById("hudRoom").textContent="Practice";
     if(!venueStarted){venueStarted=true;initAudio();initCanvas();requestAnimationFrame(renderLoop);}
-    performer.name="Practice";
+    performer.name="Stand-in";
     viewers={me:{name:myName,x:0.5,y:0.55,tx:0.5,ty:0.55,color:myColor,look:myLook,bubbleText:null,bubbleTime:0,dance:0}};
     updViewerCount();
     try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.kind)$("prKind").value=sv.kind;if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.level)$("prLevel").value=String(sv.level);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
@@ -6229,13 +6300,16 @@ function drawPerformer(x,y){
   var s=3,now=Date.now();
   if(isPerformerPlaying){var pulse=0.35+0.25*Math.sin(now*0.008);ctx.save();ctx.globalAlpha=pulse;var gl=ART.PX.rg(ctx,x,y-6*s,2,x,y-6*s,22*s);gl.addColorStop(0,hexA(performer.color,0.9));gl.addColorStop(1,hexA(performer.color,0));ctx.fillStyle=gl;ART.PX.disc(ctx,x,y-6*s,22*s);ctx.restore();}
   var _pk=perfKind(),_ps={midi:lastNoteMidi,on:isPerformerPlaying,t0:lastNoteTime,off:PERF.off,now:now,n:PERF.n};
+  /* practice: the stand-in performer plays a little riff on the song's beat (or a steady one when there's no song) */
+  if(typeof PRACTICE!=="undefined"&&PRACTICE.on&&!isPerformerPlaying){var bp=typeof ROUND!=="undefined"&&ROUND.pos?ROUND.pos():-1e9,bb=bp>-1e8?ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),bp):now/500,bi=Math.floor(bb),fr=bb-bi,bms=500;
+    _ps={midi:[60,64,67,72,67,64,62,65][((bi%8)+8)%8],on:fr<0.78,t0:now-fr*bms,off:now-fr*bms+0.78*bms,now:now,n:bi};}
   if(PERF.band)ART.INST.drawBand(ctx,x,y,s,PERF.band,_ps,Math.min(x,W-x)-8);   /* a choir or a section plays along around the performer */
   ART.INST.draw(ctx,x,y,s,performer.look||ART.looks.fromColor(performer.color,1),_pk,_ps);
   if(performer.name){ctx.font="bold 18px 'Segoe UI',system-ui,sans-serif";ctx.textAlign="center";ctx.textBaseline="top";var ny=y+12*s+3+6*s;ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,0.75)";ctx.strokeText(performer.name,x,ny);ctx.fillStyle="#fff";ctx.fillText(performer.name,x,ny);ctx.textBaseline="alphabetic";}
 }
 /* the games that cover the whole screen (ski, capture the flag) draw the performer in a corner of their own canvas,
    two thirds size on a little lit stand, so everyone can still see them playing */
-function perfHere(){return !((typeof PRACTICE!=="undefined"&&PRACTICE.on)||(typeof PH!=="undefined"&&PH.on));}   /* nobody on stage in practice */
+function perfHere(){return !(typeof PH!=="undefined"&&PH.on);}   /* the performer is on stage (in practice, a stand-in plays along) unless they're hanging out on the floor */
 function perfInset(g2,x,y){
   if(!perfHere())return;
   var k=2/3,c=ctx;ctx=g2;
@@ -6246,7 +6320,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.75.0",SERVER_VERSION="";
+var PAGE_VERSION="1.77.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6597,7 +6671,7 @@ function renderLoop(){
   PERF_AT=[perfPx,perfPy];
   if(spotK>0)drawCentreSpot(W/2,perfPy,spotK,feat);
   if(PH.on){var pfc0=document.getElementById("perfFront");if(pfc0)pfc0.getContext("2d").clearRect(0,0,pfc0.width,pfc0.height);}
-  if(KON||KOUT||(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)&&!PH.on)){   /* hanging out: the performer is on the floor, not the stage */
+  if(KON||KOUT||!PH.on){   /* hanging out: the performer is on the floor, not the stage (practice has a stand-in performer) */
     var perfDim=bp&&W<640;if(perfDim){ctx.save();ctx.globalAlpha=0.35;}   /* small screens: the match needs the room */
     /* with the Jumbotron down, the performer goes on the layer above it, so they stand in front of the screen */
     var pfc=document.getElementById("perfFront"),mainCtx=ctx,useFront=pfc&&JT.k>0.02;
@@ -6608,7 +6682,7 @@ function renderLoop(){
     var pcAge=crowdAge();if(pcAge<ART.CROWD_MS&&CROWD.kind!=="lasers"&&CROWD.kind!=="float")ART.crowdFx(ctx,CROWD.kind,perfPx,perfPy,3,pcAge,3,null,null);
     }finally{if(ctx!==mainCtx){ctx.globalAlpha=1;ctx=mainCtx;}}
     if(perfDim)ctx.restore();
-  }   /* nobody on stage in practice */
+  }
 
   /* the featured dancer, big, centre stage (their moves are live) */
   if(feat&&viewers[feat.id]){
@@ -6734,7 +6808,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.75.0"></script>
+<script src="lab.js?v=1.77.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

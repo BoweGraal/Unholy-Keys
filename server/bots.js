@@ -332,15 +332,18 @@ module.exports = function(api) {
     var r = rooms[b.room], srd = r && r.round, C = ARTX && ARTX.CTF; if (!srd || !srd.ctf || !C) return;
     var c = srd.ctf, I = c.I, st = c.st, id = b.viewerId, t = C.teamOf(st, id);
     if (!b.cf || b.cf.n !== rd.n) { var sp = C.spawnOf(I, st, id), mates = Object.keys(st.teams).filter(function(k) { return st.teams[k] === t; }).sort();
-      b.cf = { n: rd.n, x: sp[0], y: sp[1], t: now, wp: null, wpAt: 0, posAt: 0, tagSeen: 0, push: [0, 0], role: mates.indexOf(id) % 3 === 2 ? "d" : "a", jit: Math.random() * 6 }; }
+      b.cf = { n: rd.n, x: sp[0], y: sp[1], t: now, wp: null, wpAt: 0, posAt: 0, tagSeen: 0, push: [0, 0], role: mates.indexOf(id) % 3 === 2 ? "d" : "a", jit: Math.random() * 6, sp: { e: 1, on: false }, rfSeen: 0 }; }
     var k = b.cf, dt = Math.min(0.25, (now - k.t) / 1000); k.t = now;
     if (st.tagged[id] && st.tagged[id] !== k.tagSeen) { k.tagSeen = st.tagged[id]; var s2 = C.spawnOf(I, st, id); k.x = s2[0]; k.y = s2[1]; k.wp = null; k.push = [0, 0]; k.hold = now + 1500; }
     var going = wkBeat(rd, now - rd.playAt) >= 8 && !(k.hold && now < k.hold);
     if (going) {
-      var goal = C.botGoal(st, I, id, k.x, k.y, k.role);
+      var goal = C.botGoal(st, I, id, k.x, k.y, k.role, k.sp.e);
+      /* a sprint refill the referee just gave this bot (it ran over it): meter full */
+      (st.refill || []).forEach(function(tk, ri) { if (tk > k.rfSeen && Math.hypot(I.refills[ri][0] - k.x, I.refills[ri][1] - k.y) < 1.4) { k.rfSeen = tk; k.sp.e = 1; } });
+      var sm = C.sprint(k.sp, C.botSprint(st, I, id, k.x, k.y, goal, k.sp), dt);
       if (!k.wp || now > k.wpAt) { k.wp = C.path(I, k.x, k.y, goal[0], goal[1]); k.wpAt = now + 250; }
       var av = C.botAvoid(st, I, id, k.x, k.y);
-      var dx = k.wp[0] - k.x + av[0] * 1.6, dy = k.wp[1] - k.y + av[1] * 1.6, d = Math.hypot(dx, dy) || 1, sp2 = C.SPEED * (0.7 + 0.3 * b.skill) * (C.carrying(st, id) >= 0 ? C.CARRY : 1);
+      var dx = k.wp[0] - k.x + av[0] * 1.6, dy = k.wp[1] - k.y + av[1] * 1.6, d = Math.hypot(dx, dy) || 1, sp2 = C.SPEED * (0.7 + 0.3 * b.skill) * (C.carrying(st, id) >= 0 ? C.CARRY : 1) * sm;
       var pd = I.pad(k.x, k.y); if (pd) { k.push = [pd[0] * C.SPEED * C.PAD, pd[1] * C.SPEED * C.PAD]; }
       C.move(I, k, (dx / d * sp2 + k.push[0]) * dt + Math.sin(now / 700 + k.jit) * 0.01, (dy / d * sp2 + k.push[1]) * dt);
       var dm = Math.pow(0.08, dt); k.push = [k.push[0] * dm, k.push[1] * dm];
