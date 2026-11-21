@@ -757,6 +757,32 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.67.0 - Mosh pit you can follow, points over heads, longer chat, server-version warning
+
+**Mosh pit, seen from the stage**
+- The floor shows which part of the pit it is (MOSH PIT, CIRCLE PIT, WALL OF DEATH, CHARGE!, PUSH WAR!) in the top left, and in the plain pit what's coming next and when ("NEXT: CIRCLE PIT IN 0:12").
+- Circle pit: the two rings and arrows running round, the same as the players see.
+- Wall of death: the dashed line down the middle, how many are on each side, and the big count-in.
+- Push war: the live LEFT vs RIGHT tally bar, then who won.
+- A POINTS table on the right during the pit and circle pit.
+- Bots now actually mosh: they thrash about in the middle, run laps in the circle pit, split evenly for the wall of death, charge, pack in and push, and the winning side gets the bonus. Their points add up the way a player's do (laps, shoves, bumps, the wall win) instead of a made-up number.
+- With two games per song, the mosh pit's wall of death and circle pit are now fitted inside the game's time. Before, they could fall outside it and never happen.
+
+**Points over heads:** in every game except Free dance, each player's points show over their head on your stage view, and a green +N rises when they score. The server now sends you everyone's score every 3 seconds.
+
+**Chat**
+- Speech bubbles stay up for 10 seconds, or until that person walks away, whichever comes first.
+- The whole message shows: bubbles wrap onto as many lines as they need instead of being cut off with "...". Messages can be up to 300 characters.
+- The server lets you send chat faster before it starts dropping messages.
+
+**Server-version warning:** when you go live and the server is older than the page, a red banner tells you to redeploy Render.
+
+Bots also stop showing an old step-dance combo during other games, and their scores in step/target/highway rounds now count from when that game started (matters with two games per song).
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** go live with bots, start a Mosh pit, and watch the stage view through a circle pit and the wall of death.
+
 ## v1.66.0 - Ski: flag zones, jump zones, faster, and the pop and cut
 
 - **Layered mountain:** the made-up mountain now goes flag zone, jump zone, flag zone, jump zone, all the way down. A dashed line and FLAG ZONE / JUMP ZONE on the snow mark where each one starts, with a banner as you cross it.

@@ -15,6 +15,8 @@ var PIXFONT={"0":[14,17,19,21,25,17,14],"1":[4,12,4,4,4,4,14],"2":[14,17,1,2,4,8
   A:[14,17,17,31,17,17,17],B:[30,17,17,30,17,17,30],C:[14,17,16,16,16,17,14],D:[28,18,17,17,17,18,28],E:[31,16,16,30,16,16,31],F:[31,16,16,30,16,16,16],G:[14,17,16,23,17,17,15],H:[17,17,17,31,17,17,17],I:[14,4,4,4,4,4,14],J:[7,2,2,2,2,18,12],K:[17,18,20,24,20,18,17],L:[16,16,16,16,16,16,31],M:[17,27,21,21,17,17,17],
   N:[17,17,25,21,19,17,17],O:[14,17,17,17,17,17,14],P:[30,17,17,30,16,16,16],Q:[14,17,17,17,21,18,13],R:[30,17,17,30,20,18,17],S:[15,16,16,14,1,1,30],T:[31,4,4,4,4,4,4],U:[17,17,17,17,17,17,14],V:[17,17,17,17,17,10,4],W:[17,17,17,21,21,21,10],X:[17,17,10,4,10,17,17],Y:[17,17,17,10,4,4,4],Z:[31,1,2,4,8,16,31],
   "!":[4,4,4,4,4,0,4],".":[0,0,0,0,0,12,12],"-":[0,0,0,31,0,0,0]," ":[0,0,0,0,0,0,0],"'":[4,4,8,0,0,0,0],"?":[14,17,1,2,4,0,4],"*":[0,21,14,31,14,21,0],"#":[10,31,10,10,31,10,0]};
+PIXFONT["+"]=[0,4,4,31,4,4,0];PIXFONT[":"]=[0,12,12,0,12,12,0];PIXFONT[","]=[0,0,0,0,12,4,8];PIXFONT["/"]=[1,1,2,4,8,16,16];PIXFONT["<"]=[2,4,8,16,8,4,2];PIXFONT[">"]=[8,4,2,1,2,4,8];
+
 
 var ART=(function(){
   function G(k,d){return typeof GFX!=="undefined"?GFX.v(k):d;}   /* graphics lab values (gfx.js) */
@@ -648,6 +650,43 @@ var ART=(function(){
      (the round number), so every screen builds the same gates, trees, rocks and ramps. */
   var SK={CH:320,GATE_DY:170,GATE_W:40};
   SK.seedFor=function(n){return 1+((n|0)*37)%997;};
+  /* ---------- the mosh pit's plan, shared by the venue, the performer's view and the server's bots ----------
+     From the song's chart: the wall of death at the drop (split, count in, charge, a 10 s push war, the result), and circle pits
+     in the loud stretches. window() fits a chart to a game that only runs for part of the song (two games per song). */
+  var MOSHX={TUG_AT:800,TUG_MS:10000,TOP:0.35,BOT:0.74};
+  MOSHX.plan=function(chart){
+    var dur=chart&&chart.dur||0,D=chart&&chart.drop||0,out={wall:null,circles:[]},TA=MOSHX.TUG_AT,TM=MOSHX.TUG_MS;
+    if(D>12000&&(!dur||D<dur-14000)){var split=Math.max(D-9000,4000);out.wall={split:split,count:D-3000,go:D,t0:D+TA,t1:D+TA+TM,end:D+TA+TM+3500};}
+    var w=out.wall,pk=(chart&&chart.peaks)||[];
+    pk.forEach(function(p){
+      var a1=p[0],b1=p[1];
+      if(w&&b1>w.split-3000&&a1<w.end+3000){if(a1<w.split-3000)b1=w.split-3000;else if(b1>w.end+3000)a1=w.end+3000;else return;}
+      if(b1-a1>=8000&&out.circles.length<3)out.circles.push([a1,Math.min(b1,a1+40000)]);
+    });
+    if(!out.circles.length){
+      if(dur>50000){var c0=dur*0.66,c1=c0+16000;if(!w||c1<w.split-3000||c0>w.end+3000)out.circles.push([c0,c1]);}
+      else if(!dur){for(var t=40000;t<600000;t+=70000)out.circles.push([t,t+16000]);}
+    }
+    return out;
+  };
+  MOSHX.phaseAt=function(P,pos){
+    if(!P)return "pit";var w=P.wall;
+    if(w&&pos>=w.split&&pos<w.end){if(pos<w.count)return "split";if(pos<w.go)return "count";if(pos<w.t0)return "charge";if(pos<w.t1)return "tug";return "result";}
+    for(var i=0;i<P.circles.length;i++)if(pos>=P.circles[i][0]&&pos<P.circles[i][1])return "circle";
+    return "pit";
+  };
+  /* the circle pit: centred on the floor (top..bot as fractions of the room) */
+  MOSHX.circle=function(top,bot){return{x:0.5,y:(top+bot)/2,ry:Math.max(0.06,(bot-top)/2-0.03)};};
+  /* a game that runs from start to end (ms of song): keep the drop and loud stretches inside it, or make some that fit */
+  MOSHX.window=function(chart,start,end){
+    if(!chart)return chart;var c={},k;for(k in chart)c[k]=chart[k];var len=end-start,D=chart.drop||0;
+    if(!(D>=start+20000&&D<=end-17000))D=len>=62000?Math.round(start+len*0.6):0;
+    c.drop=D;var wl=D?[D-12000,D+17300]:null,pk=[];
+    (chart.peaks||[]).forEach(function(p){var a1=Math.max(p[0],start+4000),b1=Math.min(p[1],end-3000);if(b1-a1>=8000)pk.push([a1,b1]);});
+    var clear=function(p){return !wl||p[1]<wl[0]||p[0]>wl[1];};
+    if(!pk.some(clear)){var opts=[[start+6000,start+24000],[end-22000,end-4000]];for(var i=0;i<opts.length;i++)if(opts[i][1]-opts[i][0]>=8000&&opts[i][0]>=start&&clear(opts[i])){pk.unshift(opts[i]);break;}}
+    c.peaks=pk;c.dur=Math.max(chart.dur||0,end+14001);return c;
+  };
   /* the made-up mountain comes in layers: a flag zone (slalom gates) then a jump zone (a line of ramps and moguls), over and over */
   SK.Z0=300;SK.ZFLAG=1300;SK.ZJUMP=900;
   SK.zoneAt=function(yy){if(yy<SK.Z0)return{k:"start",y0:-1e9,y1:SK.Z0,i:-1};var per=SK.ZFLAG+SK.ZJUMP,i=Math.floor((yy-SK.Z0)/per),b=SK.Z0+i*per,m=yy-b;
@@ -1972,6 +2011,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{PX:PX,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.66.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{PX:PX,MOSH:MOSHX,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.67.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

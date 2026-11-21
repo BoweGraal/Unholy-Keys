@@ -285,6 +285,8 @@ function roundStandings(code) {
   r.viewers.forEach(function(v, id) { if (v.roundScore > 0) list.push({ id: id, name: v.name, color: v.color, score: v.roundScore }); });
   list.sort(function(a, b) { return b.score - a.score; });
   broadcast(code, { type: "round-scores", n: r.round.n, top: list.slice(0, 5), players: list.length });
+  /* the performer sees everyone's points over their heads */
+  if (r.performer) send(r.performer, { type: "round-all", n: r.round.n, s: list.slice(0, 60).map(function(x) { return [x.id, x.score]; }) });
 }
 /* every round hands out exactly 1000 show points:
    - 40% is shared equally by everyone who took part, so nobody is ever left with nothing and a slow start isn't the end of you;
@@ -470,7 +472,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.66.0";
+var VERSION = "1.67.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -631,7 +633,7 @@ function onMessage(ws, raw, isBinary) {
     }
     if (msg.type === "perf-chat") {
       var ptext = str(msg.text, 300);
-      if (!ptext || !allow(ws, "chat", 5, 1)) return;
+      if (!ptext || !allow(ws, "chat", 12, 3)) return;
       broadcast(ws.room, { type: "chat", id: "performer", viewerId: "performer", perf: 1, name: rooms[ws.room].performerName || "Performer", color: "#F5C518", text: ptext }, ws);
       return;
     }
@@ -649,7 +651,7 @@ function onMessage(ws, raw, isBinary) {
   if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
     if (msg.type === "chat") {
       var text = str(msg.text, 300);
-      if (!text || !allow(ws, "chat", 5, 1)) return;
+      if (!text || !allow(ws, "chat", 12, 3)) return;
       broadcast(ws.room, { type: "chat", id: ws.viewerId, viewerId: ws.viewerId, name: ws.viewerName, color: ws.viewerColor, text: text }, ws);
       return;
     }

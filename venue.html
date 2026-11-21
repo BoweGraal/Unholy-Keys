@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.66.0"></script>
-<script src="gfx.js?v=1.66.0"></script>
-<script src="art.js?v=1.66.0"></script>
-<script src="instruments.js?v=1.66.0"></script>
-<script src="kart.js?v=1.66.0"></script>
+<script src="tune.js?v=1.67.0"></script>
+<script src="gfx.js?v=1.67.0"></script>
+<script src="art.js?v=1.67.0"></script>
+<script src="instruments.js?v=1.67.0"></script>
+<script src="kart.js?v=1.67.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -587,7 +587,7 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
     <div id="chatMsgs"></div>
     <div id="chatInput">
       <button id="chatLogBtn" title="Show or hide the chat log">&#128172; Log<i id="chatUnread"></i></button>
-      <input type="text" id="chatText" placeholder="Say something..." maxlength="200" autocomplete="off">
+      <input type="text" id="chatText" placeholder="Say something..." maxlength="300" autocomplete="off">
       <button id="chatSend">Send</button>
     </div>
   </div>
@@ -1434,6 +1434,13 @@ var perfMode="sustain",perfInst="piano",perfScale="",perfKey="";
 var ws=null,wsReady=false;
 var particles=[],chatMessages=[];
 var bubbles={}; /* viewerId -> {text, time} */
+/* what someone says stays over their head for 10 s, or until they walk off (after a moment, so a word said mid-stride still shows) */
+var BUBBLE_MS=10000;
+function bubbleAlpha(v,now){
+  if(!v.bubbleText)return 0;var age=now-v.bubbleTime;if(age>=BUBBLE_MS)return 0;
+  if(!v.bubbleAt||v.bubbleAt.t!==v.bubbleTime)v.bubbleAt={t:v.bubbleTime,x:v.x,y:v.y,gone:0};
+  var b=v.bubbleAt;if(age<1200){b.x=v.x;b.y=v.y;}else if(!b.gone&&Math.hypot(v.x-b.x,v.y-b.y)>0.04)b.gone=now;
+  var a=Math.min(1,(BUBBLE_MS-age)/1000);if(b.gone)a=Math.min(a,1-(now-b.gone)/350);return Math.max(0,a);}
 
 /* Canvas */
 var canvas,ctx,W=0,H=0,perfShift=0;
@@ -4126,28 +4133,9 @@ var MOSH=(function(){
   var swing=null,swAng=0,swAcc=0,swRate=[],idleT=0,pops=[],puffs=[],cool={},tug={s:[0,0],done:false,mine:0,send:0,sent:0,res:null},circ={phi:0,r:0.22,acc:0,lap:0,inside:false};
   var bots={};
   function $(id){return document.getElementById(id);}
-  /* ---- the plan: when each part happens, from the song's chart ---- */
-  function plan(chart){
-    var dur=chart&&chart.dur||0,D=chart&&chart.drop||0,out={wall:null,circles:[]};
-    if(D>12000&&(!dur||D<dur-14000)){var split=Math.max(D-9000,4000);out.wall={split:split,count:D-3000,go:D,t0:D+TUG_AT,t1:D+TUG_AT+TUG_MS,end:D+TUG_AT+TUG_MS+3500};}
-    var w=out.wall,pk=(chart&&chart.peaks)||[];
-    pk.forEach(function(p){
-      var a=p[0],b=p[1];
-      if(w&&b>w.split-3000&&a<w.end+3000){if(a<w.split-3000)b=w.split-3000;else if(b>w.end+3000)a=w.end+3000;else return;}
-      if(b-a>=8000&&out.circles.length<3)out.circles.push([a,Math.min(b,a+40000)]);
-    });
-    if(!out.circles.length){
-      if(dur>50000){var c0=dur*0.66,c1=c0+16000;if(!w||c1<w.split-3000||c0>w.end+3000)out.circles.push([c0,c1]);}
-      else if(!dur){for(var t=40000;t<600000;t+=70000)out.circles.push([t,t+16000]);}
-    }
-    return out;
-  }
-  function phaseAt(pos){
-    if(!P)return "pit";var w=P.wall;
-    if(w&&pos>=w.split&&pos<w.end){if(pos<w.count)return "split";if(pos<w.go)return "count";if(pos<w.t0)return "charge";if(pos<w.t1)return "tug";return "result";}
-    for(var i=0;i<P.circles.length;i++)if(pos>=P.circles[i][0]&&pos<P.circles[i][1])return "circle";
-    return "pit";
-  }
+  /* ---- the plan: when each part happens, from the song's chart (shared with the performer's view and the bots: art.js) ---- */
+  function plan(chart){return ART.MOSH.plan(chart);}
+  function phaseAt(pos){return ART.MOSH.phaseAt(P,pos);}
   /* ---- start and stop (from GAME) ---- */
   function start(round){
     on=true;rnd=round||null;P=plan(rnd&&rnd.chart);score=0;phase=lastPh="";team=-1;vx=vy=0;lastT=0;pops=[];puffs=[];cool={};swing=null;swAcc=0;
@@ -6004,7 +5992,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.66.0",SERVER_VERSION="";
+var PAGE_VERSION="1.67.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6085,32 +6073,21 @@ function pad2(n){var s=n.toString(16);return s.length<2?"0"+s:s;}
 /* ============================================================
    DRAWING: SPEECH BUBBLES
    ============================================================ */
+/* a speech bubble: the whole message, wrapped onto as many lines as it needs (nothing cut off) */
 function drawBubble(x,y,text){
-  var maxW=160;
   ctx.font="12px 'Segoe UI',system-ui,sans-serif";
-  var tw=Math.min(ctx.measureText(text).width+16,maxW);
-  var bh=24;
-  var bx=x-tw/2,by=y-50;
-
-  ctx.fillStyle="rgba(10,10,15,0.85)";
-  ctx.strokeStyle="rgba(127,119,221,0.4)";
-  ctx.lineWidth=1;
-  roundRect(ctx,bx,by,tw,bh,6);
-  ctx.fill();
-  ctx.stroke();
-
-  /* Triangle pointer */
-  ctx.fillStyle="rgba(10,10,15,0.85)";
-  ctx.beginPath();
-  ctx.moveTo(x-5,by+bh);
-  ctx.lineTo(x+5,by+bh);
-  ctx.lineTo(x,by+bh+6);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle="#e0e0e8";
-  ctx.textAlign="center";
-  ctx.fillText(text.length>22?text.substring(0,22)+"...":text,x,by+16);
+  var maxW=Math.min(220,Math.max(140,W*0.3)),words=String(text).split(/\s+/),lines=[],line="";
+  words.forEach(function(wd){
+    while(ctx.measureText(wd).width>maxW-16&&wd.length>1){var k=wd.length;while(k>1&&ctx.measureText(wd.slice(0,k)).width>maxW-16)k--;if(line){lines.push(line);line="";}lines.push(wd.slice(0,k));wd=wd.slice(k);}
+    var t=line?line+" "+wd:wd;if(ctx.measureText(t).width<=maxW-16||!line)line=t;else{lines.push(line);line=wd;}});
+  if(line)lines.push(line);
+  var tw=0;lines.forEach(function(l){tw=Math.max(tw,ctx.measureText(l).width);});tw+=16;
+  var bh=lines.length*15+9,bx=Math.max(3,Math.min(W-tw-3,x-tw/2)),by=y-26-bh;
+  ctx.fillStyle="rgba(10,10,15,0.85)";ctx.strokeStyle="rgba(127,119,221,0.4)";ctx.lineWidth=1;
+  roundRect(ctx,bx,by,tw,bh,6);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-5,by+bh);ctx.lineTo(x+5,by+bh);ctx.lineTo(x,by+bh+6);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#e0e0e8";ctx.textAlign="center";
+  lines.forEach(function(l,k){ctx.fillText(l,bx+tw/2,by+16+k*15);});
 }
 
 function roundRect(c,x,y,w,h,r){
@@ -6467,8 +6444,8 @@ function renderLoop(){
     }
 
     /* Speech bubble */
-    if(v.bubbleText&&(now-v.bubbleTime)<4000){
-      var bAlpha=Math.max(0,1-(now-v.bubbleTime)/4000);
+    var bAlpha=bubbleAlpha(v,now);
+    if(bAlpha>0){
       ctx.globalAlpha=bAlpha;
       drawBubble(vx,vy-14,v.bubbleText);
       ctx.globalAlpha=1;
@@ -6478,7 +6455,7 @@ function renderLoop(){
   /* where you tapped to walk to */
   if(walkMark){var wa=1-(performance.now()-walkMark.t)/600;if(wa>0){ctx.save();ctx.globalAlpha=wa*0.8;ctx.strokeStyle="#fff";ctx.lineWidth=2;ART.PX.ringO(ctx,walkMark.x,walkMark.y,10+(1-wa)*14,(10+(1-wa)*14)*0.45,0);ctx.restore();}else walkMark=null;}
   /* the performer talking from the stage (when hanging out, their bubble is drawn with the crowd) */
-  if(!PH.on&&PERF_AT&&PH.bubbleText&&(now-PH.bubbleTime)<5000){ctx.globalAlpha=Math.max(0,1-(now-PH.bubbleTime)/5000);drawBubble(PERF_AT[0],PERF_AT[1]-30,PH.bubbleText);ctx.globalAlpha=1;}
+  if(!PH.on&&PERF_AT&&PH.bubbleText&&(now-PH.bubbleTime)<BUBBLE_MS){ctx.globalAlpha=Math.max(0,Math.min(1,(BUBBLE_MS-(now-PH.bubbleTime))/1000));drawBubble(PERF_AT[0],PERF_AT[1]-30,PH.bubbleText);ctx.globalAlpha=1;}
   MOSH.draw(ctx);SKATE.draw(ctx);KEEPY.draw(ctx);WALK.draw(ctx);PIPE.front(ctx);SKI.draw();if(KON)KART.draw(ctx);
   drawFxFront(bp,feat,perfPx,perfPy);
   GAME.drawHandles(ctx);
@@ -6498,7 +6475,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.66.0"></script>
+<script src="lab.js?v=1.67.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
