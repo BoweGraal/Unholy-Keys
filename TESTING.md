@@ -1524,3 +1524,6 @@ Needs a Render redeploy (server.js changed).
 - Left stick = power/height (quicker work = higher jump); a gauge each side shows jump strength; power resets after each jump/bail. Jumps and skating are slower.
 - Grind: hold right stick down (or up) as you reach the lip, slide along the rail, balance with the left stick, flick right stick sideways/up for moves, release to hop off. Falls off past the red zone.
 - Check: practice pipe test, hold right stick down at the lip → BALANCE meter, points; super meter resets on use.
+
+## v1.79.16
+- Half pipe camera no longer clamps to the pipe edge while airborne/grinding: skater stays centred mid-jump.
