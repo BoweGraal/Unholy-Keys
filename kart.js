@@ -8,6 +8,7 @@
    ========================================================================== */
 (function (root) {
   "use strict";
+  var KP = 3;   /* the pixel size for round things on the track, in track units */
   var WW = 1000, WH = 620;
 
   /* ---- numbers you can tweak in the Tuning lab (the lab's group "kt"); these are the fallbacks ---- */
@@ -212,21 +213,21 @@
   function bake(m) {
     /* the painted area: the track plus a wide border of space; coarser pixels for very big tracks so phones can hold it */
     m = m || 360;
-    BX0 = Math.floor(tr.box.x0 - m); BY0 = Math.floor(tr.box.y0 - m); BWW = Math.ceil(tr.box.x1 - tr.box.x0 + 2 * m); BHH = Math.ceil(tr.box.y1 - tr.box.y0 + 2 * m);
-    Q = Math.min(1.6, Math.sqrt(12e6 / (BWW * BHH)));
+    BX0 = Math.floor((tr.box.x0 - m) / 13) * 13; BY0 = Math.floor((tr.box.y0 - m) / 13) * 13;   /* lined up with the 13-unit floor tiles */ BWW = Math.ceil(tr.box.x1 - tr.box.x0 + 2 * m); BHH = Math.ceil(tr.box.y1 - tr.box.y0 + 2 * m);
+    Q = Math.min(4 / 13, Math.sqrt(12e6 / (BWW * BHH)));   /* pixel art: every floor tile is exactly 4 x 4 big pixels, scaled up blocky */
     var AREA = Math.min(6, BWW * BHH / (1200 * 820));
     var c = document.createElement("canvas"); c.width = Math.round(BWW * Q); c.height = Math.round(BHH * Q);
     var g = c.getContext("2d"), R = rng(11 + trIdx * 131), i;
     g.fillStyle = "#07041a"; g.fillRect(0, 0, c.width, c.height);
     g.setTransform(Q, 0, 0, Q, -BX0 * Q, -BY0 * Q);
     var far = function (x, y, pad) { return project(tr, x, y).dist > tr.hw + pad; };
-    for (i = 0; i < Math.round(9 * AREA); i++) { var nx = BX0 + R() * BWW, ny = BY0 + R() * BHH, nr = 120 + R() * 200, gr = g.createRadialGradient(nx, ny, 0, nx, ny, nr); var cc = [[120, 40, 170], [30, 120, 170], [190, 50, 120]][i % 3]; gr.addColorStop(0, "rgba(" + cc + ",.28)"); gr.addColorStop(1, "rgba(" + cc + ",0)"); g.fillStyle = gr; g.fillRect(nx - nr, ny - nr, nr * 2, nr * 2); }
+    for (i = 0; i < Math.round(9 * AREA); i++) { var nx = BX0 + R() * BWW, ny = BY0 + R() * BHH, nr = 120 + R() * 200, gr = ART.PX.rg(g,nx, ny, 0, nx, ny, nr); var cc = [[120, 40, 170], [30, 120, 170], [190, 50, 120]][i % 3]; gr.addColorStop(0, "rgba(" + cc + ",.28)"); gr.addColorStop(1, "rgba(" + cc + ",0)"); g.fillStyle = gr; g.fillRect(nx - nr, ny - nr, nr * 2, nr * 2); }
     for (i = 0; i < Math.round(1500 * AREA); i++) { var sx = BX0 + R() * BWW, sy = BY0 + R() * BHH, b = R(); g.fillStyle = b > 0.93 ? "#ffd9a0" : b > 0.8 ? "#a9d4ff" : "rgba(255,255,255," + (0.35 + R() * 0.5) + ")"; var sz = b > 0.97 ? 2.6 : 1 + R() * 1.2; g.fillRect(sx, sy, sz, sz); }
-    var mxp = tr.box.x1 + 150, myp = tr.box.y1 + 140, mr = 190, mg = g.createRadialGradient(mxp - 50, myp - 60, 10, mxp, myp, mr); mg.addColorStop(0, "#e07a45"); mg.addColorStop(0.7, "#a8421f"); mg.addColorStop(1, "#4a1a10");
-    g.fillStyle = mg; g.beginPath(); g.arc(mxp, myp, mr, 0, 6.3); g.fill();
-    g.fillStyle = "rgba(90,30,16,.45)"; for (i = 0; i < 9; i++) { g.beginPath(); g.ellipse(mxp - 160 + R() * 150, myp - 150 + R() * 130, 8 + R() * 22, 5 + R() * 10, R() * 3, 0, 6.3); g.fill(); }
-    var mnx = tr.box.x0 - 90, mny = tr.box.y0 + 120; g.fillStyle = "#cfd3e6"; g.beginPath(); g.arc(mnx, mny, 34, 0, 6.3); g.fill(); g.fillStyle = "rgba(60,60,90,.4)"; g.beginPath(); g.arc(mnx + 10, mny - 8, 12, 0, 6.3); g.fill();
-    for (i = 0; i < Math.round(26 * AREA); i++) { var rx = BX0 + R() * BWW, ry = BY0 + R() * BHH; if (!far(rx, ry, 40) || Math.hypot(rx - mxp, ry - myp) < mr + 20 || Math.hypot(rx - mnx, ry - mny) < 50) continue; g.fillStyle = "#4a3a58"; g.beginPath(); g.ellipse(rx, ry, 4 + R() * 9, 3 + R() * 6, R() * 3, 0, 6.3); g.fill(); g.fillStyle = "#7a6890"; g.fillRect(rx - 2, ry - 2, 3, 2); }
+    var mxp = tr.box.x1 + 150, myp = tr.box.y1 + 140, mr = 190, mg = ART.PX.rg(g,mxp - 50, myp - 60, 10, mxp, myp, mr); mg.addColorStop(0, "#e07a45"); mg.addColorStop(0.7, "#a8421f"); mg.addColorStop(1, "#4a1a10");
+    g.fillStyle = mg; ART.PX.disc(g,mxp, myp, mr,KP);
+    g.fillStyle = "rgba(90,30,16,.45)"; for (i = 0; i < 9; i++) { ART.PX.oval(g,mxp - 160 + R() * 150, myp - 150 + R() * 130, 8 + R() * 22, 5 + R() * 10, R() * 3,KP); }
+    var mnx = tr.box.x0 - 90, mny = tr.box.y0 + 120; g.fillStyle = "#cfd3e6"; ART.PX.disc(g,mnx, mny, 34,KP); g.fillStyle = "rgba(60,60,90,.4)"; ART.PX.disc(g,mnx + 10, mny - 8, 12,KP);
+    for (i = 0; i < Math.round(26 * AREA); i++) { var rx = BX0 + R() * BWW, ry = BY0 + R() * BHH; if (!far(rx, ry, 40) || Math.hypot(rx - mxp, ry - myp) < mr + 20 || Math.hypot(rx - mnx, ry - mny) < 50) continue; g.fillStyle = "#4a3a58"; ART.PX.oval(g,rx, ry, 4 + R() * 9, 3 + R() * 6, R() * 3,KP); g.fillStyle = "#7a6890"; g.fillRect(rx - 2, ry - 2, 3, 2); }
     /* the road and the plaza are the dance floor itself: dark checker tiles with a lighter top edge, like the venue floor */
     ROADP = roadPath(); var TS = 13;
     /* the edges first (twice as wide), so the tiles cover their inner half and only the outside border shows */
@@ -304,11 +305,11 @@
   }
   function ufoAt(ctx, x, y, now, sz) {
     ctx.save(); ctx.translate(x, y); ctx.scale(sz, sz);
-    var gl = ctx.createRadialGradient(0, 18, 4, 0, 18, 110); gl.addColorStop(0, "rgba(61,242,255,.45)"); gl.addColorStop(1, "rgba(61,242,255,0)"); ctx.fillStyle = gl; ctx.fillRect(-110, -60, 220, 200);
-    ctx.fillStyle = "#3a3f58"; ctx.beginPath(); ctx.ellipse(0, 0, 98, 22, 0, 0, 6.3); ctx.fill();
+    var gl = ART.PX.rg(ctx,0, 18, 4, 0, 18, 110); gl.addColorStop(0, "rgba(61,242,255,.45)"); gl.addColorStop(1, "rgba(61,242,255,0)"); ctx.fillStyle = gl; ctx.fillRect(-110, -60, 220, 200);
+    ctx.fillStyle = "#3a3f58"; ART.PX.oval(ctx,0, 0, 98, 22, 0,KP);
     ctx.fillStyle = "#6b7396"; ctx.beginPath(); ctx.ellipse(0, -4, 98, 18, 0, 3.14, 6.3); ctx.fill();
     ctx.fillStyle = "#1c1f33"; ctx.beginPath(); ctx.ellipse(0, 8, 70, 11, 0, 0, 3.14); ctx.fill();
-    for (var i = -3; i <= 3; i++) { ctx.fillStyle = (Math.floor(now / 180) + i) % 2 ? "#ff3dd8" : "#3df2ff"; ctx.beginPath(); ctx.arc(i * 26, 4 + Math.abs(i) * 0.4, 3.4, 0, 6.3); ctx.fill(); }
+    for (var i = -3; i <= 3; i++) { ctx.fillStyle = (Math.floor(now / 180) + i) % 2 ? "#ff3dd8" : "#3df2ff"; ART.PX.disc(ctx,i * 26, 4 + Math.abs(i) * 0.4, 3.4,KP); }
     ctx.restore();
   }
 
@@ -518,7 +519,7 @@
   function kart(ctx, k, now) {
     var sc = toScreen(k.x, k.y), s = k.sc || cam.z * (k.pop === undefined ? 1 : 0.3 + 0.7 * k.pop), fr = sheet(k.v.color || "#e33")[idx16(k.a)], lift = (k.air ? 6 : 0) * s, ks = s * 1.2;
     ctx.save(); ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(sc[0], sc[1] + 2 * ks, 15 * ks, 9 * ks, 0, 0, 6.3); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,.35)"; ART.PX.oval(ctx,sc[0], sc[1] + 2 * ks, 15 * ks, 9 * ks, 0,KP);
     var bx = sc[0] - OX * ks, by = sc[1] - OY * ks - lift;
     var back = Math.sin(k.a) < 0;                          /* facing up the screen: the exhausts are in front of the kart */
     if (k.boost && !back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks - lift, k.a, ks, now, k.boost > 1); });
@@ -568,7 +569,7 @@
       else { var t = v.sk ? v.sk.t : 0; all.push({ x: r.x, y: r.y, a: r.a, turn: r.turn, v: v, me: false, boost: t === 2 ? 1 : 0, air: !!r.air, drifting: t === 1 || t === 3 || t === 4, lvl: t === 3 ? 1 : t === 4 ? 2 : 0, pop: popK }); }
     });
     all.sort(function (p, q) { return (p.dance ? p.w.y : p.y) - (q.dance ? q.w.y : q.y); });
-    all.forEach(function (k) { if (k.dance) dancer(ctx, k.v, k.me, k.w, tt); else { if (k.pop < 1) { var s = toScreen(k.x, k.y); ctx.strokeStyle = "rgba(61,242,255," + (1 - k.pop) + ")"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(s[0], s[1], (0.4 + k.pop) * 34 * cam.z, 0, 6.3); ctx.stroke(); } kart(ctx, k, now); } });
+    all.forEach(function (k) { if (k.dance) dancer(ctx, k.v, k.me, k.w, tt); else { if (k.pop < 1) { var s = toScreen(k.x, k.y); ctx.strokeStyle = "rgba(61,242,255," + (1 - k.pop) + ")"; ctx.lineWidth = 3; ART.PX.ring(ctx,s[0], s[1], (0.4 + k.pop) * 34 * cam.z,undefined,KP); } kart(ctx, k, now); } });
     pops = pops.filter(function (p) { var a = (now - p.t) / 900; if (a > 1) return false; var s = toScreen(p.x, p.y); ctx.globalAlpha = 1 - a; ctx.font = "900 16px system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,.75)"; ctx.strokeText(p.txt, s[0], s[1] - 40 - a * 30); ctx.fillStyle = p.col; ctx.fillText(p.txt, s[0], s[1] - 40 - a * 30); return true; });
     ctx.globalAlpha = 1;
   }
@@ -689,9 +690,9 @@
       var ksz = clamp(cam.z * 1.15, 0.7, 1.4);
       ks.slice().sort(function (p, q) { return p.y - q.y; }).forEach(function (k) {
         var sc = toScreen(k.x, k.y), m = k.place <= 3 ? MEDAL[k.place - 1] : null;
-        if (m) { ctx.save(); ctx.globalAlpha = 0.35 + 0.25 * Math.sin(now / 180 + k.place); ctx.fillStyle = m; ctx.beginPath(); ctx.ellipse(sc[0], sc[1] + 2, 30 * ksz, 18 * ksz, 0, 0, 6.3); ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = m; ctx.lineWidth = 2.5; ctx.stroke(); ctx.restore(); }
+        if (m) { ctx.save(); ctx.globalAlpha = 0.35 + 0.25 * Math.sin(now / 180 + k.place); ctx.fillStyle = m; ART.PX.oval(ctx,sc[0], sc[1] + 2, 30 * ksz, 18 * ksz, 0,KP); ctx.globalAlpha = 1; ctx.strokeStyle = m; ctx.lineWidth = 2.5; ctx.stroke(); ctx.restore(); }
         k.sc = ksz; kart(ctx, k, now);
-        if (m) { var by = sc[1] - 46 * ksz; ctx.save(); ctx.fillStyle = m; ctx.strokeStyle = "rgba(0,0,0,.8)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sc[0], by, 11, 0, 6.3); ctx.fill(); ctx.stroke();
+        if (m) { var by = sc[1] - 46 * ksz; ctx.save(); ctx.fillStyle = m; ctx.strokeStyle = "rgba(0,0,0,.8)"; ctx.lineWidth = 3; ART.PX.disc(ctx,sc[0], by, 11,KP);ART.PX.ring(ctx,sc[0], by, 11,undefined,KP);
           ctx.fillStyle = "#1a1200"; ctx.font = "900 13px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String(k.place), sc[0], by + 1); ctx.restore(); }
       });
       /* you, playing on your UFO in the corner, with the song's video on a little Jumbotron behind you when there is one */
@@ -715,7 +716,7 @@
       ctx.textBaseline = "middle"; ctx.textAlign = "left"; ctx.font = "900 12px system-ui"; ctx.fillStyle = "#3DF2FF"; ctx.fillText("🏁 MARS RALLY" + (out.length ? "  ·  LAP " + out[0].lap : ""), px + 12, py + 20);
       if (!out.length) { ctx.font = "700 12px system-ui"; ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.fillText("Racers getting into their karts…", px + 12, py + 46); }
       for (var i = 0; i < n; i++) { var r = out[i], yy = py + 46 + i * 26, m2 = i < 3 ? MEDAL[i] : null;
-        if (m2) { ctx.fillStyle = m2; ctx.beginPath(); ctx.arc(px + 22, yy, 10, 0, 6.3); ctx.fill(); ctx.fillStyle = "#1a1200"; } else ctx.fillStyle = "rgba(255,255,255,.55)";
+        if (m2) { ctx.fillStyle = m2; ART.PX.disc(ctx,px + 22, yy, 10,KP); ctx.fillStyle = "#1a1200"; } else ctx.fillStyle = "rgba(255,255,255,.55)";
         ctx.font = "900 12px system-ui"; ctx.textAlign = "center"; ctx.fillText(String(i + 1), px + 22, yy + 1);
         ctx.textAlign = "left"; ctx.font = (i < 3 ? "800 14px" : "600 13px") + " system-ui"; ctx.fillStyle = m2 || "#ddd"; var nm = String(r.name || "?"); while (nm.length > 3 && ctx.measureText(nm).width > rw - 50) nm = nm.slice(0, -1); ctx.fillText(nm, px + 40, yy); }
       ctx.restore();
