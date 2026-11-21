@@ -13,11 +13,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.1"></script>
-<script src="gfx.js?v=1.79.1"></script>
-<script src="art.js?v=1.79.1"></script>
-<script src="instruments.js?v=1.79.1"></script>
-<script src="kart.js?v=1.79.1"></script>
+<script src="tune.js?v=1.79.2"></script>
+<script src="gfx.js?v=1.79.2"></script>
+<script src="art.js?v=1.79.2"></script>
+<script src="instruments.js?v=1.79.2"></script>
+<script src="kart.js?v=1.79.2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -46,7 +46,11 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 .jv-menu #inName:focus{border-color:#D354A0}
 .mm-btns{display:flex;flex-direction:column;gap:10px;width:100%}
 .mm-btn{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;padding:13px 14px 12px;color:#fff;border:0;cursor:pointer;font-size:17px!important;background:#2a2440}
-.mm-btn small{font:600 11px system-ui,sans-serif!important;letter-spacing:0;opacity:.8;text-transform:none}
+.mm-btn small{font:700 9px 'Silkscreen',ui-monospace,monospace!important;letter-spacing:.5px;opacity:.85;text-transform:none;text-shadow:1px 1px 0 #000}
+.mm-btn{text-shadow:2px 2px 0 #000}
+.pxi{display:inline-block;image-rendering:pixelated;background-repeat:no-repeat;background-size:100% 100%;flex:none}
+.mm-btn{position:relative}.mm-btn>.pxi{position:absolute;left:18px;top:50%;transform:translateY(-50%)}
+.mm-back{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:8px;font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700}
 .mm-join{background:#c8407e!important}.mm-prac{background:#5b4fc4!important}.mm-char{background:#2a2440!important}.mm-inst{background:#1f5f6e!important}
 .mm-btn:active{transform:translateY(2px)}
 .mm-back{background:transparent;color:#aaa5c8;border:0;cursor:pointer;font-size:12px!important;padding:6px;box-shadow:none!important;align-self:center}
@@ -60,7 +64,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 .join-sub{font-size:14px;color:var(--tx2);margin-bottom:20px;letter-spacing:2px;text-transform:uppercase}
 .join-box{background:var(--bg2);border:1px solid var(--bg4);border-radius:12px;padding:24px;
   width:100%;max-width:520px;display:flex;flex-direction:column;gap:16px}
-.join-box label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.join-box label{font:700 10px 'Silkscreen',ui-monospace,monospace;color:#a6a0c4;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
 .join-box input[type=text]{background:var(--bg3);border:1px solid var(--bg4);color:var(--tx);
   padding:10px 14px;border-radius:var(--r);font-size:14px;outline:none;width:100%}
 .join-box input[type=text]:focus{border-color:var(--pk)}
@@ -69,10 +73,12 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
   transition:transform .12s,border-color .12s}
 .color-pick:hover{transform:scale(1.15)}
 .color-pick.sel{border-color:#fff;transform:scale(1.15)}
-#enterBtn{padding:12px 32px;font-size:15px;font-weight:700;cursor:pointer;
-  background:linear-gradient(135deg,var(--pk),var(--pu));border:none;border-radius:var(--r);
-  color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:4px;width:100%}
-#enterBtn:hover{transform:scale(1.03)}
+#enterBtn{padding:14px 32px;font:700 16px 'Silkscreen',ui-monospace,monospace;cursor:pointer;
+  background:#c8407e;border:0;border-radius:0;box-shadow:inset -4px -4px 0 #8d2a58,inset 4px 4px 0 #e46aa1;text-shadow:2px 2px 0 #000;
+  color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:4px;width:100%;clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px)}
+#enterBtn:active{transform:translateY(2px)}
+#inRoom{font:700 18px 'Silkscreen',ui-monospace,monospace!important;text-align:center}
+#joinErr{font:700 10px 'Silkscreen',ui-monospace,monospace}
 
 /* VENUE (after join) */
 #venue{display:none;position:fixed;inset:0;overflow:hidden;background:#000}
@@ -255,7 +261,8 @@ body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint{
 #skWheel.ice{border-color:#8fd8ff;box-shadow:0 0 24px rgba(143,216,255,.7)}#skWheel.ice b.on{background:#3aa8e8;box-shadow:0 0 14px #8fd8ff}
 #skKnob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#FF8AD0 45%,#C2187A);box-shadow:0 0 12px rgba(255,61,168,.9)}
 #skateUI.wheeling #skJump{opacity:0}
-.srv-badge{display:inline-flex;align-items:center;gap:4px;font:600 11px system-ui,sans-serif;padding:3px 9px;border-radius:999px;white-space:nowrap;border:1px solid;cursor:help}
+.srv-badge{display:inline-flex;align-items:center;gap:6px;font:700 9px 'Silkscreen',ui-monospace,monospace;padding:5px 10px;border-radius:0;white-space:nowrap;border:2px solid;cursor:help;letter-spacing:.5px;text-shadow:1px 1px 0 #000}
+.srv-badge::before{content:'';width:6px;height:6px;background:currentColor;box-shadow:1px 1px 0 #000;flex:none}
 .srv-badge.render{color:#9fd8ff;border-color:rgba(74,155,232,.55);background:rgba(74,155,232,.12)}
 .srv-badge.self{color:#b8f5c8;border-color:rgba(60,203,138,.55);background:rgba(60,203,138,.12)}
 .srv-badge.custom{color:#e6d4ff;border-color:rgba(160,120,255,.55);background:rgba(160,120,255,.12)}
@@ -545,12 +552,12 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
   <!-- the main menu: your character on a little stage, and three ways in -->
   <div class="jv jv-menu">
     <canvas id="menuChar" width="220" height="230" aria-label="Your character"></canvas>
-    <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off" aria-label="Your name">
+    <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" aria-label="Your name">
     <div class="mm-btns">
-      <button class="mm-btn mm-join" id="mmJoin">&#9654; Join game<small>enter a room code</small></button>
-      <button class="mm-btn mm-prac" id="mmPrac">&#128378; Practice<small>the practice zone, no show needed</small></button>
-      <button class="mm-btn mm-char" id="mmChar">&#127912; Character<small>change your look</small></button>
-      <button class="mm-btn mm-inst" id="mmInst">&#127929; Instrument<small>play the phone instrument</small></button>
+      <button class="mm-btn mm-join" id="mmJoin"><i class="pxi" data-pxi="play"></i> Join game<small>enter a room code</small></button>
+      <button class="mm-btn mm-prac" id="mmPrac"><i class="pxi" data-pxi="dance"></i> Practice<small>the practice zone, no show needed</small></button>
+      <button class="mm-btn mm-char" id="mmChar"><i class="pxi" data-pxi="palette"></i> Character<small>change your look</small></button>
+      <button class="mm-btn mm-inst" id="mmInst"><i class="pxi" data-pxi="keys"></i> Instrument<small>play the phone instrument</small></button>
     </div>
   </div>
   <!-- join a show -->
@@ -561,12 +568,12 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
     </div>
     <button id="enterBtn">Enter Venue</button>
     <div id="joinErr" style="font-size:12px;color:#D85A30;display:none"></div>
-    <button class="mm-back" data-to="menu">&#9664; Back</button>
+    <button class="mm-back" data-to="menu"><i class="pxi" data-pxi="back" data-k="2"></i> Back</button>
   </div>
   <!-- your character -->
   <div class="jv jv-char join-box">
     <div id="maker"></div>
-    <button class="mm-btn mm-join" data-to="menu">&#10003; Done</button>
+    <button class="mm-btn mm-join" data-to="menu"><i class="pxi" data-pxi="check"></i> Done</button>
   </div>
 </div>
 
@@ -733,14 +740,14 @@ var SRV=(function(){
   function host(){try{return new URL(String(LIVE_URL).replace(/^ws/,"http")).host;}catch(e){return String(LIVE_URL);}}
   function info(){
     var h=host(),hn=h.replace(/:\d+$/,"");
-    if(rep==="render"||/\.onrender\.com$/i.test(hn))return{k:"render",icon:"☁️",name:"Render server",tip:"The cloud server on Render ("+h+"). Free plan: it sleeps when nobody's used it for a while and takes up to a minute to wake."};
-    if(/\.trycloudflare\.com$/i.test(hn))return{k:"self",icon:"🏠",name:"Self-hosted · home tunnel"+(repName?" ("+repName+")":""),tip:"Your own computer, reached through a Cloudflare tunnel ("+h+"). It's only up while your computer and the tunnel are running."};
-    if(hn==="localhost"||hn==="127.0.0.1"||hn==="[::1]")return{k:"self",icon:"🏠",name:"Self-hosted · this computer"+(repName?" ("+repName+")":""),tip:"The server running on this computer ("+h+")."};
-    if(/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hn)||/\.local$/i.test(hn))return{k:"self",icon:"🏠",name:"Self-hosted · local network"+(repName?" ("+repName+")":""),tip:"A server on your local network ("+h+"). Only people on the same Wi-Fi can reach it."};
-    if(rep==="self")return{k:"self",icon:"🏠",name:"Self-hosted"+(repName?" · "+repName:"")+" ("+hn+")",tip:"Your own server ("+h+")."};
-    return{k:"custom",icon:"🛰",name:"Custom server ("+hn+")",tip:"A server at "+h+"."};
+    if(rep==="render"||/\.onrender\.com$/i.test(hn))return{k:"render",icon:"",name:"Render server",tip:"The cloud server on Render ("+h+"). Free plan: it sleeps when nobody's used it for a while and takes up to a minute to wake."};
+    if(/\.trycloudflare\.com$/i.test(hn))return{k:"self",icon:"",name:"Self-hosted · home tunnel"+(repName?" ("+repName+")":""),tip:"Your own computer, reached through a Cloudflare tunnel ("+h+"). It's only up while your computer and the tunnel are running."};
+    if(hn==="localhost"||hn==="127.0.0.1"||hn==="[::1]")return{k:"self",icon:"",name:"Self-hosted · this computer"+(repName?" ("+repName+")":""),tip:"The server running on this computer ("+h+")."};
+    if(/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hn)||/\.local$/i.test(hn))return{k:"self",icon:"",name:"Self-hosted · local network"+(repName?" ("+repName+")":""),tip:"A server on your local network ("+h+"). Only people on the same Wi-Fi can reach it."};
+    if(rep==="self")return{k:"self",icon:"",name:"Self-hosted"+(repName?" · "+repName:"")+" ("+hn+")",tip:"Your own server ("+h+")."};
+    return{k:"custom",icon:"",name:"Custom server ("+hn+")",tip:"A server at "+h+"."};
   }
-  function label(){var i=info();return i.icon+" "+i.name+(st==="waking"?" · waking up…":st==="down"?" · not reachable":"");}   /* "unchecked": not asked yet (click to check) */
+  function label(){var i=info();return i.name+(st==="waking"?" · waking up…":st==="down"?" · not reachable":"");}   /* "unchecked": not asked yet (click to check) */
   function paint(){
     var i=info();
     els.forEach(function(id){var e=document.getElementById(id);if(!e)return;e.textContent=label();e.title=i.tip+(ver?" Server v"+ver+".":"")+(st==="down"?" It didn't answer just now.":"")+(st==="unchecked"?" Not contacted yet: it's only woken when you go live, or click here to check it.":"");
@@ -760,7 +767,7 @@ var SRV=(function(){
      go live / join, or when you click the badge */
   return{init:function(ids){els=ids;st="unchecked";paint();els.forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener("click",function(){check();});});},check:check,
     reported:function(h,n){if(h==="render"||h==="self")rep=h;if(n)repName=String(n).slice(0,40);st="ok";paint();},
-    short:function(){var i=info();return i.icon+" "+(i.k==="render"?"Render":i.k==="self"?"self-hosted":"custom server");},
+    short:function(){var i=info();return (i.k==="render"?"Render":i.k==="self"?"self-hosted":"custom server");},
     get kind(){return info().k;},get state(){return st;}};
 })();
 window.addEventListener("load",function(){SRV.init(["srvTag"]);});
@@ -6327,10 +6334,11 @@ function perfInset(g2,x,y){
     g2.translate(x,y);g2.scale(k,k);g2.translate(-x,-y);drawPerformer(x,y);g2.restore();window.__perfInset=[Math.round(x),Math.round(y)];}
   finally{ctx=c;}
 }
+(function(){try{document.querySelectorAll("[data-pxi]").forEach(function(e){var n=e.getAttribute("data-pxi"),sz=ART.UI.iconSize(n),k=+e.getAttribute("data-k")||3;e.style.width=sz[0]*k+"px";e.style.height=sz[1]*k+"px";e.style.backgroundImage="url("+ART.UI.icon(n,"#ffffff")+")";});}catch(e){}})();
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.1",SERVER_VERSION="";
+var PAGE_VERSION="1.79.2",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6818,7 +6826,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.1"></script>
+<script src="lab.js?v=1.79.2"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
