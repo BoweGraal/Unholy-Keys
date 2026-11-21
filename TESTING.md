@@ -757,12 +757,10 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
-## v1.77.0 - Main menu
+## v1.78.0 - Menu extras that missed v1.77.0
 
-- The first screen is now a main menu. Your character dances on a little stage and turns through all 8 directions, with your name under it and three buttons:
-  - **Join game:** goes to the room code screen, then Enter venue.
-  - **Practice:** goes straight into the practice zone, with no reload.
-  - **Character:** opens the character maker. Done brings you back. Tapping your character on the menu also opens it.
+These were pushed to #109 after it was merged, so they never reached main.
+
 - **Instrument:** opens the phone instrument (index.html?instrument). It starts behind a big START PLAYING button because phones need a tap before they'll play sound. The ✕ in the instrument brings you back to the menu.
 - Your name is saved on this device as you type it, so it's still there after a reload, after practice, or after coming back from the instrument.
 - **iPhone:** the fullscreen button is hidden on iPhones, where Safari can't do fullscreen. That covers the audience page, the performer page and the phone instrument. Leave practice moves into its spot. It's also hidden in the Home Screen app, which is already fullscreen. Android, iPad and computers keep the button.
@@ -770,6 +768,17 @@ Free dance (all in the free dance panel).
 - **Character maker, Male / Female / Both:** a new Style switch at the top. Male hides the women's hairstyles and the skirts. Female hides the men's hairstyles and the facial hair (moustache, beard, goatee, stubble). Both shows everything. Unisex styles show either way. If your current pick doesn't fit when you switch, it moves to the next one that does. Surprise me follows the switch too, and the choice is remembered on this device.
 - **Practice buttons:** next to the stick there's now **Free dance**, which starts free dancing right away, and **Start game** (pink), which opens and closes the mini game menu. Start game hides while a round is running. At a live show the button still just says Dance.
 - The character on the menu is a size smaller and sits lower, so hats aren't cut off.
+
+Page-only change: no Render redeploy needed.
+
+**Test it:** check the main menu has four buttons (Join game, Practice, Character, Instrument). Type your name and reload: it should still be there. On an iPhone, check the fullscreen button is gone. In the character maker, check the turn buttons go round 8 directions and the Male / Female / Both switch works. In practice, check for the Free dance and Start game buttons.
+
+## v1.77.0 - Main menu
+
+- The first screen is now a main menu. Your character dances on a little stage and turns through all 8 directions, with your name under it and three buttons:
+  - **Join game:** goes to the room code screen, then Enter venue.
+  - **Practice:** goes straight into the practice zone, with no reload.
+  - **Character:** opens the character maker. Done brings you back. Tapping your character on the menu also opens it.
 - A link with a room code in it (?room=ABCD) opens straight on the room code screen.
 - If you get disconnected, you land back on the room code screen with the message.
 - The logo is pixel art, and the join and character panels have square corners.
