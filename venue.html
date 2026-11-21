@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.59.0"></script>
-<script src="gfx.js?v=1.59.0"></script>
-<script src="art.js?v=1.59.0"></script>
-<script src="instruments.js?v=1.59.0"></script>
-<script src="kart.js?v=1.59.0"></script>
+<script src="tune.js?v=1.59.1"></script>
+<script src="gfx.js?v=1.59.1"></script>
+<script src="art.js?v=1.59.1"></script>
+<script src="instruments.js?v=1.59.1"></script>
+<script src="kart.js?v=1.59.1"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -3537,40 +3537,18 @@ var WALK=(function(){
    and it scores, and clean landings in a row build a combo; still mid-trick when you come down and you bail.
    ============================================================ */
 var PIPE=(function(){
-  var XL=0.08,XR=0.92,Y0=0.46,Y1=0.74,FLAT=0.42,BPC=2,AMAX=1.85;
-  var TR=[null,
-    {k:"kick",name:"Kickflip",pts:150,dur:0.3,col:"#3DF2FF"},
-    {k:"heel",name:"Heelflip",pts:150,dur:0.3,col:"#4CC38A"},
-    {k:"grab",name:"Indy grab",pts:200,dur:0.35,col:"#F5C518"},
-    {k:"spin",name:"360",pts:300,dur:0.42,col:"#D04DFF"}];
+  var PP=ART.PIPE,XL=PP.XL,XR=PP.XR,Y0=PP.Y0,Y1=PP.Y1,BPC=PP.BPC,AMAX=PP.AMAX,TR=PP.TR;   /* shape, motion and drawing shared with the performer's stage view (art.js) */
   var KEYTR={ArrowLeft:1,KeyA:1,ArrowRight:2,KeyD:2,ArrowUp:3,KeyW:3,ArrowDown:4,KeyS:4};
   var on=false,A=0.5,lastCross=0,pumped={},lastT=0,score=0,combo=0,pend=0,pendN=0,trick=null,wasAir=false,bailUntil=0,zMax=0,lastJudge="",judgeT=0,pops=[],warp=0,warpAt=0,wasRound=false,lane=0,sign=1,bots={},remote={},roundN=0;
   function $(id){return document.getElementById(id);}
   function T(k){return TUNE.v("pp."+k);}
   function pipeRound(){return GAME.mode==="pipe"||(typeof ROUND!=="undefined"&&ROUND.mode==="pipe");}
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
-  function beatAt(pos){
-    var c=ROUND.chart&&ROUND.chart(),bs=c&&c.beats,per=c&&c.bpm?60000/c.bpm:500;
-    if(pos<-1e8)return performance.now()/per;
-    if(!bs||bs.length<2)return pos/per;
-    if(pos<=bs[0])return (pos-bs[0])/per;
-    var n=bs.length;if(pos>=bs[n-1])return n-1+(pos-bs[n-1])/per;
-    var lo=0,hi=n-1;while(hi-lo>1){var m=(lo+hi)>>1;if(bs[m]<=pos)lo=m;else hi=m;}
-    return lo+(pos-bs[lo])/Math.max(1,bs[hi]-bs[lo]);
-  }
-  /* the pipe's shape: flat in the middle, quarter-circle walls up to the lips (h 0..1) */
-  function prof(au){if(au<=FLAT)return 0;var t=Math.min(1,(au-FLAT)/(1-FLAT));return 1-Math.sqrt(Math.max(0,1-t*t));}
-  function slope(u){var au=Math.abs(u);if(au<=FLAT)return 0;var t=Math.min(0.999,(au-FLAT)/(1-FLAT));return (u<0?-1:1)*t/Math.sqrt(1-t*t)/(1-FLAT);}
+  function beatAt(pos){return PP.beatAt(ROUND.chart&&ROUND.chart(),pos);}
   function wallPx(){return H*0.2*warp;}
   function airPx(){return H*0.22;}
-  function xOf(u){return 0.5+u*(XR-XL)/2;}
-  function laneInfo(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(4,Math.min(8,ids.length));return{y:Y0+((i%n)+0.5)/n*(Y1-Y0),s:i%2?-1:1};}
-  /* where a skater with swing A is on beat b: across the pipe, up the walls, and over the lip into the air */
-  function state(Aa,sg,b){
-    var s=sg*Math.sin(Math.PI*b/BPC),u=Aa*s,air=Math.abs(u)>1,z=air?(Math.abs(u)-1)/(AMAX-1):0,uu=air?(u<0?-1:1):u;
-    var vel=sg*Math.cos(Math.PI*b/BPC);
-    return{u:uu,x:xOf(uu),air:air,z:z,h:prof(Math.abs(uu)),ang:air?0:Math.atan(slope(uu)*wallPx()/((XR-XL)/2*W)),dir:vel>=0?1:3};
-  }
+  function laneInfo(id){return PP.lane(Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}),id);}
+  function state(Aa,sg,b){return PP.state(Aa,sg,b,wallPx(),(XR-XL)/2*W);}
   function banner(t,col){var b=$("ppBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function judge(t,col){lastJudge=t;judgeT=performance.now();var j=$("ppJudge");if(j){j.textContent=t;j.style.color=col||"#fff";j.classList.remove("pop");void j.offsetWidth;j.classList.add("pop");}}
   function hud(){var h=$("ppScore");if(h)h.textContent=score.toLocaleString();var c=$("ppCombo");if(c)c.textContent=combo>0?"COMBO ×"+(1+0.25*combo).toFixed(2):"";}
@@ -3658,30 +3636,10 @@ var PIPE=(function(){
     if(pr!==wasRound){wasRound=pr;warpAt=now;}
     var k=Math.min(1,(now-warpAt)/2200),e=k*k*(3-2*k);warp=pr?e:1-e;if(warp<=0.001)return;
     place();
-    var WP=wallPx(),cols=56,rows=7,yb=(Y0-0.04)*H,yf=(Y1+0.03)*H,beat=beatAt(songPos()),glow=Math.pow(1-((beat%1)+1)%1,3);
-    for(var i=0;i<cols;i++){
-      var u0=-1+2*i/cols,u1=-1+2*(i+1)/cols,xa=xOf(u0)*W,xb=xOf(u1)*W+1,um=(u0+u1)/2,p=prof(Math.abs(um))*WP,sl=Math.min(1,Math.abs(slope(um))/4);
-      /* the riding surface, in rows going back */
-      for(var j=0;j<rows;j++){var ya=yb+(yf-yb)*j/rows-p,yh=(yf-yb)/rows+1;g.fillStyle=(i+j)%2?"#1a1430":"#120e1e";g.fillRect(xa,ya,xb-xa,yh);
-        if((i*7+j*3)%11===0){g.globalAlpha=0.25*glow;g.fillStyle="#D354A0";g.fillRect(xa,ya,xb-xa,yh);g.globalAlpha=1;}}
-      if(sl>0){g.globalAlpha=0.35*sl;g.fillStyle="#000";g.fillRect(xa,yb-p,xb-xa,yf-yb);g.globalAlpha=1;}
-      /* the front face of the ramp, under the riding surface */
-      if(p>0.5){var gr=g.createLinearGradient(0,yf-p,0,yf);gr.addColorStop(0,"#2c2346");gr.addColorStop(1,"#0d0a18");g.fillStyle=gr;g.fillRect(xa,yf-p,xb-xa,p);}
-    }
-    /* the front edge and the coping at both lips */
-    g.strokeStyle="#9B7FE0";g.lineWidth=2;g.beginPath();for(var q=0;q<=cols;q++){var uq=-1+2*q/cols,xq=xOf(uq)*W,yq=yf-prof(Math.abs(uq))*WP;if(q)g.lineTo(xq,yq);else g.moveTo(xq,yq);}g.stroke();
-    [-1,1].forEach(function(sd){var xc=xOf(sd)*W;g.fillStyle="#3a3058";g.fillRect(sd<0?0:xc,yb-WP,sd<0?xc:W-xc,yf-yb);
-      g.fillStyle="#2a2240";g.fillRect(sd<0?0:xc,yf-WP,sd<0?xc:W-xc,WP);
-      g.strokeStyle="#d8d8e8";g.lineWidth=4;g.beginPath();g.moveTo(xc,yb-WP);g.lineTo(xc,yf-WP);g.stroke();});
+    PP.draw(g,{W:W,X:function(x){return x*W;},Yd:function(y){return y*H;},wall:wallPx(),beat:beatAt(songPos())});
   }
   /* skateboards under everyone's feet, trick pop-ups */
-  function board(g,x,y,ang,sc,tk,p,col){
-    g.save();g.translate(x,y);g.rotate(ang);
-    var L=8.5*sc,Hh=1.6*sc,fl=tk===1||tk===2?Math.cos(p*Math.PI*2):1;
-    g.scale(1,fl||0.05);
-    g.fillStyle=col||"#E8505B";g.fillRect(-L,-Hh,L*2,Hh*1.6);g.fillStyle="#222";g.fillRect(-L*0.75,Hh*0.6,3*sc,2*sc);g.fillRect(L*0.75-3*sc,Hh*0.6,3*sc,2*sc);
-    g.restore();
-  }
+  var board=PP.board;
   function front(g){
     if(!pipeRound()||warp<0.5)return;var now=performance.now(),b=beatAt(songPos()),sc=2,WP=wallPx(),AP=airPx();
     Object.keys(viewers).forEach(function(id){
@@ -5729,7 +5687,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.59.0",SERVER_VERSION="";
+var PAGE_VERSION="1.59.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6222,7 +6180,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.59.0"></script>
+<script src="lab.js?v=1.59.1"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

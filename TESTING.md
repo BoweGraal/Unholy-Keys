@@ -757,6 +757,15 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.59.1 - Your view of the Half pipe and the Dance walk race
+
+During a Half pipe or Dance walk race round, jam mode switches to the stage view by itself (even if you picked classic; your choice comes back when the round ends), so you can watch the game while you play.
+- **Half pipe:** the floor bends up into the pipe, and everyone skates it exactly as they see it on their phones: on the walls, in the air, boards flipping and spinning, bails. It also shows in the small live preview in the audience panel.
+- **Dance walk race:** the start and finish lines are on the floor, racers face the finish line, lie flat when they trip and turn to the crowd once they're in.
+- The half pipe's shape and drawing now live in art.js, shared by the audience screen and yours, so the two always match.
+
+**Test it:** go live with a few bots and play a Half pipe round, then a Dance walk race, with your view set to classic. Both should switch to the stage view and back.
+
 ## v1.59.0 - New minigame: Half pipe
 
 The dance floor bends up into one wide half pipe (it warps up over a couple of seconds when the round starts, and flattens again after) and everyone skates it at once, each in their own lane.
