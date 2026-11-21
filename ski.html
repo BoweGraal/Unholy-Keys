@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ski designer · Unholy Keys</title>
+<script src="art.js?v=1.61.0"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#07041a;color:#e8e4f4;font-family:system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#app{display:flex;flex-direction:column;height:100%}
+#bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;background:#120e22;border-bottom:1px solid rgba(155,127,224,.35)}
+#bar h1{font:800 15px system-ui;margin-right:6px;white-space:nowrap}
+button,.btn{background:#2a2440;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:7px 10px;font:700 13px system-ui;cursor:pointer;text-decoration:none;white-space:nowrap;touch-action:manipulation}
+button.on{background:#7F77DD;border-color:#b9b2ff}
+button.go,.btn.go{background:linear-gradient(135deg,#D354A0,#7F77DD);border:0}
+#len{min-width:76px;text-align:center;font:700 12px system-ui;color:#c9c0ee}
+#name{background:#1b1630;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font:600 13px system-ui;padding:7px 9px;width:150px}
+#wrap{flex:1;position:relative;min-height:0}
+#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block;image-rendering:pixelated}
+#status{padding:6px 10px;font:600 12px system-ui;background:#120e22;border-top:1px solid rgba(155,127,224,.35)}
+#share{display:none;position:absolute;inset:auto 10px 10px 10px;background:#1b1630;border:1px solid rgba(155,127,224,.5);border-radius:12px;padding:10px}
+#share.on{display:block}
+#share textarea{width:100%;height:110px;background:#0e0a1c;color:#e8e4f4;border:1px solid rgba(255,255,255,.15);border-radius:8px;font:12px ui-monospace,monospace;padding:7px;margin:6px 0}
+#share .r{display:flex;gap:6px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar">
+    <h1>⛷ Ski designer</h1>
+    <button data-k="gate" class="on">🚩 Gate</button>
+    <button data-k="tree">🌲 Tree</button>
+    <button data-k="rock">🪨 Rock</button>
+    <button data-k="ramp">⛸ Ramp</button>
+    <button data-k="mogul">❄ Mogul</button>
+    <button data-k="erase">🧽 Erase</button>
+    <button id="undo">↶ Undo</button>
+    <button id="lenM">−</button><span id="len"></span><button id="lenP">+</button>
+    <input id="name" maxlength="40" placeholder="Mountain name">
+    <button id="reset">↺ Reset</button>
+    <button id="clear">🗑 Clear</button>
+    <button id="shareB">📋 Share</button>
+    <a class="btn go" id="test" href="venue.html?practice&amp;skiTest" target="_blank">▶ Test run</a>
+  </div>
+  <div id="wrap"><canvas id="cv"></canvas>
+    <div id="share"><b>Share this mountain</b> — copy it, or paste someone else's and press Load.<textarea id="shareT"></textarea>
+      <div class="r"><button id="copyB">Copy</button><button id="loadB">Load pasted</button><button id="closeB">Close</button></div></div>
+  </div>
+  <div id="status"></div>
+</div>
+<script>
+(function(){
+  var SK=ART.SKI,cv=document.getElementById("cv"),g=cv.getContext("2d"),W=0,H=0,dpr=1;
+  var course=null,tool="gate",hist=[],cam={x:0,y:900,z:0.55},cache={};
+  try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){}
+  if(!course)course=SK.defaultCourse();
+  function $(id){return document.getElementById(id);}
+  function save(){try{localStorage.setItem("uk_ski",JSON.stringify(course));}catch(e){}cache={};status();}
+  function push(){hist.push(JSON.stringify(course));if(hist.length>80)hist.shift();}
+  function status(){var n={gate:0,tree:0,rock:0,ramp:0,mogul:0};course.objs.forEach(function(o){n[o[0]]++;});
+    $("len").textContent=Math.round(course.len/10)+" m";$("name").value=course.name;
+    $("status").textContent=course.name+": "+n.gate+" gates, "+n.tree+" trees, "+n.rock+" rocks, "+n.ramp+" ramps, "+n.mogul+" moguls · "+Math.round(course.len/10)+" m, then it repeats · saved on this device, and sent with your Ski rounds";}
+  function size(){dpr=Math.min(2,window.devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);draw();}
+  function sx(x){return W/2+(x-cam.x)*cam.z;}function sy(y){return H/2+(y-cam.y)*cam.z;}
+  function wx(px){return cam.x+(px-W/2)/cam.z;}function wy(py){return cam.y+(py-H/2)/cam.z;}
+  function draw(){
+    g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;var z=cam.z,y0=wy(0)-40,y1=wy(H)+40;
+    SK.ground(g,W,H,z,sx,sy,cam.x,y0,y1);
+    /* the end of the course: it starts again from the top after this */
+    var ey=sy(course.len);if(ey>-10&&ey<H+10){g.fillStyle="rgba(211,84,160,.6)";for(var q=0;q<W;q+=12)g.fillRect(q,ey-1,7,3);g.fillStyle="#D354A0";g.font="800 12px system-ui";g.textAlign="left";g.fillText("↻ the course repeats from here",10,ey-6);}
+    var view={len:course.len,objs:course.objs,name:course.name};
+    SK.near(1,cache,y0,y1,view).filter(function(o){return !o.edge;}).forEach(function(o){SK.obj(g,o,Math.max(0.5,z*1.6),sx,sy,false);});
+    g.fillStyle="#1d2740";g.font="700 11px system-ui";g.textAlign="left";for(var m=Math.ceil(y0/500)*500;m<y1;m+=500)if(m>0)g.fillText(Math.round(m/10)+" m",8,sy(m)-3);
+  }
+  function hit(x,y){var best=-1,bd=40/cam.z;course.objs.forEach(function(o,i){var d=Math.hypot(o[1]-x,o[2]-y);if(d<bd){bd=d;best=i;}});return best;}
+  function place(px,py){var x=Math.round(wx(px)),y=Math.round(wy(py));if(y<60||y>=course.len)return;push();
+    if(tool==="erase"){var i=hit(x,y);if(i>=0)course.objs.splice(i,1);else hist.pop();}
+    else{course.objs.push([tool,x,y,tool==="tree"||tool==="rock"?Math.round((0.85+Math.random()*0.4)*100)/100:1]);course.objs.sort(function(p,q){return p[2]-q[2];});}
+    save();draw();}
+  /* mouse: click to place; drag (right button, or Space) to move around; wheel to zoom. Touch: tap to place, drag to scroll, pinch to zoom */
+  var drag=null,space=false,pts={},pinch=null;
+  cv.addEventListener("contextmenu",function(e){e.preventDefault();});
+  cv.addEventListener("pointerdown",function(e){pts[e.pointerId]={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);
+    var ids=Object.keys(pts);if(ids.length===2){var a=pts[ids[0]],b=pts[ids[1]];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:cam.z};drag=null;return;}
+    drag={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y,pan:e.button===2||space||e.pointerType==="touch",moved:false};});
+  cv.addEventListener("pointermove",function(e){if(pts[e.pointerId])pts[e.pointerId]={x:e.clientX,y:e.clientY};
+    if(pinch){var ids=Object.keys(pts);if(ids.length===2){var a=pts[ids[0]],b=pts[ids[1]];cam.z=Math.max(0.15,Math.min(2.5,pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d));draw();}return;}
+    if(!drag)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>6)drag.moved=true;
+    if(drag.pan&&drag.moved){cam.x=drag.cx-dx/cam.z;cam.y=drag.cy-dy/cam.z;draw();}});
+  function up(e){delete pts[e.pointerId];if(pinch){if(Object.keys(pts).length<2)pinch=null;drag=null;return;}
+    if(drag&&!drag.moved&&(e.button===0||e.pointerType==="touch"))place(e.clientX-cv.getBoundingClientRect().left,e.clientY-cv.getBoundingClientRect().top);drag=null;}
+  cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",function(e){delete pts[e.pointerId];drag=null;pinch=null;});
+  cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,bx=wx(px),by=wy(py);
+    cam.z=Math.max(0.15,Math.min(2.5,cam.z*Math.exp(-e.deltaY*0.0015)));cam.x=bx-(px-W/2)/cam.z;cam.y=by-(py-H/2)/cam.z;draw();},{passive:false});
+  window.addEventListener("keydown",function(e){if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")return;if(e.code==="Space"){space=true;e.preventDefault();}
+    if((e.ctrlKey||e.metaKey)&&e.code==="KeyZ"){e.preventDefault();$("undo").click();}});
+  window.addEventListener("keyup",function(e){if(e.code==="Space")space=false;});
+  Array.prototype.forEach.call(document.querySelectorAll("#bar button[data-k]"),function(b){b.onclick=function(){tool=b.getAttribute("data-k");Array.prototype.forEach.call(document.querySelectorAll("#bar button[data-k]"),function(x){x.classList.toggle("on",x===b);});};});
+  $("undo").onclick=function(){if(!hist.length)return;course=JSON.parse(hist.pop());save();draw();};
+  $("lenM").onclick=function(){push();course.len=Math.max(1000,course.len-500);course.objs=course.objs.filter(function(o){return o[2]<course.len;});save();draw();};
+  $("lenP").onclick=function(){push();course.len=Math.min(20000,course.len+500);save();draw();};
+  $("name").oninput=function(){course.name=this.value.slice(0,40)||"My mountain";try{localStorage.setItem("uk_ski",JSON.stringify(course));}catch(e){}};
+  $("reset").onclick=function(){if(!confirm("Go back to the starting mountain? (Undo can bring yours back.)"))return;push();course=SK.defaultCourse();save();draw();};
+  $("clear").onclick=function(){if(!confirm("Clear everything off the slope?"))return;push();course.objs=[];save();draw();};
+  $("shareB").onclick=function(){$("shareT").value="SKI-JSON: "+JSON.stringify(course);$("share").classList.add("on");};
+  $("closeB").onclick=function(){$("share").classList.remove("on");};
+  $("copyB").onclick=function(){$("shareT").select();try{navigator.clipboard.writeText($("shareT").value);}catch(e){document.execCommand("copy");}};
+  $("loadB").onclick=function(){var t=$("shareT").value.replace(/^[^{]*/,"");try{var c=SK.clean(JSON.parse(t));if(!c)throw 0;push();course=c;save();draw();$("share").classList.remove("on");}catch(e){alert("That doesn't look like a ski mountain.");}};
+  window.addEventListener("resize",size);size();status();
+  window.ukSkiDesigner=function(){return{course:course,cam:cam};};
+})();
+</script>
+</body>
+</html>

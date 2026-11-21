@@ -641,9 +641,20 @@ var ART=(function(){
   SK.halfW=function(yy){return 110+Math.min(1,Math.max(0,yy)/650)*560;};
   SK.lineX=function(yy,sd){return Math.sin(yy/620+sd)*SK.halfW(yy)*0.42+Math.sin(yy/233+sd*2)*40*Math.min(1,yy/650);};
   function skRng(s){return function(){s=(s*16807)%2147483647;return (s-1)/2147483646;};}
-  SK.chunk=function(seed,ci,cache){
+  /* a course from the Ski designer: {name, len, objs:[[kind, x, y, size]...]}; it repeats every len down the mountain */
+  SK.KINDS={gate:1,tree:1,rock:1,ramp:1,mogul:1};
+  SK.clean=function(c){
+    if(!c||typeof c!=="object"||!Array.isArray(c.objs))return null;var len=Math.max(1000,Math.min(20000,Math.round(+c.len||3000))),out=[];
+    for(var i=0;i<c.objs.length&&out.length<800;i++){var o=c.objs[i];if(!Array.isArray(o)||!SK.KINDS[o[0]])continue;var x=+o[1],y=+o[2],s=+o[3]||1;if(!isFinite(x)||!isFinite(y))continue;
+      out.push([o[0],Math.round(Math.max(-700,Math.min(700,x))),Math.round(Math.max(60,Math.min(len-1,y))),Math.round(Math.max(0.7,Math.min(1.5,s))*100)/100]);}
+    out.sort(function(p,q){return p[2]-q[2];});
+    return{name:String(c.name||"My mountain").slice(0,40),len:len,objs:out};};
+  SK.chunk=function(seed,ci,cache,course){
     if(cache[ci])return cache[ci];var r=skRng((seed*7919+ci*104729)%2147483646+1),o=[],y0=ci*SK.CH;
-    if(y0>=60){
+    if(course){var L=course.len,gi0=0;for(var rp=Math.floor(y0/L);rp*L<y0+SK.CH;rp++){gi0=0;course.objs.forEach(function(q,qi){var yy=rp*L+q[2];
+        if(q[0]==="gate"){gi0++;if(yy>=y0&&yy<y0+SK.CH)o.push({k:"gate",x:q[1],y:yy,id:rp*1000+qi,col:gi0%2?"#E8505B":"#3B7BE8"});return;}
+        if(yy>=y0&&yy<y0+SK.CH)o.push({k:q[0],x:q[1],y:yy,s:q[3]||1});});}}
+    else if(y0>=60){
       for(var gy=Math.ceil(y0/SK.GATE_DY)*SK.GATE_DY;gy<y0+SK.CH;gy+=SK.GATE_DY){if(gy<200)continue;var gi=Math.round(gy/SK.GATE_DY);o.push({k:"gate",x:SK.lineX(gy,seed),y:gy,id:gi,col:gi%2?"#E8505B":"#3B7BE8"});}
       var nt=5+Math.floor(r()*6);for(var i=0;i<nt;i++){var ty=y0+r()*SK.CH,hw=SK.halfW(ty),tx=(r()*2-1)*hw;if(Math.abs(tx-SK.lineX(ty,seed))<95)continue;o.push({k:r()<0.8?"tree":"rock",x:tx,y:ty,s:0.8+r()*0.5});}
       if(r()<0.65){var ry=y0+r()*SK.CH,rx=SK.lineX(ry,seed)+(r()<0.5?-1:1)*(55+r()*90);o.push({k:"ramp",x:rx,y:ry});}
@@ -652,7 +663,15 @@ var ART=(function(){
     for(var e=0;e<14;e++){var ey=y0+r()*SK.CH,side=r()<0.5?-1:1,ex=side*(SK.halfW(ey)+20+r()*220);o.push({k:"tree",x:ex,y:ey,s:0.9+r()*0.6,edge:1});}
     o.sort(function(p,q){return p.y-q.y;});return cache[ci]=o;
   };
-  SK.near=function(seed,cache,y0,y1){var out=[];for(var ci=Math.floor(y0/SK.CH);ci<=Math.floor(y1/SK.CH);ci++)if(ci>=0)out=out.concat(SK.chunk(seed,ci,cache));return out.filter(function(o){return o.y>=y0&&o.y<=y1;});};
+  /* the line through the gates (bots and the test skier follow it) */
+  SK.lineAt=function(course,yy,seed){
+    if(!course)return SK.lineX(yy,seed);var gs=course.objs.filter(function(q){return q[0]==="gate";});if(!gs.length)return 0;
+    var L=course.len,m=((yy%L)+L)%L,prev=gs[gs.length-1],pY=prev[2]-L,next=gs[0],nY=next[2];
+    for(var i=0;i<gs.length;i++){if(gs[i][2]>m){next=gs[i];nY=gs[i][2];prev=i?gs[i-1]:gs[gs.length-1];pY=i?gs[i-1][2]:gs[gs.length-1][2]-L;break;}if(i===gs.length-1){prev=gs[i];pY=gs[i][2];next=gs[0];nY=gs[0][2]+L;}}
+    var t=(m-pY)/Math.max(1,nY-pY);t=t*t*(3-2*t);return prev[1]+(next[1]-prev[1])*t;};
+  /* the default course for the designer: the first stretch of the made-up mountain */
+  SK.defaultCourse=function(){var cache={},objs=[];for(var ci=0;ci*SK.CH<3000;ci++)SK.chunk(1,ci,cache).forEach(function(o){if(o.edge||o.y>=3000)return;objs.push([o.k,Math.round(o.x),Math.round(o.y),o.s||1]);});return{name:"First run",len:3000,objs:objs};};
+  SK.near=function(seed,cache,y0,y1,course){var out=[];for(var ci=Math.floor(y0/SK.CH);ci<=Math.floor(y1/SK.CH);ci++)if(ci>=0)out=out.concat(SK.chunk(seed,ci,cache,course));return out.filter(function(o){return o.y>=y0&&o.y<=y1;});};
   /* someone's position from what they send: x and the last 1000 of y in pos, the thousands in sk.h (picks the y nearest last time) */
   SK.decode=function(px,py,hh,prevY){var best=null;for(var d=-1;d<=1;d++){var yy=(hh+d)*1000+py*1000;if(best===null||Math.abs(yy-prevY)<Math.abs(best-prevY))best=yy;}if(prevY===null||prevY===undefined)best=hh*1000+py*1000;return[px*1600-800,best];};
   /* ---- ski sprites: hand-drawn pixel art (one character per pixel), built once into little canvases and scaled up crisp ---- */
@@ -1863,6 +1882,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.60.3",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.61.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

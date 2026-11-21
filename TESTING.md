@@ -757,6 +757,20 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.61.0 - Ski designer
+
+A map designer for the Ski mountain: **Setup → Creator tools → Ski designer** (ski.html).
+- **Placing things:** pick Gate, Tree, Rock, Ramp or Mogul and click (or tap) the slope to place it; Erase removes the nearest thing. Gates alternate red and blue down the course automatically.
+- **Getting around:** scroll the mouse wheel to zoom; drag with the right button (or hold Space and drag) to move around. On a phone, drag to scroll and pinch to zoom.
+- **Length:** − / + change how long the course is (in 50 m steps). After the end it repeats from the top, so a round never runs out of mountain.
+- **Other buttons:** Undo (Ctrl+Z), a name, ↺ Reset (back to the starting mountain), 🗑 Clear, 📋 Share (copy your mountain or paste someone else's) and ▶ Test run (opens a practice ski run on your course).
+- It saves on your device. Your course goes out with every Ski round you start. Players, bots and your follow view all use it, and bots ski the line through your gates.
+- The trees along the edges of the run are still added automatically.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** open the Ski designer, add a few gates and a ramp, press Test run. Then go live and start a Ski round: everyone should be on your course.
+
 ## v1.60.3 - Ski in pixel art
 
 The ski mountain is now drawn with hand-made pixel-art sprites instead of smooth shapes: two kinds of pine tree with snow on the branches, rocks (some snow-capped), red and blue slalom flags, ice ramps with an arrow, snow moguls, pixel shadows, and snowbanks along the edges of the run. Skiers are drawn bigger, at a whole-number pixel size so they stay crisp. The same art shows in your follow view. On a computer the left stick is hidden (the mouse steers); phones keep it.

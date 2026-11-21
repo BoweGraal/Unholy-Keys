@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.60.3"></script>
-<script src="art.js?v=1.60.3"></script>
-<script src="instruments.js?v=1.60.3"></script>
-<script src="kart.js?v=1.60.3"></script>
+<script src="gfx.js?v=1.61.0"></script>
+<script src="art.js?v=1.61.0"></script>
+<script src="instruments.js?v=1.61.0"></script>
+<script src="kart.js?v=1.61.0"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -495,6 +495,7 @@ body.jset .nav-item.jam-only{display:flex}
       <a class="nav-item" href="venue.html?practice&amp;lab" target="_blank" rel="noopener"><span class="nav-icon">&#128295;</span>Tuning lab</a>
       <a class="nav-item" href="gfx.html" target="_blank" rel="noopener"><span class="nav-icon">&#127912;</span>Graphics lab</a>
       <a class="nav-item" href="track.html" target="_blank" rel="noopener"><span class="nav-icon">&#127937;</span>Track builder</a>
+      <a class="nav-item" href="ski.html" target="_blank" rel="noopener"><span class="nav-icon">&#9975;</span>Ski designer</a>
     </div>
     <div id="side-cap">
       <input type="text" id="cap" aria-hidden="true" tabindex="-1" autocomplete="off" spellcheck="false">
@@ -4317,7 +4318,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.60.3",SERVER_VERSION="";
+var PAGE_VERSION="1.61.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5073,7 +5074,7 @@ var RACEVIEW=(function(){
 /* Ski: a follow view of the mountain. The camera rides with whoever's furthest down; everyone else is where they are
    on the same course (built from the round number, like on their phones), with the top three picked out and the standings */
 var SKIVIEW=(function(){
-  var raf=0,cv=null,act=false,force=null,cache={},seedN=-1,seed=1,sm={},camX=0,camY=0,last=[],MEDAL=["#F5C518","#C9D3E6","#D9894A"];
+  var course=null,raf=0,cv=null,act=false,force=null,cache={},seedN=-1,seed=1,sm={},camX=0,camY=0,last=[],MEDAL=["#F5C518","#C9D3E6","#D9894A"];
   function $(id){return document.getElementById(id);}
   function skiing(){if(force)return true;var c=typeof ROUNDS!=="undefined"&&ROUNDS.current;return !!(jamOn&&liveOn&&c&&c.mode==="ski"&&(c.phase==="countdown"||c.phase==="play"));}
   function apply(){var a=skiing(),jm=$("jm");if(!jm)return;if(a!==act){act=a;jm.classList.toggle("skiv",a);}if(a&&!raf)raf=requestAnimationFrame(frame);}
@@ -5096,7 +5097,7 @@ var SKIVIEW=(function(){
     if(!cv)cv=$("jSki");var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
     if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
     var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;
-    var c=ROUNDS.current||{n:0};if(c.n!==seedN){seedN=c.n;seed=ART.SKI.seedFor(c.n);cache={};sm={};}
+    var c=ROUNDS.current||{n:0};if(c.n!==seedN){seedN=c.n;seed=ART.SKI.seedFor(c.n);cache={};sm={};try{course=ART.SKI.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}}
     var rs=typeof force==="function"?force():collect();rs.sort(function(p,q){return q.y-p.y;});
     rs.forEach(function(r,k){r.place=k+1;});last=rs.map(function(r){return{name:r.name,place:r.place,m:Math.max(0,Math.round(r.y/10))};});
     /* follow the leader */
@@ -5104,7 +5105,7 @@ var SKIVIEW=(function(){
     var z=Math.max(0.9,Math.min(1.8,Math.min(W/900,H/620))),sx=function(wx){return W/2+(wx-camX)*z;},sy=function(wy){return H*0.42+(wy-camY)*z;};
     var y0=camY-H*0.42/z-40,y1=camY+H*0.58/z+60;
     ART.SKI.ground(g,W,H,z,sx,sy,camX,y0,y1);
-    var list=ART.SKI.near(seed,cache,y0,y1).map(function(o){return{y:o.y,o:o};});
+    var list=ART.SKI.near(seed,cache,y0,y1,course).map(function(o){return{y:o.y,o:o};});
     rs.forEach(function(r){if(r.y>y0&&r.y<y1)list.push({y:r.y,r:r});});
     list.sort(function(p,q){return p.y-q.y;});
     list.forEach(function(it){if(it.o)ART.SKI.obj(g,it.o,z,sx,sy,false);else skier(g,sx(it.r.x),sy(it.r.y),it.r,z,it.r.place);});
@@ -5749,7 +5750,8 @@ var ROUNDS=(function(){
     if(my!==job||!cur)return;
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cfg.secs*1000;
     var ktTrack=null;if(cur.mode==="kart"){try{ktTrack=JSON.parse(localStorage.getItem("uk_track")||"null");}catch(e){}}
-    liveSend({type:"round-start",track:ktTrack,mode:cur.mode==="ice"?"skate":cur.mode,ice:cur.mode==="ice"?1:0,battle:!!cur.battle,title:cur.title,countdown:cfg.secs*1000,chart:chart});
+    var skCourse=null;if(cur.mode==="ski"){try{skCourse=JSON.parse(localStorage.getItem("uk_ski")||"null");}catch(e){}}
+    liveSend({type:"round-start",track:ktTrack,ski:skCourse,mode:cur.mode==="ice"?"skate":cur.mode,ice:cur.mode==="ice"?1:0,battle:!!cur.battle,title:cur.title,countdown:cfg.secs*1000,chart:chart});
     status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file"+(why?" ("+String(why).slice(0,60)+")":"")+", so there are no notes for the Note highway on this one. Try an mp3 or wav copy. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cfg.secs*1000);
     clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();

@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.60.3"></script>
-<script src="gfx.js?v=1.60.3"></script>
-<script src="art.js?v=1.60.3"></script>
-<script src="instruments.js?v=1.60.3"></script>
-<script src="kart.js?v=1.60.3"></script>
+<script src="tune.js?v=1.61.0"></script>
+<script src="gfx.js?v=1.61.0"></script>
+<script src="art.js?v=1.61.0"></script>
+<script src="instruments.js?v=1.61.0"></script>
+<script src="kart.js?v=1.61.0"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -3729,8 +3729,9 @@ var SKI=(function(){
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
   function beatAt(pos){return ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),pos);}
   function halfW(yy){return SK.halfW(yy);}
-  function lineX(yy,sd){return SK.lineX(yy,sd);}
-  function objsNear(y0,y1){return SK.near(seed,chunks,y0,y1);}
+  var course=null;   /* a course from the Ski designer (sent with the round), or null for the made-up mountain */
+  function lineX(yy,sd){return SK.lineAt(course,yy,sd);}
+  function objsNear(y0,y1){return SK.near(seed,chunks,y0,y1,course);}
   /* ---- sending where you are: x and the last 1000 of y in pos, the thousands in sk.h; heading/state in sk.t ---- */
   function enc(){return[+((x+800)/1600).toFixed(4),+((((y%1000)+1000)%1000)/1000).toFixed(4)];}
   function wire(){var t=performance.now()<crashUntil?9:air>0?(trick?8:7):Math.max(0,Math.min(6,Math.round(a/(Math.PI/6))+3));return{h:Math.max(0,Math.min(60,Math.floor(Math.max(0,y)/1000))),f:performance.now()<crashUntil?1:0,t:t};}
@@ -3739,7 +3740,8 @@ var SKI=(function(){
   function hud(){var h=$("skiScore");if(h)h.textContent=score.toLocaleString();var c=$("skiCombo");if(c)c.textContent=combo>1?"COMBO ×"+(1+0.1*combo).toFixed(1):"";}
   function laneX(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(2,Math.min(8,ids.length));return -85+170*((i%n)+0.5)/n;}
   function start(round){
-    on=true;roundN=round?round.n:roundN+1;seed=SK.seedFor(roundN);chunks={};passed={};trail=[];pops=[];others={};bots={};
+    on=true;roundN=round?round.n:roundN+1;seed=SK.seedFor(roundN);
+    course=SK.clean(round&&round.ski);if(!course&&PRACTICE.on){try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}}chunks={};passed={};trail=[];pops=[];others={};bots={};
     x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
     cv=$("skiCv");g=cv.getContext("2d");document.body.classList.add("gaming-ski");$("skiUI").classList.add("on");hud();banner("⛷ SKI!");
   }
@@ -4593,7 +4595,7 @@ var ROUND=(function(){
     if(rd.phase==="countdown")drawCountdown();
     else if(rd.phase==="vote")drawVote();
   }
-  function join(){if(!active())return;sat=false;if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n,track:rd.track});drawPlay();}
+  function join(){if(!active())return;sat=false;if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n,ski:rd.ski,track:rd.track});drawPlay();}
   function sitOut(){sat=true;if(active())drawPlay();}
   function cleanChart(c){
     if(!c||!Array.isArray(c.steps)||!Array.isArray(c.beats)||!(c.bpm>=30&&c.bpm<=300))return null;
@@ -4605,7 +4607,7 @@ var ROUND=(function(){
     if(ph==="countdown"||ph==="play"||ph==="vote"){
       if(!rd||rd.n!==m.n){
         ICE=!!m.ice&&m.mode==="skate";
-        rd={n:+m.n||0,mode:NAMES[m.mode]?m.mode:"step",isBattle:!!m.battle,title:safeText(m.title,80),chart:cleanChart(m.chart),ts0:null,phase:"",dancers:[],track:m.mode==="kart"?KART.geo.clean(m.track):null};
+        rd={n:+m.n||0,mode:NAMES[m.mode]?m.mode:"step",isBattle:!!m.battle,title:safeText(m.title,80),chart:cleanChart(m.chart),ts0:null,phase:"",dancers:[],ski:m.mode==="ski"&&m.ski?ART.SKI.clean(m.ski):null,track:m.mode==="kart"?KART.geo.clean(m.track):null};
         corr=0;bi=0;sat=false;myVote="";top=null;bres=null;bvoted={};
         if(GAME.mode)GAME.stop();                           /* free-play ends; the round takes over */
         GAME.closeMenu();
@@ -4624,7 +4626,7 @@ var ROUND=(function(){
       if(m.b)setBattle({n:rd.n,b:m.b});                         /* joined after the bracket was drawn */
       if(first){
         clearInterval(alignT);alignT=setInterval(align,500);
-        if(!sat){if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n,track:rd.track});}
+        if(!sat){if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n,ski:rd.ski,track:rd.track});}
         drawPlay();
       }
     }
@@ -5052,6 +5054,7 @@ var PRACTICE=(function(){
     try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.kind)$("prKind").value=sv.kind;if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.level)$("prLevel").value=String(sv.level);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
     ["prMode","prSecs","prLevel","prBots","prKind"].forEach(function(id){$(id).onchange=save;});
     if(/[?&]embed\b/.test(location.search))document.body.classList.add("embed");
+    if(/[?&]skiTest\b/.test(location.search))setTimeout(function(){document.body.classList.remove("pr-open");window.ukSkiTest(3);},900);   /* test run from the Ski designer */
     if(/[?&]kartTest\b/.test(location.search))setTimeout(function(){document.body.classList.remove("pr-open");window.ukKartTest(0,3);},900);   /* test drive from the Track builder */
     showGame();
     Array.prototype.forEach.call(document.querySelectorAll("#prGames button"),function(b){b.onclick=function(){b.blur();$("prMode").value=b.getAttribute("data-m");showGame();save();};});
@@ -5877,7 +5880,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.60.3",SERVER_VERSION="";
+var PAGE_VERSION="1.61.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6370,7 +6373,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.60.3"></script>
+<script src="lab.js?v=1.61.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
