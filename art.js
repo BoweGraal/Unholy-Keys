@@ -37,6 +37,11 @@ var ART=(function(){
     hat:{label:"Hat",names:["No hat","Hard hat","Chef hat","Fire helmet","Police cap","Top hat","Cowboy hat","Wizard hat","Crown","Beret","Feathered cap","Hood","Racing helmet","Goggles"]},
     face:{label:"Face",names:["Plain","Moustache","Beard","Goatee","Glasses","Round glasses","Eye patch","Freckles","Blush","Stubble"]}
   };
+  /* which options the character maker's Male / Female / Both switch shows: one letter per option, m or f (u = anyone) */
+  OPTS.hair.g="muufuufufffffuuffmmmuffumuffuu";   /* Bald, Buzz, Bowl cut, Quiff, Widow's peak: m. Long, Ponytail, Bob, Bangs, Bun, Pigtails, Braid, Long waves, Pixie, Shoulder length, High ponytail, Bob & headband, Side tail: f */
+  OPTS.face.g="ummmuuuuum";                        /* moustache, beard, goatee, stubble */
+  OPTS.bottom.g="uufuuuuuuuuuf";                   /* skirt, mini skirt */
+  function gOk(key,i,gd){var t=OPTS[key].g;if(!t||!gd||gd==="b")return true;var c=t[i]||"u";return c==="u"||c===gd;}
   var KEYS=["skin","hair","hairCol","top","topCol","bottom","botCol","extra","shoes","hat","face"];
   function count(k){var o=OPTS[k];return o.names?o.names.length:o.n;}
   var B36="0123456789abcdefghijklmnopqrstuvwxyz";
@@ -1478,6 +1483,7 @@ var ART=(function(){
       ".ukm-any input[type=text]{flex:1;min-width:0;background:#120e22;border:1px solid rgba(255,255,255,.15);border-radius:7px;color:#fff;font:600 13px ui-monospace,monospace;padding:7px 9px}"+
       ".ukm-hue{width:100%;height:120px;border-radius:9px;cursor:crosshair;display:block;margin-bottom:8px;touch-action:none}"+
       ".ukm-done{width:100%;padding:9px;border-radius:9px;border:0;background:linear-gradient(135deg,#D354A0,#7F77DD);color:#fff;font:800 14px system-ui;cursor:pointer}"+
+      ".ukm-gender{display:flex;gap:4px}.ukm-gender button{padding:6px 10px;border:1px solid rgba(255,255,255,.18);background:#2a2440;color:#fff;font:700 12px system-ui;cursor:pointer}.ukm-gender button.on{background:#c8407e;border-color:#ff8ac8}"+
       ".ukm-rand{align-self:flex-start;margin-top:2px;padding:6px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.18);background:#2a2440;color:#fff;font:600 12px system-ui;cursor:pointer}";
       document.head.appendChild(st);}
     var L=look?JSON.parse(JSON.stringify(look)):random(),O=OPTS;
@@ -1489,6 +1495,16 @@ var ART=(function(){
     tl.onclick=function(e){e.stopPropagation();DIRV=(DIRV+7)%8;};tr2.onclick=function(e){e.stopPropagation();DIRV=(DIRV+1)%8;};pw.appendChild(tl);pw.appendChild(tr2);
     var rows=document.createElement("div");rows.className="ukm-rows";box.appendChild(rows);
     var ctl={};
+    /* Male / Female / Both: narrows the hair, face and bottoms to match (remembered on this device) */
+    var GD="b";try{GD=localStorage.getItem("uk_gender")||"b";}catch(e){}
+    function nextOk(key,from,dir){var n=count(key),i=from;for(var k=0;k<n;k++){i=(i+dir+n)%n;if(gOk(key,i,GD))return i;}return from;}
+    function fitGender(){["hair","face","bottom"].forEach(function(k){if(!gOk(k,L[k],GD))L[k]=nextOk(k,L[k],1);});}
+    var grow=document.createElement("div");grow.className="ukm-row";var glb=document.createElement("div");glb.className="ukm-lbl";glb.textContent="Style";grow.appendChild(glb);
+    var gsw=document.createElement("div");gsw.className="ukm-gender";grow.appendChild(gsw);
+    var gbs=[["m","\u2642 Male"],["f","\u2640 Female"],["b","Both"]].map(function(o){var b=document.createElement("button");b.type="button";b.textContent=o[1];b.setAttribute("aria-pressed",String(GD===o[0]));
+      b.onclick=function(){GD=o[0];try{localStorage.setItem("uk_gender",GD);}catch(e){}gbs.forEach(function(x,j){x.classList.toggle("on",gbs[j]===b);x.setAttribute("aria-pressed",String(gbs[j]===b));});fitGender();changed();};
+      b.classList.toggle("on",GD===o[0]);gsw.appendChild(b);return b;});
+    rows.appendChild(grow);
     function changed(){paint();if(onChange)onChange(JSON.parse(JSON.stringify(L)));}
     function stepper(key,label,colKey){
       var row=document.createElement("div");row.className="ukm-row";
@@ -1498,8 +1514,8 @@ var ART=(function(){
         var b1=document.createElement("button");b1.type="button";b1.textContent="\u25C0";b1.setAttribute("aria-label","Previous "+label);
         var nm=document.createElement("span");
         var b2=document.createElement("button");b2.type="button";b2.textContent="\u25B6";b2.setAttribute("aria-label","Next "+label);
-        b1.onclick=function(){L[key]=(L[key]+count(key)-1)%count(key);changed();};
-        b2.onclick=function(){L[key]=(L[key]+1)%count(key);changed();};
+        b1.onclick=function(){L[key]=nextOk(key,L[key],-1);changed();};
+        b2.onclick=function(){L[key]=nextOk(key,L[key],1);changed();};
         sp.appendChild(b1);sp.appendChild(nm);sp.appendChild(b2);row.appendChild(sp);ctl[key]=nm;
       }
       var ck=O[key].col?key:colKey;
@@ -1539,7 +1555,7 @@ var ART=(function(){
       document.body.appendChild(pop);sync();
     }
     var skr=stepper("skin","Skin");stepper("hair","Hair","hairCol");stepper("top","Top","topCol");stepper("bottom","Bottoms","botCol");stepper("shoes","Shoes");stepper("hat","Hat");stepper("face","Face");stepper("extra","Extra");
-    var rb=document.createElement("button");rb.type="button";rb.className="ukm-rand";rb.textContent="\uD83C\uDFB2 Surprise me";rb.onclick=function(){L=random();changed();};rows.appendChild(rb);
+    var rb=document.createElement("button");rb.type="button";rb.className="ukm-rand";rb.textContent="\uD83C\uDFB2 Surprise me";rb.onclick=function(){L=random();fitGender();changed();};rows.appendChild(rb);
     function paint(){
       KEYS.forEach(function(k){if(ctl[k])ctl[k].textContent=O[k].names[L[k]];if(ctl[k+"_btn"])ctl[k+"_btn"].style.background=colOf(L,PART[k][0]);});
     }
