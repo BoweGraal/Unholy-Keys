@@ -1498,3 +1498,5 @@ Needs a Render redeploy (server.js changed).
 2. Try a few games, on a phone and a computer. Check the demo matches the game and the text fits without scrolling on a phone.
 3. Tap Skip ✕: the card goes and the countdown carries on.
 4. Console: `EXPLAIN.show("pipe")` shows any game's card without starting a round.
+
+**Update (same version): the card no longer covers the performer.** It sits below the stage, so the performer stays in view when a game starts partway through a song (the second game in a set). On a wide screen it lays out as demo on the left, text on the right. The round title strip is hidden while the card is up.
