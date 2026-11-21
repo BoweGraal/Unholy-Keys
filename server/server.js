@@ -200,6 +200,18 @@ function spotPlan(dancers, chart, lockPos) {
    One match at a time: the two take centre stage and play the round's game (free dance: the room votes
    during the match, the performer's vote counts double); everyone else keeps dancing and watches. */
 var BATTLE = require("./battle.js");
+/* a Ski designer course: same checks as ART.SKI.clean on the pages */
+var SKI_KINDS = { gate: 1, tree: 1, rock: 1, ramp: 1, mogul: 1 };
+function cleanSki(c) {
+  if (!c || typeof c !== "object" || !Array.isArray(c.objs)) return null;
+  var len = Math.max(1000, Math.min(20000, Math.round(+c.len || 3000))), out = [];
+  for (var i = 0; i < c.objs.length && out.length < 800; i++) {
+    var o = c.objs[i]; if (!Array.isArray(o) || !SKI_KINDS[o[0]]) continue; var x = +o[1], y = +o[2], sz = +o[3] || 1; if (!isFinite(x) || !isFinite(y)) continue;
+    out.push([o[0], Math.round(Math.max(-700, Math.min(700, x))), Math.round(Math.max(60, Math.min(len - 1, y))), Math.round(Math.max(0.7, Math.min(1.5, sz)) * 100) / 100]);
+  }
+  out.sort(function(p, q) { return p[2] - q[2]; });
+  return { name: str(c.name, 40) || "My mountain", len: len, objs: out };
+}
 /* the Mars Rally track maths (shared with the pages): checks a track the performer built before passing it on */
 var KARTGEO = { clean: function() { return null; } }; try { KARTGEO = require("../kart.js").geo; } catch (e) {}
 function battlePublic(rd) {
@@ -244,7 +256,7 @@ function battleNow(rd) { var b = rd.battle; if (!b) return -1; var p = Date.now(
 
 function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
-  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1; if (rd.track) o.track = rd.track;
+  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1; if (rd.track) o.track = rd.track; if (rd.ski) o.ski = rd.ski;
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
   if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
@@ -332,7 +344,7 @@ function roundMessage(ws, msg) {
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, ski: mode === "ski" ? cleanSki(msg.ski) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
     broadcast(code, roundPublic(r));
@@ -421,7 +433,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.60.1";
+var VERSION = "1.63.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -623,7 +635,10 @@ function onMessage(ws, raw, isBinary) {
       if (x === null || y === null || !allow(ws, "pos", 20, 15)) return;
       var v = rooms[ws.room].viewers.get(ws.viewerId);
       if (v) { v.x = x; v.y = y; }
-      broadcast(ws.room, { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y }, ws);
+      var pm2 = { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y };
+      if (msg.z !== undefined) pm2.z = unit(msg.z) || 0;                       /* half pipe: how high in the air (0..1) */
+      if (msg.r !== undefined) pm2.r = intIn(msg.r, -1440, 1440, 0);           /* and how far they've spun (degrees) */
+      broadcast(ws.room, pm2, ws);
       return;
     }
     if (msg.type === "dance") {
