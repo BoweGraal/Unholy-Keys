@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.63.0"></script>
-<script src="gfx.js?v=1.63.0"></script>
-<script src="art.js?v=1.63.0"></script>
-<script src="instruments.js?v=1.63.0"></script>
-<script src="kart.js?v=1.63.0"></script>
+<script src="tune.js?v=1.64.0"></script>
+<script src="gfx.js?v=1.64.0"></script>
+<script src="art.js?v=1.64.0"></script>
+<script src="instruments.js?v=1.64.0"></script>
+<script src="kart.js?v=1.64.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -432,6 +432,19 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
 #ktBanner,#ktRank,#ktScore,#ktNum,#ktGasCue,#ktWrong{font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700!important;text-shadow:3px 3px 0 #000!important}
 #dpad{border-radius:0!important;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);background:rgba(24,20,40,.6)!important}
 #dpad .joy-knob,#skKnob{border-radius:0!important;clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%);background:#e85aa8!important;box-shadow:inset -6px -6px 0 rgba(0,0,0,.3),inset 6px 6px 0 rgba(255,255,255,.4)!important}
+
+/* the crowd's game vote */
+#gvPanel{display:none;position:fixed;left:50%;top:22%;transform:translateX(-50%);z-index:40;width:min(360px,90vw);background:#120e1e;border:3px solid #F5C518;padding:12px;box-shadow:6px 6px 0 #000;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px)}
+#gvPanel.on{display:block}
+#gvPanel .gvH{font:700 16px 'Silkscreen',ui-monospace,monospace;color:#F5C518;text-align:center;margin-bottom:8px;text-shadow:2px 2px 0 #000}
+#gvPanel .gvB{position:relative;display:flex;align-items:center;justify-content:space-between;width:100%;margin:6px 0;padding:10px 12px;background:#1f1836;border:2px solid #4a3f78;color:#fff;font:700 15px system-ui;cursor:pointer;overflow:hidden;text-align:left}
+#gvPanel .gvB i{position:absolute;left:0;top:0;bottom:0;background:rgba(211,84,160,.35);transition:width .3s}
+#gvPanel .gvB span,#gvPanel .gvB b{position:relative}
+#gvPanel .gvB b{font-family:'Silkscreen',ui-monospace,monospace}
+#gvPanel .gvB.me{border-color:#3DF2FF}
+#gvPanel .gvB.win{border-color:#F5C518;background:#3a2e10}
+#gvPanel .gvB.lose{opacity:.4}
+#gvPanel .gvF{font:600 12px system-ui;color:#bbb;text-align:center;margin-top:4px}
 </style>
 </head>
 <body>
@@ -1593,6 +1606,30 @@ function connectWS(){
   ws.onerror=function(){wsReady=false;console.warn("[Unholy Keys] Could not reach the live relay server at "+LIVE_URL+" (retrying every 3s)");};
 }
 
+/* ── The crowd picks the next game: a vote panel with the choices, live counts and a timer ── */
+var GVOTE=(function(){
+  var NM={step:"\u2B06\uFE0F Step dance",aim:"\uD83C\uDFAF Target dance",keys:"\uD83C\uDFB9 Note highway",keys4:"\uD83E\uDD41 Highway \u00B7 4 keys",mosh:"\uD83E\uDD18 Mosh pit",skate:"\uD83D\uDEFC Roller rink",ice:"\u26F8\uFE0F Ice rink",keepy:"\uD83C\uDF88 Keepy uppy",kart:"\uD83C\uDFCD Mars Rally",walk:"\uD83D\uDC83 Dance walk race",pipe:"\uD83D\uDEF9 Half pipe",ski:"\u26F7 Ski"};
+  var st=null,mine=null,tmr=null,hideT=null;
+  function el(){var p=document.getElementById("gvPanel");if(!p){p=document.createElement("div");p.id="gvPanel";document.body.appendChild(p);}return p;}
+  function draw(){var p=el();if(!st){p.className="";return;}
+    var left=Math.max(0,Math.ceil((st.left-(performance.now()-st.at))/1000)),tot=st.counts.reduce(function(a,b){return a+b;},0);
+    p.textContent="";var h=document.createElement("div");h.className="gvH";h.textContent=st.done?"NEXT UP":"\uD83D\uDDF3 PICK THE NEXT GAME";p.appendChild(h);
+    st.opts.forEach(function(m,k){var b=document.createElement("button");b.className="gvB"+(mine===m?" me":"")+(st.done?(m===st.win?" win":" lose"):"");
+      var bar=document.createElement("i");bar.style.width=(tot?Math.round(st.counts[k]/tot*100):0)+"%";b.appendChild(bar);
+      var n=document.createElement("span");n.textContent=NM[m]||m;b.appendChild(n);var c=document.createElement("b");c.textContent=String(st.counts[k]||0);b.appendChild(c);
+      if(!st.done)b.onclick=function(e){e.stopPropagation();mine=m;wsSend({type:"gvote-pick",m:m});draw();};p.appendChild(b);});
+    var f=document.createElement("div");f.className="gvF";f.textContent=st.done?"":left+" s left"+(mine?"":" \u00B7 tap one");p.appendChild(f);
+    p.className="on";}
+  function on(m){
+    if(m.cancel){st=null;clearInterval(tmr);draw();return;}
+    if(!st||st.id!==m.id)mine=null;
+    st={id:m.id,opts:(m.opts||[]).slice(0,4),counts:(m.counts||[]).slice(0,4).map(function(x){return +x||0;}),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
+    clearInterval(tmr);clearTimeout(hideT);draw();
+    if(st.done)hideT=setTimeout(function(){st=null;draw();},4500);else tmr=setInterval(draw,500);
+  }
+  window.ukGvote=function(){return st&&{opts:st.opts,counts:st.counts,done:st.done,win:st.win,mine:mine};};
+  return{on:on};
+})();
 function wsSend(obj){
   if(ws&&wsReady)ws.send(JSON.stringify(obj));
 }
@@ -1632,6 +1669,7 @@ function handleMsg(msg){
     ROUND.setTotals(msg.totals);
     SHOWFX=msg.fx||null;primeFx(SHOWFX);
     if(msg.round)ROUND.onMsg(msg.round);else ROUND.reset();
+    if(msg.gvote)GVOTE.on(msg.gvote);
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
     if(msg.perfPos)perfPos(msg.perfPos);
@@ -1675,6 +1713,7 @@ function handleMsg(msg){
   }
   else if(t==="round"){ROUND.onMsg(msg);}
   else if(t==="round-scores"){ROUND.scores(msg);}
+  else if(t==="gvote"){GVOTE.on(msg);}
   else if(t==="spotlight"){ROUND.setSpot(msg.turns);}
   else if(t==="battle"){ROUND.setBattle(msg);}
   else if(t==="show-fx"){SHOWFX=msg.fx||null;}
@@ -3609,7 +3648,7 @@ var PIPE=(function(){
   function pipeRound(){return GAME.mode==="pipe"||(typeof ROUND!=="undefined"&&ROUND.mode==="pipe");}
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
   function beatAt(pos){return PP.beatAt(ROUND.chart&&ROUND.chart(),pos);}
-  function wallPx(){return H*0.2*warp;}
+  function wallPx(){return H*0.13*warp;}   /* lower walls than before: a wide, shallow pipe */
   function airPx(){return H*0.24;}
   function ids(){return Object.keys(viewers).filter(function(k){return viewers[k]!==PH;});}
   function myGroup(){return PP.group(ids(),myId);}
@@ -3726,7 +3765,29 @@ var PIPE=(function(){
     (grp?grp.members:[]).forEach(function(id){var v=viewers[id];if(!v||v.dance!==4)return;var isMe=id===myId&&on,L=liftOf(v,isMe),bl=isMe?now<bailUntil:!!(v.sk&&v.sk.f),rot=bl?1.45:rotOf(v,isMe,L.u,L.air),off=14*sc;
       var cx=v.x*W,cy=v.y*H-L.lift;PP.board(g,cx-Math.sin(rot)*off,cy+Math.cos(rot)*off,rot,sc,0,0,v.color);
       var sup=isMe?(air&&air.sup):(v.sk&&v.sk.h>=10);if(sup){g.save();g.globalAlpha=0.35+0.25*Math.sin(now/90);g.fillStyle="#F5C518";for(var q=0;q<10;q++){var aa=q/10*6.283+now/300;g.fillRect(Math.round(cx+Math.cos(aa)*26)-2,Math.round(cy+Math.sin(aa)*26)-2,4,4);}g.restore();}});
+    if(on)beatBar(g);
     pops=pops.filter(function(pp){var age=(now-pp.t)/1000;if(age>1.2)return false;g.globalAlpha=1-age/1.2;g.font="900 16px system-ui";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";var px=pp.x*W,py=pp.y*H-110-age*30;g.strokeText(pp.txt,px,py);g.fillStyle=pp.col;g.fillText(pp.txt,px,py);return true;});g.globalAlpha=1;
+  }
+  /* the beat bar along the bottom: blocks slide in from both sides and meet in the box on every beat.
+     The box flashes green when you hit that beat, and goes gold when it's time to swipe */
+  var chatPx=0;
+  function beatBar(g){
+    if(!chatPx)chatPx=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--chatH"))||56;
+    var P=ART.PX.unit(g),b=beatAt(songPos());if(!(b>-1e8))return;
+    var narrow=W<640,L=Math.round(Math.min(460,W*(narrow?0.8:0.5))/P)*P,cx=Math.round(W/2/P)*P,cy=Math.round((H-chatPx-(narrow?236:26))/P)*P,bh=P*4;   /* on a phone it sits above the pad and the stick */
+    var bi=Math.round(b),near=Math.abs(b-bi)<=T("window"),hit=!!pressedBeat[bi],pulse=Math.pow(1-(((b%1)+1)%1),3),win=popWindow();
+    g.save();g.globalAlpha=0.75;g.fillStyle="#0a0714";g.fillRect(cx-L/2-P,cy-bh/2-P,L+2*P,bh+2*P);g.globalAlpha=1;
+    g.fillStyle="#2a2244";g.fillRect(cx-L/2,cy-P/2,L,P);
+    /* beat blocks: the next 4 beats, coming in from each side */
+    for(var k=Math.ceil(b-0.15);k<=Math.floor(b)+4;k++){var d=k-b,off=Math.round(d*(L/2)/4/P)*P;if(off>L/2-P)continue;var big=k%4===0,hh=big?bh:bh-2*P,al=Math.max(0.25,1-Math.abs(d)/4);
+      g.globalAlpha=al;g.fillStyle=pressedBeat[k]?"#4CC38A":big?"#F5F23D":"#D354A0";g.fillRect(cx-off-P*1.5,cy-hh/2,P*2,hh);g.fillRect(cx+off-P*0.5,cy-hh/2,P*2,hh);}
+    g.globalAlpha=1;
+    /* the box in the middle */
+    var bc=win?"#F5C518":hit?"#4CC38A":near?"#fff":"#7F77DD",bw=P*6,bx=cx-bw/2,by=cy-bh/2-P*2,bH=bh+P*4;
+    if(pulse>0.05){g.globalAlpha=pulse*0.5;g.fillStyle=bc;g.fillRect(bx-P,by-P,bw+2*P,bH+2*P);g.globalAlpha=1;}
+    g.fillStyle=bc;g.fillRect(bx,by,bw,P);g.fillRect(bx,by+bH-P,bw,P);g.fillRect(bx,by,P,bH);g.fillRect(bx+bw-P,by,P,bH);
+    g.font="700 "+Math.max(9,P*2.5)+"px Silkscreen,ui-monospace,monospace";g.textAlign="center";g.fillStyle=bc;g.fillText(win?"SWIPE!":"BEAT",cx,by-P*1.5);
+    g.restore();
   }
   function wire(){return{h:(stance||0)+(air&&air.sup?10:0),f:performance.now()<bailUntil?1:0,t:air?air.trick:0};}
   function fd(){return air?{s:TRK[air.trick].d,m:0,c:[0,0,0,0]}:null;}
@@ -5913,7 +5974,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.63.0",SERVER_VERSION="";
+var PAGE_VERSION="1.64.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6407,7 +6468,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.63.0"></script>
+<script src="lab.js?v=1.64.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
