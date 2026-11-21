@@ -757,6 +757,10 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.60.3 - Ski in pixel art
+
+The ski mountain is now drawn with hand-made pixel-art sprites instead of smooth shapes: two kinds of pine tree with snow on the branches, rocks (some snow-capped), red and blue slalom flags, ice ramps with an arrow, snow moguls, pixel shadows, and snowbanks along the edges of the run. Skiers are drawn bigger, at a whole-number pixel size so they stay crisp. The same art shows in your follow view. On a computer the left stick is hidden (the mouse steers); phones keep it.
+
 ## v1.60.2 - Old Dance menu removed
 
 The Dance button no longer opens the old list of games (Free dance / Step dance / Target dance / Note highway…).

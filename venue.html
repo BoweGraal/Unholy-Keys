@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.60.2"></script>
-<script src="gfx.js?v=1.60.2"></script>
-<script src="art.js?v=1.60.2"></script>
-<script src="instruments.js?v=1.60.2"></script>
-<script src="kart.js?v=1.60.2"></script>
+<script src="tune.js?v=1.60.3"></script>
+<script src="gfx.js?v=1.60.3"></script>
+<script src="art.js?v=1.60.3"></script>
+<script src="instruments.js?v=1.60.3"></script>
+<script src="kart.js?v=1.60.3"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -124,6 +124,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #skiTricks button b{display:block;font-size:18px}
 body.gaming-ski #reactBar,body.gaming-ski #moveHint,body.gaming-ski #actBtns{display:none}
 body.gaming-ski #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}   /* the left stick steers */
+@media (pointer:fine){body.gaming-ski #moveCtl{display:none}}   /* on a computer the mouse steers */
 body.gaming-ski #skiTricks{left:auto;right:16px;bottom:calc(var(--chatH) + 132px)}
 @media (max-width:520px){#skiHint{bottom:calc(var(--chatH) + 206px);font-size:12px}#skiSpeed{top:104px}}
 /* ── half pipe ── */
@@ -3811,8 +3812,8 @@ var SKI=(function(){
   }
   /* ---- drawing ---- */
   function skier(sx,sy,vv,isMe,ang,airK,crashed,tk,tp,z,name){
-    var lift=airK*30*z,sc=Math.max(1.4,z*0.75);
-    g.fillStyle="rgba(60,80,110,.22)";g.beginPath();g.ellipse(sx,sy,8*z,3*z,0,0,6.3);g.fill();
+    var lift=airK*30*z,sc=Math.max(2,Math.round(z*1.1));   /* whole pixels, so the character stays crisp */
+    ART.SKI.blit(g,"shadow",sx,sy+2*ART.SKI.px(z),ART.SKI.px(z));
     /* the skis, pointing the way you're going */
     g.save();g.translate(sx,sy-lift);g.rotate(crashed?0.9:-ang+(tk===1?tp*6.283:0));g.fillStyle=isMe?"#F5C518":"#E8505B";g.fillRect(-5*z,-12*z,2.2*z,22*z);g.fillRect(3*z,-12*z,2.2*z,22*z);g.restore();
     var saved=ctx;ctx=g;var sAV=AVO,sDir=AVDIR;
@@ -5876,7 +5877,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.60.2",SERVER_VERSION="";
+var PAGE_VERSION="1.60.3",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6369,7 +6370,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.60.2"></script>
+<script src="lab.js?v=1.60.3"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
