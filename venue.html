@@ -3940,17 +3940,23 @@ var SKI=(function(){
   function start(round){
     on=true;roundN=round?round.n:roundN+1;seed=SK.seedFor(roundN);
     course=SK.clean(round&&round.ski);if(!course&&PRACTICE.on){try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}}chunks={};passed={};trail=[];pops=[];others={};bots={};
-    hopAir=false;cutGrace=0;hopPush=0;puffs=[];x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
+    hopAir=false;cutGrace=0;hopPush=0;puffs=[];sweep=null;x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
     cv=$("skiCv");g=cv.getContext("2d");document.body.classList.add("gaming-ski");$("skiUI").classList.add("on");hud();banner("⛷ SKI!");
   }
   function stop(){on=false;document.body.classList.remove("gaming-ski");var u=$("skiUI");if(u)u.classList.remove("on");var c=$("skiCv");if(c)c.classList.remove("on");}
   /* a hop: while you're up you can swing the skis round fast, so you land on a new line (a cut) and keep your speed */
   /* landing in a flag's divot swoops you out cleanly: pointed at the next flag's side, a burst of speed, points and the streak */
+  /* landing in a divot: it takes over, sweeps you round the flag along the groove, then fires you out the end, fast */
+  var sweep=null;
   function swoop(){
-    var D=SK.DIV,hit=null;objsNear(y-40,y+40).forEach(function(o){if(o.k!=="flag"||hit)return;var cx=o.x+o.pass*D.dx;if(Math.pow((x-cx)/D.rx,2)+Math.pow((y-o.y)/(D.ry*1.4),2)<=1)hit=o;});
-    if(!hit)return false;var nx=null;objsNear(hit.y+20,hit.y+600).forEach(function(o){if(!nx&&o.k==="flag"&&o.y>hit.y)nx=o;});
-    var tx=nx?nx.x+nx.pass*55:lineX(y+200,seed),ty=nx?nx.y:y+200;ta=a=Math.max(-1.3,Math.min(1.3,Math.atan2(tx-x,Math.max(40,ty-y))));
-    v=Math.min(T("maxSpeed")*1.15,v+30);cutGrace=performance.now()+500;combo++;addPts(150,"SWOOP","#3DF2FF");banner("SWOOP!","#3DF2FF");return true;}
+    var hit=null;objsNear(y-80,y+80).forEach(function(o){if(o.k!=="flag"||hit)return;var n=SK.arcNear(o,x,y);if(n.d<SK.DIV.w+6&&n.t<0.8)hit={o:o,t:n.t};});
+    if(!hit)return false;sweep={o:hit.o,t:hit.t,v0:Math.max(v,120)};banner("SWOOP!","#3DF2FF");return true;}
+  function sweepStep(dt,now){
+    var s=sweep,len=SK.DIV.R*Math.PI*(SK.DIV.t1-SK.DIV.t0);s.t=Math.min(1,s.t+s.v0*1.15*dt/len);var p=SK.arc(s.o,s.t),q=SK.arc(s.o,Math.min(1,s.t+0.02));
+    if(!passed[s.o.id]&&y<s.o.y&&p[1]>=s.o.y){passed[s.o.id]=1;combo++;addPts(T("gatePts"),"FLAG",s.o.col==="#E8505B"?"#FF7A85":"#7FB0FF");}
+    x=p[0];y=p[1];var ang=Math.atan2(q[0]-p[0],Math.max(0.01,q[1]-p[1]));a=Math.max(-1.5,Math.min(1.5,ang));
+    if(s.t>=1){var ex=SK.arc(s.o,1),ep=SK.arc(s.o,0.96);a=ta=Math.max(-1.3,Math.min(1.3,Math.atan2(ex[0]-ep[0],Math.max(0.01,ex[1]-ep[1]))));
+      v=Math.min(T("maxSpeed")*1.25,s.v0+45);cutGrace=now+600;combo++;addPts(150,"SWOOP","#3DF2FF");sweep=null;}}
   function jump(){if(!on||air>0||performance.now()<crashUntil||v<20)return;air=airMax=T("hop");hopAir=true;a0=a;
     /* the pop: a little kick of speed, and a shove sideways the way you're steering (or already sliding) */
     var sd=Math.abs(ta-a)>0.08?Math.sign(ta-a):Math.abs(a)>0.08?Math.sign(a):0;hopPush=sd*T("hopPush");   /* a hop never adds speed: only a divot swoop does */
@@ -3986,9 +3992,12 @@ var SKI=(function(){
     if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.2){pointer=null;ta=joy.y<=0.05?(joy.x<0?-1.5:1.5):Math.max(-1.5,Math.min(1.5,Math.atan2(joy.x,joy.y)));}
     if(!crashed&&(air<=0||hopAir)){var da=ta-a,rt=T("turn")*dt*(air>0?3.5:1);a+=Math.max(-rt,Math.min(rt,da));}
     /* speed: gravity down the fall line, drag, and carving across slows you */
-    if(going&&!crashed){var acc=T("accel")*Math.cos(a)-v*(T("accel")/T("maxSpeed"));if(air<=0&&now>cutGrace)acc-=Math.pow(Math.abs(Math.sin(a)),2)*45;v=Math.max(0,v+acc*dt);}
+    if(going&&!crashed&&!sweep){var acc=T("accel")*Math.cos(SK.frameOf(a)*Math.PI/6)-v*(T("accel")/T("maxSpeed"));if(air<=0&&now>cutGrace)acc-=Math.pow(Math.abs(Math.sin(a)),2)*45;v=Math.max(0,v+acc*dt);}
     var py=y;
-    if(going&&!crashed){x+=Math.sin(a)*v*dt;y+=Math.cos(a)*v*dt;if(air>0&&hopAir)x+=hopPush*dt*(air/Math.max(0.01,airMax));}
+    /* you travel in straight lines at the same set angles the skis show (every 30 degrees), not in smooth curves */
+    var qa=SK.frameOf(a)*Math.PI/6;
+    if(sweep&&!crashed)sweepStep(dt,now);
+    else if(going&&!crashed){x+=Math.sin(qa)*v*dt;y+=Math.cos(qa)*v*dt;if(air>0&&hopAir)x+=hopPush*dt*(air/Math.max(0.01,airMax));}
     x=Math.max(-halfW(y)-260,Math.min(halfW(y)+260,x));
     /* air: a hop, or off a ramp; tricks in the air; land mid-trick and you crash */
     if(air>0){air-=dt;if(trick&&(now-trick.t0)/1000>=TRK[trick.k].dur){addPts(TRK[trick.k].pts*(1+airMax)*(!course&&SK.zoneAt(y).k==="jump"?1.5:1),TRK[trick.k].name,TRK[trick.k].col);combo++;trick=null;}
@@ -4006,10 +4015,10 @@ var SKI=(function(){
             if(ok){combo++;addPts(T("gatePts"),"FLAG",o.col==="#E8505B"?"#FF7A85":"#7FB0FF");}else{combo=0;hud();banner("WRONG SIDE","#aaa");}}
           else if(air<=0&&now>ghostUntil&&Math.abs(dx2)<3&&Math.abs(dy2)<4){crash("FLAG!");x=o.x-o.pass*12;ghostUntil=crashUntil+1200;}return;}
         if(o.k==="zone"){if(py<o.y&&y>=o.y)banner(o.z==="jump"?"🚀 JUMP ZONE":"🚩 FLAG ZONE",o.z==="jump"?"#3DF2FF":"#FF7A85");return;}
-        if(o.k==="ramp"){if(air<=0&&Math.abs(dx2)<22&&Math.abs(dy2)<8&&v>40){air=airMax=T("rampAir")*Math.min(1.3,v/T("maxSpeed")+0.3);hopAir=false;banner("AIR!","#3DF2FF");}return;}
+        if(o.k==="ramp"){if(air<=0&&!sweep&&Math.abs(dx2)<22&&Math.abs(dy2)<8&&v>40){air=airMax=T("rampAir")*Math.min(1.3,v/T("maxSpeed")+0.3);hopAir=false;banner("AIR!","#3DF2FF");}return;}
         if(o.k==="mogul"){if(air<=0&&Math.hypot(dx2,dy2*1.6)<12&&v>60){air=airMax=0.28;hopAir=false;}return;}
         if(air>0&&o.k==="rock")return;                       /* jump over rocks */
-        var rr=o.k==="tree"?7*o.s:9*o.s;if(now>ghostUntil&&Math.hypot(dx2,dy2*1.4)<rr+5){crash(o.k==="tree"?"TREE!":"ROCK!");
+        var rr=o.k==="tree"?7*o.s:9*o.s;if(now>ghostUntil&&!sweep&&Math.hypot(dx2,dy2*1.4)<rr+5){crash(o.k==="tree"?"TREE!":"ROCK!");
           /* thrown clear of it, so you don't get up straight back into the same tree: out to the side, a moment where you can't hit anything */
           var sd=dx2===0?(Math.random()<0.5?-1:1):Math.sign(dx2);x=o.x+sd*(rr+14);ghostUntil=crashUntil+1200;}
       });

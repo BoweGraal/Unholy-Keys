@@ -896,10 +896,19 @@ var ART=(function(){
     g.fillStyle=col;for(var q=-hw;q<hw;q+=18)g.fillRect(Math.round(sx(q)),yy,Math.round(10*z),k);
     pixText(g,o.z==="jump"?"JUMP ZONE":"FLAG ZONE",sx(0),yy+k*3,Math.max(2,Math.round(k*0.9)),col,"center");};
   /* the divot: a carved bowl in the snow on the side you pass, with chevrons pointing the way through */
-  SK.DIV={dx:46,rx:30,ry:13};
-  SK.divot=function(g,o,z,sx,sy,passedIt){var k=SK.px(z),cx=sx(o.x+o.pass*SK.DIV.dx),cy=sy(o.y),rx=SK.DIV.rx*z,ry=SK.DIV.ry*z;
-    g.fillStyle="#9fb6d8";PX.oval(g,cx,cy,rx,ry,0,k);g.fillStyle="#cbd9ee";PX.oval(g,cx,cy-k,rx-k*2,ry-k*1.5,0,k);g.fillStyle="#f7faff";PX.oval(g,cx,cy-ry*0.55,rx*0.6,k*0.9,0,k);
-    g.fillStyle=passedIt?"#9db8d8":o.col;var dir=o.pass;for(var c=0;c<3;c++){var ax=cx+(c-1)*rx*0.55;for(var q=0;q<3;q++){g.fillRect(Math.round((ax+dir*q*k-dir*k)/k)*k,Math.round((cy-ry*0.15-q*k)/k)*k,k,k);g.fillRect(Math.round((ax+dir*q*k-dir*k)/k)*k,Math.round((cy-ry*0.15+q*k)/k)*k,k,k);}}};
+  /* the divot: a carved, banked groove that curves round the flag on the side you pass, like a "(" (or ")"). Land in it
+     from a jump and it sweeps you round the flag and fires you out the bottom, fast. arc(o,t): a point on it, t 0..1 */
+  SK.DIV={R:50,t0:0.12,t1:0.92,w:13};
+  SK.arc=function(o,t){var an=(SK.DIV.t0+(SK.DIV.t1-SK.DIV.t0)*t)*Math.PI;return[o.x+o.pass*SK.DIV.R*Math.sin(an),o.y-SK.DIV.R*Math.cos(an)];};
+  SK.arcNear=function(o,x,y){var best=null;for(var i=0;i<=24;i++){var p=SK.arc(o,i/24),d=Math.hypot(x-p[0],y-p[1]);if(!best||d<best.d)best={t:i/24,d:d};}return best;};
+  SK.divot=function(g,o,z,sx,sy,passedIt){var k=SK.px(z),w=SK.DIV.w*z,i,p,c,N=34;
+    /* the bank: a wide band, its outer lip in shadow and the inner edge bright, so it reads as a groove */
+    for(i=0;i<=N;i++){p=SK.arc(o,i/N);c=[sx(p[0]),sy(p[1])];g.fillStyle="#a8bedf";PX.disc(g,c[0],c[1],w,k);}
+    for(i=0;i<=N;i++){p=SK.arc(o,i/N);var q=SK.arc(o,i/N),nx=(q[0]-o.x)/SK.DIV.R,ny=(q[1]-o.y)/SK.DIV.R;c=[sx(p[0]-nx*3),sy(p[1]-ny*3)];g.fillStyle="#d5e2f4";PX.disc(g,c[0],c[1],w*0.62,k);}
+    for(i=0;i<=N;i++){p=SK.arc(o,i/N);var nx2=(p[0]-o.x)/SK.DIV.R,ny2=(p[1]-o.y)/SK.DIV.R;g.fillStyle="#7f9cc8";g.fillRect(Math.round(sx(p[0]+nx2*SK.DIV.w*0.95)/k)*k,Math.round(sy(p[1]+ny2*SK.DIV.w*0.95)/k)*k,k,k);}
+    /* chevrons running along it, the way you go round */
+    g.fillStyle=passedIt?"#9db8d8":o.col;for(var ch=0;ch<4;ch++){var t=0.18+ch*0.21,a1=SK.arc(o,t),a2=SK.arc(o,t+0.04),dx=a2[0]-a1[0],dy=a2[1]-a1[1],dl=Math.hypot(dx,dy)||1;dx/=dl;dy/=dl;
+      for(var qq=-2;qq<=2;qq++){var bx=a1[0]-dx*Math.abs(qq)*1.6-dy*qq*1.6,by=a1[1]-dy*Math.abs(qq)*1.6+dx*qq*1.6;g.fillRect(Math.round(sx(bx)/k)*k,Math.round(sy(by)/k)*k,k,k);}}};
   /* a slalom flag with an arrow on it pointing the side to pass */
   SK.sflag=function(g,o,z,sx,sy,passedIt){var k=SK.px(z),fx=sx(o.x),fy=sy(o.y),dark=o.col==="#E8505B"?"#a8323b":"#24509c";
     SK.blit(g,"flag",fx,fy,k,passedIt?"#c9cfdb":o.col,passedIt?"#a7afbf":dark,false);
