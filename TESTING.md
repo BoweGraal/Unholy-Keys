@@ -757,6 +757,78 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.69.0 - Capture the flag (first version) and the Capture the flag designer
+
+A new minigame: **🚩 Capture the flag**. Pick it in Start song (or the crowd vote), or in dance practice.
+- **The arena:** the floor turns into a top-down arena of dance-floor tiles with walls, a red base on one side and a blue base on the other. Everyone is put on a team (red or blue, evened out) and starts at their team's spawn. The count-in is 8 beats, then GO.
+- **Moving:** arrow keys / WASD, or the stick on a phone.
+- **Boost pads** (yellow chevrons) shove you hard the way they point.
+- **The flags:** run into the other team's base to grab their flag (+100), then bring it back to your own base while your own flag is at home to score a capture (+500, and the team scores a point).
+- **Tagging:** bump into someone from the other team while they're on your half and they're sent back to their spawn (+150, or +250 if they had your flag, which goes straight back to your base).
+- The server referees everything, so all screens agree on who has which flag.
+- **Stage view:** the whole arena fills your screen with everyone in it, team colours under their feet, the flags, who's carrying what, everyone's points over their heads and RED 0 - 0 BLUE at the top.
+- **Bots** play it properly: some attack, some defend, carriers run home, and anyone chases a thief on their side. Bots on the other team's half also dodge defenders.
+
+**Capture the flag designer:** Setup → Creator tools → Capture the flag designer (ctf.html).
+- Paint walls, floor, boost pads (click Boost again to turn it: ▶ ▼ ◀ ▲), the red and blue bases, and the red and blue spawns. Drag to paint; right-click rubs out.
+- 🪞 **Mirror** (on by default) copies everything to the other side with the teams swapped, so arenas come out fair.
+- Small / Medium / Large / Huge sizes, Undo (Ctrl+Z), a name, ↺ Reset (back to the starting arena "Twin Forts"), 🗑 Clear, 📋 Share, and ▶ Test run (a practice game on your arena).
+- It saves on your device, and your arena goes out with every Capture the flag round you start.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** practice → Capture the flag. Then make an arena in the designer, press Test run, and finally go live with bots and start a Capture the flag round.
+
+## v1.68.1 - Dance editor: previous frame outline, copy and paste frames
+
+- In the full-screen dance editor (Graphics lab), the previous frame's pose now shows as a see-through white outline behind the character, so you can pose each frame against the one before (onion skinning).
+- The new **Prev frame** button in the top bar turns it on and off. It's on by default. 👻 still shows the original, unedited dance.
+- **📋 Copy / 📥 Paste** (or Ctrl+C / Ctrl+V): copy a frame's whole pose and paste it onto any other frame, which then ends up in exactly that pose.
+- The separate arm/leg/body buttons are gone from the top bar: pick a limb by grabbing its handle on the character (the D pad still nudges whichever one you last grabbed).
+
+No server changes.
+
+**Test it:** Graphics lab → a dance → full-screen editor. Step through the frames and check the white outline is the frame before.
+
+## v1.68.0 - Ski: slalom flags with divots, swoops, ski-on intro, no more getting stuck on trees
+
+- **Slalom flags:** flag zones now use single flags like the real thing (and SkiFree): red flags with a ← arrow, blue with →. Pass each flag on the side its arrow points. Right side = FLAG points and the streak goes up; wrong side = WRONG SIDE and the streak resets. Clip the pole and you go down.
+- **Divots:** beside every flag, on the side you pass, there's a carved bowl in the snow with chevrons pointing the way through.
+- **Swoop:** jump (a hop, a ramp or a mogul) and land in a divot and it swoops you out cleanly: pointed at the next flag's side, a burst of speed, +150 SWOOP and the streak goes up.
+- **The start:** the round opens zoomed right in on the skiers at the top. Their skis lie either side of them, slide in under their boots and click on (with a sparkle) while they bend down to do up the bindings. Then the view slowly pulls back to show the whole mountain by GO. Your stage follow view does the same zoom out.
+- **Trees and rocks:** a crash now throws you clear to the side, and for a moment after you get up you can't hit anything, so you can't get stuck crashing into the same tree over and over.
+- Courses made in the Ski designer keep their two-flag gates.
+
+No server changes.
+
+**Test it:** practice → Ski. Watch the skis go on, then pass a few flags on their arrow side, and hop into a divot to get SWOOP.
+
+## v1.67.0 - Mosh pit you can follow, points over heads, longer chat, server-version warning
+
+**Mosh pit, seen from the stage**
+- The floor shows which part of the pit it is (MOSH PIT, CIRCLE PIT, WALL OF DEATH, CHARGE!, PUSH WAR!) in the top left, and in the plain pit what's coming next and when ("NEXT: CIRCLE PIT IN 0:12").
+- Circle pit: the two rings and arrows running round, the same as the players see.
+- Wall of death: the dashed line down the middle, how many are on each side, and the big count-in.
+- Push war: the live LEFT vs RIGHT tally bar, then who won.
+- A POINTS table on the right during the pit and circle pit.
+- Bots now actually mosh: they thrash about in the middle, run laps in the circle pit, split evenly for the wall of death, charge, pack in and push, and the winning side gets the bonus. Their points add up the way a player's do (laps, shoves, bumps, the wall win) instead of a made-up number.
+- With two games per song, the mosh pit's wall of death and circle pit are now fitted inside the game's time. Before, they could fall outside it and never happen.
+
+**Points over heads:** in every game except Free dance, each player's points show over their head on your stage view, and a green +N rises when they score. The server now sends you everyone's score every 3 seconds.
+
+**Chat**
+- Speech bubbles stay up for 10 seconds, or until that person walks away, whichever comes first.
+- The whole message shows: bubbles wrap onto as many lines as they need instead of being cut off with "...". Messages can be up to 300 characters.
+- The server lets you send chat faster before it starts dropping messages.
+
+**Server-version warning:** when you go live and the server is older than the page, a red banner tells you to redeploy Render.
+
+Bots also stop showing an old step-dance combo during other games, and their scores in step/target/highway rounds now count from when that game started (matters with two games per song).
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** go live with bots, start a Mosh pit, and watch the stage view through a circle pit and the wall of death.
+
 ## v1.66.0 - Ski: flag zones, jump zones, faster, and the pop and cut
 
 - **Layered mountain:** the made-up mountain now goes flag zone, jump zone, flag zone, jump zone, all the way down. A dashed line and FLAG ZONE / JUMP ZONE on the snow mark where each one starts, with a banner as you cross it.

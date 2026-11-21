@@ -72,9 +72,9 @@ button{cursor:pointer}button.on{background:#7F77DD;border-color:#fff}button.go{b
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.66.0"></script>
-<script src="art.js?v=1.66.0"></script>
-<script src="instruments.js?v=1.66.0"></script>
+<script src="gfx.js?v=1.69.0"></script>
+<script src="art.js?v=1.69.0"></script>
+<script src="instruments.js?v=1.69.0"></script>
 <script>
 (function(){
 var $=function(id){return document.getElementById(id);};
@@ -373,7 +373,7 @@ function bindPixel(){
 /* ================= full screen dance (gani) editor =================
    16 frames per 4-beat loop (a notch every quarter beat). Drag a hand, foot or the body to pose it, or use the D pad for one pixel at a time.
    Every change saves as a tweak at that frame (the same DTWEAK data the side panel uses). */
-var DN={N:16,fi:0,sel:"armL",ghost:true,undo:[],drag:null};
+var DN={N:16,fi:0,sel:"armL",ghost:true,prev:true,undo:[],drag:null};
 var DN_LABEL={armL:"ARM L",armR:"ARM R",legL:"LEG L",legR:"LEG R",body:"BODY"};
 function dnQ(){return Math.round(DN.fi*(4/DN.N)*100)/100;}
 function dnEntry(){var q=dnQ(),list=ART.DTWEAK.get(AS.style,AS.sub);for(var i=0;i<list.length;i++)if(Math.abs(list[i].q-q)<0.001)return list[i];return null;}
@@ -387,10 +387,26 @@ function dnGeo(W,H){var cs=Math.max(3,Math.round(Math.min(W/44,H/50)*AS.zoom)),c
   var J=ART.joints(cx+dx,cy,cs,bob),A=[p.armL,p.armR,p.legL,p.legR],ends=J.map(function(j,i){return[j[0]-Math.sin(A[i]||0)*ART.LIMB[i]*cs,j[1]+Math.cos(A[i]||0)*ART.LIMB[i]*cs];});
   return{cs:cs,cx:cx,cy:cy,p:p,J:J,ends:ends,body:[cx+dx,cy-2*cs+bob]};}
 function dnPose(p,cs){var o=Object.assign({},p);o.bob=(p.bob||0)*cs;o.dx=(p.dx||0)*cs;return o;}
+/* onion skin: the previous frame's pose as a see-through white outline, to pose this one against */
+var DNO=null;
+function dnPrevOutline(g,W,H,G){
+  var cs=G.cs,dpr=g.getTransform?g.getTransform().a:1,cw=Math.round(W*dpr),ch=Math.round(H*dpr);
+  if(!DNO)DNO={a:document.createElement("canvas"),b:document.createElement("canvas")};
+  [DNO.a,DNO.b].forEach(function(c){if(c.width!==cw||c.height!==ch){c.width=cw;c.height=ch;}});
+  var a=DNO.a.getContext("2d"),b=DNO.b.getContext("2d");a.setTransform(dpr,0,0,dpr,0,0);a.clearRect(0,0,W,H);a.imageSmoothingEnabled=false;
+  var qp=((DN.fi-1+DN.N)%DN.N)*(4/DN.N),pp=ART.dance(AS.style,AS.sub,[0,0,0,0],qp);
+  ART.drawChar(a,G.cx,G.cy,cs,AS.look,dnPose(pp,cs));
+  a.setTransform(1,0,0,1,0,0);a.globalCompositeOperation="source-in";a.fillStyle="#fff";a.fillRect(0,0,cw,ch);a.globalCompositeOperation="source-over";   /* the silhouette, in white */
+  b.setTransform(1,0,0,1,0,0);b.clearRect(0,0,cw,ch);var o=Math.max(1,Math.round(cs*dpr/3));
+  [[o,0],[-o,0],[0,o],[0,-o]].forEach(function(d){b.drawImage(DNO.a,d[0],d[1]);});
+  b.globalCompositeOperation="destination-out";b.drawImage(DNO.a,0,0);b.globalCompositeOperation="source-over";   /* keep only the rim */
+  g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=0.55;g.drawImage(DNO.b,0,0);g.globalAlpha=0.12;g.drawImage(DNO.a,0,0);g.restore();
+}
 function dnDraw(g,W,H){
   var G=dnGeo(W,H),cs=G.cs;
   g.strokeStyle="rgba(255,255,255,.06)";g.beginPath();g.moveTo(0,G.cy+12*cs);g.lineTo(W,G.cy+12*cs);g.stroke();
   if(DN.ghost){g.globalAlpha=0.28;ART.drawChar(g,G.cx,G.cy,cs,AS.look,dnPose(ART.base(AS.style,AS.sub,[0,0,0,0],AS.q),cs));g.globalAlpha=1;}
+  if(DN.prev&&!AS.play)dnPrevOutline(g,W,H,G);
   ART.drawChar(g,G.cx,G.cy,cs,AS.look,dnPose(G.p,cs));
   if(AS.play)return;
   var keys=["armL","armR","legL","legR"];
@@ -400,13 +416,19 @@ function dnDraw(g,W,H){
   g.fillStyle="rgba(255,255,255,.8)";g.font="700 12px system-ui";g.textAlign="center";g.fillText("frame "+(DN.fi+1)+" / "+DN.N+" · beat "+dnQ().toFixed(2),W/2,22);
 }
 function dnTick(){var ph=document.querySelector("#dnline .ph");if(ph)ph.style.left=(AS.q/4*100)+"%";}
+/* copy a frame's whole pose, and paste it onto another frame: the tweak there is set so that frame ends up in exactly that pose */
+function dnCopy(){var p=ART.dance(AS.style,AS.sub,[0,0,0,0],dnQ()),o={};ART.DTWEAK.fields.forEach(function(f){o[f]=+p[f]||0;});DN.clip=o;dnBar();}
+function dnPaste(){if(!DN.clip)return;dnSnap();var now=ART.dance(AS.style,AS.sub,[0,0,0,0],dnQ()),cur=dnVals(),v={};
+  ART.DTWEAK.fields.forEach(function(f){v[f]=(cur[f]||0)+(DN.clip[f]-(+now[f]||0));});dnSet(v);}
 function dnBar(){
   var b=$("dnbar");b.textContent="";
   var ex=mk("button","","✕");ex.title="Exit full screen";ex.onclick=function(){dnFull(false);};b.appendChild(ex);
   var pl=mk("button",AS.play?"on":"",AS.play?"⏸":"▶");pl.title="Play / pause";pl.onclick=function(){if(AS.play){AS.play=false;DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();}else AS.play=true;dnBar();dnTimeline();};b.appendChild(pl);
-  ["armL","armR","legL","legR","body"].forEach(function(k){var c=mk("button",DN.sel===k?"on":"",{armL:"💪L",armR:"💪R",legL:"🦵L",legR:"🦵R",body:"🧍"}[k]);c.title=DN_LABEL[k];c.onclick=function(){DN.sel=k;dnBar();};b.appendChild(c);});
   var gh=mk("button",DN.ghost?"on":"","👻");gh.title="Show the original faintly";gh.onclick=function(){DN.ghost=!DN.ghost;dnBar();};b.appendChild(gh);
+  var pv=mk("button",DN.prev?"on":"","Prev frame");pv.title="Show the previous frame as a white outline";pv.onclick=function(){DN.prev=!DN.prev;dnBar();};b.appendChild(pv);
   var un=mk("button","","↶");un.title="Undo";un.onclick=dnUndo;b.appendChild(un);
+  var cp=mk("button","","📋 Copy");cp.title="Copy this frame's pose (Ctrl+C)";cp.onclick=dnCopy;b.appendChild(cp);
+  var ps=mk("button","","📥 Paste");ps.title="Paste the copied pose onto this frame (Ctrl+V)";ps.disabled=!DN.clip;ps.onclick=dnPaste;b.appendChild(ps);
   var cl=mk("button","","🗑");cl.title="Clear this frame";cl.onclick=function(){dnSnap();dnSet({});};b.appendChild(cl);
   var sp=mk("button","",AS.speed+"×");sp.title="Playback speed";sp.onclick=function(){var L=[0.25,0.5,1,1.5,2],i=L.indexOf(AS.speed);AS.speed=L[(i+1)%L.length];dnBar();};b.appendChild(sp);
   var d=ART.DANCES[AS.style];b.appendChild(mk("span","nm",(d?d.icon+" "+d.name:"")+((d&&d.subs&&d.subs[AS.sub])?" · "+d.subs[AS.sub]:"")));
@@ -418,6 +440,10 @@ function dnTimeline(){
     if(i%4===0){var bl=mk("div","bl","beat "+(i/4+1));bl.style.left=n.style.left;L.appendChild(bl);}}
   var ph=mk("div","ph");ph.style.left=(AS.q/4*100)+"%";L.appendChild(ph);
 }
+document.addEventListener("keydown",function(e){if(!AS.dfs||!(e.ctrlKey||e.metaKey)||/INPUT|TEXTAREA/.test((e.target||{}).tagName||""))return;var k=e.key.toLowerCase();
+  if(k==="c"){e.preventDefault();dnCopy();}else if(k==="v"){e.preventDefault();dnPaste();}});
+window.ukDnClip=function(){return DN.clip;};
+window.ukDn=function(i){AS.cat="dance";mode="assets";dnFull(true);dnGo(i|0);};   /* tests: open the dance editor at a frame */
 function dnFull(on){AS.dfs=!!on;$("app").classList.toggle("dfs",AS.dfs);
   if(AS.dfs){AS.play=false;DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();DN.undo=[];dnBar();dnTimeline();var de=document.documentElement;try{if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().catch(function(){});}catch(e){}}
   else{try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen();}catch(e){}assetPanel();}

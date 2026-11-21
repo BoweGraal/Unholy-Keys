@@ -214,6 +214,14 @@ function cleanSki(c) {
 }
 /* the Mars Rally track maths (shared with the pages): checks a track the performer built before passing it on */
 var KARTGEO = { clean: function() { return null; } }; try { KARTGEO = require("../kart.js").geo; } catch (e) {}
+/* capture the flag: the rules live in art.js (shared with every screen); the server is the referee */
+var CTF = null;
+try {
+  var vmx = require("vm"), actx = { window: {}, document: { createElement: function() { return { getContext: function() { return null; } }; } }, localStorage: { getItem: function() { return null; }, setItem: function() {} }, Math: Math, Date: Date, Int32Array: Int32Array };
+  vmx.createContext(actx); vmx.runInContext(fs.readFileSync(path.join(__dirname, "..", "art.js"), "utf8"), actx);
+  CTF = (actx.window.ART || actx.ART).CTF;
+} catch (e) { console.log("capture the flag rules not loaded:", e.message); }
+function ctfPublic(c) { return c ? { map: c.map, teams: c.st.teams, flags: c.st.flags, caps: c.st.caps } : null; }
 function battlePublic(rd) {
   var b = rd.battle; if (!b) return null;
   return { entrants: b.entrants, slots: b.slots.map(function(s) { return { r: s.r, label: s.label, a: s.a, b: s.b, w: s.w, start: s.start, end: s.end, sa: s.sa || 0, sb: s.sb || 0 }; }) };
@@ -256,7 +264,7 @@ function battleNow(rd) { var b = rd.battle; if (!b) return -1; var p = Date.now(
 
 function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
-  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1; if (rd.track) o.track = rd.track; if (rd.ski) o.ski = rd.ski;
+  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1; if (rd.track) o.track = rd.track; if (rd.ski) o.ski = rd.ski; if (rd.ctf) o.ctf = ctfPublic(rd.ctf);
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
   if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
@@ -285,6 +293,8 @@ function roundStandings(code) {
   r.viewers.forEach(function(v, id) { if (v.roundScore > 0) list.push({ id: id, name: v.name, color: v.color, score: v.roundScore }); });
   list.sort(function(a, b) { return b.score - a.score; });
   broadcast(code, { type: "round-scores", n: r.round.n, top: list.slice(0, 5), players: list.length });
+  /* the performer sees everyone's points over their heads */
+  if (r.performer) send(r.performer, { type: "round-all", n: r.round.n, s: list.slice(0, 60).map(function(x) { return [x.id, x.score]; }) });
 }
 /* every round hands out exactly 1000 show points:
    - 40% is shared equally by everyone who took part, so nobody is ever left with nothing and a slow start isn't the end of you;
@@ -340,13 +350,14 @@ function roundFinish(code) {
 function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
     rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, ski: mode === "ski" ? cleanSki(msg.ski) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
+    if (mode === "ctf") { var cm = CTF.clean(msg.ctf) || CTF.defaultMap(), ci = CTF.info(cm); rd.ctf = { map: cm, I: ci, st: CTF.newState(ci, Array.from(r.viewers.keys())) }; rd.isBattle = false; }
     broadcast(code, roundPublic(r));
     return;
   }
@@ -409,7 +420,7 @@ function roundMessage(ws, msg) {
 /* ── The crowd picks the next game ──
    The performer opens a vote between a few games (gvote-open); everyone taps one (gvote-pick); when time is up the
    game with the most votes wins (ties drawn at random, nobody voting = a random pick). Bots vote too. */
-var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski"];
+var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf"];
 function gvotePublic(g) {
   var c = g.opts.map(function() { return 0; });
   g.picks.forEach(function(m) { var i = g.opts.indexOf(m); if (i >= 0) c[i]++; });
@@ -470,7 +481,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.66.0";
+var VERSION = "1.69.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -631,7 +642,7 @@ function onMessage(ws, raw, isBinary) {
     }
     if (msg.type === "perf-chat") {
       var ptext = str(msg.text, 300);
-      if (!ptext || !allow(ws, "chat", 5, 1)) return;
+      if (!ptext || !allow(ws, "chat", 12, 3)) return;
       broadcast(ws.room, { type: "chat", id: "performer", viewerId: "performer", perf: 1, name: rooms[ws.room].performerName || "Performer", color: "#F5C518", text: ptext }, ws);
       return;
     }
@@ -649,7 +660,7 @@ function onMessage(ws, raw, isBinary) {
   if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
     if (msg.type === "chat") {
       var text = str(msg.text, 300);
-      if (!text || !allow(ws, "chat", 5, 1)) return;
+      if (!text || !allow(ws, "chat", 12, 3)) return;
       broadcast(ws.room, { type: "chat", id: ws.viewerId, viewerId: ws.viewerId, name: ws.viewerName, color: ws.viewerColor, text: text }, ws);
       return;
     }
@@ -680,6 +691,16 @@ function onMessage(ws, raw, isBinary) {
       if (msg.z !== undefined) pm2.z = unit(msg.z) || 0;                       /* half pipe: how high in the air (0..1) */
       if (msg.r !== undefined) pm2.r = intIn(msg.r, -1440, 1440, 0);           /* and how far they've spun (degrees) */
       broadcast(ws.room, pm2, ws);
+      /* capture the flag: the referee checks pick-ups, captures and tags from where everyone is */
+      var crd = rooms[ws.room].round;
+      if (crd && crd.ctf && crd.phase === "play") {
+        var cc = crd.ctf, ev = CTF.step(cc.st, cc.I, ws.viewerId, x * cc.I.w, y * cc.I.h, Date.now());
+        for (var sid in cc.st.score) { var sv2 = rooms[ws.room].viewers.get(sid); if (sv2) { sv2.roundScore = cc.st.score[sid]; sv2.danced = true; } }
+        if (ev.length || cc.st.flags.some(function(f) { return f.at; })) {
+          var now2 = Date.now();
+          if (ev.length || now2 - (cc.sentAt || 0) > 200) { cc.sentAt = now2; var cm2 = ctfPublic(cc); delete cm2.map; cm2.type = "ctf"; cm2.ev = ev; broadcast(ws.room, cm2); }
+        }
+      }
       return;
     }
     if (msg.type === "dance") {
@@ -722,7 +743,7 @@ function onMessage(ws, raw, isBinary) {
     if (msg.type === "score") {
       // a dancer's own running score for the current step or target round
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
-      if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || (!msg.fin && !allow(ws, "score", 6, 2))) return;
+      if (!srd || !sv || srd.mode === "free" || srd.mode === "ctf" || (srd.phase !== "play" && srd.phase !== "tally") || (!msg.fin && !allow(ws, "score", 6, 2))) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
       sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
       /* dance walk race: the server keeps the finish order so every screen agrees on the places;

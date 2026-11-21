@@ -22,11 +22,11 @@ var CHAT = {
 var REACTS = ["jump", "hearts", "clap", "whistle", "hearts", "clap"];
 
 /* how many options each part of a character's look has (from art.js), so bots get proper random looks */
-var LOOK_COUNTS = [6, 8, 10, 5, 12, 3, 12, 5];
+var LOOK_COUNTS = [6, 8, 10, 5, 12, 3, 12, 5], ARTX = null;
 try {
   var ctx = { window: {}, document: { createElement: function() { return { getContext: function() { return null; } }; } }, Math: Math, Date: Date };
   vm.createContext(ctx); vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "art.js"), "utf8"), ctx);
-  var A = ctx.window.ART || ctx.ART; if (A && A.looks) LOOK_COUNTS = A.looks.KEYS.map(function(k) { return A.looks.count(k); });
+  var A = ctx.window.ART || ctx.ART; ARTX = A; if (A && A.looks) LOOK_COUNTS = A.looks.KEYS.map(function(k) { return A.looks.count(k); });
 } catch (e) {}
 function randomLook() { var B = "0123456789abcdefghijklmnopqrstuvwxyz"; return LOOK_COUNTS.map(function(n) { return B.charAt(Math.floor(Math.random() * n)); }).join(""); }
 function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
@@ -111,12 +111,14 @@ module.exports = function(api) {
   function think(b) {
     if (b.dead || !b.room || !rooms[b.room]) { clearInterval(b.timer); return; }
     var now = Date.now(), rd = b.rd, playing = rd && rd.phase === "play", songOn = playing || now - b.lastNote < 4000;
-    var free = !rd || (playing && (rd.mode === "free" || rd.mode === "mosh" || rd.mode === "keepy"));
+    var free = !rd || (playing && (rd.mode === "free" || rd.mode === "keepy"));
     if (playing && rd.mode === "skate") { skate(b, now); }
     if (playing && rd.mode === "kart") { kart(b, now, rd); }
     if (playing && rd.mode === "walk") { walk(b, now, rd); }
     if (playing && rd.mode === "pipe") { pipe(b, now, rd); }
     if (playing && rd.mode === "ski") { ski(b, now, rd); }
+    if (playing && rd.mode === "mosh") { mosh(b, now, rd); }
+    if (playing && rd.mode === "ctf") { ctf(b, now, rd); }
     if (playing && rd.mode === "keepy") { if (!b.hopAt && Math.random() < 0.05) b.hopAt = now; var hu = b.hopAt ? (now - b.hopAt) / 900 : 0; if (hu >= 1) { b.hopAt = 0; hu = 0; } b.skH = b.hopAt ? Math.round(24 * 4 * hu * (1 - hu)) : 0; }
 
     /* wander about (not while playing a step, target or highway round: they're busy with the game) */
@@ -150,7 +152,7 @@ module.exports = function(api) {
   /* in a round: dance along, report a score (bots are decent, rarely great), vote in battles, push in the mosh */
   function round(b, now) {
     var rd = b.rd, pos = now - rd.playAt, ch = rd.chart, bpm = ch && ch.bpm || 120;
-    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.mode === "ski" || rd.battle ? 4 : 5;
+    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.mode === "ski" || rd.mode === "ctf" || rd.battle ? 4 : 5;
     if (!b.dancing || b.style !== style) { b.dancing = true; b.style = style; b.act({ type: "dance", style: style }); }
     pose(b, now, bpm);
     var slot = -1, bs = rd.b && rd.b.slots, be = rd.b && rd.b.entrants;
@@ -159,9 +161,10 @@ module.exports = function(api) {
       if ((s.a >= 0 && be[s.a] && be[s.a].id === b.viewerId) || (s.b >= 0 && be[s.b] && be[s.b].id === b.viewerId)) slot = k;
       else if (rd.mode === "free" && !b.bvoted[k] && pos > s.start + rnd(3000, (s.end - s.start) * 0.8)) { b.bvoted[k] = 1; b.act({ type: "bvote", side: Math.random() < 0.5 ? 0 : 1 }); }
     }
-    if (rd.mode !== "free" && rd.mode !== "walk" && rd.mode !== "ski" && rd.mode !== "pipe" && now > b.scoreAt) {
+    if (rd.mode !== "free" && rd.mode !== "walk" && rd.mode !== "ski" && rd.mode !== "pipe" && rd.mode !== "mosh" && rd.mode !== "ctf" && now > b.scoreAt) {
       /* a score that grows through the song at this bot's skill */
-      var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, pos / dur));
+      if (b.rs0n !== rd.n) { b.rs0n = rd.n; b.rs0 = pos; b.score = 0; }   /* a game can start part way into the song (two games per song) */
+      var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, (pos - b.rs0) / Math.max(60000, Math.min(150000, dur - b.rs0))));
       var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : arrows * 100 * (1 + arrows / 100) * 0.55;
       b.score = Math.max(b.score || 0, Math.round(full * frac * b.skill * rnd(0.9, 1.1)));
       var sm = { type: "score", s: b.score }; if (slot >= 0) sm.m = slot;
@@ -169,7 +172,7 @@ module.exports = function(api) {
     }
     /* the wall of death: push for your side */
     if (rd.mode === "mosh" && ch && ch.drop && pos > ch.drop + 900 && pos < ch.drop + 10600 && now > b.tugAt) {
-      b.act({ type: "tug", side: b.x < 0.5 ? 0 : 1, k: Math.ceil(rnd(1, 4) * b.skill * 2) }); b.tugAt = now + rnd(250, 600);
+      var tk = Math.ceil(rnd(1, 4) * b.skill * 2); b.act({ type: "tug", side: b.x < 0.5 ? 0 : 1, k: tk }); b.tugAt = now + rnd(250, 600); if (b.ms) b.ms.taps += tk;
     }
   }
   /* the roller rink: laps round the island, a jump with a trick now and then */
@@ -282,18 +285,73 @@ module.exports = function(api) {
     if (now - k.posAt > 150) { k.posAt = now; b.x = +((k.x + 800) / 1600).toFixed(4); b.y = +((((k.y % 1000) + 1000) % 1000) / 1000).toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
     if (going && now > k.scoreAt) { k.scoreAt = now + 2000; b.act({ type: "score", s: k.gates * 100 + Math.floor(Math.max(0, k.y) / 40) }); }
   }
+  /* the mosh pit: the same plan as everyone's screen (art.js). Pit: thrash about in the middle, bumping people. Circle pit: run
+     round it (laps score). Wall of death: off to your side, charge at the drop, pack in for the push war; the winning side scores big.
+     Scores add up the way a player's do, so the leaderboard means something. */
+  function mosh(b, now, rd) {
+    var M = ARTX && ARTX.MOSH; if (!M) return;
+    if (!b.ms || b.ms.n !== rd.n) b.ms = { n: rd.n, P: M.plan(rd.chart), score: 0, t: now, phi: Math.random() * 6.28, r: 0.13 + Math.random() * 0.15, acc: 0, team: -1, goal: null, posAt: 0, scoreAt: 0, bumpAt: now + rnd(2000, 5000), taps: 0, tapsPaid: 0, won: false, k: Math.max(0, Array.from((rooms[b.room] || { viewers: new Map() }).viewers.keys()).sort().indexOf(b.viewerId)) };
+    var m = b.ms, dt = Math.min(0.5, (now - m.t) / 1000); m.t = now;
+    var pos = now - rd.playAt, ph = M.phaseAt(m.P, pos), c = M.circle(M.TOP, M.BOT), x = b.x, y = b.y, sp = 0;
+    if ((ph === "split" || ph === "count") && m.team < 0) m.team = m.k % 2;   /* bots spread over both sides */
+    if (ph === "pit") m.team = -1;
+    if (ph === "circle") {
+      var om = 0.95 * (0.22 / m.r) * (0.8 + b.skill * 0.6); m.phi += om * dt; m.acc += om * dt;
+      if (m.acc >= Math.PI * 2) { m.acc -= Math.PI * 2; m.score += 150; }
+      x = c.x + Math.cos(m.phi) * m.r; y = c.y + Math.sin(m.phi) * m.r * (c.ry / 0.3);
+      if (now > m.bumpAt) { m.bumpAt = now + rnd(2500, 6000) / (0.5 + b.skill); m.score += Math.random() < 0.5 ? 90 : 50; }
+    } else if (ph === "split" || ph === "count") { x = (m.team ? 0.84 : 0.16) + ((m.k * 0.037) % 0.1 - 0.05); y = M.TOP + 0.04 + (m.k % 7) / 7 * (M.BOT - M.TOP - 0.08); }
+    else if (ph === "charge") { x = m.team ? 0.545 + (m.k % 3) * 0.02 : 0.455 - (m.k % 3) * 0.02; }
+    else if (ph === "tug") { var s = rd.tug ? rd.tug.s : [0, 0], fr = 0.5 + (s[0] + s[1] > 0 ? (s[0] - s[1]) / (s[0] + s[1]) : 0) * 0.2; x = fr + (m.team ? 1 : -1) * (0.028 + Math.floor((m.k + 1) / 3) * 0.04); y = (M.TOP + M.BOT) / 2 + (((m.k + 1) % 3) - 1) * 0.035;
+      if (m.taps - m.tapsPaid >= 5) { m.score += 10 * Math.floor((m.taps - m.tapsPaid) / 5); m.tapsPaid += 5 * Math.floor((m.taps - m.tapsPaid) / 5); } }
+    else if (ph === "result") { if (!m.won && rd.tug && rd.tug.done && m.team >= 0) { var s2 = rd.tug.s; m.won = true; if ((s2[1] > s2[0] ? 1 : 0) === m.team && s2[0] !== s2[1]) m.score += 800; } }
+    else {
+      /* the pit: short dashes about the middle of the floor, bumping and swinging */
+      if (!m.goal || Math.random() < dt * 1.2) m.goal = [0.28 + Math.random() * 0.44, M.TOP + 0.03 + Math.random() * (M.BOT - M.TOP - 0.06)];
+      x = b.x + (m.goal[0] - b.x) * Math.min(1, dt * 2.2); y = b.y + (m.goal[1] - b.y) * Math.min(1, dt * 2.2);
+      if (now > m.bumpAt) { m.bumpAt = now + rnd(1800, 4500) / (0.5 + b.skill); m.score += Math.random() < 0.4 ? 60 : Math.random() < 0.5 ? 40 : 30; }
+    }
+    if (ph !== "circle" && ph !== "pit") { x = b.x + (x - b.x) * Math.min(1, dt * (ph === "charge" ? 4 : 1.6)); y = b.y + (y - b.y) * Math.min(1, dt * 1.6); }
+    b.x = Math.max(0.03, Math.min(0.97, x)); b.y = Math.max(M.TOP, Math.min(M.BOT, y));
+    if (now - m.posAt > 150) { m.posAt = now; b.act({ type: "pos", x: +b.x.toFixed(4), y: +b.y.toFixed(4) }); }
+    if (now > m.scoreAt) { m.scoreAt = now + 2000; b.score = m.score; b.act({ type: "score", s: m.score }); }
+    b.moshPh = ph;
+  }
+  /* capture the flag: the server's own game (rooms[...].round.ctf) tells the bot everything. Some go for the flag, some
+     stay back to defend; carriers run home; anyone sees a thief on their side and chases. Boost pads shove them like players. */
+  function ctf(b, now, rd) {
+    var r = rooms[b.room], srd = r && r.round, C = ARTX && ARTX.CTF; if (!srd || !srd.ctf || !C) return;
+    var c = srd.ctf, I = c.I, st = c.st, id = b.viewerId, t = C.teamOf(st, id);
+    if (!b.cf || b.cf.n !== rd.n) { var sp = C.spawnOf(I, st, id), mates = Object.keys(st.teams).filter(function(k) { return st.teams[k] === t; }).sort();
+      b.cf = { n: rd.n, x: sp[0], y: sp[1], t: now, wp: null, wpAt: 0, posAt: 0, tagSeen: 0, push: [0, 0], role: mates.indexOf(id) % 3 === 2 ? "d" : "a", jit: Math.random() * 6 }; }
+    var k = b.cf, dt = Math.min(0.25, (now - k.t) / 1000); k.t = now;
+    if (st.tagged[id] && st.tagged[id] !== k.tagSeen) { k.tagSeen = st.tagged[id]; var s2 = C.spawnOf(I, st, id); k.x = s2[0]; k.y = s2[1]; k.wp = null; k.push = [0, 0]; k.hold = now + 1500; }
+    var going = wkBeat(rd, now - rd.playAt) >= 8 && !(k.hold && now < k.hold);
+    if (going) {
+      var goal = C.botGoal(st, I, id, k.x, k.y, k.role);
+      if (!k.wp || now > k.wpAt) { k.wp = C.path(I, k.x, k.y, goal[0], goal[1]); k.wpAt = now + 250; }
+      var av = C.botAvoid(st, I, id, k.x, k.y);
+      var dx = k.wp[0] - k.x + av[0] * 1.6, dy = k.wp[1] - k.y + av[1] * 1.6, d = Math.hypot(dx, dy) || 1, sp2 = C.SPEED * (0.7 + 0.3 * b.skill) * (C.carrying(st, id) >= 0 ? C.CARRY : 1);
+      var pd = I.pad(k.x, k.y); if (pd) { k.push = [pd[0] * C.SPEED * C.PAD, pd[1] * C.SPEED * C.PAD]; }
+      C.move(I, k, (dx / d * sp2 + k.push[0]) * dt + Math.sin(now / 700 + k.jit) * 0.01, (dy / d * sp2 + k.push[1]) * dt);
+      var dm = Math.pow(0.08, dt); k.push = [k.push[0] * dm, k.push[1] * dm];
+    }
+    if (now - k.posAt > 110) { k.posAt = now; b.x = +(k.x / I.w).toFixed(4); b.y = +(k.y / I.h).toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
+  }
   /* a groove: arms and legs swinging on the beat, in this bot's own style (sent about five times a second) */
   function pose(b, now, bpm) {
     if (now - (b.poseAt || 0) < 190) return; b.poseAt = now;
     var beat = now / (60000 / (bpm || 120)) * b.groove, s = Math.sin(beat * Math.PI), c = Math.cos(beat * Math.PI * 0.5);
     var a = [Math.round((70 + 90 * b.arms * Math.abs(s)) * (c > 0 ? 1 : 1.6)), Math.round(-(70 + 90 * b.arms * Math.abs(Math.sin(beat * Math.PI + 1))) * (c > 0 ? 1.6 : 1)), Math.round(18 * s), Math.round(-18 * s)];
-    var pm = { type: "pose", a: a, c: Math.floor((b.score || 0) / 900) % 60 };
+    var pm = { type: "pose", a: a, c: b.rd && b.rd.phase === "play" ? Math.floor((b.score || 0) / 900) % 60 : 0 };
     /* free dance: each bot has a favourite style (the shuffle's popular) and switches move now and then */
     if (b.rd && b.rd.mode === "free") { if (!b.fds || Math.random() < 0.01) { b.fds = Math.random() < 0.35 ? 9 : 1 + Math.floor(Math.random() * 15); b.fdm = Math.floor(Math.random() * 4); } pm.fd = { s: b.fds, m: b.fdm, c: [0, 0, 0, 0] }; }
     if (b.rd && b.rd.mode === "kart") { pm.sk = { h: b.kh || 0, f: b.kf ? 1 : 0, t: 0 }; pm.a = [210, -210, 25, -25]; }
     else if (b.rd && b.rd.mode === "ski" && b.sk2) { var cr = now < b.sk2.crash; pm.sk = { h: Math.max(0, Math.min(60, Math.floor(Math.max(0, b.sk2.y) / 1000))), f: cr ? 1 : 0, t: cr ? 9 : Math.max(0, Math.min(6, Math.round(b.sk2.a / (Math.PI / 6)) + 3)) }; pm.a = cr ? [260, -260, 120, -120] : [90, -90, 15, -15]; }
     else if (b.rd && b.rd.mode === "pipe" && b.pp) { var pa = b.pp.air; pm.sk = { h: 0, f: now < b.pp.bail ? 1 : 0, t: pa ? pa.k : 0 }; if (pa) pm.fd = { s: PPD[pa.k], m: 0, c: [0, 0, 0, 0] }; pm.a = now < b.pp.bail ? [260, -260, 120, -120] : pa ? [230, -230, 50, -50] : [120, -120, 35, -35]; }
     else if (b.rd && b.rd.mode === "walk" && b.wk) { pm.sk = { h: b.wk.fin ? 1 : 0, f: b.wk.trip ? 1 : 0, t: b.wk.si }; pm.fd = { s: b.wk.fin ? 14 : WK.D[b.wk.si], m: 0, c: [0, 0, 0, 0] }; }
+    else if (b.rd && b.rd.mode === "mosh" && b.ms) { var mp = b.moshPh, sw = now / 180 + (b.ms.k || 0), sh = Math.sin(now / 55) * 7;
+      pm.a = mp === "tug" ? (b.ms.team ? [89 + sh, 80 + sh, 9, -23] : [-80 - sh, -89 - sh, 23, -9]) : mp === "circle" ? [63 + Math.round(Math.sin(now / 110) * 29), -63 + Math.round(Math.sin(now / 110) * 29), Math.round(Math.sin(now / 90) * 34), -Math.round(Math.sin(now / 90) * 34)] : [Math.round((sw * 57.3) % 360), Math.round((sw * 57.3) % 360) - 180, 11, -11]; }
     else if (b.rd && (b.rd.mode === "skate" || b.rd.mode === "keepy")) { pm.sk = { h: b.skH || 0, f: 0, t: b.skT || 0 }; if (b.skH) pm.a = [240, -240, 100, -100]; }
     b.act(pm);
   }

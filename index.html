@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.66.0"></script>
-<script src="art.js?v=1.66.0"></script>
-<script src="instruments.js?v=1.66.0"></script>
-<script src="kart.js?v=1.66.0"></script>
+<script src="gfx.js?v=1.69.0"></script>
+<script src="art.js?v=1.69.0"></script>
+<script src="instruments.js?v=1.69.0"></script>
+<script src="kart.js?v=1.69.0"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -165,6 +165,10 @@ a.nav-item{text-decoration:none}
 #jm.skiv #jSki{opacity:1;visibility:visible;transition:opacity .6s}
 #jm.skiv #jmR{z-index:8}
 #jm.skiv #jcv,#jm.skiv #jStage,#jm.skiv #jFront{display:none!important}
+#jCtf{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;image-rendering:pixelated;opacity:0;visibility:hidden;transition:opacity .9s,visibility 0s .9s}
+#jm.ctfv #jCtf{opacity:1;visibility:visible;transition:opacity .6s}
+#jm.ctfv #jmR{z-index:8}
+#jm.ctfv #jcv,#jm.ctfv #jStage,#jm.ctfv #jFront{display:none!important}
 #jm.race #jRace,#jm.race #jRaceTop{opacity:1;visibility:visible;transition:opacity .4s}   /* fades back to the stage when the race ends */
 #jRaceTop{display:block;opacity:0;visibility:hidden;transition:opacity .9s,visibility 0s .9s;position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:none;image-rendering:pixelated}
 #jm.race #jmV{z-index:6!important;transition:none}
@@ -497,6 +501,7 @@ body.jset .nav-item.jam-only{display:flex}
       <a class="nav-item" href="gfx.html" target="_blank" rel="noopener"><span class="nav-icon">&#127912;</span>Graphics lab</a>
       <a class="nav-item" href="track.html" target="_blank" rel="noopener"><span class="nav-icon">&#127937;</span>Track builder</a>
       <a class="nav-item" href="ski.html" target="_blank" rel="noopener"><span class="nav-icon">&#9975;</span>Ski designer</a>
+      <a class="nav-item" href="ctf.html" target="_blank" rel="noopener"><span class="nav-icon">&#128681;</span>Capture the flag designer</a>
     </div>
     <div id="side-cap">
       <input type="text" id="cap" aria-hidden="true" tabindex="-1" autocomplete="off" spellcheck="false">
@@ -804,7 +809,7 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="jm">
-  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><canvas id="jRace"></canvas><canvas id="jSki"></canvas><canvas id="jRaceTop"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><canvas id="jRace"></canvas><canvas id="jSki"></canvas><canvas id="jCtf"></canvas><canvas id="jRaceTop"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
   <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
     <button id="jStageBtn" title="Stage effects: lights, weather, fog, lasers…">&#127967; Stage</button><div id="jStagePop"></div>
     <button id="jSongBtn" title="Start a song: pick it (your music, a video, or YouTube), pick the game, then start">&#127925; Start song</button>
@@ -818,7 +823,7 @@ body.jset .nav-item.jam-only{display:flex}
       <div class="pane" id="lsYt" style="display:none"><div class="row"><input id="lsYQ" placeholder="Search YouTube, or paste a link" autocomplete="off"><button id="lsYGo">Search</button></div><div class="list" id="lsYList"></div></div>
       <div class="sel" id="lsSel">No song picked yet</div>
       <div class="st">2 · Pick up to 2 games <small style="opacity:.6;font-weight:600">they're spaced through the song, with free dance before, between and after</small></div>
-      <div class="games" id="lsGames"><button data-g="off" class="on">&#127911; No game<small>just listen &amp; hang out</small></button><button data-g="crowd">&#128499; Crowd vote<small>the room picks the game · tap twice for 2</small></button><button data-g="step">&#11014;&#65039; Step dance</button><button data-g="aim">&#127919; Target dance</button><button data-g="keys">&#127929; Note highway</button><button data-g="keys4">&#127929; Highway · 4 keys</button><button data-g="free">&#128131; Free dance<small>the room votes</small></button><button data-g="mosh">&#129311; Mosh pit</button><button data-g="skate">&#128764; Roller rink<small>skate &amp; tricks</small></button><button data-g="ice">&#9976;&#65039; Ice rink<small>skating in the snow</small></button><button data-g="keepy">&#127880; Keepy uppy<small>keep them off the floor</small></button><button data-g="kart">&#127949; Mars Rally<small>top-down bike race</small></button><button data-g="walk">&#128131; Dance walk race<small>follow the circle to the finish</small></button><button data-g="pipe">&#128761; Half pipe<small>ride the beat, dance tricks, super move</small></button><button data-g="ski">&#9975; Ski<small>slalom and tricks down a mountain</small></button></div>
+      <div class="games" id="lsGames"><button data-g="off" class="on">&#127911; No game<small>just listen &amp; hang out</small></button><button data-g="crowd">&#128499; Crowd vote<small>the room picks the game · tap twice for 2</small></button><button data-g="step">&#11014;&#65039; Step dance</button><button data-g="aim">&#127919; Target dance</button><button data-g="keys">&#127929; Note highway</button><button data-g="keys4">&#127929; Highway · 4 keys</button><button data-g="free">&#128131; Free dance<small>the room votes</small></button><button data-g="mosh">&#129311; Mosh pit</button><button data-g="skate">&#128764; Roller rink<small>skate &amp; tricks</small></button><button data-g="ice">&#9976;&#65039; Ice rink<small>skating in the snow</small></button><button data-g="keepy">&#127880; Keepy uppy<small>keep them off the floor</small></button><button data-g="kart">&#127949; Mars Rally<small>top-down bike race</small></button><button data-g="walk">&#128131; Dance walk race<small>follow the circle to the finish</small></button><button data-g="pipe">&#128761; Half pipe<small>ride the beat, dance tricks, super move</small></button><button data-g="ski">&#9975; Ski<small>slalom and tricks down a mountain</small></button><button data-g="ctf">&#128681; Capture the flag<small>two teams, grab their flag, bring it home</small></button></div>
       <div class="opts"><label>Countdown <select id="lsSecs"><option value="0">none</option><option value="5">5 s</option><option value="10">10 s</option><option value="15">15 s</option><option value="20">20 s</option><option value="30">30 s</option></select></label><label class="g">Steps <select id="lsLevel"><option value="0.7">Easy</option><option value="1">Normal</option><option value="1.3">Hard</option></select></label><label class="g"><input type="checkbox" id="lsBattle"> &#9876; Battle (1 v 1s)</label><label class="g" title="For a whole show: once a game has been played it won't come up in the crowd vote again until every game has had a go"><input type="checkbox" id="lsFull"> &#127914; Full show <small id="lsPlayed" style="opacity:.7"></small></label><button type="button" id="lsShowReset" style="font:600 11px system-ui;background:none;border:1px solid rgba(255,255,255,.2);color:#ccc;border-radius:6px;padding:2px 8px;cursor:pointer">&#8634; New show</button></div>
       <div class="opts"><label class="g" title="Bots join so the room has this many people, and play the game with you. As real people arrive, bots leave to make room.">&#129302; Bots <select id="lsBots"></select></label>
         <label title="Sets your instrument's key from the song, and follows its key changes"><input type="checkbox" id="lsAutoKey"> &#127932; Auto key</label>
@@ -828,7 +833,7 @@ body.jset .nav-item.jam-only{display:flex}
     </div></div>
     <button id="jLiveBtn" title="Go live: open a room so your audience can join">&#128308; Go live</button>
     <button id="jHangBtn" title="Hang out between songs: walk the floor with the arrows or WASD (or click where to go), Enter to talk, Esc to go back on stage">&#128694; Hang out</button>
-    <div id="jHangBar"><input id="jHangSay" maxlength="200" autocomplete="off" placeholder="Say something to the room… (Enter)"><button id="jHangSend">Say</button><span>Arrows / WASD or click to walk · Esc back to the stage</span></div>
+    <div id="jHangBar"><input id="jHangSay" maxlength="300" autocomplete="off" placeholder="Say something to the room… (Enter)"><button id="jHangSend">Say</button><span>Arrows / WASD or click to walk · Esc back to the stage</span></div>
     <button id="jFsBtn" title="Fullscreen (F11)">&#9974; Fullscreen</button><div id="jTopBar"></div><div id="jBotBar"></div>
     <button id="jInstBtn" title="Pick an instrument">&#127928; <span id="jInstName">Instrument</span> &#9662;</button><div id="jInstPop"></div>
     <button id="jx" style="display:none">ESC Exit</button>
@@ -4260,7 +4265,7 @@ function goLive(){
   function liveMsg(e){
     var msg;try{msg=JSON.parse(e.data);}catch(x){return;}
     if(msg.type==="resume-failed"){LIVERC.until=0;endLive();showJamToast("Couldn't get back into the room: the show has ended","#E8505B",4000);return;}
-    if(msg.type==="room-resumed"){LIVERC.until=0;LIVERC.n=0;
+    if(msg.type==="room-resumed"){LIVERC.until=0;LIVERC.n=0;if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();serverAgeWarn();}
       document.getElementById("bLive").textContent="LIVE";audReset();
       liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
       var vm2=videoMsg();if(vm2)liveSend(vm2);STAGEFX.resend();STREAM.announce();
@@ -4268,7 +4273,7 @@ function goLive(){
       liveWs.onclose=function(){if(liveOn)liveReconnect();};
       return;}
     if(msg.type==="room-created"){LIVERC.room=msg.room;LIVERC.key=msg.key||null;LIVERC.until=0;LIVERC.n=0;}
-    if(msg.type==="room-created"){SRV.reported(msg.host,msg.hostName);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
+    if(msg.type==="room-created"){SRV.reported(msg.host,msg.hostName);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();serverAgeWarn();}
       liveOn=true;
       document.getElementById("livePnl").style.display="block";
       document.getElementById("liveCode").textContent=msg.room;setTimeout(paintAudienceLink,0);
@@ -4288,6 +4293,10 @@ function goLive(){
     if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose"||msg.type==="react"||msg.type==="kick")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
     if(msg.type==="gvote"){ROUNDS.onGvote(msg);return;}
+    if(msg.type==="round-all"){PSCORE.all(msg);return;}
+    if(msg.type==="ctf"){CTFVIEW.msg(msg);return;}
+    if(msg.type==="round"&&msg.ctf)CTFVIEW.msg(msg.ctf);
+    if(msg.type==="tug"){PMOSH.tug=[+msg.s[0]||0,+msg.s[1]||0];PMOSH.done=!!msg.done;return;}
     if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
     if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();}
     if(msg.type==="bots-info")BOTFILL.info(msg);
@@ -4320,11 +4329,16 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.66.0",SERVER_VERSION="";
+var PAGE_VERSION="1.69.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
 showVersion();
+/* going live on a server older than this page: the games' bots and rules may not match, so say so loudly */
+function verNum(v){var p=String(v||"").split(".");return (+p[0]||0)*1e6+(+p[1]||0)*1e3+(+p[2]||0);}
+function serverAgeWarn(){if(!SERVER_VERSION||verNum(SERVER_VERSION)>=verNum(PAGE_VERSION))return;var id="srvOld",e=document.getElementById(id);
+  if(!e){e=document.createElement("div");e.id=id;e.style.cssText="position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:9999;background:#7a1020;color:#fff;font:700 14px system-ui;padding:10px 16px;border:2px solid #ff6a7a;box-shadow:4px 4px 0 #000;max-width:90vw;text-align:center;cursor:pointer";e.title="Click to hide";e.onclick=function(){e.remove();};document.body.appendChild(e);}
+  e.textContent="\u26A0 The game server is on v"+SERVER_VERSION+" but this page is v"+PAGE_VERSION+". Redeploy the server on Render (Manual Deploy \u2192 Deploy latest commit) or bots and games won't behave right.";}
 var PFOLLOW=ART.follower();
 /* what you're playing, for your character with the instrument you've picked (instruments.js) */
 var PPLAY={midi:60,on:false,t0:0,off:0,n:0},PKIND={id:null,kind:"synth"};
@@ -4377,7 +4391,11 @@ YT.onPlay=function(vid,title){
    Shown in jam mode while you're live. ⤢ makes it bigger, – shrinks it to the header. */
 var AUD={people:{},count:0,min:false,big:false,rx:[]};
 try{AUD.min=localStorage.getItem("uk_jaud_min")==="1";AUD.big=localStorage.getItem("uk_jaud_big")==="1";}catch(e){}
-var AUD_SAY_MS=7000;
+var AUD_SAY_MS=10000;
+/* what someone says stays over their head for 10 s, or until they walk off (after a moment, so a word said mid-stride still shows) */
+function sayAlpha(p,now){if(!p.text)return 0;var age=now-p.said;if(age>=AUD_SAY_MS)return 0;
+  if(!p.sayAt||p.sayAt.t!==p.said)p.sayAt={t:p.said,x:p.x,y:p.y,gone:0};var b=p.sayAt;if(age<1200){b.x=p.x;b.y=p.y;}else if(!b.gone&&Math.hypot(p.x-b.x,p.y-b.y)>0.04)b.gone=now;
+  var a=Math.min(1,(AUD_SAY_MS-age)/1000);if(b.gone)a=Math.min(a,1-(now-b.gone)/350);return Math.max(0,a);}
 /* reactions in the last 15 s, for the panel header: " · ❤ 5 👏 3" */
 var AUD_RX_ICON={jump:"🙌",hearts:"❤️",bigheart:"💖",clap:"👏",whistle:"😙",spin:"🌀",twirl:"💫"};
 function audRxText(){var now=Date.now(),c={},out="";(AUD.rx||[]).forEach(function(r){if(now-r.t<15000)c[r.k]=(c[r.k]||0)+1;});ART.REACTS.forEach(function(k){if(c[k])out+=" "+AUD_RX_ICON[k]+" "+c[k];});return out?" ·"+out:"";}
@@ -4402,7 +4420,7 @@ function audEvent(msg){
     pp.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0,t:Math.max(0,Math.min(9,+msg.sk.t||0))}:null;   /* on the roller rink */
   }
   else if(msg.type==="kick"){KPS.kick(msg);}
-  else if(msg.type==="chat"&&id&&AUD.people[id]){var q=AUD.people[id];q.said=Date.now();q.text=String(msg.text||"").slice(0,140);if(msg.color)q.color=audColor(msg.color,q.color);}
+  else if(msg.type==="chat"&&id&&AUD.people[id]){var q=AUD.people[id];q.said=Date.now();q.text=String(msg.text||"").slice(0,300);if(msg.color)q.color=audColor(msg.color,q.color);}
 }
 /* word-wrap into at most `max` lines of width w */
 function audWrap(g,text,w,max){
@@ -4558,7 +4576,7 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
 }
 function audBubble(g,x,headY,text,color,alpha,W){
   g.font="12px system-ui,sans-serif";
-  var maxW=Math.min(170,W*.42),lines=audWrap(g,text,maxW-14,2),tw=0;
+  var maxW=Math.min(220,Math.max(140,W*.3)),lines=audWrap(g,text,maxW-14,12),tw=0;   /* the whole message, however many lines */
   lines.forEach(function(l){tw=Math.max(tw,g.measureText(l).width);});
   var bw=tw+14,bh=lines.length*15+8,bx=Math.max(3,Math.min(W-bw-3,x-bw/2)),by=Math.max(3,headY-bh-9);
   g.globalAlpha=alpha;
@@ -4663,9 +4681,10 @@ function drawVenueTo(g,W,H,opts){
     var wy0=Y(0.35)-30,wy1=Y(0.73)+16,wfx=0.68*W,wsq=Math.max(4,Math.round(sc*3));g.save();g.globalAlpha=0.5;g.fillStyle="#fff";g.fillRect(0.06*W-1,wy0,2,wy1-wy0);g.globalAlpha=0.9;
     for(var wyy=wy0,wk=0;wyy<wy1;wyy+=wsq,wk++){g.fillStyle=wk%2?"#fff":"#111";g.fillRect(wfx-wsq,wyy,wsq,wsq);g.fillStyle=wk%2?"#111":"#fff";g.fillRect(wfx,wyy,wsq,wsq);}
     g.globalAlpha=1;g.font="900 "+Math.round(10+sc*2)+"px system-ui";g.textAlign="center";g.fillStyle="#fff";g.fillText("FINISH",wfx,wy0-6);g.restore();}
+  var MOSHG=rc0&&rc0.mode==="mosh"&&rc0.phase==="play"?PMOSH.floor(g,W,H,Y,now,sc,rc0):null;
   if(!(stage&&HANG.on))perfDraw((opts&&opts.front)||g,px0,py,pp,now,crowd&&crowd.kind!=="lasers"&&crowd.kind!=="float"?crowd:null,alay,H,true);
   /* what you just said, over your head on stage (hanging out, it's drawn with the crowd) */
-  if(stage&&!HANG.on&&HANG.p.text&&now-HANG.p.said<5000)audBubble((opts&&opts.front)||g,px0,py-20*pp,HANG.p.text,"#F5C518",Math.max(0,1-(now-HANG.p.said)/5000),W);
+  if(stage&&!HANG.on&&HANG.p.text&&now-HANG.p.said<AUD_SAY_MS)audBubble((opts&&opts.front)||g,px0,py-20*pp,HANG.p.text,"#F5C518",Math.max(0,Math.min(1,(AUD_SAY_MS-(now-HANG.p.said))/1000)),W);
   /* audience, back to front so nearer people overlap farther ones */
   /* you, hanging out on the floor (stage view), drawn in among everyone by depth */
   var plist=ids.map(function(id){return AUD.people[id];});
@@ -4702,20 +4721,79 @@ function drawVenueTo(g,W,H,opts){
     AUDDIR=0;
     if(ppS){var poff=14*sc;ART.PIPE.board(g,x-Math.sin(ppS.rot)*poff,y-ppS.lift+Math.cos(ppS.rot)*poff,ppS.rot,sc,ppS.tk,ppS.prog,p.color);}   /* their skateboard */
     AUDSK=null;
+    var scoreShown=PSCORE.draw(g,p,x,headY,now,sc,rc0);
     if(p.msT&&now-p.msT<1700)STREAK.pop(g,x,headY,p.msN,now-p.msT,Math.max(0.75,sc*0.7));
+    else if(scoreShown){}
     else if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
     heads.push([p,x,headY]);});
   if(stage)KPS.draw(g,W,Y,sc,now);
+  if(MOSHG)PMOSH.hud(g,W,H,Y,now,sc,MOSHG);
   ART.fxFront(g,W,H,alay,sfx,{now:now,phase:ph,holes:[{x:W/2,y:py,r:Math.max(70,W*0.14)}]});
   /* speech bubbles on top of everyone; oldest first so the newest is on top */
-  heads.filter(function(h){return h[0].text&&now-h[0].said<AUD_SAY_MS;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
-    var age=now-h[0].said,al=age>AUD_SAY_MS-1200?(AUD_SAY_MS-age)/1200:1;
+  heads.filter(function(h){return sayAlpha(h[0],now)>0;}).sort(function(a,b){return a[0].said-b[0].said;}).forEach(function(h){
+    var al=sayAlpha(h[0],now);
     audBubble(g,h[1],h[2],h[0].text,h[0].color,al,W);
   });
   if(!ids.length&&!stage){g.fillStyle="rgba(255,255,255,.35)";g.font="15px system-ui,sans-serif";g.textAlign="center";g.fillText("Waiting for the audience…",W/2,.58*sy);}
 }
 
 setInterval(drawAud,50);
+/* ── Points over heads (performer views) ──
+   During a game everyone's points float over their head, and a gold "+N" rises when they score, so you can see who's
+   doing what. The server sends everyone's score every few seconds (round-all). */
+var PSCORE=(function(){
+  var n=-1;
+  function all(m){if(m.n!==n){n=m.n;Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];p._rs=null;p._rsPop=null;});}
+    (m.s||[]).forEach(function(e){var p=AUD.people[e[0]];if(!p)return;var v=Math.max(0,Math.floor(+e[1]||0));if(p._rs!=null&&v>p._rs)p._rsPop={n:v-p._rs,t:Date.now()};p._rs=v;});}
+  function draw(g,p,x,headY,now,sc,rc){
+    if(!rc||rc.phase!=="play"||rc.mode==="free"||p.hang||p._rs==null||n!==rc.n)return false;
+    var P=Math.max(2,Math.round(sc*1.2)),txt=p._rs.toLocaleString(),comboUp=p.dance===5&&p.combo>=3;
+    ART.pixText(g,txt,x,headY-(comboUp?22:8)*sc/1.4-7*P,P,"#F5F23D","center","#000");
+    var pp=p._rsPop;if(pp){var age=(now-pp.t)/1400;if(age<1){g.globalAlpha=1-age;ART.pixText(g,"+"+pp.n,x+10*sc,headY-(24+age*26)*sc,P,"#4CC38A","left","#000");g.globalAlpha=1;}else p._rsPop=null;}
+    return true;}
+  return{all:all,draw:draw};
+})();
+/* ── The mosh pit, seen from the stage ──
+   The same plan as everyone's screens (art.js): what part of the pit it is now and what's next, the circle pit's rings,
+   the wall of death's split and count, the push war's tally, and the points table. */
+var PMOSH=(function(){
+  var cache=null,cacheC=null,tug=[0,0];
+  var NAMES={pit:"MOSH PIT",circle:"CIRCLE PIT",split:"WALL OF DEATH",count:"WALL OF DEATH",charge:"CHARGE!",tug:"PUSH WAR!",result:"WALL OF DEATH"};
+  function plan(rc){if(cacheC!==rc.chart){cacheC=rc.chart;cache=ART.MOSH.plan(rc.chart);}return cache;}
+  function nextUp(P,pos){var ev=[];if(P.wall)ev.push([P.wall.split,"WALL OF DEATH"]);P.circles.forEach(function(c){ev.push([c[0],"CIRCLE PIT"]);});ev.sort(function(a,b){return a[0]-b[0];});for(var i=0;i<ev.length;i++)if(ev[i][0]>pos)return ev[i];return null;}
+  function floor(g,W,H,Y,now,sc,rc){
+    var P=plan(rc),pos=ROUNDS.pos(),ph=ART.MOSH.phaseAt(P,pos),M=ART.MOSH,c=M.circle(M.TOP,M.BOT),cx=c.x*W,cy=Y(c.y),ryp=Y(c.y+c.ry)-cy,u=Math.max(2,Math.round(sc*1.5));
+    g.save();
+    if(ph==="circle"){var t=now/1000;
+      [0.12,0.3].forEach(function(r,k){g.strokeStyle=k?"rgba(76,195,138,.75)":"rgba(76,195,138,.45)";g.lineWidth=u*(k?2:1);ART.PX.ringO(g,cx,cy,r*W,ryp*r/0.3,0,u*(k?2:1));});
+      g.fillStyle="#4CC38A";for(var i=0;i<10;i++){var a=i/10*6.283+t*0.9,ax=cx+Math.cos(a)*0.21*W,ay=cy+Math.sin(a)*0.21*ryp/0.3;   /* arrows running round the pit */
+        var tx=-Math.sin(a)*0.21*W,ty=Math.cos(a)*0.21*ryp/0.3,tl=Math.hypot(tx,ty)||1;tx/=tl;ty/=tl;for(var q=0;q<3;q++){g.fillRect(Math.round((ax-tx*q*u*1.2)/u)*u,Math.round((ay-ty*q*u*1.2)/u)*u,u,u);}}}
+    if(ph==="split"||ph==="count"||ph==="charge"){var top=Y(M.TOP)-10,bot=Y(M.BOT)+10;g.fillStyle="rgba(232,80,91,"+(0.6+0.3*Math.sin(now/150))+")";for(var yy=top;yy<bot;yy+=u*4)g.fillRect(Math.round(W/2-u/2),Math.round(yy),u,u*2);}
+    g.restore();
+    return{P:P,pos:pos,ph:ph};
+  }
+  function hud(g,W,H,Y,now,sc,st){
+    var M=ART.MOSH,ph=st.ph,P=Math.max(1,Math.round(Math.min(W/240,H/170)*0.8)),top=Y(M.TOP),label=NAMES[ph]||"MOSH PIT",col=ph==="circle"?"#4CC38A":ph==="pit"?"#F5D03C":"#E8505B";
+    /* what part of the pit it is, and what's coming */
+    var ny=top+3*P,lx=Math.max(10,W*0.03),LP=Math.max(1,Math.round(P*1.5));ART.pixText(g,label,lx,ny,LP,col,"left","#000");   /* top left of the floor, clear of the stage */
+    var nx=nextUp(st.P,st.pos);if(ph==="pit"&&nx){var s=Math.max(0,Math.ceil((nx[0]-st.pos)/1000));ART.pixText(g,"NEXT: "+nx[1]+" IN "+Math.floor(s/60)+":"+("0"+s%60).slice(-2),lx,ny+10*LP,P,"#fff","left","#000");}
+    ny=top+3*P+10*LP;
+    if(ph==="split"||ph==="count"){var nL=0,nR=0;Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(p.dance!==4)return;if(p.x<0.5)nL++;else nR++;});
+      var cy2=ny+2*P;ART.pixText(g,"LEFT "+nL,W*0.2,cy2,LP,"#4A9BE8","center","#000");ART.pixText(g,"RIGHT "+nR,W*0.8,cy2,LP,"#E8505B","center","#000");
+      if(ph==="count"&&st.P.wall){var left=Math.max(1,Math.ceil((st.P.wall.go-st.pos)/1000));ART.pixText(g,String(left),W/2,H*0.5,P*6,"#fff","center","#E8505B");}}
+    if(ph==="tug"||ph==="result"){var a=PMOSH.tug[0],b=PMOSH.tug[1],bw=Math.min(W*0.5,460),bx=W/2-bw/2,by=top+3*P,share=a+b>0?a/(a+b):0.5,bh=P*5;
+      g.fillStyle="#000";g.fillRect(bx-P,by-P,bw+2*P,bh+2*P);g.fillStyle="#4A9BE8";g.fillRect(bx,by,Math.round(bw*share),bh);g.fillStyle="#E8505B";g.fillRect(bx+Math.round(bw*share),by,bw-Math.round(bw*share),bh);
+      ART.pixText(g,"LEFT "+a,bx+P*2,by+P,P,"#fff","left");ART.pixText(g,b+" RIGHT",bx+bw-P*2,by+P,P,"#fff","right");
+      if(ph==="result"&&a!==b)ART.pixText(g,(a>b?"LEFT":"RIGHT")+" SIDE WINS!",W/2,by+bh+6*P,P*2,a>b?"#4A9BE8":"#E8505B","center","#000");}
+    /* the points table */
+    var list=Object.keys(AUD.people).map(function(id){return AUD.people[id];}).filter(function(p){return p._rs!=null&&p.dance===4;}).sort(function(p,q){return q._rs-p._rs;}).slice(0,6);
+    if(list.length&&W>=600&&(ph==="pit"||ph==="circle")){   /* off during the wall of death: the right-hand side stands where it would be */
+      var tw=Math.min(260,W*0.24),tx=W-tw-12,ty=Math.max(60,top+3*P),rh=P*9;g.fillStyle="rgba(10,7,20,.82)";g.fillRect(tx,ty,tw,rh*(list.length+1)+P*3);
+      ART.pixText(g,"POINTS",tx+P*3,ty+P*3,P,"#F5D03C","left");
+      list.forEach(function(p,k){var y=ty+rh*(k+1)+P*2,sw=String(p._rs).length*6*P,mx=Math.max(3,Math.floor((tw-P*9-sw)/(6*P))-2),nm=String(p.name||"?").replace(/[^\x20-\x7e]/g,"").trim().toUpperCase().slice(0,mx);ART.pixText(g,(k+1)+" "+nm,tx+P*3,y,P,k<3?["#F5C518","#C9D3E6","#D9894A"][k]:"#ddd","left");ART.pixText(g,String(p._rs),tx+tw-P*3,y,P,"#fff","right");});}
+  }
+  return{floor:floor,hud:hud,get tug(){return tug;},set tug(v){tug=v;},done:false};
+})();
 /* ── Jam stage view ──
    Jam mode can show your venue instead of the classic visuals: the stage, you at the keys, the effects and the
    crowd, with a Jumbotron lowered over the stage carrying the video (YouTube, a music video, the video library)
@@ -4859,7 +4937,7 @@ var LSET=(function(){
   function bar(){
     if(!cur)return;
     $("lsIc").textContent=cur.kind==="yt"?"▶️":cur.o.video?"🎬":"🎵";$("lsTitle").textContent=cur.title;
-    var rc=ROUNDS.current,setL=ROUNDS.setLine(),gameTxt=setL?setL:cur.game==="off"?"No game":({crowd:"Crowd vote",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",ski:"Ski",pipe:"Half pipe",walk:"Dance walk race",kart:"Mars Rally"})[cur.game];
+    var rc=ROUNDS.current,setL=ROUNDS.setLine(),gameTxt=setL?setL:cur.game==="off"?"No game":({crowd:"Crowd vote",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",ski:"Ski",pipe:"Half pipe",walk:"Dance walk race",kart:"Mars Rally",ctf:"Capture the flag"})[cur.game];
     var sub=cur.cd>0?"Starting in "+cur.cd+"…":rc&&rc.phase==="analyse"?gameTxt+" · checking the song…":rc&&rc.phase==="countdown"?gameTxt+" · countdown":!cur.started?gameTxt:gameTxt+" · "+fmt(pos())+(dur()?" / "+fmt(dur()):"")+(cur.paused?" · paused":"");
     var pt=SONGMAP.part(),kn=SONGMAP.keyNow();if(cur.started&&(pt||kn))sub+=" · "+[pt,kn].filter(Boolean).join(" · ");
     var rb=$("lsRec");if(rb){rb.classList.toggle("on",SONGMAP.recording);rb.innerHTML=SONGMAP.recording?"&#9210; Rec":"&#9210;";rb.title=SONGMAP.recording?"Recording the show: click to stop and save it":"Record show: every stage change you make from now is saved with this song, and plays back by itself next time";}
@@ -5094,6 +5172,39 @@ var RACEVIEW=(function(){
 })();
 /* Ski: a follow view of the mountain. The camera rides with whoever's furthest down; everyone else is where they are
    on the same course (built from the round number, like on their phones), with the top three picked out and the standings */
+/* ── Capture the flag, seen from the stage ──
+   The whole arena fills your screen: everyone running about, the flags, who's carrying what, the team score and the points. */
+var CTFVIEW=(function(){
+  var C=ART.CTF,raf=0,cv=null,act=false,map=null,I=null,st={teams:{},flags:[],caps:[0,0]},sm={};
+  function $(id){return document.getElementById(id);}
+  function on(){var c=typeof ROUNDS!=="undefined"&&ROUNDS.current;return !!(jamOn&&liveOn&&c&&c.mode==="ctf"&&(c.phase==="countdown"||c.phase==="play"));}
+  function apply(){var a=on(),jm=$("jm");if(!jm)return;if(a!==act){act=a;jm.classList.toggle("ctfv",a);if(!a){map=null;sm={};}}if(a&&!raf)raf=requestAnimationFrame(frame);}
+  function msg(m){if(m.map){var mm=C.clean(m.map);if(mm){map=mm;I=C.info(map);}}if(m.teams)st.teams=m.teams;if(m.flags)st.flags=m.flags;if(m.caps)st.caps=m.caps;}
+  function frame(){
+    raf=0;if(!on()){apply();return;}
+    if(!cv)cv=$("jCtf");var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
+    if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+    var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;g.fillStyle="#07041a";g.fillRect(0,0,W,H);
+    if(!map){try{map=C.clean(JSON.parse(localStorage.getItem("uk_ctf")||"null"));}catch(e){}if(!map)map=C.clean(C.defaultMap());I=C.info(map);}
+    var V=C.fit(I,W,H,70,64),now=performance.now(),P=Math.max(2,Math.round(V.s/7));
+    C.draw(g,map,I,V,now,st.flags.length?st:null);
+    var list=[];Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p||p.dance!==4)return;var s=sm[id]||(sm[id]={x:p.x*I.w,y:p.y*I.h,f:0}),tx=p.x*I.w,ty=p.y*I.h,dx=tx-s.x,dy=ty-s.y;
+      if(Math.hypot(dx,dy)>4){s.x=tx;s.y=ty;}else{s.x+=dx*0.3;s.y+=dy*0.3;if(Math.hypot(dx,dy)>0.05)s.f=ART.face8(dx,dy,s.f);}list.push({id:id,p:p,x:s.x,y:s.y,f:s.f});});
+    list.sort(function(a,b){return a.y-b.y;});
+    var sc=Math.max(1,Math.round(V.s/14)),rc=ROUNDS.current;
+    list.forEach(function(q){var X=V.X(q.x),Y=V.Y(q.y),t=st.teams[q.id];g.globalAlpha=0.55;g.fillStyle=t===undefined?"#888":C.TEAM[t];ART.PX.oval(g,X,Y+2,V.s*0.42,V.s*0.18,0);g.globalAlpha=1;
+      ART.drawChar(g,X,Y-14*sc,sc,q.p.look||audLook("",q.p.color,q.p.name),{armL:0.5,armR:-0.5,legL:0.1,legR:-0.1,dir:q.f});
+      var cf=-1;st.flags.forEach(function(f,k){if(f.at===q.id)cf=k;});if(cf>=0)C.flag(g,X+4*sc,Y-30*sc,cf,V.s,now);
+      g.font="800 "+Math.max(10,Math.round(V.s*0.42))+"px system-ui";g.textAlign="center";g.textBaseline="top";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.8)";var nm=String(q.p.name||"");g.strokeText(nm,X,Y+V.s*0.3);g.fillStyle=t===undefined?"#fff":C.TEAM[t];g.fillText(nm,X,Y+V.s*0.3);g.textBaseline="alphabetic";
+      PSCORE.draw(g,q.p,X,Y-32*sc,Date.now(),sc,rc);});
+    /* the team score, and the count in */
+    ART.pixText(g,"RED "+st.caps[0],W/2-P*4,18,P,C.TEAM[0],"right","#000");ART.pixText(g,"-",W/2,18,P,"#fff","center","#000");ART.pixText(g,st.caps[1]+" BLUE",W/2+P*4,18,P,C.TEAM[1],"left","#000");
+    var bp=ROUNDS.pos(),b=bp>-1e8?ART.PIPE.beatAt(rc&&rc.chart,bp):-99;if(b<8)ART.pixText(g,b<4?"GET READY":String(Math.ceil(8-b)),W/2,H*0.45,P*2,"#fff","center","#000");else if(b<9.5)ART.pixText(g,"GO!",W/2,H*0.45,P*3,"#F5C518","center","#000");
+    raf=requestAnimationFrame(frame);
+  }
+  window.ukCtfView=function(){return{on:act,caps:st.caps,flags:st.flags,people:Object.keys(sm).length};};
+  return{init:function(){setInterval(apply,400);},apply:apply,msg:msg};
+})();
 var SKIVIEW=(function(){
   var course=null,raf=0,cv=null,act=false,force=null,cache={},seedN=-1,seed=1,sm={},camX=0,camY=0,last=[],MEDAL=["#F5C518","#C9D3E6","#D9894A"];
   function $(id){return document.getElementById(id);}
@@ -5123,7 +5234,9 @@ var SKIVIEW=(function(){
     rs.forEach(function(r,k){r.place=k+1;});last=rs.map(function(r){return{name:r.name,place:r.place,m:Math.max(0,Math.round(r.y/10))};});
     /* follow the leader */
     var lead=rs[0],tx=lead?lead.x:0,ty=lead?lead.y:-24;camX+=(tx-camX)*0.08;camY+=(ty-camY)*0.12;
-    var z=Math.max(0.9,Math.min(1.8,Math.min(W/900,H/620))),sx=function(wx){return W/2+(wx-camX)*z;},sy=function(wy){return H*0.42+(wy-camY)*z;};
+    /* the start: in close on the skiers at the top, pulling back slowly to the whole mountain by GO (beat 8) */
+    var ib=ART.PIPE.beatAt(c.chart,ROUNDS.pos()),ik=ib>-1e8?Math.max(0,Math.min(1,ib/8)):0;ik=ik*ik*(3-2*ik);
+    var z=Math.max(0.9,Math.min(1.8,Math.min(W/900,H/620)))*(1+1.6*(1-ik)),sx=function(wx){return W/2+(wx-camX)*z;},sy=function(wy){return H*0.42+(wy-camY)*z;};
     var y0=camY-H*0.42/z-40,y1=camY+H*0.58/z+60;
     ART.SKI.ground(g,W,H,z,sx,sy,camX,y0,y1);
     var list=ART.SKI.near(seed,cache,y0,y1,course).map(function(o){return{y:o.y,o:o};});
@@ -5151,7 +5264,7 @@ var SKIVIEW=(function(){
   window.ukSkiViewTest=function(fn){force=fn||null;apply();};
   return{init:function(){setInterval(apply,400);},apply:apply};
 })();
-window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.init();SKIVIEW.init();
+window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.init();SKIVIEW.init();CTFVIEW.init();
   var tb=document.getElementById("jTopBar"),bb=document.getElementById("jBotBar");
   ["jLiveBtn","jFsBtn","jx"].forEach(function(id){var e=document.getElementById(id);if(e)tb.appendChild(e);});
   /* Stage button: borrow the show effects panel from Setup → Show while the pop-up is open, then put it back */
@@ -5724,7 +5837,7 @@ var BOTFILL=(function(){
 window.addEventListener("load",function(){BOTFILL.init();});
 var ROUNDS=(function(){
   var cfg={mode:"off",secs:10,level:1,battle:false},cur=null,job=0,cdT=null,syncT=null,uiT=null,hideT=null,totals=[],myVote="",votes=null,top=null;
-  var NAMES={crowd:"Crowd vote",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",ski:"Ski",pipe:"Half pipe",walk:"Dance walk race",kart:"Mars Rally"},ORD=["1st","2nd","3rd"];
+  var NAMES={ctf:"Capture the flag",crowd:"Crowd vote",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",ski:"Ski",pipe:"Half pipe",walk:"Dance walk race",kart:"Mars Rally"},ORD=["1st","2nd","3rd"];
   try{var sv=JSON.parse(localStorage.getItem("uk_rounds")||"{}");if(NAMES[sv.mode]||sv.mode==="off")cfg.mode=sv.mode;if(sv.secs>=5&&sv.secs<=30)cfg.secs=+sv.secs;if(sv.level>=0.5&&sv.level<=1.5)cfg.level=+sv.level;cfg.battle=!!sv.battle;}catch(e){}
   function ord(n){return ORD[n-1]||n+"th";}
   function $(id){return document.getElementById(id);}
@@ -5773,10 +5886,13 @@ var ROUNDS=(function(){
     if(my!==job||!cur)return;
     if(cur.setGames){var D=chart&&chart.dur>0?chart.dur:(cur.file&&backingAudio&&isFinite(backingAudio.duration)?backingAudio.duration*1000:0);if(D>0){startSet(chart,D,my);return;}cur.mode=cur.setGames.filter(function(x){return x!=="crowd";})[0]||ALLG[Math.floor(Math.random()*ALLG.length)];}
     var cdS=cdMs||cfg.secs*1000;
+    /* a mosh pit that runs for part of the song: its wall of death and circle pits are fitted inside the game's time */
+    if(cur.setQ&&cur.mode==="mosh"&&chart&&typeof ART!=="undefined"&&ART.MOSH)chart=ART.MOSH.window(chart,cur.setQ.start,cur.setQ.end);
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cdS;
     var ktTrack=null;if(cur.mode==="kart"){try{ktTrack=JSON.parse(localStorage.getItem("uk_track")||"null");}catch(e){}}
     var skCourse=null;if(cur.mode==="ski"){try{skCourse=JSON.parse(localStorage.getItem("uk_ski")||"null");}catch(e){}}
-    liveSend({type:"round-start",track:ktTrack,ski:skCourse,mode:cur.mode==="ice"?"skate":cur.mode,ice:cur.mode==="ice"?1:0,battle:!!cur.battle,title:cur.title,countdown:cdS,chart:chart});
+    var ctfMap=null;if(cur.mode==="ctf"){try{ctfMap=JSON.parse(localStorage.getItem("uk_ctf")||"null");}catch(e){}}
+    liveSend({type:"round-start",track:ktTrack,ski:skCourse,ctf:ctfMap,mode:cur.mode==="ice"?"skate":cur.mode,ice:cur.mode==="ice"?1:0,battle:!!cur.battle,title:cur.title,countdown:cdS,chart:chart});
     status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file"+(why?" ("+String(why).slice(0,60)+")":"")+", so there are no notes for the Note highway on this one. Try an mp3 or wav copy. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cdS);
     clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();
@@ -5786,7 +5902,7 @@ var ROUNDS=(function(){
      intro, and the second one comes after a short break (the first one's results show then). What's left over is
      free dance between and at the end. */
   var set=null,fullShow=false,gv=null;
-  var GAME_MAX=150000,VOTE_MS=15000,ALLG=["step","aim","keys","keys4","mosh","skate","ice","keepy","kart","walk","pipe","ski"];
+  var GAME_MAX=150000,VOTE_MS=15000,ALLG=["step","aim","keys","keys4","mosh","skate","ice","keepy","kart","walk","pipe","ski","ctf"];
   /* the full show: games already played this show (kept on this computer until New show) */
   function played(){try{var a=JSON.parse(localStorage.getItem("uk_showplayed")||"[]");return Array.isArray(a)?a.filter(function(x){return ALLG.indexOf(x)>=0;}):[];}catch(e){return [];}}
   function markPlayed(m){if(!fullShow)return;var a=played();if(a.indexOf(m)<0)a.push(m);try{localStorage.setItem("uk_showplayed",JSON.stringify(a));}catch(e){}}

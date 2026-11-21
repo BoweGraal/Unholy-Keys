@@ -15,6 +15,8 @@ var PIXFONT={"0":[14,17,19,21,25,17,14],"1":[4,12,4,4,4,4,14],"2":[14,17,1,2,4,8
   A:[14,17,17,31,17,17,17],B:[30,17,17,30,17,17,30],C:[14,17,16,16,16,17,14],D:[28,18,17,17,17,18,28],E:[31,16,16,30,16,16,31],F:[31,16,16,30,16,16,16],G:[14,17,16,23,17,17,15],H:[17,17,17,31,17,17,17],I:[14,4,4,4,4,4,14],J:[7,2,2,2,2,18,12],K:[17,18,20,24,20,18,17],L:[16,16,16,16,16,16,31],M:[17,27,21,21,17,17,17],
   N:[17,17,25,21,19,17,17],O:[14,17,17,17,17,17,14],P:[30,17,17,30,16,16,16],Q:[14,17,17,17,21,18,13],R:[30,17,17,30,20,18,17],S:[15,16,16,14,1,1,30],T:[31,4,4,4,4,4,4],U:[17,17,17,17,17,17,14],V:[17,17,17,17,17,10,4],W:[17,17,17,21,21,21,10],X:[17,17,10,4,10,17,17],Y:[17,17,17,10,4,4,4],Z:[31,1,2,4,8,16,31],
   "!":[4,4,4,4,4,0,4],".":[0,0,0,0,0,12,12],"-":[0,0,0,31,0,0,0]," ":[0,0,0,0,0,0,0],"'":[4,4,8,0,0,0,0],"?":[14,17,1,2,4,0,4],"*":[0,21,14,31,14,21,0],"#":[10,31,10,10,31,10,0]};
+PIXFONT["+"]=[0,4,4,31,4,4,0];PIXFONT[":"]=[0,12,12,0,12,12,0];PIXFONT[","]=[0,0,0,0,12,4,8];PIXFONT["/"]=[1,1,2,4,8,16,16];PIXFONT["<"]=[2,4,8,16,8,4,2];PIXFONT[">"]=[8,4,2,1,2,4,8];
+
 
 var ART=(function(){
   function G(k,d){return typeof GFX!=="undefined"?GFX.v(k):d;}   /* graphics lab values (gfx.js) */
@@ -648,6 +650,160 @@ var ART=(function(){
      (the round number), so every screen builds the same gates, trees, rocks and ramps. */
   var SK={CH:320,GATE_DY:170,GATE_W:40};
   SK.seedFor=function(n){return 1+((n|0)*37)%997;};
+
+  /* ---------- capture the flag: the arena, the rules and the bots' brains, shared by the venue, the performer's view, the
+     server (which referees) and the Capture the flag designer (ctf.html) ----------
+     A map is a grid of tiles {name, w, h, t}: t is w*h characters, row by row:
+       .  floor      #  wall      > < ^ v  boost pad (shoves you that way)
+       R  red base (red's flag sits in the middle of these)     B  blue base
+       r  red spawn  b  blue spawn
+     Positions are in tiles (x across, y down); on the wire they're fractions of the map (0..1). */
+  var CTF={CH:".#><^vRBrb",TEAM:["#E8505B","#3B7BE8"],TNAME:["RED","BLUE"],SPEED:6.2,CARRY:0.85,PAD:2.4,TAG_R:0.75,TAKE_R:0.9,CAP_R:1.2};
+  CTF.defaultMap=function(){
+    var w=40,h=24,G=[],x,y;for(y=0;y<h;y++){G.push([]);for(x=0;x<w;x++)G[y].push(x===0||y===0||x===w-1||y===h-1?"#":".");}
+    function put(x,y,c){if(x>0&&y>0&&x<w-1&&y<h-1){G[y][x]=c;var mc=c==="R"?"B":c==="B"?"R":c==="r"?"b":c==="b"?"r":c===">"?"<":c==="<"?">":c;G[y][w-1-x]=mc;}}
+    function rect(x0,y0,x1,y1,c){for(var yy=y0;yy<=y1;yy++)for(var xx=x0;xx<=x1;xx++)put(xx,yy,c);}
+    rect(2,10,4,13,"R");rect(2,3,3,4,"r");rect(2,19,3,20,"r");                  /* the base and two spawns */
+    rect(7,6,7,9,"#");rect(7,14,7,17,"#");rect(8,6,10,6,"#");rect(8,17,10,17,"#");   /* the fort round the base */
+    rect(13,2,13,7,"#");rect(13,16,13,21,"#");rect(17,10,18,13,"#");             /* cover in the middle */
+    rect(19,4,19,6,"#");rect(19,17,19,19,"#");
+    rect(10,11,14,11,">");rect(10,12,14,12,">");                                 /* the fast lane out of the base */
+    rect(15,3,17,3,">");rect(15,20,17,20,">");rect(22,8,22,8,"v");rect(22,15,22,15,"^");
+    return{name:"Twin Forts",w:w,h:h,t:G.map(function(r){return r.join("");}).join("")};};
+  CTF.clean=function(m){
+    if(!m||typeof m!=="object")return null;var w=m.w|0,h=m.h|0,t=String(m.t||"");
+    if(w<16||w>80||h<10||h>50||t.length!==w*h)return null;var out="",i,hasR=false,hasB=false;
+    for(i=0;i<t.length;i++){var c=t[i],x=i%w,y=(i/w)|0;if(CTF.CH.indexOf(c)<0)c=".";if(x===0||y===0||x===w-1||y===h-1)c="#";if(c==="R")hasR=true;if(c==="B")hasB=true;out+=c;}
+    if(!hasR||!hasB)return null;return{name:String(m.name||"My arena").slice(0,40),w:w,h:h,t:out};};
+  var CTFI=[];
+  /* what a map works out to: where each flag sits, the spawn spots, and quick tile lookups (cached) */
+  CTF.info=function(m){
+    for(var k=0;k<CTFI.length;k++)if(CTFI[k].m===m)return CTFI[k].i;
+    var w=m.w,h=m.h,base=[[0,0,0],[0,0,0]],sp=[[],[]],i;
+    for(i=0;i<m.t.length;i++){var c=m.t[i],x=i%w+0.5,y=((i/w)|0)+0.5;if(c==="R"){base[0][0]+=x;base[0][1]+=y;base[0][2]++;}if(c==="B"){base[1][0]+=x;base[1][1]+=y;base[1][2]++;}if(c==="r")sp[0].push([x,y]);if(c==="b")sp[1].push([x,y]);}
+    var bs=base.map(function(b){return b[2]?[b[0]/b[2],b[1]/b[2]]:[w/2,h/2];});
+    [0,1].forEach(function(t){if(!sp[t].length)sp[t].push(bs[t].slice());});
+    var I={w:w,h:h,base:bs,spawn:sp,
+      at:function(x,y){x=Math.floor(x);y=Math.floor(y);if(x<0||y<0||x>=w||y>=h)return "#";return m.t[y*w+x];},
+      solid:function(x,y){return I.at(x,y)==="#";},
+      pad:function(x,y){var c=I.at(x,y);return c===">"?[1,0]:c==="<"?[-1,0]:c==="^"?[0,-1]:c==="v"?[0,1]:null;},
+      side:function(x,y){var d0=Math.hypot(x-bs[0][0],y-bs[0][1]),d1=Math.hypot(x-bs[1][0],y-bs[1][1]);return d0<=d1?0:1;}};
+    CTFI.push({m:m,i:I});if(CTFI.length>6)CTFI.shift();return I;};
+  /* moving a player (radius 0.32 tiles) by dx, dy with walls in the way: each axis on its own, so you slide along walls */
+  CTF.move=function(I,p,dx,dy){var r=0.32;
+    function hit(x,y){return I.solid(x-r,y-r)||I.solid(x+r,y-r)||I.solid(x-r,y+r)||I.solid(x+r,y+r);}
+    var n=Math.ceil(Math.max(Math.abs(dx),Math.abs(dy))/0.25)||1;for(var s=0;s<n;s++){if(!hit(p.x+dx/n,p.y))p.x+=dx/n;if(!hit(p.x,p.y+dy/n))p.y+=dy/n;}return p;};
+  /* the game state; the server keeps the real one and everyone else mirrors it */
+  CTF.newState=function(I,ids){var st={teams:{},flags:[{t:0,x:I.base[0][0],y:I.base[0][1],at:null},{t:1,x:I.base[1][0],y:I.base[1][1],at:null}],caps:[0,0],score:{},pos:{},cool:{},tagged:{}};
+    (ids||[]).slice().sort().forEach(function(id,k){st.teams[id]=k%2;});return st;};
+  CTF.teamOf=function(st,id){if(st.teams[id]===undefined){var n=[0,0];for(var k in st.teams)n[st.teams[k]]++;st.teams[id]=n[0]<=n[1]?0:1;}return st.teams[id];};
+  CTF.spawnOf=function(I,st,id){var t=CTF.teamOf(st,id),ids=Object.keys(st.teams).filter(function(k){return st.teams[k]===t;}).sort(),s=I.spawn[t];return s[Math.max(0,ids.indexOf(id))%s.length].slice();};
+  CTF.carrying=function(st,id){for(var f=0;f<2;f++)if(st.flags[f].at===id)return f;return -1;};
+  /* someone is at x, y (tiles): flags picked up, captures and tags. Returns what happened, for banners and points */
+  CTF.step=function(st,I,id,x,y,now){
+    var t=CTF.teamOf(st,id),ev=[],mine=st.flags[t],theirs=st.flags[1-t],add=function(n,who){st.score[who]=(st.score[who]||0)+n;};
+    if(st.tagged[id]&&now-st.tagged[id]<1500)return ev;        /* just tagged: on the way back to spawn */
+    st.pos[id]=[x,y,now];
+    var cf=CTF.carrying(st,id);
+    if(cf>=0){st.flags[cf].x=x;st.flags[cf].y=y;
+      if(mine.at===null&&Math.hypot(x-I.base[t][0],y-I.base[t][1])<CTF.CAP_R){st.caps[t]++;add(500,id);var fl=st.flags[cf];fl.at=null;fl.x=I.base[fl.t][0];fl.y=I.base[fl.t][1];ev.push({k:"cap",id:id,t:t});}}
+    else if(theirs.at===null&&Math.hypot(x-theirs.x,y-theirs.y)<CTF.TAKE_R){theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
+    /* tags: two players from different teams meet; whoever is on the other team's half goes back to spawn */
+    for(var o in st.pos){if(o===id||st.teams[o]===undefined||st.teams[o]===t)continue;var q=st.pos[o];if(now-q[2]>1500||(st.tagged[o]&&now-st.tagged[o]<1500))continue;
+      if(Math.hypot(q[0]-x,q[1]-y)>CTF.TAG_R)continue;var key=id<o?id+"|"+o:o+"|"+id;if(st.cool[key]&&now-st.cool[key]<1200)continue;st.cool[key]=now;
+      var sd=I.side((q[0]+x)/2,(q[1]+y)/2),victim=sd===t?o:id,tagger=victim===o?id:o,vf=CTF.carrying(st,victim);
+      if(vf>=0){var f2=st.flags[vf];f2.at=null;f2.x=I.base[f2.t][0];f2.y=I.base[f2.t][1];}
+      st.tagged[victim]=now;add(vf>=0?250:150,tagger);ev.push({k:"tag",id:victim,by:tagger,carrier:vf>=0});if(victim===id)break;}
+    return ev;};
+  /* a shortest path step through the grid (for the bots): the next tile centre to head for on the way from a to b */
+  CTF.path=function(I,ax,ay,bx,by){
+    var w=I.w,h=I.h,sx=Math.floor(ax),sy=Math.floor(ay),tx=Math.floor(bx),ty=Math.floor(by);if(sx===tx&&sy===ty)return[bx,by];
+    var prev=new Int32Array(w*h).fill(-1),q=[sy*w+sx],head=0;prev[sy*w+sx]=sy*w+sx;
+    while(head<q.length){var c=q[head++],cx=c%w,cy=(c/w)|0;if(cx===tx&&cy===ty)break;
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){var nx=cx+d[0],ny=cy+d[1];if(nx<0||ny<0||nx>=w||ny>=h)return;var ni=ny*w+nx;if(prev[ni]>=0||m_solid(nx,ny))return;prev[ni]=c;q.push(ni);});}
+    function m_solid(x,y){return I.solid(x+0.5,y+0.5);}
+    var e=ty*w+tx;if(prev[e]<0)return[bx,by];var steps=[];while(e!==sy*w+sx){steps.push(e);e=prev[e];}
+    /* look two tiles ahead so they cut corners a little, but only when the straight line there is clear of walls */
+    var one=steps[steps.length-1],two=steps.length>1?steps[steps.length-2]:one,tx2=(two%w)+0.5,ty2=((two/w)|0)+0.5,clear=true;
+    for(var k=1;k<=6&&clear;k++){var px=ax+(tx2-ax)*k/6,py=ay+(ty2-ay)*k/6;if(I.solid(px-0.34,py-0.34)||I.solid(px+0.34,py-0.34)||I.solid(px-0.34,py+0.34)||I.solid(px+0.34,py+0.34))clear=false;}
+    var nxt=clear?two:one;return[(nxt%w)+0.5,((nxt/w)|0)+0.5];};
+  /* a bot's plan: carrying a flag, run it home; a carrier from the other team about, chase them on your half; otherwise
+     some go for the flag and some stay back near home */
+  CTF.botGoal=function(st,I,id,x,y,role){
+    var t=CTF.teamOf(st,id),cf=CTF.carrying(st,id);
+    if(cf>=0)return I.base[t];
+    var thief=st.flags[t].at;if(thief&&st.pos[thief]){var tp=st.pos[thief];return[tp[0],tp[1]];}
+    if(role==="d"){var best=null,bd=1e9;for(var o in st.pos){if(st.teams[o]===t)continue;var q=st.pos[o];if(I.side(q[0],q[1])!==t)continue;var d=Math.hypot(q[0]-x,q[1]-y);if(d<bd){bd=d;best=[q[0],q[1]];}}
+      if(best)return best;return[I.base[t][0]+(t?-4:4),I.base[t][1]+Math.sin(Date.now()/1500)*3];}
+    var f=st.flags[1-t];return[f.x,f.y];};
+  /* a bot on the other team's half steers away from anyone who could tag it (a push to add to its running) */
+  CTF.botAvoid=function(st,I,id,x,y){var t=CTF.teamOf(st,id),ax=0,ay=0;if(I.side(x,y)===t)return[0,0];
+    for(var o in st.pos){if(st.teams[o]===t||st.teams[o]===undefined)continue;var q=st.pos[o],dx=x-q[0],dy=y-q[1],d=Math.hypot(dx,dy);if(d<3&&d>0.01){ax+=dx/d*(3-d)/3;ay+=dy/d*(3-d)/3;}}
+    var m=Math.hypot(ax,ay);return m>1?[ax/m,ay/m]:[ax,ay];};
+  /* ---- drawing: the floor in dance-floor tiles, walls as raised pixel blocks, boost pads with running chevrons, bases ---- */
+  CTF.fit=function(I,W,H,top,bot){var s=Math.max(4,Math.floor(Math.min(W/I.w,(H-top-bot)/I.h))),ox=Math.round((W-s*I.w)/2),oy=Math.round(top+(H-top-bot-s*I.h)/2);return{s:s,ox:ox,oy:oy,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
+  CTF.draw=function(g,m,I,v,now,st){
+    var s=v.s,P=Math.max(1,Math.round(s/8)),x,y,ph=(now/90)%8;
+    for(y=0;y<I.h;y++)for(x=0;x<I.w;x++){var c=m.t[y*I.w+x],X=v.ox+x*s,Y=v.oy+y*s;
+      if(c==="#"){continue;}
+      var hs=Math.sin(x*12.9898+y*78.233)*43758.5453;hs-=Math.floor(hs);
+      g.fillStyle=(x+y)%2?"#1a1430":"#120e1e";if(c==="R"||c==="r")g.fillStyle=(x+y)%2?"#3a1420":"#2c0f18";if(c==="B"||c==="b")g.fillStyle=(x+y)%2?"#14243e":"#0f1a30";
+      g.fillRect(X,Y,s,s);
+      if((c==="."||c==="R"||c==="B")&&hs<0.08){g.globalAlpha=0.35+0.25*Math.sin(now/300+x+y);g.fillStyle=["#D354A0","#7F77DD","#3DF2FF","#F5C518"][(hs*50|0)%4];g.fillRect(X+P,Y+P,s-2*P,s-2*P);g.globalAlpha=1;}
+      g.fillStyle="#0a0714";g.fillRect(X,Y,s,P);g.fillRect(X,Y,P,s);
+      var pd=I.pad(x,y);if(pd){g.fillStyle="#2b2050";g.fillRect(X+P,Y+P,s-2*P,s-2*P);g.fillStyle="#F5F23D";
+        for(var k=0;k<2;k++){var o=((ph/8+k*0.5)%1)*s-s*0.25,cx=X+s/2+pd[0]*(o-s*0.25),cy=Y+s/2+pd[1]*(o-s*0.25);
+          for(var q=-2;q<=2;q++){var ax=cx-pd[0]*Math.abs(q)*P+pd[1]*q*P,ay=cy-pd[1]*Math.abs(q)*P+pd[0]*q*P;if(ax>X&&ax<X+s-P&&ay>Y&&ay<Y+s-P)g.fillRect(Math.round(ax),Math.round(ay),P,P);}}}
+      if(c==="r"||c==="b"){g.fillStyle=c==="r"?"rgba(232,80,91,.35)":"rgba(59,123,232,.35)";g.fillRect(X+2*P,Y+2*P,s-4*P,s-4*P);}}
+    /* walls on top: raised blocks with a lit top edge and a shadow below */
+    for(y=0;y<I.h;y++)for(x=0;x<I.w;x++){if(m.t[y*I.w+x]!=="#")continue;var X2=v.ox+x*s,Y2=v.oy+y*s;
+      g.fillStyle="#3a3058";g.fillRect(X2,Y2-P*2,s,s);g.fillStyle="#5a4a88";g.fillRect(X2,Y2-P*2,s,P);g.fillStyle="#241c3a";g.fillRect(X2,Y2+s-P*2,s,P*2);
+      if(I.at(x+0.5,y+1.5)!=="#"){g.fillStyle="rgba(0,0,0,.35)";g.fillRect(X2,Y2+s,s,P*2);}}
+    /* the bases: a ring round where each flag lives */
+    [0,1].forEach(function(t){var b=I.base[t];g.strokeStyle=CTF.TEAM[t];g.lineWidth=P;g.globalAlpha=0.6+0.3*Math.sin(now/250);PX.ring(g,v.X(b[0]),v.Y(b[1]),CTF.CAP_R*s,P,P);g.globalAlpha=1;});
+    if(st)st.flags.forEach(function(f){if(f.at===null)CTF.flag(g,v.X(f.x),v.Y(f.y),f.t,s,now);});
+  };
+  /* a flag on a pole, waving */
+  CTF.flag=function(g,x,y,t,s,now){var P=Math.max(1,Math.round(s/8)),h=s*1.4,col=CTF.TEAM[t],dk=t?"#24509c":"#a8323b";x=Math.round(x);y=Math.round(y);
+    g.fillStyle="rgba(0,0,0,.35)";g.fillRect(x-P*2,y,P*5,P);g.fillStyle="#d8d8e4";g.fillRect(x,y-h,P,h);
+    var wv=Math.sin(now/160)*P;for(var r=0;r<4;r++){g.fillStyle=r%2?dk:col;g.fillRect(x+P,y-h+r*P*1.5+(r===1||r===2?wv*0.5:0),P*(6-r),P*1.5);}};
+  /* ---------- the mosh pit's plan, shared by the venue, the performer's view and the server's bots ----------
+     From the song's chart: the wall of death at the drop (split, count in, charge, a 10 s push war, the result), and circle pits
+     in the loud stretches. window() fits a chart to a game that only runs for part of the song (two games per song). */
+  var MOSHX={TUG_AT:800,TUG_MS:10000,TOP:0.35,BOT:0.74};
+  MOSHX.plan=function(chart){
+    var dur=chart&&chart.dur||0,D=chart&&chart.drop||0,out={wall:null,circles:[]},TA=MOSHX.TUG_AT,TM=MOSHX.TUG_MS;
+    if(D>12000&&(!dur||D<dur-14000)){var split=Math.max(D-9000,4000);out.wall={split:split,count:D-3000,go:D,t0:D+TA,t1:D+TA+TM,end:D+TA+TM+3500};}
+    var w=out.wall,pk=(chart&&chart.peaks)||[];
+    pk.forEach(function(p){
+      var a1=p[0],b1=p[1];
+      if(w&&b1>w.split-3000&&a1<w.end+3000){if(a1<w.split-3000)b1=w.split-3000;else if(b1>w.end+3000)a1=w.end+3000;else return;}
+      if(b1-a1>=8000&&out.circles.length<3)out.circles.push([a1,Math.min(b1,a1+40000)]);
+    });
+    if(!out.circles.length){
+      if(dur>50000){var c0=dur*0.66,c1=c0+16000;if(!w||c1<w.split-3000||c0>w.end+3000)out.circles.push([c0,c1]);}
+      else if(!dur){for(var t=40000;t<600000;t+=70000)out.circles.push([t,t+16000]);}
+    }
+    return out;
+  };
+  MOSHX.phaseAt=function(P,pos){
+    if(!P)return "pit";var w=P.wall;
+    if(w&&pos>=w.split&&pos<w.end){if(pos<w.count)return "split";if(pos<w.go)return "count";if(pos<w.t0)return "charge";if(pos<w.t1)return "tug";return "result";}
+    for(var i=0;i<P.circles.length;i++)if(pos>=P.circles[i][0]&&pos<P.circles[i][1])return "circle";
+    return "pit";
+  };
+  /* the circle pit: centred on the floor (top..bot as fractions of the room) */
+  MOSHX.circle=function(top,bot){return{x:0.5,y:(top+bot)/2,ry:Math.max(0.06,(bot-top)/2-0.03)};};
+  /* a game that runs from start to end (ms of song): keep the drop and loud stretches inside it, or make some that fit */
+  MOSHX.window=function(chart,start,end){
+    if(!chart)return chart;var c={},k;for(k in chart)c[k]=chart[k];var len=end-start,D=chart.drop||0;
+    if(!(D>=start+20000&&D<=end-17000))D=len>=62000?Math.round(start+len*0.6):0;
+    c.drop=D;var wl=D?[D-12000,D+17300]:null,pk=[];
+    (chart.peaks||[]).forEach(function(p){var a1=Math.max(p[0],start+4000),b1=Math.min(p[1],end-3000);if(b1-a1>=8000)pk.push([a1,b1]);});
+    var clear=function(p){return !wl||p[1]<wl[0]||p[0]>wl[1];};
+    if(!pk.some(clear)){var opts=[[start+6000,start+24000],[end-22000,end-4000]];for(var i=0;i<opts.length;i++)if(opts[i][1]-opts[i][0]>=8000&&opts[i][0]>=start&&clear(opts[i])){pk.unshift(opts[i]);break;}}
+    c.peaks=pk;c.dur=Math.max(chart.dur||0,end+14001);return c;
+  };
   /* the made-up mountain comes in layers: a flag zone (slalom gates) then a jump zone (a line of ramps and moguls), over and over */
   SK.Z0=300;SK.ZFLAG=1300;SK.ZJUMP=900;
   SK.zoneAt=function(yy){if(yy<SK.Z0)return{k:"start",y0:-1e9,y1:SK.Z0,i:-1};var per=SK.ZFLAG+SK.ZJUMP,i=Math.floor((yy-SK.Z0)/per),b=SK.Z0+i*per,m=yy-b;
@@ -673,7 +829,9 @@ var ART=(function(){
       var per=SK.ZFLAG+SK.ZJUMP;for(var zb=SK.Z0+Math.max(0,Math.floor((y0-SK.Z0)/per))*per;zb<y0+SK.CH;zb+=per){[zb,zb+SK.ZFLAG].forEach(function(zy,zk){if(zy>=y0&&zy<y0+SK.CH)o.push({k:"zone",x:0,y:zy,z:zk?"jump":"flag"});});}
       /* flag zones: gates down the line, a little tighter than before */
       var GD=150;
-      for(var gy=Math.ceil(y0/GD)*GD;gy<y0+SK.CH;gy+=GD){var zn=SK.zoneAt(gy);if(zn.k!=="flag"||gy<zn.y0+90||gy>zn.y1-60)continue;var gi=Math.round(gy/GD);o.push({k:"gate",x:SK.lineX(gy,seed),y:gy,id:gi,col:gi%2?"#E8505B":"#3B7BE8"});}
+      /* single slalom flags, swapping sides of the line: the arrow on the flag (and the carved divot beside it) shows which side to pass */
+      for(var gy=Math.ceil(y0/GD)*GD;gy<y0+SK.CH;gy+=GD){var zn=SK.zoneAt(gy);if(zn.k!=="flag"||gy<zn.y0+90||gy>zn.y1-60)continue;var gi=Math.round(gy/GD),sd=gi%2?1:-1,pass=-sd;
+        o.push({k:"flag",x:SK.lineX(gy,seed)+sd*34,y:gy,id:gi,pass:pass,col:pass<0?"#E8505B":"#3B7BE8"});}
       /* jump zones: a run of ramps along the line, swapping sides, with moguls between */
       for(var ry2=Math.ceil(y0/230)*230;ry2<y0+SK.CH;ry2+=230){var zr=SK.zoneAt(ry2);if(zr.k!=="jump"||ry2<zr.y0+120||ry2>zr.y1-80)continue;var side2=Math.round(ry2/230)%2?-1:1;o.push({k:"ramp",x:SK.lineX(ry2,seed)+side2*26,y:ry2});
         if(r()<0.8){var my2=ry2+90+r()*60;o.push({k:"mogul",x:SK.lineX(my2,seed)+(r()*2-1)*70,y:my2});}}
@@ -728,7 +886,18 @@ var ART=(function(){
   SK.zone=function(g,o,z,sx,sy){var k=SK.px(z),col=o.z==="jump"?"#22a6c8":"#d8404c",hw=SK.halfW(o.y),yy=Math.round(sy(o.y));
     g.fillStyle=col;for(var q=-hw;q<hw;q+=18)g.fillRect(Math.round(sx(q)),yy,Math.round(10*z),k);
     pixText(g,o.z==="jump"?"JUMP ZONE":"FLAG ZONE",sx(0),yy+k*3,Math.max(2,Math.round(k*0.9)),col,"center");};
-  SK.obj=function(g,o,z,sx,sy,passedIt){var ox=sx(o.x),oy=sy(o.y),alt=((Math.round(o.x*7+o.y*3)%3)+3)%3===0;if(o.k==="tree")SK.tree(g,ox,oy,o.s,z,alt);else if(o.k==="rock")SK.rock(g,ox,oy,o.s,z,alt);else if(o.k==="ramp")SK.ramp(g,ox,oy,z);else if(o.k==="mogul")SK.mogul(g,ox,oy,z);else if(o.k==="zone")SK.zone(g,o,z,sx,sy);else if(o.k==="gate")SK.gate(g,o,z,sx,sy,passedIt);};
+  /* the divot: a carved bowl in the snow on the side you pass, with chevrons pointing the way through */
+  SK.DIV={dx:46,rx:30,ry:13};
+  SK.divot=function(g,o,z,sx,sy,passedIt){var k=SK.px(z),cx=sx(o.x+o.pass*SK.DIV.dx),cy=sy(o.y),rx=SK.DIV.rx*z,ry=SK.DIV.ry*z;
+    g.fillStyle="#9fb6d8";PX.oval(g,cx,cy,rx,ry,0,k);g.fillStyle="#cbd9ee";PX.oval(g,cx,cy-k,rx-k*2,ry-k*1.5,0,k);g.fillStyle="#f7faff";PX.oval(g,cx,cy-ry*0.55,rx*0.6,k*0.9,0,k);
+    g.fillStyle=passedIt?"#9db8d8":o.col;var dir=o.pass;for(var c=0;c<3;c++){var ax=cx+(c-1)*rx*0.55;for(var q=0;q<3;q++){g.fillRect(Math.round((ax+dir*q*k-dir*k)/k)*k,Math.round((cy-ry*0.15-q*k)/k)*k,k,k);g.fillRect(Math.round((ax+dir*q*k-dir*k)/k)*k,Math.round((cy-ry*0.15+q*k)/k)*k,k,k);}}};
+  /* a slalom flag with an arrow on it pointing the side to pass */
+  SK.sflag=function(g,o,z,sx,sy,passedIt){var k=SK.px(z),fx=sx(o.x),fy=sy(o.y),dark=o.col==="#E8505B"?"#a8323b":"#24509c";
+    SK.blit(g,"flag",fx,fy,k,passedIt?"#c9cfdb":o.col,passedIt?"#a7afbf":dark,false);
+    var ox=Math.round(fx-SK.sprite("flag").width*k/2)+k*2,oy=Math.round(fy-SK.sprite("flag").height*k)+k;   /* the arrow, in white on the cloth */
+    g.fillStyle="#fff";var rows=o.pass<0?["..#..",".##..","#####",".##..","..#.."]:["..#..","..##.","#####","..##.","..#.."];
+    for(var r=0;r<5;r++)for(var c=0;c<5;c++)if(rows[r][c]==="#")g.fillRect(ox+c*k*0.8,oy+r*k*0.8,Math.ceil(k*0.8),Math.ceil(k*0.8));};
+  SK.obj=function(g,o,z,sx,sy,passedIt){var ox=sx(o.x),oy=sy(o.y),alt=((Math.round(o.x*7+o.y*3)%3)+3)%3===0;if(o.k==="tree")SK.tree(g,ox,oy,o.s,z,alt);else if(o.k==="rock")SK.rock(g,ox,oy,o.s,z,alt);else if(o.k==="ramp")SK.ramp(g,ox,oy,z);else if(o.k==="mogul")SK.mogul(g,ox,oy,z);else if(o.k==="zone")SK.zone(g,o,z,sx,sy);else if(o.k==="flag"){SK.divot(g,o,z,sx,sy,passedIt);SK.sflag(g,o,z,sx,sy,passedIt);}else if(o.k==="gate")SK.gate(g,o,z,sx,sy,passedIt);};
   /* snow with a faint grain, the start strip of dance floor, and the edges of the run, for the view from y0 to y1 */
   SK.ground=function(g,W,H,z,sx,sy,camX,y0,y1){
     g.fillStyle="#eef3fb";g.fillRect(0,0,W,H);
@@ -1972,6 +2141,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{PX:PX,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.66.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.69.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
