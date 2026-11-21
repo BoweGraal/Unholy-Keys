@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.79.8"></script>
-<script src="art.js?v=1.79.8"></script>
-<script src="instruments.js?v=1.79.8"></script>
-<script src="kart.js?v=1.79.8"></script>
+<script src="gfx.js?v=1.79.12"></script>
+<script src="art.js?v=1.79.12"></script>
+<script src="instruments.js?v=1.79.12"></script>
+<script src="kart.js?v=1.79.12"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -700,7 +700,7 @@ body.jset .nav-item.jam-only{display:flex}
   <div class="pnl" id="roundPanel">
     <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
       <label>When I play a backing track <select id="rdMode"><option value="off">no game: everyone just listens &amp; hangs out</option><option value="step">Step dance round</option><option value="aim">Target dance round</option><option value="keys">Note highway round</option><option value="keys4">Note highway round (4 keys, on the beat)</option><option value="free">Free dance round (audience votes)</option><option value="skate">Roller rink round (skate &amp; tricks)</option><option value="ice">Ice rink round (skating in the snow)</option><option value="keepy">Keepy uppy round (balloon, ball &amp; feather)</option><option value="kart">Mars Rally round (top-down bike race)</option><option value="walk">Dance walk race (keep your cursor in the circle)</option><option value="pipe">Half pipe (skate, pump on the beat, tricks)</option><option value="ski">Ski (slalom and tricks down a mountain)</option><option value="mosh">Mosh pit round (wall of death at the drop)</option></select></label>
-      <label>Countdown <select id="rdSecs"><option value="5">5 s</option><option value="10">10 s</option><option value="15">15 s</option><option value="20">20 s</option><option value="30">30 s</option></select></label>
+      <label>Countdown <select id="rdSecs"><option value="18">18 s</option><option value="25">25 s</option><option value="30">30 s</option></select></label>
       <label>Steps <select id="rdLevel"><option value="0.7">Easy</option><option value="1">Normal</option><option value="1.3">Hard</option></select></label>
       <label title="Everyone dances; a little way in, the dancers are drawn into a knockout of quick 1 v 1s on the stage, one match at a time, with the final at the end of the song"><input type="checkbox" id="rdBattle"> &#9876; Battle (1 v 1s)</label>
     </div>
@@ -4791,7 +4791,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.79.8",SERVER_VERSION="";
+var PAGE_VERSION="1.79.12",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6303,7 +6303,7 @@ var BOTFILL=(function(){
 })();
 window.addEventListener("load",function(){BOTFILL.init();});
 var ROUNDS=(function(){
-  var cfg={mode:"off",secs:10,level:1,battle:false},cur=null,job=0,cdT=null,syncT=null,uiT=null,hideT=null,totals=[],myVote="",votes=null,top=null;
+  var cfg={mode:"off",secs:18,level:1,battle:false},cur=null,job=0,cdT=null,syncT=null,uiT=null,hideT=null,totals=[],myVote="",votes=null,top=null;
   var NAMES={ctf:"Capture the flag",crowd:"Crowd vote",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",ski:"Ski",pipe:"Half pipe",walk:"Dance walk race",kart:"Mars Rally"},ORD=["1st","2nd","3rd"];
   try{var sv=JSON.parse(localStorage.getItem("uk_rounds")||"{}");if(NAMES[sv.mode]||sv.mode==="off")cfg.mode=sv.mode;if(sv.secs>=5&&sv.secs<=30)cfg.secs=+sv.secs;if(sv.level>=0.5&&sv.level<=1.5)cfg.level=+sv.level;cfg.battle=!!sv.battle;}catch(e){}
   function ord(n){return ORD[n-1]||n+"th";}
@@ -6352,7 +6352,7 @@ var ROUNDS=(function(){
   function send(chart,my,failed,why,cdMs){
     if(my!==job||!cur)return;
     if(cur.setGames){var D=chart&&chart.dur>0?chart.dur:(cur.file&&backingAudio&&isFinite(backingAudio.duration)?backingAudio.duration*1000:0);if(D>0){startSet(chart,D,my);return;}cur.mode=cur.setGames.filter(function(x){return x!=="crowd";})[0]||ALLG[Math.floor(Math.random()*ALLG.length)];}
-    var cdS=cdMs||cfg.secs*1000;
+    var cdS=cdMs||Math.max(18000,cfg.secs*1000);   /* at least 18 s: 15 for the how-to-play card, then 3-2-1 */
     /* a mosh pit that runs for part of the song: its wall of death and circle pits are fitted inside the game's time */
     if(cur.setQ&&cur.mode==="mosh"&&chart&&typeof ART!=="undefined"&&ART.MOSH)chart=ART.MOSH.window(chart,cur.setQ.start,cur.setQ.end);
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cdS;
@@ -6559,7 +6559,7 @@ var ROUNDS=(function(){
   function reset(){stopSet();job++;clearTimeout(cdT);clearInterval(syncT);clearInterval(uiT);cur=null;totals=[];hideFloat();board();buttons();status("Go live, choose a round type, then play a song from Backing Tracks.");}
   function init(){
     var m=$("rdMode"),sc=$("rdSecs"),lv=$("rdLevel");if(!m)return;
-    m.value=cfg.mode;sc.value=String(cfg.secs);lv.value=String(cfg.level);
+    m.value=cfg.mode;sc.value=String(Math.max(18,cfg.secs));lv.value=String(cfg.level);
     if(lv.selectedIndex<0)lv.value="1";if(sc.selectedIndex<0)sc.value="10";
     m.onchange=function(){cfg.mode=m.value;save();};
     var bt=$("rdBattle");if(bt){bt.checked=cfg.battle;bt.onchange=function(){cfg.battle=bt.checked;save();};}sc.onchange=function(){cfg.secs=+sc.value;save();};lv.onchange=function(){cfg.level=+lv.value;save();};
@@ -6578,7 +6578,7 @@ var ROUNDS=(function(){
   /* the live song menu's settings, kept in the Music tab's controls too */
   function setCfg(o){
     if(o.mode!==undefined)cfg.mode=o.mode;if(o.secs)cfg.secs=Math.max(5,Math.min(30,+o.secs));if(o.level)cfg.level=+o.level;if(o.battle!==undefined)cfg.battle=!!o.battle;save();
-    var m=$("rdMode"),sc=$("rdSecs"),lv=$("rdLevel"),bt=$("rdBattle");if(m)m.value=cfg.mode;if(sc)sc.value=String(cfg.secs);if(lv)lv.value=String(cfg.level);if(bt)bt.checked=cfg.battle;
+    var m=$("rdMode"),sc=$("rdSecs"),lv=$("rdLevel"),bt=$("rdBattle");if(m)m.value=cfg.mode;if(sc)sc.value=String(Math.max(18,cfg.secs));if(lv)lv.value=String(cfg.level);if(bt)bt.checked=cfg.battle;
   }
   window.ukFakeRound=function(mode,chart){cur={n:1,mode:mode,title:"Test",phase:"play",chart:chart,endAt:performance.now(),file:false};};   /* tests: pretend a round is playing */
   return{intercept:intercept,onMsg:onMsg,reset:reset,init:init,buttons:buttons,get current(){return cur;},pos:function(){return cur&&cur.phase==="play"?songPos():-1e9;},get cfg(){return cfg;},

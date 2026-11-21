@@ -13,11 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.8"></script>
-<script src="gfx.js?v=1.79.8"></script>
-<script src="art.js?v=1.79.8"></script>
-<script src="instruments.js?v=1.79.8"></script>
-<script src="kart.js?v=1.79.8"></script>
+<script src="tune.js?v=1.79.12"></script>
+<script src="gfx.js?v=1.79.12"></script>
+<script src="art.js?v=1.79.12"></script>
+<script src="instruments.js?v=1.79.12"></script>
+<script src="kart.js?v=1.79.12"></script>
+<script src="explain.js?v=1.79.12"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -396,6 +397,28 @@ body.jt-top #roundBox.strip .rb-btn{margin-top:0;padding:4px 10px;font-size:12px
   /* the games that cover the whole screen hide the sign anyway, so the line goes back to the top middle,
      clear of the performer in the corner */
   body[data-game=kart] #roundBox.strip,body[data-game=ski] #roundBox.strip{left:50%;transform:translateX(-50%);top:52px;width:min(420px,60vw);text-align:center}}
+
+/* ── the Jumbotron in the games that cover the whole screen: a small screen in a corner, always above the game ── */
+body.gaming-ski #bigScreen,body.gaming-ctf #bigScreen{z-index:22;left:auto!important;width:min(200px,40vw)!important;height:auto!important;aspect-ratio:16/9;border-width:3px;border-bottom-width:7px;box-shadow:0 0 0 2px #2a2440,0 4px 18px rgba(0,0,0,.6)}
+body.gaming-ski #bigScreen::before,body.gaming-ski #bigScreen::after,body.gaming-ctf #bigScreen::before,body.gaming-ctf #bigScreen::after{display:none}
+body.gaming-ski #jtLogo,body.gaming-ctf #jtLogo{font-size:19px!important}
+body.gaming-ski #bigScreen{right:10px;top:104px!important}
+body.gaming-ctf #bigScreen{left:140px!important;right:auto;top:14px!important}
+@media (max-width:640px){body.gaming-ski #jtLogo,body.gaming-ctf #jtLogo{font-size:14px!important}
+  body.gaming-ski #bigScreen{right:8px;top:62px!important;width:min(150px,38vw)!important}
+  body.gaming-ctf #bigScreen{left:118px!important;top:44px!important;width:min(150px,38vw)!important}}
+/* half pipe: the SUPER meter sits under the score, not across the Jumbotron */
+#ppSuperBox{left:auto!important;right:14px;top:92px!important;transform:none!important}
+@media (max-width:640px){#ppSuperBox{right:8px;top:160px!important}}
+/* phones: the how-to-play lines show for a few seconds and then fade, so the game isn't buried in tutorial text */
+@keyframes ukHintFade{to{opacity:0;visibility:hidden}}
+@keyframes ukSubFade{to{opacity:0;max-height:0;margin:0;overflow:hidden}}
+@media (max-width:640px){
+  #moshHint,#skHint,#kpHint,#wkHint,#ppHint,#skiHint,#ctfHint,#fdUI .fd-help{white-space:normal!important;text-align:center!important;max-width:calc(100vw - 28px)!important;pointer-events:none;animation:ukHintFade .6s ease 6s forwards}
+  #ppHint{right:auto!important;left:50%!important;transform:translateX(-50%)!important}
+  #ctfHint{bottom:calc(var(--chatH) + 130px)!important}
+  body[class*="gaming"] #roundBox:not(.myturn):not(.spot) .rb-sub{animation:ukSubFade .6s ease 6s forwards}
+}
 /* capture the flag: the line sits under the team score, above the arena */
 body[data-game=ctf] #roundBox.strip{left:50%;transform:translateX(-50%);top:60px;width:min(420px,calc(100vw - 150px));text-align:center;padding:5px 12px}
 @media (max-width:640px){body[data-game=ctf] #roundBox.strip{top:128px;width:calc(100vw - 24px)}}
@@ -459,6 +482,7 @@ body.practice #hudBR{bottom:18px}
 body.embed #prBar{top:12px}
 body.embed #roundBox{top:12px}
 body.practice:not(.pr-busy) #roundBox{top:180px}
+@media (max-width:640px){body.practice.gaming:not(.pr-busy) #roundBox.strip{top:6px}}   /* upright phone: the line goes up to the top edge, off the performer */
 #prBar select,#prBar button,#prBar label.f{font:600 12px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(127,119,221,.55);border-radius:8px;padding:6px 10px;cursor:pointer}
 #prBar #prGo{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:transparent}
 #prBar #prGo:disabled{opacity:.45;cursor:default}
@@ -674,7 +698,7 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
     </div>
     <div class="r" style="margin-top:8px">
       <select id="prMode" style="display:none"><option value="step">Step dance</option><option value="aim">Target dance</option><option value="keys">Note highway</option><option value="keys4">Note highway (4 keys)</option><option value="free">Free dance (vote)</option><option value="skate">Roller rink</option><option value="ice">Ice rink</option><option value="keepy">Keepy uppy</option><option value="kart">Mars Rally</option><option value="mosh">Mosh pit</option><option value="walk">Dance walk race</option><option value="pipe">Half pipe</option><option value="ski">Ski</option><option value="ctf">Capture the flag</option></select>
-      <select id="prSecs"><option value="5">5 s countdown</option><option value="10">10 s countdown</option><option value="20">20 s countdown</option><option value="30">30 s countdown</option></select>
+      <select id="prSecs"><option value="18">18 s countdown</option><option value="25">25 s countdown</option><option value="30">30 s countdown</option></select>
       <select id="prLevel"><option value="0.7">Easy</option><option value="1" selected>Normal</option><option value="1.3">Hard</option></select>
       <select id="prBots"><option value="0">No other dancers</option><option value="3" selected>3 practice dancers</option><option value="8">8 practice dancers</option></select>
       <select id="prKind" title="A normal round, or a battle: 1 v 1s on the stage, knockout style"><option value="">Normal round</option><option value="battle">&#9876; Battle (1 v 1s)</option></select>
@@ -3804,7 +3828,7 @@ var PIPE=(function(){
   function pipeRound(){return GAME.mode==="pipe"||(typeof ROUND!=="undefined"&&ROUND.mode==="pipe");}
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
   function beatAt(pos){return PP.beatAt(ROUND.chart&&ROUND.chart(),pos);}
-  function wallPx(){return H*0.115*warp;}   /* lower walls than before: a wide, shallow pipe */
+  function wallPx(){return H*0.14*warp;}   /* lower walls than before: a wide, shallow pipe */
   function airPx(){return H*0.24;}
   function ids(){return Object.keys(viewers).filter(function(k){return viewers[k]!==PH;});}
   function myGroup(){return PP.group(ids(),myId);}
@@ -3912,7 +3936,7 @@ var PIPE=(function(){
     me.tx=me.x=x;me.ty=me.y=lane;sendPos(x,lane,{z:+z.toFixed(3),r:Math.round(r)});me.sk=wire();me.pz=z;me.pr=r;
     var st=stance?STN[stance].p:null;
     var pk=now-boostT<300?Math.sin((now-boostT)/300*Math.PI):0,pl=1;   /* pumping: one knee bends then the other */
-    GAME.moshPose(now<bailUntil?[2.6,-2.6,1.2,-1.2]:st?st:air?[2.3,-2.3,0.5,-0.5]:[1.2+lean*0.5,-1.2+lean*0.5,0.35+pk*0.55*pl,-0.35+pk*0.55*pl]);
+    GAME.moshPose(now<bailUntil?[2.6,-2.6,1.2,-1.2]:st?st:air?[2.3,-2.3,0.5,-0.5]:[1.2+lean*0.2,-1.2+lean*0.2,0.35+pk*0.55*pl,-0.35+pk*0.55*pl]);
     if(PRACTICE.on)botTick(now,dt);
     var hn=$("ppHint");if(hn)hn.textContent=air?"Line the board up with the wall to land":win?"Draw your trick on the right stick, ending with a flick up · harder = higher":"Left stick: up/down to line up with the lit pad, left/right to lean · right stick: tricks";
     hud();
@@ -3950,11 +3974,11 @@ var PIPE=(function(){
   }
   function liftOf(v,isMe){var x=v.x,u=Math.max(-1,Math.min(1,(x-0.5)/((XR-XL)/2))),h=PP.prof(Math.abs(u)),z=isMe?(v.pz||0):(rem[idOf(v)]?rem[idOf(v)].z:(v.pz||0));return{u:u,lift:h*wallPx()+z*airPx()+4,air:z>0.01};}
   function idOf(v){for(var k in viewers)if(viewers[k]===v)return k;return null;}
-  function rotOf(v,isMe,u,air){var id=isMe?myId:idOf(v),rr=isMe?r:(rem[id]?rem[id].r:(v.pr||0)),ang=air?0:Math.atan(PP.slope(u)*wallPx()/((XR-XL)/2*W));return ang+rr*Math.PI/180;}
+  function rotOf(v,isMe,u,air){var id=isMe?myId:idOf(v),rr=isMe?r:(rem[id]?rem[id].r:(v.pr||0)),ang=air?0:Math.atan(PP.slope(u)*wallPx()/((XR-XL)/2*W))*0.35;return ang+rr*Math.PI/180;}   /* the board only leans a third as far up the walls: less swinging about */
   function looks(v,isMe){if(warp<0.05)return null;var L=liftOf(v,isMe),bl=isMe?performance.now()<bailUntil:!!(v.sk&&v.sk.f);return{lift:-L.lift,rot:bl?1.45:rotOf(v,isMe,L.u,L.air),ns:true};}
-  function facing(v,isMe){var id=isMe?myId:idOf(v);if(isMe&&on)return air?0:(Math.cos(phi)*1>0?1:3);var rr=rem[id];if(!rr)return 0;var dx=(v.tx||0)-rr.x;return Math.abs(dx)<0.002?0:dx>0?1:3;}
+  function facing(v,isMe){return 0;}   /* everyone keeps facing the stage: no flipping round at each wall */
   function front(g){
-    if(!pipeRound()||warp<0.5)return;var now=performance.now(),sc=2;
+    if(!pipeRound()||warp<0.5)return;var now=performance.now(),sc=3;
     (grp?grp.members:[]).forEach(function(id){var v=viewers[id];if(!v||v.dance!==4)return;var isMe=id===myId&&on,L=liftOf(v,isMe),bl=isMe?now<bailUntil:!!(v.sk&&v.sk.f),rot=bl?1.45:rotOf(v,isMe,L.u,L.air),off=14*sc;
       var cx=v.x*W,cy=v.y*H-L.lift;PP.board(g,cx-Math.sin(rot)*off,cy+Math.cos(rot)*off,rot,sc,0,0,v.color);
       var sup=isMe?(air&&air.sup):(v.sk&&v.sk.h>=10);if(sup){g.save();g.globalAlpha=0.35+0.25*Math.sin(now/90);g.fillStyle="#F5C518";for(var q=0;q<10;q++){var aa=q/10*6.283+now/300;g.fillRect(Math.round(cx+Math.cos(aa)*26)-2,Math.round(cy+Math.sin(aa)*26)-2,4,4);}g.restore();}});
@@ -4658,6 +4682,8 @@ var DEVICE=(function(){
     var bottom=Math.round(chatH+(kind==="phone"?8:14));
     var short=vh<480;document.body.classList.toggle("short",short);
     var top=short?8:document.body.classList.contains("embed")?78:112;      /* below the round banner */
+    /* on a phone or a tablet held upright the panel starts under the stage, so the performer and the Jumbotron stay in view above it */
+    if(!short&&kind!=="pc"&&vh>vw)top=Math.max(top,Math.round((typeof STAGE_BOTTOM!=="undefined"?STAGE_BOTTOM:0.3)*vh)+6);
     var chrome=(hdr?hdr.offsetHeight:44)+(ft?ft.offsetHeight:28)+2;
     var avail=vh-bottom-top,meH=z.me;
     if(document.body.classList.contains("gaming-free"))meH=0;
@@ -4880,11 +4906,12 @@ var ROUND=(function(){
     else{b.textContent="";nodes.forEach(function(n){b.appendChild(n);});}
     clearTimeout(hideT);hideT=null;
   }
-  function hide(){var b=box();b.className="";b.textContent="";}
+  function hide(){var b=box();b.className="";b.textContent="";try{EXPLAIN.hide();}catch(e){}}
   function lvl(){return rd.mode==="free"||rd.mode==="mosh"||rd.mode==="skate"||rd.mode==="keepy"||rd.mode==="kart"||rd.mode==="walk"||rd.mode==="pipe"||rd.mode==="ski"||rd.mode==="ctf"?"":" · "+GAME.DIFFS[GAME.diffOf(rd.n)];}
   function head(){return mk("div","rb-head","Round "+rd.n+" · "+(rd.isBattle?"⚔ ":"")+(NAMES[rd.mode]||"Dance")+(rd.isBattle?" battle":"")+lvl());}
   function drawCountdown(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
+    try{EXPLAIN.tick(rd.mode,(endAt-performance.now())/1000,"r"+rd.n,{ice:ICE,battle:rd.isBattle});}catch(e){}
     show([head(),mk("div","rb-title",rd.title),mk("div","rb-big",left>0?String(left):"GO!"),
       mk("div","rb-sub",rd.isBattle?"Everyone dances; then it's 1 v 1s on the stage, knockout style, with the final at the end of the song."+(rd.mode==="free"?" The room votes each match.":" Highest score in each match goes through."):rd.mode==="free"?"Dance however you like. Everyone votes when the song ends.":rd.mode==="kart"?"The performer takes off in a UFO and the dance floor becomes a space race track! The stick is your speed and direction. Push it when the 2 lights up for a rocket start. Tap DRIFT to hop, swing into the turn and hold it for a boost. Distance, laps, boosts and overtakes all score.":rd.mode==="skate"?"Skate the rink! Build speed, JUMP (Space), hold directions for tricks, let go before you land.":rd.mode==="keepy"?"Keep the balloon, the ball and the feather off the floor! Jump, double jump for height. The feather and double-jump hits score most.":"Everyone gets the same steps. Highest score wins the round.")],"count");
   }
@@ -5059,6 +5086,7 @@ var ROUND=(function(){
     if(!rd||rd.n!==m.n)return;
     if(ph==="countdown"){rd.phase=ph;endAt=performance.now()+(+m.ms||0);drawCountdown();}
     else if(ph==="play"){
+      try{EXPLAIN.hide();}catch(e){}
       var first=rd.phase!=="play";
       rd.ts0=(typeof m.ts0==="number"&&isFinite(m.ts0))?m.ts0:null;
       playPerf=performance.now()-(+m.pos||0);
@@ -5082,10 +5110,11 @@ var ROUND=(function(){
     }
     else if(ph==="off"){if(GAME.mode)GAME.stop();end();hide();}
   }
-  function end(){document.getElementById("gamePanel").classList.remove("spotlit");document.body.classList.remove("battle-match");document.body.classList.remove("rd-paused");rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
+  function end(){try{EXPLAIN.hide();}catch(e){}document.getElementById("gamePanel").classList.remove("spotlit");document.body.classList.remove("battle-match");document.body.classList.remove("rd-paused");rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
   function reset(){if(rd&&GAME.mode)GAME.stop();end();hide();}
   function setTotals(t){totals=Array.isArray(t)?t.slice(0,10).map(function(x){return{name:safeText(x.name,24),pts:Math.max(0,Math.floor(+x.pts||0)),wins:Math.max(0,Math.floor(+x.wins||0))};}):[];}
   function scores(m){if(rd&&m.n===rd.n&&active()){top={top:Array.isArray(m.top)?m.top.slice(0,5).map(function(x){return{id:String(x.id),name:safeText(x.name,24),score:Math.max(0,Math.floor(+x.score||0))};}):[],players:Math.max(0,Math.floor(+m.players||0))};drawPlay();}}
+  window.ukRoundMsg=function(m){onMsg(m);};   /* for testing: feed the round a message */
   window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),beatOffset:lastD===null?null:Math.round(lastD),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat,spotlight:rd.spot||null,featured:featured(),battle:rd.isBattle?{bracket:rd.b||null,none:rd.bNone,onStage:(function(){var q=pair();return q?{match:q.k,label:q.s.label,a:q.A.name,b:q.B.name,sa:q.sa,sb:q.sb,leftMs:Math.round(q.left)}:null;})()}:null}:{round:null,totals:totals};};
   return{get mode(){return rd&&(rd.phase==="countdown"||rd.phase==="play")?rd.mode:"";},onMsg:onMsg,setBattle:setBattle,bscore:bscore,pair:pair,get battle(){return rd&&rd.isBattle?rd.b||null:null;},get n(){return rd?rd.n:0;},setSpot:setSpot,featured:featured,spotOn:spotOn,chart:function(){return rd?rd.chart:null;},scores:scores,setTotals:setTotals,pos:pos,active:active,join:join,sitOut:sitOut,reset:reset,myTotal:myTotal,get mode(){return rd?rd.mode:"";}};
 })();
@@ -5491,7 +5520,7 @@ var PRACTICE=(function(){
     document.getElementById("venue").classList.add("on");
     document.getElementById("hudRoom").textContent="Practice";
     if(!venueStarted){venueStarted=true;initAudio();initCanvas();requestAnimationFrame(renderLoop);}
-    performer.name="Stand-in";
+    performer.name="";   /* practice: no name tag over the stand-in */
     viewers={me:{name:myName,x:0.5,y:0.55,tx:0.5,ty:0.55,color:myColor,look:myLook,bubbleText:null,bubbleTime:0,dance:0}};
     updViewerCount();
     try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.kind)$("prKind").value=sv.kind;if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.level)$("prLevel").value=String(sv.level);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
@@ -5777,7 +5806,7 @@ var PRACTICE=(function(){
     var my=++job;
     initAudio();save();
     try{Tone.start();Tone.getContext().rawContext.resume();}catch(e){}
-    mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk"&&mode!=="pipe"&&mode!=="ski"&&mode!=="ctf";plan=null;var secs=+$("prSecs").value,level=+$("prLevel").value;
+    mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk"&&mode!=="pipe"&&mode!=="ski"&&mode!=="ctf";plan=null;var secs=Math.max(18,+$("prSecs").value||18),level=+$("prLevel").value;
     stopSong();makeBots(+$("prBots").value);
     document.body.classList.add("pr-busy");
     n++;
@@ -6338,7 +6367,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.8",SERVER_VERSION="";
+var PAGE_VERSION="1.79.12",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6721,7 +6750,7 @@ function renderLoop(){
   if(myId&&viewers[myId]){ids=ids.filter(function(k){return k!==myId;});ids.push(myId);}     /* you're drawn last, on top */
   /* the performer hanging out on the floor, in among everyone (by depth) */
   if(PH.on&&!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){
-    PH.name="\u2605 "+(performer.name||"Performer");PH.look=performer.look||lookOf(null,PH.color,performer.name);
+    PH.name=performer.name?"\u2605 "+performer.name:"";PH.look=performer.look||lookOf(null,PH.color,performer.name);
     var pk=0;while(pk<ids.length&&ids[pk]!==myId&&viewers[ids[pk]].y<=PH.y)pk++;ids.splice(pk,0,"__perf");
   }
   for(var i=0;i<ids.length;i++){
@@ -6755,7 +6784,7 @@ function renderLoop(){
     var freeMe=ids[i]===myId&&GAME.mode==="free";
     if(!v.look)v.look=lookOf(null,v.color,v.name);
     /* a crowd surprise: float up, or point both hands at the stage and fire lasers, sparkle or burn */
-    var cAge=crowdAge(),ck=cAge<ART.CROWD_MS?CROWD.kind:"",sc2=freeMe?GAME.freeS():2,dyy=vy+ART.crowdLift(ck,cAge,sc2),cp=freeMe?GAME.pose:vp,cdn=v.dance,cfd=freeMe?GAME.fd:v.fd,hands=null;
+    var cAge=crowdAge(),ck=cAge<ART.CROWD_MS?CROWD.kind:"",sc2=freeMe?GAME.freeS():(v!==PH&&PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?3:2),dyy=vy+ART.crowdLift(ck,cAge,sc2),cp=freeMe?GAME.pose:vp,cdn=v.dance,cfd=freeMe?GAME.fd:v.fd,hands=null;
     if(ck==="lasers"){
       var JJ=limbJoints(vx,dyy,sc2,0),tg=v._tg={x:W/2+Math.sin(now/650+(v.seed||0))*W*0.32,y:STAGE_TOP*H+12};
       var aL=Math.atan2(-(tg.x-JJ[0][0]),tg.y-JJ[0][1]),aR=Math.atan2(-(tg.x-JJ[1][0]),tg.y-JJ[1][1]);
@@ -6826,7 +6855,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.8"></script>
+<script src="lab.js?v=1.79.12"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

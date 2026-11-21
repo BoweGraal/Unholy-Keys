@@ -757,6 +757,24 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.9 - Every game shows the Jumbotron and the performer
+
+A sweep of all 14 mini games, on a computer and an upright phone, with the Jumbotron down and the performer on stage. Before the fix:
+
+| Game | Computer | Phone |
+|---|---|---|
+| Step dance, Target dance, Note highway, 4-key highway | OK | The game panel covered the performer |
+| Free dance, Mosh pit, Roller rink, Keepy uppy, Dance walk race, Mars Rally | OK | OK |
+| Half pipe | SUPER meter ran across the Jumbotron | Same |
+| Ski, Capture the flag | No Jumbotron (performer was in the corner) | Same |
+
+Fixes:
+1. **Ski and Capture the flag** now show the Jumbotron as a small screen in a corner (above the game), so a video on it stays in view. The performer stays in the corner on their stand.
+2. **Phone and tablet held upright**: the game panel now starts under the stage, so the performer and the Jumbotron stay visible above it. In practice the round line moves to the top edge.
+3. **Half pipe**: the SUPER meter moved under the score.
+
+To check: join a room on a phone with a video on the Jumbotron and start Step dance, Ski and Capture the flag. You should see the Jumbotron and the performer in each. Not covered by the sweep: Ice rink (it uses the same drawing as the Roller rink, which passed) and a live video playing (the sweep forced the Jumbotron down).
+
 ## v1.79.8 - Presets you can actually hear
 
 You tried the violin presets in v1.79.7 and all but Haunted sounded the same. That was right: they were tuned to keep the volume level, not to sound different, and most only added a little reverb. The measurements agreed: Haunted's tail was about 13 dB longer than the dry sound, while Concert Hall's was about 2 dB longer.
@@ -1449,3 +1467,34 @@ Needs a Render redeploy (server.js changed).
 - The fix: the performer can now send up to 240 KB (everyone else stays capped at 16 KB). The server also logs when it drops an oversized message.
 - Server change: **redeploy Render** (this fix only works once the server is updated).
 - Check: go live, have someone join, start a round with a full-length song (try Mars Rally too). The round should count in and the music should play for them.
+
+## v1.79.10 - Half pipe: closer camera, less turning
+- The camera is in tighter: skaters and boards are drawn 50% bigger, the walls are taller and the pipe fills the full width of the screen.
+- Less turning: everyone keeps facing the stage instead of flipping left and right at each wall, the board tilts only a third as far up the walls, and the leaning pose is calmer.
+- In-air spinning (left stick) is unchanged, since the tricks depend on it.
+
+**Test it:**
+1. Open venue.html?practice, run the half pipe test (`ukPipeTest(3)` in the console), on a computer and on a phone.
+2. Watch yourself swing from wall to wall: you should stay big, face forward, and the board should only tilt slightly.
+3. Do a trick and spin in the air with the left stick: spinning and landing still work.
+
+## v1.79.11 - Phone: no stand-in name tag, how-to-play text fades
+- Practice mode no longer puts a "Stand-in" name under the performer.
+- On phones, the how-to-play lines in the mini games (mosh, roller rink, keepy uppy, dance walk, half pipe, ski, capture the flag) now wrap to fit and fade out after about 6 seconds. The round description under the round title fades too, except when it's your turn.
+
+**Test it:**
+1. On a phone, open venue.html?practice and start each mini game.
+2. The hint text should be readable for a few seconds, then disappear and leave the play area clear.
+3. Leave practice: the performer should show no name tag.
+
+## v1.79.12 - How-to-play card before every minigame
+- For the last 15 seconds of a round's countdown, a card covers the screen with a looping pixel demo of the game, a one-line goal, **How to play** (touch or keyboard, depending on your device) and **Rules**. A bar shows how long until it starts. The last 3 seconds go back to the big 3-2-1-GO.
+- Covers Step dance, Target dance, Note highway (7 and 4 keys), Free dance, Mosh pit, Roller rink, Ice rink, Keepy uppy, Mars Rally, Dance walk race, Half pipe, Ski and Capture the flag. Battle rounds add a line about the knockout.
+- **Skip ✕** closes it for that round.
+- Countdowns are now at least 18 seconds (15 for the card + 3 for the count): the Countdown setting on the performer page and in practice is 18, 25 or 30 s. Songs in a timed set keep the countdown the set gives them (the card shows for as much of it as fits).
+
+**Test it:**
+1. Practice → pick a game → Start game. The card should appear straight away with the demo animating, then clear at 3 seconds for the count.
+2. Try a few games, on a phone and a computer. Check the demo matches the game and the text fits without scrolling on a phone.
+3. Tap Skip ✕: the card goes and the countdown carries on.
+4. Console: `EXPLAIN.show("pipe")` shows any game's card without starting a round.
