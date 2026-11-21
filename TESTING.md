@@ -757,6 +757,40 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.4 - Effects: why the wah sounded bad, and 3 tested presets
+
+**What was wrong.** I rendered every preset offline (a plucked guitar, a strummed guitar and a saw synth) and measured it. Anything with the auto-wah came out about 9 to 10 dB louder than the dry sound and clipped (up to 4% of the samples), because the wah had a built-in 20 dB boost. That's the harsh, loud "sweep". The master limiter doesn't catch it, so anything over full scale just distorts. The crush and lo-fi presets were also 3 to 7 dB louder than dry.
+
+**Fixed.**
+- The wah boost is 4 dB now (was 20), with a gentler resonance. This is the biggest change for Funk Machine, Full Board and the Auto-Wah pedal.
+- Presets can carry a loudness trim. Funk Machine -4 dB, Full Board -6, Lo-fi Chikk -3, Crushed Lo-fi -3. Touching any effect by hand drops the trim again.
+- Presets can set the pedal parameters too (wah range, sweep speed, delay time, tremolo rate). Anything a preset leaves out goes back to the default, so a preset no longer inherits the last one's wah or delay settings.
+
+**3 new presets** (Performance presets list, after Full Board). All three land within about 2 dB of the dry level and peak at least 1.7 dB under full scale.
+- **Guitar Sweep:** a smooth auto-wah that opens on every note (200 Hz up about 4.5 octaves), a touch of grit and chorus, a dotted-eighth echo and a small room.
+- **Dreamy Hall:** slow chorus, a big hall and a dotted-eighth echo. Good on guitar, strings, keys and pads.
+- **Warm Tube:** light tube-style drive, a short slap echo, gentle tremolo and a plate reverb. Adds bite to guitar, keys and brass.
+
+How to check by ear: pick a guitar, tap each of the three presets and play single notes, then chords. The volume should stay about the same as Dry Clean, with no harsh crackle. Try Funk Machine and Full Board too, they should no longer jump in volume.
+
+Page-only change: no Render redeploy needed.
+
+## v1.79.3 - Graphics lab: cleaned up, with a Pixel edit button next to each selection (beta)
+
+Open gfx.html (the Graphics lab).
+
+- **Pixel edit buttons:** a teal **Pixel edit** button sits next to each selection that has pixel art.
+  - Animations, Instrument: opens that instrument in the full screen pixel editor.
+  - Animations, Prop / object: Keyboard and Mic stand have one (the rest have no pixel art yet, so no button).
+  - Animations, Character pose or any Dance: a "Pixel edit this character (beta)" box lists hair, hat, face, extras, top and bottoms, each with its own Pixel edit button.
+  - Pixel Editor tab: **Full screen** next to Part and Which.
+  - Press **✕** in the full screen editor to come back to where you were.
+- **Clean up:** the lab now looks like the game (pixel type, square bevelled buttons, flat panels, no emoji). Each selection has its small label above it. The share box text is tucked away behind **Text**; Copy changes still works.
+
+How to check: Animations, pick Instrument, press Pixel edit, draw a pixel, press ✕, and the instrument shows your edit. Then Character pose, press Pixel edit next to Hair.
+
+Page-only change: no Render redeploy needed.
+
 ## v1.79.2 - Main menu: the last non-pixel bits
 
 - The button icons (play, dance, palette, piano, check, back) are now little pixel icons drawn in the game's own style, replacing the emoji.
