@@ -763,7 +763,9 @@ Free dance (all in the free dance panel).
   - **Join game:** goes to the room code screen, then Enter venue.
   - **Practice:** goes straight into the practice zone, with no reload.
   - **Character:** opens the character maker. Done brings you back. Tapping your character on the menu also opens it.
-- Your name is remembered on this device.
+- **Instrument:** opens the phone instrument (index.html?instrument). It starts behind a big START PLAYING button because phones need a tap before they'll play sound. The ✕ in the instrument brings you back to the menu.
+- Your name is saved on this device as you type it, so it's still there after a reload, after practice, or after coming back from the instrument.
+- The character on the menu is a size smaller and sits lower, so hats aren't cut off.
 - A link with a room code in it (?room=ABCD) opens straight on the room code screen.
 - If you get disconnected, you land back on the room code screen with the message.
 - The logo is pixel art, and the join and character panels have square corners.

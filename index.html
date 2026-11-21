@@ -1769,7 +1769,20 @@ document.getElementById("bjam").onclick=function(){enterJam();};
 document.getElementById("jx").onclick=function(){exitJam();};
 /* Loop recorder UI removed - coming soon */
 document.getElementById("bMobile").onclick=function(){enterMobile();};
-document.getElementById("mb-exit").onclick=function(){exitMobile();};
+document.getElementById("mb-exit").onclick=function(){exitMobile();if(MBLINK)location.href="venue.html";};
+/* opened from the venue's main menu (index.html?instrument): straight to the phone instrument. Sound and fullscreen need a tap
+   first, so a big pixel START button covers the page until then; leaving goes back to the menu */
+var MBLINK=/[?&]instrument\b/.test(location.search);
+if(MBLINK)(function(){var o=document.createElement("div");o.id="mbStart";
+  o.innerHTML='<div class="mbs-in"><div class="mbs-t">UNHOLY <b>KEYS</b></div><button id="mbStartBtn">&#127929; Start playing</button><small>Tap to turn the sound on</small><a href="venue.html">&#9664; Back to the menu</a></div>';
+  var st=document.createElement("style");st.textContent="#mbStart{position:fixed;inset:0;z-index:99999;background:#0b0818;display:flex;align-items:center;justify-content:center;padding:20px}"+
+    "#mbStart .mbs-in{display:flex;flex-direction:column;align-items:center;gap:16px;width:min(360px,100%)}"+
+    "#mbStart .mbs-t{font:700 40px/1 Silkscreen,ui-monospace,monospace;color:#fff;text-shadow:4px 4px 0 #000;text-align:center}#mbStart .mbs-t b{color:#e46aa1}"+
+    "#mbStartBtn{width:100%;padding:18px;border:0;color:#fff;background:#c8407e;font:700 20px Silkscreen,ui-monospace,monospace;cursor:pointer;box-shadow:inset -4px -4px 0 #8d2a58,inset 4px 4px 0 #e46aa1;clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px)}"+
+    "#mbStartBtn:active{transform:translateY(2px)}#mbStart small{color:#a6a0c4;font:600 13px system-ui}#mbStart a{color:#a6a0c4;font:700 12px Silkscreen,ui-monospace,monospace;text-decoration:none}";
+  document.head.appendChild(st);
+  function go(){document.body.appendChild(o);document.getElementById("mbStartBtn").onclick=function(){o.remove();enterMobile();};}
+  if(document.body)go();else document.addEventListener("DOMContentLoaded",go);})();
 document.getElementById("ytQ").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();YT.search();}});
 
 /* ── Natural octave per instrument ─────────────────────────────────────────
