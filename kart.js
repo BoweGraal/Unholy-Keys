@@ -524,8 +524,8 @@
     var back = Math.sin(k.a) < 0;                          /* facing up the screen: the exhausts are in front of the kart */
     if (k.boost && !back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks - lift, k.a, ks, now, k.boost > 1); });
     ctx.drawImage(fr.under, bx, by, FW * ks, FH * ks);
-    /* the driver faces the way the kart points: front, side, back or the other side (real turned views of their character) */
-    var q4 = ((Math.round(k.a / (Math.PI / 2)) % 4) + 4) % 4, dir = [1, 0, 3, 2][q4], side = dir === 1 || dir === 3, tn = clamp(k.turn || 0, -1, 1);
+    /* the driver faces the way the kart points, in all 8 directions (real turned views of their character, diagonals included) */
+    var dir = ART.face8(Math.cos(k.a), Math.sin(k.a), k._dir), side = dir !== 0 && dir !== 2, tn = clamp(k.turn || 0, -1, 1); k._dir = dir;
     var seatX = sc[0] + fr.seat[0] * ks, seatY = sc[1] + fr.seat[1] * ks - lift, as = s * 0.78, cy = seatY + 2 * as, neck = cy - 9 * as;
     var pose = side ? [-1.15 + tn * 0.2, -1.0 + tn * 0.2, 0.2, -0.2] : [0.55 - tn * 0.25, -0.55 - tn * 0.25, 0.2, -0.2];
     /* sunk down into the seat: only the head, chest and arms show above the cockpit */

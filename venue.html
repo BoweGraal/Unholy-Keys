@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.74.0"></script>
-<script src="gfx.js?v=1.74.0"></script>
-<script src="art.js?v=1.74.0"></script>
-<script src="instruments.js?v=1.74.0"></script>
-<script src="kart.js?v=1.74.0"></script>
+<script src="tune.js?v=1.75.0"></script>
+<script src="gfx.js?v=1.75.0"></script>
+<script src="art.js?v=1.75.0"></script>
+<script src="instruments.js?v=1.75.0"></script>
+<script src="kart.js?v=1.75.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3961,7 +3961,7 @@ var PIPE=(function(){
    knock you down. Everyone skis the same course (made from the round number), so you'll see the others around you.
    ============================================================ */
 var SKI=(function(){
-  var SK=ART.SKI,GO_BEAT=8,CH=SK.CH,GATE_DY=SK.GATE_DY,GATE_W=SK.GATE_W;   /* the mountain itself is shared with the performer's follow view (art.js) */
+  var liftY=null,SK=ART.SKI,GO_BEAT=8,CH=SK.CH,GATE_DY=SK.GATE_DY,GATE_W=SK.GATE_W;   /* the mountain itself is shared with the performer's follow view (art.js) */
   var TRK=[null,{name:"360",pts:300,dur:0.45,col:"#D04DFF"},{name:"Backflip",pts:350,dur:0.55,col:"#3DF2FF"},{name:"Daffy",pts:200,dur:0.35,col:"#F5C518"}];
   var KEYTR={ArrowLeft:1,KeyA:1,ArrowUp:2,KeyW:2,ArrowRight:3,KeyD:3};
   var TOUCHY=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
@@ -4134,7 +4134,11 @@ var SKI=(function(){
     puffs=puffs.filter(function(pf){var age=(now-pf.t)/1000;if(age>0.5)return false;var kp=SK.px(V.z),cx=V.sx(pf.x),cy=V.sy(pf.y);g.globalAlpha=1-age/0.5;g.fillStyle="#ffffff";
       for(var q=0;q<10;q++){var an=q*0.63,d=(4+age*46)*V.z;g.fillRect(Math.round((cx+Math.cos(an)*d)/kp)*kp,Math.round((cy+Math.sin(an)*d*0.5)/kp)*kp,kp,kp);}g.globalAlpha=1;return true;});
     pops=pops.filter(function(pp){var age=(now-pp.t)/1000;if(age>1.1)return false;g.globalAlpha=1-age/1.1;g.font="900 16px system-ui";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.6)";var px=V.sx(pp.x),py=V.sy(pp.y)-60-age*30;g.strokeText(pp.txt,px,py);g.fillStyle=pp.col;g.fillText(pp.txt,px,py);return true;});g.globalAlpha=1;
-    perfInset(g,Math.max(56,Math.min(90,W*0.07)),W<641?200:150);   /* the performer, top left under the speed */
+    /* the ski lift down the left of the run, the performer riding a chair down alongside you */
+    var lx=Math.round(Math.max(60,Math.min(110,W*0.08))),ls=2,ldn=lx+7*ls,lt=Math.max(W<641?230:170,Math.min(H-170,V.sy(y)-10));
+    liftY=liftY===null?lt:liftY+(lt-liftY)*0.05;
+    SK.lift(g,{cx:lx,H:H,sy:V.sy,y0:y0,y1:y1,s:ls,now:now});
+    if(perfHere()){var ly=Math.round(liftY);SK.liftChair(g,ldn,ly+10,ls,false);perfInset(g,ldn,ly);SK.liftChair(g,ldn,ly+10,ls,true);}
     /* speed */
     var sp=$("skiSpeed");if(sp)sp.textContent=Math.round(v*0.36)+" km/h";
   }
@@ -6231,8 +6235,9 @@ function drawPerformer(x,y){
 }
 /* the games that cover the whole screen (ski, capture the flag) draw the performer in a corner of their own canvas,
    two thirds size on a little lit stand, so everyone can still see them playing */
+function perfHere(){return !((typeof PRACTICE!=="undefined"&&PRACTICE.on)||(typeof PH!=="undefined"&&PH.on));}   /* nobody on stage in practice */
 function perfInset(g2,x,y){
-  if((typeof PRACTICE!=="undefined"&&PRACTICE.on)||(typeof PH!=="undefined"&&PH.on))return;   /* nobody on stage in practice */
+  if(!perfHere())return;
   var k=2/3,c=ctx;ctx=g2;
   try{g2.save();
     g2.translate(x,y);g2.scale(k,k);g2.translate(-x,-y);drawPerformer(x,y);g2.restore();window.__perfInset=[Math.round(x),Math.round(y)];}
@@ -6241,7 +6246,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.74.0",SERVER_VERSION="";
+var PAGE_VERSION="1.75.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6674,7 +6679,7 @@ function renderLoop(){
       var skl=v===PH?null:RINK?SKATE.looks(v,ids[i]===myId,sc2):keepyOn()?KEEPY.looks(v,ids[i]===myId,sc2):WALK.walkRound()&&v.dance===4?WALK.looks(v,ids[i]===myId,sc2):PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.looks(v,ids[i]===myId,sc2):null;
       if(!cdn&&!ck||skl)ART.footShadow(ctx,vx,vy,sc2,(rpo?rpo.lift:0)+(epo?epo.lift:0)+(skl?skl.lift:0));
       if(skl)AVO=AVO?Object.assign(AVO,{sk:skl}):{sk:skl};
-      AVDIR=PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.facing(v,ids[i]===myId):WALK.walkRound()&&v.dance===4?WALK.facing(v):cdn||ck?0:(wk.face|0);   /* facing the way they walked (dancing faces the stage) */
+      AVDIR=PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.facing(v,ids[i]===myId):WALK.walkRound()&&v.dance===4?WALK.facing(v):ck?0:cdn===4?(RINK||wk.k>0.3?(wk.face|0):0):cdn?0:(wk.face|0);   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
       drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,skl?null:walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
       AVO=null;AVDIR=0;
       if(ck)ART.crowdFx(ctx,ck,vx,dyy,sc2,cAge,v.seed||0,hands,v._tg);
@@ -6729,7 +6734,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.74.0"></script>
+<script src="lab.js?v=1.75.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

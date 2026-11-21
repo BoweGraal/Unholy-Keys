@@ -757,6 +757,25 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.75.0 - 8 directions in every game, the performer rides a ski lift
+
+8 directions (audience and performer screens):
+- Before, anyone in a game round faced the front, because a game counts as dancing. In the roller rink, ice rink, Keepy uppy, Mosh pit and free dance, players now face the way they're moving, diagonals included.
+- Skaters keep their heading when they slow down. In the other games, standing still faces the stage.
+- Mars Rally drivers turn with the kart in 8 directions (before: 4).
+- Already 8-direction: Capture the flag, Ski (downhill angles), and walking around between rounds.
+- Side-on by design: the Half pipe and the Dance walk race.
+- The dance games (Step, Target, Note highway) still face the stage.
+
+Ski lift:
+- A ski lift runs down the left side of the run. It has two cables with shadows on the snow, a pylon every so often, and empty red chairs going back up.
+- The performer sits on a chair coming down the mountain alongside you, easing along to stay level with you. On the performer's follow view, the chair stays level with the leader.
+- There's no performer in practice, but the lift is still drawn there.
+
+Page-only change: no Render redeploy needed.
+
+**Test it:** in practice, try the roller rink and Keepy uppy. Skate or run around and check your character turns to face each of the 8 directions. Then run a live Ski round: the performer should ride a lift chair beside you on the audience screen and beside the leader on yours.
+
 ## v1.74.0 - Everyone can see each other in every game, pixel art buttons and joystick
 
 I ran every game live (performer page, an audience page, 6 bots) and checked both screens mid-round.
