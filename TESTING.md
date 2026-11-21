@@ -1530,3 +1530,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.17 — half pipe controls
 - Left stick steers only. Press the right stick at the yellow incline line to crouch; flick it at the lip: flick = trick, flick speed = height (no crouch = weaker jump). Side gauges show flick strength live and launched strength in the air.
+
+## v1.79.18
+- The "Round N · title / Leading: …" strip fades out when a normal round starts (still shown for free dance, battles and the join prompt).
