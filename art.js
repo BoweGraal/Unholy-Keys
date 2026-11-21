@@ -83,7 +83,8 @@ var ART=(function(){
   var pmk=null,pmg=null,hmk=null,hmg=null,tmk=null,tmg=null,MUSED=false;
   function masks(){if(!pmk){pmk=canv(CWD,CHT);pmg=pmk.getContext("2d");hmk=canv(CWD,CHT);hmg=hmk.getContext("2d");tmk=canv(CWD,CHT);tmg=tmk.getContext("2d");}}
   var SEC="",ISO=null,HIDECHAR=false;   /* ISO: draw only one part of a character (the pixel editor); SEC: the part being drawn */
-  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;sg.fillStyle=c;sg.fillRect(OX+x,OY+y,w,h);}
+  var TOFF=null;   /* three-quarter views: some parts (face, hair, hat) slide a pixel toward the way they're turned */
+  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0),OY+y,w,h);}
   /* a limb: a 3-pixel-wide strip from the joint along the angle, coloured in bands (cols = [[upTo, colour],...]) */
   function limb(jx,jy,a,len,cols,stripes){
     if(ISO&&SEC!==ISO)return;
@@ -112,6 +113,10 @@ var ART=(function(){
   }
   function drawSprite(L,st){
     init();
+    /* 8 ways to face: 0 front, 1 right side, 2 back, 4 front three-quarter (turned to the right), 5 back three-quarter (turned right).
+       The left-hand ones are these mirrored (drawChar does that). FT / BT: drawing a front / back three-quarter view */
+    var FT=(st.dir|0)===4?1:0,BT=(st.dir|0)===5?1:0;TOFF=FT?{head:1,face:2,extra:2,hair:1,hat:1}:BT?{head:1}:null;
+    function dimF(cols){return cols.map(function(c){return [c[0],shade(c[1],-0.25)];});}
     sg.clearRect(0,0,CWD,CHT);if(MUSED){pmg.clearRect(0,0,CWD,CHT);hmg.clearRect(0,0,CWD,CHT);MUSED=false;}
     var skin=colOf(L,"skin"),hc=colOf(L,"hair"),tc=colOf(L,"top"),bc=colOf(L,"bot");
     var tcD=shade(tc,-0.25),tcL=shade(tc,0.25),bcD=shade(bc,-0.25),skD=shade(skin,-0.18),hcD=shade(hc,-0.3),shoe="#2A2238";
@@ -153,7 +158,7 @@ var ART=(function(){
     function legC(cols,n){return cols.map(function(c){return [c[0]*n/7,c[1]];});}
     function strC(n){return legStripes?legStripes.map(function(q){return [q[0],q[1]*n/7,q[2]*n/7,q[3]];}):null;}
     var gL=Math.max(3,Math.min(7,st.legLenL||7)),gR=Math.max(3,Math.min(7,st.legLenR||7));
-    var D=st.dir|0;
+    var D=st.dir|0;if(D===4)D=0;if(D===5)D=2;
     if(D===1||D===2){
     /* ======== turned round: the side view (facing right; facing left is this flipped) and the back view ========
        Same parts and colours as the front, drawn as they look from the side or from behind. Pixel-editor paint is front-only. */
@@ -320,10 +325,10 @@ var ART=(function(){
       SEC="hat";sideHat();
     }else{
       /* ---- back: the arms and legs swap sides, no face, the hair covers the back of the head ---- */
-      SEC="legL";limb(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(-2.5,4,-lR,gR,legC(legColsR,gR),strC(gR));
+      SEC="legL";limb(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));
       if(st.skates){var ic2=st.skates==="ice";SEC="legL";skate(2.5,4,-lL,gL,ic2);SEC="legR";skate(-2.5,4,-lR,gR,ic2);}
       /* from behind, the arms are on the far side of the body: drawn first, so the back covers them where they cross it */
-      SEC="armL";limb(6.5,-4.5,-aL,nL,armC(nL));SEC="armR";limb(-6.5,-4.5,-aR,nR,armC(nR));
+      SEC="armL";limb(6.5,-4.5,-aL,nL,armC(nL));SEC="armR";limb(BT?-5.5:-6.5,-4.5,-aR,nR,BT?dimF(armC(nR)):armC(nR));
       SEC="top";
       px(-5,-5,10,10,base);px(-5,-5,1,10,shade(base,-0.25));px(-5,4,10,1,shade(base,-0.25));
       if(T===0||T===4)px(-5,-5,10,1,shade(base,0.25));
@@ -353,7 +358,7 @@ var ART=(function(){
       SEC="head";
       px(-5,-14+hy,10,9,skin);px(-5,-14+hy,1,9,skD);px(-5,-6+hy,10,1,skD);
       px(-6,-11+hy,1,2,skin);px(5,-11+hy,1,2,skin);                                 /* ears */
-      SEC="hair";backHair();
+      SEC="hair";backHair();if(BT){SEC="head";px(3,-12+hy,1,5,skin);px(4,-11+hy,1,3,skD);SEC="top";px(-5,-5,2,10,tcD);}
       SEC="extra";
       if(EX===1){px(-6,-11+hy,1,1,"#111018");px(5,-11+hy,1,1,"#111018");}
       if(EX===2){px(-6,-16+hy,12,1,"#2A2238");px(-7,-12+hy,2,4,"#2A2238");px(5,-12+hy,2,4,"#2A2238");}
@@ -362,7 +367,7 @@ var ART=(function(){
       SEC="hat";backHat();
     }
     }else{
-    SEC="legL";limb(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(2.5,4,lR,gR,legC(legColsR,gR),strC(gR));
+    SEC="legL";limb(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));
     if(st.skates){var ic=st.skates==="ice";SEC="legL";skate(-2.5,4,lL,gL,ic);SEC="legR";skate(2.5,4,lR,gR,ic);}
     SEC="top";
     /* torso */
@@ -404,13 +409,16 @@ var ART=(function(){
     /* an arm can be drawn shorter: reaching toward you (holding an instrument up to the mouth) */
     function armC(n){return sleeve?[[Math.min(sleeve,n-2)*n/9+0.01,armTop],[n,skin]]:[[n,skin]];}
     var nL=Math.max(3,Math.min(9,st.lenL||9)),nR=Math.max(3,Math.min(9,st.lenR||9));
-    SEC="armL";limb(-6.5,-4.5,aL,nL,armC(nL));SEC="armR";limb(6.5,-4.5,aR,nR,armC(nR));
+    if(FT){SEC="top";px(3,-5,2,10,tcD);}   /* three-quarter: the far side of the body in shadow */
+    SEC="armL";limb(-6.5,-4.5,aL,nL,armC(nL));SEC="armR";limb(FT?5.5:6.5,-4.5,aR,nR,FT?dimF(armC(nR)):armC(nR));
     SEC="head";
     /* head */
     px(-5,-14+hy,10,9,skin);px(4,-14+hy,1,9,skD);px(-5,-6+hy,10,1,skD);
-    /* face: eyes, and an open mouth when singing or hitting a step */
-    px(-3,-11+hy,1,2,"#15121F");px(2,-11+hy,1,2,"#15121F");
-    if(st.mouth)px(-1,-8+hy,2,2,"#5A2A2A");else px(-1,-8+hy,2,1,skD);
+    if(FT){px(-6,-11+hy,1,3,skD);px(-5,-14+hy,1,8,skD);}   /* turned: the ear, and the side of the head */
+    /* face: eyes, and an open mouth when singing or hitting a step (turned: the face sits a pixel to the side, an ear shows) */
+    px(-3+FT,-11+hy,1,2,"#15121F");px(2+FT,-11+hy,1,2,"#15121F");
+    if(st.mouth)px(-1+FT,-8+hy,2,2,"#5A2A2A");else px(-1+FT,-8+hy,2,1,skD);
+
     SEC="hair";
     /* hair */
     var hair=L.hair;
@@ -524,9 +532,10 @@ var ART=(function(){
     if(HIDECHAR)return;st=st||{};if(!L)L=random(7);
     var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,head:st.head||0,skates:st.skates==="ice"?"ice":!!st.skates};
     /* which way they face: 0 front, 1 facing right, 2 back, 3 facing left (the right-facing side view, mirrored) */
-    var DIR=(((st.dir|0)%4)+4)%4,SX=st.sx!==undefined?st.sx:1;
-    if(DIR===3){var t1=s.armL;s.armL=-s.armR;s.armR=-t1;t1=s.legL;s.legL=-s.legR;s.legR=-t1;t1=s.lenL;s.lenL=s.lenR;s.lenR=t1;t1=s.legLenL;s.legLenL=s.legLenR;s.legLenR=t1;SX=-SX;s.dir=1;}else s.dir=DIR;
-    var c=drawSprite(L,s),q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
+    /* 0 front, 1 right, 2 back, 3 left, 4 front-right, 5 back-right, 6 back-left, 7 front-left; the left ones are the right ones mirrored */
+    var DIR=(((st.dir|0)%8)+8)%8,SX=st.sx!==undefined?st.sx:1,MIR=DIR===3?1:DIR===6?5:DIR===7?4:0;
+    if(MIR){var t1=s.armL;s.armL=-s.armR;s.armR=-t1;t1=s.legL;s.legL=-s.legR;s.legR=-t1;t1=s.lenL;s.lenL=s.lenR;s.lenR=t1;t1=s.legLenL;s.legLenL=s.legLenR;s.legLenR=t1;SX=-SX;s.dir=MIR;}else s.dir=DIR;
+    var c=drawSprite(L,s);TOFF=null;var q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
     if(NEON){g.save();g.shadowColor=neonCol(L);g.shadowBlur=6*q;}
     if(st.rot){
@@ -889,6 +898,10 @@ var ART=(function(){
      through, the body rises a pixel as the legs pass and settles on each footfall, and when you stop the feet
      come down together instead of freezing mid-stride.
      w = a state object kept on each person; x, y = where they're drawn this frame (screen px); s = their scale. */
+  /* which of 8 ways a direction faces (screen x right, y down): a little stickiness so a heading between two doesn't flicker */
+  var F8=[1,4,0,7,3,6,2,5],F8A={1:0,4:1,0:2,7:3,3:4,6:5,2:6,5:7};
+  function face8(dx,dy,cur){var a=Math.atan2(dy,dx)/(Math.PI/4),sec=((Math.round(a)%8)+8)%8,ca=F8A[cur];
+    if(ca!==undefined){var d=((a-ca)%8+8)%8;d=Math.min(d,8-d);if(d<0.62)return cur;}return F8[sec];}
   function walkStep(w,x,y,now,s){
     if(w.t===undefined){w.t=now;w.px=x;w.py=y;w.ph=0;w.k=0;w.dx=1;w.dy=0;w.sp=0;}
     var dt=Math.max(1,Math.min(100,now-w.t)),mx=x-w.px,my=y-w.py,md=Math.hypot(mx,my);w.t=now;w.px=x;w.py=y;
@@ -900,8 +913,7 @@ var ART=(function(){
       var nd=Math.hypot(mx,my)||1;w.dx+=(mx/nd-w.dx)*0.35;w.dy+=(my/nd-w.dy)*0.35;
       /* which way they face (0 front, 1 right, 2 back, 3 left): the way they're walking; kept when they stop.
          A little bias toward the current way so a diagonal doesn't flicker between two. */
-      var ax=Math.abs(w.dx),ay=Math.abs(w.dy),cur=w.face|0,side=cur===1||cur===3;
-      if(ax+ay>0.3)w.face=(side?ax*1.25>ay:ax>ay*1.25)?(w.dx>0?1:3):(w.dy<0?2:0);
+      if(Math.abs(w.dx)+Math.abs(w.dy)>0.3)w.face=face8(w.dx,w.dy,w.face|0);
       w.k=Math.min(1,w.k+dt/70);w.still=0;
     }else{
       /* stopping: finish the footfall (to the nearest step), then ease back to standing */
@@ -1946,6 +1958,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{PX:PX,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.64.1",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{PX:PX,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.65.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

@@ -757,6 +757,19 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.65.0 - 8 directions for every character
+
+Characters now face 8 ways instead of 4: front, back, left, right, and the four diagonals.
+- **Front diagonals** (walking down-left or down-right): the head turns toward the way you're walking, the face sits to that side with an ear showing on the other, and the far arm and leg tuck in, a shade darker.
+- **Back diagonals** (walking up-left or up-right): the back view with the head turned, a sliver of cheek and ear showing on the side they're looking toward, and the far side in shadow.
+- They're built from each character's own parts, so every hair, hat, top and face option works in all 8 directions, including anything made in the character creator.
+- Walking picks the nearest of the 8 directions, with a little stickiness so a heading between two doesn't flicker. They keep facing that way when they stop. Your stage view uses the same 8 directions.
+- Dancing still faces the stage. The Half pipe, Ski, walk race and Mars Rally keep their own facing rules for now.
+
+No server changes.
+
+**Test it:** walk around the floor diagonally (two arrow keys, or the stick at an angle) and check the character turns to face each diagonal.
+
 ## v1.64.1 - Half pipe: the beat pulses out of a disco ball
 
 - The beat bar is replaced by a pixel disco ball at the bottom of the screen (above the pad and stick on phones).
