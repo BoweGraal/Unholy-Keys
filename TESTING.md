@@ -757,10 +757,12 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
-## v1.68.1 - Dance editor: previous frame as an outline
+## v1.68.1 - Dance editor: previous frame outline, copy and paste frames
 
 - In the full-screen dance editor (Graphics lab), the previous frame's pose now shows as a see-through white outline behind the character, so you can pose each frame against the one before (onion skinning).
-- The new ◐ button in the top bar turns it on and off. It's on by default. 👻 still shows the original, unedited dance.
+- The new **Prev frame** button in the top bar turns it on and off. It's on by default. 👻 still shows the original, unedited dance.
+- **📋 Copy / 📥 Paste** (or Ctrl+C / Ctrl+V): copy a frame's whole pose and paste it onto any other frame, which then ends up in exactly that pose.
+- The separate arm/leg/body buttons are gone from the top bar: pick a limb by grabbing its handle on the character (the D pad still nudges whichever one you last grabbed).
 
 No server changes.
 

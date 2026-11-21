@@ -416,14 +416,19 @@ function dnDraw(g,W,H){
   g.fillStyle="rgba(255,255,255,.8)";g.font="700 12px system-ui";g.textAlign="center";g.fillText("frame "+(DN.fi+1)+" / "+DN.N+" · beat "+dnQ().toFixed(2),W/2,22);
 }
 function dnTick(){var ph=document.querySelector("#dnline .ph");if(ph)ph.style.left=(AS.q/4*100)+"%";}
+/* copy a frame's whole pose, and paste it onto another frame: the tweak there is set so that frame ends up in exactly that pose */
+function dnCopy(){var p=ART.dance(AS.style,AS.sub,[0,0,0,0],dnQ()),o={};ART.DTWEAK.fields.forEach(function(f){o[f]=+p[f]||0;});DN.clip=o;dnBar();}
+function dnPaste(){if(!DN.clip)return;dnSnap();var now=ART.dance(AS.style,AS.sub,[0,0,0,0],dnQ()),cur=dnVals(),v={};
+  ART.DTWEAK.fields.forEach(function(f){v[f]=(cur[f]||0)+(DN.clip[f]-(+now[f]||0));});dnSet(v);}
 function dnBar(){
   var b=$("dnbar");b.textContent="";
   var ex=mk("button","","✕");ex.title="Exit full screen";ex.onclick=function(){dnFull(false);};b.appendChild(ex);
   var pl=mk("button",AS.play?"on":"",AS.play?"⏸":"▶");pl.title="Play / pause";pl.onclick=function(){if(AS.play){AS.play=false;DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();}else AS.play=true;dnBar();dnTimeline();};b.appendChild(pl);
-  ["armL","armR","legL","legR","body"].forEach(function(k){var c=mk("button",DN.sel===k?"on":"",{armL:"💪L",armR:"💪R",legL:"🦵L",legR:"🦵R",body:"🧍"}[k]);c.title=DN_LABEL[k];c.onclick=function(){DN.sel=k;dnBar();};b.appendChild(c);});
   var gh=mk("button",DN.ghost?"on":"","👻");gh.title="Show the original faintly";gh.onclick=function(){DN.ghost=!DN.ghost;dnBar();};b.appendChild(gh);
-  var pv=mk("button",DN.prev?"on":"","◐");pv.title="Show the previous frame as a white outline";pv.onclick=function(){DN.prev=!DN.prev;dnBar();};b.appendChild(pv);
+  var pv=mk("button",DN.prev?"on":"","Prev frame");pv.title="Show the previous frame as a white outline";pv.onclick=function(){DN.prev=!DN.prev;dnBar();};b.appendChild(pv);
   var un=mk("button","","↶");un.title="Undo";un.onclick=dnUndo;b.appendChild(un);
+  var cp=mk("button","","📋 Copy");cp.title="Copy this frame's pose (Ctrl+C)";cp.onclick=dnCopy;b.appendChild(cp);
+  var ps=mk("button","","📥 Paste");ps.title="Paste the copied pose onto this frame (Ctrl+V)";ps.disabled=!DN.clip;ps.onclick=dnPaste;b.appendChild(ps);
   var cl=mk("button","","🗑");cl.title="Clear this frame";cl.onclick=function(){dnSnap();dnSet({});};b.appendChild(cl);
   var sp=mk("button","",AS.speed+"×");sp.title="Playback speed";sp.onclick=function(){var L=[0.25,0.5,1,1.5,2],i=L.indexOf(AS.speed);AS.speed=L[(i+1)%L.length];dnBar();};b.appendChild(sp);
   var d=ART.DANCES[AS.style];b.appendChild(mk("span","nm",(d?d.icon+" "+d.name:"")+((d&&d.subs&&d.subs[AS.sub])?" · "+d.subs[AS.sub]:"")));
@@ -435,6 +440,9 @@ function dnTimeline(){
     if(i%4===0){var bl=mk("div","bl","beat "+(i/4+1));bl.style.left=n.style.left;L.appendChild(bl);}}
   var ph=mk("div","ph");ph.style.left=(AS.q/4*100)+"%";L.appendChild(ph);
 }
+document.addEventListener("keydown",function(e){if(!AS.dfs||!(e.ctrlKey||e.metaKey)||/INPUT|TEXTAREA/.test((e.target||{}).tagName||""))return;var k=e.key.toLowerCase();
+  if(k==="c"){e.preventDefault();dnCopy();}else if(k==="v"){e.preventDefault();dnPaste();}});
+window.ukDnClip=function(){return DN.clip;};
 window.ukDn=function(i){AS.cat="dance";mode="assets";dnFull(true);dnGo(i|0);};   /* tests: open the dance editor at a frame */
 function dnFull(on){AS.dfs=!!on;$("app").classList.toggle("dfs",AS.dfs);
   if(AS.dfs){AS.play=false;DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();DN.undo=[];dnBar();dnTimeline();var de=document.documentElement;try{if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().catch(function(){});}catch(e){}}
