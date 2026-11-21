@@ -1477,3 +1477,24 @@ Needs a Render redeploy (server.js changed).
 1. Open venue.html?practice, run the half pipe test (`ukPipeTest(3)` in the console), on a computer and on a phone.
 2. Watch yourself swing from wall to wall: you should stay big, face forward, and the board should only tilt slightly.
 3. Do a trick and spin in the air with the left stick: spinning and landing still work.
+
+## v1.79.11 - Phone: no stand-in name tag, how-to-play text fades
+- Practice mode no longer puts a "Stand-in" name under the performer.
+- On phones, the how-to-play lines in the mini games (mosh, roller rink, keepy uppy, dance walk, half pipe, ski, capture the flag) now wrap to fit and fade out after about 6 seconds. The round description under the round title fades too, except when it's your turn.
+
+**Test it:**
+1. On a phone, open venue.html?practice and start each mini game.
+2. The hint text should be readable for a few seconds, then disappear and leave the play area clear.
+3. Leave practice: the performer should show no name tag.
+
+## v1.79.12 - How-to-play card before every minigame
+- For the last 15 seconds of a round's countdown, a card covers the screen with a looping pixel demo of the game, a one-line goal, **How to play** (touch or keyboard, depending on your device) and **Rules**. A bar shows how long until it starts. The last 3 seconds go back to the big 3-2-1-GO.
+- Covers Step dance, Target dance, Note highway (7 and 4 keys), Free dance, Mosh pit, Roller rink, Ice rink, Keepy uppy, Mars Rally, Dance walk race, Half pipe, Ski and Capture the flag. Battle rounds add a line about the knockout.
+- **Skip ✕** closes it for that round.
+- Countdowns are now at least 18 seconds (15 for the card + 3 for the count): the Countdown setting on the performer page and in practice is 18, 25 or 30 s. Songs in a timed set keep the countdown the set gives them (the card shows for as much of it as fits).
+
+**Test it:**
+1. Practice → pick a game → Start game. The card should appear straight away with the demo animating, then clear at 3 seconds for the count.
+2. Try a few games, on a phone and a computer. Check the demo matches the game and the text fits without scrolling on a phone.
+3. Tap Skip ✕: the card goes and the countdown carries on.
+4. Console: `EXPLAIN.show("pipe")` shows any game's card without starting a round.
