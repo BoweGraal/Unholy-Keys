@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.70.0"></script>
-<script src="gfx.js?v=1.70.0"></script>
-<script src="art.js?v=1.70.0"></script>
-<script src="instruments.js?v=1.70.0"></script>
-<script src="kart.js?v=1.70.0"></script>
+<script src="tune.js?v=1.71.0"></script>
+<script src="gfx.js?v=1.71.0"></script>
+<script src="art.js?v=1.71.0"></script>
+<script src="instruments.js?v=1.71.0"></script>
+<script src="kart.js?v=1.71.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -165,7 +165,7 @@ body.gaming-ski #skiTricks{left:auto;right:16px;bottom:calc(var(--chatH) + 132px
 #ppPad.dn{transform:translateY(3px);box-shadow:0 1px 0 #065868}
 #ppStances{position:absolute;right:16px;bottom:calc(var(--chatH) + 150px);display:flex;gap:5px;pointer-events:auto}
 #ppPad .knob{display:none;position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;background:#fff;opacity:.85;pointer-events:none;clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%)}
-#ppPad.swipe .knob{display:block}#ppPad.swipe small{visibility:hidden}
+#ppPad .knob{display:block;opacity:.45}#ppPad.swipe .knob{opacity:.9}
 #ppGuide{position:absolute;left:16px;top:120px;display:flex;flex-direction:column;gap:4px;pointer-events:none;opacity:.6;transition:opacity .2s}
 #ppGuide.hot{opacity:1}
 #ppGuide .pg{display:flex;align-items:center;gap:6px;background:rgba(10,7,20,.7);padding:2px 8px 2px 2px;border:1px solid rgba(255,255,255,.15)}
@@ -551,7 +551,7 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
   <div id="pipeUI"><div id="ppBanner"></div><div id="ppJudge"></div><div id="ppScore">0</div><div id="ppCombo"></div><div id="ppHint"></div>
     <div id="ppSuperBox" title="Land clean to fill it; when it's full your next pop is a SUPER MOVE"><b>SUPER</b><div id="ppSuperBar"><div id="ppSuper"></div></div></div>
     <div id="ppMomBox" title="Momentum: tap BEAT on the beat"><div id="ppMomentum"></div></div>
-    <button id="ppPad"><span class="b1">PUMP</span><span class="b2">FLICK!</span><small>tap fast · Space</small><i class="knob"></i></button>
+    <button id="ppPad"><span class="b1">TRICKS</span><span class="b2">FLICK!</span><small>draw a move, flick up</small><i class="knob"></i></button>
     <div id="ppGuide" title="How to flick each trick: follow the path, ending with a flick up. A harder flick goes higher"></div>
     <div id="ppStances"><button data-s="1">1<br>Point</button><button data-s="2">2<br>Vogue</button><button data-s="3">3<br>Kick</button><button data-s="4">4<br>Freeze</button></div>
   </div>
@@ -3687,7 +3687,7 @@ var PIPE=(function(){
     {name:"Shuffle",pts:220,d:9,col:"#F5C518",how:"down, then up",g:[[3,2],[3,9],[7,9],[7,1]]},
     {name:"Boogie",pts:350,d:3,col:"#FF4D6D",how:"spin round, then up",g:[[5,5],[7,4],[7,7],[4,8],[2,6],[3,3],[6,2],[8,3],[8,1]]}];
   var STN=[null,{name:"Point",p:[3.0,-0.4,0.3,-0.1]},{name:"Vogue",p:[2.4,-2.9,0.1,-0.5]},{name:"Kick",p:[1.6,-1.6,1.3,-0.2]},{name:"Freeze",p:[-0.6,0.6,0.9,-0.9]}];
-  var on=false,phi=0,A=0.3,lean=0,keyLean=0,air=null,r=0,score=0,combo=0,superK=0,bailUntil=0,lastT=0,lastBeat=-1,pressedBeat={},trick=0,stance=0,stanceT=0,stances={},pops=[],warp=0,warpAt=-1e9,wasRound=false,lane=0.6,grp=null,swipe=null,wasWin=false,lastJudgeT=0,bots={},rem={};
+  var keyLane=0,prevU=0,boostT=0,on=false,phi=0,A=0.3,lean=0,keyLean=0,air=null,r=0,score=0,combo=0,superK=0,bailUntil=0,lastT=0,lastBeat=-1,pressedBeat={},trick=0,stance=0,stanceT=0,stances={},pops=[],warp=0,warpAt=-1e9,wasRound=false,lane=0.6,grp=null,swipe=null,wasWin=false,lastJudgeT=0,bots={},rem={};
   function $(id){return document.getElementById(id);}
   function T(k){return TUNE.v("pp."+k);}
   function pipeRound(){return GAME.mode==="pipe"||(typeof ROUND!=="undefined"&&ROUND.mode==="pipe");}
@@ -3706,15 +3706,20 @@ var PIPE=(function(){
   function popWindow(){var u=uNow();return !air&&A>=0.95&&Math.abs(u)>0.9*Math.min(0.995,A)&&Math.cos(phi)*Math.sign(Math.sin(phi))>0;}   /* climbing, near the top */
   function start(round){
     on=true;phi=0.01;A=0.3;air=null;r=0;score=0;combo=0;superK=0;bailUntil=0;pressedBeat={};trick=0;stance=0;stances={};pops=[];bots={};rem={};swipe=null;
-    grp=myGroup();lane=grp.y;
+    grp=myGroup();lane=grp.y;prevU=0;keyLane=0;
     document.body.classList.add("gaming-pipe");$("pipeUI").classList.add("on");hud();banner(grp.G>1?"🛹 HALF PIPE · GROUP "+(grp.g+1)+" OF "+grp.G:"🛹 HALF PIPE");
   }
   function stop(){on=false;document.body.classList.remove("gaming-pipe");var u=$("pipeUI");if(u)u.classList.remove("on");}
-  /* PUMP: every tap pumps your feet once; tap fast and you build speed fast. It fades if you stop */
+  /* speed looks after itself now: you roll up to cruising speed on your own; the boost pads are how you go faster */
   var pumpT=0,pumpN=0,queued=null;
-  function beat(){
-    if(!on||performance.now()<bailUntil||air||popWindow())return;   /* going up the wall you can't pump: the pad is the trick stick now */
-    A=Math.min(AMAX,A+T("gain")*(1-0.6*Math.pow(A/AMAX,2)));pumpT=performance.now();pumpN++;hud();
+  function beat(){}
+  /* crossing the middle: over the live pad = a burst of speed; over the dead one = nothing */
+  function crossPads(now){
+    var b=beatAt(songPos()),live=PP.livePad(b),hit=-1;
+    for(var k=0;k<2;k++)if(Math.abs(lane-PP.padY(k))<PP.PAD_H/2*(PP.Y1-PP.Y0)+0.02)hit=k;
+    if(hit<0)return;
+    if(hit===live){A=Math.min(AMAX,A+T("boost"));boostT=now;judge("BOOST!","#F5C518");pops.push({x:0.5,y:lane,t:now,txt:"BOOST",col:"#F5C518"});}
+    else judge("NOT LIT","#777");
   }
   /* reading a flick: pts = [x, y, ms] with y down (screen) or the stick's own y. It has to finish with a quick move up.
      Before that: going round in a loop = Boogie; mostly left / right / down first = Thriller / Robot / Shuffle; nothing = Headspin.
@@ -3734,7 +3739,7 @@ var PIPE=(function(){
   /* a trick read from a flick: only at the lip (a flick a moment early is held until you get there) */
   function trickGo(k,pw){
     if(!on||air||performance.now()<bailUntil||!k)return;
-    if(!popWindow()){if(A>=0.95){queued={k:k,pw:pw,t:performance.now()};}else judge("PUMP MORE SPEED","#aaa");return;}
+    if(!popWindow()){if(A>=0.95){queued={k:k,pw:pw,t:performance.now()};}else judge("BUILDING SPEED…","#aaa");return;}
     queued=null;
     var sup=superK>=1,side=Math.sign(Math.sin(phi)),h=(A-0.6)*pw*(1-0.25*Math.abs(lean))*(sup?1.5:1),dur=Math.min(2.2,0.6+0.9*h);
     air={t0:performance.now(),dur:dur,h:Math.min(1.4,h),side:side,trick:k,sup:sup,pw:pw,phi0:phi};r=lean*30;stance=0;stances={};trick=k;
@@ -3747,14 +3752,20 @@ var PIPE=(function(){
   function key(code,down){
     if(!on)return false;
     var now=performance.now();
-    if(code==="ArrowLeft"||code==="KeyA"){keyLean=down?-1:(keyLean===-1?0:keyLean);if(down)keySeq.push(["L",now]);return true;}
-    if(code==="ArrowRight"||code==="KeyD"){keyLean=down?1:(keyLean===1?0:keyLean);if(down)keySeq.push(["R",now]);return true;}
-    if(!down)return code==="Space"||/^Digit[1-4]$/.test(code)||/^Arrow(Up|Down)$|^Key[WS]$/.test(code);
-    if(code==="Space"){beat();return true;}
+    /* the left stick on keys: A/D lean and spin, W/S move to the back / front of the pipe */
+    if(code==="KeyA"){keyLean=down?-1:(keyLean===-1?0:keyLean);return true;}
+    if(code==="KeyD"){keyLean=down?1:(keyLean===1?0:keyLean);return true;}
+    if(code==="KeyW"){keyLane=down?-1:(keyLane===-1?0:keyLane);return true;}
+    if(code==="KeyS"){keyLane=down?1:(keyLane===1?0:keyLane);return true;}
+    /* the right stick on keys: the arrows, in order, ending with up */
+    if(!down)return code==="Space"||/^Digit[1-4]$/.test(code)||/^Arrow/.test(code);
+    if(code==="Space"){trickGo(1,1);return true;}
     if(/^Digit[1-4]$/.test(code)){stanceGo(+code.slice(5));return true;}
-    if(code==="ArrowDown"||code==="KeyS"){keySeq.push(["D",now]);return true;}
+    if(code==="ArrowLeft"){keySeq.push(["L",now]);return true;}
+    if(code==="ArrowRight"){keySeq.push(["R",now]);return true;}
+    if(code==="ArrowDown"){keySeq.push(["D",now]);return true;}
     /* the keys do the flicks as sequences: (← / → / ↓ / ← ↓ → round) then ↑ */
-    if(code==="ArrowUp"||code==="KeyW"){var seq=keySeq.filter(function(s){return now-s[1]<700;}).map(function(s){return s[0];});keySeq=[];
+    if(code==="ArrowUp"){var seq=keySeq.filter(function(s){return now-s[1]<700;}).map(function(s){return s[0];});keySeq=[];
       var has=function(c){return seq.indexOf(c)>=0;},k=has("L")&&has("D")&&has("R")?5:seq.length?{L:2,R:3,D:4}[seq[seq.length-1]]:1;trickGo(k,1);return true;}
     return false;
   }
@@ -3774,7 +3785,11 @@ var PIPE=(function(){
     var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
     var me=myId&&viewers[myId];if(!me)return;
     var b=beatAt(songPos()),bi=Math.floor(b);
-    if(!air&&now>bailUntil)A=Math.max(0.25,A-T("decay")*dt);   /* momentum fades unless you keep pumping */
+    /* speed: rolls up to cruising on its own; boosts lift it higher and it eases back down */
+    if(!air&&now>bailUntil){var cr=T("cruise");if(A<cr)A=Math.min(cr,A+0.14*dt);else A=Math.max(cr,A-T("decay")*dt);}
+    var uu0=uNow();if(!air&&now>bailUntil&&prevU*uu0<0)crossPads(now);prevU=uu0;
+    /* the left stick: up and down moves you between the back and front of the pipe (to line up with the live pad) */
+    var jy=joy.id!==null&&Math.abs(joy.y)>0.2?joy.y:keyLane;if(!air&&jy)lane=Math.max(PP.Y0,Math.min(PP.Y1,lane+jy*0.42*dt));
     if(queued){if(now-queued.t>600)queued=null;else if(popWindow())trickGo(queued.k,queued.pw);}
     /* the left stick: lean on the ramp, spin in the air */
     var jx=joy.id!==null&&Math.abs(joy.x)>0.15?joy.x:keyLean;lean+=(jx-lean)*Math.min(1,dt*8);
@@ -3785,10 +3800,10 @@ var PIPE=(function(){
     var x=xOf(),z=air?Math.sin(Math.PI*Math.min(1,(now-air.t0)/1000/air.dur))*air.h/1.4:0;
     me.tx=me.x=x;me.ty=me.y=lane;sendPos(x,lane,{z:+z.toFixed(3),r:Math.round(r)});me.sk=wire();me.pz=z;me.pr=r;
     var st=stance?STN[stance].p:null;
-    var pk=now-pumpT<220?Math.sin((now-pumpT)/220*Math.PI):0,pl=pumpN%2?1:-1;   /* pumping: one knee bends then the other */
+    var pk=now-boostT<300?Math.sin((now-boostT)/300*Math.PI):0,pl=1;   /* pumping: one knee bends then the other */
     GAME.moshPose(now<bailUntil?[2.6,-2.6,1.2,-1.2]:st?st:air?[2.3,-2.3,0.5,-0.5]:[1.2+lean*0.5,-1.2+lean*0.5,0.35+pk*0.55*pl,-0.35+pk*0.55*pl]);
     if(PRACTICE.on)botTick(now,dt);
-    var hn=$("ppHint");if(hn)hn.textContent=air?"Line the board up with the wall to land · 1–4 for style":win?"Draw your trick on the right stick, ending with a flick up · harder = higher":A<0.95?"Tap PUMP fast to build speed · lean with the left stick":"Going up the wall, PUMP turns into the trick stick";
+    var hn=$("ppHint");if(hn)hn.textContent=air?"Line the board up with the wall to land · 1–4 for style":win?"Draw your trick on the right stick, ending with a flick up · harder = higher":"Left stick: up/down to line up with the lit pad, left/right to lean · right stick: tricks";
     hud();
   }
   /* practice: the practice skaters build speed and throw tricks at their own pace */
@@ -3809,8 +3824,9 @@ var PIPE=(function(){
   /* each frame: everyone in your group into their lane, smoothing the others' positions */
   function place(){
     if(!pipeRound())return;var all=ids();grp=PP.group(all,myId);
-    grp.members.forEach(function(id){var v=viewers[id];if(!v||v.dance!==4)return;var gy=PP.group(all,id).y;v.ty=v.y=gy;if(id===myId&&on){v.y=v.ty=lane=gy;return;}
-      var rr=rem[id]||(rem[id]={x:v.tx||0.5,z:0,r:0});rr.x+=(v.tx-rr.x)*0.3;rr.z+=((v.pz||0)-rr.z)*0.35;var dr=(v.pr||0)-rr.r;rr.r+=dr*0.35;v.x=rr.x;});
+    grp.members.forEach(function(id){var v=viewers[id];if(!v||v.dance!==4)return;if(id===myId&&on){v.y=v.ty=lane;return;}
+      var ty=v.ty>=PP.Y0-0.02&&v.ty<=PP.Y1+0.02?v.ty:PP.group(all,id).y;
+      var rr=rem[id]||(rem[id]={x:v.tx||0.5,y:ty,z:0,r:0});rr.x+=(v.tx-rr.x)*0.3;rr.y+=(ty-rr.y)*0.3;rr.z+=((v.pz||0)-rr.z)*0.35;var dr=(v.pr||0)-rr.r;rr.r+=dr*0.35;v.x=rr.x;v.y=rr.y;});
   }
   function bg(g){
     var pr=pipeRound(),now=performance.now();
@@ -3818,6 +3834,7 @@ var PIPE=(function(){
     var k=Math.min(1,(now-warpAt)/2200),e=k*k*(3-2*k);warp=pr?e:1-e;if(warp<=0.001)return;
     place();
     PP.draw(g,{W:W,X:function(x){return x*W;},Yd:function(y){return y*H;},wall:wallPx(),beat:beatAt(songPos())});
+    if(warp>0.6)PP.pads(g,function(x){return x*W;},function(y){return y*H;},beatAt(songPos()),ART.PX.unit(g));
   }
   function liftOf(v,isMe){var x=v.x,u=Math.max(-1,Math.min(1,(x-0.5)/((XR-XL)/2))),h=PP.prof(Math.abs(u)),z=isMe?(v.pz||0):(rem[idOf(v)]?rem[idOf(v)].z:(v.pz||0));return{u:u,lift:h*wallPx()+z*airPx()+4,air:z>0.01};}
   function idOf(v){for(var k in viewers)if(viewers[k]===v)return k;return null;}
@@ -3839,7 +3856,7 @@ var PIPE=(function(){
   function beatBar(g){
     if(!chatPx)chatPx=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--chatH"))||56;
     var P=ART.PX.unit(g),b=beatAt(songPos());if(!(b>-1e8))return;
-    var narrow=W<640,R=P*(narrow?6:8),cx=Math.round(W/2/P)*P,cy=Math.round((H-chatPx-(narrow?250:R+P*7))/P)*P;
+    var narrow=W<640,R=P*(narrow?5:7),cx=Math.round((narrow?W/2:Math.max(R*3,W*0.1))/P)*P,cy=Math.round((narrow?150:H-chatPx-R-P*8)/P)*P;   /* off to the side (top on a phone), clear of the boost pads in the middle */
     var bi=Math.floor(b),fr=((b%1)+1)%1,pulse=Math.pow(1-fr,2.2),win=popWindow(),nb=Math.round(b),hitNow=!!pressedBeat[nb]&&Math.abs(b-nb)<0.5,big=bi%4===0;
     var tint=win?"#F5C518":big?"#F5F23D":"#D354A0";
     g.save();
@@ -3879,8 +3896,7 @@ var PIPE=(function(){
     /* the right-hand pad: a PUMP button on the flat; going up the wall it becomes a stick, and the move you draw on it is your trick */
     var stk=null,knob=p.querySelector(".knob");
     p.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();p.classList.add("dn");
-      if(popWindow()||air===null&&A>=0.95&&Math.abs(uNow())>0.6){stk={pts:[[e.clientX,e.clientY,performance.now()]],x:e.clientX,y:e.clientY,id:e.pointerId};try{p.setPointerCapture(e.pointerId);}catch(x2){}}
-      else beat();});
+      stk={pts:[[e.clientX,e.clientY,performance.now()]],x:e.clientX,y:e.clientY,id:e.pointerId};try{p.setPointerCapture(e.pointerId);}catch(x2){}});
     p.addEventListener("pointermove",function(e){if(!stk||e.pointerId!==stk.id)return;stk.pts.push([e.clientX,e.clientY,performance.now()]);
       if(knob){var dx=e.clientX-stk.x,dy=e.clientY-stk.y,d=Math.hypot(dx,dy),m=Math.min(d,40)/(d||1);knob.style.transform="translate("+Math.round(dx*m)+"px,"+Math.round(dy*m)+"px)";}});
     var stkEnd=function(e){p.classList.remove("dn");if(knob)knob.style.transform="";if(!stk)return;var pts=stk.pts;stk=null;pts.push([e.clientX,e.clientY,performance.now()]);
@@ -3903,7 +3919,7 @@ var PIPE=(function(){
   window.ukPipeGesture=function(pts){return gesture(pts);};
   window.ukPipe=function(){return{on:on,A:+A.toFixed(2),u:+uNow().toFixed(2),win:popWindow(),air:!!air,r:Math.round(r),score:score,combo:combo,super:+superK.toFixed(2),bailed:performance.now()<bailUntil,group:grp?{g:grp.g,G:grp.G,n:grp.members.length}:null,warp:+warp.toFixed(2)};};
   window.ukPipeBot=function(o){window.__ppBot=!!o;};
-  return{start:start,stop:stop,tick:function(){wirePad();if(window.__ppBot&&on){if(Math.random()<0.12&&!popWindow())beat();if(popWindow())trickGo(1+Math.floor(Math.random()*5),0.8+Math.random()*0.5);if(air){keyLean=Math.max(-1,Math.min(1,(180-r)/60));}else keyLean=0;}tick();},
+  return{start:start,stop:stop,tick:function(){wirePad();if(window.__ppBot&&on){var lp=PP.padY(PP.livePad(beatAt(songPos())+(Math.abs(uNow())>0.3?0.5:0)));keyLane=Math.abs(lp-lane)>0.01?Math.sign(lp-lane):0;if(popWindow())trickGo(1+Math.floor(Math.random()*5),0.8+Math.random()*0.5);if(air){keyLean=Math.max(-1,Math.min(1,(180-r)/60));}else keyLean=0;}tick();},
     beat:beat,stance:stanceGo,key:key,bg:bg,front:front,looks:looks,facing:facing,wire:wire,fd:fd,hide:hide,pipeRound:pipeRound,get on(){return on;}};
 })();
 /* ============================================================
@@ -6182,7 +6198,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.70.0",SERVER_VERSION="";
+var PAGE_VERSION="1.71.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6665,7 +6681,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.70.0"></script>
+<script src="lab.js?v=1.71.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
