@@ -1486,7 +1486,7 @@ var ART=(function(){
     var cv=document.createElement("canvas");cv.className="ukm-prev";cv.width=120;cv.height=150;cv.title="Tap to see a dance move, drag sideways to turn round";pw.appendChild(cv);
     /* turn the character round: front, side, back, other side */
     var DIRV=0,tl=document.createElement("button"),tr2=document.createElement("button");tl.type=tr2.type="button";tl.className="ukm-turn l";tr2.className="ukm-turn r";tl.textContent="\u27F2";tr2.textContent="\u27F3";tl.title="Turn left";tr2.title="Turn right";tl.setAttribute("aria-label","Turn left");tr2.setAttribute("aria-label","Turn right");
-    tl.onclick=function(e){e.stopPropagation();DIRV=(DIRV+3)%4;};tr2.onclick=function(e){e.stopPropagation();DIRV=(DIRV+1)%4;};pw.appendChild(tl);pw.appendChild(tr2);
+    tl.onclick=function(e){e.stopPropagation();DIRV=(DIRV+7)%8;};tr2.onclick=function(e){e.stopPropagation();DIRV=(DIRV+1)%8;};pw.appendChild(tl);pw.appendChild(tr2);
     var rows=document.createElement("div");rows.className="ukm-rows";box.appendChild(rows);
     var ctl={};
     function changed(){paint();if(onChange)onChange(JSON.parse(JSON.stringify(L)));}
@@ -1547,7 +1547,7 @@ var ART=(function(){
     var g=cv.getContext("2d"),moveT=-1e9,raf=0;
     var dragX=null,dragged=false;
     cv.onpointerdown=function(e){dragX=e.clientX;dragged=false;try{cv.setPointerCapture(e.pointerId);}catch(x){}};
-    cv.onpointermove=function(e){if(dragX===null)return;var d=e.clientX-dragX;if(Math.abs(d)>34){DIRV=(DIRV+(d>0?1:3))%4;dragX=e.clientX;dragged=true;}};
+    cv.onpointermove=function(e){if(dragX===null)return;var d=e.clientX-dragX;if(Math.abs(d)>34){DIRV=(DIRV+(d>0?1:7))%8;dragX=e.clientX;dragged=true;}};
     cv.onpointerup=cv.onpointercancel=function(){dragX=null;};
     cv.style.touchAction="pan-y";
     cv.onclick=function(){if(dragged){dragged=false;return;}moveT=performance.now();};
@@ -1558,7 +1558,7 @@ var ART=(function(){
       g.fillStyle="rgba(0,0,0,.35)";g.fillRect(36,128,48,6);
       if(k>=0&&k<1){var up=Math.sin(k*Math.PI);st={armL:0.15+up*2.6,armR:-0.15-up*2.6,legL:up*0.5,legR:-up*0.5,bob:-up*12,mouth:true};}
       else{var w=Math.sin(t*0.003);st={armL:0.15,armR:-0.15+(Math.floor(t/4000)%2?Math.max(0,w)*2.2:0),bob:-Math.abs(Math.sin(t*0.004))*3};}
-      st.dir=DIRV;drawChar(g,60,92,3,L,st);
+      st.dir=[0,4,1,5,2,6,3,7][DIRV];drawChar(g,60,92,3,L,st);   /* 8 turns: front, front-right, right, back-right, back, back-left, left, front-left */
       raf=requestAnimationFrame(frame);
     }
     paint();frame();

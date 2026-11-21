@@ -765,6 +765,8 @@ Free dance (all in the free dance panel).
   - **Character:** opens the character maker. Done brings you back. Tapping your character on the menu also opens it.
 - **Instrument:** opens the phone instrument (index.html?instrument). It starts behind a big START PLAYING button because phones need a tap before they'll play sound. The ✕ in the instrument brings you back to the menu.
 - Your name is saved on this device as you type it, so it's still there after a reload, after practice, or after coming back from the instrument.
+- **iPhone:** the fullscreen button is hidden on iPhones, where Safari can't do fullscreen. That covers the audience page, the performer page and the phone instrument. Leave practice moves into its spot. It's also hidden in the Home Screen app, which is already fullscreen. Android, iPad and computers keep the button.
+- **Character maker:** the turn buttons and dragging now step through all 8 directions, diagonals included (was 4).
 - The character on the menu is a size smaller and sits lower, so hats aren't cut off.
 - A link with a room code in it (?room=ABCD) opens straight on the room code screen.
 - If you get disconnected, you land back on the room code screen with the message.
