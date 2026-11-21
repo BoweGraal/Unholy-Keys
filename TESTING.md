@@ -1540,3 +1540,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.20
 - Practice minigames: the "Viewers: N" counter is hidden (players on screen are untouched).
+
+## v1.79.21 — kart laps
+- Race is 5 laps: counter shows LAP n/5, banners "3 LAPS TO GO", "2 LAPS TO GO", "FINAL LAP!", "FINISH!"; lap points stop after lap 5.
