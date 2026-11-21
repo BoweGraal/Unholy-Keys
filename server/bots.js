@@ -269,7 +269,7 @@ module.exports = function(api) {
     var r = rooms[b.room]; if (!r) return;
     if (!b.sk2 || b.sk2.n !== rd.n) {
       var ids = Array.from(r.viewers.keys()).sort(), i = Math.max(0, ids.indexOf(b.viewerId)), nl = Math.max(2, Math.min(8, ids.length));
-      b.sk2 = { n: rd.n, seed: 1 + (rd.n * 37) % 997, x: -85 + 170 * ((i % nl) + 0.5) / nl, y: -24, sp: 90 + 70 * b.skill, off: (Math.random() * 2 - 1) * 30, t: now, crash: 0, gates: 0, lastGate: 0, posAt: 0, scoreAt: 0, a: 0 };
+      b.sk2 = { n: rd.n, seed: 1 + (rd.n * 37) % 997, x: -85 + 170 * ((i % nl) + 0.5) / nl, y: -24, sp: 140 + 90 * b.skill, off: (Math.random() * 2 - 1) * 30, t: now, crash: 0, gates: 0, lastGate: 0, posAt: 0, scoreAt: 0, a: 0 };
     }
     var k = b.sk2, dt = Math.min(0.5, (now - k.t) / 1000); k.t = now;
     var going = wkBeat(rd, now - rd.playAt) >= 8;

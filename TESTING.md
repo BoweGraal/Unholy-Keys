@@ -757,6 +757,22 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.66.0 - Ski: flag zones, jump zones, faster, and the pop and cut
+
+- **Layered mountain:** the made-up mountain now goes flag zone, jump zone, flag zone, jump zone, all the way down. A dashed line and FLAG ZONE / JUMP ZONE on the snow mark where each one starts, with a banner as you cross it.
+  - **Flag zones:** slalom gates down the line, a little closer together than before, with no ramps.
+  - **Jump zones:** a run of ramps along the line, swapping sides, with moguls between them. Tricks are worth ×1.5 here.
+  - Courses made in the Ski designer are unchanged.
+- **Faster:** top speed 230 (was 170), quicker acceleration, sharper turning, and less speed lost when carving. The camera pulls back a little at full speed so you can see what's coming.
+- **The pop:** a hop (Space / HOP) gives a small kick of speed and shoves you sideways the way you're steering (or already sliding), with a puff of snow.
+- **The cut:** while you're up from a hop, your skis swing round about 3.5 times faster. Land on a new line (half a radian or more of turn) and you get CUT, a little speed and no carving slowdown for a moment. Arrow keys mid-hop now steer instead of doing tricks; tricks are for ramps and moguls (the trick buttons still work anywhere in the air).
+- New Tuning lab sliders: Hop pop speed and Hop pop sideways shove.
+- **Fix:** the server's ski bots had gone missing in v1.62.0. In a live Ski round with bots that would have broken the bots (and possibly the server). They're back.
+
+Needs a Render redeploy (bots.js changed).
+
+**Test it:** practice → Ski. Cross a flag zone, then a jump zone. Hop and swing hard left or right while you're up, and check you land on the new line with CUT.
+
 ## v1.65.0 - 8 directions for every character
 
 Characters now face 8 ways instead of 4: front, back, left, right, and the four diagonals.
