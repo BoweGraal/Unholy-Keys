@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.64.0"></script>
-<script src="gfx.js?v=1.64.0"></script>
-<script src="art.js?v=1.64.0"></script>
-<script src="instruments.js?v=1.64.0"></script>
-<script src="kart.js?v=1.64.0"></script>
+<script src="tune.js?v=1.64.1"></script>
+<script src="gfx.js?v=1.64.1"></script>
+<script src="art.js?v=1.64.1"></script>
+<script src="instruments.js?v=1.64.1"></script>
+<script src="kart.js?v=1.64.1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3765,30 +3765,49 @@ var PIPE=(function(){
     (grp?grp.members:[]).forEach(function(id){var v=viewers[id];if(!v||v.dance!==4)return;var isMe=id===myId&&on,L=liftOf(v,isMe),bl=isMe?now<bailUntil:!!(v.sk&&v.sk.f),rot=bl?1.45:rotOf(v,isMe,L.u,L.air),off=14*sc;
       var cx=v.x*W,cy=v.y*H-L.lift;PP.board(g,cx-Math.sin(rot)*off,cy+Math.cos(rot)*off,rot,sc,0,0,v.color);
       var sup=isMe?(air&&air.sup):(v.sk&&v.sk.h>=10);if(sup){g.save();g.globalAlpha=0.35+0.25*Math.sin(now/90);g.fillStyle="#F5C518";for(var q=0;q<10;q++){var aa=q/10*6.283+now/300;g.fillRect(Math.round(cx+Math.cos(aa)*26)-2,Math.round(cy+Math.sin(aa)*26)-2,4,4);}g.restore();}});
-    if(on)beatBar(g);
+    if(on){beatWash(g);beatBar(g);}
     pops=pops.filter(function(pp){var age=(now-pp.t)/1000;if(age>1.2)return false;g.globalAlpha=1-age/1.2;g.font="900 16px system-ui";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";var px=pp.x*W,py=pp.y*H-110-age*30;g.strokeText(pp.txt,px,py);g.fillStyle=pp.col;g.fillText(pp.txt,px,py);return true;});g.globalAlpha=1;
   }
-  /* the beat bar along the bottom: blocks slide in from both sides and meet in the box on every beat.
-     The box flashes green when you hit that beat, and goes gold when it's time to swipe */
+  /* the beat, pulsing out of a disco ball at the bottom of the screen (above the pad and stick on phones):
+     every beat a ring of light bursts out of the ball and its mirrors flash; a white ring closes in on the ball and
+     touches it right on the next beat, so you can see the timing coming. Green burst = you hit it, gold = time to swipe */
   var chatPx=0;
   function beatBar(g){
     if(!chatPx)chatPx=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--chatH"))||56;
     var P=ART.PX.unit(g),b=beatAt(songPos());if(!(b>-1e8))return;
-    var narrow=W<640,L=Math.round(Math.min(460,W*(narrow?0.8:0.5))/P)*P,cx=Math.round(W/2/P)*P,cy=Math.round((H-chatPx-(narrow?236:26))/P)*P,bh=P*4;   /* on a phone it sits above the pad and the stick */
-    var bi=Math.round(b),near=Math.abs(b-bi)<=T("window"),hit=!!pressedBeat[bi],pulse=Math.pow(1-(((b%1)+1)%1),3),win=popWindow();
-    g.save();g.globalAlpha=0.75;g.fillStyle="#0a0714";g.fillRect(cx-L/2-P,cy-bh/2-P,L+2*P,bh+2*P);g.globalAlpha=1;
-    g.fillStyle="#2a2244";g.fillRect(cx-L/2,cy-P/2,L,P);
-    /* beat blocks: the next 4 beats, coming in from each side */
-    for(var k=Math.ceil(b-0.15);k<=Math.floor(b)+4;k++){var d=k-b,off=Math.round(d*(L/2)/4/P)*P;if(off>L/2-P)continue;var big=k%4===0,hh=big?bh:bh-2*P,al=Math.max(0.25,1-Math.abs(d)/4);
-      g.globalAlpha=al;g.fillStyle=pressedBeat[k]?"#4CC38A":big?"#F5F23D":"#D354A0";g.fillRect(cx-off-P*1.5,cy-hh/2,P*2,hh);g.fillRect(cx+off-P*0.5,cy-hh/2,P*2,hh);}
+    var narrow=W<640,R=P*(narrow?6:8),cx=Math.round(W/2/P)*P,cy=Math.round((H-chatPx-(narrow?250:R+P*7))/P)*P;
+    var bi=Math.floor(b),fr=((b%1)+1)%1,pulse=Math.pow(1-fr,2.2),win=popWindow(),nb=Math.round(b),hitNow=!!pressedBeat[nb]&&Math.abs(b-nb)<0.5,big=bi%4===0;
+    var tint=win?"#F5C518":big?"#F5F23D":"#D354A0";
+    g.save();
+    /* bursts: the last two beats' rings flying outward */
+    for(var k=0;k<2;k++){var bb=bi-k,age=b-bb;if(age<0||age>1.6)continue;var rr=R+age*R*(bb%4===0?6:4.5),al=Math.max(0,1-age/1.6);
+      g.globalAlpha=al*(bb%4===0?1:0.75);g.strokeStyle=pressedBeat[bb]?"#4CC38A":win?"#F5C518":bb%4===0?"#F5F23D":"#D354A0";ART.PX.ring(g,cx,cy,rr,P*(bb%4===0?3:2));
+      /* sparks shooting out along eight rays */
+      g.fillStyle="#fff";for(var q=0;q<8;q++){var an=q*0.785+bb*0.39,d=R+age*R*5.5;g.fillRect(Math.round((cx+Math.cos(an)*d)/P)*P,Math.round((cy+Math.sin(an)*d*0.8)/P)*P,P,P);}}
     g.globalAlpha=1;
-    /* the box in the middle */
-    var bc=win?"#F5C518":hit?"#4CC38A":near?"#fff":"#7F77DD",bw=P*6,bx=cx-bw/2,by=cy-bh/2-P*2,bH=bh+P*4;
-    if(pulse>0.05){g.globalAlpha=pulse*0.5;g.fillStyle=bc;g.fillRect(bx-P,by-P,bw+2*P,bH+2*P);g.globalAlpha=1;}
-    g.fillStyle=bc;g.fillRect(bx,by,bw,P);g.fillRect(bx,by+bH-P,bw,P);g.fillRect(bx,by,P,bH);g.fillRect(bx+bw-P,by,P,bH);
-    g.font="700 "+Math.max(9,P*2.5)+"px Silkscreen,ui-monospace,monospace";g.textAlign="center";g.fillStyle=bc;g.fillText(win?"SWIPE!":"BEAT",cx,by-P*1.5);
+    /* the closing ring: touches the ball on the next beat */
+    var ap=1-fr;g.globalAlpha=0.35+0.6*(1-ap);g.strokeStyle=win?"#F5C518":"#fff";ART.PX.ring(g,cx,cy,R+P+ap*R*2.2,P);g.globalAlpha=1;
+    /* glow behind the ball, strongest on the beat */
+    g.globalAlpha=0.25+0.55*pulse;g.fillStyle=hitNow?"#4CC38A":tint;ART.PX.disc(g,cx,cy,R+P*2+pulse*P*2);g.globalAlpha=1;
+    /* the hanging chain */
+    g.fillStyle="#8a84a8";for(var cy2=cy-R-P*4;cy2<cy-R;cy2+=P*2)g.fillRect(cx-P/2,cy2,P,P);
+    /* the ball: square mirror tiles that turn, shade toward the edge and flash on the beat */
+    var rot=performance.now()/600;
+    for(var yy=-R;yy<R;yy+=P)for(var xx=-R;xx<R;xx+=P){var dd=Math.hypot(xx+P/2,yy+P/2)/R;if(dd>1)continue;
+      var row=Math.round(yy/(P*2)),col=Math.floor((xx/(P*2))+rot),h=((row*7+col*13)%9+9)%9,lit=h===0||(pulse>0.6&&h<3);
+      var sh=1-dd*0.55,base=lit?255:Math.round((h<4?190:140)*sh+40*pulse);g.fillStyle=lit?"#fff":"rgb("+base+","+base+","+Math.min(255,base+30)+")";
+      g.fillRect(cx+xx,cy+yy,P,P);
+      if(!lit&&((xx/P+yy/P)%2===0)){g.fillStyle="rgba(20,16,40,.25)";g.fillRect(cx+xx,cy+yy,P,P);}}
+    g.strokeStyle="#2a2440";ART.PX.ring(g,cx,cy,R,P);
+    /* glints */
+    if(pulse>0.3){g.fillStyle="#fff";g.globalAlpha=pulse;g.fillRect(cx-R*0.45,cy-R*0.5,P,P*3);g.fillRect(cx-R*0.45-P,cy-R*0.5+P,P*3,P);g.globalAlpha=1;}
+    g.font="700 "+Math.max(10,Math.round(P*2.8))+"px Silkscreen,ui-monospace,monospace";g.textAlign="center";g.lineWidth=4;g.strokeStyle="#000";
+    var lb=win?"SWIPE!":hitNow?"NICE!":"BEAT";g.strokeText(lb,cx,cy+R+P*5);g.fillStyle=win?"#F5C518":hitNow?"#4CC38A":"#fff";g.fillText(lb,cx,cy+R+P*5);
     g.restore();
   }
+  /* the whole pipe flashes with the beat too */
+  function beatWash(g){var b=beatAt(songPos());if(!(b>-1e8))return;var pulse=Math.pow(1-(((b%1)+1)%1),3);if(pulse<0.05)return;
+    g.save();g.globalCompositeOperation="lighter";g.globalAlpha=pulse*(Math.floor(b)%4===0?0.16:0.09);g.fillStyle=popWindow()?"#F5C518":"#D354A0";g.fillRect(0,H*0.3,W,H*0.62);g.restore();}
   function wire(){return{h:(stance||0)+(air&&air.sup?10:0),f:performance.now()<bailUntil?1:0,t:air?air.trick:0};}
   function fd(){return air?{s:TRK[air.trick].d,m:0,c:[0,0,0,0]}:null;}
   /* the pad: tap = BEAT; up near the lip it lights up for the swipe. On a computer, drag the mouse anywhere for the swipe */
@@ -5974,7 +5993,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.64.0",SERVER_VERSION="";
+var PAGE_VERSION="1.64.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6468,7 +6487,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.64.0"></script>
+<script src="lab.js?v=1.64.1"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
