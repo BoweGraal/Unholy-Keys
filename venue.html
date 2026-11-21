@@ -122,7 +122,10 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #skiTricks{position:absolute;left:16px;bottom:calc(var(--chatH) + 16px);display:flex;gap:6px;pointer-events:auto}
 #skiTricks button{width:62px;height:58px;border-radius:12px;font:800 11px/1.1 system-ui;color:#fff;background:rgba(30,40,70,.85);border:2px solid rgba(255,255,255,.5);touch-action:none}
 #skiTricks button b{display:block;font-size:18px}
-body.gaming-ski #moveCtl,body.gaming-ski #reactBar,body.gaming-ski #moveHint{display:none}
+body.gaming-ski #reactBar,body.gaming-ski #moveHint,body.gaming-ski #actBtns{display:none}
+body.gaming-ski #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}   /* the left stick steers */
+body.gaming-ski #skiTricks{left:auto;right:16px;bottom:calc(var(--chatH) + 132px)}
+@media (max-width:520px){#skiHint{bottom:calc(var(--chatH) + 206px);font-size:12px}#skiSpeed{top:104px}}
 /* ── half pipe ── */
 #pipeUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
 #pipeUI.on{display:block}
@@ -3716,6 +3719,7 @@ var SKI=(function(){
   var SK=ART.SKI,GO_BEAT=8,CH=SK.CH,GATE_DY=SK.GATE_DY,GATE_W=SK.GATE_W;   /* the mountain itself is shared with the performer's follow view (art.js) */
   var TRK=[null,{name:"360",pts:300,dur:0.45,col:"#D04DFF"},{name:"Backflip",pts:350,dur:0.55,col:"#3DF2FF"},{name:"Daffy",pts:200,dur:0.35,col:"#F5C518"}];
   var KEYTR={ArrowLeft:1,KeyA:1,ArrowUp:2,KeyW:2,ArrowRight:3,KeyD:3};
+  var TOUCHY=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
   var on=false,seed=1,x=0,y=-24,a=0,ta=0,v=0,air=0,airMax=0,crashUntil=0,trick=null,score=0,combo=0,dist=0,lastT=0,pointer=null,keyTurn=0,chunks={},passed={},trail=[],pops=[],lastCount=-1,goShown=false,lane=0,camX=0,others={},bots={},tilted=false,fadeK=0,roundN=0;
   var cv=null,g=null;
   function $(id){return document.getElementById(id);}
@@ -3752,7 +3756,7 @@ var SKI=(function(){
   }
   function crash(why){if(performance.now()<crashUntil)return;crashUntil=performance.now()+T("crash")*1000;v=0;air=0;trick=null;combo=0;banner("💥 "+why,"#FF4D6D");hud();}
   function addPts(n,txt,col){var m=1+0.1*combo,got=Math.round(n*m);score+=got;GAME.moshPts(got);pops.push({x:x,y:y,t:performance.now(),txt:txt+" +"+got,col:col});hud();}
-  function view(){var z=Math.max(1.3,Math.min(2.6,Math.min(W/620,H/430)));return{z:z,sx:function(wx){return W/2+(wx-camX)*z;},sy:function(wy){return H*0.42+(wy-y)*z;}};}   /* you sit a little above the middle, clear of the round banner */
+  function view(){var z=Math.max(1.3,Math.min(2.6,Math.min(W/620,H/430)));return{z:z,sx:function(wx){return W/2+(wx-camX)*z;},sy:function(wy){return H*(H>W*1.2?0.5:0.42)+(wy-y)*z;}};}   /* you sit a little above the middle, clear of the round banner */
   function tick(){
     if(!on)return;
     var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
@@ -3764,6 +3768,8 @@ var SKI=(function(){
     var V=view();
     if(pointer){var dx=pointer[0]-V.sx(x),dy=pointer[1]-V.sy(y);ta=dy<=4?(dx<0?-1.5:1.5):Math.max(-1.5,Math.min(1.5,Math.atan2(dx,dy)));}
     if(keyTurn)ta=Math.max(-1.5,Math.min(1.5,ta+keyTurn*2.6*dt));
+    /* the left stick: push the way you want to go (down is fastest, sideways carves, up stops you) */
+    if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.2){pointer=null;ta=joy.y<=0.05?(joy.x<0?-1.5:1.5):Math.max(-1.5,Math.min(1.5,Math.atan2(joy.x,joy.y)));}
     if(!crashed&&air<=0){var da=ta-a,rt=T("turn")*dt;a+=Math.max(-rt,Math.min(rt,da));}
     /* speed: gravity down the fall line, drag, and carving across slows you */
     if(going&&!crashed){var acc=T("accel")*Math.cos(a)-v*(T("accel")/T("maxSpeed"));if(air<=0)acc-=Math.pow(Math.abs(Math.sin(a)),2)*60;v=Math.max(0,v+acc*dt);}
@@ -3790,7 +3796,7 @@ var SKI=(function(){
     var e=enc();me.tx=me.x=e[0];me.ty=me.y=e[1];sendPos(e[0],e[1]);me.sk=wire();
     GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:trick&&trick.k===3?[2.9,-0.4,0.9,-0.9]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
     if(PRACTICE.on)botTick(dt,now,going);
-    var hn=$("skiHint");if(hn)hn.textContent=!going?"Point where you want to go: straight down is fastest":crashed?"Ouch! Back up in a moment…":air>0?"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy":"Point to steer · Space to hop · go between the flags";
+    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy":(TOUCHY?"Left stick to steer · HOP · go between the flags":"Point to steer · Space to hop · go between the flags");
   }
   /* practice: the practice skiers follow the slalom line at their own pace, now and then crashing */
   function botTick(dt,now,going){
@@ -3821,7 +3827,7 @@ var SKI=(function(){
     if(fadeK<=0.02)return;
     var dpr=Math.min(2,window.devicePixelRatio||1);if(c.width!==Math.round(W*dpr)||c.height!==Math.round(H*dpr)){c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);}
     g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;
-    var V=view(),z=V.z,now=performance.now(),y0=y-H*0.42/z-40,y1=y+H*0.58/z+60;
+    var V=view(),z=V.z,now=performance.now(),y0=y-H*0.5/z-40,y1=y+H*0.58/z+60;
     SK.ground(g,W,H,z,V.sx,V.sy,camX,y0,y1);
     /* your tracks */
     g.strokeStyle="rgba(140,160,190,.45)";g.lineWidth=1.5;g.beginPath();var tr0=true;trail.forEach(function(p){if(p[1]<y0)return;var px=V.sx(p[0]),pyy=V.sy(p[1]);if(tr0){g.moveTo(px,pyy);tr0=false;}else g.lineTo(px,pyy);});g.stroke();
@@ -3844,7 +3850,7 @@ var SKI=(function(){
     var sp=$("skiSpeed");if(sp)sp.textContent=Math.round(v*0.36)+" km/h";
   }
   /* pointer: hover with a mouse, or touch and drag anywhere on the slope */
-  function wire2(){var c=$("skiCv");if(!c||c._w)return;c._w=1;
+  function wire2(){var c=$("skiCv");if(c)c.style.touchAction="none";if(!c||c._w)return;c._w=1;
     c.addEventListener("pointermove",function(e){if(!on)return;if(e.pointerType==="mouse"||e.buttons)pointer=[e.clientX,e.clientY];});
     c.addEventListener("pointerdown",function(e){if(!on)return;pointer=[e.clientX,e.clientY];try{c.setPointerCapture(e.pointerId);}catch(x2){}});
     c.addEventListener("contextmenu",function(e){e.preventDefault();});}

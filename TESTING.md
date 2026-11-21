@@ -763,6 +763,8 @@ The Dance button no longer opens the old list of games (Free dance / Step dance 
 - In Dance practice it opens the practice panel (the newer menu with every minigame).
 - At a show with no round on, it starts free dancing straight away. When a round is on it still joins the round, and pressing it again stops.
 
+**Ski on phones:** the left stick is back during Ski. Push it the way you want to go (down is fastest, sideways carves, up stops you). The trick buttons sit above HOP on the right, and on tall phones your skier sits lower so the round banner doesn't cover them.
+
 ## v1.60.1 - Your follow view of the Ski round
 
 During a Ski round, jam mode switches to a follow view of the mountain (and back when the round ends):
