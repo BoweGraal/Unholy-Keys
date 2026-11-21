@@ -757,6 +757,19 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.73.0 - Half pipe: cleaner screen
+
+- The pipe is a bit smaller: narrower and with lower walls.
+- The disco ball now sits in the middle of the pipe, between the two boost pads, and swells and throws rings on every beat. No BEAT label on it.
+- The trick guides (Headspin, Thriller, Robot, Shuffle, Boogie) are a row along the bottom right, next to the TRICKS stick. On a phone they sit just above the stick.
+- The TRICKS stick is round.
+- The 1 2 3 4 style buttons are gone, along with the "1–4 for style" hints.
+- The round info (round name, who's leading) now sits top left under the corner buttons on computers and tablets, so it no longer covers the UNHOLY KEYS sign. This applies to every game. On phones it stays centred at the top.
+
+Page-only change: no Render redeploy needed for this one.
+
+**Test it:** practice → Half pipe. Check that the ball pulses between the pads, the guides sit beside the round stick, and the round box sits top left.
+
 ## v1.72.0 - Dance walk race: fewer style changes, racers really dance-walk
 
 - The dance style now changes every 32 beats (was every 8), so you get time to settle into each one.
