@@ -757,6 +757,25 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.70.0 - Half pipe: pump to build speed, draw your trick on the stick
+
+- **PUMP:** the right-hand button is now PUMP. Every tap pumps your feet once (you can see the knees go), so tapping fast builds speed fast. It doesn't matter if you're on the beat. Momentum slowly fades if you stop. Space pumps too.
+- **The trick stick:** as you go up the wall to the lip, you can't pump any more. The PUMP button turns into a stick (FLICK!, with a knob that follows your thumb). Draw the move on it, ending with a flick up. How hard you flick sets how high you go:
+  - **Headspin:** straight up
+  - **Thriller:** left, then up
+  - **Robot:** right, then up
+  - **Shuffle:** down, then up
+  - **Boogie:** spin round in a loop, then up (worth the most)
+- A flick a moment before the lip is held until you get there.
+- **Guides:** small pixel drawings of each move down the left side show how to draw it. They light up when it's time to flick.
+- The **left stick** still sets your angle on the ramp and spins you in the air. 1 to 4 still change stance in the air, and landing still has to line up with the wall.
+- **On a computer:** drag the mouse anywhere to draw the move. With keys, A/D or ←/→ lean. For tricks, press the arrows in order ending with ↑: ↑ alone, ← ↑, → ↑, ↓ ↑, or ← ↓ → ↑ for Boogie.
+- New Tuning lab values: Momentum per pump and Momentum fade.
+
+No server changes.
+
+**Test it:** practice → Half pipe. Tap PUMP fast until you're climbing high, then draw a trick on the stick at the lip.
+
 ## v1.69.1 - Ski: pixel skis that turn in frames, a smaller hop
 
 - **Skis:** they're now pixel art that snaps between 7 set angles (every 30 degrees), like a sprite swapping frames, instead of smoothly rotating rectangles. The skier's facing follows the same frame: front when going straight down, three-quarter for a gentle turn, side-on for a hard turn. A spin trick shows the skis clicking round through the frames. Your stage follow view matches.
