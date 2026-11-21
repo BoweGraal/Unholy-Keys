@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.71.0"></script>
-<script src="gfx.js?v=1.71.0"></script>
-<script src="art.js?v=1.71.0"></script>
-<script src="instruments.js?v=1.71.0"></script>
-<script src="kart.js?v=1.71.0"></script>
+<script src="tune.js?v=1.72.0"></script>
+<script src="gfx.js?v=1.72.0"></script>
+<script src="art.js?v=1.72.0"></script>
+<script src="instruments.js?v=1.72.0"></script>
+<script src="kart.js?v=1.72.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3512,7 +3512,7 @@ var KEEPY=(function(){
    dance changes, and so does the path. Drift out and you slow down; stay out too long and you trip.
    ============================================================ */
 var WALK=(function(){
-  var X0=0.06,X1=0.68,Y0=0.35,Y1=0.73,GO_BEAT=8,SEG=8;   /* the finish is left of the pad, so the pad never hides it */
+  var X0=0.06,X1=0.68,Y0=0.35,Y1=0.73,GO_BEAT=8,SEG=32;   /* a new dance style every 32 beats (was 8): long enough to settle into it */   /* the finish is left of the pad, so the pad never hides it */
   /* each dance: its name, the free-dance moves the body does (ART.DANCES), the circle's colour and its path (u = 0..1 round the loop) */
   function tri(t){t-=Math.floor(t);return 1-4*Math.abs(t-0.5);}
   var BOX=[[-0.58,-0.55],[0.58,-0.55],[0.58,0.55],[-0.58,0.55]];
@@ -6198,7 +6198,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.71.0",SERVER_VERSION="";
+var PAGE_VERSION="1.72.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6234,6 +6234,8 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       /* a free dance style: worked out here from the dance, its move and the two dots (the same on every screen) */
       var rg=ART.dance(fd.s,fd.m,[fd.c[0]/100,fd.c[1]/100,fd.c[2]/100,fd.c[3]/100],GAME.beatPos());
       armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;prA=rg.prop||"";if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
+      /* the dance walk race: really walking forward while doing the style, so the legs stride (with a bit of the dance in them) and the body keeps the dance's arms and bounce */
+      if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
     }else{
     var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];
     bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
@@ -6623,6 +6625,8 @@ function renderLoop(){
       var rpo=ART.reactPose(v.reacts,now,sc2),epo=ART.envPose(LAYV,H,vx,dyy,sc2,now,v.seed||0);
       AVO=rpo||epo?{r:rpo,e:epo}:null;
       var wk=v._walk||(v._walk={}),walking=ART.walkStep(wk,vx,vy,pnow,sc2);
+      /* dance walk race: racers creep forward a fraction of a pixel a frame, too slow for the step detector, so note whether they moved on in the last third of a second */
+      if(WALK.walkRound()&&v.dance===4){if(wk.ax===undefined||pnow-wk.at>330){wk.adv=wk.ax!==undefined&&vx-wk.ax>0.6;wk.ax=vx;wk.at=pnow;}}
       var skl=v===PH?null:RINK?SKATE.looks(v,ids[i]===myId,sc2):keepyOn()?KEEPY.looks(v,ids[i]===myId,sc2):WALK.walkRound()&&v.dance===4?WALK.looks(v,ids[i]===myId,sc2):PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.looks(v,ids[i]===myId,sc2):null;
       if(!cdn&&!ck||skl)ART.footShadow(ctx,vx,vy,sc2,(rpo?rpo.lift:0)+(epo?epo.lift:0)+(skl?skl.lift:0));
       if(skl)AVO=AVO?Object.assign(AVO,{sk:skl}):{sk:skl};
@@ -6681,7 +6685,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.71.0"></script>
+<script src="lab.js?v=1.72.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

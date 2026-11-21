@@ -757,6 +757,17 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.72.0 - Dance walk race: fewer style changes, racers really dance-walk
+
+- The dance style now changes every 32 beats (was every 8), so you get time to settle into each one.
+- Racers really walk forward to the beat while doing the active style: the legs stride, and the arms and bounce come from the style. Before, they slid along standing still.
+- The cursor circle goes a bit slower: one loop every 5 beats (was 4). Tuning lab: Dance walk race → Beats per loop.
+- Also in this version (from #102 and #103, which skipped the version bump): ski divots are curved grooves round the flag that sweep you round and fire you out fast, ski movement snaps to the ski angle frames in straight lines, and Capture the flag uses your Twin Forts as the built-in arena.
+
+Needs a Render redeploy (bots.js changed).
+
+**Test it:** practice → Dance walk race. Watch the racers' legs step on the beat as they move up the track, and check the style banner only changes about every 32 beats.
+
 ## v1.71.0 - Half pipe: no more pumping, two sticks, beat boost pads
 
 - **Speed is automatic:** you roll up to cruising speed on your own, enough to reach the lip. There's no pumping any more.

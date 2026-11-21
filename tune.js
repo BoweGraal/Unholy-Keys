@@ -75,7 +75,7 @@ var TUNE=(function(){
     V("wk.minSpeed","Slowest speed",0.25,0,0.8,0.01,"Your speed when you're well outside the circle, as a fraction of full speed.","×"),
     V("wk.tripTime","Time out before tripping",1.4,0.4,4,0.1,"How long you can stay outside the circle before you trip.","s"),
     V("wk.stun","Trip time",1.3,0.3,4,0.1,"How long a trip stops you.","s"),
-    V("wk.loopBeats","Beats per loop",4,2,8,1,"How many beats the circle takes to go once round its path. Lower is faster and harder.","beats")]},
+    V("wk.loopBeats","Beats per loop",5,2,8,1,"How many beats the circle takes to go once round its path. Lower is faster and harder.","beats")]},
   {id:"keepy",name:"Keepy uppy",icon:"🎈",mode:"keepy",
    about:"Keep balloons, balls and feathers off the floor. Get under one and head it up. Jump (Space) once for a hop, again in the air for a double jump that hits harder and scores double.",
    vars:[
