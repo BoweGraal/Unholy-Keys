@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.59.1"></script>
-<script src="gfx.js?v=1.59.1"></script>
-<script src="art.js?v=1.59.1"></script>
-<script src="instruments.js?v=1.59.1"></script>
-<script src="kart.js?v=1.59.1"></script>
+<script src="tune.js?v=1.60.0"></script>
+<script src="gfx.js?v=1.60.0"></script>
+<script src="art.js?v=1.60.0"></script>
+<script src="instruments.js?v=1.60.0"></script>
+<script src="kart.js?v=1.60.0"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -103,6 +103,26 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 /* ── the part of the song (verse, chorus, solo...), announced as it starts ── */
 #partBanner{position:fixed;left:50%;top:26%;transform:translateX(-50%);z-index:22;pointer-events:none;font:900 clamp(24px,5.5vw,48px)/1 system-ui,sans-serif;color:#fff;text-shadow:0 0 18px #D354A0,0 3px 0 #000;white-space:nowrap;opacity:0}
 #partBanner.pop{animation:moshPop 2.2s ease-out forwards}
+/* ── ski ── */
+#skiCv{display:none;position:fixed;inset:0;width:100%;height:100%;z-index:19;touch-action:none;cursor:crosshair;image-rendering:pixelated}
+#skiCv.on{display:block}
+#mainCanvas{transition:transform 2.4s ease-in,filter 2.4s ease-in;transform-origin:50% 22%}
+#mainCanvas.ski-tilt{transform:perspective(900px) rotateX(42deg) scale(1.15);filter:brightness(1.35) saturate(.4)}
+#skiUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
+#skiUI.on{display:block}
+#skiBanner{position:absolute;left:50%;top:16%;transform:translateX(-50%);font:900 clamp(24px,5.5vw,50px)/1 system-ui,sans-serif;color:#fff;white-space:nowrap;opacity:0}
+#skiBanner.pop{animation:moshPop 2.2s ease-out forwards}
+#skiScore{position:absolute;right:14px;top:56px;font:900 26px system-ui;color:#3B7BE8;text-shadow:0 2px 0 #fff}
+#skiScore::before{content:"\26F7  ";font-size:20px}
+#skiCombo{position:absolute;right:14px;top:90px;font:900 15px system-ui;color:#E8505B;text-shadow:0 1px 0 #fff}
+#skiSpeed{position:absolute;left:14px;top:56px;font:800 15px system-ui;color:#2a3550;text-shadow:0 1px 0 #fff}
+#skiHint{position:absolute;left:50%;bottom:calc(var(--chatH) + 130px);transform:translateX(-50%);font:800 13px system-ui;color:#1d2740;background:rgba(255,255,255,.75);padding:3px 10px;border-radius:8px;white-space:nowrap}
+#skiJump{position:absolute;right:18px;bottom:calc(var(--chatH) + 16px);width:104px;height:104px;border-radius:50%;pointer-events:auto;touch-action:none;font:900 18px system-ui;color:#fff;background:radial-gradient(circle at 40% 35%,#7fb0ff,#2b5fc0);border:3px solid rgba(255,255,255,.8);box-shadow:0 4px 18px rgba(59,123,232,.4)}
+#skiJump small{display:block;font:700 10px system-ui;opacity:.85}
+#skiTricks{position:absolute;left:16px;bottom:calc(var(--chatH) + 16px);display:flex;gap:6px;pointer-events:auto}
+#skiTricks button{width:62px;height:58px;border-radius:12px;font:800 11px/1.1 system-ui;color:#fff;background:rgba(30,40,70,.85);border:2px solid rgba(255,255,255,.5);touch-action:none}
+#skiTricks button b{display:block;font-size:18px}
+body.gaming-ski #moveCtl,body.gaming-ski #reactBar,body.gaming-ski #moveHint{display:none}
 /* ── half pipe ── */
 #pipeUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
 #pipeUI.on{display:block}
@@ -464,6 +484,11 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
   </div>
   <div id="moshUI"><div id="moshBanner">🤘 MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
   <div id="partBanner"></div>
+  <canvas id="skiCv"></canvas>
+  <div id="skiUI"><div id="skiBanner"></div><div id="skiScore">0</div><div id="skiCombo"></div><div id="skiSpeed"></div><div id="skiHint"></div>
+    <button id="skiJump">HOP<small>Space</small></button>
+    <div id="skiTricks"><button data-t="1"><b>&#11013;</b>360</button><button data-t="2"><b>&#11014;</b>Backflip</button><button data-t="3"><b>&#10145;</b>Daffy</button></div>
+  </div>
   <div id="pipeUI"><div id="ppBanner"></div><div id="ppJudge"></div><div id="ppScore">0</div><div id="ppCombo"></div>
     <div id="ppMeterLbl">pump when the bar fills (at the bottom)</div><div id="ppMeterBox"><div id="ppMeter"></div></div>
     <div id="ppHeightBox" title="How high you're swinging"><div id="ppHeight"></div></div>
@@ -491,6 +516,7 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
       <button data-m="kart">&#127949; Mars Rally</button>
       <button data-m="walk">&#128131; Dance walk race</button>
       <button data-m="pipe">&#128761; Half pipe</button>
+      <button data-m="ski">&#9975; Ski</button>
     </div>
     <div class="r" style="margin-top:8px">
       <select id="prList" style="flex:1 1 220px;min-width:0"><option value="">Pick a song…</option></select>
@@ -505,7 +531,7 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
       <button id="prYtCancel">Stop adding</button>
     </div>
     <div class="r" style="margin-top:8px">
-      <select id="prMode" style="display:none"><option value="step">Step dance</option><option value="aim">Target dance</option><option value="keys">Note highway</option><option value="keys4">Note highway (4 keys)</option><option value="free">Free dance (vote)</option><option value="skate">Roller rink</option><option value="ice">Ice rink</option><option value="keepy">Keepy uppy</option><option value="kart">Mars Rally</option><option value="mosh">Mosh pit</option><option value="walk">Dance walk race</option><option value="pipe">Half pipe</option></select>
+      <select id="prMode" style="display:none"><option value="step">Step dance</option><option value="aim">Target dance</option><option value="keys">Note highway</option><option value="keys4">Note highway (4 keys)</option><option value="free">Free dance (vote)</option><option value="skate">Roller rink</option><option value="ice">Ice rink</option><option value="keepy">Keepy uppy</option><option value="kart">Mars Rally</option><option value="mosh">Mosh pit</option><option value="walk">Dance walk race</option><option value="pipe">Half pipe</option><option value="ski">Ski</option></select>
       <select id="prSecs"><option value="5">5 s countdown</option><option value="10">10 s countdown</option><option value="20">20 s countdown</option><option value="30">30 s countdown</option></select>
       <select id="prLevel"><option value="0.7">Easy</option><option value="1" selected>Normal</option><option value="1.3">Hard</option></select>
       <select id="prBots"><option value="0">No other dancers</option><option value="3" selected>3 practice dancers</option><option value="8">8 practice dancers</option></select>
@@ -1938,7 +1964,8 @@ function moveTick(){
   if(typeof KART!=="undefined"&&KART.on){requestAnimationFrame(moveTick);return;}   /* the kart drives itself */
   if(typeof KEEPY!=="undefined"&&KEEPY.on){requestAnimationFrame(moveTick);return;}
   if(typeof WALK!=="undefined"&&WALK.on){requestAnimationFrame(moveTick);return;}
-  if(typeof PIPE!=="undefined"&&PIPE.on){requestAnimationFrame(moveTick);return;}   /* the pipe moves you */   /* the race walks you */   /* keepy uppy moves you itself (and jumps) */   /* skating: momentum, not walking */   /* the wall of death and the circle pit move you */
+  if(typeof PIPE!=="undefined"&&PIPE.on){requestAnimationFrame(moveTick);return;}
+  if(typeof SKI!=="undefined"&&SKI.on){requestAnimationFrame(moveTick);return;}   /* skiing moves you */   /* the pipe moves you */   /* the race walks you */   /* keepy uppy moves you itself (and jumps) */   /* skating: momentum, not walking */   /* the wall of death and the circle pit move you */
   if(mw&&mw.walk&&anyHeld())mw.walk=null;          /* the arrows take over */
   if(mw&&mw.walk){
     /* walking to where you tapped, at the same pace as the arrows */
@@ -2031,6 +2058,7 @@ document.addEventListener("keydown",function(e){
     if(d&&e.code.indexOf("Arrow")!==0)return;                                                  /* letters are limbs here; the arrow keys still walk */
   }
   if(GAME.mode==="kart"&&(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight"||e.code==="KeyB")){e.preventDefault();KART.drift(true);return;}
+  if(GAME.mode==="ski"){if(!e.repeat&&SKI.key(e.code,true)){e.preventDefault();return;}if(e.code==="Space"||/^Arrow|^Key[WASD]$/.test(e.code)){e.preventDefault();return;}}
   if(GAME.mode==="pipe"&&!e.repeat&&PIPE.key(e.code,true)){e.preventDefault();return;}
   if(GAME.mode==="pipe"&&(e.code==="Space"||/^Arrow|^Key[WASD]$/.test(e.code))){e.preventDefault();return;}
   if(GAME.mode==="keepy"&&e.code==="Space"){e.preventDefault();if(!e.repeat)KEEPY.jump();return;}
@@ -2045,7 +2073,7 @@ document.addEventListener("keydown",function(e){
 var LIMBKEY={KeyD:0,KeyK:1,KeyF:2,KeyJ:3};   /* left arm, right arm, left leg, right leg */
 var HWKEY={KeyA:0,KeyS:1,KeyD:2,KeyF:3,KeyG:4,KeyH:5,KeyJ:6};   /* note highway lanes */
 var HW4KEY={KeyD:0,KeyF:1,KeyJ:2,KeyK:3,ArrowLeft:0,ArrowDown:1,ArrowUp:2,ArrowRight:3};   /* the 4-key highway */
-document.addEventListener("keyup",function(e){if(GAME.fdKey(e.code,false))return;if(GAME.mode==="kart"&&(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight"||e.code==="KeyB")){KART.drift(false);return;}if(GAME.mode==="keys"&&GAME.four&&HW4KEY[e.code]!==undefined){GAME.releaseKey(HW4KEY[e.code]);return;}if(GAME.mode==="keys"&&!GAME.four&&HWKEY[e.code]!==undefined){GAME.releaseKey(HWKEY[e.code]);return;}var d=KEYDIR[e.code];if(d){setHeld(d,false);if(GAME.mode==="step")GAME.release(d);}var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
+document.addEventListener("keyup",function(e){if(GAME.fdKey(e.code,false))return;if(GAME.mode==="ski"&&SKI.key(e.code,false))return;if(GAME.mode==="kart"&&(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight"||e.code==="KeyB")){KART.drift(false);return;}if(GAME.mode==="keys"&&GAME.four&&HW4KEY[e.code]!==undefined){GAME.releaseKey(HW4KEY[e.code]);return;}if(GAME.mode==="keys"&&!GAME.four&&HWKEY[e.code]!==undefined){GAME.releaseKey(HWKEY[e.code]);return;}var d=KEYDIR[e.code];if(d){setHeld(d,false);if(GAME.mode==="step")GAME.release(d);}var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
 window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){setHeld(d,false);});});
 
 
@@ -2055,6 +2083,8 @@ window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){
    your character, the performer too; applause and whistles make a soft sound here.
    ============================================================ */
 document.getElementById("moshTap").addEventListener("pointerdown",function(e){e.preventDefault();MOSH.tap();});
+document.getElementById("skiJump").addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();SKI.jump();});
+Array.prototype.forEach.call(document.querySelectorAll("#skiTricks button"),function(b){b.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();SKI.trick(+b.getAttribute("data-t"));});});
 document.getElementById("ppPump").addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();PIPE.pump();this.classList.add("dn");var b=this;setTimeout(function(){b.classList.remove("dn");},120);});
 Array.prototype.forEach.call(document.querySelectorAll("#ppTricks button"),function(b){b.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();PIPE.trick(+b.getAttribute("data-t"));});});
 document.getElementById("kpJump").addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();KEEPY.jump();this.classList.add("dn");var b=this;setTimeout(function(){b.classList.remove("dn");},150);});
@@ -2420,7 +2450,7 @@ var GAME=(function(){
   function sendPose(force){
     var now=Date.now(),fd=mode==="free"?fdState():mode==="walk"?WALK.fd():null,msg=pose.map(function(a){return Math.round(a*100);});
     if(fd){var rg=ART.dance(fd.s,fd.m,fCtl,beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
-    var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():mode==="walk"?WALK.wire():mode==="pipe"?PIPE.wire():null;
+    var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():mode==="walk"?WALK.wire():mode==="pipe"?PIPE.wire():mode==="ski"?SKI.wire():null;
     var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(","):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
     if(key===lastSent&&!force&&(!sk||now-lastSend<1000))return;   /* in a game, resend now and then: someone who just (re)joined needs it */
     if(now-lastSend<90&&!force){if(!sendTimer)sendTimer=setTimeout(function(){sendTimer=null;sendPose();},95-(now-lastSend));return;}
@@ -3170,6 +3200,7 @@ var GAME=(function(){
     if(mode==="kart"){KART.tick();raf=requestAnimationFrame(tick);return;}
     if(mode==="walk"){WALK.tick();raf=requestAnimationFrame(tick);return;}
     if(mode==="pipe"){PIPE.tick();raf=requestAnimationFrame(tick);return;}
+    if(mode==="ski"){SKI.tick();raf=requestAnimationFrame(tick);return;}
     size();
     if(mode==="aim")drawAim(now);else if(mode==="keys")drawKeys(now);else drawStep(now);
     drawMe();
@@ -3178,29 +3209,30 @@ var GAME=(function(){
     raf=requestAnimationFrame(tick);
   }
   function start(m,round){
-    if(m!=="free"&&m!=="step"&&m!=="aim"&&m!=="keys"&&m!=="keys4"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart"&&m!=="walk"&&m!=="pipe")return;
+    if(m!=="free"&&m!=="step"&&m!=="aim"&&m!=="keys"&&m!=="keys4"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart"&&m!=="walk"&&m!=="pipe"&&m!=="ski")return;
     if(mode)stop(true);
     four=m==="keys4";if(four)m="keys";
     rnd=round||null;rndIdx=0;sentScore=-1;fCtl=[0,0,0,0];
     if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart)rnd.chart=easeChart(rnd.chart,rnd.diff);}clkOff=null;clkJumps=0;swoopEnd=-1e9;finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
-    mode=m;myDance=m==="free"||m==="mosh"||m==="skate"||m==="keepy"||m==="kart"||m==="walk"||m==="pipe"?4:5;
+    mode=m;myDance=m==="free"||m==="mosh"||m==="skate"||m==="keepy"||m==="kart"||m==="walk"||m==="pipe"||m==="ski"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
     pose=REST.slice();combo=0;keyT=[null,null,null,null];keyHeld=[false,false,false,false];grab={};
     notes=[];score=0;best=0;hits=0;misses=0;judge="";lastGen=-1;lastSlot=0;startT=performance.now();
     /* free dance happens on the floor itself; the other two games open their pad in the middle */
-    document.body.classList.toggle("gaming",m!=="free"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart"&&m!=="walk"&&m!=="pipe");document.body.classList.toggle("gaming-step",m==="step");document.body.classList.toggle("gaming-free",m==="free");document.body.classList.toggle("gaming-keys",m==="keys");
-    document.getElementById("gamePanel").classList.toggle("on",m!=="free"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart"&&m!=="walk"&&m!=="pipe");
+    document.body.classList.toggle("gaming",m!=="free"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart"&&m!=="walk"&&m!=="pipe"&&m!=="ski");document.body.classList.toggle("gaming-step",m==="step");document.body.classList.toggle("gaming-free",m==="free");document.body.classList.toggle("gaming-keys",m==="keys");
+    document.getElementById("gamePanel").classList.toggle("on",m!=="free"&&m!=="mosh"&&m!=="skate"&&m!=="keepy"&&m!=="kart"&&m!=="walk"&&m!=="pipe"&&m!=="ski");
     if(m==="mosh")MOSH.start(rnd);
     if(m==="skate")SKATE.start(rnd);
     if(m==="keepy")KEEPY.start(rnd);
     if(m==="kart")KART.start(rnd);
     if(m==="walk")WALK.start(rnd);
     if(m==="pipe")PIPE.start(rnd);
+    if(m==="ski")SKI.start(rnd);
     lastFit=0;DEVICE.fit();
-    document.getElementById("gameTitle").textContent=m==="pipe"?"🛹 Half pipe":m==="walk"?"💃 Dance walk race":m==="kart"?"🏍 Mars Rally":m==="keepy"?"🎈 Keepy uppy":m==="skate"?(ICE?"⛸ Ice rink":"🛼 Roller rink"):m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
+    document.getElementById("gameTitle").textContent=m==="ski"?"⛷ Ski":m==="pipe"?"🛹 Half pipe":m==="walk"?"💃 Dance walk race":m==="kart"?"🏍 Mars Rally":m==="keepy"?"🎈 Keepy uppy":m==="skate"?(ICE?"⛸ Ice rink":"🛼 Roller rink"):m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
     if(m==="free")setTimeout(fdRender,0);
-    document.getElementById("moveHint").textContent=m==="pipe"?"Pump (Space) at the bottom on the beat to go higher; arrows for tricks in the air":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
+    document.getElementById("moveHint").textContent=m==="ski"?"Point to steer down the mountain; go between the flags; Space to hop":m==="pipe"?"Pump (Space) at the bottom on the beat to go higher; arrows for tricks in the air":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
     var mm=me();if(mm)mm.dance=myDance;
@@ -3218,6 +3250,7 @@ var GAME=(function(){
     if(mode==="kart")KART.stop();
     if(mode==="walk")WALK.stop();
     if(mode==="pipe")PIPE.stop();
+    if(mode==="ski")SKI.stop();
     mode="";myDance=0;
     document.body.classList.remove("gaming","gaming-step","gaming-free","gaming-keys");
     document.getElementById("gamePanel").classList.remove("on");
@@ -3669,6 +3702,184 @@ var PIPE=(function(){
   window.ukPipe=function(){var b=beatAt(songPos()),st=state(A,sign,b);return{on:on,A:+A.toFixed(2),air:st.air,z:+st.z.toFixed(2),x:+st.x.toFixed(3),score:score,combo:combo,trick:trick?TR[trick.k].name:null,judge:lastJudge,bailed:performance.now()<bailUntil,beat:+b.toFixed(2),warp:+warp.toFixed(2)};};
   window.ukPipeBot=function(on2){window.__ppBot=!!on2;};
   return{start:start,stop:stop,tick:tick,pump:pump,trick:doTrick,key:key,bg:bg,front:front,looks:looks,facing:facing,wire:wire,pipeRound:pipeRound,get on(){return on;}};
+})();
+/* ============================================================
+   SKI (the ski round)
+   The floor tilts into a slope and the camera follows you down an endless SkiFree-style mountain that widens out
+   below the start. Point (mouse or finger) where you want to go: straight down is fastest, sideways slows you,
+   pointing uphill stops you. Pass between slalom gates, hit ramps for air and press a trick key; trees and rocks
+   knock you down. Everyone skis the same course (made from the round number), so you'll see the others around you.
+   ============================================================ */
+var SKI=(function(){
+  var GO_BEAT=8,CH=320,GATE_DY=170,GATE_W=40;
+  var TRK=[null,{name:"360",pts:300,dur:0.45,col:"#D04DFF"},{name:"Backflip",pts:350,dur:0.55,col:"#3DF2FF"},{name:"Daffy",pts:200,dur:0.35,col:"#F5C518"}];
+  var KEYTR={ArrowLeft:1,KeyA:1,ArrowUp:2,KeyW:2,ArrowRight:3,KeyD:3};
+  var on=false,seed=1,x=0,y=-24,a=0,ta=0,v=0,air=0,airMax=0,crashUntil=0,trick=null,score=0,combo=0,dist=0,lastT=0,pointer=null,keyTurn=0,chunks={},passed={},trail=[],pops=[],lastCount=-1,goShown=false,lane=0,camX=0,others={},bots={},tilted=false,fadeK=0,roundN=0;
+  var cv=null,g=null;
+  function $(id){return document.getElementById(id);}
+  function T(k){return TUNE.v("ski."+k);}
+  function skiRound(){return GAME.mode==="ski"||(typeof ROUND!=="undefined"&&ROUND.mode==="ski");}
+  function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
+  function beatAt(pos){return ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),pos);}
+  /* ---- the mountain: as wide as the dance floor at the top, opening out below ---- */
+  function halfW(yy){return 110+Math.min(1,Math.max(0,yy)/650)*560;}
+  function lineX(yy,sd){return Math.sin(yy/620+sd)*halfW(yy)*0.42+Math.sin(yy/233+sd*2)*40*Math.min(1,yy/650);}
+  function rng(s){return function(){s=(s*16807)%2147483647;return (s-1)/2147483646;};}
+  /* each stretch of slope: its gates, trees, rocks and ramps, the same on every screen */
+  function chunk(ci){
+    if(chunks[ci])return chunks[ci];var r=rng((seed*7919+ci*104729)%2147483646+1),o=[],y0=ci*CH;
+    if(y0>=60){
+      for(var gy=Math.ceil(y0/GATE_DY)*GATE_DY;gy<y0+CH;gy+=GATE_DY){if(gy<200)continue;var gi=Math.round(gy/GATE_DY);o.push({k:"gate",x:lineX(gy,seed),y:gy,id:gi,col:gi%2?"#E8505B":"#3B7BE8"});}
+      var nt=5+Math.floor(r()*6);for(var i=0;i<nt;i++){var ty=y0+r()*CH,hw=halfW(ty),tx=(r()*2-1)*hw;if(Math.abs(tx-lineX(ty,seed))<95)continue;o.push({k:r()<0.8?"tree":"rock",x:tx,y:ty,s:0.8+r()*0.5});}
+      if(r()<0.65){var ry=y0+r()*CH,rx=lineX(ry,seed)+(r()<0.5?-1:1)*(55+r()*90);o.push({k:"ramp",x:rx,y:ry});}
+      if(r()<0.5){var my=y0+r()*CH;o.push({k:"mogul",x:(r()*2-1)*halfW(my)*0.8,y:my});}
+    }
+    /* the edges: thick forest */
+    for(var e=0;e<14;e++){var ey=y0+r()*CH,side=r()<0.5?-1:1,ex=side*(halfW(ey)+20+r()*220);o.push({k:"tree",x:ex,y:ey,s:0.9+r()*0.6,edge:1});}
+    o.sort(function(p,q){return p.y-q.y;});return chunks[ci]=o;
+  }
+  function objsNear(y0,y1){var out=[];for(var ci=Math.floor(y0/CH);ci<=Math.floor(y1/CH);ci++)if(ci>=0)out=out.concat(chunk(ci));return out.filter(function(o){return o.y>=y0&&o.y<=y1;});}
+  /* ---- sending where you are: x and the last 1000 of y in pos, the thousands in sk.h; heading/state in sk.t ---- */
+  function enc(){return[+((x+800)/1600).toFixed(4),+((((y%1000)+1000)%1000)/1000).toFixed(4)];}
+  function wire(){var t=performance.now()<crashUntil?9:air>0?(trick?8:7):Math.max(0,Math.min(6,Math.round(a/(Math.PI/6))+3));return{h:Math.max(0,Math.min(60,Math.floor(Math.max(0,y)/1000))),f:performance.now()<crashUntil?1:0,t:t};}
+  function decode(v2,prevY){var ex=+v2.x,ey=+v2.y,hh=v2.sk?v2.sk.h|0:0,best=null;for(var d=-1;d<=1;d++){var yy=(hh+d)*1000+ey*1000;if(best===null||Math.abs(yy-prevY)<Math.abs(best-prevY))best=yy;}if(prevY===null)best=hh*1000+ey*1000;return[ex*1600-800,best];}
+  function banner(t,col){var b=$("skiBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function hud(){var h=$("skiScore");if(h)h.textContent=score.toLocaleString();var c=$("skiCombo");if(c)c.textContent=combo>1?"COMBO ×"+(1+0.1*combo).toFixed(1):"";}
+  function laneX(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(2,Math.min(8,ids.length));return -85+170*((i%n)+0.5)/n;}
+  function start(round){
+    on=true;roundN=round?round.n:roundN+1;seed=1+(roundN*37)%997;chunks={};passed={};trail=[];pops=[];others={};bots={};
+    x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
+    cv=$("skiCv");g=cv.getContext("2d");document.body.classList.add("gaming-ski");$("skiUI").classList.add("on");hud();banner("⛷ SKI!");
+  }
+  function stop(){on=false;document.body.classList.remove("gaming-ski");var u=$("skiUI");if(u)u.classList.remove("on");var c=$("skiCv");if(c)c.classList.remove("on");}
+  function jump(){if(!on||air>0||performance.now()<crashUntil||v<20)return;air=airMax=T("hop");}
+  function doTrick(k){if(!on||air<=0.05||trick||performance.now()<crashUntil)return;trick={k:k,t0:performance.now()};}
+  function key(code,down){
+    if(!on)return false;
+    if(code==="ArrowLeft"||code==="KeyA"){keyTurn=down?-1:(keyTurn===-1?0:keyTurn);if(down&&air>0)doTrick(1);return true;}
+    if(code==="ArrowRight"||code==="KeyD"){keyTurn=down?1:(keyTurn===1?0:keyTurn);if(down&&air>0)doTrick(3);return true;}
+    if(code==="ArrowUp"||code==="KeyW"){if(down&&air>0)doTrick(2);return true;}
+    if(code==="ArrowDown"||code==="KeyS"){if(down){keyTurn=0;ta=0;pointer=null;}return true;}
+    if(code==="Space"){if(down)jump();return true;}
+    return false;
+  }
+  function crash(why){if(performance.now()<crashUntil)return;crashUntil=performance.now()+T("crash")*1000;v=0;air=0;trick=null;combo=0;banner("💥 "+why,"#FF4D6D");hud();}
+  function addPts(n,txt,col){var m=1+0.1*combo,got=Math.round(n*m);score+=got;GAME.moshPts(got);pops.push({x:x,y:y,t:performance.now(),txt:txt+" +"+got,col:col});hud();}
+  function view(){var z=Math.max(1.3,Math.min(2.6,Math.min(W/620,H/430)));return{z:z,sx:function(wx){return W/2+(wx-camX)*z;},sy:function(wy){return H*0.42+(wy-y)*z;}};}   /* you sit a little above the middle, clear of the round banner */
+  function tick(){
+    if(!on)return;
+    var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
+    var me=myId&&viewers[myId];if(!me)return;
+    var pos=songPos(),b=pos>-1e8?beatAt(pos):-99,going=b>=GO_BEAT,crashed=now<crashUntil;
+    var cnt=Math.floor(b);if(b<GO_BEAT&&cnt!==lastCount&&cnt>=GO_BEAT-4){lastCount=cnt;banner(cnt===GO_BEAT-4?"READY…":String(GO_BEAT-cnt),"#F5C518");}
+    if(going&&!goShown){goShown=true;banner("GO! ⛷","#3DF2FF");}
+    /* steering: toward the pointer (relative to you on screen), or the arrow keys */
+    var V=view();
+    if(pointer){var dx=pointer[0]-V.sx(x),dy=pointer[1]-V.sy(y);ta=dy<=4?(dx<0?-1.5:1.5):Math.max(-1.5,Math.min(1.5,Math.atan2(dx,dy)));}
+    if(keyTurn)ta=Math.max(-1.5,Math.min(1.5,ta+keyTurn*2.6*dt));
+    if(!crashed&&air<=0){var da=ta-a,rt=T("turn")*dt;a+=Math.max(-rt,Math.min(rt,da));}
+    /* speed: gravity down the fall line, drag, and carving across slows you */
+    if(going&&!crashed){var acc=T("accel")*Math.cos(a)-v*(T("accel")/T("maxSpeed"));if(air<=0)acc-=Math.pow(Math.abs(Math.sin(a)),2)*60;v=Math.max(0,v+acc*dt);}
+    var py=y;
+    if(going&&!crashed){x+=Math.sin(a)*v*dt;y+=Math.cos(a)*v*dt;}
+    x=Math.max(-halfW(y)-260,Math.min(halfW(y)+260,x));
+    /* air: a hop, or off a ramp; tricks in the air; land mid-trick and you crash */
+    if(air>0){air-=dt;if(trick&&(now-trick.t0)/1000>=TRK[trick.k].dur){addPts(TRK[trick.k].pts*(1+airMax),TRK[trick.k].name,TRK[trick.k].col);combo++;trick=null;}
+      if(air<=0){air=0;if(trick)crash("WIPEOUT!");}}
+    /* what you hit, what you passed */
+    if(going&&!crashed){
+      objsNear(Math.min(py,y)-30,Math.max(py,y)+30).forEach(function(o){
+        var dx2=x-o.x,dy2=y-o.y;
+        if(o.k==="gate"){if(py<o.y&&y>=o.y&&!passed[o.id]){passed[o.id]=1;if(Math.abs(x-o.x)<=GATE_W){combo++;addPts(T("gatePts"),"GATE",o.col==="#E8505B"?"#FF7A85":"#7FB0FF");}else{combo=0;hud();banner("MISSED GATE","#aaa");}}return;}
+        if(o.k==="ramp"){if(air<=0&&Math.abs(dx2)<22&&Math.abs(dy2)<8&&v>40){air=airMax=T("rampAir")*Math.min(1.3,v/T("maxSpeed")+0.3);banner("AIR!","#3DF2FF");}return;}
+        if(o.k==="mogul"){if(air<=0&&Math.hypot(dx2,dy2*1.6)<12&&v>60){air=airMax=0.28;}return;}
+        if(air>0&&o.k==="rock")return;                       /* jump over rocks */
+        var rr=o.k==="tree"?7*o.s:9*o.s;if(Math.hypot(dx2,dy2*1.4)<rr+5)crash(o.k==="tree"?"TREE!":"ROCK!");
+      });
+      var nd=Math.floor(Math.max(0,y)/40);if(nd>dist){score+=nd-dist;GAME.moshPts(nd-dist);dist=nd;hud();}
+    }
+    camX+=(x-camX)*Math.min(1,dt*4);
+    if(going&&air<=0&&!crashed&&v>10)trail.push([x,y]);if(trail.length>500)trail.shift();
+    var e=enc();me.tx=me.x=e[0];me.ty=me.y=e[1];sendPos(e[0],e[1]);me.sk=wire();
+    GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:trick&&trick.k===3?[2.9,-0.4,0.9,-0.9]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
+    if(PRACTICE.on)botTick(dt,now,going);
+    var hn=$("skiHint");if(hn)hn.textContent=!going?"Point where you want to go: straight down is fastest":crashed?"Ouch! Back up in a moment…":air>0?"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy":"Point to steer · Space to hop · go between the flags";
+  }
+  /* practice: the practice skiers follow the slalom line at their own pace, now and then crashing */
+  function botTick(dt,now,going){
+    Object.keys(viewers).filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id){
+      var vv=viewers[id],bt=bots[id];if(!bt)bt=bots[id]={x:laneX(id),y:-24,sp:95+Math.random()*55,crash:0,off:(Math.random()*2-1)*30,score:0,lastGate:0};
+      if(going&&now>bt.crash){var ny=bt.y+bt.sp*dt,nx=lineX(ny,seed)+bt.off*Math.sin(now/1500+bt.sp);bt.x+=(nx-bt.x)*Math.min(1,dt*2.5);bt.y=ny;
+        if(Math.random()<dt*0.04)bt.crash=now+T("crash")*1000;
+        var gi=Math.floor(bt.y/GATE_DY);if(gi>bt.lastGate&&bt.y>=200){bt.lastGate=gi;if(Math.random()<0.8)bt.score+=T("gatePts");}
+        PRACTICE.botScore(id,bt.score+Math.floor(Math.max(0,bt.y)/40));}
+      var ex=(bt.x+800)/1600,ey=(((bt.y%1000)+1000)%1000)/1000;vv.tx=vv.x=ex;vv.ty=vv.y=ey;vv.dance=4;vv.sk={h:Math.max(0,Math.floor(Math.max(0,bt.y)/1000)),f:now<bt.crash?1:0,t:now<bt.crash?9:3};
+    });
+  }
+  /* ---- drawing ---- */
+  function tree(cx,cy,s,z){var k=z*s;cx=Math.round(cx);g.fillStyle="rgba(60,80,110,.18)";g.beginPath();g.ellipse(cx+3*k,cy,9*k,3*k,0,0,6.3);g.fill();
+    g.fillStyle="#6b4a2b";g.fillRect(cx-1.5*k,cy-5*k,3*k,5*k);
+    [[0,22,9],[6,16,7],[11,10,5]].forEach(function(t,i){g.fillStyle=i===2?"#2f7a3e":i===1?"#276b35":"#1f5a2c";g.beginPath();g.moveTo(cx,cy-(t[0]+t[1]*0.55+4)*k);g.lineTo(cx-t[2]*k,cy-(t[0]+3)*k);g.lineTo(cx+t[2]*k,cy-(t[0]+3)*k);g.fill();});
+    g.fillStyle="#f4f8ff";g.fillRect(cx-2*k,cy-24*k,4*k,2*k);g.fillRect(cx-5*k,cy-12*k,3*k,1.5*k);}
+  function rock(cx,cy,s,z){var k=z*s;g.fillStyle="#7d8597";g.beginPath();g.ellipse(cx,cy-3*k,9*k,5*k,0,0,6.3);g.fill();g.fillStyle="#a9b0c0";g.beginPath();g.ellipse(cx-2*k,cy-5*k,4*k,2*k,0,0,6.3);g.fill();g.fillStyle="#f4f8ff";g.fillRect(cx-4*k,cy-8*k,6*k,1.5*k);}
+  function ramp(cx,cy,z){g.fillStyle="#b9d6f2";g.beginPath();g.moveTo(cx-20*z,cy+6*z);g.lineTo(cx+20*z,cy+6*z);g.lineTo(cx+16*z,cy-6*z);g.lineTo(cx-16*z,cy-6*z);g.fill();g.fillStyle="#7fb0e0";g.fillRect(cx-16*z,cy-6*z,32*z,3*z);g.fillStyle="#3B7BE8";g.font="900 "+Math.round(8*z)+"px system-ui";g.textAlign="center";g.fillText("▲",cx,cy+4*z);}
+  function mogul(cx,cy,z){g.fillStyle="#dfe9f6";g.beginPath();g.ellipse(cx,cy,10*z,4*z,0,0,6.3);g.fill();g.fillStyle="#fff";g.beginPath();g.ellipse(cx-2*z,cy-1.5*z,6*z,2*z,0,0,6.3);g.fill();}
+  function gate(o,z,V,passedIt){[-1,1].forEach(function(sd){var px=V.sx(o.x+sd*GATE_W),py=V.sy(o.y);g.fillStyle="#333";g.fillRect(px-1,py-18*z,2,18*z);g.fillStyle=o.col;g.beginPath();g.moveTo(px,py-18*z);g.lineTo(px+sd*-9*z,py-15*z);g.lineTo(px,py-12*z);g.fill();});
+    if(passedIt){g.globalAlpha=0.25;g.fillStyle=o.col;g.fillRect(V.sx(o.x-GATE_W),V.sy(o.y)-1,GATE_W*2*z,2);g.globalAlpha=1;}}
+  function skier(sx,sy,vv,isMe,ang,airK,crashed,tk,tp,z,name){
+    var lift=airK*30*z,sc=Math.max(1.4,z*0.75);
+    g.fillStyle="rgba(60,80,110,.22)";g.beginPath();g.ellipse(sx,sy,8*z,3*z,0,0,6.3);g.fill();
+    /* the skis, pointing the way you're going */
+    g.save();g.translate(sx,sy-lift);g.rotate(crashed?0.9:-ang+(tk===1?tp*6.283:0));g.fillStyle=isMe?"#F5C518":"#E8505B";g.fillRect(-5*z,-12*z,2.2*z,22*z);g.fillRect(3*z,-12*z,2.2*z,22*z);g.restore();
+    var saved=ctx;ctx=g;var sAV=AVO,sDir=AVDIR;
+    try{AVO={sk:{lift:-lift,rot:crashed?1.45:tk===2?tp*6.283:0,ns:true}};AVDIR=crashed?0:ang<-0.45?3:ang>0.45?1:0;
+      drawAvatar(sx,sy-14*sc,vv.color,name,sc,false,false,null,4,vv.seed||0,isMe,isMe?GAME.pose:(vv.pose||[0.9,-0.9,0.15,-0.15]),9999,vv.look||lookOf(null,vv.color,vv.name),null);}
+    finally{ctx=saved;AVO=sAV;AVDIR=sDir;}
+  }
+  function draw(){
+    var show=skiRound()&&on;var c=$("skiCv");if(!c)return;
+    fadeK+=((show?1:0)-fadeK)*0.06;c.classList.toggle("on",fadeK>0.02);c.style.opacity=fadeK.toFixed(3);
+    var mc=$("mainCanvas");if(mc){var tl=show&&fadeK<0.98;if(tl!==tilted){tilted=tl;mc.classList.toggle("ski-tilt",tl);}}
+    if(fadeK<=0.02)return;
+    var dpr=Math.min(2,window.devicePixelRatio||1);if(c.width!==Math.round(W*dpr)||c.height!==Math.round(H*dpr)){c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);}
+    g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;
+    var V=view(),z=V.z,now=performance.now(),y0=y-H*0.42/z-40,y1=y+H*0.58/z+60;
+    /* snow, and a faint grain so you can feel the speed */
+    g.fillStyle="#eef3fb";g.fillRect(0,0,W,H);
+    g.fillStyle="rgba(150,175,210,.18)";for(var gy=Math.floor(y0/24)*24;gy<y1;gy+=24)for(var gx=Math.floor((camX-W/2/z)/37)*37;gx<camX+W/2/z;gx+=37){var hsh=Math.sin(gx*12.9898+gy*78.233)*43758.5453;hsh-=Math.floor(hsh);if(hsh<0.35)g.fillRect(V.sx(gx+hsh*20),V.sy(gy),2,1);}
+    /* the start: a strip of dance floor at the top of the slope */
+    if(y0<10){for(var ty=-160;ty<0;ty+=16)for(var tx=-112;tx<112;tx+=16){var bx=V.sx(tx),by=V.sy(ty);g.fillStyle=((tx+ty)/16)%2?"#1a1430":"#120e1e";g.fillRect(bx,by,16*z+1,16*z+1);}
+      for(var sx2=-112;sx2<112;sx2+=8){g.fillStyle=(sx2/8)%2?"#fff":"#111";g.fillRect(V.sx(sx2),V.sy(0)-2,8*z,4);}}
+    /* the edge of the run */
+    g.strokeStyle="rgba(120,150,190,.35)";g.lineWidth=2;[-1,1].forEach(function(sd){g.beginPath();for(var ey=Math.max(0,y0);ey<y1;ey+=20){var ex=V.sx(sd*halfW(ey)),eyy=V.sy(ey);if(ey===Math.max(0,y0))g.moveTo(ex,eyy);else g.lineTo(ex,eyy);}g.stroke();});
+    /* your tracks */
+    g.strokeStyle="rgba(140,160,190,.45)";g.lineWidth=1.5;g.beginPath();var tr0=true;trail.forEach(function(p){if(p[1]<y0)return;var px=V.sx(p[0]),pyy=V.sy(p[1]);if(tr0){g.moveTo(px,pyy);tr0=false;}else g.lineTo(px,pyy);});g.stroke();
+    /* everything on the slope and everyone on it, back to front */
+    var list=objsNear(y0,y1).map(function(o){return{y:o.y,o:o};});
+    Object.keys(viewers).forEach(function(id){var vv=viewers[id];if(!vv||vv===PH||id===myId||vv.dance!==4)return;
+      var oth=others[id]||(others[id]={y:null,x:0,dy:0});var p=PRACTICE.on&&bots[id]?[bots[id].x,bots[id].y]:decode(vv,oth.y);
+      if(oth.y===null||Math.abs(p[1]-oth.y)>400){oth.x=p[0];oth.y=p[1];}else{oth.x+=(p[0]-oth.x)*0.25;oth.y+=(p[1]-oth.y)*0.25;}
+      if(oth.y>y0&&oth.y<y1)list.push({y:oth.y,sk:{id:id,v:vv,x:oth.x}});});
+    list.push({y:y,me:true});
+    list.sort(function(p,q){return p.y-q.y;});
+    list.forEach(function(it){
+      if(it.o){var o=it.o,ox=V.sx(o.x),oy=V.sy(o.y);if(o.k==="tree")tree(ox,oy,o.s,z);else if(o.k==="rock")rock(ox,oy,o.s,z);else if(o.k==="ramp")ramp(ox,oy,z);else if(o.k==="mogul")mogul(ox,oy,z);else if(o.k==="gate")gate(o,z,V,!!passed[o.id]);return;}
+      if(it.me){var mm=viewers[myId];if(mm){var tp=trick?Math.min(1,(now-trick.t0)/1000/TRK[trick.k].dur):0;skier(V.sx(x),V.sy(y),mm,true,a,air>0?Math.sin(Math.PI*(1-air/Math.max(0.01,airMax))):0,now<crashUntil,trick?trick.k:0,tp,z,"You");}return;}
+      var s=it.sk,st=s.v.sk||{},t=st.t|0,ang=t<=6?(t-3)*Math.PI/6:0;
+      skier(V.sx(s.x),V.sy(it.y),s.v,false,ang,t===7||t===8?0.7:0,t===9||!!st.f,t===8?1:0,(now%450)/450,z,s.v.name);
+    });
+    pops=pops.filter(function(pp){var age=(now-pp.t)/1000;if(age>1.1)return false;g.globalAlpha=1-age/1.1;g.font="900 16px system-ui";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.6)";var px=V.sx(pp.x),py=V.sy(pp.y)-60-age*30;g.strokeText(pp.txt,px,py);g.fillStyle=pp.col;g.fillText(pp.txt,px,py);return true;});g.globalAlpha=1;
+    /* speed */
+    var sp=$("skiSpeed");if(sp)sp.textContent=Math.round(v*0.36)+" km/h";
+  }
+  /* pointer: hover with a mouse, or touch and drag anywhere on the slope */
+  function wire2(){var c=$("skiCv");if(!c||c._w)return;c._w=1;
+    c.addEventListener("pointermove",function(e){if(!on)return;if(e.pointerType==="mouse"||e.buttons)pointer=[e.clientX,e.clientY];});
+    c.addEventListener("pointerdown",function(e){if(!on)return;pointer=[e.clientX,e.clientY];try{c.setPointerCapture(e.pointerId);}catch(x2){}});
+    c.addEventListener("contextmenu",function(e){e.preventDefault();});}
+  window.ukSki=function(){return{others:Object.keys(others).map(function(id){return[viewers[id]?viewers[id].name:id,Math.round(others[id].x),Math.round(others[id].y)];}),on:on,x:Math.round(x),y:Math.round(y),a:+a.toFixed(2),v:Math.round(v),air:+air.toFixed(2),crashed:performance.now()<crashUntil,score:score,combo:combo,trick:trick?TRK[trick.k].name:null};};
+  window.ukSkiAuto=function(o){window.__skAuto=!!o;};
+  return{start:start,stop:stop,tick:function(){wire2();if(window.__skAuto&&on){var V2=view(),ly=y+60,lx=lineX(ly,seed);pointer=[V2.sx(lx),V2.sy(ly)];if(air>0.3&&!trick)doTrick(1+Math.floor(Math.random()*3));}tick();},draw:draw,key:key,jump:jump,trick:doTrick,wire:wire,skiRound:skiRound,get on(){return on;}};
 })();
 var SKATE=(function(){
   var TRICKS=["","SUPERMAN","TUCK","KICK","SPLIT"];          /* up, down, left, right */
@@ -4190,7 +4401,7 @@ var BATTLE = (function() {
 })();
 var ROUND=(function(){
   var rd=null,corr=0,lastD=null,playPerf=0,endAt=0,sat=false,totals=[],myVote="",timer=null,alignT=null,hideT=null,top=null,bi=0;
-  var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",pipe:"Half pipe",walk:"Dance walk race",keepy:"Keepy uppy",kart:"Mars Rally"},ORD=["1st","2nd","3rd"];
+  var NAMES={step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ski:"Ski",pipe:"Half pipe",walk:"Dance walk race",keepy:"Keepy uppy",kart:"Mars Rally"},ORD=["1st","2nd","3rd"];
   function ord(n){return ORD[n-1]||n+"th";}
   function box(){return document.getElementById("roundBox");}
   function mk(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
@@ -4248,7 +4459,7 @@ var ROUND=(function(){
     clearTimeout(hideT);hideT=null;
   }
   function hide(){var b=box();b.className="";b.textContent="";}
-  function lvl(){return rd.mode==="free"||rd.mode==="mosh"||rd.mode==="skate"||rd.mode==="keepy"||rd.mode==="kart"||rd.mode==="walk"||rd.mode==="pipe"?"":" · "+GAME.DIFFS[GAME.diffOf(rd.n)];}
+  function lvl(){return rd.mode==="free"||rd.mode==="mosh"||rd.mode==="skate"||rd.mode==="keepy"||rd.mode==="kart"||rd.mode==="walk"||rd.mode==="pipe"||rd.mode==="ski"?"":" · "+GAME.DIFFS[GAME.diffOf(rd.n)];}
   function head(){return mk("div","rb-head","Round "+rd.n+" · "+(rd.isBattle?"⚔ ":"")+(NAMES[rd.mode]||"Dance")+(rd.isBattle?" battle":"")+lvl());}
   function drawCountdown(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
@@ -5123,7 +5334,7 @@ var PRACTICE=(function(){
     bots.forEach(function(b){
       var v=viewers[b.id];if(!v)return;
       if(mode==="free"){v.pose=[Math.random()*3-0.6,-(Math.random()*3-0.6),Math.random()*1.8-0.9,Math.random()*1.8-0.9];return;}
-      if(mode==="walk"||mode==="pipe"){v.dance=4;return;}      /* WALK races them; PIPE skates them */
+      if(mode==="walk"||mode==="pipe"||mode==="ski"){v.dance=4;return;}      /* WALK races them; PIPE skates them */
       if(mode==="mosh"||mode==="skate"||mode==="keepy"||mode==="kart"){v.dance=4;if(Math.random()<0.5)b.score+=Math.round((4+16*b.skill)*Math.random());return;}      /* the mosh moves them (MOSH); here they just score */
       if(Math.random()<b.skill){b.combo++;b.score+=Math.round(perStep*(0.6+b.skill*0.4)*(1+Math.floor(b.combo/10)*0.1));}else b.combo=0;
       v.pose=POSES[Math.floor(Math.random()*4)];v.combo=b.combo;v.hitT=Date.now();
@@ -5140,7 +5351,7 @@ var PRACTICE=(function(){
     var my=++job;
     initAudio();save();
     try{Tone.start();Tone.getContext().rawContext.resume();}catch(e){}
-    mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk"&&mode!=="pipe";plan=null;var secs=+$("prSecs").value,level=+$("prLevel").value;
+    mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk"&&mode!=="pipe"&&mode!=="ski";plan=null;var secs=+$("prSecs").value,level=+$("prLevel").value;
     stopSong();makeBots(+$("prBots").value);
     document.body.classList.add("pr-busy");
     n++;
@@ -5178,7 +5389,7 @@ var PRACTICE=(function(){
   /* the song has started (lagMs until its first moment is heard): the round's clock, the dancers, the scoring */
   function afterStart(my,lagMs){
     playAt=performance.now()+lagMs;
-    viewers.me.dance=0;bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=mode==="free"||mode==="mosh"||mode==="skate"||mode==="keepy"||mode==="kart"||mode==="walk"||mode==="pipe"||battle?4:5;});
+    viewers.me.dance=0;bots.forEach(function(b){if(viewers[b.id])viewers[b.id].dance=mode==="free"||mode==="mosh"||mode==="skate"||mode==="keepy"||mode==="kart"||mode==="walk"||mode==="pipe"||mode==="ski"||battle?4:5;});
     ROUND.onMsg({type:"round",phase:"play",n:n,ts0:null,pos:-lagMs});
     if(battle){battleStart(my);return;}
     /* free dance: lock in the spotlight 35% of the way through (at least 20 s in), as the server does in a show */
@@ -5326,9 +5537,10 @@ var PRACTICE=(function(){
     if(window.parent!==window){try{window.parent.postMessage({uk:"practice-close"},location.origin);}catch(x){}}
   });
   /* tests: a dance walk race in practice with a steady 120 BPM beat and no song */
+  window.ukSkiTest=function(nb){window.__testMode="ski";window.ukWalkTest(nb);};
   window.ukPipeTest=function(nb){window.__testMode="pipe";window.ukWalkTest(nb);};
   window.ukWalkTest=function(nb){var my=++job;makeBots(nb===undefined?3:nb);mode=window.__testMode||"walk";window.__testMode=null;battle=false;n++;var beats=[];for(var i=0;i<600;i++)beats.push(i*500);
-    chart={bpm:120,beats:beats,steps:[],dur:300000};ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,chart:chart,ms:800,title:mode==="pipe"?"Pipe test":"Walk test"});
+    chart={bpm:120,beats:beats,steps:[],dur:300000};ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,chart:chart,ms:800,title:mode==="ski"?"Ski test":mode==="pipe"?"Pipe test":"Walk test"});
     setTimeout(function(){if(my===job)afterStart(my,0);},800);};
   window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
   window.ukPracticeBattle=function(){return plan?pub():null;};
@@ -5687,7 +5899,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.59.1",SERVER_VERSION="";
+var PAGE_VERSION="1.60.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6161,7 +6373,7 @@ function renderLoop(){
   if(walkMark){var wa=1-(performance.now()-walkMark.t)/600;if(wa>0){ctx.save();ctx.globalAlpha=wa*0.8;ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(walkMark.x,walkMark.y,10+(1-wa)*14,(10+(1-wa)*14)*0.45,0,0,6.3);ctx.stroke();ctx.restore();}else walkMark=null;}
   /* the performer talking from the stage (when hanging out, their bubble is drawn with the crowd) */
   if(!PH.on&&PERF_AT&&PH.bubbleText&&(now-PH.bubbleTime)<5000){ctx.globalAlpha=Math.max(0,1-(now-PH.bubbleTime)/5000);drawBubble(PERF_AT[0],PERF_AT[1]-30,PH.bubbleText);ctx.globalAlpha=1;}
-  MOSH.draw(ctx);SKATE.draw(ctx);KEEPY.draw(ctx);WALK.draw(ctx);PIPE.front(ctx);if(KON)KART.draw(ctx);
+  MOSH.draw(ctx);SKATE.draw(ctx);KEEPY.draw(ctx);WALK.draw(ctx);PIPE.front(ctx);SKI.draw();if(KON)KART.draw(ctx);
   drawFxFront(bp,feat,perfPx,perfPy);
   GAME.drawHandles(ctx);
   /* standing behind the buttons: fade them so you can see yourself */
@@ -6180,7 +6392,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.59.1"></script>
+<script src="lab.js?v=1.60.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

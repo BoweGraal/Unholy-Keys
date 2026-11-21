@@ -757,6 +757,22 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.60.0 - New minigame: Ski
+
+The dance floor tilts and whites out into a slope, and the camera follows you down an endless SkiFree-style mountain. It starts as narrow as the dance floor (everyone lined up on a strip of it at the top) and opens out wide below.
+- **Steering:** point where you want to go with the mouse (or touch and drag on a phone). Straight down is fastest, sideways slows you, pointing uphill stops you. Left / right arrows steer too, down points you straight.
+- **Start:** "READY… 3, 2, 1, GO!" on the beat (beat 8).
+- **Slalom gates:** go between each pair of flags (alternating red and blue) for points. Gates in a row build a **combo** (×1.1, ×1.2, …); miss one and the combo resets.
+- **Air and tricks:** hit a blue ramp (or a mogul) for air, or hop with **Space** / HOP (hop over rocks). In the air: ⬅ 360, ⬆ Backflip, ➡ Daffy. Land a trick to score it; still mid-trick when you land and you wipe out.
+- **Crashes:** trees and rocks knock you down for 1.4 s and reset your combo. The sides of the run are thick forest.
+- **Scoring:** gates and tricks (with the combo), plus a point for every bit of slope you cover.
+- Everyone skis the same course (made from the round number), so you'll see the others when they're near you. **Bots** ski the slalom line at their own pace and sometimes crash.
+- In your round picker and Dance practice. **Tuning lab → Ski**: top speed, acceleration, turn speed, hop and ramp air time, crash time, points per gate.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** Dance practice → Ski with a song. Steer through gates, hit a ramp and try a trick, crash into a tree. Then live with a couple of bots.
+
 ## v1.59.1 - Your view of the Half pipe and the Dance walk race
 
 During a Half pipe or Dance walk race round, jam mode switches to the stage view by itself (even if you picked classic; your choice comes back when the round ends), so you can watch the game while you play.

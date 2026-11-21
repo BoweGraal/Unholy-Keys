@@ -43,6 +43,16 @@ var TUNE=(function(){
     V("hype.good","Hype gain, GOOD",0.012,0,0.2,0.002,"Hype per GOOD.",""),
     V("hype.miss","Hype loss, miss / let go",0.08,0,0.4,0.01,"Hype lost on a miss or letting go early.",""),
     V("hype.drift","Hype drift back",0.0008,0,0.01,0.0001,"How fast hype drifts back to its resting level each frame when nothing is happening.","")]},
+  {id:"ski",name:"Ski",icon:"⛷",mode:"ski",
+   about:"Ski down an endless mountain. Point where you want to go: straight down is fastest, sideways slows you, uphill stops you. Go between the slalom flags for points (in a row for a combo), hit ramps for air and press a trick key; trees and rocks knock you down (hop over rocks).",
+   vars:[
+    V("ski.maxSpeed","Top speed",170,60,300,5,"Fastest you can go, pointing straight down the slope.","u/s"),
+    V("ski.accel","Acceleration",220,60,500,10,"How quickly you pick up speed.",""),
+    V("ski.turn","Turn speed",3.2,1,8,0.1,"How fast your skis swing round to where you're pointing.","rad/s"),
+    V("ski.hop","Hop air time",0.45,0.2,1,0.05,"How long a hop (Space) keeps you in the air.","s"),
+    V("ski.rampAir","Ramp air time",1.0,0.4,2,0.05,"How long a ramp keeps you in the air at top speed.","s"),
+    V("ski.crash","Crash time",1.4,0.4,4,0.1,"How long a crash keeps you down.","s"),
+    V("ski.gatePts","Points per gate",100,10,500,10,"Points for going between a pair of flags (before the combo multiplier).","")]},
   {id:"pipe",name:"Half pipe",icon:"🛹",mode:"pipe",
    about:"Everyone skates one big half pipe. You cross from wall to wall every 2 beats; pump (Space or PUMP) as you pass the bottom, on the beat, to go higher. Over the lip you're in the air: an arrow does a trick. Land it to score (clean landings in a row build a combo); still mid-trick when you come down and you bail.",
    vars:[

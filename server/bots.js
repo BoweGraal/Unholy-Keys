@@ -116,6 +116,7 @@ module.exports = function(api) {
     if (playing && rd.mode === "kart") { kart(b, now, rd); }
     if (playing && rd.mode === "walk") { walk(b, now, rd); }
     if (playing && rd.mode === "pipe") { pipe(b, now, rd); }
+    if (playing && rd.mode === "ski") { ski(b, now, rd); }
     if (playing && rd.mode === "keepy") { if (!b.hopAt && Math.random() < 0.05) b.hopAt = now; var hu = b.hopAt ? (now - b.hopAt) / 900 : 0; if (hu >= 1) { b.hopAt = 0; hu = 0; } b.skH = b.hopAt ? Math.round(24 * 4 * hu * (1 - hu)) : 0; }
 
     /* wander about (not while playing a step, target or highway round: they're busy with the game) */
@@ -149,7 +150,7 @@ module.exports = function(api) {
   /* in a round: dance along, report a score (bots are decent, rarely great), vote in battles, push in the mosh */
   function round(b, now) {
     var rd = b.rd, pos = now - rd.playAt, ch = rd.chart, bpm = ch && ch.bpm || 120;
-    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.battle ? 4 : 5;
+    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.mode === "ski" || rd.battle ? 4 : 5;
     if (!b.dancing || b.style !== style) { b.dancing = true; b.style = style; b.act({ type: "dance", style: style }); }
     pose(b, now, bpm);
     var slot = -1, bs = rd.b && rd.b.slots, be = rd.b && rd.b.entrants;
@@ -158,7 +159,7 @@ module.exports = function(api) {
       if ((s.a >= 0 && be[s.a] && be[s.a].id === b.viewerId) || (s.b >= 0 && be[s.b] && be[s.b].id === b.viewerId)) slot = k;
       else if (rd.mode === "free" && !b.bvoted[k] && pos > s.start + rnd(3000, (s.end - s.start) * 0.8)) { b.bvoted[k] = 1; b.act({ type: "bvote", side: Math.random() < 0.5 ? 0 : 1 }); }
     }
-    if (rd.mode !== "free" && rd.mode !== "walk" && now > b.scoreAt) {
+    if (rd.mode !== "free" && rd.mode !== "walk" && rd.mode !== "ski" && now > b.scoreAt) {
       /* a score that grows through the song at this bot's skill */
       var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, pos / dur));
       var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : arrows * 100 * (1 + arrows / 100) * 0.55;
@@ -237,6 +238,27 @@ module.exports = function(api) {
     if (p.air && !air) { if (p.tr && Math.random() > 0.55 + 0.4 * b.skill) { p.bail = now + 1200; p.A = 0.4; } p.tr = 0; }
     p.air = air;
   }
+  /* ski: start in a lane at the top, then (from beat 8) follow the slalom line down at this bot's pace, sometimes crashing.
+     The course's line, lanes and position encoding match venue.html's SKI exactly. */
+  function skiHalfW(y) { return 110 + Math.min(1, Math.max(0, y) / 650) * 560; }
+  function skiLine(y, sd) { return Math.sin(y / 620 + sd) * skiHalfW(y) * 0.42 + Math.sin(y / 233 + sd * 2) * 40 * Math.min(1, y / 650); }
+  function ski(b, now, rd) {
+    var r = rooms[b.room]; if (!r) return;
+    if (!b.sk2 || b.sk2.n !== rd.n) {
+      var ids = Array.from(r.viewers.keys()).sort(), i = Math.max(0, ids.indexOf(b.viewerId)), nl = Math.max(2, Math.min(8, ids.length));
+      b.sk2 = { n: rd.n, seed: 1 + (rd.n * 37) % 997, x: -85 + 170 * ((i % nl) + 0.5) / nl, y: -24, sp: 90 + 70 * b.skill, off: (Math.random() * 2 - 1) * 30, t: now, crash: 0, gates: 0, lastGate: 0, posAt: 0, scoreAt: 0, a: 0 };
+    }
+    var k = b.sk2, dt = Math.min(0.5, (now - k.t) / 1000); k.t = now;
+    var going = wkBeat(rd, now - rd.playAt) >= 8;
+    if (going && now > k.crash) {
+      var ny = k.y + k.sp * dt, nx = skiLine(ny, k.seed) + k.off * Math.sin(now / 1500 + k.sp);
+      k.a = Math.atan2(nx - k.x, ny - k.y); k.x += (nx - k.x) * Math.min(1, dt * 2.5); k.y = ny;
+      if (Math.random() < dt * 0.04 * (1.3 - b.skill)) k.crash = now + 1400;
+      var gi = Math.floor(k.y / 170); if (gi > k.lastGate && k.y >= 200) { k.lastGate = gi; if (Math.random() < 0.55 + 0.4 * b.skill) k.gates++; }
+    }
+    if (now - k.posAt > 150) { k.posAt = now; b.x = +((k.x + 800) / 1600).toFixed(4); b.y = +((((k.y % 1000) + 1000) % 1000) / 1000).toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
+    if (going && now > k.scoreAt) { k.scoreAt = now + 2000; b.act({ type: "score", s: k.gates * 100 + Math.floor(Math.max(0, k.y) / 40) }); }
+  }
   /* a groove: arms and legs swinging on the beat, in this bot's own style (sent about five times a second) */
   function pose(b, now, bpm) {
     if (now - (b.poseAt || 0) < 190) return; b.poseAt = now;
@@ -246,6 +268,7 @@ module.exports = function(api) {
     /* free dance: each bot has a favourite style (the shuffle's popular) and switches move now and then */
     if (b.rd && b.rd.mode === "free") { if (!b.fds || Math.random() < 0.01) { b.fds = Math.random() < 0.35 ? 9 : 1 + Math.floor(Math.random() * 15); b.fdm = Math.floor(Math.random() * 4); } pm.fd = { s: b.fds, m: b.fdm, c: [0, 0, 0, 0] }; }
     if (b.rd && b.rd.mode === "kart") { pm.sk = { h: b.kh || 0, f: b.kf ? 1 : 0, t: 0 }; pm.a = [210, -210, 25, -25]; }
+    else if (b.rd && b.rd.mode === "ski" && b.sk2) { var cr = now < b.sk2.crash; pm.sk = { h: Math.max(0, Math.min(60, Math.floor(Math.max(0, b.sk2.y) / 1000))), f: cr ? 1 : 0, t: cr ? 9 : Math.max(0, Math.min(6, Math.round(b.sk2.a / (Math.PI / 6)) + 3)) }; pm.a = cr ? [260, -260, 120, -120] : [90, -90, 15, -15]; }
     else if (b.rd && b.rd.mode === "pipe" && b.pp) { pm.sk = { h: Math.round(b.pp.A * 25), f: now < b.pp.bail ? 1 : 0, t: b.pp.tr }; pm.a = now < b.pp.bail ? [260, -260, 120, -120] : b.pp.air ? [230, -230, 50, -50] : [125, -125, 35, -35]; }
     else if (b.rd && b.rd.mode === "walk" && b.wk) { pm.sk = { h: b.wk.fin ? 1 : 0, f: b.wk.trip ? 1 : 0, t: b.wk.si }; pm.fd = { s: b.wk.fin ? 14 : WK.D[b.wk.si], m: 0, c: [0, 0, 0, 0] }; }
     else if (b.rd && (b.rd.mode === "skate" || b.rd.mode === "keepy")) { pm.sk = { h: b.skH || 0, f: 0, t: b.skT || 0 }; if (b.skH) pm.a = [240, -240, 100, -100]; }
