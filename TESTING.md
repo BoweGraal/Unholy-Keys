@@ -757,6 +757,16 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.2 - Main menu: the last non-pixel bits
+
+- The button icons (play, dance, palette, piano, check, back) are now little pixel icons drawn in the game's own style, replacing the emoji.
+- The small lines under each button, the Room Code label and box, the Enter Venue button and the server badge (Render / self-hosted) now use the pixel font with square corners. The server badge got a square pixel dot instead of the emoji.
+- The name box no longer shows the red spell-check underline.
+
+How to check: open the main menu on a phone, then Join game and Back. Nothing should be rounded or in the plain system font.
+
+Page-only change: no Render redeploy needed.
+
 ## v1.79.1 - Phone instrument: the circle can't get stuck
 
 - Fixed: on iPhone the circle could stay stuck on one note, and pressing again did nothing, when the "finger up" never arrived (a system swipe, switching apps, a call). Now a new press always takes over, and everything is let go when the screen loses focus, the phone turns, the page is hidden, or the last finger lifts anywhere on the screen. The zones get the same protection.
