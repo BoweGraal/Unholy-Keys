@@ -768,6 +768,7 @@ Free dance (all in the free dance panel).
 - **iPhone:** the fullscreen button is hidden on iPhones, where Safari can't do fullscreen. That covers the audience page, the performer page and the phone instrument. Leave practice moves into its spot. It's also hidden in the Home Screen app, which is already fullscreen. Android, iPad and computers keep the button.
 - **Character maker:** the turn buttons and dragging now step through all 8 directions, diagonals included (was 4).
 - **Character maker, Male / Female / Both:** a new Style switch at the top. Male hides the women's hairstyles and the skirts. Female hides the men's hairstyles and the facial hair (moustache, beard, goatee, stubble). Both shows everything. Unisex styles show either way. If your current pick doesn't fit when you switch, it moves to the next one that does. Surprise me follows the switch too, and the choice is remembered on this device.
+- **Practice buttons:** next to the stick there's now **Free dance**, which starts free dancing right away, and **Start game** (pink), which opens and closes the mini game menu. Start game hides while a round is running. At a live show the button still just says Dance.
 - The character on the menu is a size smaller and sits lower, so hats aren't cut off.
 - A link with a room code in it (?room=ABCD) opens straight on the room code screen.
 - If you get disconnected, you land back on the room code screen with the message.

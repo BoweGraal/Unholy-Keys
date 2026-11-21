@@ -416,7 +416,10 @@ body.practice #prExit{display:block}
 #prExit:hover{border-color:#E8505B;background:rgba(232,80,91,.3)}
 #prBar{display:none;position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:25;width:min(560px,94vw);box-sizing:border-box;padding:10px 14px;background:rgba(14,11,26,.93);border:1px solid rgba(245,197,24,.45);border-radius:14px;color:#fff;font:500 12px system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #prDance{display:none;position:fixed;left:12px;top:58px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;background:rgba(20,18,32,.88);border:1px solid rgba(245,197,24,.7);cursor:pointer}
-body.practice #prDance{display:none}   /* one Dance button: the one by the stick opens the practice menu */
+body.practice #prDance{display:none}
+/* practice: Free dance starts dancing on the spot; Start game opens the mini game menu (hidden while a round is on) */
+#prStart{display:none}body.practice:not(.pr-busy) #prStart{display:block;background:#c8407e!important;border-color:#ff8ac8!important}body.practice.pr-open #prStart{background:#5b4fc4!important}
+   /* one Dance button: the one by the stick opens the practice menu */
 body.practice.pr-busy #prDance{display:none}body.practice.pr-open #prDance{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:#fff}
 body.practice #prBar{display:none}body.practice.pr-open #prBar{display:block;top:104px;max-height:calc(100vh - 150px);overflow:auto}
 body.practice.pr-busy #prBar,body.practice.pr-busy.pr-open #prBar{display:none}
@@ -591,6 +594,7 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
     <div id="actBtns">
       <button id="talkBtn" title="Say something (Enter)">&#128172; Talk</button>
       <button id="danceBtn" title="Dance (Space)">&#128131; Dance</button>
+      <button id="prStart" title="Pick a mini game and a song">&#127918; Start game</button>
       <div id="danceMenu">
         <button data-g="free" title="Move your character's arms and legs yourself">&#128378; Free dance <kbd>1</kbd></button>
         <button data-g="step" title="Hit the arrows in time with the music">&#11014;&#65039; Step dance <kbd>2</kbd></button>
@@ -3455,7 +3459,7 @@ var GAME=(function(){
     document.body.classList.remove("gaming","gaming-step","gaming-free","gaming-keys");document.body.removeAttribute("data-game");
     document.getElementById("gamePanel").classList.remove("on");
     document.getElementById("moveHint").innerHTML=PRACTICE.on?"Arrows or WASD to walk &middot; Space to dance":"Arrows or WASD to walk &middot; Enter to talk &middot; Space to dance";
-    var b=document.getElementById("danceBtn");b.classList.remove("on");b.innerHTML="&#128131; Dance";
+    var b=document.getElementById("danceBtn");b.classList.remove("on");b.innerHTML=typeof PRACTICE!=="undefined"&&PRACTICE.on?"&#128131; Free dance":"&#128131; Dance";
     var mm=me();if(mm){mm.dance=0;mm.pose=null;mm.combo=0;}
     if(!quiet)wsSend({type:"dance",style:0});
   }
@@ -3467,8 +3471,7 @@ var GAME=(function(){
     if(mode){stop();if(ROUND.active())ROUND.sitOut();}
     else if(ROUND.active())ROUND.join();          /* a round is on: Dance joins it */
     /* no round on: in Dance practice, open the practice panel to pick a game; at a show, just start dancing (the old game list is gone) */
-    else if(typeof PRACTICE!=="undefined"&&PRACTICE.on){closeMenu();document.body.classList.toggle("pr-open");}
-    else{closeMenu();start("free");}
+    else{closeMenu();document.body.classList.remove("pr-open");start("free");}   /* no round on: free dance, at a show or in practice (Start game opens the practice menu) */
   }
 
   document.getElementById("danceBtn").addEventListener("click",function(e){e.currentTarget.blur();toggle();});
@@ -5475,6 +5478,7 @@ var PRACTICE=(function(){
     var small=window.innerWidth<700||(window.matchMedia&&matchMedia("(pointer: coarse)").matches);
     document.body.classList.toggle("pr-open",!small);
     $("prDance").onclick=function(){document.body.classList.toggle("pr-open");};
+    $("danceBtn").innerHTML="&#128131; Free dance";$("prStart").onclick=function(e){e.currentTarget.blur();document.body.classList.toggle("pr-open");};
     document.getElementById("moveHint").innerHTML="Arrows or WASD to walk &middot; Space to dance";
     document.getElementById("joinScreen").classList.add("hidden");
     document.getElementById("venue").classList.add("on");
