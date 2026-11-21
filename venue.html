@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.76.0"></script>
-<script src="gfx.js?v=1.76.0"></script>
-<script src="art.js?v=1.76.0"></script>
-<script src="instruments.js?v=1.76.0"></script>
-<script src="kart.js?v=1.76.0"></script>
+<script src="tune.js?v=1.77.0"></script>
+<script src="gfx.js?v=1.77.0"></script>
+<script src="art.js?v=1.77.0"></script>
+<script src="instruments.js?v=1.77.0"></script>
+<script src="kart.js?v=1.77.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -33,6 +33,24 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #vFsTip{display:none;position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9500;width:min(420px,90vw);background:#1c1830;border:1px solid #D354A0;color:#fff;font:13px/1.45 system-ui;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 #vFsTip.on{display:block}
 #joinScreen.hidden{display:none}
+/* main menu views: menu (character + three buttons), join (room code), char (the character maker) */
+#joinScreen .jv{display:none}
+#joinScreen[data-view=menu] .jv-menu,#joinScreen[data-view=join] .jv-join,#joinScreen[data-view=char] .jv-char{display:flex}
+.jv-menu{flex-direction:column;align-items:center;gap:14px;width:100%;max-width:360px}
+#menuChar{width:220px;height:200px;image-rendering:pixelated;cursor:pointer}
+.jv-menu #inName{width:100%;background:#120e22;border:2px solid #3a3058;color:#fff;padding:10px 12px;font:700 15px 'Silkscreen',ui-monospace,monospace;text-align:center;outline:none;border-radius:0}
+.jv-menu #inName:focus{border-color:#D354A0}
+.mm-btns{display:flex;flex-direction:column;gap:10px;width:100%}
+.mm-btn{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;padding:13px 14px 12px;color:#fff;border:0;cursor:pointer;font-size:17px!important;background:#2a2440}
+.mm-btn small{font:600 11px system-ui,sans-serif!important;letter-spacing:0;opacity:.8;text-transform:none}
+.mm-join{background:#c8407e!important}.mm-prac{background:#5b4fc4!important}.mm-char{background:#2a2440!important}
+.mm-btn:active{transform:translateY(2px)}
+.mm-back{background:transparent;color:#aaa5c8;border:0;cursor:pointer;font-size:12px!important;padding:6px;box-shadow:none!important;align-self:center}
+.jv-join,.jv-char{max-width:420px}
+#joinScreen .join-logo{font:700 clamp(34px,10vw,52px)/1 'Silkscreen',ui-monospace,monospace;letter-spacing:1px;text-shadow:4px 4px 0 #000;text-align:center}
+#joinScreen .join-sub{font-family:'Silkscreen',ui-monospace,monospace;margin-bottom:6px}
+#joinScreen .join-box,#joinScreen .join-box input[type=text],#maker *{border-radius:0!important}
+#joinScreen .join-box{box-shadow:4px 4px 0 rgba(0,0,0,.55)}
 .join-logo{font-size:42px;font-weight:700;letter-spacing:-1px;margin-bottom:4px}
 .join-logo b{color:var(--pk)}
 .join-sub{font-size:14px;color:var(--tx2);margin-bottom:20px;letter-spacing:2px;text-transform:uppercase}
@@ -513,26 +531,34 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
 <!-- JOIN SCREEN -->
 <button id="vFsBtn" title="Fullscreen">&#9974;</button>
 <div id="vFsTip">On iPhone, Safari can't make a web page fullscreen. For a fullscreen app: tap <b>Share</b>, then <b>Add to Home Screen</b>, and open it from your home screen.</div>
-<div id="joinScreen">
+<div id="joinScreen" data-view="menu">
   <div class="join-logo"><b>Unholy</b> Keys</div>
   <div class="join-sub">Live Venue</div>
-  <div style="text-align:center;margin:-4px 0 10px"><span id="srvTag" class="srv-badge"></span></div>
-  <a class="join-practice-btn" href="?practice">&#128378; Dance practice <small style="font-weight:500;opacity:.75">no show needed</small></a>
-  <div class="join-box">
-    <div>
-      <label>Display Name</label>
-      <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off">
+  <div style="text-align:center;margin:-4px 0 6px"><span id="srvTag" class="srv-badge"></span></div>
+  <!-- the main menu: your character on a little stage, and three ways in -->
+  <div class="jv jv-menu">
+    <canvas id="menuChar" width="220" height="200" aria-label="Your character"></canvas>
+    <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off" aria-label="Your name">
+    <div class="mm-btns">
+      <button class="mm-btn mm-join" id="mmJoin">&#9654; Join game<small>enter a room code</small></button>
+      <button class="mm-btn mm-prac" id="mmPrac">&#128378; Practice<small>the practice zone, no show needed</small></button>
+      <button class="mm-btn mm-char" id="mmChar">&#127912; Character<small>change your look</small></button>
     </div>
+  </div>
+  <!-- join a show -->
+  <div class="jv jv-join join-box">
     <div>
       <label>Room Code</label>
       <input type="text" id="inRoom" placeholder="4 letters" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase;letter-spacing:4px">
     </div>
-    <div>
-      <label>Your character</label>
-      <div id="maker"></div>
-    </div>
     <button id="enterBtn">Enter Venue</button>
     <div id="joinErr" style="font-size:12px;color:#D85A30;display:none"></div>
+    <button class="mm-back" data-to="menu">&#9664; Back</button>
+  </div>
+  <!-- your character -->
+  <div class="jv jv-char join-box">
+    <div id="maker"></div>
+    <button class="mm-btn mm-join" data-to="menu">&#10003; Done</button>
   </div>
 </div>
 
@@ -1523,6 +1549,33 @@ var MAKER=ART.maker(document.getElementById("maker"),myLook,function(L){
   myLook=L;myColor=ART.looks.topColor(L);
   try{localStorage.setItem("uk_look",ART.looks.pack(L));}catch(e){}
 });
+/* the main menu: switch views, remember your name, and your character dancing on a little stage */
+var MENU=(function(){
+  var js=document.getElementById("joinScreen"),cv=document.getElementById("menuChar"),g=cv.getContext("2d"),raf=0;
+  function view(v){js.setAttribute("data-view",v);if(v==="join"){var r=document.getElementById("inRoom");if(r&&!r.value)setTimeout(function(){try{r.focus();}catch(e){}},50);}if(v==="menu")loop();}
+  function saveName(){try{localStorage.setItem("uk_name",document.getElementById("inName").value.trim());}catch(e){}}
+  function frame(){raf=0;if(js.classList.contains("hidden")||js.getAttribute("data-view")!=="menu")return;
+    var W=cv.width,H=cv.height,now=performance.now(),b=now/500,ph=b*Math.PI;g.imageSmoothingEnabled=false;g.clearRect(0,0,W,H);
+    /* a little stage with a spotlight */
+    g.fillStyle="#1d1733";g.fillRect(20,150,180,26);g.fillStyle="#3a3058";g.fillRect(20,150,180,4);g.fillStyle="#120e22";g.fillRect(20,176,180,6);
+    for(var i=0;i<6;i++){g.fillStyle=["#D354A0","#7F77DD","#3DF2FF","#F5C518","#4CC38A","#E8505B"][(i+Math.floor(b))%6];g.globalAlpha=0.5;g.fillRect(28+i*30,160,22,8);}g.globalAlpha=1;
+    g.fillStyle="rgba(245,197,24,.10)";g.beginPath();g.moveTo(90,0);g.lineTo(130,0);g.lineTo(170,152);g.lineTo(50,152);g.fill();
+    var sw=Math.sin(ph),p=5,dir=Math.floor(now/2400)%8;
+    ART.drawChar(g,110,150-12*p-Math.abs(sw)*4,p,myLook,{armL:0.9+sw*0.9,armR:-0.9+sw*0.9,legL:sw*0.25,legR:-sw*0.25,bob:Math.abs(sw)*2,dir:[0,4,1,5,2,6,3,7][dir]});
+    raf=requestAnimationFrame(frame);}
+  function loop(){if(!raf)raf=requestAnimationFrame(frame);}
+  try{var nm=localStorage.getItem("uk_name");if(nm)document.getElementById("inName").value=nm;}catch(e){}
+  document.getElementById("inName").addEventListener("change",saveName);
+  document.getElementById("mmJoin").onclick=function(){saveName();view("join");};
+  document.getElementById("mmChar").onclick=function(){view("char");};
+  cv.onclick=function(){view("char");};
+  document.getElementById("mmPrac").onclick=function(){saveName();try{history.replaceState(null,"","?practice");}catch(e){}PRACTICE.enter();};
+  Array.prototype.forEach.call(js.querySelectorAll("[data-to]"),function(b){b.onclick=function(){view(b.getAttribute("data-to"));};});
+  /* a link with a room code goes straight to joining */
+  try{if(/[?&]room=/.test(location.search))view("join");}catch(e){}
+  loop();
+  return{view:view,loop:loop};
+})();
 /* a look from the network: 8 letters, or nothing (then dress them in their colour) */
 /* a free dance from the network: {s: dance 1-8, m: move, c: [4 dots, -100..100]} or null */
 function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=15)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
@@ -1533,7 +1586,7 @@ if(/[?&]practice\b/.test(location.search))setTimeout(function(){PRACTICE.enter()
 document.getElementById("enterBtn").addEventListener("click",function(){
   var name=document.getElementById("inName").value.trim();
   var room=document.getElementById("inRoom").value.trim();
-  if(!name){showJoinErr("Please enter a display name");return;}
+  if(!name){MENU.view("menu");var nI=document.getElementById("inName");nI.placeholder="Type your name first";try{nI.focus();}catch(e){}return;}
   if(!room){showJoinErr("Please enter a room code");return;}
   myName=name;
   myColor=ART.looks.topColor(myLook);
@@ -1593,7 +1646,7 @@ function backToJoin(msg){
   silenceNote();isPerformerPlaying=false;
   document.getElementById("venue").classList.remove("on");
   document.getElementById("joinScreen").classList.remove("hidden");
-  showJoinErr(msg);
+  MENU.view("join");showJoinErr(msg);
 }
 
 /* ============================================================
@@ -6267,7 +6320,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.76.0",SERVER_VERSION="";
+var PAGE_VERSION="1.77.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6755,7 +6808,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.76.0"></script>
+<script src="lab.js?v=1.77.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

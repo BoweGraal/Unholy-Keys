@@ -757,6 +757,21 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.77.0 - Main menu
+
+- The first screen is now a main menu. Your character dances on a little stage and turns through all 8 directions, with your name under it and three buttons:
+  - **Join game:** goes to the room code screen, then Enter venue.
+  - **Practice:** goes straight into the practice zone, with no reload.
+  - **Character:** opens the character maker. Done brings you back. Tapping your character on the menu also opens it.
+- Your name is remembered on this device.
+- A link with a room code in it (?room=ABCD) opens straight on the room code screen.
+- If you get disconnected, you land back on the room code screen with the message.
+- The logo is pixel art, and the join and character panels have square corners.
+
+Page-only change: no Render redeploy needed.
+
+**Test it:** open venue.html. Change your character and press Done, then Practice, then Leave practice. Your name and character should still be there. Then try Join game with a room code from a live show.
+
 ## v1.76.0 - Capture the flag sprint and refills, a stand-in performer in practice, one Dance button
 
 Capture the flag:
