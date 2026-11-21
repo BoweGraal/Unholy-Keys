@@ -551,9 +551,30 @@
     effects(ctx, tt, T_, now, vs, myId);
   }
   function pads(ctx, now) {
-    tr.pads.forEach(function (pd) { var p = pointAt(tr, pd.d, pd.lat), hwp = pd.w, sc = hwp / 22; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = "rgba(20,10,40,.85)"; ctx.fillRect(-tr.padL / 2, -hwp, tr.padL, hwp * 2); ctx.scale(1, Math.min(1, sc));
-      for (var c = 0; c < 3; c++) { var ph = ((now / 260 + c) % 3) / 3; ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillStyle = c % 2 ? "#3DF2FF" : "#F5F23D"; ctx.beginPath(); var xx = -tr.padL / 2 + ph * tr.padL; ctx.moveTo(xx - 6, -22); ctx.lineTo(xx + 5, 0); ctx.lineTo(xx - 6, 22); ctx.lineTo(xx - 1, 0); ctx.closePath(); ctx.fill(); }
-      ctx.restore(); });
+    /* boost pads, in pixel art: every pixel is on the same grid as the track (4 per floor tile), and the chevrons
+       sweep across them cell by cell instead of as smooth shapes */
+    var PC = 13 / 4;
+    function padMix(c, a) { var r = parseInt(c.substr(1, 2), 16), g2 = parseInt(c.substr(3, 2), 16), b = parseInt(c.substr(5, 2), 16);
+      return "rgb(" + Math.round(20 + (r - 20) * a) + "," + Math.round(10 + (g2 - 10) * a) + "," + Math.round(40 + (b - 40) * a) + ")"; }
+    tr.pads.forEach(function (pd) {
+      var p = pointAt(tr, pd.d, pd.lat), hwp = pd.w, sq = Math.min(1, hwp / 22), ca = Math.cos(p.a), sa = Math.sin(p.a), hl = tr.padL / 2;
+      var ex = Math.abs(ca) * hl + Math.abs(sa) * hwp, ey = Math.abs(sa) * hl + Math.abs(ca) * hwp, ph = [];
+      for (var c = 0; c < 3; c++) { var f = ((now / 260 + c) % 3) / 3; ph.push({ xx: -hl + f * tr.padL, a: Math.sin(f * Math.PI), col: c % 2 ? "#3DF2FF" : "#F5F23D" }); }
+      /* every cell is an opaque colour (chevron mixed into the pad by its brightness), drawn as runs a hair wider so no seams show */
+      for (var gy = Math.floor((p.y - ey) / PC); gy <= Math.floor((p.y + ey) / PC); gy++) {
+        var run = null, rx0 = 0;
+        for (var gx = Math.floor((p.x - ex) / PC); gx <= Math.floor((p.x + ex) / PC) + 1; gx++) {
+          var dx = (gx + 0.5) * PC - p.x, dy = (gy + 0.5) * PC - p.y, lx = dx * ca + dy * sa, ly = -dx * sa + dy * ca, col = null;
+          if (Math.abs(lx) <= hl && Math.abs(ly) <= hwp) {
+            col = "#140a28"; var al = Math.abs(ly) / sq;
+            for (var q = 0; q < 3; q++) { var h = ph[q]; if (al > 22) continue; var xl = h.xx - 1 - 5 * al / 22, xr = h.xx + 5 - 11 * al / 22;
+              if (lx >= xl - PC / 2 && lx <= xr + PC / 2) col = padMix(h.col, Math.round(h.a * 4) / 4); }
+          }
+          if (col !== run) { if (run) { ctx.fillStyle = run; ctx.fillRect(rx0 * PC, gy * PC, (gx - rx0) * PC + 0.4, PC + 0.4); } run = col; rx0 = gx; }
+        }
+      }
+      ctx.globalAlpha = 1;
+    });
   }
   function effects(ctx, tt, T_, now, vs, myId) {
     /* drift sparks flying off, boost embers, landing dust */
