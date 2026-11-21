@@ -60,8 +60,8 @@ var TUNE=(function(){
    vars:[
     V("pp.cross","Time to cross the pipe",2.2,1,4,0.1,"Seconds to roll from one wall to the other. Higher is slower.","s"),
     V("pp.window","Beat timing window",0.2,0.05,0.5,0.01,"How far from the beat (in beats) a BEAT press still counts.","beats"),
-    V("pp.gain","Momentum per beat",0.05,0.01,0.2,0.005,"How much one on-beat press builds your momentum.",""),
-    V("pp.decay","Momentum lost per missed beat",0.012,0,0.06,0.002,"How much momentum you lose on a beat you didn't press.",""),
+    V("pp.gain","Momentum per pump",0.035,0.005,0.15,0.005,"How much one tap of PUMP builds your momentum. Tapping fast builds it fast.",""),
+    V("pp.decay","Momentum fade",0.08,0,0.4,0.01,"How much momentum fades each second you're not pumping.","/s"),
     V("pp.spin","Spin speed",420,120,900,10,"How fast the left stick spins you in the air.","°/s"),
     V("pp.clean","Clean landing angle",25,8,60,1,"How far off the wall's angle you can land and still be clean (twice this is sketchy).","°"),
     V("pp.superPts","Points to fill SUPER",2500,500,10000,100,"Clean-landing points needed to fill the SUPER meter.",""),

@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.69.1"></script>
-<script src="gfx.js?v=1.69.1"></script>
-<script src="art.js?v=1.69.1"></script>
-<script src="instruments.js?v=1.69.1"></script>
-<script src="kart.js?v=1.69.1"></script>
+<script src="tune.js?v=1.70.0"></script>
+<script src="gfx.js?v=1.70.0"></script>
+<script src="art.js?v=1.70.0"></script>
+<script src="instruments.js?v=1.70.0"></script>
+<script src="kart.js?v=1.70.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -164,6 +164,14 @@ body.gaming-ski #skiTricks{left:auto;right:16px;bottom:calc(var(--chatH) + 132px
 #ppPad .b2{display:none}#ppPad.swipe{background:#F5C518;color:#1a1200;box-shadow:0 0 22px #F5C518}#ppPad.swipe .b1{display:none}#ppPad.swipe .b2{display:inline}
 #ppPad.dn{transform:translateY(3px);box-shadow:0 1px 0 #065868}
 #ppStances{position:absolute;right:16px;bottom:calc(var(--chatH) + 150px);display:flex;gap:5px;pointer-events:auto}
+#ppPad .knob{display:none;position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;background:#fff;opacity:.85;pointer-events:none;clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%)}
+#ppPad.swipe .knob{display:block}#ppPad.swipe small{visibility:hidden}
+#ppGuide{position:absolute;left:16px;top:120px;display:flex;flex-direction:column;gap:4px;pointer-events:none;opacity:.6;transition:opacity .2s}
+#ppGuide.hot{opacity:1}
+#ppGuide .pg{display:flex;align-items:center;gap:6px;background:rgba(10,7,20,.7);padding:2px 8px 2px 2px;border:1px solid rgba(255,255,255,.15)}
+#ppGuide canvas{width:40px;height:40px;image-rendering:pixelated}
+#ppGuide b{font:700 11px 'Silkscreen',ui-monospace,monospace;color:#fff}
+@media (max-width:640px){#ppGuide{top:96px;left:8px}#ppGuide canvas{width:28px;height:28px}#ppGuide b{font-size:9px}}
 #ppStances button{width:48px;height:44px;font:800 10px/1.1 system-ui;color:#fff;background:rgba(20,16,36,.85);border:2px solid rgba(255,255,255,.3);border-radius:8px;touch-action:none}
 body.gaming-pipe #reactBar,body.gaming-pipe #moveHint,body.gaming-pipe #actBtns{display:none}
 body.gaming-pipe #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
@@ -543,7 +551,8 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
   <div id="pipeUI"><div id="ppBanner"></div><div id="ppJudge"></div><div id="ppScore">0</div><div id="ppCombo"></div><div id="ppHint"></div>
     <div id="ppSuperBox" title="Land clean to fill it; when it's full your next pop is a SUPER MOVE"><b>SUPER</b><div id="ppSuperBar"><div id="ppSuper"></div></div></div>
     <div id="ppMomBox" title="Momentum: tap BEAT on the beat"><div id="ppMomentum"></div></div>
-    <button id="ppPad"><span class="b1">BEAT</span><span class="b2">SWIPE!</span><small>Space · swipe at the lip</small></button>
+    <button id="ppPad"><span class="b1">PUMP</span><span class="b2">FLICK!</span><small>tap fast · Space</small><i class="knob"></i></button>
+    <div id="ppGuide" title="How to flick each trick: follow the path, ending with a flick up. A harder flick goes higher"></div>
     <div id="ppStances"><button data-s="1">1<br>Point</button><button data-s="2">2<br>Vogue</button><button data-s="3">3<br>Kick</button><button data-s="4">4<br>Freeze</button></div>
   </div>
   <div id="walkUI"><div id="wkBanner"></div><div id="wkHint"></div><canvas id="wkPad"></canvas></div>
@@ -3669,7 +3678,14 @@ var WALK=(function(){
    ============================================================ */
 var PIPE=(function(){
   var PP=ART.PIPE,XL=PP.XL,XR=PP.XR,AMAX=1.8;
-  var TRK=[null,{name:"Headspin",pts:250,d:11,col:"#D04DFF"},{name:"Thriller",pts:200,d:10,col:"#4CC38A"},{name:"Robot",pts:200,d:6,col:"#3DF2FF"},{name:"Shuffle",pts:150,d:9,col:"#F5C518"}];   /* swipe ↑ ← → ↓ */
+  /* the tricks, by how you flick the stick (or drag the mouse): every one ends with a flick up, which launches you; how hard
+     that flick is sets how high you go. g = the guide drawn for it: the path in a 10x10 box, ending in the arrow */
+  var TRK=[null,
+    {name:"Headspin",pts:150,d:11,col:"#D04DFF",how:"flick up",g:[[5,9],[5,1]]},
+    {name:"Thriller",pts:200,d:10,col:"#4CC38A",how:"left, then up",g:[[9,8],[3,8],[3,1]]},
+    {name:"Robot",pts:200,d:6,col:"#3DF2FF",how:"right, then up",g:[[1,8],[7,8],[7,1]]},
+    {name:"Shuffle",pts:220,d:9,col:"#F5C518",how:"down, then up",g:[[3,2],[3,9],[7,9],[7,1]]},
+    {name:"Boogie",pts:350,d:3,col:"#FF4D6D",how:"spin round, then up",g:[[5,5],[7,4],[7,7],[4,8],[2,6],[3,3],[6,2],[8,3],[8,1]]}];
   var STN=[null,{name:"Point",p:[3.0,-0.4,0.3,-0.1]},{name:"Vogue",p:[2.4,-2.9,0.1,-0.5]},{name:"Kick",p:[1.6,-1.6,1.3,-0.2]},{name:"Freeze",p:[-0.6,0.6,0.9,-0.9]}];
   var on=false,phi=0,A=0.3,lean=0,keyLean=0,air=null,r=0,score=0,combo=0,superK=0,bailUntil=0,lastT=0,lastBeat=-1,pressedBeat={},trick=0,stance=0,stanceT=0,stances={},pops=[],warp=0,warpAt=-1e9,wasRound=false,lane=0.6,grp=null,swipe=null,wasWin=false,lastJudgeT=0,bots={},rem={};
   function $(id){return document.getElementById(id);}
@@ -3694,35 +3710,52 @@ var PIPE=(function(){
     document.body.classList.add("gaming-pipe");$("pipeUI").classList.add("on");hud();banner(grp.G>1?"🛹 HALF PIPE · GROUP "+(grp.g+1)+" OF "+grp.G:"🛹 HALF PIPE");
   }
   function stop(){on=false;document.body.classList.remove("gaming-pipe");var u=$("pipeUI");if(u)u.classList.remove("on");}
-  /* the BEAT button: on the beat builds momentum, off it costs a little */
+  /* PUMP: every tap pumps your feet once; tap fast and you build speed fast. It fades if you stop */
+  var pumpT=0,pumpN=0,queued=null;
   function beat(){
-    if(!on||performance.now()<bailUntil||air)return;if(popWindow())return;   /* up at the lip it's the swipe, not the beat */
-    var b=beatAt(songPos()),bi=Math.round(b),d=Math.abs(b-bi),win=T("window");
-    if(d<=win&&!pressedBeat[bi]){pressedBeat[bi]=1;A=Math.min(AMAX,A+T("gain")*(1-0.5*d/win));judge(d<win*0.4?"PERFECT":"ON BEAT",d<win*0.4?"#3DF2FF":"#4CC38A");}
-    else{A=Math.max(0.25,A-0.03);judge("OFF BEAT","#FF8A2B");}
-    hud();
+    if(!on||performance.now()<bailUntil||air||popWindow())return;   /* going up the wall you can't pump: the pad is the trick stick now */
+    A=Math.min(AMAX,A+T("gain")*(1-0.6*Math.pow(A/AMAX,2)));pumpT=performance.now();pumpN++;hud();
   }
-  /* the swipe at the lip: direction = the dance trick, how hard = how high */
-  function swipeGo(dx,dy,ms){
-    if(!on||air||performance.now()<bailUntil)return;
-    if(!popWindow()){judge(Math.abs(uNow())<0.6?"TOO EARLY":"WAIT FOR THE LIP","#aaa");return;}
-    var d=Math.hypot(dx,dy);if(d<24)return;
-    var k=Math.abs(dx)>Math.abs(dy)?(dx<0?2:3):(dy<0?1:4),pw=Math.max(0.5,Math.min(1.5,(d/Math.max(60,ms))*0.9));
+  /* reading a flick: pts = [x, y, ms] with y down (screen) or the stick's own y. It has to finish with a quick move up.
+     Before that: going round in a loop = Boogie; mostly left / right / down first = Thriller / Robot / Shuffle; nothing = Headspin.
+     The speed of the last flick is the power */
+  function gesture(pts){
+    if(!pts||pts.length<3)return 0;var n=pts.length,end=pts[n-1],lo=0,i;
+    for(i=0;i<n;i++)if(pts[i][1]>=pts[lo][1])lo=i;                          /* the lowest point: where the flick up starts */
+    var fl=pts.slice(lo),rise=pts[lo][1]-end[1],sx=end[0]-pts[lo][0];
+    if(fl.length<2||rise<0.35*span(pts)||rise<Math.abs(sx)*0.7)return 0;   /* it doesn't end going up */
+    var j=n-1;while(j>0&&end[2]-pts[j-1][2]<140)j--;var fd=Math.hypot(end[0]-pts[j][0],end[1]-pts[j][1]),ft=Math.max(30,end[2]-pts[j][2]),pw=Math.max(0.5,Math.min(1.5,fd/ft*1000/span(pts)*0.35));
+    var wind=0;for(i=2;i<=Math.max(lo,j);i++){var a1=Math.atan2(pts[i-1][1]-pts[i-2][1],pts[i-1][0]-pts[i-2][0]),a2=Math.atan2(pts[i][1]-pts[i-1][1],pts[i][0]-pts[i-1][0]),da=a2-a1;while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;if(Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1])>0.002*span(pts))wind+=da;}
+    var px=pts[lo][0]-pts[0][0],py=pts[lo][1]-pts[0][1],pre=Math.hypot(px,py),k;
+    if(Math.abs(wind)>4.2)k=5;else if(pre<0.3*span(pts))k=1;else if(Math.abs(px)>Math.abs(py))k=px<0?2:3;else k=py>0?4:1;
+    return{k:k,pw:pw};
+  }
+  function span(pts){var x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;pts.forEach(function(p){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]);});return Math.max(1e-6,Math.max(x1-x0,y1-y0));}
+  /* a trick read from a flick: only at the lip (a flick a moment early is held until you get there) */
+  function trickGo(k,pw){
+    if(!on||air||performance.now()<bailUntil||!k)return;
+    if(!popWindow()){if(A>=0.95){queued={k:k,pw:pw,t:performance.now()};}else judge("PUMP MORE SPEED","#aaa");return;}
+    queued=null;
     var sup=superK>=1,side=Math.sign(Math.sin(phi)),h=(A-0.6)*pw*(1-0.25*Math.abs(lean))*(sup?1.5:1),dur=Math.min(2.2,0.6+0.9*h);
     air={t0:performance.now(),dur:dur,h:Math.min(1.4,h),side:side,trick:k,sup:sup,pw:pw,phi0:phi};r=lean*30;stance=0;stances={};trick=k;
     if(sup){superK=0;banner("⚡ SUPER MOVE!","#F5C518");}else banner(TRK[k].name.toUpperCase()+"!",TRK[k].col);
     hud();
   }
+  function swipeGo(dx,dy,ms){var g2=gesture([[0,0,0],[dx*0.5,dy*0.5,ms*0.5],[dx,dy,ms]]);if(g2)trickGo(g2.k,g2.pw);}   /* (kept for the test skater) */
+  var keySeq=[],jp=[];
   function stanceGo(k){if(!on||!air)return;stance=k;stanceT=performance.now();stances[k]=1;}
   function key(code,down){
     if(!on)return false;
-    if(code==="ArrowLeft"||code==="KeyA"){keyLean=down?-1:(keyLean===-1?0:keyLean);return true;}
-    if(code==="ArrowRight"||code==="KeyD"){keyLean=down?1:(keyLean===1?0:keyLean);return true;}
-    if(!down)return code==="Space"||/^Digit[1-4]$/.test(code);
+    var now=performance.now();
+    if(code==="ArrowLeft"||code==="KeyA"){keyLean=down?-1:(keyLean===-1?0:keyLean);if(down)keySeq.push(["L",now]);return true;}
+    if(code==="ArrowRight"||code==="KeyD"){keyLean=down?1:(keyLean===1?0:keyLean);if(down)keySeq.push(["R",now]);return true;}
+    if(!down)return code==="Space"||/^Digit[1-4]$/.test(code)||/^Arrow(Up|Down)$|^Key[WS]$/.test(code);
     if(code==="Space"){beat();return true;}
     if(/^Digit[1-4]$/.test(code)){stanceGo(+code.slice(5));return true;}
-    if(code==="ArrowUp"||code==="KeyW"){swipeGo(0,-140,120);return true;}       /* keys can swipe too */
-    if(code==="ArrowDown"||code==="KeyS"){swipeGo(0,140,120);return true;}
+    if(code==="ArrowDown"||code==="KeyS"){keySeq.push(["D",now]);return true;}
+    /* the keys do the flicks as sequences: (← / → / ↓ / ← ↓ → round) then ↑ */
+    if(code==="ArrowUp"||code==="KeyW"){var seq=keySeq.filter(function(s){return now-s[1]<700;}).map(function(s){return s[0];});keySeq=[];
+      var has=function(c){return seq.indexOf(c)>=0;},k=has("L")&&has("D")&&has("R")?5:seq.length?{L:2,R:3,D:4}[seq[seq.length-1]]:1;trickGo(k,1);return true;}
     return false;
   }
   function land(now){
@@ -3741,19 +3774,21 @@ var PIPE=(function(){
     var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
     var me=myId&&viewers[myId];if(!me)return;
     var b=beatAt(songPos()),bi=Math.floor(b);
-    if(bi!==lastBeat){if(lastBeat>=0&&!pressedBeat[lastBeat]&&!air&&now>bailUntil)A=Math.max(0.25,A-T("decay"));lastBeat=bi;}
+    if(!air&&now>bailUntil)A=Math.max(0.25,A-T("decay")*dt);   /* momentum fades unless you keep pumping */
+    if(queued){if(now-queued.t>600)queued=null;else if(popWindow())trickGo(queued.k,queued.pw);}
     /* the left stick: lean on the ramp, spin in the air */
     var jx=joy.id!==null&&Math.abs(joy.x)>0.15?joy.x:keyLean;lean+=(jx-lean)*Math.min(1,dt*8);
     if(air){r+=lean*T("spin")*dt;var p=(now-air.t0)/1000/air.dur;if(p>=1)land(now);}
     else if(now>=bailUntil)phi+=Math.PI/T("cross")*dt;
-    var win=popWindow();if(win!==wasWin){wasWin=win;var pad=$("ppPad");if(pad)pad.classList.toggle("swipe",win);if(win)judge("SWIPE!","#F5C518");}
+    var win=popWindow();if(win!==wasWin){wasWin=win;var pad=$("ppPad");if(pad)pad.classList.toggle("swipe",win);var gd=$("ppGuide");if(gd)gd.classList.toggle("hot",win);if(win)judge("FLICK!","#F5C518");}
     if(stance&&now-stanceT>450)stance=0;
     var x=xOf(),z=air?Math.sin(Math.PI*Math.min(1,(now-air.t0)/1000/air.dur))*air.h/1.4:0;
     me.tx=me.x=x;me.ty=me.y=lane;sendPos(x,lane,{z:+z.toFixed(3),r:Math.round(r)});me.sk=wire();me.pz=z;me.pr=r;
     var st=stance?STN[stance].p:null;
-    GAME.moshPose(now<bailUntil?[2.6,-2.6,1.2,-1.2]:st?st:air?[2.3,-2.3,0.5,-0.5]:[1.2+lean*0.5,-1.2+lean*0.5,0.35,-0.35]);
+    var pk=now-pumpT<220?Math.sin((now-pumpT)/220*Math.PI):0,pl=pumpN%2?1:-1;   /* pumping: one knee bends then the other */
+    GAME.moshPose(now<bailUntil?[2.6,-2.6,1.2,-1.2]:st?st:air?[2.3,-2.3,0.5,-0.5]:[1.2+lean*0.5,-1.2+lean*0.5,0.35+pk*0.55*pl,-0.35+pk*0.55*pl]);
     if(PRACTICE.on)botTick(now,dt);
-    var hn=$("ppHint");if(hn)hn.textContent=air?"Line the board up with the wall to land · 1–4 for style":win?"SWIPE now! ↑ Headspin · ← Thriller · → Robot · ↓ Shuffle":"Tap BEAT on the beat to build speed · lean with the stick";
+    var hn=$("ppHint");if(hn)hn.textContent=air?"Line the board up with the wall to land · 1–4 for style":win?"Draw your trick on the right stick, ending with a flick up · harder = higher":A<0.95?"Tap PUMP fast to build speed · lean with the left stick":"Going up the wall, PUMP turns into the trick stick";
     hud();
   }
   /* practice: the practice skaters build speed and throw tricks at their own pace */
@@ -3831,7 +3866,7 @@ var PIPE=(function(){
     /* glints */
     if(pulse>0.3){g.fillStyle="#fff";g.globalAlpha=pulse;g.fillRect(cx-R*0.45,cy-R*0.5,P,P*3);g.fillRect(cx-R*0.45-P,cy-R*0.5+P,P*3,P);g.globalAlpha=1;}
     g.font="700 "+Math.max(10,Math.round(P*2.8))+"px Silkscreen,ui-monospace,monospace";g.textAlign="center";g.lineWidth=4;g.strokeStyle="#000";
-    var lb=win?"SWIPE!":hitNow?"NICE!":"BEAT";g.strokeText(lb,cx,cy+R+P*5);g.fillStyle=win?"#F5C518":hitNow?"#4CC38A":"#fff";g.fillText(lb,cx,cy+R+P*5);
+    var lb=win?"FLICK!":hitNow?"NICE!":"BEAT";g.strokeText(lb,cx,cy+R+P*5);g.fillStyle=win?"#F5C518":hitNow?"#4CC38A":"#fff";g.fillText(lb,cx,cy+R+P*5);
     g.restore();
   }
   /* the whole pipe flashes with the beat too */
@@ -3841,16 +3876,34 @@ var PIPE=(function(){
   function fd(){return air?{s:TRK[air.trick].d,m:0,c:[0,0,0,0]}:null;}
   /* the pad: tap = BEAT; up near the lip it lights up for the swipe. On a computer, drag the mouse anywhere for the swipe */
   function wirePad(){var p=$("ppPad");if(!p||p._w)return;p._w=1;
-    p.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();swipe={x:e.clientX,y:e.clientY,t:performance.now()};try{p.setPointerCapture(e.pointerId);}catch(x2){}if(!popWindow())beat();p.classList.add("dn");});
-    var up=function(e){p.classList.remove("dn");if(!swipe)return;var s2=swipe;swipe=null;var dx=e.clientX-s2.x,dy=e.clientY-s2.y;if(Math.hypot(dx,dy)>=24)swipeGo(dx,dy,performance.now()-s2.t);};
-    p.addEventListener("pointerup",up);p.addEventListener("pointercancel",function(){swipe=null;p.classList.remove("dn");});
-    var ms=null;document.addEventListener("pointerdown",function(e){if(!on||e.pointerType!=="mouse"||e.target.closest&&e.target.closest("button,#ppPad,#chatPanel,input"))return;ms={x:e.clientX,y:e.clientY,t:performance.now()};});
-    document.addEventListener("pointerup",function(e){if(!ms)return;var s3=ms;ms=null;var dx=e.clientX-s3.x,dy=e.clientY-s3.y;if(Math.hypot(dx,dy)>=24)swipeGo(dx,dy,performance.now()-s3.t);});
+    /* the right-hand pad: a PUMP button on the flat; going up the wall it becomes a stick, and the move you draw on it is your trick */
+    var stk=null,knob=p.querySelector(".knob");
+    p.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();p.classList.add("dn");
+      if(popWindow()||air===null&&A>=0.95&&Math.abs(uNow())>0.6){stk={pts:[[e.clientX,e.clientY,performance.now()]],x:e.clientX,y:e.clientY,id:e.pointerId};try{p.setPointerCapture(e.pointerId);}catch(x2){}}
+      else beat();});
+    p.addEventListener("pointermove",function(e){if(!stk||e.pointerId!==stk.id)return;stk.pts.push([e.clientX,e.clientY,performance.now()]);
+      if(knob){var dx=e.clientX-stk.x,dy=e.clientY-stk.y,d=Math.hypot(dx,dy),m=Math.min(d,40)/(d||1);knob.style.transform="translate("+Math.round(dx*m)+"px,"+Math.round(dy*m)+"px)";}});
+    var stkEnd=function(e){p.classList.remove("dn");if(knob)knob.style.transform="";if(!stk)return;var pts=stk.pts;stk=null;pts.push([e.clientX,e.clientY,performance.now()]);
+      if(span(pts)<14)return;var gg=gesture(pts);if(gg)trickGo(gg.k,gg.pw);else judge("FINISH WITH A FLICK UP","#aaa");};
+    p.addEventListener("pointerup",stkEnd);p.addEventListener("pointercancel",function(){stk=null;p.classList.remove("dn");if(knob)knob.style.transform="";});
+    /* on a computer, drag the mouse anywhere to draw the flick */
+    var ms=null;document.addEventListener("pointerdown",function(e){if(!on||e.pointerType!=="mouse"||e.target.closest&&e.target.closest("button,#ppPad,#chatPanel,input"))return;ms=[[e.clientX,e.clientY,performance.now()]];});
+    document.addEventListener("pointermove",function(e){if(ms)ms.push([e.clientX,e.clientY,performance.now()]);});
+    document.addEventListener("pointerup",function(e){if(!ms)return;var pts=ms;ms=null;pts.push([e.clientX,e.clientY,performance.now()]);if(span(pts)<24)return;var gg=gesture(pts);if(gg)trickGo(gg.k,gg.pw);else judge("FINISH WITH A FLICK UP","#aaa");});
+    guides();
     Array.prototype.forEach.call(document.querySelectorAll("#ppStances button"),function(bb){bb.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();stanceGo(+bb.getAttribute("data-s"));});});
   }
+  /* the little guides: how to flick each trick, drawn as pixel paths with an arrow at the end */
+  function guides(){var box=$("ppGuide");if(!box||box._d)return;box._d=1;
+    TRK.forEach(function(t,k){if(!t)return;var d=document.createElement("div");d.className="pg";var c=document.createElement("canvas");c.width=c.height=40;var gx=c.getContext("2d"),u=4;
+      gx.fillStyle=t.col;for(var i=1;i<t.g.length;i++){var a=t.g[i-1],b=t.g[i],n=Math.max(Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1]))*2||1;for(var s=0;s<=n;s++)gx.fillRect(Math.round(a[0]+(b[0]-a[0])*s/n)*u,Math.round(a[1]+(b[1]-a[1])*s/n)*u,u,u);}
+      var e=t.g[t.g.length-1];gx.fillStyle="#fff";gx.fillRect(e[0]*u,e[1]*u,u,u);gx.fillRect((e[0]-1)*u,(e[1]+1)*u,u,u);gx.fillRect((e[0]+1)*u,(e[1]+1)*u,u,u);gx.fillRect((e[0]-2)*u,(e[1]+2)*u,u,u);gx.fillRect((e[0]+2)*u,(e[1]+2)*u,u,u);
+      gx.fillStyle="rgba(255,255,255,.9)";gx.fillRect(t.g[0][0]*u,t.g[0][1]*u,u,u);
+      d.appendChild(c);var l=document.createElement("b");l.textContent=t.name;d.appendChild(l);d.title=t.name+": "+t.how+". A harder flick goes higher";box.appendChild(d);});}
+  window.ukPipeGesture=function(pts){return gesture(pts);};
   window.ukPipe=function(){return{on:on,A:+A.toFixed(2),u:+uNow().toFixed(2),win:popWindow(),air:!!air,r:Math.round(r),score:score,combo:combo,super:+superK.toFixed(2),bailed:performance.now()<bailUntil,group:grp?{g:grp.g,G:grp.G,n:grp.members.length}:null,warp:+warp.toFixed(2)};};
   window.ukPipeBot=function(o){window.__ppBot=!!o;};
-  return{start:start,stop:stop,tick:function(){wirePad();if(window.__ppBot&&on){var bb=beatAt(songPos()),dd=Math.abs(bb-Math.round(bb));if(dd<0.05&&!pressedBeat[Math.round(bb)]&&!popWindow())beat();if(popWindow())swipeGo([0,-1,1,0][Math.floor(Math.random()*4)]*150,(Math.random()<0.5?-1:1)*150,120);if(air){keyLean=Math.max(-1,Math.min(1,(180-r)/60));}else keyLean=0;}tick();},
+  return{start:start,stop:stop,tick:function(){wirePad();if(window.__ppBot&&on){if(Math.random()<0.12&&!popWindow())beat();if(popWindow())trickGo(1+Math.floor(Math.random()*5),0.8+Math.random()*0.5);if(air){keyLean=Math.max(-1,Math.min(1,(180-r)/60));}else keyLean=0;}tick();},
     beat:beat,stance:stanceGo,key:key,bg:bg,front:front,looks:looks,facing:facing,wire:wire,fd:fd,hide:hide,pipeRound:pipeRound,get on(){return on;}};
 })();
 /* ============================================================
@@ -6120,7 +6173,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.69.1",SERVER_VERSION="";
+var PAGE_VERSION="1.70.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6603,7 +6656,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.69.1"></script>
+<script src="lab.js?v=1.70.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
