@@ -757,6 +757,76 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.66.0 - Ski: flag zones, jump zones, faster, and the pop and cut
+
+- **Layered mountain:** the made-up mountain now goes flag zone, jump zone, flag zone, jump zone, all the way down. A dashed line and FLAG ZONE / JUMP ZONE on the snow mark where each one starts, with a banner as you cross it.
+  - **Flag zones:** slalom gates down the line, a little closer together than before, with no ramps.
+  - **Jump zones:** a run of ramps along the line, swapping sides, with moguls between them. Tricks are worth ×1.5 here.
+  - Courses made in the Ski designer are unchanged.
+- **Faster:** top speed 230 (was 170), quicker acceleration, sharper turning, and less speed lost when carving. The camera pulls back a little at full speed so you can see what's coming.
+- **The pop:** a hop (Space / HOP) gives a small kick of speed and shoves you sideways the way you're steering (or already sliding), with a puff of snow.
+- **The cut:** while you're up from a hop, your skis swing round about 3.5 times faster. Land on a new line (half a radian or more of turn) and you get CUT, a little speed and no carving slowdown for a moment. Arrow keys mid-hop now steer instead of doing tricks; tricks are for ramps and moguls (the trick buttons still work anywhere in the air).
+- New Tuning lab sliders: Hop pop speed and Hop pop sideways shove.
+- **Fix:** the server's ski bots had gone missing in v1.62.0. In a live Ski round with bots that would have broken the bots (and possibly the server). They're back.
+
+Needs a Render redeploy (bots.js changed).
+
+**Test it:** practice → Ski. Cross a flag zone, then a jump zone. Hop and swing hard left or right while you're up, and check you land on the new line with CUT.
+
+## v1.65.0 - 8 directions for every character
+
+Characters now face 8 ways instead of 4: front, back, left, right, and the four diagonals.
+- **Front diagonals** (walking down-left or down-right): the head turns toward the way you're walking, the face sits to that side with an ear showing on the other, and the far arm and leg tuck in, a shade darker.
+- **Back diagonals** (walking up-left or up-right): the back view with the head turned, a sliver of cheek and ear showing on the side they're looking toward, and the far side in shadow.
+- They're built from each character's own parts, so every hair, hat, top and face option works in all 8 directions, including anything made in the character creator.
+- Walking picks the nearest of the 8 directions, with a little stickiness so a heading between two doesn't flicker. They keep facing that way when they stop. Your stage view uses the same 8 directions.
+- Dancing still faces the stage. The Half pipe, Ski, walk race and Mars Rally keep their own facing rules for now.
+
+No server changes.
+
+**Test it:** walk around the floor diagonally (two arrow keys, or the stick at an angle) and check the character turns to face each diagonal.
+
+## v1.64.1 - Half pipe: the beat pulses out of a disco ball
+
+- The beat bar is replaced by a pixel disco ball at the bottom of the screen (above the pad and stick on phones).
+- On every beat a ring of light and sparks bursts out of the ball and its mirrors flash. Every 4th beat the burst is bigger and yellow.
+- A white ring closes in on the ball and touches it right on the next beat, so you can see the timing coming.
+- Hit the beat and the burst turns green with NICE!. When it's time to swipe, the ball glows gold with SWIPE!.
+- The whole pipe pulses harder with the beat: more of the glowing tiles light up, they flash brighter, and the floor gets a coloured wash on each beat.
+
+No server changes.
+
+**Test it:** practice → Half pipe. Tap BEAT as the white ring touches the ball; the burst should go green.
+
+## v1.64.0 - Two games per song, crowd vote, full show, pixel boost pads
+
+**Pick up to 2 games per song** (Start song menu, step 2). Tap a game to add it; tap again to take it off. Numbered badges show the order.
+- The song starts right away with everyone in free dance. The first game starts after an intro (15 to 30 s, longer on long songs).
+- Each game runs for 2:30 at most. With two games there's a break of at least 20 s between them, which is when the first game's results show. Whatever's left of the song is free dance at the end.
+- If the song is too short for two games of at least 40 s, only the first one is played.
+- Free dance and Battle still take the whole song, the same as before.
+- The bar at the bottom shows what's on ("Free dance · Half pipe next"), and the round panel counts down to the next game.
+
+**Crowd vote:** pick 🗳 Crowd vote instead of a game (tap it twice to have the crowd pick both games). About 15 s before that game's countdown, everyone gets a panel with 3 games to choose from, with live vote counts. The game with the most votes is played; a tie is decided at random, and so is a vote nobody joins. Bots vote too.
+
+**Full show:** tick 🎪 Full show and a game that's been played won't be offered in the crowd vote again. Once every game has been played, they all come back. ↺ New show starts the list over. The menu shows how many have been played so far.
+
+**Mars Rally boost pads** are now pixel art on the track's pixel grid, with the chevrons sweeping across them in steps.
+
+Needs a Render redeploy (server.js changed: the crowd vote).
+
+**Test it:** go live with bots, open Start song, pick Crowd vote + Half pipe, and play a song of 3 minutes or more. You should get free dance, then the vote, then the winning game, a break with the results, then Half pipe, then free dance to the end.
+
+## v1.63.1 - Half pipe: beat bar and a bigger, shallower pipe
+
+- **Beat bar** along the bottom of the screen (above the pad and stick on phones): blocks slide in from both sides and meet in the box on every beat, so you can see when to tap BEAT. Every 4th beat is a bigger yellow block. The box flashes green when you hit the beat and turns gold with SWIPE! when it's time to swipe.
+- **Bigger pipe:** it's wider (nearly the full screen), deeper front to back (9 rows of tiles instead of 6), and the walls are lower.
+- Bots ride all the way up the wider walls.
+
+Needs a Render redeploy (bots.js changed).
+
+**Test it:** practice → Half pipe. Tap BEAT as the blocks meet in the box; the box should flash green on each hit.
+
 ## v1.63.0 - Pixel art sweep
 
 Everything round, glowing or blended in the games is now drawn the pixel-art way:
