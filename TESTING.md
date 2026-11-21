@@ -757,6 +757,12 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.60.2 - Old Dance menu removed
+
+The Dance button no longer opens the old list of games (Free dance / Step dance / Target dance / Note highway…).
+- In Dance practice it opens the practice panel (the newer menu with every minigame).
+- At a show with no round on, it starts free dancing straight away. When a round is on it still joins the round, and pressing it again stops.
+
 ## v1.60.1 - Your follow view of the Ski round
 
 During a Ski round, jam mode switches to a follow view of the mountain (and back when the round ends):
