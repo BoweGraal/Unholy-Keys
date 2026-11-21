@@ -757,6 +757,22 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.3 - Graphics lab: cleaned up, with a Pixel edit button next to each selection (beta)
+
+Open gfx.html (the Graphics lab).
+
+- **Pixel edit buttons:** a teal **Pixel edit** button sits next to each selection that has pixel art.
+  - Animations, Instrument: opens that instrument in the full screen pixel editor.
+  - Animations, Prop / object: Keyboard and Mic stand have one (the rest have no pixel art yet, so no button).
+  - Animations, Character pose or any Dance: a "Pixel edit this character (beta)" box lists hair, hat, face, extras, top and bottoms, each with its own Pixel edit button.
+  - Pixel Editor tab: **Full screen** next to Part and Which.
+  - Press **✕** in the full screen editor to come back to where you were.
+- **Clean up:** the lab now looks like the game (pixel type, square bevelled buttons, flat panels, no emoji). Each selection has its small label above it. The share box text is tucked away behind **Text**; Copy changes still works.
+
+How to check: Animations, pick Instrument, press Pixel edit, draw a pixel, press ✕, and the instrument shows your edit. Then Character pose, press Pixel edit next to Hair.
+
+Page-only change: no Render redeploy needed.
+
 ## v1.79.2 - Main menu: the last non-pixel bits
 
 - The button icons (play, dance, palette, piano, check, back) are now little pixel icons drawn in the game's own style, replacing the emoji.
