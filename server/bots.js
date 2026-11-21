@@ -254,6 +254,34 @@ module.exports = function(api) {
     }
     if (now > p.scoreAt) { p.scoreAt = now + 2000; b.act({ type: "score", s: p.score }); }
   }
+  /* ski: start in a lane at the top, then (from beat 8) follow the slalom line down at this bot's pace, sometimes crashing.
+     The course's line, lanes and position encoding match venue.html's SKI exactly. */
+  function skiHalfW(y) { return 110 + Math.min(1, Math.max(0, y) / 650) * 560; }
+  function skiLine(y, sd) { return Math.sin(y / 620 + sd) * skiHalfW(y) * 0.42 + Math.sin(y / 233 + sd * 2) * 40 * Math.min(1, y / 650); }
+  /* with a designer course: the line through its gates (matches ART.SKI.lineAt) */
+  function skiLineAt(course, y, sd) {
+    if (!course) return skiLine(y, sd); var gs = course.objs.filter(function(q) { return q[0] === "gate"; }); if (!gs.length) return 0;
+    var L = course.len, m = ((y % L) + L) % L, prev = gs[gs.length - 1], pY = prev[2] - L, next = gs[0], nY = next[2];
+    for (var i = 0; i < gs.length; i++) { if (gs[i][2] > m) { next = gs[i]; nY = gs[i][2]; prev = i ? gs[i - 1] : gs[gs.length - 1]; pY = i ? gs[i - 1][2] : gs[gs.length - 1][2] - L; break; } if (i === gs.length - 1) { prev = gs[i]; pY = gs[i][2]; next = gs[0]; nY = gs[0][2] + L; } }
+    var t = (m - pY) / Math.max(1, nY - pY); t = t * t * (3 - 2 * t); return prev[1] + (next[1] - prev[1]) * t;
+  }
+  function ski(b, now, rd) {
+    var r = rooms[b.room]; if (!r) return;
+    if (!b.sk2 || b.sk2.n !== rd.n) {
+      var ids = Array.from(r.viewers.keys()).sort(), i = Math.max(0, ids.indexOf(b.viewerId)), nl = Math.max(2, Math.min(8, ids.length));
+      b.sk2 = { n: rd.n, seed: 1 + (rd.n * 37) % 997, x: -85 + 170 * ((i % nl) + 0.5) / nl, y: -24, sp: 140 + 90 * b.skill, off: (Math.random() * 2 - 1) * 30, t: now, crash: 0, gates: 0, lastGate: 0, posAt: 0, scoreAt: 0, a: 0 };
+    }
+    var k = b.sk2, dt = Math.min(0.5, (now - k.t) / 1000); k.t = now;
+    var going = wkBeat(rd, now - rd.playAt) >= 8;
+    if (going && now > k.crash) {
+      var ny = k.y + k.sp * dt, nx = skiLineAt(rd.ski, ny, k.seed) + k.off * Math.sin(now / 1500 + k.sp);
+      k.a = Math.atan2(nx - k.x, ny - k.y); k.x += (nx - k.x) * Math.min(1, dt * 2.5); k.y = ny;
+      if (Math.random() < dt * 0.04 * (1.3 - b.skill)) k.crash = now + 1400;
+      var gi = Math.floor(k.y / 170); if (gi > k.lastGate && k.y >= 200) { k.lastGate = gi; if (Math.random() < 0.55 + 0.4 * b.skill) k.gates++; }
+    }
+    if (now - k.posAt > 150) { k.posAt = now; b.x = +((k.x + 800) / 1600).toFixed(4); b.y = +((((k.y % 1000) + 1000) % 1000) / 1000).toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
+    if (going && now > k.scoreAt) { k.scoreAt = now + 2000; b.act({ type: "score", s: k.gates * 100 + Math.floor(Math.max(0, k.y) / 40) }); }
+  }
   /* a groove: arms and legs swinging on the beat, in this bot's own style (sent about five times a second) */
   function pose(b, now, bpm) {
     if (now - (b.poseAt || 0) < 190) return; b.poseAt = now;
