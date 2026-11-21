@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.13"></script>
-<script src="gfx.js?v=1.79.13"></script>
-<script src="art.js?v=1.79.13"></script>
-<script src="instruments.js?v=1.79.13"></script>
-<script src="kart.js?v=1.79.13"></script>
-<script src="explain.js?v=1.79.13"></script>
+<script src="tune.js?v=1.79.14"></script>
+<script src="gfx.js?v=1.79.14"></script>
+<script src="art.js?v=1.79.14"></script>
+<script src="instruments.js?v=1.79.14"></script>
+<script src="kart.js?v=1.79.14"></script>
+<script src="explain.js?v=1.79.14"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4068,7 +4068,7 @@ var SKI=(function(){
   var KEYTR={ArrowLeft:1,KeyA:1,ArrowUp:2,KeyW:2,ArrowRight:3,KeyD:3};
   var TOUCHY=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
   var hopAir=false,a0=0,cutGrace=0,zoneK="",hopPush=0,puffs=[],ghostUntil=0;
-  var on=false,seed=1,x=0,y=-24,a=0,ta=0,v=0,air=0,airMax=0,crashUntil=0,trick=null,score=0,combo=0,dist=0,lastT=0,pointer=null,keyTurn=0,chunks={},passed={},trail=[],pops=[],lastCount=-1,goShown=false,lane=0,camX=0,others={},bots={},tilted=false,fadeK=0,roundN=0;
+  var on=false,seed=1,x=0,y=-24,a=0,ta=0,v=0,air=0,airMax=0,crashUntil=0,trick=null,score=0,combo=0,dist=0,lastT=0,pointer=null,keyTurn=0,chunks={},passed={},trail=[],pops=[],lastCount=-1,goShown=false,lane=0,camX=0,others={},bots={},tilted=false,fadeK=0,roundN=0,hMul=1;
   var cv=null,g=null;
   function $(id){return document.getElementById(id);}
   function T(k){return TUNE.v("ski."+k);}
@@ -4106,7 +4106,14 @@ var SKI=(function(){
     x=p[0];y=p[1];var ang=Math.atan2(q[0]-p[0],Math.max(0.01,q[1]-p[1]));a=Math.max(-1.5,Math.min(1.5,ang));
     if(s.t>=1){var ex=SK.arc(s.o,1),ep=SK.arc(s.o,0.96);a=ta=Math.max(-1.3,Math.min(1.3,Math.atan2(ex[0]-ep[0],Math.max(0.01,ex[1]-ep[1]))));
       v=Math.min(T("maxSpeed")*1.25,s.v0+45);cutGrace=now+600;combo++;addPts(150,"SWOOP","#3DF2FF");sweep=null;}}
-  function jump(){if(!on||air>0||performance.now()<crashUntil||v<20)return;air=airMax=T("hop");hopAir=true;a0=a;
+  /* ramps: HOP while you're on one and you take off from there: the nearer the lip, the bigger the jump. Rolling off the end with no hop gives the plain jump */
+  var RAMP_DY=18,RAMP_DX=40;
+  function rampLaunch(p,late){air=airMax=T("rampAir")*Math.min(1.3,v/T("maxSpeed")+0.3)*(1+0.5*p*p);hMul=1.35*(1+0.5*p*p);hopAir=false;
+    if(!late&&p>0.75){banner("PERFECT JUMP!","#F5C518");addPts(100,"PERFECT","#F5C518");}else if(!late&&p>0.45)banner("BIG AIR!","#3DF2FF");else banner("AIR!","#3DF2FF");}
+  function rampUnder(){var hit=-1;objsNear(y-RAMP_DY-4,y+RAMP_DY+4).forEach(function(o){if(o.k!=="ramp"||hit>=0)return;var dy2=y-o.y;if(Math.abs(x-o.x)<RAMP_DX&&dy2>-RAMP_DY&&dy2<RAMP_DY)hit=Math.max(0,Math.min(1,(dy2+RAMP_DY)/(2*RAMP_DY)));});return hit;}
+  function jump(){if(!on||air>0||performance.now()<crashUntil||v<20)return;
+    if(!sweep&&v>40){var rp=rampUnder();if(rp>=0){rampLaunch(rp,false);puffs.push({x:x,y:y,t:performance.now()});return;}}
+    hMul=1;air=airMax=T("hop");hopAir=true;a0=a;
     /* the pop: a little kick of speed, and a shove sideways the way you're steering (or already sliding) */
     var sd=Math.abs(ta-a)>0.08?Math.sign(ta-a):Math.abs(a)>0.08?Math.sign(a):0;hopPush=sd*T("hopPush");   /* a hop never adds speed: only a divot swoop does */
     puffs.push({x:x,y:y,t:performance.now()});}
@@ -4164,8 +4171,8 @@ var SKI=(function(){
             if(ok){combo++;addPts(T("gatePts"),"FLAG",o.col==="#E8505B"?"#FF7A85":"#7FB0FF");}else{combo=0;hud();banner("WRONG SIDE","#aaa");}}
           else if(air<=0&&now>ghostUntil&&Math.abs(dx2)<3&&Math.abs(dy2)<4){crash("FLAG!");x=o.x-o.pass*12;ghostUntil=crashUntil+1200;}return;}
         if(o.k==="zone"){if(py<o.y&&y>=o.y)banner(o.z==="jump"?"🚀 JUMP ZONE":"🚩 FLAG ZONE",o.z==="jump"?"#3DF2FF":"#FF7A85");return;}
-        if(o.k==="ramp"){if(air<=0&&!sweep&&Math.abs(dx2)<22&&Math.abs(dy2)<8&&v>40){air=airMax=T("rampAir")*Math.min(1.3,v/T("maxSpeed")+0.3);hopAir=false;banner("AIR!","#3DF2FF");}return;}
-        if(o.k==="mogul"){if(air<=0&&Math.hypot(dx2,dy2*1.6)<12&&v>60){air=airMax=0.28;hopAir=false;}return;}
+        if(o.k==="ramp"){if(air<=0&&!sweep&&Math.abs(dx2)<RAMP_DX&&dy2>=RAMP_DY&&dy2<RAMP_DY+14&&v>40)rampLaunch(0,true);return;}   /* rolled off the lip without a hop: the plain jump */
+        if(o.k==="mogul"){if(air<=0&&Math.hypot(dx2,dy2*1.6)<12&&v>60){air=airMax=0.28;hMul=1;hopAir=false;}return;}
         if(air>0&&o.k==="rock")return;                       /* jump over rocks */
         var rr=o.k==="tree"?7*o.s:9*o.s;if(now>ghostUntil&&!sweep&&Math.hypot(dx2,dy2*1.4)<rr+5){crash(o.k==="tree"?"TREE!":"ROCK!");
           /* thrown clear of it, so you don't get up straight back into the same tree: out to the side, a moment where you can't hit anything */
@@ -4178,7 +4185,7 @@ var SKI=(function(){
     var e=enc();me.tx=me.x=e[0];me.ty=me.y=e[1];sendPos(e[0],e[1]);me.sk=wire();
     GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:trick&&trick.k===3?[2.9,-0.4,0.9,-0.9]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
     if(PRACTICE.on)botTick(dt,now,going);
-    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: hit the ramps and trick in the air (tricks worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · pass each flag on its arrow side · Space to pop and cut · land in a divot to swoop");
+    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · pass each flag on its arrow side · Space to pop and cut · land in a divot to swoop");
   }
   /* practice: the practice skiers follow the slalom line at their own pace, now and then crashing */
   function botTick(dt,now,going){
@@ -4228,7 +4235,7 @@ var SKI=(function(){
     list.sort(function(p,q){return p.y-q.y;});
     list.forEach(function(it){
       if(it.o){SK.obj(g,it.o,z,V.sx,V.sy,!!passed[it.o.id]);return;}
-      if(it.me){var mm=viewers[myId];if(mm){var tp=trick?Math.min(1,(now-trick.t0)/1000/TRK[trick.k].dur):0;skier(V.sx(x),V.sy(y),mm,true,a,air>0?Math.sin(Math.PI*(1-air/Math.max(0.01,airMax))):0,now<crashUntil,trick?trick.k:0,tp,z,"You");}return;}
+      if(it.me){var mm=viewers[myId];if(mm){var tp=trick?Math.min(1,(now-trick.t0)/1000/TRK[trick.k].dur):0;skier(V.sx(x),V.sy(y),mm,true,a,air>0?Math.sin(Math.PI*(1-air/Math.max(0.01,airMax)))*(hopAir?1:hMul):0,now<crashUntil,trick?trick.k:0,tp,z,"You");}return;}
       var s=it.sk,st=s.v.sk||{},t=st.t|0,ang=t<=6?(t-3)*Math.PI/6:0;
       skier(V.sx(s.x),V.sy(it.y),s.v,false,ang,t===7||t===8?0.7:0,t===9||!!st.f,t===8?1:0,(now%450)/450,z,s.v.name);
     });
@@ -4251,6 +4258,8 @@ var SKI=(function(){
     c.addEventListener("contextmenu",function(e){e.preventDefault();});}
   window.ukSki=function(){return{others:Object.keys(others).map(function(id){return[viewers[id]?viewers[id].name:id,Math.round(others[id].x),Math.round(others[id].y)];}),on:on,x:Math.round(x),y:Math.round(y),a:+a.toFixed(2),v:Math.round(v),air:+air.toFixed(2),crashed:performance.now()<crashUntil,score:score,combo:combo,trick:trick?TRK[trick.k].name:null};};
   window.ukSkiAuto=function(o){window.__skAuto=!!o;};
+  window.ukSkiToRamp=function(back){var r=null;objsNear(y,y+3000).forEach(function(o){if(o.k==="ramp"&&!r&&o.y>y+40)r=o;});if(!r)return null;x=camX=r.x;y=r.y-(back===undefined?80:back);v=200;a=ta=0;sweep=null;return{x:Math.round(r.x),y:Math.round(r.y)};};   /* testing: put the skier above the next ramp */
+  window.ukSkiJump=function(){jump();};
   return{start:start,stop:stop,tick:function(){wire2();if(window.__skAuto&&on){var V2=view(),ly=y+60,lx=lineX(ly,seed);pointer=[V2.sx(lx),V2.sy(ly)];if(air>0.3&&!trick)doTrick(1+Math.floor(Math.random()*3));}tick();},draw:draw,key:key,jump:jump,trick:doTrick,wire:wire,skiRound:skiRound,get on(){return on;}};
 })();
 
@@ -6367,7 +6376,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.13",SERVER_VERSION="";
+var PAGE_VERSION="1.79.14",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6855,7 +6864,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.13"></script>
+<script src="lab.js?v=1.79.14"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

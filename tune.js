@@ -52,7 +52,7 @@ var TUNE=(function(){
     V("ski.hop","Hop air time",0.28,0.2,1,0.05,"How long a hop (Space) keeps you in the air. While you're up you can swing round fast to cut onto a new line.","s"),
     V("ski.hopBoost","Hop pop: speed (unused)",0,0,60,1,"The little kick of speed a hop gives you.","u/s"),
     V("ski.hopPush","Hop pop: sideways shove",55,0,200,5,"How hard a hop shoves you sideways, the way you're steering or sliding.","u/s"),
-    V("ski.rampAir","Ramp air time",1.0,0.4,2,0.05,"How long a ramp keeps you in the air at top speed.","s"),
+    V("ski.rampAir","Ramp air time",1.3,0.4,2,0.05,"How long a ramp keeps you in the air at top speed.","s"),
     V("ski.crash","Crash time",1.4,0.4,4,0.1,"How long a crash keeps you down.","s"),
     V("ski.gatePts","Points per gate",100,10,500,10,"Points for going between a pair of flags (before the combo multiplier).","")]},
   {id:"pipe",name:"Half pipe",icon:"🛹",mode:"pipe",

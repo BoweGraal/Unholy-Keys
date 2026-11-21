@@ -1508,3 +1508,12 @@ Needs a Render redeploy (server.js changed).
 - Server change: the ski bots follow the same straight line. **Redeploy Render.**
 
 **Test it:** practice → Ski. Land in a red swoop: you should be fired out toward the next (blue) flag's swoop, then back across to the next red, at a slant, not sideways. Check the skier size on a phone.
+
+## v1.79.14 - Ski: bigger, longer jumps, and a hop at the end of the ramp jumps higher
+- Ramps are drawn bigger and spaced further apart (420 instead of 230), and the jump zone is longer to fit them.
+- Jumps are longer and higher: the plain ramp jump is about 1.5 s of air (it was about 1.1 s).
+- **Hop while you're on a ramp** to take off from it. The nearer the lip, the bigger the jump: up to about 1.5x the air time and 1.9x the height. Late on the ramp you get **PERFECT JUMP!** and 100 points; the middle is **BIG AIR!**. Roll off the end without a hop and you get the plain jump.
+- Tuning lab: Ski, Ramp air time is now 1.3 s (it was 1.0).
+- Server change: the ski bots use the new zone length. **Redeploy Render.**
+
+**Test it:** practice → Ski, in a jump zone. Roll up a ramp and tap HOP at the start, middle and very end: the jump should get bigger each time. Skip the hop and you still get a decent jump.
