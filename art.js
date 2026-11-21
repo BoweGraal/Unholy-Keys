@@ -2190,6 +2190,28 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.73.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  /* ---------- pixel art on-screen controls: the joystick base and knob are drawn small, pixel by pixel, and shown scaled up
+     with crisp pixels (image-rendering: pixelated), so they match the game art. Each returns a data URL (browser only). ---------- */
+  var UI=(function(){
+    var cache={};
+    function grid(n,fn){if(typeof document==="undefined")return "";var c=document.createElement("canvas");c.width=c.height=n;var g=c.getContext("2d");
+      for(var y=0;y<n;y++)for(var x=0;x<n;x++){var col=fn(x,y);if(col){g.fillStyle=col;g.fillRect(x,y,1,1);}}return c.toDataURL();}
+    /* a round stick base: dark outline, a coloured rim, a dark well, a faint inner ring and four arrow notches */
+    function stick(rim){rim=rim||"#7F77DD";var k="s"+rim;if(cache[k])return cache[k];var n=31,c=(n-1)/2,R=c+0.5;
+      return cache[k]=grid(n,function(x,y){var dx=x-c,dy=y-c,d=Math.sqrt(dx*dx+dy*dy);if(d>R)return null;if(d>R-1.2)return "#0b0818";
+        if(d>R-3.2)return (dx+dy<-4)?shade(rim,30):(dx+dy>4)?shade(rim,-35):rim;
+        var ax=Math.abs(dx),ay=Math.abs(dy);
+        /* arrow notches pointing out */
+        if((ay<=c-4-ax&&ax>=c-6&&ax<=c-4)||(ax<=c-4-ay&&ay>=c-6&&ay<=c-4))return "rgba(255,255,255,.55)";
+        if(Math.abs(d-6.5)<0.6)return "rgba(255,255,255,.10)";
+        return d<7?"rgba(34,28,58,.92)":"rgba(18,14,34,.88)";});}
+    /* a round knob: outline, flat colour, a light pixel band top left and a dark one bottom right */
+    function knob(col){col=col||"#E85AA8";var k="k"+col;if(cache[k])return cache[k];var n=13,c=(n-1)/2,R=c+0.5;
+      return cache[k]=grid(n,function(x,y){var dx=x-c,dy=y-c,d=Math.sqrt(dx*dx+dy*dy);if(d>R)return null;if(d>R-1.1)return "#1a0b18";
+        if(dx+dy<-5&&d>R-2.6)return shade(col,55);if(dx+dy>4&&d>R-2.6)return shade(col,-45);if(dx<-1&&dy<-1&&d<2.2)return "#ffffff";return col;});}
+    function shade(h,amt){var v=parseInt(h.slice(1),16),r=(v>>16)+amt,g=((v>>8)&255)+amt,b=(v&255)+amt;function cl(q){return Math.max(0,Math.min(255,q));}return "rgb("+cl(r)+","+cl(g)+","+cl(b)+")";}
+    return{stick:stick,knob:knob};
+  })();
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.74.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

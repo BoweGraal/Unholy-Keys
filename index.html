@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.73.0"></script>
-<script src="art.js?v=1.73.0"></script>
-<script src="instruments.js?v=1.73.0"></script>
-<script src="kart.js?v=1.73.0"></script>
+<script src="gfx.js?v=1.74.0"></script>
+<script src="art.js?v=1.74.0"></script>
+<script src="instruments.js?v=1.74.0"></script>
+<script src="kart.js?v=1.74.0"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -182,6 +182,8 @@ a.nav-item{text-decoration:none}
 #jFront{display:none;position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;image-rendering:pixelated}
 #jm.stage #jFront{display:block}
 #jm.stage #jcv{opacity:0}
+/* stage view during a game: your own arrow and key indicators would sit over the dancers in the middle of the floor (the stage has its own controller that lights up) */
+#jm.stage.rnd #jh,#jm.stage.rnd #jModRow{display:none}
 #jm.stage #jmV{z-index:3;transition:none}
 #jm.stage #jmV iframe,#jm.stage #jmV video{opacity:1!important}
 #jm.stage #jmVL{display:none}
@@ -4329,7 +4331,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.73.0",SERVER_VERSION="";
+var PAGE_VERSION="1.74.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5100,7 +5102,8 @@ var JAMSTAGE=(function(){
   function set(v){on=!!v;try{localStorage.setItem("uk_jamview",on?"stage":"classic");}catch(e){}paint();apply();if(typeof showJamToast==="function"&&jamOn)showJamToast(on?"🏟 Stage view":"Classic view","#7F77DD");}
   /* the half pipe and the dance walk race happen on the floor: show the stage view while one's on, whatever view you picked */
   function floorGame(){var c=typeof ROUNDS!=="undefined"&&ROUNDS.current;return !!(c&&(c.mode==="pipe"||c.mode==="walk")&&(c.phase==="countdown"||c.phase==="play"));}
-  function apply(){var jm=$("jm");if(!jm)return;var act=(on||floorGame())&&jamOn;jm.classList.toggle("stage",act);if(act&&!raf)raf=requestAnimationFrame(frame);if(!act)restore();}
+  function inRound(){var c=typeof ROUNDS!=="undefined"&&ROUNDS.current;return !!(c&&(c.phase==="countdown"||c.phase==="play"));}
+  function apply(){var jm=$("jm");if(!jm)return;var act=(on||floorGame())&&jamOn;jm.classList.toggle("stage",act);jm.classList.toggle("rnd",act&&inRound());if(act&&!raf)raf=requestAnimationFrame(frame);if(!act)restore();}
   function restore(){var v=$("jmV");if(v&&last){v.style.left=v.style.width=v.style.right="";v.style.top="";v.style.bottom="";v.style.height="";v.style.transform="";last="";}}
   /* is a video showing in jam (YouTube, the video library, or a music video)? */
   function videoOn(){
@@ -5111,6 +5114,7 @@ var JAMSTAGE=(function(){
   }
   function frame(){
     raf=0;if(!((on||floorGame())&&jamOn))return;
+    var jm0=$("jm");if(jm0)jm0.classList.toggle("rnd",inRound());
     if(!cv)cv=$("jStage");
     var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
     if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
