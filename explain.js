@@ -48,7 +48,7 @@ var EXPLAIN=(function(){
       how:[["Drag to keep your circle inside the moving circle","Move the mouse to keep your circle inside the moving circle"],"When it says GO, keep it there to walk forward","Stay on it through the dance style changes"],
       rules:["Staying in the circle moves you forward","Falling out stops you","First to the finish wins"]},
     pipe:{n:"Half pipe",i:"🛹",goal:"Swing from wall to wall, boost on the beat, and land dance tricks.",
-      how:[["Left stick: up and down lines you up with the lit pad, left and right lean and spin. Right stick: draw a trick ending with a flick up","W/S lines you up with the lit pad, A/D lean and spin. Drag the mouse (or press arrow keys) to draw a trick ending with an up flick"],"Roll over the lit pad in the middle for a BOOST","A harder flick goes higher"],
+      how:[["Left stick steers. Press the right stick at the line on the ramp to crouch, then flick it at the lip: the flick is your trick, a faster flick goes higher","WASD steers. Hold the mouse button at the line to crouch, then drag and flick up at the lip: the flick is your trick, a faster flick goes higher"],"Roll over the lit pad in the middle for a BOOST","A harder flick goes higher"],
       rules:["Tricks score: bigger tricks and combos score more","Land straight, or you bail","Highest score wins the round"]},
     ski:{n:"Ski",i:"⛷️",goal:"Race down the mountain through flag zones and jump zones.",
       how:[["Point the stick the way you want to go. Tap HOP","Steer with the arrows or WASD. Space hops"],"Flag zones: carve through the gates","Jump zones: hit the ramps and do tricks"],
