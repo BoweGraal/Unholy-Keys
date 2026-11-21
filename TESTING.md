@@ -757,6 +757,23 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.62.0 - Half pipe v2
+
+The half pipe is rebuilt from scratch around your request.
+- **Groups:** players are split into groups of 4 to 5 on the same pipe. You only see your own group, so the pipe never gets crowded.
+- **Own pace:** everyone rolls at their own, slower speed. Hit **BEAT** (or Space) on the beat to build momentum; missing beats lets it drain. Momentum keeps building through the song.
+- **Lean:** the left stick (A/D or ← →) sets how you hit the lip, and spins you in the air.
+- **Swipe:** when the BEAT pad turns into **SWIPE!** near the top of the wall, swipe on it (or drag the mouse anywhere, or press ↑/↓). The direction picks the trick: ↑ Headspin, ← Thriller, → Robot, ↓ Shuffle. A harder, faster swipe goes higher.
+- **Landing:** line the board up with the wall (upright, or a full half/whole spin). Close = clean, a bit off = sketchy for half points, way off = bail.
+- **Stances:** 1 to 4 (Point, Vogue, Kick, Freeze) change your pose mid-air for bonus points.
+- **Super move:** clean landings fill the SUPER bar. When it's full your next trick goes higher and scores triple.
+- The pipe is now built from the dance floor's own tiles, bent up the walls, with the glowing tiles pulsing on the beat.
+- Bots skate the new way too, and your stage view shows everyone at their real height and spin.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** practice → Half pipe. Tap BEAT on the beat until the bar fills, swipe at the top, and try to land straight. Then go live with bots and start a Half pipe round.
+
 ## v1.61.0 - Ski designer
 
 A map designer for the Ski mountain: **Setup → Creator tools → Ski designer** (ski.html).

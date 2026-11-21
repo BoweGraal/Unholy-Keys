@@ -238,7 +238,7 @@ module.exports = function(api) {
     if (p.air) {
       p.r += p.air.spin * dt;
       if ((now - p.air.t0) / 1000 >= p.air.dur) {
-        if (Math.random() < 0.5 + 0.45 * b.skill) { p.score += Math.round([0, 250, 200, 200, 150][p.air.k] * (1 + 0.6 * p.air.h)); } else { p.bail = now + 1200; p.A *= 0.5; }
+        if (Math.random() < 0.5 + 0.45 * b.skill) { p.combo = (p.combo || 0) + 1; p.score += Math.round(([0, 250, 200, 200, 150][p.air.k] + 120 * Math.floor(Math.random() * 2) + 100 * Math.round(Math.abs(p.air.spin * p.air.dur) / 180)) * (1 + 0.6 * p.air.h) * (1 + 0.25 * Math.min(8, p.combo))); } else { p.bail = now + 1200; p.A *= 0.5; p.combo = 0; }
         p.phi = Math.PI - p.air.phi0; p.air = null; p.r = 0;
       }
     } else if (now > p.bail) {
