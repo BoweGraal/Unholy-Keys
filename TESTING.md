@@ -757,6 +757,15 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.68.1 - Dance editor: previous frame as an outline
+
+- In the full-screen dance editor (Graphics lab), the previous frame's pose now shows as a see-through white outline behind the character, so you can pose each frame against the one before (onion skinning).
+- The new ◐ button in the top bar turns it on and off. It's on by default. 👻 still shows the original, unedited dance.
+
+No server changes.
+
+**Test it:** Graphics lab → a dance → full-screen editor. Step through the frames and check the white outline is the frame before.
+
 ## v1.68.0 - Ski: slalom flags with divots, swoops, ski-on intro, no more getting stuck on trees
 
 - **Slalom flags:** flag zones now use single flags like the real thing (and SkiFree): red flags with a ← arrow, blue with →. Pass each flag on the side its arrow points. Right side = FLAG points and the streak goes up; wrong side = WRONG SIDE and the streak resets. Clip the pole and you go down.
