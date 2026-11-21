@@ -757,6 +757,14 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.6 - New instrument picker with favourites
+
+1. Setup tab, Instrument section: a card shows your current instrument with **Browse instruments** and **Favourites** buttons (the old list is under "Show the classic list"). The performer's instrument button and the phone's favourites screen ("Browse all instruments") open the same picker.
+2. Pick a family tile (Keys, Synths, Guitar & Bass, Strings, Brass, Woodwinds, Mallets & Bells, Drums & Perc, Voices, or Everything). Filters sit at the top: collection chips, type chips, and a search box that looks through every instrument. **Back** steps up one level.
+3. Tap an instrument: it plays a short phrase. On its page tap **Studio**, **Guitar Sweep**, **Dreamy Hall** or **Warm Tube** to hear it with that sound (the other presets are the small chips below). Prev / Next flips through the list.
+4. Tap a numbered slot to save instrument + sound as a favourite. Slots are the same 1-9 hotkeys as before, and loading one now also restores its sound.
+5. **Favourites** tile: tap a slot to play it, or Remove it.
+
 ## v1.79.5 - Auto level for playing along with songs
 
 1. Open the Volume panel. There is a new **Auto level** button with three positions: **Blend** (sits inside the track), **Lead singer**, **Solo** (cuts through).
