@@ -221,7 +221,7 @@ try {
   vmx.createContext(actx); vmx.runInContext(fs.readFileSync(path.join(__dirname, "..", "art.js"), "utf8"), actx);
   CTF = (actx.window.ART || actx.ART).CTF;
 } catch (e) { console.log("capture the flag rules not loaded:", e.message); }
-function ctfPublic(c) { return c ? { map: c.map, teams: c.st.teams, flags: c.st.flags, caps: c.st.caps } : null; }
+function ctfPublic(c) { if (!c) return null; var nw = Date.now(); return { map: c.map, teams: c.st.teams, flags: c.st.flags, caps: c.st.caps, rf: c.I.refills.map(function(q, i) { return CTF.refillLeft(c.st, i, nw); }) }; }   /* rf: ms until each sprint refill is back (clocks differ, so not the time it was taken) */
 function battlePublic(rd) {
   var b = rd.battle; if (!b) return null;
   return { entrants: b.entrants, slots: b.slots.map(function(s) { return { r: s.r, label: s.label, a: s.a, b: s.b, w: s.w, start: s.start, end: s.end, sa: s.sa || 0, sb: s.sb || 0 }; }) };
@@ -481,7 +481,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.75.0";
+var VERSION = "1.76.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
