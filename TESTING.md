@@ -757,6 +757,18 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.60.1 - Your follow view of the Ski round
+
+During a Ski round, jam mode switches to a follow view of the mountain (and back when the round ends):
+- The camera rides with whoever's furthest down, on the same course everyone's skiing.
+- Every skier is shown where they are, with gold, silver and bronze rings and 1/2/3 badges on the top three.
+- Anyone too far back to be on screen gets a tag at the top: "↑ Name · 93 m back".
+- A standings list on the right shows everyone's distance down the mountain.
+- You're playing on a snowy ledge in the top left.
+- The mountain (course, trees, gates, ramps) now lives in art.js, shared by the players' screens and yours, so they always match.
+
+**Test it:** go live with a few bots and play a Ski round; watch the camera follow the leader and the standings reorder.
+
 ## v1.60.0 - New minigame: Ski
 
 The dance floor tilts and whites out into a slope, and the camera follows you down an endless SkiFree-style mountain. It starts as narrow as the dance floor (everyone lined up on a strip of it at the top) and opens out wide below.

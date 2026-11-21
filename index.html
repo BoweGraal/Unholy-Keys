@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys">
 <title>Unholy Keys</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.60.0"></script>
-<script src="art.js?v=1.60.0"></script>
-<script src="instruments.js?v=1.60.0"></script>
-<script src="kart.js?v=1.60.0"></script>
+<script src="gfx.js?v=1.60.1"></script>
+<script src="art.js?v=1.60.1"></script>
+<script src="instruments.js?v=1.60.1"></script>
+<script src="kart.js?v=1.60.1"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -161,6 +161,10 @@ a.nav-item{text-decoration:none}
 #jcv{position:absolute;top:0;left:0;pointer-events:none;opacity:0.55}
 /* jam stage view: the venue fills the screen; the video sits on the Jumbotron (placed by JAMSTAGE) */
 #jRace{display:block;opacity:0;visibility:hidden;transition:opacity .9s,visibility 0s .9s;position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;image-rendering:pixelated}
+#jSki{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;image-rendering:pixelated;opacity:0;visibility:hidden;transition:opacity .9s,visibility 0s .9s}
+#jm.skiv #jSki{opacity:1;visibility:visible;transition:opacity .6s}
+#jm.skiv #jmR{z-index:8}
+#jm.skiv #jcv,#jm.skiv #jStage,#jm.skiv #jFront{display:none!important}
 #jm.race #jRace,#jm.race #jRaceTop{opacity:1;visibility:visible;transition:opacity .4s}   /* fades back to the stage when the race ends */
 #jRaceTop{display:block;opacity:0;visibility:hidden;transition:opacity .9s,visibility 0s .9s;position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:none;image-rendering:pixelated}
 #jm.race #jmV{z-index:6!important;transition:none}
@@ -798,7 +802,7 @@ body.jset .nav-item.jam-only{display:flex}
   </div>
 </div>
 <div id="jm">
-  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><canvas id="jRace"></canvas><canvas id="jRaceTop"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
+  <div id="jAud" title="Your live audience"><div id="jAudH"><span class="dot"></span><span id="jAudRoom">Live</span><span class="mm" id="jAudLink" title="Copy the audience link (opens the venue on this server, room code filled in)" style="display:none">&#128279;</span><span class="n" id="jAudN">0 viewers</span><span class="mm" id="jAudBig" title="Bigger / smaller">&#10530;</span><span class="mm" id="jAudMin" title="Shrink">&#8211;</span></div><canvas id="jAudCv" width="800" height="480"></canvas></div><canvas id="jFront"></canvas><canvas id="jRace"></canvas><canvas id="jSki"></canvas><canvas id="jRaceTop"></canvas><div id="jmV"><iframe id="jmF" allowfullscreen allow="autoplay"></iframe><video id="jmVid" autoplay playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><video id="jmBV" muted playsinline style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72"></video><div id="jmVL"></div></div>
   <div id="jmR"><canvas id="jcv"></canvas><canvas id="jStage"></canvas><div id="jnd"></div>
     <button id="jStageBtn" title="Stage effects: lights, weather, fog, lasers…">&#127967; Stage</button><div id="jStagePop"></div>
     <button id="jSongBtn" title="Start a song: pick it (your music, a video, or YouTube), pick the game, then start">&#127925; Start song</button>
@@ -4313,7 +4317,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.60.0",SERVER_VERSION="";
+var PAGE_VERSION="1.60.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5066,7 +5070,66 @@ var RACEVIEW=(function(){
   window.ukRaceTest=function(fn){force=fn||null;apply();};   /* tests: fn() returns the racers */
   return{init:function(){setInterval(apply,400);},apply:apply};
 })();
-window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.init();
+/* Ski: a follow view of the mountain. The camera rides with whoever's furthest down; everyone else is where they are
+   on the same course (built from the round number, like on their phones), with the top three picked out and the standings */
+var SKIVIEW=(function(){
+  var raf=0,cv=null,act=false,force=null,cache={},seedN=-1,seed=1,sm={},camX=0,camY=0,last=[],MEDAL=["#F5C518","#C9D3E6","#D9894A"];
+  function $(id){return document.getElementById(id);}
+  function skiing(){if(force)return true;var c=typeof ROUNDS!=="undefined"&&ROUNDS.current;return !!(jamOn&&liveOn&&c&&c.mode==="ski"&&(c.phase==="countdown"||c.phase==="play"));}
+  function apply(){var a=skiing(),jm=$("jm");if(!jm)return;if(a!==act){act=a;jm.classList.toggle("skiv",a);}if(a&&!raf)raf=requestAnimationFrame(frame);}
+  function collect(){var out=[];Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p||p.dance!==4||!p.sk)return;
+    var s=sm[id]||(sm[id]={y:null,x:0}),d=ART.SKI.decode(+p.x,+p.y,p.sk.h|0,s.y);
+    if(s.y===null||Math.abs(d[1]-s.y)>400){s.x=d[0];s.y=d[1];}else{s.x+=(d[0]-s.x)*0.2;s.y+=(d[1]-s.y)*0.2;}
+    out.push({id:id,name:p.name,color:p.color,look:p.look,x:s.x,y:s.y,t:p.sk.t|0,f:!!p.sk.f,pose:p.pose});});return out;}
+  function skier(g,X,Y,r,z,place){
+    var sc=Math.max(1.2,z*0.8),t=r.t,crashed=t===9||r.f,ang=t<=6?(t-3)*Math.PI/6:0,lift=(t===7||t===8)?18*z:0,m=place<=3?MEDAL[place-1]:null,now=performance.now();
+    if(m){g.save();g.globalAlpha=0.35+0.2*Math.sin(now/180+place);g.fillStyle=m;g.beginPath();g.ellipse(X,Y,16*z,6*z,0,0,6.3);g.fill();g.globalAlpha=1;g.strokeStyle=m;g.lineWidth=2;g.stroke();g.restore();}
+    g.fillStyle="rgba(60,80,110,.22)";g.beginPath();g.ellipse(X,Y,8*z,3*z,0,0,6.3);g.fill();
+    g.save();g.translate(X,Y-lift);g.rotate(crashed?0.9:-ang+(t===8?(now%450)/450*6.283:0));g.fillStyle="#E8505B";g.fillRect(-5*z,-12*z,2.2*z,22*z);g.fillRect(3*z,-12*z,2.2*z,22*z);g.restore();
+    var pz=crashed?[2.6,-2.6,1.2,-1.2]:lift?[2.4,-2.4,0.6,-0.6]:[0.9,-0.9,0.15,-0.15];
+    ART.drawChar(g,X,Y-14*sc-lift,sc,r.look||audLook("",r.color,r.name),{armL:pz[0],armR:pz[1],legL:pz[2],legR:pz[3],rot:crashed?1.45:0,dir:crashed?0:ang<-0.45?3:ang>0.45?1:0});
+    g.font="800 "+Math.round(9+z*2)+"px system-ui";g.textAlign="center";g.textBaseline="top";g.lineWidth=3;g.strokeStyle="rgba(255,255,255,.9)";g.strokeText(r.name||"",X,Y+4*z);g.fillStyle="#1d2740";g.fillText(r.name||"",X,Y+4*z);
+    if(m){var by=Y-34*sc-lift;g.fillStyle=m;g.strokeStyle="rgba(0,0,0,.6)";g.lineWidth=2;g.beginPath();g.arc(X,by,10,0,6.3);g.fill();g.stroke();g.fillStyle="#1a1200";g.font="900 12px system-ui";g.textBaseline="middle";g.fillText(String(place),X,by+1);}
+  }
+  function frame(){
+    raf=0;if(!skiing()){apply();return;}
+    if(!cv)cv=$("jSki");var dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||innerWidth,H=cv.clientHeight||innerHeight;
+    if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+    var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;
+    var c=ROUNDS.current||{n:0};if(c.n!==seedN){seedN=c.n;seed=ART.SKI.seedFor(c.n);cache={};sm={};}
+    var rs=typeof force==="function"?force():collect();rs.sort(function(p,q){return q.y-p.y;});
+    rs.forEach(function(r,k){r.place=k+1;});last=rs.map(function(r){return{name:r.name,place:r.place,m:Math.max(0,Math.round(r.y/10))};});
+    /* follow the leader */
+    var lead=rs[0],tx=lead?lead.x:0,ty=lead?lead.y:-24;camX+=(tx-camX)*0.08;camY+=(ty-camY)*0.12;
+    var z=Math.max(0.9,Math.min(1.8,Math.min(W/900,H/620))),sx=function(wx){return W/2+(wx-camX)*z;},sy=function(wy){return H*0.42+(wy-camY)*z;};
+    var y0=camY-H*0.42/z-40,y1=camY+H*0.58/z+60;
+    ART.SKI.ground(g,W,H,z,sx,sy,camX,y0,y1);
+    var list=ART.SKI.near(seed,cache,y0,y1).map(function(o){return{y:o.y,o:o};});
+    rs.forEach(function(r){if(r.y>y0&&r.y<y1)list.push({y:r.y,r:r});});
+    list.sort(function(p,q){return p.y-q.y;});
+    list.forEach(function(it){if(it.o)ART.SKI.obj(g,it.o,z,sx,sy,false);else skier(g,sx(it.r.x),sy(it.r.y),it.r,z,it.r.place);});
+    /* anyone further back, off the top of the view */
+    var behind=rs.filter(function(r){return r.y<=y0;});
+    behind.slice(0,6).forEach(function(r,k){var bx=Math.max(70,Math.min(W-70,sx(r.x)))+(k%2?14:-14)*0,byy=96+k*0;g.fillStyle="rgba(29,39,64,.82)";g.font="800 12px system-ui";var tt="\u2191 "+r.name+" · "+Math.round((lead.y-r.y)/10)+" m back",tw=g.measureText(tt).width+16;
+      var bxx=Math.max(8,Math.min(W-tw-8,bx-tw/2)),byy2=92+k*22;g.beginPath();if(g.roundRect)g.roundRect(bxx,byy2,tw,19,9);else g.rect(bxx,byy2,tw,19);g.fill();g.fillStyle="#fff";g.textAlign="left";g.textBaseline="middle";g.fillText(tt,bxx+8,byy2+10);});
+    /* you, on a snowy ledge in the corner */
+    var ux=Math.max(90,W*0.08),uy=Math.max(200,H*0.32),us=Math.max(1.6,Math.min(2.6,H/320));
+    g.fillStyle="#fff";g.beginPath();g.ellipse(ux,uy+6,70,16,0,0,6.3);g.fill();g.fillStyle="#cfdcee";g.beginPath();g.ellipse(ux,uy+12,70,10,0,0,3.14);g.fill();
+    perfDraw(g,ux,uy-14*us,us,Date.now(),null,null,0,true);
+    /* standings by distance */
+    var pr=Math.min(220,W*0.2),px=W-pr-14,py=100,n=Math.min(last.length,10);g.fillStyle="rgba(255,255,255,.88)";g.strokeStyle="rgba(59,123,232,.5)";g.lineWidth=1.5;
+    g.beginPath();if(g.roundRect)g.roundRect(px,py,pr,40+Math.max(1,n)*24,10);else g.rect(px,py,pr,40+Math.max(1,n)*24);g.fill();g.stroke();
+    g.textAlign="left";g.textBaseline="middle";g.font="900 12px system-ui";g.fillStyle="#3B7BE8";g.fillText("\u26F7 SKI · DOWN THE MOUNTAIN",px+12,py+20);
+    if(!n){g.font="700 12px system-ui";g.fillStyle="#555";g.fillText("Skiers getting ready…",px+12,py+44);}
+    for(var k2=0;k2<n;k2++){var r2=last[k2],yy=py+44+k2*24,m2=k2<3?MEDAL[k2]:null;if(m2){g.fillStyle=m2;g.beginPath();g.arc(px+22,yy,9,0,6.3);g.fill();}g.fillStyle=m2?"#1a1200":"#777";g.font="900 11px system-ui";g.textAlign="center";g.fillText(String(k2+1),px+22,yy+1);
+      g.textAlign="left";g.font=(k2<3?"800 13px":"600 12px")+" system-ui";g.fillStyle="#1d2740";var nm=String(r2.name||"?");while(nm.length>3&&g.measureText(nm).width>pr-100)nm=nm.slice(0,-1);g.fillText(nm,px+38,yy);g.textAlign="right";g.fillStyle="#3B7BE8";g.fillText(r2.m+" m",px+pr-12,yy);}
+    raf=requestAnimationFrame(frame);
+  }
+  window.ukSkiView=function(){return{on:act,standings:last,cam:[Math.round(camX),Math.round(camY)]};};
+  window.ukSkiViewTest=function(fn){force=fn||null;apply();};
+  return{init:function(){setInterval(apply,400);},apply:apply};
+})();
+window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.init();SKIVIEW.init();
   var tb=document.getElementById("jTopBar"),bb=document.getElementById("jBotBar");
   ["jLiveBtn","jFsBtn","jx"].forEach(function(id){var e=document.getElementById(id);if(e)tb.appendChild(e);});
   /* Stage button: borrow the show effects panel from Setup → Show while the pop-up is open, then put it back */

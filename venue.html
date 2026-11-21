@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Unholy Keys Play">
 <title>Unholy Keys — Live</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.60.0"></script>
-<script src="gfx.js?v=1.60.0"></script>
-<script src="art.js?v=1.60.0"></script>
-<script src="instruments.js?v=1.60.0"></script>
-<script src="kart.js?v=1.60.0"></script>
+<script src="tune.js?v=1.60.1"></script>
+<script src="gfx.js?v=1.60.1"></script>
+<script src="art.js?v=1.60.1"></script>
+<script src="instruments.js?v=1.60.1"></script>
+<script src="kart.js?v=1.60.1"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--bg4:#22222f;--tx:#e0e0e8;--tx2:#8888a0;--tx3:#555568;
@@ -3711,7 +3711,7 @@ var PIPE=(function(){
    knock you down. Everyone skis the same course (made from the round number), so you'll see the others around you.
    ============================================================ */
 var SKI=(function(){
-  var GO_BEAT=8,CH=320,GATE_DY=170,GATE_W=40;
+  var SK=ART.SKI,GO_BEAT=8,CH=SK.CH,GATE_DY=SK.GATE_DY,GATE_W=SK.GATE_W;   /* the mountain itself is shared with the performer's follow view (art.js) */
   var TRK=[null,{name:"360",pts:300,dur:0.45,col:"#D04DFF"},{name:"Backflip",pts:350,dur:0.55,col:"#3DF2FF"},{name:"Daffy",pts:200,dur:0.35,col:"#F5C518"}];
   var KEYTR={ArrowLeft:1,KeyA:1,ArrowUp:2,KeyW:2,ArrowRight:3,KeyD:3};
   var on=false,seed=1,x=0,y=-24,a=0,ta=0,v=0,air=0,airMax=0,crashUntil=0,trick=null,score=0,combo=0,dist=0,lastT=0,pointer=null,keyTurn=0,chunks={},passed={},trail=[],pops=[],lastCount=-1,goShown=false,lane=0,camX=0,others={},bots={},tilted=false,fadeK=0,roundN=0;
@@ -3721,33 +3721,18 @@ var SKI=(function(){
   function skiRound(){return GAME.mode==="ski"||(typeof ROUND!=="undefined"&&ROUND.mode==="ski");}
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
   function beatAt(pos){return ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),pos);}
-  /* ---- the mountain: as wide as the dance floor at the top, opening out below ---- */
-  function halfW(yy){return 110+Math.min(1,Math.max(0,yy)/650)*560;}
-  function lineX(yy,sd){return Math.sin(yy/620+sd)*halfW(yy)*0.42+Math.sin(yy/233+sd*2)*40*Math.min(1,yy/650);}
-  function rng(s){return function(){s=(s*16807)%2147483647;return (s-1)/2147483646;};}
-  /* each stretch of slope: its gates, trees, rocks and ramps, the same on every screen */
-  function chunk(ci){
-    if(chunks[ci])return chunks[ci];var r=rng((seed*7919+ci*104729)%2147483646+1),o=[],y0=ci*CH;
-    if(y0>=60){
-      for(var gy=Math.ceil(y0/GATE_DY)*GATE_DY;gy<y0+CH;gy+=GATE_DY){if(gy<200)continue;var gi=Math.round(gy/GATE_DY);o.push({k:"gate",x:lineX(gy,seed),y:gy,id:gi,col:gi%2?"#E8505B":"#3B7BE8"});}
-      var nt=5+Math.floor(r()*6);for(var i=0;i<nt;i++){var ty=y0+r()*CH,hw=halfW(ty),tx=(r()*2-1)*hw;if(Math.abs(tx-lineX(ty,seed))<95)continue;o.push({k:r()<0.8?"tree":"rock",x:tx,y:ty,s:0.8+r()*0.5});}
-      if(r()<0.65){var ry=y0+r()*CH,rx=lineX(ry,seed)+(r()<0.5?-1:1)*(55+r()*90);o.push({k:"ramp",x:rx,y:ry});}
-      if(r()<0.5){var my=y0+r()*CH;o.push({k:"mogul",x:(r()*2-1)*halfW(my)*0.8,y:my});}
-    }
-    /* the edges: thick forest */
-    for(var e=0;e<14;e++){var ey=y0+r()*CH,side=r()<0.5?-1:1,ex=side*(halfW(ey)+20+r()*220);o.push({k:"tree",x:ex,y:ey,s:0.9+r()*0.6,edge:1});}
-    o.sort(function(p,q){return p.y-q.y;});return chunks[ci]=o;
-  }
-  function objsNear(y0,y1){var out=[];for(var ci=Math.floor(y0/CH);ci<=Math.floor(y1/CH);ci++)if(ci>=0)out=out.concat(chunk(ci));return out.filter(function(o){return o.y>=y0&&o.y<=y1;});}
+  function halfW(yy){return SK.halfW(yy);}
+  function lineX(yy,sd){return SK.lineX(yy,sd);}
+  function objsNear(y0,y1){return SK.near(seed,chunks,y0,y1);}
   /* ---- sending where you are: x and the last 1000 of y in pos, the thousands in sk.h; heading/state in sk.t ---- */
   function enc(){return[+((x+800)/1600).toFixed(4),+((((y%1000)+1000)%1000)/1000).toFixed(4)];}
   function wire(){var t=performance.now()<crashUntil?9:air>0?(trick?8:7):Math.max(0,Math.min(6,Math.round(a/(Math.PI/6))+3));return{h:Math.max(0,Math.min(60,Math.floor(Math.max(0,y)/1000))),f:performance.now()<crashUntil?1:0,t:t};}
-  function decode(v2,prevY){var ex=+v2.x,ey=+v2.y,hh=v2.sk?v2.sk.h|0:0,best=null;for(var d=-1;d<=1;d++){var yy=(hh+d)*1000+ey*1000;if(best===null||Math.abs(yy-prevY)<Math.abs(best-prevY))best=yy;}if(prevY===null)best=hh*1000+ey*1000;return[ex*1600-800,best];}
+  function decode(v2,prevY){return SK.decode(+v2.x,+v2.y,v2.sk?v2.sk.h|0:0,prevY);}
   function banner(t,col){var b=$("skiBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("skiScore");if(h)h.textContent=score.toLocaleString();var c=$("skiCombo");if(c)c.textContent=combo>1?"COMBO ×"+(1+0.1*combo).toFixed(1):"";}
   function laneX(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(2,Math.min(8,ids.length));return -85+170*((i%n)+0.5)/n;}
   function start(round){
-    on=true;roundN=round?round.n:roundN+1;seed=1+(roundN*37)%997;chunks={};passed={};trail=[];pops=[];others={};bots={};
+    on=true;roundN=round?round.n:roundN+1;seed=SK.seedFor(roundN);chunks={};passed={};trail=[];pops=[];others={};bots={};
     x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
     cv=$("skiCv");g=cv.getContext("2d");document.body.classList.add("gaming-ski");$("skiUI").classList.add("on");hud();banner("⛷ SKI!");
   }
@@ -3817,15 +3802,6 @@ var SKI=(function(){
     });
   }
   /* ---- drawing ---- */
-  function tree(cx,cy,s,z){var k=z*s;cx=Math.round(cx);g.fillStyle="rgba(60,80,110,.18)";g.beginPath();g.ellipse(cx+3*k,cy,9*k,3*k,0,0,6.3);g.fill();
-    g.fillStyle="#6b4a2b";g.fillRect(cx-1.5*k,cy-5*k,3*k,5*k);
-    [[0,22,9],[6,16,7],[11,10,5]].forEach(function(t,i){g.fillStyle=i===2?"#2f7a3e":i===1?"#276b35":"#1f5a2c";g.beginPath();g.moveTo(cx,cy-(t[0]+t[1]*0.55+4)*k);g.lineTo(cx-t[2]*k,cy-(t[0]+3)*k);g.lineTo(cx+t[2]*k,cy-(t[0]+3)*k);g.fill();});
-    g.fillStyle="#f4f8ff";g.fillRect(cx-2*k,cy-24*k,4*k,2*k);g.fillRect(cx-5*k,cy-12*k,3*k,1.5*k);}
-  function rock(cx,cy,s,z){var k=z*s;g.fillStyle="#7d8597";g.beginPath();g.ellipse(cx,cy-3*k,9*k,5*k,0,0,6.3);g.fill();g.fillStyle="#a9b0c0";g.beginPath();g.ellipse(cx-2*k,cy-5*k,4*k,2*k,0,0,6.3);g.fill();g.fillStyle="#f4f8ff";g.fillRect(cx-4*k,cy-8*k,6*k,1.5*k);}
-  function ramp(cx,cy,z){g.fillStyle="#b9d6f2";g.beginPath();g.moveTo(cx-20*z,cy+6*z);g.lineTo(cx+20*z,cy+6*z);g.lineTo(cx+16*z,cy-6*z);g.lineTo(cx-16*z,cy-6*z);g.fill();g.fillStyle="#7fb0e0";g.fillRect(cx-16*z,cy-6*z,32*z,3*z);g.fillStyle="#3B7BE8";g.font="900 "+Math.round(8*z)+"px system-ui";g.textAlign="center";g.fillText("▲",cx,cy+4*z);}
-  function mogul(cx,cy,z){g.fillStyle="#dfe9f6";g.beginPath();g.ellipse(cx,cy,10*z,4*z,0,0,6.3);g.fill();g.fillStyle="#fff";g.beginPath();g.ellipse(cx-2*z,cy-1.5*z,6*z,2*z,0,0,6.3);g.fill();}
-  function gate(o,z,V,passedIt){[-1,1].forEach(function(sd){var px=V.sx(o.x+sd*GATE_W),py=V.sy(o.y);g.fillStyle="#333";g.fillRect(px-1,py-18*z,2,18*z);g.fillStyle=o.col;g.beginPath();g.moveTo(px,py-18*z);g.lineTo(px+sd*-9*z,py-15*z);g.lineTo(px,py-12*z);g.fill();});
-    if(passedIt){g.globalAlpha=0.25;g.fillStyle=o.col;g.fillRect(V.sx(o.x-GATE_W),V.sy(o.y)-1,GATE_W*2*z,2);g.globalAlpha=1;}}
   function skier(sx,sy,vv,isMe,ang,airK,crashed,tk,tp,z,name){
     var lift=airK*30*z,sc=Math.max(1.4,z*0.75);
     g.fillStyle="rgba(60,80,110,.22)";g.beginPath();g.ellipse(sx,sy,8*z,3*z,0,0,6.3);g.fill();
@@ -3844,14 +3820,7 @@ var SKI=(function(){
     var dpr=Math.min(2,window.devicePixelRatio||1);if(c.width!==Math.round(W*dpr)||c.height!==Math.round(H*dpr)){c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);}
     g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;
     var V=view(),z=V.z,now=performance.now(),y0=y-H*0.42/z-40,y1=y+H*0.58/z+60;
-    /* snow, and a faint grain so you can feel the speed */
-    g.fillStyle="#eef3fb";g.fillRect(0,0,W,H);
-    g.fillStyle="rgba(150,175,210,.18)";for(var gy=Math.floor(y0/24)*24;gy<y1;gy+=24)for(var gx=Math.floor((camX-W/2/z)/37)*37;gx<camX+W/2/z;gx+=37){var hsh=Math.sin(gx*12.9898+gy*78.233)*43758.5453;hsh-=Math.floor(hsh);if(hsh<0.35)g.fillRect(V.sx(gx+hsh*20),V.sy(gy),2,1);}
-    /* the start: a strip of dance floor at the top of the slope */
-    if(y0<10){for(var ty=-160;ty<0;ty+=16)for(var tx=-112;tx<112;tx+=16){var bx=V.sx(tx),by=V.sy(ty);g.fillStyle=((tx+ty)/16)%2?"#1a1430":"#120e1e";g.fillRect(bx,by,16*z+1,16*z+1);}
-      for(var sx2=-112;sx2<112;sx2+=8){g.fillStyle=(sx2/8)%2?"#fff":"#111";g.fillRect(V.sx(sx2),V.sy(0)-2,8*z,4);}}
-    /* the edge of the run */
-    g.strokeStyle="rgba(120,150,190,.35)";g.lineWidth=2;[-1,1].forEach(function(sd){g.beginPath();for(var ey=Math.max(0,y0);ey<y1;ey+=20){var ex=V.sx(sd*halfW(ey)),eyy=V.sy(ey);if(ey===Math.max(0,y0))g.moveTo(ex,eyy);else g.lineTo(ex,eyy);}g.stroke();});
+    SK.ground(g,W,H,z,V.sx,V.sy,camX,y0,y1);
     /* your tracks */
     g.strokeStyle="rgba(140,160,190,.45)";g.lineWidth=1.5;g.beginPath();var tr0=true;trail.forEach(function(p){if(p[1]<y0)return;var px=V.sx(p[0]),pyy=V.sy(p[1]);if(tr0){g.moveTo(px,pyy);tr0=false;}else g.lineTo(px,pyy);});g.stroke();
     /* everything on the slope and everyone on it, back to front */
@@ -3863,7 +3832,7 @@ var SKI=(function(){
     list.push({y:y,me:true});
     list.sort(function(p,q){return p.y-q.y;});
     list.forEach(function(it){
-      if(it.o){var o=it.o,ox=V.sx(o.x),oy=V.sy(o.y);if(o.k==="tree")tree(ox,oy,o.s,z);else if(o.k==="rock")rock(ox,oy,o.s,z);else if(o.k==="ramp")ramp(ox,oy,z);else if(o.k==="mogul")mogul(ox,oy,z);else if(o.k==="gate")gate(o,z,V,!!passed[o.id]);return;}
+      if(it.o){SK.obj(g,it.o,z,V.sx,V.sy,!!passed[it.o.id]);return;}
       if(it.me){var mm=viewers[myId];if(mm){var tp=trick?Math.min(1,(now-trick.t0)/1000/TRK[trick.k].dur):0;skier(V.sx(x),V.sy(y),mm,true,a,air>0?Math.sin(Math.PI*(1-air/Math.max(0.01,airMax))):0,now<crashUntil,trick?trick.k:0,tp,z,"You");}return;}
       var s=it.sk,st=s.v.sk||{},t=st.t|0,ang=t<=6?(t-3)*Math.PI/6:0;
       skier(V.sx(s.x),V.sy(it.y),s.v,false,ang,t===7||t===8?0.7:0,t===9||!!st.f,t===8?1:0,(now%450)/450,z,s.v.name);
@@ -5899,7 +5868,7 @@ function drawPerformer(x,y){
 }
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.60.0",SERVER_VERSION="";
+var PAGE_VERSION="1.60.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6392,7 +6361,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.60.0"></script>
+<script src="lab.js?v=1.60.1"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
