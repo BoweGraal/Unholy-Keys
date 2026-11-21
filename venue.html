@@ -13,11 +13,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.8"></script>
-<script src="gfx.js?v=1.79.8"></script>
-<script src="art.js?v=1.79.8"></script>
-<script src="instruments.js?v=1.79.8"></script>
-<script src="kart.js?v=1.79.8"></script>
+<script src="tune.js?v=1.79.9"></script>
+<script src="gfx.js?v=1.79.9"></script>
+<script src="art.js?v=1.79.9"></script>
+<script src="instruments.js?v=1.79.9"></script>
+<script src="kart.js?v=1.79.9"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -396,6 +396,19 @@ body.jt-top #roundBox.strip .rb-btn{margin-top:0;padding:4px 10px;font-size:12px
   /* the games that cover the whole screen hide the sign anyway, so the line goes back to the top middle,
      clear of the performer in the corner */
   body[data-game=kart] #roundBox.strip,body[data-game=ski] #roundBox.strip{left:50%;transform:translateX(-50%);top:52px;width:min(420px,60vw);text-align:center}}
+
+/* ── the Jumbotron in the games that cover the whole screen: a small screen in a corner, always above the game ── */
+body.gaming-ski #bigScreen,body.gaming-ctf #bigScreen{z-index:22;left:auto!important;width:min(200px,40vw)!important;height:auto!important;aspect-ratio:16/9;border-width:3px;border-bottom-width:7px;box-shadow:0 0 0 2px #2a2440,0 4px 18px rgba(0,0,0,.6)}
+body.gaming-ski #bigScreen::before,body.gaming-ski #bigScreen::after,body.gaming-ctf #bigScreen::before,body.gaming-ctf #bigScreen::after{display:none}
+body.gaming-ski #jtLogo,body.gaming-ctf #jtLogo{font-size:19px!important}
+body.gaming-ski #bigScreen{right:10px;top:104px!important}
+body.gaming-ctf #bigScreen{left:140px!important;right:auto;top:14px!important}
+@media (max-width:640px){body.gaming-ski #jtLogo,body.gaming-ctf #jtLogo{font-size:14px!important}
+  body.gaming-ski #bigScreen{right:8px;top:62px!important;width:min(150px,38vw)!important}
+  body.gaming-ctf #bigScreen{left:118px!important;top:44px!important;width:min(150px,38vw)!important}}
+/* half pipe: the SUPER meter sits under the score, not across the Jumbotron */
+#ppSuperBox{left:auto!important;right:14px;top:92px!important;transform:none!important}
+@media (max-width:640px){#ppSuperBox{right:8px;top:160px!important}}
 /* capture the flag: the line sits under the team score, above the arena */
 body[data-game=ctf] #roundBox.strip{left:50%;transform:translateX(-50%);top:60px;width:min(420px,calc(100vw - 150px));text-align:center;padding:5px 12px}
 @media (max-width:640px){body[data-game=ctf] #roundBox.strip{top:128px;width:calc(100vw - 24px)}}
@@ -459,6 +472,7 @@ body.practice #hudBR{bottom:18px}
 body.embed #prBar{top:12px}
 body.embed #roundBox{top:12px}
 body.practice:not(.pr-busy) #roundBox{top:180px}
+@media (max-width:640px){body.practice.gaming:not(.pr-busy) #roundBox.strip{top:6px}}   /* upright phone: the line goes up to the top edge, off the performer */
 #prBar select,#prBar button,#prBar label.f{font:600 12px system-ui,sans-serif;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(127,119,221,.55);border-radius:8px;padding:6px 10px;cursor:pointer}
 #prBar #prGo{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:transparent}
 #prBar #prGo:disabled{opacity:.45;cursor:default}
@@ -4658,6 +4672,8 @@ var DEVICE=(function(){
     var bottom=Math.round(chatH+(kind==="phone"?8:14));
     var short=vh<480;document.body.classList.toggle("short",short);
     var top=short?8:document.body.classList.contains("embed")?78:112;      /* below the round banner */
+    /* on a phone or a tablet held upright the panel starts under the stage, so the performer and the Jumbotron stay in view above it */
+    if(!short&&kind!=="pc"&&vh>vw)top=Math.max(top,Math.round((typeof STAGE_BOTTOM!=="undefined"?STAGE_BOTTOM:0.3)*vh)+6);
     var chrome=(hdr?hdr.offsetHeight:44)+(ft?ft.offsetHeight:28)+2;
     var avail=vh-bottom-top,meH=z.me;
     if(document.body.classList.contains("gaming-free"))meH=0;
@@ -6338,7 +6354,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.8",SERVER_VERSION="";
+var PAGE_VERSION="1.79.9",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6826,7 +6842,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.8"></script>
+<script src="lab.js?v=1.79.9"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

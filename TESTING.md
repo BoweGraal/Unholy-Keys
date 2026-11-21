@@ -757,6 +757,24 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.9 - Every game shows the Jumbotron and the performer
+
+A sweep of all 14 mini games, on a computer and an upright phone, with the Jumbotron down and the performer on stage. Before the fix:
+
+| Game | Computer | Phone |
+|---|---|---|
+| Step dance, Target dance, Note highway, 4-key highway | OK | The game panel covered the performer |
+| Free dance, Mosh pit, Roller rink, Keepy uppy, Dance walk race, Mars Rally | OK | OK |
+| Half pipe | SUPER meter ran across the Jumbotron | Same |
+| Ski, Capture the flag | No Jumbotron (performer was in the corner) | Same |
+
+Fixes:
+1. **Ski and Capture the flag** now show the Jumbotron as a small screen in a corner (above the game), so a video on it stays in view. The performer stays in the corner on their stand.
+2. **Phone and tablet held upright**: the game panel now starts under the stage, so the performer and the Jumbotron stay visible above it. In practice the round line moves to the top edge.
+3. **Half pipe**: the SUPER meter moved under the score.
+
+To check: join a room on a phone with a video on the Jumbotron and start Step dance, Ski and Capture the flag. You should see the Jumbotron and the performer in each. Not covered by the sweep: Ice rink (it uses the same drawing as the Roller rink, which passed) and a live video playing (the sweep forced the Jumbotron down).
+
 ## v1.79.8 - Presets you can actually hear
 
 You tried the violin presets in v1.79.7 and all but Haunted sounded the same. That was right: they were tuned to keep the volume level, not to sound different, and most only added a little reverb. The measurements agreed: Haunted's tail was about 13 dB longer than the dry sound, while Concert Hall's was about 2 dB longer.
