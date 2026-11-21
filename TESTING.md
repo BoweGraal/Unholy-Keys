@@ -1477,3 +1477,12 @@ Needs a Render redeploy (server.js changed).
 1. Open venue.html?practice, run the half pipe test (`ukPipeTest(3)` in the console), on a computer and on a phone.
 2. Watch yourself swing from wall to wall: you should stay big, face forward, and the board should only tilt slightly.
 3. Do a trick and spin in the air with the left stick: spinning and landing still work.
+
+## v1.79.11 - Phone: no stand-in name tag, how-to-play text fades
+- Practice mode no longer puts a "Stand-in" name under the performer.
+- On phones, the how-to-play lines in the mini games (mosh, roller rink, keepy uppy, dance walk, half pipe, ski, capture the flag) now wrap to fit and fade out after about 6 seconds. The round description under the round title fades too, except when it's your turn.
+
+**Test it:**
+1. On a phone, open venue.html?practice and start each mini game.
+2. The hint text should be readable for a few seconds, then disappear and leave the play area clear.
+3. Leave practice: the performer should show no name tag.

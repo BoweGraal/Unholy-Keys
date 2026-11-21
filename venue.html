@@ -13,11 +13,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.10"></script>
-<script src="gfx.js?v=1.79.10"></script>
-<script src="art.js?v=1.79.10"></script>
-<script src="instruments.js?v=1.79.10"></script>
-<script src="kart.js?v=1.79.10"></script>
+<script src="tune.js?v=1.79.11"></script>
+<script src="gfx.js?v=1.79.11"></script>
+<script src="art.js?v=1.79.11"></script>
+<script src="instruments.js?v=1.79.11"></script>
+<script src="kart.js?v=1.79.11"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -409,6 +409,15 @@ body.gaming-ctf #bigScreen{left:140px!important;right:auto;top:14px!important}
 /* half pipe: the SUPER meter sits under the score, not across the Jumbotron */
 #ppSuperBox{left:auto!important;right:14px;top:92px!important;transform:none!important}
 @media (max-width:640px){#ppSuperBox{right:8px;top:160px!important}}
+/* phones: the how-to-play lines show for a few seconds and then fade, so the game isn't buried in tutorial text */
+@keyframes ukHintFade{to{opacity:0;visibility:hidden}}
+@keyframes ukSubFade{to{opacity:0;max-height:0;margin:0;overflow:hidden}}
+@media (max-width:640px){
+  #moshHint,#skHint,#kpHint,#wkHint,#ppHint,#skiHint,#ctfHint{white-space:normal!important;text-align:center!important;max-width:calc(100vw - 28px)!important;pointer-events:none;animation:ukHintFade .6s ease 6s forwards}
+  #ppHint{right:auto!important;left:50%!important;transform:translateX(-50%)!important}
+  #ctfHint{bottom:calc(var(--chatH) + 130px)!important}
+  body[class*="gaming"] #roundBox:not(.myturn):not(.spot) .rb-sub{animation:ukSubFade .6s ease 6s forwards}
+}
 /* capture the flag: the line sits under the team score, above the arena */
 body[data-game=ctf] #roundBox.strip{left:50%;transform:translateX(-50%);top:60px;width:min(420px,calc(100vw - 150px));text-align:center;padding:5px 12px}
 @media (max-width:640px){body[data-game=ctf] #roundBox.strip{top:128px;width:calc(100vw - 24px)}}
@@ -5507,7 +5516,7 @@ var PRACTICE=(function(){
     document.getElementById("venue").classList.add("on");
     document.getElementById("hudRoom").textContent="Practice";
     if(!venueStarted){venueStarted=true;initAudio();initCanvas();requestAnimationFrame(renderLoop);}
-    performer.name="Stand-in";
+    performer.name="";   /* practice: no name tag over the stand-in */
     viewers={me:{name:myName,x:0.5,y:0.55,tx:0.5,ty:0.55,color:myColor,look:myLook,bubbleText:null,bubbleTime:0,dance:0}};
     updViewerCount();
     try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.kind)$("prKind").value=sv.kind;if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.level)$("prLevel").value=String(sv.level);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
@@ -6354,7 +6363,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.10",SERVER_VERSION="";
+var PAGE_VERSION="1.79.11",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6737,7 +6746,7 @@ function renderLoop(){
   if(myId&&viewers[myId]){ids=ids.filter(function(k){return k!==myId;});ids.push(myId);}     /* you're drawn last, on top */
   /* the performer hanging out on the floor, in among everyone (by depth) */
   if(PH.on&&!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){
-    PH.name="\u2605 "+(performer.name||"Performer");PH.look=performer.look||lookOf(null,PH.color,performer.name);
+    PH.name=performer.name?"\u2605 "+performer.name:"";PH.look=performer.look||lookOf(null,PH.color,performer.name);
     var pk=0;while(pk<ids.length&&ids[pk]!==myId&&viewers[ids[pk]].y<=PH.y)pk++;ids.splice(pk,0,"__perf");
   }
   for(var i=0;i<ids.length;i++){
@@ -6842,7 +6851,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.10"></script>
+<script src="lab.js?v=1.79.11"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
