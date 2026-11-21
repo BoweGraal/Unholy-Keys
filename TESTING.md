@@ -757,6 +757,19 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.68.0 - Ski: slalom flags with divots, swoops, ski-on intro, no more getting stuck on trees
+
+- **Slalom flags:** flag zones now use single flags like the real thing (and SkiFree): red flags with a ← arrow, blue with →. Pass each flag on the side its arrow points. Right side = FLAG points and the streak goes up; wrong side = WRONG SIDE and the streak resets. Clip the pole and you go down.
+- **Divots:** beside every flag, on the side you pass, there's a carved bowl in the snow with chevrons pointing the way through.
+- **Swoop:** jump (a hop, a ramp or a mogul) and land in a divot and it swoops you out cleanly: pointed at the next flag's side, a burst of speed, +150 SWOOP and the streak goes up.
+- **The start:** the round opens zoomed right in on the skiers at the top. Their skis lie either side of them, slide in under their boots and click on (with a sparkle) while they bend down to do up the bindings. Then the view slowly pulls back to show the whole mountain by GO. Your stage follow view does the same zoom out.
+- **Trees and rocks:** a crash now throws you clear to the side, and for a moment after you get up you can't hit anything, so you can't get stuck crashing into the same tree over and over.
+- Courses made in the Ski designer keep their two-flag gates.
+
+No server changes.
+
+**Test it:** practice → Ski. Watch the skis go on, then pass a few flags on their arrow side, and hop into a divot to get SWOOP.
+
 ## v1.67.0 - Mosh pit you can follow, points over heads, longer chat, server-version warning
 
 **Mosh pit, seen from the stage**
