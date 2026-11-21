@@ -1501,9 +1501,10 @@ Needs a Render redeploy (server.js changed).
 
 **Update (same version): the card no longer covers the performer.** It sits below the stage, so the performer stays in view when a game starts partway through a song (the second game in a set). On a wide screen it lays out as demo on the left, text on the right. The round title strip is hidden while the card is up.
 
-## v1.79.13 - Ski: smaller skier, bigger mountain, a plain slalom to open each flag zone
-- The skier and their skis are drawn smaller, and the mountain (trees, flags, ramps, snow) is a bit bigger.
-- Each flag zone now opens with **5 plain flags, left, right, left, right**, on a dead straight line and 210 apart (they were 150), with the flags further out to each side, so there's room to weave. Then the line eases back into the wave and the usual closer flags follow (the flag zone is longer, to fit both).
+## v1.79.13 - Ski: smaller skier, bigger mountain, swoops lined up with the next flag
+- The skier is drawn smaller and the mountain (trees, flags, ramps, snow) a bit bigger. The skis stay full size.
+- **Flags lined up with the swoops.** A swoop fires you out toward the flag's own side, so the next flag used to be behind you. Now the flags are spread so the run from one swoop to the next is a **45-65 degree line, random for each flag**. Red flags are passed on their left and sit on the left, blue are passed on their right and sit on the right, so the swoops send you across the course in a zigzag.
+- Each flag zone opens with 5 plain flags at a fixed 50 degrees on a straight line, 210 apart. The flag zone is straight all the way and longer (1600), then the line eases back into the wave for the jump zone.
 - Server change: the ski bots follow the same straight line. **Redeploy Render.**
 
-**Test it:** practice → Ski. After GO, the first flags in the zone should alternate sides down a straight run. Check the skier looks smaller on a phone and a computer, and that you can weave through without clipping flags.
+**Test it:** practice → Ski. Land in a red swoop: you should be fired out toward the next (blue) flag's swoop, then back across to the next red, at a slant, not sideways. Check the skier size on a phone.
