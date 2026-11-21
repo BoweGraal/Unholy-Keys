@@ -757,6 +757,19 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.0 - Phone instrument in pixel art, with your character on stage
+
+Open the phone instrument (main menu **Instrument**, or the phone button on the performer page).
+
+- **Your character plays in the middle**, between the zones and the circle, holding the instrument you picked and playing each note as you touch it. From the main menu it's the character you made there. From the performer page it's your stage character. Switch instruments from the top and the character swaps to match: a keyboard has you behind it, a violin or trumpet goes up to your chin, drums and sections bring the band along.
+- **The stage:** a lit pad under the character's feet, a spotlight that takes the colour of the note while it plays, little stage lights on top that flash faster while you play, and square pixel sparks on each new note. It redraws when you turn the phone.
+- **Pixel buttons everywhere:** the five zones are chunky bevelled blocks in their colours, the top bar and mode chip use the same bevelled pixel buttons as the rest of the game, and the circle uses the pixel stick and knob from the games. The note name moved to the top right of the stage so it never covers the character. The mode chip (Sustain / Impact / ...) is top left.
+- Portrait: the stage gets the whole top, the zones and circle sit underneath.
+
+How to check: tap each of the four quadrants, hold a zone, change octave, tap the instrument button and pick a few different ones (piano, drums, harp, trumpet, a string section). The character should always be in the middle and not covered by the note name.
+
+Page-only change: no Render redeploy needed.
+
 ## v1.78.0 - Menu extras that missed v1.77.0
 
 These were pushed to #109 after it was merged, so they never reached main.
