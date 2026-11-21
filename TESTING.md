@@ -757,6 +757,38 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.79.8 - Presets you can actually hear
+
+You tried the violin presets in v1.79.7 and all but Haunted sounded the same. That was right: they were tuned to keep the volume level, not to sound different, and most only added a little reverb. The measurements agreed: Haunted's tail was about 13 dB longer than the dry sound, while Concert Hall's was about 2 dB longer.
+
+What changed:
+1. Every preset was rebuilt with a strong character (big hall, close room, heavy chorus, deep echo, drive, tape wobble, wah and so on) instead of a light touch.
+2. The test now measures how audible a preset is: how much the tone changes, how long the tail gets and how much it wobbles, all against the dry sound. A preset is only kept if it is clearly different from dry AND clearly different from every other preset for that instrument.
+3. Levels are still matched to the dry sound within 2 dB, and no preset may peak above -1.5 dBFS.
+4. The generic presets are unchanged and still under "More sounds".
+
+| Type | Presets |
+|---|---|
+| Piano, harpsichord | Concert Hall, Felt Piano, Honky-Tonk, Tape Keys, Dreamy Piano |
+| Electric piano | Rhodes Tremolo, Warm Drive, Neo Soul |
+| Organ | Cathedral, Rotary Slow, Rock Organ, Gospel Warm |
+| Accordion, harmonica, bagpipe | Cafe Room, Blues Harp, Wide Squeeze, Folk Hall |
+| Synths, keytar, chip, EDM | 80s Chorus, Sweep Lead, Wide Pad, Arp Echo, Gritty |
+| Electric / distorted / jazz guitar | Clean Chorus, Edge of Breakup, Crunch Lead, Ambient Swell, Surf Spring |
+| Acoustic guitar, banjo, sitar, harp, zither | Campfire, Shimmer Stereo, Nashville, Cavern, Lo-fi Porch |
+| Bass | Tight Studio, Drive Pick, Fretless Chorus, Dub Echo, Lo-fi Sub |
+| Violin, cello, double bass | Concert Hall, Warm Section, Cinematic Swell, Folk Fiddle, Haunted |
+| Trumpet, trombone, horn, tuba | Big Hall, Fanfare, Mariachi Slap, Warm Section |
+| Sax, clarinet, bassoon | Smoky Club, Breathy Hall, Late Night Echo, Wide Section, Funk Sax |
+| Flute, pan flute, ocarina, whistle | Dreamy Flute, Canyon Echo, Folk Hall |
+| Mallets, bells, music box, kalimba, steel drum | Glass Hall, Music Box Echo, Dreamy Shimmer, Lo-fi Chimes, Island Tremolo |
+| Drums, timpani | Tight Room, Big Hall Hits, Lo-fi Break, Dub Space, Crunch |
+| Voice, choir | Studio Vocal, Cathedral Choir, Robot Choir |
+
+Everything was tested offline with the real Tone.js against stand-in sounds, because the real instrument samples can not be downloaded from the build machine (91 candidates, 4 renders each). Rejected: Rhodes-style "Chorus Dream", "Funk Wah" on most instruments (it pushed peaks over the limit), "Chamber" on strings and a few more that sounded like another preset or like the dry sound.
+
+Please try the violin again, then a few others, and tell me which ones still sound too alike or too much.
+
 ## v1.79.7 - Presets for each type of instrument
 
 Every instrument now shows its own sounds on its picker page: **Studio** plus 3 to 5 presets made for that type of instrument. The generic presets (Lo-fi, 80s Synth, Funk Machine, Guitar Sweep, Dreamy Hall, Warm Tube and the rest) are still there under "More sounds".
