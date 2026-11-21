@@ -1533,3 +1533,7 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.18
 - The "Round N · title / Leading: …" strip fades out when a normal round starts (still shown for free dance, battles and the join prompt).
+
+## v1.79.19
+- Kart: Speed -/+ box removed from the game screen (Tuning lab still sets it).
+- Practice: top "Leave practice" button hidden while a minigame is on (the bottom STOP does the job).

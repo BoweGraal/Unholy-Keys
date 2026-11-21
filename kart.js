@@ -639,7 +639,7 @@
     el.classList.toggle("on", !!show); el.classList.remove("ready"); document.body.classList.toggle("gaming-kart", !!show); document.body.classList.remove("kt-ready");
     if (show) { driftHold = false; MOUSE.down = false; MOUSE.on = false; var lg = $("ktLights"); if (lg) lg.style.display = "none"; speedUI(); }
   }
-  function speedUI() { var w = $("ktSpeed"); if (!w) return; w.style.display = env.practice && env.practice() ? "flex" : "none"; var v = $("ktSpV"); if (v) v.textContent = Math.round(T("maxSpeed")); }
+  function speedUI() { var w = $("ktSpeed"); if (!w) return; w.style.display = "none";   /* (set it in the Tuning lab) */ var v = $("ktSpV"); if (v) v.textContent = Math.round(T("maxSpeed")); }
   function banner(t) { var b = $("ktBanner"); if (!b) return; b.textContent = t; b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
   function hud() { var s = $("ktScore"); if (s) s.textContent = score.toLocaleString(); }
   function lights(lt) {
