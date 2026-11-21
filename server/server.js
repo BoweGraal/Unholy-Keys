@@ -128,7 +128,6 @@ function broadcast(room, msg, exclude) {
    the song. Step and target rounds: each dancer's page reports its score and the highest wins.
    Free dance rounds: when the song ends everyone votes for a dancer (the performer's vote counts
    double). Placings earn show points (10, 7, 5, 3, then 1 for taking part) that add up all show. */
-var ROUND_POINTS = [10, 7, 5, 3];
 var VOTE_MS = +process.env.VOTE_MS || 20000;
 function intIn(v, lo, hi, def) { v = Math.floor(+v); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : def; }
 var SECTION_NAMES = ["intro", "verse", "chorus", "solo", "bridge", "breakdown", "finale", "outro"];
@@ -275,6 +274,19 @@ function roundStandings(code) {
   list.sort(function(a, b) { return b.score - a.score; });
   broadcast(code, { type: "round-scores", n: r.round.n, top: list.slice(0, 5), players: list.length });
 }
+/* every round hands out exactly 1000 show points:
+   - 40% is shared equally by everyone who took part, so nobody is ever left with nothing and a slow start isn't the end of you;
+   - 60% goes by score, but softened (square root), so a big win is worth only a bit more than a solid second and steady
+     rounds add up faster than the odd blowout. Largest remainders get the leftover points so it adds up to exactly 1000. */
+var SHARE_FLOOR = 0.4;
+function share1000(list) {
+  var n = list.length; if (!n) return;
+  var w = list.map(function(x) { return Math.sqrt(Math.max(0, +x.score || 0)); }), tw = 0; w.forEach(function(v) { tw += v; });
+  var raw = list.map(function(x, i) { return 1000 * (tw > 0 ? SHARE_FLOOR / n + (1 - SHARE_FLOOR) * w[i] / tw : 1 / n); });
+  var given = 0; list.forEach(function(x, i) { x.pts = Math.floor(raw[i]); given += x.pts; });
+  list.map(function(x, i) { return i; }).sort(function(a, b) { return (raw[b] - Math.floor(raw[b])) - (raw[a] - Math.floor(raw[a])); })
+    .slice(0, 1000 - given).forEach(function(i) { list[i].pts++; });
+}
 function roundFinish(code) {
   var r = rooms[code]; if (!r || !r.round) return;
   var rd = r.round; roundStop(r);
@@ -283,7 +295,8 @@ function roundFinish(code) {
   if (rd.isBattle) {
     /* battle: placed by how far each got in the bracket; the score shown is matches won */
     if (rd.battle) BATTLE.ranks(rd.battle).forEach(function(x) { var e = rd.battle.entrants[x.e]; list.push({ id: e.id, name: e.name, color: e.color, score: x.wins, bplace: x.place }); });
-    list.forEach(function(x) { x.place = x.bplace; x.pts = ROUND_POINTS[x.place] || 1; var key = x.name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: x.name, color: x.color, pts: 0, wins: 0 }); t.pts += x.pts; t.color = x.color; if (x.place === 0) t.wins++; });
+    share1000(list);
+    list.forEach(function(x) { x.place = x.bplace; var key = x.name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: x.name, color: x.color, pts: 0, wins: 0 }); t.pts += x.pts; t.color = x.color; if (x.place === 0) t.wins++; });
     rd.phase = "result";
     broadcast(code, { type: "round", phase: "result", n: rd.n, mode: rd.mode, battle: true, title: rd.title, players: list.length,
       ranking: list.slice(0, 10).map(function(x) { return { id: x.id, name: x.name, color: x.color, score: x.score, pts: x.pts, place: x.place + 1 }; }),
@@ -298,11 +311,11 @@ function roundFinish(code) {
     r.viewers.forEach(function(v, id) { if (v.roundScore > 0) list.push({ id: id, name: v.name, color: v.color, score: v.roundScore }); });
   }
   list.sort(function(a, b) { return b.score - a.score; });
-  /* equal scores share a placing; a free-dance dancer nobody voted for still gets the taking-part point */
+  share1000(list);
+  /* equal scores share a placing */
   for (var i = 0; i < list.length; i++) {
     var place = (i > 0 && list[i].score === list[i - 1].score) ? list[i - 1].place : i;
     list[i].place = place;
-    list[i].pts = (rd.mode === "free" && list[i].score === 0) ? 1 : (ROUND_POINTS[place] || 1);
     var key = list[i].name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: list[i].name, color: list[i].color, pts: 0, wins: 0 });
     t.pts += list[i].pts; t.color = list[i].color;
     if (place === 0 && list[i].score > 0) t.wins++;
@@ -315,11 +328,11 @@ function roundFinish(code) {
 function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
     broadcast(code, roundPublic(r));
@@ -408,7 +421,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.57.0";
+var VERSION = "1.60.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -646,16 +659,25 @@ function onMessage(ws, raw, isBinary) {
       if (pv) { pv.pose = a; pv.combo = combo; pv.fd = fd; var prd = rooms[ws.room].round; if (prd && prd.phase === "play") pv.danced = true; }
       var pm = { type: "pose", id: ws.viewerId, a: a, c: combo }; if (fd) pm.fd = fd;
       /* on the roller rink: height in the air (0-60), a wipe-out, the trick (0-4) */
-      if (msg.sk && typeof msg.sk === "object") pm.sk = { h: intIn(msg.sk.h, 0, 60, 0), f: msg.sk.f ? 1 : 0, t: intIn(msg.sk.t, 0, 4, 0) };
+      if (msg.sk && typeof msg.sk === "object") pm.sk = { h: intIn(msg.sk.h, 0, 60, 0), f: msg.sk.f ? 1 : 0, t: intIn(msg.sk.t, 0, 9, 0) };
       broadcast(ws.room, pm, ws);
       return;
     }
     if (msg.type === "score") {
       // a dancer's own running score for the current step or target round
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
-      if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || !allow(ws, "score", 6, 2)) return;
+      if (!srd || !sv || srd.mode === "free" || (srd.phase !== "play" && srd.phase !== "tally") || (!msg.fin && !allow(ws, "score", 6, 2))) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
-      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+      /* dance walk race: the server keeps the finish order so every screen agrees on the places;
+         over the line = 1000 + 3000 / place, still racing = distance (up to 1000). When everyone's in, the round ends. */
+      if (srd.mode === "walk") {
+        if (msg.fin && !sv.walkFin) { sv.walkFin = true; (srd.wfin || (srd.wfin = [])).push(ws.viewerId || ""); sv.roundScore = 1000 + Math.round(3000 / srd.wfin.length); }
+        else if (sv.walkFin) sv.roundScore = Math.max(sv.roundScore, 1000);
+        else sv.roundScore = Math.min(1000, sv.roundScore);
+        var racers = 0, done = 0, wcode = ws.room; rooms[wcode].viewers.forEach(function(v) { if (v.dance === 4) { racers++; if (v.walkFin) done++; } });
+        if (racers && done >= racers && !srd.walkEnd) srd.walkEnd = setTimeout(function() { if (rooms[wcode] && rooms[wcode].round === srd) roundFinish(wcode); }, 3500);
+      }
       if (srd.battle && msg.m !== undefined) {
         /* a battle match score: only from the two in the match that's on */
         var bk = battleNow(srd), bs = srd.battle.slots[msg.m | 0], be = srd.battle.entrants;

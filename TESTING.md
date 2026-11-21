@@ -757,6 +757,89 @@ Free dance (all in the free dance panel).
 - If you'd set your own speed in practice, that saved setting still wins on your device; Reset in the Tuning lab's Mars Rally group goes back to 260.
 - Server change: **redeploy Render** so the live-show bots drive at the new speed.
 
+## v1.60.0 - New minigame: Ski
+
+The dance floor tilts and whites out into a slope, and the camera follows you down an endless SkiFree-style mountain. It starts as narrow as the dance floor (everyone lined up on a strip of it at the top) and opens out wide below.
+- **Steering:** point where you want to go with the mouse (or touch and drag on a phone). Straight down is fastest, sideways slows you, pointing uphill stops you. Left / right arrows steer too, down points you straight.
+- **Start:** "READY… 3, 2, 1, GO!" on the beat (beat 8).
+- **Slalom gates:** go between each pair of flags (alternating red and blue) for points. Gates in a row build a **combo** (×1.1, ×1.2, …); miss one and the combo resets.
+- **Air and tricks:** hit a blue ramp (or a mogul) for air, or hop with **Space** / HOP (hop over rocks). In the air: ⬅ 360, ⬆ Backflip, ➡ Daffy. Land a trick to score it; still mid-trick when you land and you wipe out.
+- **Crashes:** trees and rocks knock you down for 1.4 s and reset your combo. The sides of the run are thick forest.
+- **Scoring:** gates and tricks (with the combo), plus a point for every bit of slope you cover.
+- Everyone skis the same course (made from the round number), so you'll see the others when they're near you. **Bots** ski the slalom line at their own pace and sometimes crash.
+- In your round picker and Dance practice. **Tuning lab → Ski**: top speed, acceleration, turn speed, hop and ramp air time, crash time, points per gate.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** Dance practice → Ski with a song. Steer through gates, hit a ramp and try a trick, crash into a tree. Then live with a couple of bots.
+
+## v1.59.1 - Your view of the Half pipe and the Dance walk race
+
+During a Half pipe or Dance walk race round, jam mode switches to the stage view by itself (even if you picked classic; your choice comes back when the round ends), so you can watch the game while you play.
+- **Half pipe:** the floor bends up into the pipe, and everyone skates it exactly as they see it on their phones: on the walls, in the air, boards flipping and spinning, bails. It also shows in the small live preview in the audience panel.
+- **Dance walk race:** the start and finish lines are on the floor, racers face the finish line, lie flat when they trip and turn to the crowd once they're in.
+- The half pipe's shape and drawing now live in art.js, shared by the audience screen and yours, so the two always match.
+
+**Test it:** go live with a few bots and play a Half pipe round, then a Dance walk race, with your view set to classic. Both should switch to the stage view and back.
+
+## v1.59.0 - New minigame: Half pipe
+
+The dance floor bends up into one wide half pipe (it warps up over a couple of seconds when the round starts, and flattens again after) and everyone skates it at once, each in their own lane.
+- **Riding:** you swing from wall to wall in time with the music, one crossing every 2 beats.
+- **Pumping:** press **Space** or the big **PUMP** button as you pass the bottom, on the beat, to go higher. The bar at the bottom fills as the moment comes; the meter beside PUMP shows how high you're swinging. "PERFECT PUMP" for spot on; pumping at the wrong time ("OFF BEAT") or skipping a swing loses a little height.
+- **Air and tricks:** swing high enough and you fly over the lip. In the air, an arrow (or the trick buttons) does a trick: ⬅ Kickflip, ➡ Heelflip, ⬆ Indy grab, ⬇ 360. You can fit two near the top of a big swing.
+- **Landing:** finish the trick before you come down and it scores (more for higher air). Clean landings in a row build a **combo** multiplier (×1.25, ×1.5, …). Still mid-trick when you land and you **bail**: you go flat, lose your combo and drop most of your height.
+- **Bots** skate too: pumping mostly on the beat, throwing tricks, sometimes bailing.
+- In your round picker and Dance practice. **Tuning lab → Half pipe**: pump timing window, pump power, height lost per missed pump, bail time.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** Dance practice → Half pipe with a song. Pump on the beat until you're getting air, try each trick, and try a trick right before landing to see a bail. Then live with a couple of bots.
+
+## v1.58.0 - New minigame: Dance walk race
+
+Everyone lines up on the left of the dance floor and dance-walks to the finish line.
+- **The pad:** a circle glides along an invisible path on your pad (bottom right; bottom middle on phones). Keep your cursor (or finger) inside it to walk at full speed.
+- **The dances:** every 8 beats the dance changes (Sway, Spin, Shuffle, Wave, Bounce, Box step) and so does the circle's path. The pad shows the dance now and warns you two beats before the next one. Your character does that dance as they walk.
+- **Slipping out:** outside the circle you slow down, the further out the slower. Stay out for about 1.4 seconds and you **trip** (1.3 seconds on the floor). The pad's border goes orange, then red, as you get close to tripping.
+- **Start:** "READY… 3, 2, 1, GO!" on the beat (the race starts on beat 8 of the song).
+- **Finish:** first across the line wins. The round ends by itself a few seconds after everyone's finished. Places are decided by the server, so every screen agrees.
+- **Scoring:** 1st 4,000, 2nd 2,500, 3rd 2,000, then 1,000 + 3,000 ÷ place. Anyone still racing at the end scores by distance (up to 1,000). Show points then split 1,000 per round as usual.
+- **Bots** race too, each at their own pace, and sometimes trip.
+- In your round picker and in Dance practice. **Tuning lab → Dance walk race** has sliders for race time (40 s at full speed), circle size, slowest speed, time out before tripping, trip time and how fast the circle loops.
+
+Needs a Render redeploy (server.js and bots.js changed).
+
+**Test it:** Dance practice → Dance walk race with a song. Then live with a couple of bots: race, slip out on purpose to trip, and check the round ends once everyone's in.
+
+## v1.57.3 - Every round is worth 1,000 show points, with a high floor
+
+Each round now hands out exactly 1,000 show points (before: 10 / 7 / 5 / 3 / 1 by finishing place).
+- **40% is shared equally** by everyone who took part in the round, so nobody walks away with nothing.
+- **60% goes by score, softened** (square root), so a blowout win is worth only a bit more than a solid second.
+- Example: Mars Rally scores of 2,651 / 2,449 / 1,889 / 1,459 pay 269 / 263 / 243 / 225. A lopsided round of 3,000 / 800 / 500 / 100 still pays the last player 152.
+- A game with huge score numbers counts the same as one with small numbers.
+- Steady beats spiky: over three rounds, a player who wins one round big then flops finishes behind someone who's a solid second every time, and the gaps stay small enough that a slow starter can catch up.
+- Battles split by matches won; free dance by votes. Works the same in Dance practice.
+
+Needs a Render redeploy (server.js changed).
+
+**Test it:** play a few rounds with bots; each round's "+points" add up to 1,000, and the show standings stay close.
+
+## v1.57.2 - Dance floor fills tall phone screens
+
+The floor used to stop at 78% of the screen height (room for the old, always-open chat log), which left a black band at the bottom on tall phones, most noticeably in the Home Screen app. It now runs down to the chat bar, or to the bottom of the screen in Dance practice.
+
+**Test it:** open the Home Screen app on the iPhone, in portrait and landscape, live and in Dance practice: no black band under the floor.
+
+## v1.57.1 - Drift steering tightened
+
+Once a drift has landed, the stick can now only change the turn by 15% (was 35%), and that steering builds up over about two-thirds of a second instead of instantly. Land at a bad angle and you'll have to let go and recover, rather than steering out of it.
+
+Two new Tuning lab sliders under Mars Rally if you want to adjust it: **Drift steering** (how much, default 0.15) and **Drift steering speed** (how fast it builds, default 1.5/s).
+
+**Test it:** practice a Mars Rally, land a drift too sharp for a corner, and try to steer it wider: you shouldn't make the turn.
+
 ## v1.57.0 - Stage button, characters face the way they walk, audience screen trimmed
 
 **Performer jam screen**

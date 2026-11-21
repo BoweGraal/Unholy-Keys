@@ -12,7 +12,7 @@
 
   /* ---- numbers you can tweak in the Tuning lab (the lab's group "kt"); these are the fallbacks ---- */
   var DEF = { maxSpeed: 260, accel: 130, brake: 260, coast: 70, wall: 0.35, turn: 3.4, grip: 0.002, revSpeed: 0.45,
-    hop: 0.3, hopTurn: 7, driftK: 2.2, miniT: 0.8, turboT: 1.6, ultraT: 2.6, boost1: 0.7, boost2: 1.1, boost3: 1.6, boostMul: 1.4, padTime: 1.1, startBoost: 1.4, intro: 1,
+    hop: 0.3, hopTurn: 7, driftK: 2.2, driftTrim: 0.15, trimRate: 1.5, miniT: 0.8, turboT: 1.6, ultraT: 2.6, boost1: 0.7, boost2: 1.1, boost3: 1.6, boostMul: 1.4, padTime: 1.1, startBoost: 1.4, intro: 1,
     distPts: 40, lapPts: 400, rankPts: 6, passPts: 30, driftPts: 50, hw: 48 };
   var env = null;
   function T(k) { if (k === "intro" && typeof root.__kartIntro === "number") return root.__kartIntro; var v = env && env.tune ? env.tune("kt." + k) : undefined; return typeof v === "number" && isFinite(v) ? v : DEF[k]; }
@@ -323,7 +323,7 @@
     var vm = T("maxSpeed"), sp = Math.hypot(k.vx, k.vy), vdir = Math.atan2(k.vy, k.vx), slip = wrapA(k.a - vdir);
     puff(k.x, k.y, 6);
     if (inp.drift && sp > vm * 0.3 && Math.abs(slip) > 0.2 && Math.abs(slip) < 1.7) {
-      k.drift = slip > 0 ? 1 : -1; k.slip = clamp(slip, -1.05, 1.05); k.omega = k.drift * clamp(Math.abs(k.slip) * T("driftK"), 0.5, 2.8); k.charge = 0; k.a = vdir + k.slip;
+      k.drift = slip > 0 ? 1 : -1; k.trim = 0; k.slip = clamp(slip, -1.05, 1.05); k.omega = k.drift * clamp(Math.abs(k.slip) * T("driftK"), 0.5, 2.8); k.charge = 0; k.a = vdir + k.slip;
     }
   }
   function endDrift(k) {
@@ -344,7 +344,9 @@
       /* drifting: the turn is locked by the angle you landed at; the stick trims it a little */
       var sp = Math.hypot(k.vx, k.vy), vdir = Math.atan2(k.vy, k.vx), adj = 0;
       if (inp.m > 0) adj = clamp(Math.sin(wrapA(inp.ta - k.a)) * k.drift * 1.6, -1, 1);
-      vdir += k.omega * (1 + 0.35 * adj) * dt; k.a = vdir + k.slip;
+      /* the trim only nudges the turn, and builds up slowly: land a bad angle and you can't steer your way out of it */
+      var tr0 = k.trim || 0, rr = T("trimRate") * dt; k.trim = tr0 + clamp(adj - tr0, -rr, rr);
+      vdir += k.omega * (1 + T("driftTrim") * k.trim) * dt; k.a = vdir + k.slip;
       var tgt = vm * Math.max(0.6, inp.m) * (k.boost > 0 ? T("boostMul") : 1);
       sp += clamp(tgt - sp, -T("coast") * dt, T("accel") * dt);
       k.vx = Math.cos(vdir) * sp; k.vy = Math.sin(vdir) * sp;

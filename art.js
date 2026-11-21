@@ -633,6 +633,51 @@ var ART=(function(){
     return{cx:W/2,cy:cy,rx:rx,ry:ry,ix:Math.max(46,rx*0.26),iy:Math.max(18,ry*0.34)};
   }
 
+  /* ---------------- the half pipe (the pipe round): shape, motion and drawing, shared by the venue and the performer's stage view ----------------
+     Positions are fractions of the venue (x across, y = depth lane). A skater with swing A (0.3..1.85) crosses the pipe once every BPC beats;
+     past the lip (|u| > 1) they're in the air. Every screen works this out from the beat, so everyone sees the same thing, smoothly. */
+  var PP={XL:0.08,XR:0.92,Y0:0.46,Y1:0.74,FLAT:0.42,BPC:2,AMAX:1.85,
+    TR:[null,{k:"kick",name:"Kickflip",pts:150,dur:0.3,col:"#3DF2FF"},{k:"heel",name:"Heelflip",pts:150,dur:0.3,col:"#4CC38A"},{k:"grab",name:"Indy grab",pts:200,dur:0.35,col:"#F5C518"},{k:"spin",name:"360",pts:300,dur:0.42,col:"#D04DFF"}]};
+  PP.prof=function(au){if(au<=PP.FLAT)return 0;var t=Math.min(1,(au-PP.FLAT)/(1-PP.FLAT));return 1-Math.sqrt(Math.max(0,1-t*t));};
+  PP.slope=function(u){var au=Math.abs(u);if(au<=PP.FLAT)return 0;var t=Math.min(0.999,(au-PP.FLAT)/(1-PP.FLAT));return (u<0?-1:1)*t/Math.sqrt(1-t*t)/(1-PP.FLAT);};
+  PP.xOf=function(u){return 0.5+u*(PP.XR-PP.XL)/2;};
+  /* the song's beat at a position (ms), from the chart's beat times when there are some */
+  PP.beatAt=function(c,pos){var bs=c&&c.beats,per=c&&c.bpm?60000/c.bpm:500;
+    if(!(pos>-1e8))return performance.now()/per;
+    if(!bs||bs.length<2)return pos/per;
+    if(pos<=bs[0])return (pos-bs[0])/per;
+    var n=bs.length;if(pos>=bs[n-1])return n-1+(pos-bs[n-1])/per;
+    var lo=0,hi=n-1;while(hi-lo>1){var m=(lo+hi)>>1;if(bs[m]<=pos)lo=m;else hi=m;}
+    return lo+(pos-bs[lo])/Math.max(1,bs[hi]-bs[lo]);};
+  /* lanes: everyone sorted the same way on every screen; neighbours start on opposite walls */
+  PP.lane=function(ids,id){ids=ids.slice().sort();var i=Math.max(0,ids.indexOf(id)),n=Math.max(4,Math.min(8,ids.length));return{y:PP.Y0+((i%n)+0.5)/n*(PP.Y1-PP.Y0),s:i%2?-1:1};};
+  /* where a skater is: wallPx = how tall the walls are on this screen, halfW = half the pipe's width in pixels (for the tilt) */
+  PP.state=function(A,sg,b,wallPx,halfW){
+    var s=sg*Math.sin(Math.PI*b/PP.BPC),u=A*s,air=Math.abs(u)>1,z=air?(Math.abs(u)-1)/(PP.AMAX-1):0,uu=air?(u<0?-1:1):u,vel=sg*Math.cos(Math.PI*b/PP.BPC);
+    return{u:uu,x:PP.xOf(uu),air:air,z:z,h:PP.prof(Math.abs(uu)),ang:air?0:Math.atan(PP.slope(uu)*wallPx/Math.max(1,halfW)),dir:vel>=0?1:3};};
+  /* the pipe itself: o = {W, X(x frac) -> px, Yd(y frac) -> px, wall px, beat} */
+  PP.draw=function(g,o){
+    var WP=o.wall,cols=56,rows=7,yb=o.Yd(PP.Y0-0.04),yf=o.Yd(PP.Y1+0.03),glow=Math.pow(1-((o.beat%1)+1)%1,3),W=o.W;
+    for(var i=0;i<cols;i++){
+      var u0=-1+2*i/cols,u1=-1+2*(i+1)/cols,xa=o.X(PP.xOf(u0)),xb=o.X(PP.xOf(u1))+1,um=(u0+u1)/2,p=PP.prof(Math.abs(um))*WP,sl=Math.min(1,Math.abs(PP.slope(um))/4);
+      for(var j=0;j<rows;j++){var ya=yb+(yf-yb)*j/rows-p,yh=(yf-yb)/rows+1;g.fillStyle=(i+j)%2?"#1a1430":"#120e1e";g.fillRect(xa,ya,xb-xa,yh);
+        if((i*7+j*3)%11===0){g.globalAlpha=0.25*glow;g.fillStyle="#D354A0";g.fillRect(xa,ya,xb-xa,yh);g.globalAlpha=1;}}
+      if(sl>0){g.globalAlpha=0.35*sl;g.fillStyle="#000";g.fillRect(xa,yb-p,xb-xa,yf-yb);g.globalAlpha=1;}
+      if(p>0.5){var gr=g.createLinearGradient(0,yf-p,0,yf);gr.addColorStop(0,"#2c2346");gr.addColorStop(1,"#0d0a18");g.fillStyle=gr;g.fillRect(xa,yf-p,xb-xa,p);}
+    }
+    g.strokeStyle="#9B7FE0";g.lineWidth=2;g.beginPath();for(var q=0;q<=cols;q++){var uq=-1+2*q/cols,xq=o.X(PP.xOf(uq)),yq=yf-PP.prof(Math.abs(uq))*WP;if(q)g.lineTo(xq,yq);else g.moveTo(xq,yq);}g.stroke();
+    [-1,1].forEach(function(sd){var xc=o.X(PP.xOf(sd));g.fillStyle="#3a3058";g.fillRect(sd<0?0:xc,yb-WP,sd<0?xc:W-xc,yf-yb);
+      g.fillStyle="#2a2240";g.fillRect(sd<0?0:xc,yf-WP,sd<0?xc:W-xc,WP);
+      g.strokeStyle="#d8d8e8";g.lineWidth=4;g.beginPath();g.moveTo(xc,yb-WP);g.lineTo(xc,yf-WP);g.stroke();});
+  };
+  /* a skateboard: flips over on a kickflip or heelflip */
+  PP.board=function(g,x,y,ang,sc,tk,p,col){
+    g.save();g.translate(x,y);g.rotate(ang);
+    var L=8.5*sc,Hh=1.6*sc,fl=tk===1||tk===2?Math.cos(p*Math.PI*2):1;
+    g.scale(1,fl||0.05);
+    g.fillStyle=col||"#E8505B";g.fillRect(-L,-Hh,L*2,Hh*1.6);g.fillStyle="#222";g.fillRect(-L*0.75,Hh*0.6,3*sc,2*sc);g.fillRect(L*0.75-3*sc,Hh*0.6,3*sc,2*sc);
+    g.restore();
+  };
   /* ---------------- keepy uppy (the keepy round) ----------------
      A balloon (light, drifts down), a ball (heavy, drops fast and bounces) and a feather (floats high and
      takes forever to come down) to keep off the floor. Shared between the pages: every screen runs the same
@@ -1757,6 +1802,6 @@ var ART=(function(){
     var J=joints(x,y+lift,p,0),aL=Math.atan2(-(target.x-J[0][0]),target.y-J[0][1]),aR=Math.atan2(-(target.x-J[1][0]),target.y-J[1][1]);
     return{lift:lift,armL:aL,armR:aR,hands:[[J[0][0]-Math.sin(aL)*9*p,J[0][1]+Math.cos(aL)*9*p],[J[1][0]-Math.sin(aR)*9*p,J[1][1]+Math.cos(aR)*9*p]]};
   }
-  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.57.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.60.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
