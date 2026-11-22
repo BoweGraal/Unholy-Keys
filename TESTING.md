@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.14 — Kart flag tune-up, skip timer
+
+- **Flag pick-up**: the pick-up is now tested along the kart's path since the last update and karts get a bigger reach (1.25 tiles), so stopping on or driving fast over the flag always grabs it. A hiccup in the button display can no longer stop the rules from running.
+- **Zoom**: halfway back out (44 px per tile, was 54; the old wide view was about 33).
+- **LAUNCH**: a little softer (tap 0.95×, full 1.4× top speed) and a **4 second cooldown**; the button dims and counts down.
+- **Items off**: no ? boxes and no item button, just LAUNCH and IMPACT. (Switch: `K_ITEMS` in art.js.)
+- **Practice: ⏩ Skip timer** at the bottom during the countdown starts the song right away (once its steps are ready).
+- The practice countdown card now says **Kart flag** (not Capture the flag) with the right one-line rules.
+
+All of these are tunable in the lab: Kart flag → Zoom, Launch quick tap / fully charged, Launch cooldown.
+
 ## v1.81.13 — Crew cut hair
 
 - **Hair → Crew cut**: close to the head with a short fringe swept across the brow, a little lift at the front from the side, and the neck showing at the back. Swept mop stays as its own option.
