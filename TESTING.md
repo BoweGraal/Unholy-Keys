@@ -1582,3 +1582,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.33 — phone keyboard buttons like the real keyboard
 - Phone play screen, left side: two small buttons on top (E and 3, same as Space+E and Space+3), then a peanut: top half = D, bottom half = Space, the waist = both (Space+D). A finger on each half also counts as both, and you can slide between halves to change level. Root (no finger) is unchanged.
+
+## v1.79.34
+- Practice: the viewer count is gone, and Leave practice moves into the bottom stack with Dance and Start game, all hugging the right edge. Still hidden while a minigame is on.
