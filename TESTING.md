@@ -1552,3 +1552,6 @@ Needs a Render redeploy (server.js changed).
 - Right stick (arrows) is the per-dance control; help text for every dance now says what it does.
 - Shuffle: right stick UP = step up on toes with high knees, DOWN = low stomp, sideways = arms; left stick sets slide direction and speed.
 - Test hook: ukFree(i).
+
+## v1.79.24
+- Free dance: dragging a dot out of its ring no longer tears it off to hover over buttons; dances and sub-moves are picked by tapping their buttons.
