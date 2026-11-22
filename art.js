@@ -330,6 +330,7 @@ var ART=(function(){
       if(FC===8)px(1,-9+hy,2,1,"#F08AA0");
       if(FC===9){var sb3=shade(skin,-0.3);px(0,-7+hy,1,1,sb3);px(2,-7+hy,1,1,sb3);px(1,-6+hy,1,1,sb3);px(3,-6+hy,1,1,sb3);}
       SEC="hat";sideHat();
+      PAINT.view("hair:"+HR,1,OX,OY+hy);PAINT.view("hat:"+HT,1,OX,OY+hy);PAINT.view("extra:"+EX,1,OX,OY+hy);
     }else{
       /* ---- back: the arms and legs swap sides, no face, the hair covers the back of the head ---- */
       SEC="legL";limb(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));
@@ -372,6 +373,7 @@ var ART=(function(){
       if(EX===3){px(-5,-17+hy,10,3,"#E8505B");px(-5,-14+hy,10,1,"#B83A44");px(-1,-14+hy,2,2,"#B83A44");px(-2,-12+hy,1,2,"#B83A44");px(1,-12+hy,1,2,"#B83A44");}
       if(EX===4)px(-5,-14+hy,10,2,"#D354A0");
       SEC="hat";backHat();
+      PAINT.view("hair:"+HR,2,OX,OY+hy);PAINT.view("hat:"+HT,2,OX,OY+hy);
     }
     }else{
     SEC="legL";limb(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));
@@ -509,7 +511,7 @@ var ART=(function(){
     if(ht===13){px(-6,-15+hy,12,1,"#3a3650");px(-5,-17+hy,4,3,"#C8C8D8");px(1,-17+hy,4,3,"#C8C8D8");px(-4,-16+hy,2,1,"#6FE0C0");px(2,-16+hy,2,1,"#6FE0C0");px(-1,-16+hy,2,1,"#3a3650");}   /* goggles pushed up on the head */
     if(ht===12){px(-6,-17+hy,12,9,"#D8303A");px(-6,-12+hy,12,1,BLK);px(-5,-12+hy,10,3,"#3a3a5a");px(-4,-12+hy,3,1,"#8AC8FF");px(-6,-17+hy,12,1,WH);px(-1,-17+hy,2,5,WH);}   /* racing helmet: the visor down */
     /* pixels painted in the Graphics lab, by part, before the outline goes round them */
-    paintLayer("hair:"+(L.hair|0),OX,OY+hy);paintLayer("hat:"+(L.hat|0),OX,OY+hy);paintLayer("face:"+(L.face|0),OX,OY+hy);paintLayer("extra:"+(L.extra|0),OX,OY+hy);
+    var TO=TOFF||{};paintLayer("hair:"+(L.hair|0),OX+(TO.hair||0),OY+hy);paintLayer("hat:"+(L.hat|0),OX+(TO.hat||0),OY+hy);paintLayer("face:"+(L.face|0),OX+(TO.face||0),OY+hy);paintLayer("extra:"+(L.extra|0),OX+(TO.extra||0),OY+hy);
     paintLayer("top:"+(L.top|0),OX,OY);paintLayer("bottom:"+(L.bottom|0),OX,OY);
     paintLayer("armL",Math.round(OX-6.5),Math.round(OY-4.5),aL);paintLayer("armR",Math.round(OX+6.5),Math.round(OY-4.5),aR);
     paintLayer("legL",Math.round(OX-2.5),OY+4,lL);paintLayer("legR",Math.round(OX+2.5),OY+4,lR);
@@ -1198,7 +1200,7 @@ var ART=(function(){
         g.fillStyle=T.col;g.beginPath();g.moveTo(-r*1.2,r*0.35);g.quadraticCurveTo(0,-r*1.1,r*1.3,-r*0.4);g.quadraticCurveTo(0,r*0.2,-r*1.2,r*0.35);g.fill();
       }
       g.restore();
-      if(o.streak>=2){g.font="800 "+Math.round(10+Math.min(8,o.streak))+"px system-ui";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("×"+o.streak,p[0],p[1]-r*1.6);g.fillStyle=T.col;g.fillText("×"+o.streak,p[0],p[1]-r*1.6);}
+      if(o.streak>=2){g.font="800 "+Math.round(10+Math.min(8,o.streak))+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("×"+o.streak,p[0],p[1]-r*1.6);g.fillStyle=T.col;g.fillText("×"+o.streak,p[0],p[1]-r*1.6);}
     });
   }
   /* ---------------- walking ----------------
@@ -1411,7 +1413,7 @@ var ART=(function(){
       r(kx,ky,kw,kh,on?c:"#1f1933");r(kx,ky,kw,1,on?"rgba(255,255,255,.45)":"#2e2648");r(kx,ky+kh-1,kw,1,on?"rgba(0,0,0,.3)":"#151024");
       if(on){g.globalAlpha=0.25;r(kx-1,ky-1,kw+2,kh+2,c);g.globalAlpha=1;r(kx,ky,kw,kh,c);r(kx,ky,kw,1,"rgba(255,255,255,.45)");}
     }
-    function label(t,cx,cy,on){if(p<3)return;g.fillStyle=on?"#fff":"rgba(255,255,255,.4)";g.font="700 "+Math.max(7,Math.round(p*2.6))+"px system-ui,sans-serif";
+    function label(t,cx,cy,on){if(p<3)return;g.fillStyle=on?"#fff":"rgba(255,255,255,.4)";g.font="700 "+Math.max(7,Math.round(p*2.6))+"px 'Silkscreen',ui-monospace,monospace";
       g.textAlign="center";g.textBaseline="middle";g.fillText(t,Math.round(x+cx*p),Math.round(y+cy*p)+1);}
     var row=[["SPACE",2,9,"space"],["D",12,4,"d"],["E",17,4,"e"],["3",22,3,"three"]];
     row.forEach(function(k){var on=!!mods[k[3]];key(k[1],2,k[2],5,on,mc[k[3]]||"#7F77DD");label(k[0],k[1]+k[2]/2,4.5,on);});
@@ -1474,29 +1476,29 @@ var ART=(function(){
     opts=opts||{};
     if(!makerCss){makerCss=true;var st=document.createElement("style");st.textContent=
       ".ukm{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}"+
-      ".ukm-pw{position:relative;flex:0 0 auto;line-height:0}.ukm-turn{position:absolute;bottom:8px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(42,36,64,.9);color:#fff;font:700 19px system-ui;cursor:pointer;line-height:1;padding:0}.ukm-turn.l{left:8px}.ukm-turn.r{right:8px}"+
+      ".ukm-pw{position:relative;flex:0 0 auto;line-height:0}.ukm-turn{position:absolute;bottom:8px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(42,36,64,.9);color:#fff;font:700 19px 'Silkscreen',ui-monospace,monospace;cursor:pointer;line-height:1;padding:0}.ukm-turn.l{left:8px}.ukm-turn.r{right:8px}"+
       ".ukm-prev{flex:0 0 auto;width:176px;height:220px;border-radius:10px;background:linear-gradient(#2a1f42,#161128);border:1px solid rgba(255,255,255,.12);image-rendering:pixelated;cursor:pointer}"+
       ".ukm-rows{flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:7px}"+
       ".ukm-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}"+
       ".ukm-lbl{font-size:11px;color:#a59cc4;text-transform:uppercase;letter-spacing:.5px;width:100%;margin-bottom:-2px}"+
       ".ukm-step{display:flex;align-items:center;gap:4px}"+
-      ".ukm-step button{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:#2a2440;color:#fff;cursor:pointer;font:700 13px system-ui;padding:0}"+
-      ".ukm-step span{min-width:84px;text-align:center;font:600 13px system-ui;color:#fff}"+
+      ".ukm-step button{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:#2a2440;color:#fff;cursor:pointer;font:700 13px 'Silkscreen',ui-monospace,monospace;padding:0}"+
+      ".ukm-step span{min-width:84px;text-align:center;font:600 13px 'Silkscreen',ui-monospace,monospace;color:#fff}"+
       ".ukm-sw{width:20px;height:20px;border-radius:5px;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}"+
       ".ukm-sw.sel{border-color:#fff;transform:scale(1.12)}"+
       "@media (max-width:520px){.ukm{gap:12px;flex-direction:column;align-items:center}.ukm-prev{width:min(250px,66vw);height:min(312px,82vw)}.ukm-rows{flex-basis:auto;width:100%}.ukm-step span{min-width:70px;font-size:12px}.ukm-sw{width:18px;height:18px}}"+
       ".ukm-col{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.85);cursor:pointer;padding:0;margin-left:4px;box-shadow:0 0 0 2px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.3)}"+
       ".ukm-pop{position:fixed;inset:0;z-index:200000;background:rgba(6,3,14,.7);display:flex;align-items:center;justify-content:center;padding:14px}"+
-      ".ukm-pbox{background:#1b1630;border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px;width:min(360px,100%);color:#fff;font:600 13px system-ui;box-shadow:0 18px 50px rgba(0,0,0,.6)}"+
-      ".ukm-pbox h4{margin:0 0 10px;font:800 15px system-ui}"+
+      ".ukm-pbox{background:#1b1630;border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px;width:min(360px,100%);color:#fff;font:600 13px 'Silkscreen',ui-monospace,monospace;box-shadow:0 18px 50px rgba(0,0,0,.6)}"+
+      ".ukm-pbox h4{margin:0 0 10px;font:800 15px 'Silkscreen',ui-monospace,monospace}"+
       ".ukm-zoom{width:100%;height:170px;border-radius:10px;background:linear-gradient(#2a1f42,#161128);image-rendering:pixelated;display:block;margin-bottom:10px}"+
       ".ukm-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.ukm-grid .ukm-sw{width:30px;height:30px;border-radius:7px}"+
       ".ukm-any{display:flex;align-items:center;gap:8px;margin-bottom:12px}.ukm-any input[type=color]{width:46px;height:34px;border:0;padding:0;background:none;cursor:pointer}"+
       ".ukm-any input[type=text]{flex:1;min-width:0;background:#120e22;border:1px solid rgba(255,255,255,.15);border-radius:7px;color:#fff;font:600 13px ui-monospace,monospace;padding:7px 9px}"+
       ".ukm-hue{width:100%;height:120px;border-radius:9px;cursor:crosshair;display:block;margin-bottom:8px;touch-action:none}"+
-      ".ukm-done{width:100%;padding:9px;border-radius:9px;border:0;background:linear-gradient(135deg,#D354A0,#7F77DD);color:#fff;font:800 14px system-ui;cursor:pointer}"+
-      ".ukm-gender{display:flex;gap:4px}.ukm-gender button{padding:6px 10px;border:1px solid rgba(255,255,255,.18);background:#2a2440;color:#fff;font:700 12px system-ui;cursor:pointer}.ukm-gender button.on{background:#c8407e;border-color:#ff8ac8}"+
-      ".ukm-rand{align-self:flex-start;margin-top:2px;padding:6px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.18);background:#2a2440;color:#fff;font:600 12px system-ui;cursor:pointer}";
+      ".ukm-done{width:100%;padding:9px;border-radius:9px;border:0;background:linear-gradient(135deg,#D354A0,#7F77DD);color:#fff;font:800 14px 'Silkscreen',ui-monospace,monospace;cursor:pointer}"+
+      ".ukm-gender{display:flex;gap:4px}.ukm-gender button{padding:6px 10px;border:1px solid rgba(255,255,255,.18);background:#2a2440;color:#fff;font:700 12px 'Silkscreen',ui-monospace,monospace;cursor:pointer}.ukm-gender button.on{background:#c8407e;border-color:#ff8ac8}"+
+      ".ukm-rand{align-self:flex-start;margin-top:2px;padding:6px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.18);background:#2a2440;color:#fff;font:600 12px 'Silkscreen',ui-monospace,monospace;cursor:pointer}";
       document.head.appendChild(st);}
     var L=look?JSON.parse(JSON.stringify(look)):random(),O=OPTS;
     el.innerHTML="";var box=document.createElement("div");box.className="ukm";el.appendChild(box);
@@ -1857,17 +1859,18 @@ var ART=(function(){
   var NOADJ=false;function withAdj(key,g,fn){var f=NOADJ?"":adjCss(key);if(!f||!("filter" in g)){return fn();}var was=g.filter;g.filter=f;try{return fn();}finally{g.filter=was;}}
   /* pixel edits painted in the Graphics lab (uk_paint): {layerKey:{"x,y":"#rrggbb" | "0" (a hole)}}, coordinates local to the part */
   var PT={},PC={},POFF=false;/* shipped pixel edits (the shades): what this device has saved on top wins */
-  PT=JSON.parse("{\"hair:12\":{\"-2,-15\":\"#7f77dd\",\"-1,-15\":\"#7f77dd\",\"0,-15\":\"#7f77dd\",\"1,-15\":\"#7f77dd\",\"2,-15\":\"#7f77dd\",\"-3,-11\":\"#7f77dd\",\"-3,-10\":\"#7f77dd\",\"-3,-9\":\"#7f77dd\",\"-3,-12\":\"#7f77dd\",\"-2,-12\":\"#7f77dd\",\"-1,-12\":\"#7f77dd\",\"0,-12\":\"#7f77dd\",\"-2,-11\":\"#7f77dd\",\"-1,-11\":\"#7f77dd\",\"0,-11\":\"#7f77dd\",\"1,-11\":\"#7f77dd\",\"2,-11\":\"#7f77dd\",\"-7,-14\":\"#7f77dd\",\"-7,-13\":\"#7f77dd\",\"-7,-12\":\"#7f77dd\",\"-7,-11\":\"#7f77dd\",\"-7,-10\":\"#7f77dd\",\"-7,-9\":\"#7f77dd\",\"-7,-8\":\"#7f77dd\",\"-7,-7\":\"#7f77dd\",\"-7,-6\":\"#7f77dd\",\"-6,-6\":\"#7f77dd\",\"-6,-7\":\"#7f77dd\",\"-6,-8\":\"#7f77dd\",\"-6,-9\":\"#7f77dd\",\"-6,-10\":\"#7f77dd\",\"-6,-11\":\"#7f77dd\",\"-6,-12\":\"#7f77dd\",\"-6,-13\":\"#7f77dd\",\"-6,-14\":\"#7f77dd\",\"-5,-13\":\"#7f77dd\",\"-5,-14\":\"#7f77dd\",\"-5,-12\":\"#7f77dd\",\"-5,-11\":\"#7f77dd\",\"-5,-10\":\"#7f77dd\",\"-5,-9\":\"#7f77dd\",\"-5,-8\":\"#7f77dd\",\"-5,-7\":\"#7f77dd\",\"-5,-6\":\"#7f77dd\",\"-4,-6\":\"#7f77dd\",\"-3,-5\":\"#7f77dd\",\"-3,-6\":\"#7f77dd\",\"-4,-7\":\"#7f77dd\",\"-4,-8\":\"#7f77dd\",\"-4,-9\":\"#7f77dd\",\"-4,-10\":\"#7f77dd\",\"-4,-11\":\"#7f77dd\",\"-4,-12\":\"#7f77dd\",\"-4,-13\":\"#7f77dd\",\"-3,-13\":\"#7f77dd\",\"-2,-10\":\"#7f77dd\",\"-2,-9\":\"#7f77dd\",\"-3,-8\":\"#7f77dd\",\"-3,-7\":\"#7f77dd\",\"-2,-8\":\"#7f77dd\",\"-2,-7\":\"#7f77dd\",\"-2,-6\":\"#7f77dd\",\"-1,-10\":\"#7f77dd\",\"-1,-9\":\"#7f77dd\",\"-1,-8\":\"#7f77dd\",\"-1,-7\":\"#7f77dd\",\"-1,-6\":\"#7f77dd\",\"0,-10\":\"#7f77dd\",\"0,-9\":\"#7f77dd\",\"0,-8\":\"#7f77dd\"},\"extra:1\":{\"-1,-9\":\"0\",\"0,-9\":\"0\"}}");
+  PT=JSON.parse("{\"hair:12\":{\"-2,-15\":\"#7f77dd\",\"-1,-15\":\"#7f77dd\",\"0,-15\":\"#7f77dd\",\"1,-15\":\"#7f77dd\",\"2,-15\":\"#7f77dd\",\"-3,-11\":\"#7f77dd\",\"-3,-10\":\"#7f77dd\",\"-3,-9\":\"#7f77dd\",\"-3,-12\":\"#7f77dd\",\"-2,-12\":\"#7f77dd\",\"-1,-12\":\"#7f77dd\",\"0,-12\":\"#7f77dd\",\"-2,-11\":\"#7f77dd\",\"-1,-11\":\"#7f77dd\",\"0,-11\":\"#7f77dd\",\"1,-11\":\"#7f77dd\",\"2,-11\":\"#7f77dd\",\"-7,-14\":\"#7f77dd\",\"-7,-13\":\"#7f77dd\",\"-7,-12\":\"#7f77dd\",\"-7,-11\":\"#7f77dd\",\"-7,-10\":\"#7f77dd\",\"-7,-9\":\"#7f77dd\",\"-7,-8\":\"#7f77dd\",\"-7,-7\":\"#7f77dd\",\"-7,-6\":\"#7f77dd\",\"-6,-6\":\"#7f77dd\",\"-6,-7\":\"#7f77dd\",\"-6,-8\":\"#7f77dd\",\"-6,-9\":\"#7f77dd\",\"-6,-10\":\"#7f77dd\",\"-6,-11\":\"#7f77dd\",\"-6,-12\":\"#7f77dd\",\"-6,-13\":\"#7f77dd\",\"-6,-14\":\"#7f77dd\",\"-5,-13\":\"#7f77dd\",\"-5,-14\":\"#7f77dd\",\"-5,-12\":\"#7f77dd\",\"-5,-11\":\"#7f77dd\",\"-5,-10\":\"#7f77dd\",\"-5,-9\":\"#7f77dd\",\"-5,-8\":\"#7f77dd\",\"-5,-7\":\"#7f77dd\",\"-5,-6\":\"#7f77dd\",\"-4,-6\":\"#7f77dd\",\"-3,-5\":\"#7f77dd\",\"-3,-6\":\"#7f77dd\",\"-4,-7\":\"#7f77dd\",\"-4,-8\":\"#7f77dd\",\"-4,-9\":\"#7f77dd\",\"-4,-10\":\"#7f77dd\",\"-4,-11\":\"#7f77dd\",\"-4,-12\":\"#7f77dd\",\"-4,-13\":\"#7f77dd\",\"-3,-13\":\"#7f77dd\",\"-2,-10\":\"#7f77dd\",\"-2,-9\":\"#7f77dd\",\"-3,-8\":\"#7f77dd\",\"-3,-7\":\"#7f77dd\",\"-2,-8\":\"#7f77dd\",\"-2,-7\":\"#7f77dd\",\"-2,-6\":\"#7f77dd\",\"-1,-10\":\"#7f77dd\",\"-1,-9\":\"#7f77dd\",\"-1,-8\":\"#7f77dd\",\"-1,-7\":\"#7f77dd\",\"-1,-6\":\"#7f77dd\",\"0,-10\":\"#7f77dd\",\"0,-9\":\"#7f77dd\",\"0,-8\":\"#7f77dd\"},\"extra:1\":{\"-1,-9\":\"0\",\"0,-9\":\"0\",\"3,-12\":\"#1a1033\",\"4,-11\":\"#7f77dd\",\"-4,-12\":\"#1a1033\",\"-5,-11\":\"#7f77dd\",\"-2,-12\":\"#1a1033\",\"-3,-12\":\"#1a1033\",\"2,-12\":\"#1a1033\",\"1,-12\":\"#1a1033\",\"-2,-10\":\"#7f77dd\",\"-1,-10\":\"#7f77dd\",\"-1,-11\":\"#7f77dd\",\"0,-11\":\"#7f77dd\",\"-1,-12\":\"#1a1033\",\"0,-12\":\"#1a1033\",\"1,-11\":\"#7f77dd\",\"-2,-11\":\"#7f77dd\",\"-3,-11\":\"#7f77dd\",\"-4,-11\":\"#7f77dd\",\"-4,-10\":\"#7f77dd\",\"-5,-10\":\"#7f77dd\",\"-3,-10\":\"#7f77dd\",\"-3,-9\":\"#7f77dd\",\"-4,-9\":\"#7f77dd\",\"0,-10\":\"#7f77dd\",\"2,-10\":\"#7f77dd\",\"1,-9\":\"0\",\"2,-9\":\"#7f77dd\",\"3,-9\":\"#7f77dd\",\"3,-10\":\"#7f77dd\",\"4,-10\":\"#7f77dd\",\"2,-11\":\"#7f77dd\",\"3,-11\":\"#7f77dd\",\"1,-10\":\"#7f77dd\",\"5,-12\":\"#1a1033\",\"4,-12\":\"#1a1033\",\"6,-11\":\"#1a1033\",\"-5,-12\":\"#1a1033\",\"-6,-12\":\"#1a1033\",\"-7,-11\":\"#1a1033\"},\"hair:3\":{\"4,-7\":\"#1f8fbf\"},\"hair:5\":{\"-8,-12\":\"0\",\"-7,-11\":\"0\",\"-6,-11\":\"0\",\"-5,-11\":\"0\",\"-4,-11\":\"0\",\"-3,-11\":\"0\",\"-2,-11\":\"0\",\"-1,-11\":\"0\",\"0,-11\":\"0\",\"1,-11\":\"0\",\"2,-11\":\"0\",\"3,-11\":\"0\",\"4,-11\":\"0\",\"5,-11\":\"0\",\"6,-11\":\"0\",\"6,-12\":\"#120d1e\",\"7,-12\":\"0\",\"-8,-13\":\"#120d1e\",\"-7,-12\":\"#120d1e\",\"7,-13\":\"#120d1e\",\"5,-12\":\"#120d1e\",\"-6,-12\":\"#120d1e\",\"-5,-12\":\"#120d1e\",\"-4,-12\":\"#120d1e\",\"-3,-12\":\"#120d1e\",\"-2,-12\":\"#120d1e\",\"-1,-12\":\"#120d1e\",\"0,-12\":\"#120d1e\",\"1,-12\":\"#120d1e\",\"2,-12\":\"#120d1e\",\"3,-12\":\"#120d1e\",\"4,-12\":\"#120d1e\",\"-8,-11\":\"0\",\"-6,-22\":\"#120d1e\",\"-5,-22\":\"#120d1e\",\"-4,-22\":\"#120d1e\",\"-3,-22\":\"#120d1e\",\"-2,-22\":\"#120d1e\",\"-1,-22\":\"#120d1e\",\"0,-22\":\"#120d1e\",\"1,-22\":\"#120d1e\",\"2,-22\":\"#120d1e\",\"3,-22\":\"#120d1e\",\"4,-22\":\"#120d1e\",\"5,-22\":\"#120d1e\",\"-7,-21\":\"#120d1e\",\"-8,-20\":\"#120d1e\",\"6,-21\":\"#120d1e\",\"7,-20\":\"#120d1e\",\"-5,-21\":\"#4a9be8\",\"-4,-21\":\"#4a9be8\",\"-3,-21\":\"#4a9be8\",\"-2,-21\":\"#4a9be8\",\"-1,-21\":\"#4a9be8\",\"0,-21\":\"#4a9be8\",\"1,-21\":\"#4a9be8\",\"2,-21\":\"#4a9be8\",\"3,-21\":\"#4a9be8\",\"4,-21\":\"#4a9be8\",\"5,-21\":\"#4a9be8\",\"-6,-21\":\"#4a9be8\"},\"hair:6\":{\"-4,-11\":\"0\",\"-5,-11\":\"0\",\"-6,-11\":\"0\",\"-5,-10\":\"0\",\"-6,-12\":\"0\",\"6,-14\":\"0\",\"6,-13\":\"#120d1e\",\"6,-12\":\"#120d1e\",\"6,-11\":\"#120d1e\",\"7,-11\":\"0\",\"7,-12\":\"0\",\"7,-13\":\"0\",\"7,-10\":\"0\",\"7,-9\":\"0\",\"7,-8\":\"0\",\"7,-7\":\"0\",\"6,-7\":\"0\",\"6,-8\":\"0\",\"6,-9\":\"#120d1e\",\"6,-10\":\"#120d1e\",\"-5,-12\":\"0\",\"-2,-13\":\"#120d1e\",\"1,-13\":\"#120d1e\",\"-1,-13\":\"#120d1e\",\"0,-13\":\"#120d1e\",\"2,-12\":\"0\",\"3,-11\":\"0\",\"2,-13\":\"#120d1e\",\"4,-11\":\"#120d1e\",\"5,-7\":\"0\",\"-3,-13\":\"#120d1e\",\"-4,-13\":\"#120d1e\",\"-5,-13\":\"#120d1e\",\"1,-15\":\"#4a9be8\",\"2,-15\":\"#4a9be8\",\"4,-15\":\"#120d1e\",\"3,-15\":\"#4a9be8\",\"5,-9\":\"#120d1e\",\"5,-8\":\"0\",\"1,-16\":\"#120d1e\",\"2,-16\":\"#120d1e\",\"3,-16\":\"#120d1e\",\"4,-16\":\"0\"}}");
   try{var pts=JSON.parse(localStorage.getItem("uk_paint")||"{}");if(pts&&typeof pts==="object")for(var pk in pts)PT[pk]=pts[pk];}catch(e){}
   function ptSave(){try{localStorage.setItem("uk_paint",JSON.stringify(PT));}catch(e){}}
-  function ptBuild(key){var m=PT[key];if(!m)return null;var P=[],x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,k;
+  function ptBuild(key){return ptBuildM(PT[key]);}
+  function ptBuildM(m){if(!m)return null;var P=[],x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,k;
     for(k in m){if(!/^-?\d+,-?\d+$/.test(k))continue;var v=m[k];if(v!=="0"&&!/^#[0-9a-fA-F]{6}$/.test(v))continue;var q=k.split(","),x=+q[0],y=+q[1];if(Math.abs(x)>400||Math.abs(y)>400)continue;P.push([x,y,v]);x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
     if(!P.length)return null;var w=x1-x0+1,h=y1-y0+1,c=document.createElement("canvas"),hc=null,cg,hg,any=false;c.width=w;c.height=h;cg=c.getContext("2d");
     P.forEach(function(e){if(e[2]==="0"){if(!hc){hc=document.createElement("canvas");hc.width=w;hc.height=h;hg=hc.getContext("2d");hg.fillStyle="#000";}hg.fillRect(e[0]-x0,e[1]-y0,1,1);}else{cg.fillStyle=e[2];cg.fillRect(e[0]-x0,e[1]-y0,1,1);any=true;}});
     return{c:any?c:null,h:hc,x0:x0,y0:y0};}
   var DUMMYG=null,HOLEC=null;
   function ptGet(key){if(POFF)return null;if(!(key in PC))PC[key]=ptBuild(key);return PC[key];}
-  var PAINT={get:function(k){return PT[k];},set:function(k,m,nosave){if(m&&Object.keys(m).length)PT[k]=m;else delete PT[k];delete PC[k];if(!nosave)ptSave();},save:ptSave,all:function(){return PT;},
+  var PAINT={view:paintView,get:function(k){return PT[k];},set:function(k,m,nosave){if(m&&Object.keys(m).length)PT[k]=m;else delete PT[k];delete PC[k];if(!nosave)ptSave();},save:ptSave,all:function(){return PT;},
     load:function(o){PT=o&&typeof o==="object"?o:{};PC={};ptSave();},clear:function(){PT={};PC={};ptSave();},off:function(b){POFF=!!b;},
     count:function(){return Object.keys(PT).length;},
     replaced:function(k){return !POFF&&!!(PT[k]&&PT[k]["!"]);},   /* redrawn from scratch: the original art is skipped, only the paint shows */
@@ -1884,6 +1887,22 @@ var ART=(function(){
     if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();
     masks();MUSED=true;[[pmg,e.c],[hmg,e.h]].forEach(function(m){if(!m[1])return;m[0].save();m[0].imageSmoothingEnabled=false;m[0].translate(tx,ty);if(rot)m[0].rotate(rot);m[0].drawImage(m[1],e.x0,e.y0);m[0].restore();});
     if(e.c){hmg.save();hmg.translate(tx,ty);if(rot)hmg.rotate(rot);hmg.globalCompositeOperation="destination-out";hmg.drawImage(e.c,e.x0,e.y0);hmg.restore();}}
+  /* Pixel paint is drawn on the front view. The side and back views are drawn separately, so the same paint is carried across to them here:
+     hair and hat paint (the crown, from the forehead up) goes onto the back as it is and onto the side squeezed to the side head's width;
+     glasses/extras go on the side view's front half. Faces, clothes and limbs are front-only. The result is cached per part and view. */
+  var TAILS={"hair:6":[5,1],"hair:3":[4,0]};   /* [first x of the hanging part on the front view, 1 = it swaps sides seen from behind] */
+  function paintView(key,D,tx,ty){if(POFF||(ISO&&ISO!==key.split(":")[0]))return;var m=PT[key];if(!m)return;var part=key.split(":")[0];
+    if(part!=="hair"&&part!=="hat"&&part!=="extra")return;
+    var ck="v"+D+"|"+key;if(!(ck in PC)){var o={},k,q,x,y,nx;
+      for(k in m){if(!/^-?\d+,-?\d+$/.test(k))continue;q=k.split(",");x=+q[0];y=+q[1];
+        if(part==="extra"){if(D===2)continue;if(x<0)continue;nx=Math.round(x*0.5);}
+        else if(y>-14){var tl=TAILS[key];if(!tl||x<tl[0])continue;nx=D===2?(tl[1]?-x-1:x):-x;}   /* the hanging part (a ponytail, long locks): it hangs behind the head */
+        else nx=D===2?x:Math.round(-8+(x+8)*11/15);
+        var nk=nx+","+y;if(m[k]==="0"){if(o[nk]===undefined)o[nk]="0";}else o[nk]=m[k];}
+      PC[ck]=ptBuildM(o);}
+    var e=PC[ck];if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);
+    if(e.h){sg.globalCompositeOperation="destination-out";sg.drawImage(e.h,e.x0,e.y0);sg.globalCompositeOperation="source-over";}
+    if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();}
   var DT={},DT_F=["armL","armR","legL","legR","bob","dx","rot"];
   DT=JSON.parse("{\"1.0\":[{\"q\":0,\"bob\":0.69,\"dx\":-0.28},{\"q\":0.25,\"armR\":-0.1,\"bob\":-0.86,\"dx\":0.4}]}");   /* shipped dance tweaks; this device's own win */
   try{var dts=JSON.parse(localStorage.getItem("uk_dtweak")||"{}");if(dts&&typeof dts==="object")for(var dk in dts)DT[dk]=dts[dk];}catch(e){}
@@ -2366,6 +2385,6 @@ var ART=(function(){
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.79.47",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.79.56",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
