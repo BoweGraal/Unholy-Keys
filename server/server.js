@@ -712,7 +712,7 @@ function onMessage(ws, raw, isBinary) {
           for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
           if (fc) {
             fd = { s: fs, m: fm, c: fc };
-            if (+msg.fd.b === 1) fd.b = 1;
+            var fb = Math.floor(+msg.fd.b); if (fb >= 1 && fb <= 3) fd.b = fb;   // facing: 1 = turned round, 2 = a quarter turn right, 3 = a quarter turn left
             if (Array.isArray(msg.fd.h) && msg.fd.h.length === 2) {
               var hh = msg.fd.h.map(function (v) { return v === null || v === undefined || !isFinite(+v) ? null : Math.max(-400, Math.min(400, Math.round(+v))); });
               if (hh[0] !== null || hh[1] !== null) fd.h = hh;

@@ -2069,8 +2069,8 @@ var ART=(function(){
       o.armL=tw?2.5:1.7;o.armR=tw?-2.5:-1.7;o.legL=0.25*Math.sin(ang*2);o.legR=-o.legL;o.mouth=tw;}
     else if(r.k==="turn180"){   /* a quick half turn, and you stay facing that way (the page flips your facing when it ends) */
       var u1=Math.min(1,a/650),an=u1*u1*(3-2*u1)*Math.PI;o.dir=face8(Math.sin(an),Math.cos(an),-1);o.armL=0.9;o.armR=-0.9;o.legL=0.2*Math.sin(an);o.legR=-o.legL;}
-    else if(r.k==="turn90"){   /* a quick quarter turn and back, you end up facing the same way */
-      var u2=Math.min(1,a/600),an2=Math.sin(u2*Math.PI)*Math.PI/2;o.dir=face8(Math.sin(an2),Math.cos(an2),-1);o.armL=0.9;o.armR=-0.9;o.legL=0.2*Math.sin(an2);o.legR=-o.legL;}
+    else if(r.k==="turn90"){   /* a quick quarter turn, and you stay facing that way (the page turns your facing when it ends) */
+      var u2=Math.min(1,a/600),an2=u2*u2*(3-2*u2)*Math.PI/2;o.dir=face8(Math.sin(an2),Math.cos(an2),-1);o.armL=0.9;o.armR=-0.9;o.legL=0.2*Math.sin(an2);o.legR=-o.legL;}
     else if(r.k==="spinmove"){   /* a low spin on the spot, arms out, feet kicking round */
       var u3=Math.min(1,a/900),an3=u3*Math.PI*3;o.dir=face8(Math.sin(an3),Math.cos(an3),-1);o.armL=1.57;o.armR=-1.57;o.legL=0.55;o.legR=-0.55;o.mouth=true;}
     else if(r.k==="clap"){var cl=Math.abs(Math.sin(a*0.016));o.armL=-1.45+cl*0.45;o.armR=1.45-cl*0.45;o.mouth=true;}
