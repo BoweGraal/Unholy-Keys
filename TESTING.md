@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.27 — 4-key tiles the standard size; standings order
+
+- **Note highway, 4 keys**: tap notes are now the same short tile as on the 7-key highway (they were about twice as tall). Only holds are long.
+- **Standings**: the top 3 is sorted again with your live score, so you're never listed below someone you're ahead of. Before, your score updated but your place didn't.
+
 ## v1.81.26 — Hair goes under hats
 
 - With a hat on, hair above the hat's brim isn't drawn, so spikes, mohawks, afros, buns and the rest no longer poke out around the hat. Hair below the brim still shows: sides, fringes, long hair, ponytails.
