@@ -1605,3 +1605,6 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.39 — start in the Two-step, planner only once the circle forms
 - Free dance no longer has the blank Freestyle option: you start in the Two-step and the dance list begins there. Number keys 1–9 pick Two-step … Shuffle, 0 Thriller, then - = ] [ \ ' for the rest.
 - Before the circle forms everyone just free dances with the sticks. The planner appears when the circle forms (7 s before the first turn); only the first dancer is called into it early, 15 s before their turn.
+
+## v1.79.40 — no walking to the bottom from the controls
+- Free dance: tapping the floor in the lower half of the screen (where the sticks, dance buttons and planner are) no longer walks you there. A tap that just missed a button used to send your dancer to the bottom edge.
