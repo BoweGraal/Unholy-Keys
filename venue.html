@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.32"></script>
-<script src="gfx.js?v=1.79.32"></script>
-<script src="art.js?v=1.79.32"></script>
-<script src="instruments.js?v=1.79.32"></script>
-<script src="kart.js?v=1.79.32"></script>
-<script src="explain.js?v=1.79.32"></script>
+<script src="tune.js?v=1.79.34"></script>
+<script src="gfx.js?v=1.79.34"></script>
+<script src="art.js?v=1.79.34"></script>
+<script src="instruments.js?v=1.79.34"></script>
+<script src="kart.js?v=1.79.34"></script>
+<script src="explain.js?v=1.79.34"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -448,8 +448,11 @@ body[data-game=ctf] #roundBox.strip{left:50%;transform:translateX(-50%);top:60px
 /* ── Practice mode (venue.html?practice) ── */
 #prExit{display:none;position:fixed;left:62px;top:10px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;text-decoration:none;background:rgba(20,18,32,.85);border:1px solid rgba(232,80,91,.6)}
 body.practice #prExit{display:block}
-body.practice[class*="gaming"] #prExit{display:none}
-body.practice[class*="gaming"] #hudTR{display:none}
+body.practice[class*="gaming"] #actBtns #prExit,body.practice[class*="gaming"] #prExit{display:none}
+body.practice #hudTR{display:none}   /* no viewer count while practising */
+/* practice: Leave practice joins Dance and Start game in the stack, and the whole stack hugs the right edge */
+body.practice #actBtns #prExit{position:static;display:block;box-sizing:border-box;min-width:104px;text-align:left;padding:11px 14px;font-size:14px;border-radius:12px}
+body.practice #moveCtl{right:12px;justify-content:space-between}
 #prExit:hover{border-color:#E8505B;background:rgba(232,80,91,.3)}
 #prBar{display:none;position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:25;width:min(560px,94vw);box-sizing:border-box;padding:10px 14px;background:rgba(14,11,26,.93);border:1px solid rgba(245,197,24,.45);border-radius:14px;color:#fff;font:500 12px system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #prDance{display:none;position:fixed;left:12px;top:58px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;background:rgba(20,18,32,.88);border:1px solid rgba(245,197,24,.7);cursor:pointer}
@@ -633,6 +636,7 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
       <button id="talkBtn" title="Say something (Enter)">&#128172; Talk</button>
       <button id="danceBtn" title="Dance (Space)">&#128131; Dance</button>
       <button id="prStart" title="Pick a mini game and a song">&#127918; Start game</button>
+      <a id="prExit" href="?" title="Leave practice and go back to joining a show">&#10005; Leave practice</a>
       <div id="danceMenu">
         <button data-g="free" title="Move your character's arms and legs yourself">&#128378; Free dance <kbd>1</kbd></button>
         <button data-g="step" title="Hit the arrows in time with the music">&#11014;&#65039; Step dance <kbd>2</kbd></button>
@@ -672,7 +676,6 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
   <div id="skateUI"><div id="skBanner">🛼 ROLLER RINK</div><div id="skScore">0</div><div id="skSpeed"><i></i></div><div id="skTrick"></div><div id="skHint"></div><button id="skJump" aria-label="Jump">JUMP</button><div id="skWheel"><b data-t="1" style="left:50%;top:9%">SUPERMAN</b><b data-t="2" style="left:50%;top:91%">TUCK</b><b data-t="3" style="left:13%;top:50%">KICK</b><b data-t="4" style="left:87%;top:50%">SPLIT</b><i id="skKnob"></i></div></div>
   <div id="roundBox"></div>
   <button id="prDance" type="button" title="Pick a mini game and a song">&#128131; Dance</button>
-  <a id="prExit" href="?" title="Leave practice and go back to joining a show">&#10005; Leave practice</a>
   <div id="prBar">
     <div class="h">Dance practice · pick a mini game and a song</div>
     <div class="r" id="prGames">
@@ -6523,7 +6526,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.32",SERVER_VERSION="";
+var PAGE_VERSION="1.79.34",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7018,7 +7021,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.32"></script>
+<script src="lab.js?v=1.79.34"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
