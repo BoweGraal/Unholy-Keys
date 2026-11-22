@@ -16,12 +16,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.80.4"></script>
-<script src="gfx.js?v=1.80.4"></script>
-<script src="art.js?v=1.80.4"></script>
-<script src="instruments.js?v=1.80.4"></script>
-<script src="kart.js?v=1.80.4"></script>
-<script src="explain.js?v=1.80.4"></script>
+<script src="tune.js?v=1.80.5"></script>
+<script src="gfx.js?v=1.80.5"></script>
+<script src="art.js?v=1.80.5"></script>
+<script src="instruments.js?v=1.80.5"></script>
+<script src="kart.js?v=1.80.5"></script>
+<script src="explain.js?v=1.80.5"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1837,7 +1837,7 @@ function vzCalc(){
   /* zoomed in: the camera follows you, kept inside the room so you never see past the edges */
   var aY=H*VZ_AY,bx=W/2,by=aY;if(base&&VZ_ME){bx=Math.max(W/(2*Z0),Math.min(W-W/(2*Z0),VZ_ME[0]));by=Math.max(aY/Z0,Math.min(H-(H-aY)/Z0,VZ_ME[1]-VZ_H*0.3));}
   VZ_B[0]+=(bx-VZ_B[0])*Math.min(1,dt*5);VZ_B[1]+=(by-VZ_B[1])*Math.min(1,dt*5);bx=VZ_B[0];by=VZ_B[1];
-  var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-VZ_H*0.16:H*VZ_AY,Zt=Math.max(Z0,Math.min(6,0.8*H/VZ_H));   /* zoom until your body is about 70% of the screen tall */
+  var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-VZ_H*0.16:H*VZ_AY,Zt=Math.max(Z0,Math.min(6,Math.min(0.5*H,Math.max(120,(W-192)*1.08))/VZ_H));   /* zoom so your whole body, arms out, fits in the gap between the two columns of buttons */
   VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=bx+(fx-bx)*tz;VZS.cy=by+(fy-by)*tz;VZS.ay=H*VZ_AY+(H*0.47-H*VZ_AY)*tz;VZS.on=true;
 }
 function floorPt(e){var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(VZS.on){x=VZS.cx+(x-W/2)/VZS.Z;y=VZS.cy+(y-VZS.ay)/VZS.Z;}return [x,y];}
@@ -2985,7 +2985,13 @@ var GAME=(function(){
     if(fdLbl!==fdManual){fdLbl=fdManual;fdqRender();}
     var nw=performance.now();if(nw-fdqPlaceT>500){fdqPlaceT=nw;fdqPlace();}
     if(nw-plT>200){plT=nw;plTick();}
-    var f=ROUND.featured(),on=f&&f.id===myId&&fdQ.length&&mode==="free";
+    var f=ROUND.featured(),mine=!!(f&&f.id===myId&&mode==="free");
+    if(mine&&!fdQ.length&&!fdAutoPick){   /* nothing picked: the game picks two different styles for you */
+      var pool=[];ART.DANCES.forEach(function(d,i){if(i)pool.push(i);});var a1=pool.splice(Math.floor(Math.random()*pool.length),1)[0],a2=pool[Math.floor(Math.random()*pool.length)];
+      fdQ=[[a1,0],[a2,0]];fdAutoPick=true;fdqRender();}
+    if(!mine&&fdAutoPick){fdAutoPick=false;fdQ=[];fdqRender();}   /* those picks were just for that turn */
+    fdStyleFilter(mine?fdQ.map(function(e){return e[0];}):null);
+    var on=mine&&fdQ.length;
     if(!on){fdManual=false;if(fdQNow!==-1){fdQNow=-1;fdqRender();}return;}
     if(fdManual)return;   /* you picked something yourself this turn: you're driving, the plan stops switching your dance */
     var k=fdqIndex(f.into,f.left,fdQ.length);
@@ -3041,6 +3047,15 @@ var GAME=(function(){
     fdPull.hover=b;fdPull.hoverT=now;if(b)b.classList.add("hov");
   }
   window.ukFdqIndex=fdqIndex;
+  var fdAutoPick=false,fdBtns=[],fdFiltSig="";
+  /* in your own turn the style buttons are only the styles you picked (spread over both sides); otherwise all of them */
+  function fdStyleFilter(styles){
+    var sig=styles?styles.join(","):"";if(sig===fdFiltSig||!fdBtns.length)return;fdFiltSig=sig;
+    var ui=document.getElementById("fdUI"),L=ui.querySelector(".fd-l"),R=ui.querySelector(".fd-r"),n=fdBtns.length;
+    if(!styles){fdBtns.forEach(function(b,k){b.style.display="";(k+1<=Math.ceil(n/2)?L:R).appendChild(b);});return;}
+    var seen={},side=0;fdBtns.forEach(function(b){b.style.display="none";});
+    styles.forEach(function(s){if(seen[s])return;seen[s]=1;var b=fdBtns[s-1];if(!b)return;b.style.display="";(side++%2?R:L).appendChild(b);});
+  }
   function fdBuild(){
     if(fdBuilt)return;fdBuilt=true;
     var ui=document.getElementById("fdUI"),L=ui.querySelector(".fd-l"),R=ui.querySelector(".fd-r");
@@ -3055,7 +3070,7 @@ var GAME=(function(){
       var b=document.createElement("button");b.setAttribute("data-s",i);b.title=d.name+"  ("+(i<10?i:"")+")";
       b.textContent=d.name;
       b.onclick=function(e){e.stopPropagation();b.blur();fdPick(i);};
-      (i<=Math.ceil((ART.DANCES.length-1)/2)?L:R).appendChild(b);   /* split evenly down both sides */
+      fdBtns.push(b);(i<=Math.ceil((ART.DANCES.length-1)/2)?L:R).appendChild(b);   /* split evenly down both sides */
     });
     Array.prototype.forEach.call(ui.querySelectorAll(".fd-hand"),function(hd){
       var h=+hd.getAttribute("data-h"),dot=hd.firstChild;
@@ -6938,7 +6953,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.80.4",SERVER_VERSION="";
+var PAGE_VERSION="1.80.5",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7488,7 +7503,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.80.4"></script>
+<script src="lab.js?v=1.80.5"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

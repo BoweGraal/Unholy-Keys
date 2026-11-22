@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.80.5 — Your turn: only your styles, and a smaller camera
+
+During your spotlight turn the style buttons are only the styles you picked in the planner (none picked: the game picks two different ones for you). The camera now stops at a zoom where your whole body, arms out, fits between the two button columns.
+
 ## v1.80.4 — Add to my turn moves up
 
 The Add to my turn button now sits right under your queued dances, in the spot the sub-style box used to take, as a wide cyan button.
