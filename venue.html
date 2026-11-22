@@ -3486,11 +3486,24 @@ var GAME=(function(){
     g.restore();
     return true;
   }
+  /* 8-bit arrows: the arrow shape is cut into a 13 x 13 grid of whole pixels, with a dark outline, a light top-left edge and a shaded bottom-right edge */
+  var ARW=null,ARN=13;
+  function arrowMask(){
+    if(ARW)return ARW;var P=[[1,0],[0,-1],[0,-0.42],[-1,-0.42],[-1,0.42],[0,0.42],[0,1]],m=[],x,y,i,j;
+    function inside(px,py){var c=false;for(i=0,j=P.length-1;i<P.length;j=i++){if((P[i][1]>py)!==(P[j][1]>py)&&px<(P[j][0]-P[i][0])*(py-P[i][1])/(P[j][1]-P[i][1])+P[i][0])c=!c;}return c;}
+    for(y=0;y<ARN;y++){m[y]=[];for(x=0;x<ARN;x++)m[y][x]=inside(-1+(x+0.5)*2/ARN,-1+(y+0.5)*2/ARN)?1:0;}
+    function at(x,y){return x>=0&&y>=0&&x<ARN&&y<ARN&&m[y][x]?1:0;}
+    ARW=[];for(y=0;y<ARN;y++)for(x=0;x<ARN;x++){if(!m[y][x])continue;
+      var edge=!at(x-1,y)||!at(x+1,y)||!at(x,y-1)||!at(x,y+1);
+      ARW.push({x:x,y:y,e:edge,hl:!edge&&(!at(x-1,y)||!at(x,y-1)||!at(x-2,y)&&!at(x,y)?false:false)||(!edge&&(!at(x-2,y)||!at(x,y-2))),sh:!edge&&(!at(x+2,y)||!at(x,y+2))});}
+    return ARW;}
   function arrow(x,y,sz,rot,fill,stroke,lw){
-    g.save();g.translate(x,y);g.rotate(rot);
-    g.beginPath();g.moveTo(sz,0);g.lineTo(0,-sz);g.lineTo(0,-sz*0.42);g.lineTo(-sz,-sz*0.42);g.lineTo(-sz,sz*0.42);g.lineTo(0,sz*0.42);g.lineTo(0,sz);g.closePath();
-    if(fill){g.fillStyle=fill;g.fill();}
-    if(stroke){g.lineWidth=lw||2;g.strokeStyle=stroke;g.lineJoin="round";g.stroke();}
+    var M=arrowMask(),cell=Math.max(2,Math.round(2*sz/ARN)),half=cell*ARN/2,k;
+    g.save();g.translate(Math.round(x),Math.round(y));g.rotate(rot);
+    for(k=0;k<M.length;k++){var c=M[k],px=-half+c.x*cell,py=-half+c.y*cell;
+      if(c.e){if(stroke){g.fillStyle=fill?"rgba(10,6,24,.85)":stroke;g.fillRect(px,py,cell,cell);}else if(fill){g.fillStyle="rgba(10,6,24,.85)";g.fillRect(px,py,cell,cell);}}
+      else if(fill){g.fillStyle=fill;g.fillRect(px,py,cell,cell);
+        if(c.hl){g.fillStyle="rgba(255,255,255,.38)";g.fillRect(px,py,cell,cell);}else if(c.sh){g.fillStyle="rgba(0,0,0,.28)";g.fillRect(px,py,cell,cell);}}}
     g.restore();
   }
   function drawStep(now){
