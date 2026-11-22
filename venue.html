@@ -3777,6 +3777,19 @@ var WALK=(function(){
     {name:"Box step",icon:"🤖",d:6,col:"#FF4D6D",p:function(u){var s=(u-Math.floor(u))*4,i=Math.floor(s),f=s-i,a=BOX[i%4],b=BOX[(i+1)%4];return[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];}}];
   var on=false,x=X0,y=0.56,laneY=0.56,fin=-1,place=0,tripUntil=0,outT=0,lastT=0,score=0,sentFin=false,cur=null,speedF=0,order=[0,1,2,3,4,5],roundN=0,finOrder=[],seen={},bots={},doneAsked=false,lastStyle=-1,lastCount=-1;
   var pad=null,pg=null,PS=0;
+  /* The track is a few screens long and the camera follows the racers, so the finish is out of sight at the start and the race
+     takes a minute or more. Everyone is sent as before (x from X0 to X1 = the whole race); sx() turns that into where they are on
+     this screen. Until GO, everyone stands on the start line. */
+  var TRK=3.2,CAMA=0.35,camOff=0,goingC=false;
+  function prog(vx){return Math.max(0,Math.min(1,(vx-X0)/(X1-X0)));}
+  function camUpdate(){
+    if(!walkRound()){camOff=0;goingC=false;return;}
+    goingC=beatAt(songPos())>=GO_BEAT;var p=0;
+    if(goingC){if(on)p=prog(x);else Object.keys(viewers).forEach(function(id){var v=viewers[id];if(v&&v!==PH&&v.dance===4)p=Math.max(p,prog(v.x));});}   /* watching: follow the leader */
+    var tgt=Math.max(0,p*W*TRK-(CAMA-X0)*W);
+    camOff=Math.abs(tgt-camOff)>W*2?tgt:camOff+(tgt-camOff)*Math.min(1,FRAME_DT*6);
+  }
+  function sx(vx){return X0*W+(goingC?prog(vx):0)*W*TRK-camOff;}
   function $(id){return document.getElementById(id);}
   function T(k){return TUNE.v("wk."+k);}
   function walkRound(){return GAME.mode==="walk"||(typeof ROUND!=="undefined"&&ROUND.mode==="walk");}
@@ -3904,11 +3917,20 @@ var WALK=(function(){
   }
   /* the start and finish lines on the floor, and place numbers once people finish */
   function draw(g){
-    if(!walkRound())return;var gy0=Y0*H-34,gy1=Y1*H+18,fx=X1*W,sx=X0*W,sq=6;
-    g.save();g.globalAlpha=0.5;g.fillStyle="#fff";g.fillRect(sx-1,gy0,2,gy1-gy0);g.globalAlpha=0.85;
-    for(var yy=gy0,k=0;yy<gy1;yy+=sq,k++){g.fillStyle=k%2?"#fff":"#111";g.fillRect(fx-sq,yy,sq,sq);g.fillStyle=k%2?"#111":"#fff";g.fillRect(fx,yy,sq,sq);}
-    g.globalAlpha=1;g.font="900 12px system-ui";g.textAlign="center";g.fillStyle="#fff";g.fillText("FINISH",fx,gy0-6);
-    finOrder.slice(0,3).forEach(function(id,i){var v=viewers[id];if(!v)return;var vx=v.x*W,vy=v.y*H-62;g.fillStyle=["#F5C518","#C9D3E6","#D9894A"][i];ART.PX.disc(g,vx,vy,10);g.fillStyle="#1a1200";g.font="900 12px system-ui";g.textBaseline="middle";g.fillText(String(i+1),vx,vy+1);});
+    if(!walkRound())return;var gy0=Y0*H-34,gy1=Y1*H+18,trk=W*TRK,fx=X0*W+trk-camOff,sx0=X0*W-camOff,sq=6;
+    g.save();
+    /* faint markers along the floor so you can see the track going by */
+    g.globalAlpha=0.12;g.fillStyle="#fff";var mk=W*0.25;for(var mx=Math.ceil((camOff-X0*W)/mk)*mk+X0*W-camOff;mx<W;mx+=mk){if(mx>0&&mx<fx-4)g.fillRect(Math.round(mx),gy0,1,gy1-gy0);}
+    g.globalAlpha=0.5;g.fillStyle="#fff";if(sx0>-4&&sx0<W+4)g.fillRect(sx0-1,gy0,2,gy1-gy0);g.globalAlpha=0.85;
+    if(fx>-sq&&fx<W+sq){for(var yy=gy0,k=0;yy<gy1;yy+=sq,k++){g.fillStyle=k%2?"#fff":"#111";g.fillRect(fx-sq,yy,sq,sq);g.fillStyle=k%2?"#111":"#fff";g.fillRect(fx,yy,sq,sq);}
+      g.globalAlpha=1;g.font="900 12px system-ui";g.textAlign="center";g.fillStyle="#fff";g.fillText("FINISH",fx,gy0-6);}
+    /* the whole race along the top of the floor: everyone's dot, so you can see who's ahead even when they're off screen */
+    var bx0=W*0.1,bx1=W*0.9,by=Math.max(STAGE_BOTTOM*H+14,gy0-24);g.globalAlpha=0.85;g.fillStyle="rgba(10,8,20,.7)";g.fillRect(bx0-8,by-9,bx1-bx0+16,18);g.fillStyle="rgba(255,255,255,.3)";g.fillRect(bx0,by-1,bx1-bx0,2);
+    g.fillStyle="#fff";g.font="900 11px system-ui";g.textAlign="center";g.textBaseline="middle";g.fillText("\u2691",bx1+1,by+1);
+    Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4||id===myId)return;var dx=bx0+(goingC?prog(v.x):0)*(bx1-bx0);g.fillStyle=v.color||"#aaa";g.beginPath();g.arc(dx,by,4,0,6.283);g.fill();});
+    var mv0=myId&&viewers[myId];if(mv0){var mdx=bx0+(goingC?prog(on?x:mv0.x):0)*(bx1-bx0);g.fillStyle=mv0.color||"#fff";g.strokeStyle="#fff";g.lineWidth=2;g.beginPath();g.arc(mdx,by,6,0,6.283);g.fill();g.stroke();}
+    g.globalAlpha=1;g.textBaseline="alphabetic";
+    finOrder.slice(0,3).forEach(function(id,i){var v=viewers[id];if(!v)return;var vx=sx(v.x),vy=v.y*H-62;g.fillStyle=["#F5C518","#C9D3E6","#D9894A"][i];ART.PX.disc(g,vx,vy,10);g.fillStyle="#1a1200";g.font="900 12px system-ui";g.textBaseline="middle";g.fillText(String(i+1),vx,vy+1);});
     g.restore();
   }
   function wire(){var b=beatAt(songPos());return{h:fin>=0?1:0,f:performance.now()<tripUntil?1:0,t:b>=GO_BEAT?styleAt(b):order[0]};}
@@ -3919,7 +3941,7 @@ var WALK=(function(){
   window.ukWalk=function(){var b=beatAt(songPos());return{on:on,x:+x.toFixed(3),fin:fin,place:place,score:score,beat:+b.toFixed(2),style:b>=GO_BEAT?STY[styleAt(b)].name:"(not started)",cursor:cur,circle:circleAt(b),out:+outT.toFixed(2),tripped:performance.now()<tripUntil,finOrder:finOrder.slice()};};
   window.ukWalkCursor=function(px,py){cur=px===null?null:[px,py];};      /* tests: put the cursor somewhere on the pad (-1..1) */
   window.ukWalkFollow=function(on2){window.__wkFollow=!!on2;};
-  return{start:start,stop:stop,tick:tick,draw:draw,wire:wire,fd:fd,looks:looks,facing:facing,walkRound:walkRound,circleNow:function(){return circleAt(beatAt(songPos()));},get on(){return on;}};
+  return{start:start,stop:stop,tick:tick,draw:draw,wire:wire,fd:fd,looks:looks,facing:facing,walkRound:walkRound,camUpdate:camUpdate,sx:sx,circleNow:function(){return circleAt(beatAt(songPos()));},get on(){return on;}};
 })();
 /* ============================================================
    HALF PIPE (the pipe round)
@@ -7023,6 +7045,7 @@ function renderLoop(){
 
   /* Audience avatars */
   var now=Date.now(),pnow=performance.now();FRAME_DT=Math.min(0.05,Math.max(0.001,(pnow-(LAST_FRAME||pnow))/1000));LAST_FRAME=pnow;
+  WALK.camUpdate();   /* the dance walk race: where the camera is this frame */
   var ids=Object.keys(viewers);
   function yOf(id){var r=RP&&RP.pos[id];return r?viewers[id].y*(1-RP.k)+r[1]/H*RP.k:viewers[id].y;}
   ids.sort(function(a,b){return yOf(a)-yOf(b);});                                 /* back to front, so nearer people overlap farther ones */
@@ -7043,7 +7066,7 @@ function renderLoop(){
     if(ids[i]===myId||gap>0.3){v.x=v.tx;v.y=v.ty;}
     else if(gap>0){var stp=Math.min(gap,(0.36+gap*3)*FRAME_DT);v.x+=dx/gap*stp;v.y+=dy/gap*stp;}
 
-    var vx=(PIPE.pipeRound()&&v.dance===4&&v!==PH?PIPE.sx(v.x):v.x*W), vy=v.y*H;
+    var vx=(PIPE.pipeRound()&&v.dance===4&&v!==PH?PIPE.sx(v.x):WALK.walkRound()&&v.dance===4&&v!==PH?WALK.sx(v.x):v.x*W), vy=v.y*H;
     if(RP&&RP.pos[ids[i]]){var rp=RP.pos[ids[i]];vx=vx*(1-RP.k)+rp[0]*RP.k;vy=vy*(1-RP.k)+rp[1]*RP.k;}
     if(v.seed===undefined)v.seed=(ids[i].charCodeAt(0)||0)%7+(v.name.length%5);
     /* limbs glide toward the latest pose so remote dancers move smoothly between updates */
