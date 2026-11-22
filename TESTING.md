@@ -1601,3 +1601,7 @@ Needs a Render redeploy (server.js changed).
 - Free dance turns: once the turns are fixed (8 s in) everyone forms an oval on the floor with a gold dashed outline and a "NEXT IN" marker at the top. Whoever is due north walks into the middle for their 15 s, walks back, the whole ring turns one place left, and the next dancer walks in.
 - While you wait, the bottom half of the screen is your planner (the sticks come back for your turn): "You're #3 of 8 · turn 1 of 2 · up in 0:44", and the first dancer gets "YOU'RE FIRST · you start in 15 s. Plan your moves!". Pick up to 3 dances and moves, reorder with the arrows, remove with the cross. 1 pick = 15 s, 2 = 7.5 s each, 3 = 5 s each. Picking a dance shows it live on your own dancer.
 - Needs the server redeploy (turn timing, ring order sent to late joiners).
+
+## v1.79.39 — start in the Two-step, planner only once the circle forms
+- Free dance no longer has the blank Freestyle option: you start in the Two-step and the dance list begins there. Number keys 1–9 pick Two-step … Shuffle, 0 Thriller, then - = ] [ \ ' for the rest.
+- Before the circle forms everyone just free dances with the sticks. The planner appears when the circle forms (7 s before the first turn); only the first dancer is called into it early, 15 s before their turn.

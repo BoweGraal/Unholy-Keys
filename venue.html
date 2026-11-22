@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.38"></script>
-<script src="gfx.js?v=1.79.38"></script>
-<script src="art.js?v=1.79.38"></script>
-<script src="instruments.js?v=1.79.38"></script>
-<script src="kart.js?v=1.79.38"></script>
-<script src="explain.js?v=1.79.38"></script>
+<script src="tune.js?v=1.79.39"></script>
+<script src="gfx.js?v=1.79.39"></script>
+<script src="art.js?v=1.79.39"></script>
+<script src="instruments.js?v=1.79.39"></script>
+<script src="kart.js?v=1.79.39"></script>
+<script src="explain.js?v=1.79.39"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2312,13 +2312,13 @@ document.addEventListener("keydown",function(e){
   if(GAME.mode==="free"){
     if(e.code==="Space"){e.preventDefault();if(!e.repeat)react("jump");return;}               /* Space jumps (Esc stops) */
     /* 1-9 pick a dance; Z X C V B its moves */
-    if((e.code==="Minus"||e.code==="NumpadSubtract")&&GAME.fStyle!==undefined&&ART.DANCES.length>10&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(10);return;}
-    if((e.code==="Equal"||e.code==="NumpadAdd")&&ART.DANCES.length>11&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(11);return;}
-    if(e.code==="BracketRight"&&ART.DANCES.length>12&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(12);return;}
-    if(e.code==="BracketLeft"&&ART.DANCES.length>13&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(13);return;}
-    if(e.code==="Backslash"&&ART.DANCES.length>14&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(14);return;}
-    if(e.code==="Quote"&&ART.DANCES.length>15&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(15);return;}
-    var dn=/^(Digit|Numpad)([0-9])$/.exec(e.code);if(dn){e.preventDefault();var di=dn[2]==="0"?9:+dn[2]-1;if(di<ART.DANCES.length)GAME.fdPick(di);return;}
+    if((e.code==="Minus"||e.code==="NumpadSubtract")&&GAME.fStyle!==undefined&&ART.DANCES.length>11&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(11);return;}
+    if((e.code==="Equal"||e.code==="NumpadAdd")&&ART.DANCES.length>12&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(12);return;}
+    if(e.code==="BracketRight"&&ART.DANCES.length>13&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(13);return;}
+    if(e.code==="BracketLeft"&&ART.DANCES.length>14&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(14);return;}
+    if(e.code==="Backslash"&&ART.DANCES.length>15&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(15);return;}
+    if(e.code==="Quote"&&ART.DANCES.length>16&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(16);return;}
+    var dn=/^(Digit|Numpad)([0-9])$/.exec(e.code);if(dn){e.preventDefault();var di=dn[2]==="0"?10:+dn[2];if(di<ART.DANCES.length&&GAME.mode==="free")GAME.fdPick(di);return;}
     var sk="KeyZ KeyX KeyC KeyV KeyB KeyN KeyM".split(" ").indexOf(e.code);if(sk>=0&&GAME.fStyle>0&&sk<ART.DANCES[GAME.fStyle].subs.length){e.preventDefault();GAME.fdSub(sk);return;}
     if(GAME.fdKey(e.code,true)){e.preventDefault();return;}                                    /* a dance picked: WASD and the arrows move the two dots */
     var lk=LIMBKEY[e.code];
@@ -2854,10 +2854,11 @@ var GAME=(function(){
     var jb=ui.querySelector(".fd-jump");jb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();jb.blur();react("jump");jb.classList.add("pop");setTimeout(function(){jb.classList.remove("pop");},150);});
     R.appendChild(act("&#127744; Spin",function(){react("spin");},"Spin on the spot (T)"));R.appendChild(act("&#128171; Twirl",function(){react("twirl");},"Two fast turns (G)"));R.appendChild(act("&#128172; Talk",function(){var t=document.getElementById("talkBtn");if(t)t.click();},"Say something (Enter)"));
     ART.DANCES.forEach(function(d,i){
-      var b=document.createElement("button");b.setAttribute("data-s",i);b.title=d.name+(i?"  ("+(i+1)+")":"  (1)");
+      if(!i)return;
+      var b=document.createElement("button");b.setAttribute("data-s",i);b.title=d.name+"  ("+(i<10?i:"")+")";
       b.innerHTML='<span class="i">'+d.icon+'</span>'+d.name;
       b.onclick=function(e){e.stopPropagation();b.blur();fdPick(i);};
-      (i<Math.ceil(ART.DANCES.length/2)?L:R).appendChild(b);   /* split evenly down both sides */
+      (i<=Math.ceil((ART.DANCES.length-1)/2)?L:R).appendChild(b);   /* split evenly down both sides */
     });
     Array.prototype.forEach.call(ui.querySelectorAll(".fd-hand"),function(hd){
       var h=+hd.getAttribute("data-h"),dot=hd.firstChild;
@@ -3565,7 +3566,7 @@ var GAME=(function(){
     if(m==="ctf")CTFG.start(rnd);
     lastFit=0;DEVICE.fit();
     document.getElementById("gameTitle").textContent=m==="ctf"?"🚩 Capture the flag":m==="ski"?"⛷ Ski":m==="pipe"?"🛹 Half pipe":m==="walk"?"💃 Dance walk race":m==="kart"?"🏍 Mars Rally":m==="keepy"?"🎈 Keepy uppy":m==="skate"?(ICE?"⛸ Ice rink":"🛼 Roller rink"):m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
-    if(m==="free")setTimeout(fdRender,0);
+    if(m==="free")setTimeout(function(){if(fStyle<=0)fdPick(1);else fdRender();},0);   /* no blank freestyle: you start in the Two-step */
     document.getElementById("moveHint").textContent=m==="ctf"?"Arrows / WASD or the stick to run · hold SPRINT (Space) · grab their flag, bring it home · tag them on your half":m==="ski"?"Point to steer down the mountain; flag zones then jump zones; Space pops you up so you can cut onto a new line":m==="pipe"?"Tap BEAT (Space) on the beat to build speed · swipe at the lip for a dance trick · A/D to lean and spin":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
@@ -5170,7 +5171,7 @@ var ROUND=(function(){
   function ringIds(){if(rd.ring&&rd.ring.length)return rd.ring;var o=[];rd.spot.forEach(function(t){if(o.indexOf(t.id)<0)o.push(t.id);});return o;}
   function ringState(){
     if(!rd||rd.phase!=="play"||rd.mode!=="free"||rd.isBattle||!rd.spot||!rd.spot.length)return null;
-    var sp=rd.spot,p=pos(),k=Math.min(sm01((p-(sp[0].a-13000))/2000),1-sm01((p-(sp[sp.length-1].b+3000))/2000));
+    var sp=rd.spot,p=pos(),k=Math.min(sm01((p-(sp[0].a-7000))/2000),1-sm01((p-(sp[sp.length-1].b+3000))/2000));
     if(k<=0)return null;
     var rot=0,walk=null;
     for(var j=0;j<sp.length;j++){rot+=sm01((p-(sp[j].b+1500))/1500);
@@ -5183,6 +5184,7 @@ var ROUND=(function(){
     var sp=rd.spot,p=pos(),f=featured(),N=ringIds().length,nx=null,total=0;
     for(var i=0;i<sp.length;i++)if(sp[i].id===myId){total++;if(!nx&&sp[i].b>p)nx={i:i,a:sp[i].a};}
     if(!nx||(f&&f.id===myId))return null;
+    if(nx.i>0&&p<sp[0].a-7000)return null;   /* until the circle forms everyone just free dances; only the first dancer is called in early */
     return{show:true,ord:nx.i+1,of:sp.length,pass:Math.floor(nx.i/Math.max(1,N))+1,passes:Math.max(1,Math.ceil(sp.length/Math.max(1,N))),inMs:Math.max(0,nx.a-p),first:nx.i===0,now:f?f.name:"",nowI:f?f.i:-1,nextName:(sp[nx.i-1]&&nx.i>0&&!f)?sp[nx.i-1].name:""};
   }
   function spotOn(){if(!rd||rd.phase!=="play"||!rd.spot||!rd.spot.length)return 0;var p=pos(),a=rd.spot[0].a,b=rd.spot[rd.spot.length-1].b;if(p<a-2500||p>b+1500)return 0;return Math.max(0,Math.min(1,(p-(a-2500))/1500,(b+1500-p)/1500));}
@@ -6608,7 +6610,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.38",SERVER_VERSION="";
+var PAGE_VERSION="1.79.39",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7116,7 +7118,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.38"></script>
+<script src="lab.js?v=1.79.39"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
