@@ -458,7 +458,7 @@ function castVote(ws, voter, target, weight) {
 /* the show's effects, checked: anything unknown is dropped */
 var FX_LIGHTS = ["auto", "party", "edm", "strobe", "spot", "warm", "cool", "off"], FX_WEATHER = ["none", "rain", "storm", "snow"];
 var FX_CROWD = ["sparkle", "fire", "lasers", "float"];
-var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", "turn180", "turn360", "spinmove"];
+var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", "turn180", "turn90", "spinmove"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */

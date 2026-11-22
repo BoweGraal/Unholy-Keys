@@ -669,7 +669,7 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
   <!-- free dance: dance buttons down both edges, the dance's own moves along the bottom, two control dots in the middle -->
   <div id="fdUI" aria-label="Free dance controls">
     <div class="fd-col fd-l"></div><div class="fd-col fd-r"></div>
-    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><button class="fd-jump" aria-label="Jump" title="Jump (Space)">&#10514;<small>Jump</small></button><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div><div class="fd-hand" data-h="0" title="Left hand (hold to control it)"><i></i></div><div class="fd-hand" data-h="1" title="Right hand (hold to control it)"><i></i></div><div class="fd-moveName"></div><div class="fd-mini"><button data-r="turn180" title="180 turn (Z)">180</button><button data-r="turn360" title="360 turn (X)">360</button><button data-r="spinmove" title="Spin move (V)">Spin move</button></div></div>
+    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><button class="fd-jump" aria-label="Jump" title="Jump (Space)">&#10514;<small>Jump</small></button><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div><div class="fd-hand" data-h="0" title="Left hand (hold to control it)"><i></i></div><div class="fd-hand" data-h="1" title="Right hand (hold to control it)"><i></i></div><div class="fd-moveName"></div><div class="fd-mini"><button data-r="turn90" title="90 turn (X)">90</button><button data-r="turn180" title="180 turn (Z)">180</button><button data-r="spinmove" title="Spin (V)">Spin</button></div></div>
     <div class="fd-help"></div>
     <div class="fd-subs"></div>
     <div class="fd-queue" id="fdQueue"></div>
@@ -2400,13 +2400,13 @@ function react(k){
   if(REACT.last.length>=6)return;                                     /* no more than the server lets through */
   if(k==="bigheart"){if(now-REACT.big<4000)return;REACT.big=now;var bb=document.querySelector('#reactBar [data-r="bigheart"]');if(bb){bb.classList.add("cool");setTimeout(function(){bb.classList.remove("cool");},4000);}}
   REACT.last.push(now);addReact(myId,k);
-  if((k==="spin"||k==="twirl"||k==="turn360"||k==="spinmove")&&GAME.mode==="free")GAME.spinStart(k);
+  if((k==="spin"||k==="twirl"||k==="spinmove")&&GAME.mode==="free")GAME.spinStart(k);
   if(k==="turn180"&&GAME.mode==="free")GAME.turnToggle();
   var btn=document.querySelector('#reactBar [data-r="'+k+'"]');if(btn){btn.classList.add("pop");setTimeout(function(){btn.classList.remove("pop");},160);}
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on))wsSend({type:"react",k:k});
 }
 Array.prototype.forEach.call(document.querySelectorAll("#reactBar button"),function(b){b.addEventListener("click",function(e){e.preventDefault();b.blur();react(b.getAttribute("data-r"));});});
-var REACTKEY={KeyQ:"jump",KeyE:"hearts",KeyR:"bigheart",KeyY:"clap",KeyU:"whistle",KeyT:"spin",KeyG:"twirl",KeyZ:"turn180",KeyX:"turn360",KeyV:"spinmove"};
+var REACTKEY={KeyQ:"jump",KeyE:"hearts",KeyR:"bigheart",KeyY:"clap",KeyU:"whistle",KeyT:"spin",KeyG:"twirl",KeyZ:"turn180",KeyX:"turn90",KeyV:"spinmove"};
 /* the sounds, made on the spot (quieter for other people's) */
 function reactSound(k,mine){
   if(!audioReady||!lim)return;
@@ -2929,7 +2929,7 @@ var GAME=(function(){
   /* let go of a dot and it drifts back to the middle */
   /* your own spin: it starts with the button, slows down on its own, and swinging the right stick round (either way) keeps it going and speeds it up */
   var mySpin={on:false,ang:0,vel:0,pa:null,t:0};
-  function spinStart(k){var turns={spin:1,twirl:2,turn360:1,spinmove:1.5}[k]||1;mySpin.on=true;mySpin.ang=0;mySpin.vel=turns*6.2*1.25*(k==="turn360"?1.25:1);mySpin.pa=null;mySpin.t=performance.now();}
+  function spinStart(k){var turns={spin:1,twirl:2,spinmove:1.5}[k]||1;mySpin.on=true;mySpin.ang=0;mySpin.vel=turns*6.2*1.25;mySpin.pa=null;mySpin.t=performance.now();}
   function spinStep(now){
     if(!mySpin.on)return;var dt=Math.min(0.1,(now-mySpin.t)/1000);mySpin.t=now;
     var sx2=fCtl[2],sy2=fCtl[3],mg=Math.hypot(sx2,sy2),swing=false;

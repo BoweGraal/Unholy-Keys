@@ -2056,7 +2056,7 @@ var ART=(function(){
      Quick reactions anyone can send: "jump", "hearts", "bigheart", "clap" (applause), "whistle".
      A dancer keeps a short list [{k, t}] (t = when, ms); reactPose changes the pose for the latest one,
      reactFx draws them all over the dancer at feet (x, y), art pixel p. */
-  var REACTS=["jump","hearts","bigheart","clap","whistle","spin","twirl","turn180","turn360","spinmove"],REACT_MS={jump:1000,hearts:2400,bigheart:2600,clap:1900,whistle:1700,spin:800,twirl:1500,turn180:700,turn360:650,spinmove:900};
+  var REACTS=["jump","hearts","bigheart","clap","whistle","spin","twirl","turn180","turn90","spinmove"],REACT_MS={jump:1000,hearts:2400,bigheart:2600,clap:1900,whistle:1700,spin:800,twirl:1500,turn180:700,turn90:600,spinmove:900};
   var HEART=[".XX.XX.","XXXXXXX","XXXXXXX",".XXXXX.","..XXX..","...X..."],NOTE=["..XX","..XX","..X.","..X.","XXX.","XXX."];
   function pixArt(g,rows,x,y,q,col,hi){for(var r=0;r<rows.length;r++)for(var c=0;c<rows[r].length;c++)if(rows[r][c]==="X"){g.fillStyle=hi&&r===1&&c===1?hi:col;g.fillRect(Math.round(x+c*q),Math.round(y+r*q),q,q);}}
   function reactLive(list,now){var out=[];if(!list)return out;for(var i=0;i<list.length;i++){var a=now-list[i].t;if(a>=0&&a<REACT_MS[list[i].k])out.push({k:list[i].k,a:a});}return out;}
@@ -2069,8 +2069,8 @@ var ART=(function(){
       o.armL=tw?2.5:1.7;o.armR=tw?-2.5:-1.7;o.legL=0.25*Math.sin(ang*2);o.legR=-o.legL;o.mouth=tw;}
     else if(r.k==="turn180"){   /* a quick half turn, and you stay facing that way (the page flips your facing when it ends) */
       var u1=Math.min(1,a/650),an=u1*u1*(3-2*u1)*Math.PI;o.dir=face8(Math.sin(an),Math.cos(an),-1);o.armL=0.9;o.armR=-0.9;o.legL=0.2*Math.sin(an);o.legR=-o.legL;}
-    else if(r.k==="turn360"){   /* one fast full turn with a little hop */
-      var u2=Math.min(1,a/650),an2=u2*Math.PI*2;o.dir=face8(Math.sin(an2),Math.cos(an2),-1);o.lift=-Math.sin(u2*Math.PI)*p*5;o.armL=2.0;o.armR=-2.0;o.legL=0.3*Math.sin(an2*2);o.legR=-o.legL;}
+    else if(r.k==="turn90"){   /* a quick quarter turn and back, you end up facing the same way */
+      var u2=Math.min(1,a/600),an2=Math.sin(u2*Math.PI)*Math.PI/2;o.dir=face8(Math.sin(an2),Math.cos(an2),-1);o.armL=0.9;o.armR=-0.9;o.legL=0.2*Math.sin(an2);o.legR=-o.legL;}
     else if(r.k==="spinmove"){   /* a low spin on the spot, arms out, feet kicking round */
       var u3=Math.min(1,a/900),an3=u3*Math.PI*3;o.dir=face8(Math.sin(an3),Math.cos(an3),-1);o.armL=1.57;o.armR=-1.57;o.legL=0.55;o.legR=-0.55;o.mouth=true;}
     else if(r.k==="clap"){var cl=Math.abs(Math.sin(a*0.016));o.armL=-1.45+cl*0.45;o.armR=1.45-cl*0.45;o.mouth=true;}
