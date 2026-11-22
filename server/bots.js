@@ -172,7 +172,7 @@ module.exports = function(api) {
     }
     /* the wall of death: push for your side */
     if (rd.mode === "mosh" && ch && ch.drop && pos > ch.drop + 900 && pos < ch.drop + 10600 && now > b.tugAt) {
-      var tk = Math.ceil(rnd(1, 4) * b.skill * 2); b.act({ type: "tug", side: b.x < 0.5 ? 0 : 1, k: tk }); b.tugAt = now + rnd(250, 600); if (b.ms) b.ms.taps += tk;
+      var tk = Math.ceil(rnd(1, 4) * b.skill * 2); b.act({ type: "tug", side: b.ms && b.ms.team >= 0 ? b.ms.team : (b.x < 0.5 ? 0 : 1), k: tk }); b.tugAt = now + rnd(250, 600); if (b.ms) b.ms.taps += tk;
     }
   }
   /* the roller rink: laps round the island, a jump with a trick now and then */
@@ -309,7 +309,7 @@ module.exports = function(api) {
     if (!b.ms || b.ms.n !== rd.n) b.ms = { n: rd.n, P: M.plan(rd.chart), score: 0, t: now, phi: Math.random() * 6.28, r: 0.13 + Math.random() * 0.15, acc: 0, team: -1, goal: null, posAt: 0, scoreAt: 0, bumpAt: now + rnd(2000, 5000), taps: 0, tapsPaid: 0, won: false, k: Math.max(0, Array.from((rooms[b.room] || { viewers: new Map() }).viewers.keys()).sort().indexOf(b.viewerId)) };
     var m = b.ms, dt = Math.min(0.5, (now - m.t) / 1000); m.t = now;
     var pos = now - rd.playAt, ph = M.phaseAt(m.P, pos), c = M.circle(M.TOP, M.BOT), x = b.x, y = b.y, sp = 0;
-    if ((ph === "split" || ph === "count") && m.team < 0) m.team = m.k % 2;   /* bots spread over both sides */
+    if ((ph === "split" || ph === "count" || ph === "charge") && m.team < 0) m.team = m.k % 2;   /* bots spread over both sides */
     if (ph === "pit") m.team = -1;
     if (ph === "circle") {
       var om = 0.95 * (0.22 / m.r) * (0.8 + b.skill * 0.6); m.phi += om * dt; m.acc += om * dt;
