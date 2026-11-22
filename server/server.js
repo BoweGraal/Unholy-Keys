@@ -159,7 +159,7 @@ function cleanChart(c) {
     var sc = c.sections[i]; if (!Array.isArray(sc)) continue;
     var stt = intIn(sc[0], 0, 3600000, -1); if (stt >= 0 && SECTION_NAMES.indexOf(sc[1]) >= 0) sections.push([stt, sc[1]]);
   }
-  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks, drop: intIn(c.drop, 0, 3600000, 0), keys: keys, sections: sections };
+  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), gameMs: intIn(c.gameMs, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks, drop: intIn(c.drop, 0, 3600000, 0), keys: keys, sections: sections };
 }
 /* Spotlight plan for free dance rounds: everyone dances in a ring; one at a time the dancer due north walks down to the
    middle for a 15 s turn, walks back, and the ring dances round (left) until the next dancer is due north.

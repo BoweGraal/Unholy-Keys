@@ -211,6 +211,8 @@ module.exports = function(api) {
     var lo = 0, hi = n - 1; while (hi - lo > 1) { var m = (lo + hi) >> 1; if (bs[m] <= pos) lo = m; else hi = m; }
     return lo + (pos - bs[lo]) / Math.max(1, bs[hi] - bs[lo]);
   }
+  /* how long a full-speed run takes: fitted to the game window when the host sent one (same as venue.html WALK.raceTime) */
+  function wkTime(rd) { var g = rd.chart && rd.chart.gameMs > 0 ? rd.chart.gameMs : 0; return g ? Math.max(45, Math.min(90, (g / 1000 - 6) * 0.8)) : WK.TIME; }
   function walk(b, now, rd) {
     var r = rooms[b.room]; if (!r) return;
     if (!b.wk || b.wk.n !== rd.n) {
@@ -224,7 +226,7 @@ module.exports = function(api) {
       var f = Math.max(0.3, Math.min(1, w.sp + 0.25 * Math.sin(now / 1100 + w.ph)));
       if (!w.trip && Math.random() < dt * 0.05 * (1.2 - w.sp)) w.trip = now + 1300;
       if (w.trip && now > w.trip) w.trip = 0;
-      if (!w.trip) w.x += (WK.X1 - WK.X0) / WK.TIME * f * dt;
+      if (!w.trip) w.x += (WK.X1 - WK.X0) / wkTime(rd) * f * dt;
       if (w.x >= WK.X1) { w.x = WK.X1; w.fin = true; b.act({ type: "score", s: 4000, fin: 1 }); }
       else if (now > w.scoreAt) { w.scoreAt = now + 2000; b.act({ type: "score", s: Math.round(1000 * (w.x - WK.X0) / (WK.X1 - WK.X0)) }); }
     }
