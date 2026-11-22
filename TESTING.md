@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.22 — Standards sweep
+
+I went through every game in portrait and landscape (practice, with bots) and checked each one against the standards:
+- **No "You" label under your own character** in capture the flag (on foot) and ski. Every other game was already clean.
+- **How-to lines fade after a few seconds on phones held sideways too** (mosh, keepy uppy, half pipe, ski, walk race, rinks, CTF, free dance). Before, they only faded in portrait. The keyboard controls line doesn't show on a touch screen.
+- Checked: the version is hidden in every game, there's no bottom strip in practice, team games are even, and the rhythm games have short tap notes and the speed control.
+- The drag ghost in the turn planner is square (pixel style).
+
 ## v1.81.21 — Character preview stays in view; afro fix
 
 - **Character maker**: the preview stays pinned at the top while you scroll through the options (smaller on phones so the options have room). This also applies to the performer's character dialog.
