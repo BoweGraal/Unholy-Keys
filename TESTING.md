@@ -1634,3 +1634,6 @@ Needs a Render redeploy (server.js changed).
 - Host: the visuals stream to the venue's big screen now runs outside jam mode too (jam visualizer behind the note roll), so it no longer falls back to just the YouTube video. Needs sound sharing on (Go live → share tab).
 - Venue: if the performer's visuals still aren't arriving while a video is on the big screen (sound sharing off), a note roll is drawn over the video from the notes the room hears.
 - Check: go live without opening jam mode and play; the big screen should show the visualizer with notes, not the video.
+
+## v1.79.47 — new shades (graphics defaults)
+- Brian's graphics-lab export is now the shipped look for everyone: stage lights (brighter, wider, faster beams, hazier, purple/indigo/mauve/red colours, stronger floor and sign glow), the Two-step bob tweaks, and the purple hair:12 and shades (extra:1) pixel edits. Anyone who has saved their own values on a device keeps those on top.
