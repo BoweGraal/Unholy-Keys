@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.11 — Graal home assets
+
+New in the character maker, after Brian's Graal characters:
+- **Hat → Witch hat**: Bowe's floppy grey witch hat with the orange band, the tip curling over and the little yellow sigils (front, side and back).
+- **Extra → Mask**: a black mask over the nose and mouth.
+- **Holding** (new row): a **Violin** tucked under the chin with its bow, or a black sparkly **Electric guitar** slung across the body. They stay on the body while you dance (not on the rinks).
+
 ## v1.81.10 — Kart flag LAUNCH feels like Mars Rally
 
 - Pressing LAUNCH does the same hop as the Mars Rally drift, then you land in a slide that slows down while you aim, with the same drift sparks (blue while charging, orange when full).
