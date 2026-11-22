@@ -17,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.15"></script>
-<script src="gfx.js?v=1.81.15"></script>
-<script src="art.js?v=1.81.15"></script>
-<script src="instruments.js?v=1.81.15"></script>
-<script src="kart.js?v=1.81.15"></script>
-<script src="explain.js?v=1.81.15"></script>
+<script src="tune.js?v=1.81.16"></script>
+<script src="gfx.js?v=1.81.16"></script>
+<script src="art.js?v=1.81.16"></script>
+<script src="instruments.js?v=1.81.16"></script>
+<script src="kart.js?v=1.81.16"></script>
+<script src="explain.js?v=1.81.16"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -240,7 +240,7 @@ body.gaming-pipe #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #wkBanner.pop{animation:moshPop 2.2s ease-out forwards}
 #wkPad{position:absolute;right:max(16px,3vw);bottom:calc(var(--chatH) + 12px);width:min(300px,44vw,46vh);height:min(300px,44vw,46vh);pointer-events:auto;touch-action:none;cursor:none}
 #wkHint{position:absolute;right:16px;bottom:calc(var(--chatH) + min(300px,44vw,46vh) + 18px);width:min(300px,44vw,46vh);text-align:center;font:700 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.75);text-shadow:0 1px 2px #000}
-body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint{display:none}
+body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint,body.gaming-skate #moveHint{display:none}
 /* portrait: the pad big and centred at the bottom, the racers in a band between the stage and the pad (WALK.sy) */
 @media (orientation:portrait){#wkPad{left:50%;right:auto;transform:translateX(-50%);bottom:calc(var(--chatH) + 30px);width:min(92vw,30vh);height:min(92vw,30vh)}#wkHint{left:0;right:0;width:auto;font-size:12px;bottom:calc(var(--chatH) + 8px)}}
 /* ── keepy uppy ── */
@@ -266,6 +266,7 @@ body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint{
 #skSpeed i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3DF2FF,#FF3DA8,#F5F23D)}
 #skTrick{position:absolute;left:50%;top:30%;transform:translateX(-50%);font:900 clamp(18px,4vw,32px)/1.1 'Silkscreen',ui-monospace,monospace;color:#F5F23D;text-shadow:0 0 12px #FF3DA8,0 2px 0 #000;white-space:nowrap;text-align:center}
 #skTrick small{display:block;font-size:.55em;color:#fff}
+@media (orientation:landscape){body.gaming-skate #skHint{bottom:6px!important}}
 #skHint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 70px);font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000;white-space:nowrap}
 #skJump{position:absolute;right:18px;bottom:150px;width:96px;height:96px;border-radius:50%;border:3px solid #FF3DA8;background:radial-gradient(circle,rgba(255,61,168,.5),rgba(20,8,40,.85));color:#fff;font:900 18px 'Silkscreen',ui-monospace,monospace;letter-spacing:1px;pointer-events:auto;touch-action:manipulation;box-shadow:0 0 18px rgba(255,61,168,.6)}
 #skJump.dn{transform:scale(.94);background:radial-gradient(circle,rgba(61,242,255,.55),rgba(20,8,40,.85))}
@@ -4930,7 +4931,7 @@ var SKATE=(function(){
   var TRICKS=["","SUPERMAN","TUCK","KICK","SPLIT"];          /* up, down, left, right */
   var on=false,rnd=null,score=0,vx=0,vy=0,lastT=0,air=null,fall=0,trick=0,chain=0,airPts=0,lapAcc=0,lastAng=null,pops=[],stride=0,banked=null,bots={},pressT=0;
   function $(id){return document.getElementById(id);}
-  function geom(){return ART.rinkGeom(W,(FLOOR_TOP+0.05)*H,floorMaxY()*H);}
+  function geom(){var bot=floorMaxY()*H;if(W>H*1.2&&!document.body.classList.contains("chat-open"))bot=Math.max(bot,H-18);return ART.rinkGeom(W,(FLOOR_TOP+0.05)*H,bot);}   /* landscape: the rink takes the whole floor down to the bottom edge, not a thin strip */
   var WH=null;   /* the trick wheel, while your thumb's on it: {x,y} */
   function input(){var x=(held.right?1:0)-(held.left?1:0),y=(held.down?1:0)-(held.up?1:0);if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){x=joy.x;y=joy.y;}
     if(WH&&air){x=WH.x;y=WH.y;}var m=Math.hypot(x,y);if(m>1){x/=m;y/=m;}return{x:x,y:y,m:Math.min(1,m)};}
@@ -4949,7 +4950,7 @@ var SKATE=(function(){
   function jump(){
     if(!on||air||fall>0)return;var G=geom(),sp=Math.hypot(vx,vy)/maxSp(G);
     if(sp<TUNE.v("sk.minJump")){var me=viewers[myId];if(me)pops.push({x:me.x*W,y:me.y*H-60,t:performance.now(),txt:"MORE SPEED!",col:"#fff"});return;}
-    air={t0:performance.now(),dur:TUNE.v("sk.airBase")+TUNE.v("sk.airExtra")*Math.min(1,sp),peak:TUNE.v("sk.peakBase")+TUNE.v("sk.peakExtra")*Math.min(1,sp)};trick=0;chain=0;airPts=0;
+    air={t0:performance.now(),dur:TUNE.v("sk.airBase")+TUNE.v("sk.airExtra")*Math.min(1,sp),peak:TUNE.v("sk.peakBase")+TUNE.v("sk.peakExtra")*Math.min(1,sp),lock:trickOf(input())};trick=0;chain=0;airPts=0;
   }
   /* bounce off an oval's rail: k=1 keeps you inside it (the outer rail), k=-1 outside it (the island) */
   function rail(G,px,py,rx,ry,k){
@@ -4973,7 +4974,7 @@ var SKATE=(function(){
       stride+=dt*(2+sp/MS*7);
     }else{
       /* in the air: you sail on; the stick does tricks */
-      var u=(now-air.t0)/air.dur,t2=trickOf(inp);
+      var u=(now-air.t0)/air.dur,t2=trickOf(inp);if(air.lock>0){if(t2===air.lock)t2=0;else air.lock=0;}   /* still holding the way you were skating: not a trick until you let go or change direction */
       if(t2&&t2!==trick){chain++;trick=t2;var ttl=$("skTrick");if(ttl)ttl.innerHTML=TRICKS[t2]+(chain>1?"<small>× "+chain+" CHAIN</small>":"");}
       else if(!t2)trick=0;
       if(trick)airPts+=dt*TUNE.v("sk.trickPts")*(1+TUNE.v("sk.chain")*(chain-1));
@@ -4995,7 +4996,8 @@ var SKATE=(function(){
   }
   function land(me){
     var inp=input(),px=me.x*W,py=me.y*H;
-    if(trickOf(inp)||inp.m>0.45){fall=TUNE.v("sk.bailTime");vx*=TUNE.v("sk.bailKeep");vy*=TUNE.v("sk.bailKeep");pops.push({x:px,y:py-60,t:performance.now(),txt:"BAIL!",col:"#FF5A5A"});var ttl=$("skTrick");if(ttl)ttl.innerHTML="BAIL!<small>let go before you land</small>";}
+    var tl=trickOf(inp);if(air.lock>0&&tl===air.lock)tl=0;
+    if(tl&&trick){fall=TUNE.v("sk.bailTime");vx*=TUNE.v("sk.bailKeep");vy*=TUNE.v("sk.bailKeep");pops.push({x:px,y:py-60,t:performance.now(),txt:"BAIL!",col:"#FF5A5A"});var ttl=$("skTrick");if(ttl)ttl.innerHTML="BAIL!<small>let go before you land</small>";}
     else{var pts=Math.round(airPts)+(chain?TUNE.v("sk.landPts")*chain:0);if(pts>0)add(pts,px,py-70,chain>1?chain+"× COMBO":"LANDED",chain>1?"#FF3DA8":"#F5F23D");else pops.push({x:px,y:py-60,t:performance.now(),txt:"AIR!",col:"#fff"});}
     air=null;trick=0;banked=performance.now();
   }
@@ -6210,7 +6212,7 @@ var PRACTICE=(function(){
     performer.name="";   /* practice: no name tag over the stand-in */
     viewers={me:{name:myName,x:0.5,y:0.55,tx:0.5,ty:0.55,color:myColor,look:myLook,bubbleText:null,bubbleTime:0,dance:0}};
     updViewerCount();
-    try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.kind)$("prKind").value=sv.kind;if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.level)$("prLevel").value=String(sv.level);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
+    try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.kind)$("prKind").value=sv.kind;if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
     ["prMode","prSecs","prLevel","prBots","prKind"].forEach(function(id){$(id).onchange=save;});
     if(/[?&]embed\b/.test(location.search))document.body.classList.add("embed");
     if(/[?&]kflagTest\b/.test(location.search))setTimeout(function(){document.body.classList.remove("pr-open");window.ukKflagTest(5);},900);   /* test run from the designer: Kart flag */
@@ -6254,6 +6256,7 @@ var PRACTICE=(function(){
       .catch(function(){});
   }
   /* the drop-down: the site's songs, then the performer's Backing Tracks (when opened from the performer page) */
+  var autoDip=false;
   function renderList(selName){
     var sel=$("prList"),keep=sel.value!==""&&lib[+sel.value]?lib[+sel.value].name:null;sel.textContent="";
     lib=REPO.concat(YTL,TRACKS);
@@ -6264,6 +6267,8 @@ var PRACTICE=(function(){
         if((selName&&t.name===selName)||(!selName&&keep&&t.name===keep))pick=off+i;});sel.appendChild(gp);}
     group("Unholy Keys songs",REPO,0);group("YouTube songs",YTL,REPO.length);group("Your Backing Tracks",TRACKS,REPO.length+YTL.length);
     if(pick>=0)sel.value=String(pick);
+    /* for now: Dip is picked to start with, so practice is one tap away */
+    else if(!autoDip&&!file&&!ytSel){for(var di=0;di<REPO.length;di++)if(/^dip\b/i.test(REPO[di].name)){autoDip=true;sel.value=String(di);pick=di;pickTrack(REPO[di]);break;}}
     return pick;
   }
   /* a song from the list: a Backing Track is already a file; a site song is downloaded when picked */
@@ -7082,7 +7087,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.15",SERVER_VERSION="";
+var PAGE_VERSION="1.81.16",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7660,7 +7665,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.15"></script>
+<script src="lab.js?v=1.81.16"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

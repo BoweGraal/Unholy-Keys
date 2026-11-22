@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.16 — Rinks in landscape, no false bails, practice defaults
+
+- **Roller and ice rink, landscape**: the rink fills the floor down to the bottom edge (it was a thin strip under the stage), the long controls line is gone and the hint sits at the bottom.
+- **Bails**: holding the stick to skate as you jump is no longer a trick, so you don't bail on landing. A trick starts when you change direction (or use the trick wheel) in the air, and you only bail if you're still holding a trick when you land.
+- **Practice**: Dip is picked to start with and the difficulty starts on Normal.
+
 ## v1.81.15 — Walk race portrait, Spin and Worm; CTF blocking
 
 **Dance walk race**
