@@ -17,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.27"></script>
-<script src="gfx.js?v=1.81.27"></script>
-<script src="art.js?v=1.81.27"></script>
-<script src="instruments.js?v=1.81.27"></script>
-<script src="kart.js?v=1.81.27"></script>
-<script src="explain.js?v=1.81.27"></script>
+<script src="tune.js?v=1.81.28"></script>
+<script src="gfx.js?v=1.81.28"></script>
+<script src="art.js?v=1.81.28"></script>
+<script src="instruments.js?v=1.81.28"></script>
+<script src="kart.js?v=1.81.28"></script>
+<script src="explain.js?v=1.81.28"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3345,7 +3345,7 @@ var GAME=(function(){
     for(var i=0;i<notes.length;i++){var n=notes[i];if(n.j||n.lane!==lane)continue;var d=Math.abs(n.t-now);if(d<bd){bd=d;bestN=n;}}
     flash[lane]=now;laneDown[lane]=true;
     if(!bestN||bd>win(2))return;                    /* nothing close enough: no penalty for a stray tap */
-    grade(bestN,bd,now);
+    if(grade(bestN,bd,now)===false)return;
     if(bestN.hold>0){bestN.holding=true;bestN.j="";bestN.headJ=judge;}          /* a hold: keep it down until the tail ends */
     setPose(hitPose,true);sendPose(true);
     foot();
@@ -3378,6 +3378,8 @@ var GAME=(function(){
     judge=why||"LET GO";judgeT=now;judgeCol="#E05050";hype=Math.max(0,hype-TUNE.v("hype.miss"));foot();
   }
   function grade(n,bd,now){
+    /* late is a miss: only early and on-time hits (up to the PERFECT window after the beat) keep the streak going */
+    if(now-n.t>win(0)){n.j="MISS";n.jt=now;misses++;if(combo>0){combo=0;setPose(REST);sendPose(true);}judge="MISS";judgeT=now;judgeCol="#E05050";hype=Math.max(0,hype-TUNE.v("hype.miss"));foot();return false;}
     for(var i=0;i<HIT.length;i++)if(bd<=win(i)){
       n.j=HIT[i][1];n.jt=now;combo++;hits++;if(combo>best)best=combo;
       score+=Math.round(HIT[i][2]*(1+Math.floor(combo/TUNE.v("combo.every"))*TUNE.v("combo.bonus"))*(onFire?TUNE.v("fire.mult"):1));   /* big moments score double */
@@ -3479,7 +3481,7 @@ var GAME=(function(){
     if(!bestN)return;
     var bd=Math.abs(bestN.t-now);
     if(bd>HIT[2][0]){if(now<bestN.t){judge="EARLY";judgeT=now;judgeCol="rgba(255,255,255,.6)";}return;}   /* too early: wait for the ring */
-    grade(bestN,bd,now);
+    if(grade(bestN,bd,now)===false)return;
     if(bestN.hold>0&&bestN.x2!==undefined){bestN.sliding=true;bestN.j="";bestN.headJ=judge;bestN.pid=pid;bestN.okT=now;finger[pid]=p;}
     /* reach for it: the nearest hand or foot points at the target */
     var dx=bestN.x-0.5,dy=bestN.y-0.47,np=REST.slice(),a=Math.atan2(-dx,dy);
@@ -7114,7 +7116,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.27",SERVER_VERSION="";
+var PAGE_VERSION="1.81.28",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7693,7 +7695,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.27"></script>
+<script src="lab.js?v=1.81.28"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

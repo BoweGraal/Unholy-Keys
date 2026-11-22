@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.28 — Late hits are misses
+
+- In step dance, target dance and both note highways, a hit that comes **after** the note's PERFECT window counts as a **MISS**: the streak ends and hype drops. Early and on-time hits still count (PERFECT, GREAT or GOOD by how close they are).
+- A late hit on a hold note doesn't start the hold.
+- The "on time" allowance after the beat is the PERFECT window (tunable in the lab: hw.p4 / hw.p7 for the highways), so normal touch lag isn't punished.
+
 ## v1.81.27 — 4-key tiles the standard size; standings order
 
 - **Note highway, 4 keys**: tap notes are now the same short tile as on the 7-key highway (they were about twice as tall). Only holds are long.
