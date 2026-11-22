@@ -680,8 +680,8 @@
   }
 
   /* draw one kart + driver at a screen spot, for checking every angle */
-  K.preview = function (ctx, x, y, a, v, z, turn) { var c0 = { x: cam.x, y: cam.y, z: cam.z }, w0 = VW, h0 = VH; VW = 0; VH = 0; cam.z = z || 2; cam.x = -x / cam.z; cam.y = -y / cam.z;
-    try { kart(ctx, { x: 0, y: 0, a: a, v: v, me: false, turn: turn || 0, boost: 0, air: false, drifting: false }, performance.now()); } finally { cam.x = c0.x; cam.y = c0.y; cam.z = c0.z; VW = w0; VH = h0; } };
+  K.preview = function (ctx, x, y, a, v, z, turn, o) { o = o || {}; var c0 = { x: cam.x, y: cam.y, z: cam.z }, w0 = VW, h0 = VH; VW = 0; VH = 0; cam.z = z || 2; cam.x = -x / cam.z; cam.y = -y / cam.z;
+    try { kart(ctx, { x: 0, y: 0, a: a, v: v, me: false, turn: turn || 0, boost: o.boost ? 1 : 0, air: !!o.air, drifting: !!o.drifting, lvl: o.lvl === undefined ? -1 : o.lvl }, performance.now());   /* o: air (the hop), drifting + lvl (sparks), boost - the same looks as Mars Rally */ } finally { cam.x = c0.x; cam.y = c0.y; cam.z = c0.z; VW = w0; VH = h0; } };
   /* ================= the performer's view: the whole track from above, everyone on it, the top three picked out =================
      o: { track (a builder track or null), round (changes = new race), racers: [{ id, name, color, look, x, y (world), h, t }],
           avatar(x, y, v, isMe, scale, pose, noName, dir), perf(ctx, x, y, scale), beat() }

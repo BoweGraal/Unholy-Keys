@@ -84,8 +84,8 @@ var TUNE=(function(){
    about:"Capture the flag in karts: LAUNCH (hold, aim, let go) to fly, IMPACT to knock your flag out of a carrier, power-up boxes for items. Practice uses these straight away; shows use the server's until you send them.",
    vars:[
     V("kf.speed","Top speed",9.5,3,20,0.1,"Tiles a second at full stick.","tiles/s"),
-    V("kf.launch0","Launch, quick tap",1.25,1,3,0.05,"Speed after a tap of LAUNCH, as a multiple of top speed.","×"),
-    V("kf.launch1","Launch, fully charged",2.4,1,4,0.05,"Speed after a full charge.","×"),
+    V("kf.launch0","Launch, quick tap",1.05,0.8,3,0.05,"Speed after a tap of LAUNCH, as a multiple of top speed.","×"),
+    V("kf.launch1","Launch, fully charged",1.6,1,4,0.05,"Speed after a full charge.","×"),
     V("kf.aim","Launch charge time",700,200,2000,50,"How long to hold LAUNCH for a full charge.","ms"),
     V("kf.impactR","IMPACT reach",3,1,8,0.1,"Radius of the IMPACT blast.","tiles"),
     V("kf.impactCd","IMPACT cooldown",8000,1000,20000,250,"Time before you can IMPACT again.","ms"),
