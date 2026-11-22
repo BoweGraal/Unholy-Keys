@@ -1812,7 +1812,7 @@ var VZ=1,VZ_AY=0.62;
 try{VZ=Math.max(1,Math.min(2.6,+localStorage.getItem("uk_vz")||1));}catch(e){}
 function vzActive(){return VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
 /* the camera: the wheel zoom, plus an automatic push in on you while it's your turn in the spotlight, so you can see (and steer) the whole body */
-var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null,VZ_H=60;
+var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null,VZ_H=60,VZ_B=[0,0];
 function vzCalc(){
   var now=performance.now(),dt=Math.min(0.1,(now-(vzT||now))/1000);vzT=now;
   var f=null;try{f=GAME.mode==="free"&&typeof ROUND!=="undefined"?ROUND.featured():null;}catch(e){}
@@ -1821,8 +1821,11 @@ function vzCalc(){
   var base=vzActive(),Z0=base?VZ:1;
   document.body.classList.toggle("vz-turn",vzTz>0.3);
   if(!base&&!vzTz){VZS.on=false;return;}
+  /* zoomed in: the camera follows you, kept inside the room so you never see past the edges */
+  var aY=H*VZ_AY,bx=W/2,by=aY;if(base&&VZ_ME){bx=Math.max(W/(2*Z0),Math.min(W-W/(2*Z0),VZ_ME[0]));by=Math.max(aY/Z0,Math.min(H-(H-aY)/Z0,VZ_ME[1]-VZ_H*0.3));}
+  VZ_B[0]+=(bx-VZ_B[0])*Math.min(1,dt*5);VZ_B[1]+=(by-VZ_B[1])*Math.min(1,dt*5);bx=VZ_B[0];by=VZ_B[1];
   var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-VZ_H*0.16:H*VZ_AY,Zt=Math.max(Z0,Math.min(6,0.8*H/VZ_H));   /* zoom until your body is about 70% of the screen tall */
-  VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=W/2+(fx-W/2)*tz;VZS.cy=H*VZ_AY+(fy-H*VZ_AY)*tz;VZS.ay=H*VZ_AY+(H*0.47-H*VZ_AY)*tz;VZS.on=true;
+  VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=bx+(fx-bx)*tz;VZS.cy=by+(fy-by)*tz;VZS.ay=H*VZ_AY+(H*0.47-H*VZ_AY)*tz;VZS.on=true;
 }
 function floorPt(e){var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(VZS.on){x=VZS.cx+(x-W/2)/VZS.Z;y=VZS.cy+(y-VZS.ay)/VZS.Z;}return [x,y];}
 window.addEventListener("wheel",function(e){
@@ -1830,6 +1833,17 @@ window.addEventListener("wheel",function(e){
   e.preventDefault();VZ=Math.max(1,Math.min(2.6,VZ*(e.deltaY<0?1.12:1/1.12)));if(VZ<1.02)VZ=1;
   try{localStorage.setItem("uk_vz",VZ.toFixed(2));}catch(x){}
 },{passive:false});
+/* pinch to zoom (phones): only with two fingers that are both on the room itself, and never inside a game - a finger on a stick or a button is not a pinch, so playing is never affected. Zoom is kept between 1x and 2.6x. */
+(function(){var pts={},pinch=null,cv=document.getElementById("mainCanvas");if(!cv)return;
+  function dist(){var k=Object.keys(pts);if(k.length<2)return 0;var a=pts[k[0]],b=pts[k[1]];return Math.hypot(a[0]-b[0],a[1]-b[1]);}
+  function okMode(){return !GAME.mode||GAME.mode==="free";}
+  cv.addEventListener("pointerdown",function(e){if(e.pointerType==="mouse")return;pts[e.pointerId]=[e.clientX,e.clientY];
+    if(Object.keys(pts).length===2&&okMode()){var ids=Object.keys(pts);ids.forEach(function(id){try{GAME.floorRelease(+id);}catch(x){}});if(viewers[myId])viewers[myId].walk=null;walkMark=null;pinch={d:dist()||1,z:VZ};e.stopImmediatePropagation();e.preventDefault();}
+    else if(pinch)e.stopImmediatePropagation();},true);
+  cv.addEventListener("pointermove",function(e){if(!pts[e.pointerId])return;pts[e.pointerId]=[e.clientX,e.clientY];
+    if(pinch){e.stopImmediatePropagation();e.preventDefault();VZ=Math.max(1,Math.min(2.6,pinch.z*dist()/pinch.d));if(VZ<1.04)VZ=1;}},true);
+  ["pointerup","pointercancel"].forEach(function(n){cv.addEventListener(n,function(e){delete pts[e.pointerId];if(pinch&&Object.keys(pts).length<2){pinch=null;try{localStorage.setItem("uk_vz",VZ.toFixed(2));}catch(x){}}},true);});
+})();
 var walkMark=null,FRAME_DT=0.016,LAST_FRAME=0;
 /* a tap or click on the venue: grab one of your limbs if you're free dancing and it's on you, otherwise walk there */
 function onFloorDown(e){
