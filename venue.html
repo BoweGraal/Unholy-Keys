@@ -16,12 +16,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.1"></script>
-<script src="gfx.js?v=1.81.1"></script>
-<script src="art.js?v=1.81.1"></script>
-<script src="instruments.js?v=1.81.1"></script>
-<script src="kart.js?v=1.81.1"></script>
-<script src="explain.js?v=1.81.1"></script>
+<script src="tune.js?v=1.81.2"></script>
+<script src="gfx.js?v=1.81.2"></script>
+<script src="art.js?v=1.81.2"></script>
+<script src="instruments.js?v=1.81.2"></script>
+<script src="kart.js?v=1.81.2"></script>
+<script src="explain.js?v=1.81.2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -742,7 +742,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <div id="partBanner"></div>
   <canvas id="skiCv"></canvas>
   <canvas id="ctfCv"></canvas>
-  <div id="ctfUI"><div id="ctfBanner"></div><div id="ctfScore"></div><div id="ctfTeam"></div><div id="ctfHint"></div><button id="ctfSprint" aria-label="Sprint"><i></i><b>SPRINT</b><span>hold</span></button><button id="ctfItem" aria-label="Use item"><b>&middot;</b><span>item</span></button><button id="ctfDrift" aria-label="Drift"><i></i><b>DRIFT</b><span>hold &middot; let go</span></button></div>
+  <div id="ctfUI"><div id="ctfBanner"></div><div id="ctfScore"></div><div id="ctfTeam"></div><div id="ctfHint"></div><button id="ctfSprint" aria-label="Sprint"><i></i><b>SPRINT</b><span>hold</span></button><button id="ctfItem" aria-label="Use item"><b>&middot;</b><span>item</span></button><button id="ctfDrift" aria-label="Jump and launch"><i></i><b>LAUNCH</b><span>hold &middot; aim &middot; let go</span></button></div>
   <div id="skiUI"><div id="skiBanner"></div><div id="skiScore">0</div><div id="skiCombo"></div><div id="skiSpeed"></div><div id="skiHint"></div>
     <button id="skiJump">HOP<small>Space</small></button>
     <div id="skiTricks"><button data-t="1"><b>&#11013;</b>360</button><button data-t="2"><b>&#11014;</b>Backflip</button><button data-t="3"><b>&#10145;</b>Daffy</button></div>
@@ -4720,7 +4720,7 @@ var SKI=(function(){
    rules are in art.js, ART.CTF); in practice they run here, with the practice dancers as bots.
    ============================================================ */
 var CTFG=(function(){
-  var C=ART.CTF,kart=false,ka=0,ma=0,kv=0,nitroT=0,kfx=[],drift=false,dCharge=0,dDir=0,boostT=0,sparks=[],spr={e:1,on:false},sprWant=false,on=false,map=null,I=null,st=null,me={x:0,y:0},push=[0,0],hold=0,lastT=0,team=0,others={},bots={},banT=0,roundN=0,face=0,cv=null,g=null,GO_BEAT=8;
+  var C=ART.CTF,kart=false,ka=0,ma=0,kv=0,nitroT=0,kfx=[],drift=false,dCharge=0,dDir=0,boostT=0,launchCd=0,sparks=[],spr={e:1,on:false},sprWant=false,on=false,map=null,I=null,st=null,me={x:0,y:0},push=[0,0],hold=0,lastT=0,team=0,others={},bots={},banT=0,roundN=0,face=0,cv=null,g=null,GO_BEAT=8;
   function $(id){return document.getElementById(id);}
   function ctfRound(){return GAME.mode==="ctf"||(typeof ROUND!=="undefined"&&ROUND.mode==="ctf");}
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
@@ -4738,13 +4738,16 @@ var CTFG=(function(){
     if(rc){if(rc.teams)st.teams=rc.teams;if(rc.flags)st.flags=rc.flags;if(rc.caps)st.caps=rc.caps;kmirror(rc);}
     ka=ma=team?Math.PI:0;kv=0;nitroT=0;kfx=[];drift=false;dCharge=0;boostT=0;sparks=[];document.body.classList.toggle("ctf-kart",kart);
     team=C.teamOf(st,myId);var sp=C.spawnOf(I,st,myId);me={x:sp[0],y:sp[1]};push=[0,0];hold=0;others={};bots={};spr={e:1,on:false};sprWant=false;wireSprint();
-    cv=$("ctfCv");g=cv.getContext("2d");cv.classList.add("on");document.body.classList.add("gaming-ctf");$("ctfUI").classList.add("on");hud();banner(kart?"🏎️ KART FLAG":"🚩 CAPTURE THE FLAG","#F5C518");if(kart)setTimeout(function(){if(on&&kart)banner("PULSE knocks your flag home","#ff6fae");},2200);
+    cv=$("ctfCv");g=cv.getContext("2d");cv.classList.add("on");document.body.classList.add("gaming-ctf");$("ctfUI").classList.add("on");hud();banner(kart?"🏎️ KART FLAG":"🚩 CAPTURE THE FLAG","#F5C518");if(kart)setTimeout(function(){if(on&&kart)banner("LAUNCH to fly · IMPACT steals your flag back","#ff6fae");},2200);
   }
   function stop(){on=false;document.body.classList.remove("gaming-ctf","ctf-kart");var u=$("ctfUI");if(u)u.classList.remove("on");var c=$("ctfCv");if(c)c.classList.remove("on");}
   /* the sprint button (bottom right) and Space / Shift: hold to sprint while the meter has charge */
   /* Kart flag drift: hold to slide, let go for a boost if it charged */
-  function driftOn(d){if(!on||!kart)return;if(d){if(!drift&&kv>C.K_SPEED*0.3&&!((st.spin[myId]||0)>Date.now())){drift=true;dCharge=0;}return;}
-    if(drift){var lv=dCharge>=C.K_DRIFT2?2:dCharge>=C.K_DRIFT1?1:0;if(lv){boostT=performance.now()+C.K_DBOOST[lv];kv=Math.max(kv,C.K_SPEED*(lv===2?1.35:1.2));banner(lv===2?"MEGA BOOST!":"BOOST!",lv===2?"#FF9A2E":"#3DF2FF");}}drift=false;dCharge=0;}
+  function driftOn(d){if(!on||!kart)return;if(d){if(!drift&&beat()>=GO_BEAT&&!((st.spin[myId]||0)>Date.now())&&performance.now()>launchCd){drift=true;dCharge=0;}return;}
+    if(drift){var f=Math.min(1,dCharge*1000/C.K_AIM_MS);drift=false;dCharge=0;launchCd=performance.now()+250;
+      ma=ka;kv=C.K_SPEED*(1.25+1.15*f);boostT=performance.now()+300+600*f;   /* let go: the kart shoots off the way you aimed, harder the longer you charged */
+      kfx.push({x:me.x,y:me.y,r:0.9+0.6*f,t:performance.now(),col:f>=1?"#FF9A2E":"#3DF2FF"});if(f>=1)banner("FULL LAUNCH!","#FF9A2E");}
+  }
   /* Kart Flag: pulse / use, the server decides (practice: here) */
   function act(a){if(!on||!kart||!st||beat()<GO_BEAT)return;var nw=Date.now();
     if(a==="pulse"){if(C.cdLeft(st,myId,nw)>0||(st.spin[myId]||0)>nw)return;}else if(!st.held[myId])return;
@@ -4755,8 +4758,8 @@ var CTFG=(function(){
     if(m.held)st.held=m.held;if(m.sh){st.shield={};Object.keys(m.sh).forEach(function(k){st.shield[k]=dn+m.sh[k];});}if(m.spin){Object.keys(m.spin).forEach(function(k){st.spin[k]=dn+m.spin[k];});}if(m.mega)st.mega=m.mega;if(m.cd&&m.cd[myId]!==undefined)st.cd[myId]=dn-(C.K_PULSE_MS-m.cd[myId]);}
   function sprintHud(){var b=$("ctfSprint");if(!b)return;
     if(kart){var nw=Date.now(),cl=C.cdLeft(st,myId,nw),f2=b.querySelector("i");if(f2)f2.style.height=Math.round((1-cl/C.K_PULSE_MS)*100)+"%";b.classList.toggle("ready",cl<=0);b.classList.remove("on");
-      var bb=b.querySelector("b"),ss=b.querySelector("span");if(bb&&bb.textContent!=="PULSE"){bb.textContent="PULSE";}if(ss)ss.textContent=cl>0?Math.ceil(cl/1000)+"s":(st.mega[myId]?"MEGA!":"tap");
-      var dbt=$("ctfDrift");if(dbt){var fr=drift?Math.min(1,dCharge/C.K_DRIFT2):0;dbt.querySelector("i").style.height=Math.round(fr*100)+"%";dbt.classList.toggle("o2",drift&&dCharge>=C.K_DRIFT2);}
+      var bb=b.querySelector("b"),ss=b.querySelector("span");if(bb&&bb.textContent!=="IMPACT"){bb.textContent="IMPACT";}if(ss)ss.textContent=cl>0?Math.ceil(cl/1000)+"s":(st.mega[myId]?"MEGA!":"tap");
+      var dbt=$("ctfDrift");if(dbt){var fr=drift?Math.min(1,dCharge*1000/C.K_AIM_MS):0;dbt.querySelector("i").style.height=Math.round(fr*100)+"%";dbt.classList.toggle("o2",fr>=1);}
       var ib=$("ctfItem"),it=st.held[myId];if(ib){ib.classList.toggle("has",!!it);ib.querySelector("b").textContent=it?C.ITEM_ICON[it]:"\u00b7";ib.querySelector("span").textContent=it||"item";}return;}
     var bs=b.querySelector("b");if(bs&&bs.textContent!=="SPRINT"){bs.textContent="SPRINT";b.querySelector("span").textContent="hold";}var f=b.querySelector("i");if(f)f.style.height=Math.round(spr.e*100)+"%";b.classList.toggle("ready",spr.e>=C.SPRINT_MIN||spr.on);b.classList.toggle("on",spr.on);}
   function wireSprint(){var b=$("ctfSprint");if(!b||b._w)return;b._w=1;
@@ -4776,11 +4779,11 @@ var CTFG=(function(){
     else if(e.k==="refill"&&e.id===myId){spr.e=1;banner("SPRINT REFILLED","#3DF2FF");}
     else if(e.k==="tag"){if(e.id===myId){respawn();banner(e.carrier?"TAGGED! FLAG RETURNED":"TAGGED! BACK TO SPAWN","#fff");}else if(e.by===myId)banner(e.carrier?"FLAG SAVED!":"TAGGED "+nameOf(e.id).toUpperCase(),C.TEAM[team]);}
     if(e.k==="pulse")kfx.push({x:e.x,y:e.y,r:e.r,t:performance.now(),col:C.TEAM[e.t]});
-    else if(e.k==="save"){if(e.id===myId)banner("PULSED! FLAG LOST","#fff");else if(e.by===myId)banner("FLAG KNOCKED HOME!",C.TEAM[team]);else banner(C.TNAME[e.t]+" SAVES THEIR FLAG",C.TEAM[e.t]);}
+    else if(e.k==="save"){if(e.id===myId)banner("IMPACT! FLAG LOST","#fff");else if(e.by===myId)banner("FLAG KNOCKED HOME!",C.TEAM[team]);else banner(C.TNAME[e.t]+" SAVES THEIR FLAG",C.TEAM[e.t]);}
     else if(e.k==="spin"){if(e.id===myId)banner(e.oil?"OIL! SPUN OUT":"SPUN OUT","#fff");if(st.kart)st.spin[e.id]=Date.now()+C.K_SPIN_MS;}
     else if(e.k==="block"&&(e.id===myId||e.by===myId))banner("SHIELD BLOCKED IT","#3DF2FF");
     else if(e.k==="box"&&e.id===myId)banner("GOT "+e.it.toUpperCase()+" "+C.ITEM_ICON[e.it],"#F5C518");
-    else if(e.k==="use"){if(e.it==="nitro"&&e.id===myId)nitroT=performance.now()+C.K_NITRO_MS;if(e.it==="shield"&&st.kart)st.shield[e.id]=Date.now()+C.K_SHIELD_MS;if(e.it==="mega"&&e.id===myId)banner("NEXT PULSE IS MEGA","#ff6fae");}
+    else if(e.k==="use"){if(e.it==="nitro"&&e.id===myId)nitroT=performance.now()+C.K_NITRO_MS;if(e.it==="shield"&&st.kart)st.shield[e.id]=Date.now()+C.K_SHIELD_MS;if(e.it==="mega"&&e.id===myId)banner("NEXT IMPACT IS MEGA","#ff6fae");}
     if(PRACTICE.on&&e.by===myId&&(e.k==="save"||e.k==="spin"))GAME.moshPts(e.k==="save"?250:60);
     if(PRACTICE.on&&e.id===myId&&e.k==="take")GAME.moshPts(100);if(PRACTICE.on&&e.by===myId)GAME.moshPts(e.carrier?250:150);});hud();}
   /* from the server */
@@ -4791,13 +4794,15 @@ var CTFG=(function(){
     var going=beat()>=GO_BEAT;
     var sm=C.sprint(spr,sprWant&&going&&now>hold&&Math.hypot(input().x,input().y)>0.2,dt);sprintHud();
     if(kart){var inp2=input(),mg=Math.hypot(inp2.x,inp2.y),spin=(st.spin[myId]||0)>Date.now(),carry=C.carrying(st,myId)>=0;
-      if(going&&!spin){var da=0;if(mg>0.2){var ta=Math.atan2(inp2.y,inp2.x);da=Math.atan2(Math.sin(ta-ka),Math.cos(ta-ka));var tr2=dt*(drift?9:(7-3*Math.min(1,kv/C.K_SPEED)));ka+=Math.max(-tr2,Math.min(tr2,da));face=ART.face8(Math.cos(ka),Math.sin(ka),face);}
-        /* drifting: the kart turns hard but keeps sliding the old way; turning while you slide charges the boost (quick: blue at 0.45 s, orange at 1 s) */
-        if(drift&&kv>C.K_SPEED*0.35){var slip=Math.abs(Math.atan2(Math.sin(ka-ma),Math.cos(ka-ma)));if(slip>0.25||Math.abs(da)>0.3)dCharge+=dt;}
-        var tv=C.K_SPEED*Math.min(1,mg)*(carry?C.CARRY:1)*(now<nitroT?1.6:1)*(now<boostT?1.5:1)*(drift?0.92:1);kv+=(tv-kv)*Math.min(1,dt*(tv>kv?(now<boostT?6:2.4):3.2));}
+      if(going&&!spin){var da=0;
+        if(drift){   /* in the air: the kart hops and slides to a stop while you aim it anywhere with the stick; the charge builds while you hold */
+          if(mg>0.2){var ta0=Math.atan2(inp2.y,inp2.x);ka+=Math.atan2(Math.sin(ta0-ka),Math.cos(ta0-ka))*Math.min(1,dt*16);face=ART.face8(Math.cos(ka),Math.sin(ka),face);}
+          dCharge=Math.min(C.K_AIM_MS/1000,dCharge+dt);kv*=Math.pow(0.08,dt);}
+        else{if(mg>0.2){var ta=Math.atan2(inp2.y,inp2.x);da=Math.atan2(Math.sin(ta-ka),Math.cos(ta-ka));var tr2=dt*(7-3*Math.min(1,kv/C.K_SPEED));ka+=Math.max(-tr2,Math.min(tr2,da));face=ART.face8(Math.cos(ka),Math.sin(ka),face);}
+          var tv=C.K_SPEED*Math.min(1,mg)*(carry?C.CARRY:1)*(now<nitroT?1.6:1);if(now<boostT)tv=Math.max(tv,kv);kv+=(tv-kv)*Math.min(1,dt*(now<boostT?0.9:(tv>kv?2.4:3.2)));}}
       else{kv*=Math.pow(0.02,dt);if(spin){ka+=dt*14;drift=false;dCharge=0;}}
-      ma+=Math.atan2(Math.sin(ka-ma),Math.cos(ka-ma))*Math.min(1,dt*(drift?2.6:14));   /* the way you're actually moving */
-      if(drift&&dCharge>=C.K_DRIFT1&&Math.random()<dt*40)sparks.push({x:me.x-Math.cos(ka)*0.45,y:me.y-Math.sin(ka)*0.45,t:now,c:dCharge>=C.K_DRIFT2?"#FF9A2E":"#3DF2FF"});
+      ma+=Math.atan2(Math.sin(ka-ma),Math.cos(ka-ma))*Math.min(1,dt*(drift?0:14));   /* the way you're actually moving (it doesn't turn in the air) */
+      if(drift&&Math.random()<dt*30)sparks.push({x:me.x+(Math.random()-0.5)*0.5,y:me.y+0.3,t:now,c:dCharge*1000>=C.K_AIM_MS?"#FF9A2E":"#3DF2FF"});
       var pd2=I.pad(me.x,me.y);if(pd2)push=[pd2[0]*C.SPEED*C.PAD,pd2[1]*C.SPEED*C.PAD];
       var wx=(Math.cos(ma)*kv+push[0])*dt,wy=(Math.sin(ma)*kv+push[1])*dt,ox=me.x,oy=me.y;C.move(I,me,wx,wy);var dmp=Math.pow(0.08,dt);push=[push[0]*dmp,push[1]*dmp];
       var got=Math.hypot(me.x-ox,me.y-oy),want=Math.hypot(wx,wy);if(want>0.001&&got<want*0.5)kv*=0.55;   /* hit a wall: lose speed */
@@ -4864,7 +4869,11 @@ var CTFG=(function(){
       var run=p.sp>0.6,rk=Math.min(1,p.sp/(C.SPEED*C.SPRINT)),bump=-Math.round(Math.pow(1-BEAT.phase(now),3)*1.5*sc);   /* running: a stride from the distance covered; standing: a small bump on each beat */
       var mv=run?{k:1,ph:p.ph,dx:p.dx,dy:0,sp:0.5*rk*rk}:null;
       if(kart){var kh=p.id===myId?ka:(Math.hypot(p.dx2||0,p.dy2||0)>0.002?Math.atan2(p.dy2,p.dx2):(others[p.id]&&others[p.id].ka)||0);if(others[p.id])others[p.id].ka=kh;if((st.spin[p.id]||0)>Date.now())kh+=now/60;
-        KART.preview(g,X,Y-2*sc,kh,p.id===myId?{color:p.v.color,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:""}:{color:p.v.color,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:p.v.name},Math.max(0.8,V.s/22),0);
+        var lift=p.id===myId&&drift?Math.round((3+2*Math.sin(now/90))*sc):0;
+        if(lift){g.fillStyle="rgba(0,0,0,.35)";ART.PX.oval(g,X,Y+2*sc,V.s*0.45,V.s*0.18,0,Math.max(1,sc));
+          var fr2=Math.min(1,dCharge*1000/C.K_AIM_MS),al=V.s*(1.2+2.3*fr2),ac=fr2>=1?"#FF9A2E":"#3DF2FF";g.fillStyle=ac;for(var ad=V.s*0.7;ad<al;ad+=Math.max(4,V.s/5)){var az=Math.max(2,Math.round(V.s/9));g.fillRect(Math.round(X+Math.cos(ka)*ad)-az/2,Math.round(Y+Math.sin(ka)*ad)-az/2,az,az);}
+          var hx=X+Math.cos(ka)*al,hy=Y+Math.sin(ka)*al,hz=V.s*0.35;g.beginPath();g.moveTo(hx+Math.cos(ka)*hz,hy+Math.sin(ka)*hz);g.lineTo(hx+Math.cos(ka+2.4)*hz,hy+Math.sin(ka+2.4)*hz);g.lineTo(hx+Math.cos(ka-2.4)*hz,hy+Math.sin(ka-2.4)*hz);g.closePath();g.fill();}   /* the aim arrow grows as it charges */
+        KART.preview(g,X,Y-2*sc-lift,kh,p.id===myId?{color:p.v.color,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:""}:{color:p.v.color,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:p.v.name},Math.max(0.8,V.s/22),0);
         if((st.shield[p.id]||0)>Date.now()){g.strokeStyle="#3DF2FF";g.lineWidth=2;g.globalAlpha=0.5+0.3*Math.sin(now/90);ART.PX.ring(g,X,Y-6*sc,V.s*0.85);g.globalAlpha=1;}
         if(st.mega[p.id]){g.strokeStyle="#ff6fae";g.lineWidth=2;g.globalAlpha=0.4+0.3*Math.sin(now/70);ART.PX.ring(g,X,Y-6*sc,V.s*0.65);g.globalAlpha=1;}
         var cf2=C.carrying(st,p.id);if(cf2>=0)C.flag(g,X+4*sc,Y-24*sc,cf2,V.s,now);g.globalAlpha=1;return;}
@@ -7025,7 +7034,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.1",SERVER_VERSION="";
+var PAGE_VERSION="1.81.2",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7575,7 +7584,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.1"></script>
+<script src="lab.js?v=1.81.2"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

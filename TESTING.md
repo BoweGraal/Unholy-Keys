@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.2 — Kart flag: jump, aim, launch and IMPACT
+
+- **LAUNCH** (big button bottom right, or Shift / X) replaces drift: hold it and the kart hops and slides to a stop while you aim it anywhere with the stick. An arrow grows as it charges (blue, then orange when full at 0.7 s). Let go and the kart shoots off the way you aimed, harder the longer you held.
+- **PULSE is now IMPACT**: same blast round you; an enemy carrying your flag drops it and it flies home.
+
 ## v1.81.1 — Kart flag: open arena and drift boost
 
 - Kart flag has its own arena: by default "Open Circuit", 64 x 30, wide and open with a few pillars, boost lanes and power-up boxes. The camera shows more of it.
