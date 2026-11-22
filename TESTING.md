@@ -1688,6 +1688,41 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.28 — Late hits are misses
+
+- In step dance, target dance and both note highways, a hit that comes **after** the note's PERFECT window counts as a **MISS**: the streak ends and hype drops. Early and on-time hits still count (PERFECT, GREAT or GOOD by how close they are).
+- A late hit on a hold note doesn't start the hold.
+- The "on time" allowance after the beat is the PERFECT window (tunable in the lab: hw.p4 / hw.p7 for the highways), so normal touch lag isn't punished.
+
+## v1.81.27 — 4-key tiles the standard size; standings order
+
+- **Note highway, 4 keys**: tap notes are now the same short tile as on the 7-key highway (they were about twice as tall). Only holds are long.
+- **Standings**: the top 3 is sorted again with your live score, so you're never listed below someone you're ahead of. Before, your score updated but your place didn't.
+
+## v1.81.26 — Hair goes under hats
+
+- With a hat on, hair above the hat's brim isn't drawn, so spikes, mohawks, afros, buns and the rest no longer poke out around the hat. Hair below the brim still shows: sides, fringes, long hair, ponytails.
+- This covers the drawn hair and your painted hair edits, in the front, three-quarter, side and back views.
+- The crown and the goggles sit on top of the hair, so hair still shows with those.
+- Swept: every hair with every hat (30+ × 14), plus close-ups of the tricky ones in all views.
+
+## v1.81.25 — Planner timing in free dance
+
+- **Everyone free dances for about 30 s** before the circle forms. The ring is locked in at 22 s, the first dancer is told then, and the first turn starts about 37 s in (was 23 s).
+- **The planner only shows once the circle has formed.** The exception is the first dancer, who gets it as soon as they're told, so they have about 15 s to plan. After the circle forms it stays up while you're in the circle and not in the spotlight (between turns, and after your turns are done).
+- Server change: a live show needs the server redeployed to get the 30 s.
+
+## v1.81.24 — Turn planner the whole time
+
+- In free dance, the half-screen drag-and-drop planner now shows the whole time you're in the circle and not in the spotlight: before the circle forms, between your turns, after your turns are done, and when you're not in the turns this song. The header says which.
+- Before, it only showed when you had a turn coming up and the circle had formed, otherwise you got the full-screen style columns.
+
+## v1.81.23 — Cap and witch hat on turned views
+
+- **Cap** (and headphones, bandana): in the three-quarter views they now sit on the head instead of a pixel off to the side. Shades and the mask still sit on the face.
+- **Witch hat**: turning left no longer flips the curl. The tip curls the same way in the front, three-quarter and back views (side views still show it trailing behind).
+- A cap under a hat is hidden, so it doesn't poke out from under the brim.
+
 ## v1.81.22 — Standards sweep
 
 I went through every game in portrait and landscape (practice, with bots) and checked each one against the standards:

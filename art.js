@@ -93,7 +93,9 @@ var ART=(function(){
   var SEC="",ISO=null,HIDECHAR=false;   /* ISO: draw only one part of a character (the pixel editor); SEC: the part being drawn */
   var TOFF=null;   /* three-quarter views: some parts (face, hair, hat) slide a pixel toward the way they're turned */
   var SHF=null;   /* per-part shifts made with Shift all in the pixel editor: {hair:[dx,dy],...} */
-  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
+  var MIRHAT=false;   /* the witch hat's curl keeps its side when a turned-left view is the turned-right one mirrored */
+  var HATCLIP=null;   /* a hat on: hair above its brim line is under the hat, so it isn't drawn (y is head-relative, like px) */
+  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;if(MIRHAT)x=-x-w;if(HATCLIP!==null&&SEC==="hair"){if(y+h<=HATCLIP)return;if(y<HATCLIP){h-=HATCLIP-y;y=HATCLIP;}}var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
   /* a limb: a 3-pixel-wide strip from the joint along the angle, coloured in bands (cols = [[upTo, colour],...]) */
   function limb(jx,jy,a,len,cols,stripes){
     if(ISO&&SEC!==ISO)return;
@@ -125,12 +127,13 @@ var ART=(function(){
     /* 8 ways to face: 0 front, 1 right side, 2 back, 4 front three-quarter (turned to the right), 5 back three-quarter (turned right).
        The left-hand ones are these mirrored (drawChar does that). FT / BT: drawing a front / back three-quarter view */
     SHF=null;if(!POFF)["hair","hat","face","extra","top","bottom"].forEach(function(p){var m0=PT[p+":"+(L[p]|0)];if(m0&&m0["@"]){var q0=m0["@"].split(","),d0=st.dir|0;if(!SHF)SHF={};SHF[p]=[(d0===0||d0===4)?+q0[0]||0:0,+q0[1]||0];}});
-    var FT=(st.dir|0)===4?1:0,BT=(st.dir|0)===5?1:0;TOFF=FT?{head:1,face:2,extra:2,hair:1,hat:1}:BT?{head:1}:null;
+    var FT=(st.dir|0)===4?1:0,BT=(st.dir|0)===5?1:0;TOFF=FT?{head:1,face:2,extra:(L.extra===1||L.extra===5)?2:1,hair:1,hat:1}:BT?{head:1}:null;   /* shades and the mask sit on the face (2); the cap, headphones and bandana sit on the head (1) */
     function dimF(cols){return cols.map(function(c){return [c[0],shade(c[1],-0.25)];});}
     sg.clearRect(0,0,CWD,CHT);if(MUSED){pmg.clearRect(0,0,CWD,CHT);hmg.clearRect(0,0,CWD,CHT);MUSED=false;}
     var skin=colOf(L,"skin"),hc=colOf(L,"hair"),tc=colOf(L,"top"),bc=colOf(L,"bot");
     var tcD=shade(tc,-0.25),tcL=shade(tc,0.25),bcD=shade(bc,-0.25),skD=shade(skin,-0.18),hcD=shade(hc,-0.3),shoe="#2A2238";
     var aL=st.armL,aR=st.armR,lL=st.legL,lR=st.legR,hd=st.head||0,hy=Math.round(Math.max(0,hd)*3);   /* head: bowed forward (1) or flung back (-1) */
+    var HTc=L.hat|0;HATCLIP=HTc&&HTc!==8&&HTc!==13?-14+hy:null;   /* every hat but the crown and goggles (they sit on top of the hair) */
     SEC="hair";
     /* behind the head: afro, long hair, the hood */
     if(L.hair===5){px(-7,-19,14,9,hc);px(-6,-20,12,1,hc);px(-8,-17,1,6,hc);px(7,-17,1,6,hc);}
@@ -280,7 +283,7 @@ var ART=(function(){
       if(ht===10){px(-6,-17+hy,12,3,"#3A7A3A");px(-6,-14+hy,12,1,"#2A5A2A");px(-4,-21+hy,1,5,"#E8505B");px(-5,-22+hy,1,3,"#F08080");}
       if(ht===11){var hd4="#6A4A30";px(-6,-16+hy,12,12,hd4);px(-5,-17+hy,10,1,hd4);px(-1,-6+hy,2,2,shade(hd4,-0.2));}
       if(ht===12){px(-6,-17+hy,12,9,"#D8303A");px(-6,-17+hy,12,1,WH);px(-1,-17+hy,2,9,WH);}
-      if(ht===14){var WH1="#4A4A5A",WH2="#666678",WH3="#2C2C38",WB="#F09A2E",WB2="#F5C518",WX="#F5E04A";px(-9,-13+hy,18,1,WH3);px(-8,-14+hy,16,1,WH1);px(-6,-16+hy,12,2,WB);px(-5,-18+hy,10,2,WH1);px(-4,-20+hy,8,2,WH1);px(-3,-21+hy,5,1,WH1);px(-5,-22+hy,5,1,WH1);px(-7,-23+hy,3,1,WH1);px(-7,-22+hy,1,1,WH3);}
+      if(ht===14){MIRHAT=!!(st.mir&&BT);try{var WH1="#4A4A5A",WH2="#666678",WH3="#2C2C38",WB="#F09A2E",WB2="#F5C518",WX="#F5E04A";px(-9,-13+hy,18,1,WH3);px(-8,-14+hy,16,1,WH1);px(-6,-16+hy,12,2,WB);px(-5,-18+hy,10,2,WH1);px(-4,-20+hy,8,2,WH1);px(-3,-21+hy,5,1,WH1);px(-5,-22+hy,5,1,WH1);px(-7,-23+hy,3,1,WH1);px(-7,-22+hy,1,1,WH3);}finally{MIRHAT=false;}}
       if(ht===13){px(-6,-15+hy,12,1,"#3a3650");}
     };
     if(D===1){
@@ -327,7 +330,7 @@ var ART=(function(){
       SEC="extra";
       if(EX===1){px(2,-11+hy,3,2,"#111018");px(-1,-11+hy,3,1,"#111018");}
       if(EX===2){px(-4,-16+hy,8,1,"#2A2238");px(-2,-12+hy,3,4,"#2A2238");px(-1,-11+hy,1,2,"#E8505B");}
-      if(EX===3){px(-4,-17+hy,8,3,"#E8505B");px(-4,-14+hy,8,1,"#B83A44");px(-6,-14+hy,2,1,"#B83A44");px(-7,-13+hy,2,2,"#B83A44");}
+      if(EX===3&&!HT){px(-4,-17+hy,8,3,"#E8505B");px(-4,-14+hy,8,1,"#B83A44");px(-6,-14+hy,2,1,"#B83A44");px(-7,-13+hy,2,2,"#B83A44");}
       if(EX===4){px(-4,-14+hy,8,2,"#D354A0");}
       if(EX===5){px(-1,-9+hy,6,4,"#15121F");px(4,-9+hy,1,1,"#2E2A3C");px(-4,-10+hy,3,1,"#15121F");}   /* mask */
       SEC="face";
@@ -381,7 +384,7 @@ var ART=(function(){
       SEC="extra";
       if(EX===1){px(-6,-11+hy,1,1,"#111018");px(5,-11+hy,1,1,"#111018");}
       if(EX===2){px(-6,-16+hy,12,1,"#2A2238");px(-7,-12+hy,2,4,"#2A2238");px(5,-12+hy,2,4,"#2A2238");}
-      if(EX===3){px(-5,-17+hy,10,3,"#E8505B");px(-5,-14+hy,10,1,"#B83A44");px(-1,-14+hy,2,2,"#B83A44");px(-2,-12+hy,1,2,"#B83A44");px(1,-12+hy,1,2,"#B83A44");}
+      if(EX===3&&!HT){px(-5,-17+hy,10,3,"#E8505B");px(-5,-14+hy,10,1,"#B83A44");px(-1,-14+hy,2,2,"#B83A44");px(-2,-12+hy,1,2,"#B83A44");px(1,-12+hy,1,2,"#B83A44");}
       if(EX===4)px(-5,-14+hy,10,2,"#D354A0");
       if(EX===5){px(-6,-10+hy,12,1,"#15121F");px(-1,-10+hy,2,3,"#15121F");}   /* mask: the knot at the back */
       SEC="hat";backHat();
@@ -498,7 +501,7 @@ var ART=(function(){
     var ex=L.extra;
     if(ex===1){px(-4,-11+hy,8,2,"#111018");}
     if(ex===2){px(-6,-16+hy,12,1,"#2A2238");px(-7,-12+hy,2,4,"#2A2238");px(5,-12+hy,2,4,"#2A2238");px(-7,-11+hy,1,2,"#E8505B");px(6,-11+hy,1,2,"#E8505B");}
-    if(ex===3){px(-5,-17+hy,10,3,"#E8505B");px(-5,-14+hy,10,1,"#B83A44");px(-8,-14+hy,4,1,"#B83A44");}
+    if(ex===3&&!HT){px(-5,-17+hy,10,3,"#E8505B");px(-5,-14+hy,10,1,"#B83A44");px(-8,-14+hy,4,1,"#B83A44");}
     if(ex===4){px(-5,-14+hy,10,2,"#D354A0");px(-6,-13+hy,1,3,"#D354A0");}
     if(ex===5){px(-5,-9+hy,10,4,"#15121F");px(-5,-9+hy,10,1,"#2E2A3C");px(-6,-10+hy,1,2,"#15121F");px(5,-10+hy,1,2,"#15121F");}   /* mask over the nose and mouth */
     SEC="face";
@@ -531,7 +534,7 @@ var ART=(function(){
     if(ht===11){var hd2="#6A4A30";px(-6,-16+hy,12,2,hd2);px(-7,-14+hy,2,9,hd2);px(5,-14+hy,2,9,hd2);px(-6,-15+hy,12,1,shade(hd2,0.2));px(-5,-5+hy,10,1,hd2);}   /* hood */
     if(ht===13){px(-6,-15+hy,12,1,"#3a3650");px(-5,-17+hy,4,3,"#C8C8D8");px(1,-17+hy,4,3,"#C8C8D8");px(-4,-16+hy,2,1,"#6FE0C0");px(2,-16+hy,2,1,"#6FE0C0");px(-1,-16+hy,2,1,"#3a3650");}   /* goggles pushed up on the head */
     if(ht===12){px(-6,-17+hy,12,9,"#D8303A");px(-6,-12+hy,12,1,BLK);px(-5,-12+hy,10,3,"#3a3a5a");px(-4,-12+hy,3,1,"#8AC8FF");px(-6,-17+hy,12,1,WH);px(-1,-17+hy,2,5,WH);}   /* racing helmet: the visor down */
-    var witchF=function(){var WH1="#4A4A5A",WH2="#666678",WH3="#2C2C38",WB="#F09A2E",WB2="#F5C518",WX="#F5E04A";px(-9,-13+hy,18,1,WH3);px(-8,-14+hy,16,1,WH1);px(-6,-16+hy,12,2,WB);px(-6,-16+hy,12,1,WB2);px(-5,-18+hy,10,2,WH1);px(-4,-20+hy,8,2,WH1);px(-2,-21+hy,5,1,WH1);px(0,-22+hy,5,1,WH1);px(4,-23+hy,3,1,WH1);px(6,-22+hy,1,1,WH3);px(-5,-18+hy,1,2,WH2);px(-4,-20+hy,1,2,WH2);px(-7,-14+hy,3,1,WH2);px(-3,-20+hy,1,1,WX);px(-1,-20+hy,1,1,WX);px(-2,-19+hy,1,1,WX);px(-3,-18+hy,1,1,WX);px(-1,-18+hy,1,1,WX);px(-6,-14+hy,1,1,WX);px(5,-14+hy,1,1,WX);};   /* witch hat (Bowe's): floppy brim, orange band, a cone curling over, its sigils */
+    var witchF=function(){MIRHAT=!!(st.mir&&FT);try{var WH1="#4A4A5A",WH2="#666678",WH3="#2C2C38",WB="#F09A2E",WB2="#F5C518",WX="#F5E04A";px(-9,-13+hy,18,1,WH3);px(-8,-14+hy,16,1,WH1);px(-6,-16+hy,12,2,WB);px(-6,-16+hy,12,1,WB2);px(-5,-18+hy,10,2,WH1);px(-4,-20+hy,8,2,WH1);px(-2,-21+hy,5,1,WH1);px(0,-22+hy,5,1,WH1);px(4,-23+hy,3,1,WH1);px(6,-22+hy,1,1,WH3);px(-5,-18+hy,1,2,WH2);px(-4,-20+hy,1,2,WH2);px(-7,-14+hy,3,1,WH2);px(-3,-20+hy,1,1,WX);px(-1,-20+hy,1,1,WX);px(-2,-19+hy,1,1,WX);px(-3,-18+hy,1,1,WX);px(-1,-18+hy,1,1,WX);px(-6,-14+hy,1,1,WX);px(5,-14+hy,1,1,WX);}finally{MIRHAT=false;}};   /* witch hat (Bowe's): floppy brim, orange band, a cone curling over, its sigils */
     if(ht===14)witchF();
     /* pixels painted in the Graphics lab, by part, before the outline goes round them */
     var TO=TOFF||{};paintLayer("hair:"+(L.hair|0),OX+(TO.hair||0),OY+hy);if(ht===14){SEC="hat";witchF();}paintLayer("hat:"+(L.hat|0),OX+(TO.hat||0),OY+hy);   /* the witch hat sits over any painted hair */paintLayer("face:"+(L.face|0),OX+(TO.face||0),OY+hy);paintLayer("extra:"+(L.extra|0),OX+(TO.extra||0),OY+hy);
@@ -567,7 +570,7 @@ var ART=(function(){
     /* which way they face: 0 front, 1 facing right, 2 back, 3 facing left (the right-facing side view, mirrored) */
     /* 0 front, 1 right, 2 back, 3 left, 4 front-right, 5 back-right, 6 back-left, 7 front-left; the left ones are the right ones mirrored */
     var DIR=(((st.dir|0)%8)+8)%8,SX=st.sx!==undefined?st.sx:1,MIR=DIR===3?1:DIR===6?5:DIR===7?4:0;
-    if(MIR){var t1=s.armL;s.armL=-s.armR;s.armR=-t1;t1=s.legL;s.legL=-s.legR;s.legR=-t1;t1=s.lenL;s.lenL=s.lenR;s.lenR=t1;t1=s.legLenL;s.legLenL=s.legLenR;s.legLenR=t1;SX=-SX;s.dir=MIR;}else s.dir=DIR;
+    if(MIR){var t1=s.armL;s.armL=-s.armR;s.armR=-t1;t1=s.legL;s.legL=-s.legR;s.legR=-t1;t1=s.lenL;s.lenL=s.lenR;s.lenR=t1;t1=s.legLenL;s.legLenL=s.legLenR;s.legLenR=t1;SX=-SX;s.dir=MIR;s.mir=1;}else s.dir=DIR;
     var c=drawSprite(L,s);TOFF=null;var q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
     if(NEON){g.save();g.shadowColor=neonCol(L);g.shadowBlur=6*q;}
@@ -1993,7 +1996,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       var r=fn(o);o.globalCompositeOperation="destination-out";o.drawImage(e.h,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.h.width*p,e.h.height*p);o.globalCompositeOperation="source-over";
       g.save();g.setTransform(1,0,0,1,0,0);var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(oc,0,0);g.imageSmoothingEnabled=was;g.restore();return r;},
     at:function(g,key,x,y,p){var e=ptGet(key);if(!e||!e.c)return;var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(e.c,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.c.width*p,e.c.height*p);g.imageSmoothingEnabled=was;}};
-  function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var e=ptGet(key);if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(rot)sg.rotate(rot);
+  function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var e=ptGet(key);if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(rot)sg.rotate(rot);if(HATCLIP!==null&&key.indexOf("hair:")===0){sg.beginPath();sg.rect(-200,-14,400,400);sg.clip();}
     if(e.h){sg.globalCompositeOperation="destination-out";sg.drawImage(e.h,e.x0,e.y0);sg.globalCompositeOperation="source-over";}
     if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();
     masks();MUSED=true;[[pmg,e.c],[hmg,e.h]].forEach(function(m){if(!m[1])return;m[0].save();m[0].imageSmoothingEnabled=false;m[0].translate(tx,ty);if(rot)m[0].rotate(rot);m[0].drawImage(m[1],e.x0,e.y0);m[0].restore();});
@@ -2011,7 +2014,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
         else nx=D===2?x:Math.round(-8+(x+8)*11/15);
         var nk=nx+","+y;if(m[k]==="0"){if(o[nk]===undefined)o[nk]="0";}else o[nk]=m[k];}
       PC[ck]=ptBuildM(o);}
-    var e=PC[ck];if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);
+    var e=PC[ck];if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(HATCLIP!==null&&part==="hair"){sg.beginPath();sg.rect(-200,-14,400,400);sg.clip();}
     if(e.h){sg.globalCompositeOperation="destination-out";sg.drawImage(e.h,e.x0,e.y0);sg.globalCompositeOperation="source-over";}
     if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();}
   var DT={},DT_F=["armL","armR","legL","legR","bob","dx","rot"];
@@ -2513,6 +2516,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.22",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.28",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

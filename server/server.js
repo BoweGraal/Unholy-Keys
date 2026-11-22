@@ -369,7 +369,7 @@ function roundMessage(ws, msg) {
     }
     if (first && rd.mode === "free") {
       /* lock in the ring a few seconds into the round, so everyone's turn fits */
-      var dur = rd.chart && rd.chart.dur > 0 ? rd.chart.dur : 0, lockAt = 8000;   /* everyone dancing then goes in the ring; the first turn is 15 s later */
+      var dur = rd.chart && rd.chart.dur > 0 ? rd.chart.dur : 0, lockAt = 22000;   /* about 30 s of free dance before the circle forms: the ring is locked at 22 s, the first dancer is told then and the first turn is 15 s later (the circle forms 7 s before it) */
       rd.spotTimer = setTimeout(function() { spotLock(code); }, Math.max(0, lockAt - (Date.now() - rd.playAt)));
     }
     return;
@@ -466,7 +466,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", 
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.81.22";
+var VERSION = "1.81.28";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
