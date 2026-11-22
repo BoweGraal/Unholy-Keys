@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.43"></script>
-<script src="gfx.js?v=1.79.43"></script>
-<script src="art.js?v=1.79.43"></script>
-<script src="instruments.js?v=1.79.43"></script>
-<script src="kart.js?v=1.79.43"></script>
-<script src="explain.js?v=1.79.43"></script>
+<script src="tune.js?v=1.79.47"></script>
+<script src="gfx.js?v=1.79.47"></script>
+<script src="art.js?v=1.79.47"></script>
+<script src="instruments.js?v=1.79.47"></script>
+<script src="kart.js?v=1.79.47"></script>
+<script src="explain.js?v=1.79.47"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -109,6 +109,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-
 #jtLogo b{color:#E8505B;margin-left:.4em}
 @keyframes jtGlow{50%{text-shadow:0 0 22px #D354A0,0 0 4px #fff}}
 #bigScreen iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+#jtNotes{display:none;position:absolute;inset:0;width:100%;height:100%;pointer-events:none;image-rendering:pixelated}
 #streamCv{display:none;position:absolute;inset:0;width:100%;height:100%;background:#000}
 #tapHint{display:none;position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);white-space:nowrap;background:#D354A0;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:8px 12px;border-radius:14px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4);animation:tapPulse 1.6s ease-in-out infinite}
 @keyframes tapPulse{0%,100%{opacity:1}50%{opacity:.65}}
@@ -657,7 +658,7 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
 <div id="venue">
   <canvas id="mainCanvas"></canvas>
   <canvas id="perfFront"></canvas>
-  <div id="bigScreen"><div id="jtLogo">UNHOLY<b>KEYS</b></div><iframe id="ytFrame" allow="autoplay"></iframe><canvas id="streamCv" width="480" height="270"></canvas><div id="tapHint"></div><div id="jtLeds"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div id="bigScreen"><div id="jtLogo">UNHOLY<b>KEYS</b></div><iframe id="ytFrame" allow="autoplay"></iframe><canvas id="streamCv" width="480" height="270"></canvas><canvas id="jtNotes" width="480" height="270"></canvas><div id="tapHint"></div><div id="jtLeds"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
   <div id="hudTL">Room: <span id="hudRoom">---</span></div>
   <div id="hudTR">Viewers: <span id="hudCount">0</span></div>
   <div id="hudBR"></div>
@@ -1779,7 +1780,16 @@ function resize(){
   var pf=document.getElementById("perfFront");if(pf){pf.width=W;pf.height=H;}
 }
 
-function floorPt(e){var r=canvas.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
+/* scroll-wheel zoom on the venue floor (PC): wheel up zooms in, wheel down out, anchored low so the dancers grow upward; taps are mapped back through it */
+var VZ=1,VZ_AY=0.62;
+try{VZ=Math.max(1,Math.min(2.6,+localStorage.getItem("uk_vz")||1));}catch(e){}
+function vzActive(){return VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
+function floorPt(e){var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(vzActive()){x=W/2+(x-W/2)/VZ;y=H*VZ_AY+(y-H*VZ_AY)/VZ;}return [x,y];}
+window.addEventListener("wheel",function(e){
+  if(e.ctrlKey||!canvas||(e.target.closest&&e.target.closest("#prBar,#chatPanel,#fdPlan,select,textarea,input,.modal,[role=dialog]")))return;if(GAME.mode&&GAME.mode!=="free")return;
+  e.preventDefault();VZ=Math.max(1,Math.min(2.6,VZ*(e.deltaY<0?1.12:1/1.12)));if(VZ<1.02)VZ=1;
+  try{localStorage.setItem("uk_vz",VZ.toFixed(2));}catch(x){}
+},{passive:false});
 var walkMark=null,FRAME_DT=0.016,LAST_FRAME=0;
 /* a tap or click on the venue: grab one of your limbs if you're free dancing and it's on you, otherwise walk there */
 function onFloorDown(e){
@@ -1962,11 +1972,11 @@ function handleMsg(msg){
   else if(t==="react"){if(msg.id!==myId&&viewers[msg.id])addReact(msg.id,String(msg.k));}
   else if(t==="note"){
     if(msg.on){
-      var _m=+msg.midi;if(isFinite(_m)&&_m>=0&&_m<=128){lastNoteMidi=_m;lastNoteTime=Date.now();isPerformerPlaying=true;PERF.n++;}
+      var _m=+msg.midi;if(isFinite(_m)&&_m>=0&&_m<=128){lastNoteMidi=_m;lastNoteTime=Date.now();isPerformerPlaying=true;PERF.n++;JN.push({m:_m,t0:Date.now(),t1:0,h:((_m%12)+12)%12*30});if(JN.length>80)JN.shift();}
       keyPadNote(msg.nk);   /* the lights follow the playing even with your sound off */
       playNoteFromEvent(msg.midi,msg.inst||activeInst,msg.mode||"sustain");
     }else{
-      silenceNote();keyPadNote(null);
+      silenceNote();keyPadNote(null);JN.forEach(function(n){if(!n.t1)n.t1=Date.now();});
       if(isPerformerPlaying)PERF.off=Date.now();
       isPerformerPlaying=false;
     }
@@ -6345,31 +6355,40 @@ var vYT=null;
 function handleVideo(msg){
   var screen=document.getElementById("bigScreen");
   var frame=document.getElementById("ytFrame");
-  if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};}
+  if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};frame.style.pointerEvents="none";}   /* the video is not for clicking: nobody can pause it, seek it or click through to YouTube */
+  if(+msg.dur>0)vYT.exp=+msg.dur;   /* the real length, from the performer: a different length means an ad is on */
   if(msg.action==="stop"){JT.video=false;vYT.clear();updTapHint();return;}
   var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
   if(!vid)return;
   JT.video=true;
   var playing=msg.action==="play";
   var target=Math.max(0,+msg.time||0)+(playing?0.2:0);   /* ~network delay */
+  vYT.target=target;
   var rate=+msg.rate;if(!(rate>0&&rate<=4))rate=1;
   if(vYT.vid!==vid){
     vYT.load(vid,target,{paused:!playing});
     clearTimeout(handleVideo._hint);handleVideo._hint=setTimeout(updTapHint,3000);
   }else{
-    if(Math.abs(vYT.now()-target)>1.2)vYT.cmd("seekTo",[target,true]);
+    if(!vYT.ad&&Math.abs(vYT.now()-target)>1.2)vYT.cmd("seekTo",[target,true]);
     if(playing&&vYT.state!==1&&vYT.state!==3)vYT.cmd("playVideo");
     if(!playing&&(vYT.state===1||vYT.state===3))vYT.cmd("pauseVideo");
   }
   if(Math.abs(rate-(vYT.rate||1))>0.01)vYT.cmd("setPlaybackRate",[rate]);
   vYT.want=playing?"play":"pause";
 }
+/* an ad on this screen: the video is a different length from the song. Hide it and mute it until it ends, then it unmutes and the next sync puts it back on the beat */
+setInterval(function(){
+  if(!vYT||!vYT.vid)return;
+  var fr=vYT.iframe,ad=vYT.exp>0&&vYT.dur>0&&Math.abs(vYT.dur-vYT.exp)>3&&vYT.state!==0&&vYT.state!==-1;
+  if(ad!==!!vYT.ad){vYT.ad=ad;fr.style.visibility=ad?"hidden":"";vYT.cmd(ad?"mute":"unMute");if(!ad)vYT.cmd("seekTo",[Math.max(0,vYT.target||0),true]);updTapHint();}
+},300);
 function updTapHint(){
   var h=document.getElementById("tapHint");if(!h)return;
-  var stuck=vYT&&vYT.vid&&vYT.want==="play"&&vYT.state!==1&&vYT.state!==3;
-  var muted=vYT&&vYT.vid&&vYT.state===1&&vYT.muted;
-  h.textContent=muted?"Tap the speaker on the video for sound":"Tap \u25B6 on the video for the music";
-  h.style.display=(stuck||muted)?"block":"none";
+  var stuck=vYT&&vYT.vid&&vYT.want==="play"&&vYT.state!==1&&vYT.state!==3&&!vYT.ad;
+  var muted=vYT&&vYT.vid&&vYT.state===1&&vYT.muted&&!vYT.ad;
+  h.textContent=vYT&&vYT.ad?"Ad playing \u00b7 the music joins when it ends":muted?"Tap the speaker on the video for sound":"Tap \u25B6 on the video for the music";
+  h.style.display=(stuck||muted||(vYT&&vYT.ad))?"block":"none";
+  if(vYT&&vYT.iframe)vYT.iframe.style.pointerEvents=(stuck||muted)?"auto":"none";   /* only clickable while a phone needs the one tap to allow sound */
 }
 
 /* ============================================================
@@ -6654,7 +6673,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.43",SERVER_VERSION="";
+var PAGE_VERSION="1.79.47",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6779,6 +6798,20 @@ window.ukShowFx=function(f){if(f!==undefined)SHOWFX=f;return SHOWFX;};
    Down while a video or the performer's visuals are on (the performer can also keep it down or up). It hangs
    over the back of the stage; while it's down the performer steps forward to the front of the stage. */
 var JT={video:false,visuals:false,k:0,rect:null,key:""};
+/* the notes on the big screen, always: when the performer's own visuals aren't arriving and a video is up, a note roll is drawn over the video from the notes you hear */
+var JN=[];
+setInterval(function(){
+  var cv=document.getElementById("jtNotes");if(!cv)return;
+  var show=JT.video&&!JT.visuals&&!(vYT&&vYT.ad);cv.style.display=show?"block":"none";if(!show)return;
+  var g=cv.getContext("2d"),w=cv.width,h=cv.height,now=Date.now(),WIN=3500,nowX=w*0.86,list=JN.filter(function(n){return (n.t1||now)>now-WIN;}),lo=1e9,hi=-1e9;
+  g.clearRect(0,0,w,h);g.fillStyle="rgba(0,0,0,.28)";g.fillRect(0,0,w,h);
+  list.forEach(function(n){lo=Math.min(lo,n.m);hi=Math.max(hi,n.m);});if(!list.length){lo=55;hi=72;}if(hi-lo<12){var mid=(hi+lo)/2;lo=mid-6;hi=mid+6;}lo-=1;hi+=1;
+  var span=hi-lo,bh=Math.max(6,Math.min(h*0.08,h*0.6/span)),pad=h*0.08,pxms=nowX/WIN;
+  g.fillStyle="rgba(255,255,255,.25)";g.fillRect(Math.round(nowX),0,2,h);
+  list.forEach(function(n){var x1=nowX-(now-n.t0)*pxms,x2=nowX-(now-(n.t1||now))*pxms,yy=pad+(1-(n.m-lo)/span)*(h-2*pad)-bh/2,ww=Math.max(bh,x2-x1),nc=Math.max(1,Math.round(bh/4));
+    g.fillStyle="hsl("+n.h+",80%,62%)";g.globalAlpha=n.t1?0.85:1;g.fillRect(Math.round(x1)+nc,Math.round(yy),Math.round(ww)-2*nc,Math.round(bh));g.fillRect(Math.round(x1),Math.round(yy)+nc,Math.round(ww),Math.round(bh)-2*nc);});
+  g.globalAlpha=1;
+},66);
 function jumboTick(){
   var el=document.getElementById("bigScreen");if(!el)return;
   var fx=SHOWFX||{},want=fx.jumbo==="down"||(fx.jumbo!=="up"&&(JT.video||JT.visuals));
@@ -6977,6 +7010,7 @@ function renderLoop(){
   /* the floor runs down to the chat bar (or the bottom of the screen when there's none), so tall phones don't get a black band */
   var cpE=document.getElementById("chatPanel"),cpH=cpE?cpE.offsetHeight:0;FLOOR_BOTTOM=Math.max(0.78,Math.min(1,1-cpH/H));
   ctx.clearRect(0,0,W,H);LAYV.stageBottom=STAGE_BOTTOM;LAYV.floorBottom=FLOOR_BOTTOM;
+  var vzOn=vzActive();if(vzOn){ctx.save();ctx.translate(W/2,H*VZ_AY);ctx.scale(VZ,VZ);ctx.translate(-W/2,-H*VZ_AY);}   /* scroll-wheel zoom (PC) */
 
   /* Background */
   ctx.fillStyle="#0a0a0f";
@@ -7173,6 +7207,7 @@ function renderLoop(){
   /* standing behind the buttons: fade them so you can see yourself */
   if(myId&&viewers[myId]){var mv=viewers[myId],mx=mv.x*W,my=mv.y*H;["reactBar","moveCtl"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.offsetWidth)return;var r=el.getBoundingClientRect(),hit=mx>r.left-14&&mx<r.right+14&&my>r.top-6&&my-46<r.bottom;el.classList.toggle("dim",hit);});}
 
+  if(vzOn)ctx.restore();
   requestAnimationFrame(renderLoop);
 }
 
@@ -7186,7 +7221,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.43"></script>
+<script src="lab.js?v=1.79.47"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

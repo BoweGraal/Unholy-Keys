@@ -1619,3 +1619,21 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.43 — spinning is locked in place
 - While you spin (Spin, Twirl, 360, Spin move) the right stick only keeps the spin going; it no longer drives dance moves, lifts or bounces, so the dancer stays put and just turns. Spin move no longer hops.
+
+## v1.79.44 — bending down keeps the dance; scroll-wheel zoom
+- Pushing the right stick down / down-diagonal (a bend) keeps the dance's own arm and leg motions (hands on knees stays hands on knees) and just lowers the body with bent, slightly wider knees. Before, it swapped to a generic arms-out pose.
+- PC: the scroll wheel zooms the venue floor in and out (up = in, down = out, up to 2.6x). Taps and clicks still land where you point. Remembered between visits. Works in free dance and on the plain floor; other minigames keep their own cameras.
+
+## v1.79.45 — YouTube: not clickable, ads handled before the game starts
+- Audience screens: the YouTube overlay can no longer be clicked (no pausing, seeking or clicking through to YouTube). It only becomes clickable while a phone needs its one tap to allow sound.
+- Audience ads: the host now tells the room the song's real length. If a screen's video is a different length (an ad), it is hidden and muted with "Ad playing · the music joins when it ends", then unmutes and syncs to the beat.
+- Host: picking a YouTube song now loads it muted and hidden first, so any ad plays then. The Now Playing bar says "An ad is playing (muted and hidden). Waiting for it to finish…" and then the song is parked at 1 s. The countdown/game starts only once it is ready (45 s at most), and the song then unmutes and starts from 0.
+- NOT tested against real YouTube from the build machine (no network): try one song with an ad on both host and phone.
+
+## v1.79.46 — the big screen always shows the notes and the visualizer
+- Host: the visuals stream to the venue's big screen now runs outside jam mode too (jam visualizer behind the note roll), so it no longer falls back to just the YouTube video. Needs sound sharing on (Go live → share tab).
+- Venue: if the performer's visuals still aren't arriving while a video is on the big screen (sound sharing off), a note roll is drawn over the video from the notes the room hears.
+- Check: go live without opening jam mode and play; the big screen should show the visualizer with notes, not the video.
+
+## v1.79.47 — new shades (graphics defaults)
+- Brian's graphics-lab export is now the shipped look for everyone: stage lights (brighter, wider, faster beams, hazier, purple/indigo/mauve/red colours, stronger floor and sign glow), the Two-step bob tweaks, and the purple hair:12 and shades (extra:1) pixel edits. Anyone who has saved their own values on a device keeps those on top.
