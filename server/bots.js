@@ -201,7 +201,7 @@ module.exports = function(api) {
   /* the dance walk race: line up in the same lane the players' screens use, wait for GO (beat 8), then dance-walk
      to the finish at this bot's pace, losing the circle now and then (slower) and tripping once in a while.
      The style order and lanes match venue.html's WALK exactly. */
-  var WK = { X0: 0.06, X1: 0.68, Y0: 0.35, Y1: 0.73, GO: 8, SEG: 32, D: [1, 11, 9, 3, 4, 6] };
+  var WK = { X0: 0.06, X1: 0.68, Y0: 0.35, Y1: 0.73, GO: 8, SEG: 32, TIME: 75, D: [1, 11, 9, 3, 4, 6] };   /* TIME matches the wk.time tuning default in tune.js */
   function wkOrder(n) { var o = [0, 1, 2, 3, 4, 5], s = (n * 9301 + 49297) % 233280; for (var i = o.length - 1; i > 0; i--) { s = (s * 9301 + 49297) % 233280; var j = Math.floor(s / 233280 * (i + 1)), t = o[i]; o[i] = o[j]; o[j] = t; } return o; }
   function wkBeat(rd, pos) {
     var c = rd.chart, bs = c && c.beats, per = c && c.bpm ? 60000 / c.bpm : 500;
@@ -211,6 +211,8 @@ module.exports = function(api) {
     var lo = 0, hi = n - 1; while (hi - lo > 1) { var m = (lo + hi) >> 1; if (bs[m] <= pos) lo = m; else hi = m; }
     return lo + (pos - bs[lo]) / Math.max(1, bs[hi] - bs[lo]);
   }
+  /* how long a full-speed run takes: fitted to the game window when the host sent one (same as venue.html WALK.raceTime) */
+  function wkTime(rd) { var g = rd.chart && rd.chart.gameMs > 0 ? rd.chart.gameMs : 0; return g ? Math.max(45, Math.min(90, (g / 1000 - 6) * 0.8)) : WK.TIME; }
   function walk(b, now, rd) {
     var r = rooms[b.room]; if (!r) return;
     if (!b.wk || b.wk.n !== rd.n) {
@@ -224,7 +226,7 @@ module.exports = function(api) {
       var f = Math.max(0.3, Math.min(1, w.sp + 0.25 * Math.sin(now / 1100 + w.ph)));
       if (!w.trip && Math.random() < dt * 0.05 * (1.2 - w.sp)) w.trip = now + 1300;
       if (w.trip && now > w.trip) w.trip = 0;
-      if (!w.trip) w.x += (WK.X1 - WK.X0) / 40 * f * dt;
+      if (!w.trip) w.x += (WK.X1 - WK.X0) / wkTime(rd) * f * dt;
       if (w.x >= WK.X1) { w.x = WK.X1; w.fin = true; b.act({ type: "score", s: 4000, fin: 1 }); }
       else if (now > w.scoreAt) { w.scoreAt = now + 2000; b.act({ type: "score", s: Math.round(1000 * (w.x - WK.X0) / (WK.X1 - WK.X0)) }); }
     }

@@ -292,7 +292,9 @@
     for (var rr = 0; rr < 2; rr++) for (var cc = -n; cc < n; cc++) { ctx.fillStyle = (rr + cc) & 1 ? "#e8e4f4" : "#16121c"; ctx.fillRect(rr * 6.5 - 6.5, cc * 6.5, 6.5, 6.5); }
     ctx.restore();
   }
-  function perfCorner() { return [Math.max(105, VW * 0.14), Math.max(112, VH * 0.17)]; }
+  /* phones (narrow, or held sideways): the performer and their UFO sit higher and a little smaller, so they take less of the track */
+  function compact() { return VW < 600 || VH < 520; }
+  function perfCorner() { return compact() ? [Math.max(96, VW * 0.14), Math.max(86, VH * 0.09)] : [Math.max(105, VW * 0.14), Math.max(112, VH * 0.17)]; }
   function perf(sx, sy) {
     if (!on) { var k = outroK(); if (k >= 1) return null; var c0 = perfCorner(), u0 = ease(Math.min(1, k / 0.72));   /* flying home */
       return [c0[0] + (sx - c0[0]) * u0, c0[1] + (sy - c0[1]) * u0 - Math.sin(u0 * Math.PI) * 40]; }
@@ -301,7 +303,7 @@
   }
   function ufo(ctx, tt, T_) {
     var sp = env.perfStage ? env.perfStage() : null; if (!sp) return; var p = perf(sp[0], sp[1]), drop = ease(tt / (1.0 * T_.S)); var y = p[1] + 62 - (1 - drop) * 340, x = p[0], now = performance.now();
-    ufoAt(ctx, x, y, now, 1);
+    ufoAt(ctx, x, y, now, compact() ? 0.8 : 1);
   }
   function ufoAt(ctx, x, y, now, sz) {
     ctx.save(); ctx.translate(x, y); ctx.scale(sz, sz);
@@ -421,7 +423,7 @@
   K.ufoOut = function (ctx, sx, sy) {     /* draws the UFO under the performer on the way home; sx, sy = their stage spot */
     var k = outroK(); if (k >= 1) return; var p = perf(sx, sy); if (!p) return;
     var drop = clamp((k - 0.72) / 0.28, 0, 1), now = performance.now();
-    ctx.save(); ctx.globalAlpha = 1 - drop; ufoAt(ctx, p[0], p[1] + 62 + drop * 70, now, 1 - drop * 0.3); ctx.restore();
+    ctx.save(); ctx.globalAlpha = 1 - drop; ufoAt(ctx, p[0], p[1] + 62 + drop * 70, now, (compact() ? 0.8 : 1) - drop * 0.3); ctx.restore();
   };
   function savedTrack() { try { return clean(JSON.parse(localStorage.getItem("uk_track") || "null")); } catch (e) { return null; } }
   function tick() {
@@ -612,6 +614,9 @@
     "#ktUI.ready .ktB{transform:none}.ktB small{font:600 10px 'Silkscreen',ui-monospace,monospace;opacity:.75;margin-top:2px}.ktB.dn{background:radial-gradient(circle,rgba(61,242,255,.6),rgba(20,8,40,.9))}#ktUI.ready .ktB.dn{transform:scale(.93)}" +
     "#ktSpeed{position:absolute;right:14px;top:236px;display:none;align-items:center;gap:6px;pointer-events:auto;background:rgba(18,14,34,.85);border:1px solid rgba(155,127,224,.5);border-radius:10px;padding:4px 8px;font:700 12px 'Silkscreen',ui-monospace,monospace;color:#c9c0ee}#ktSpeed button{width:30px;height:28px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:#2a2440;color:#fff;font:800 16px 'Silkscreen',ui-monospace,monospace;padding:0}#ktSpeed b{min-width:30px;text-align:center;color:#3DF2FF;font-size:15px}" +
     "#ktDrift{right:18px;bottom:140px;width:112px;height:112px}body.practice #ktDrift{bottom:60px}@media (pointer:fine){#ktDrift{width:88px;height:88px;font-size:15px;bottom:120px}}" +
+    /* phones: the race readout moves up to the top corner and shrinks, the DRIFT button is smaller and see-through, so more of the track shows */
+    "@media (max-width:640px),(max-height:520px){#ktRank{top:66px;right:10px;font-size:24px}#ktRank small{font-size:11px;margin-top:2px}#ktScore{top:100px;right:10px;font-size:15px}#ktBars{top:122px;right:10px;width:120px}#ktBars div{height:6px;margin-bottom:4px}#ktSpeed{top:146px}" +
+    ".ktB{background:radial-gradient(circle,rgba(255,61,216,.3),rgba(20,8,30,.5))}#ktDrift{width:92px;height:92px;font-size:15px;bottom:104px;right:14px}body.practice #ktDrift{bottom:78px}#ktHint{bottom:196px}}" +
     "body.gaming-kart #reactBar{display:none}body.gaming-kart #moveHint{display:none}body.gaming-kart #moveCtl{transition:transform .6s cubic-bezier(.2,1.2,.4,1)}body.gaming-kart:not(.kt-ready) #moveCtl{transform:translateY(110vh)}";
   function ui(show) {
     var el = $("ktUI");

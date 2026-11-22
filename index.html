@@ -4912,7 +4912,7 @@ function sayAlpha(p,now){if(!p.text)return 0;var age=now-p.said;if(age>=AUD_SAY_
   if(!p.sayAt||p.sayAt.t!==p.said)p.sayAt={t:p.said,x:p.x,y:p.y,gone:0};var b=p.sayAt;if(age<1200){b.x=p.x;b.y=p.y;}else if(!b.gone&&Math.hypot(p.x-b.x,p.y-b.y)>0.04)b.gone=now;
   var a=Math.min(1,(AUD_SAY_MS-age)/1000);if(b.gone)a=Math.min(a,1-(now-b.gone)/350);return Math.max(0,a);}
 /* reactions in the last 15 s, for the panel header: " · ❤ 5 👏 3" */
-var AUD_RX_ICON={jump:"🙌",hearts:"❤️",bigheart:"💖",clap:"👏",whistle:"😙",spin:"🌀",twirl:"💫",turn180:"↩️",turn360:"🔄",spinmove:"🌀"};
+var AUD_RX_ICON={jump:"🙌",hearts:"❤️",bigheart:"💖",clap:"👏",whistle:"😙",spin:"🌀",twirl:"💫",turn180:"↩️",turn90:"🔄",spinmove:"🌀"};
 function audRxText(){var now=Date.now(),c={},out="";(AUD.rx||[]).forEach(function(r){if(now-r.t<15000)c[r.k]=(c[r.k]||0)+1;});ART.REACTS.forEach(function(k){if(c[k])out+=" "+AUD_RX_ICON[k]+" "+c[k];});return out?" ·"+out:"";}
 window.ukAudReacts=function(){var o={};Object.keys(AUD.people).forEach(function(id){var L=AUD.people[id].reacts;if(L&&L.length)o[AUD.people[id].name]=L.map(function(r){return r.k;});});return{people:o,header:document.getElementById("jAudN").textContent};};
 function audColor(c,d){return /^#[0-9a-fA-F]{6}$/.test(c)?c:d;}
@@ -6054,7 +6054,7 @@ var CHART=(function(){
         var len=i+k<nb?(bt[i+k]-bt[i])*10*0.92:0,perMs=60000/bpm;     /* ends just before the next step there */
         if(len>=perMs*1.5&&len<=perMs*4.2&&holds(i,k)&&on>0.25){
           var hl=lane(tier);
-          if(add(t,1<<hl,hl,true,len)){heldLane=hl;heldUntil=i+k;lastHoldBeat=i;holdQuiet=tier<=1;
+          if(add(t,1<<hl,hl,true,len)){heldLane=hl;heldUntil=i+k;lastHoldBeat=i;holdQuiet=tier<=0;   /* only a calm part just holds: normal and busy parts keep other arrows coming */
             if(i+1<nb&&tier>=2){var h0=Math.round((bt[i]+bt[i+1])/2),hs0=near(e,h0,2)/hit;if(!fast&&tier===3&&hs0>0.25&&room(h0*10,1)){var lo0=lane(tier);add(h0*10,1<<lo0,lo0,false);}}
             continue;}
         }
@@ -6062,7 +6062,7 @@ var CHART=(function(){
       /* on the beat */
       if(tier>0||i%2===0||on>0.6){
         var l=lane(tier),mask=1<<l;
-        if((tier===3&&(bar||(on>0.8&&!fast)))||(tier===2&&bar&&on>0.55&&!fast))mask=two(l,tier);   /* doubles: bar starts, and crashes when there's time */
+        if((tier===3&&(bar||(on>0.8&&!fast)))||(tier===2&&bar&&on>0.4&&!fast)||(tier===1&&bar&&on>0.7&&!fast))mask=two(l,tier);   /* doubles: bar starts, and crashes when there's time */
         add(t,mask,l,true);
       }
       /* off the beat, where the music has a hit there */
@@ -6411,6 +6411,7 @@ var ROUNDS=(function(){
     var cdS=cdMs||Math.max(18000,cfg.secs*1000);   /* at least 18 s: 15 for the how-to-play card, then 3-2-1 */
     /* a mosh pit that runs for part of the song: its wall of death and circle pits are fitted inside the game's time */
     if(cur.setQ&&cur.mode==="mosh"&&chart&&typeof ART!=="undefined"&&ART.MOSH)chart=ART.MOSH.window(chart,cur.setQ.start,cur.setQ.end);
+    if(cur.setQ&&chart)chart=Object.assign({},chart,{gameMs:cur.setQ.end-cur.setQ.start});   /* how long this game has, so games that run to a finish (the walk race) are fitted to it */
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cdS;
     var ktTrack=null;if(cur.mode==="kart"){try{ktTrack=JSON.parse(localStorage.getItem("uk_track")||"null");}catch(e){}}
     var skCourse=null;if(cur.mode==="ski"){try{skCourse=JSON.parse(localStorage.getItem("uk_ski")||"null");}catch(e){}}
@@ -6421,11 +6422,11 @@ var ROUNDS=(function(){
     clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();
   }
   /* ---- two games in one song ----
-     The song starts straight away with everyone free dancing. Each game gets at most 2:30, starts after a free dance
-     intro, and the second one comes after a short break (the first one's results show then). What's left over is
-     free dance between and at the end. */
+     The song starts straight away with everyone free dancing. Each game gets 60 to 90 s (the length that fills most gaps in a
+     song: as long as fits, up to 90), starts after a free dance intro on a bar or part change, and the second one comes after a
+     short break (the first one's results show then). What's left over is free dance between and at the end. */
   var set=null,fullShow=false,gv=null;
-  var GAME_MAX=150000,VOTE_MS=15000,ALLG=["step","aim","keys","keys4","mosh","skate","ice","keepy","kart","walk","pipe","ski","ctf"];
+  var GAME_MIN=60000,GAME_MAX=90000,VOTE_MS=15000,ALLG=["step","aim","keys","keys4","mosh","skate","ice","keepy","kart","walk","pipe","ski","ctf"];
   /* the full show: games already played this show (kept on this computer until New show) */
   function played(){try{var a=JSON.parse(localStorage.getItem("uk_showplayed")||"[]");return Array.isArray(a)?a.filter(function(x){return ALLG.indexOf(x)>=0;}):[];}catch(e){return [];}}
   function markPlayed(m){if(!fullShow)return;var a=played();if(a.indexOf(m)<0)a.push(m);try{localStorage.setItem("uk_showplayed",JSON.stringify(a));}catch(e){}}
@@ -6443,19 +6444,27 @@ var ROUNDS=(function(){
     if(set&&gv.done&&ALLG.indexOf(gv.win)>=0)set.plan.forEach(function(q){if(q.voting&&q.voteId===gv.id){q.voting=false;q.mode=gv.win;}});
     setTick();
   }
-  function planSet(games,D){
+  /* bar starts (every 4th beat) and part changes: where a game is best started and ended */
+  function cuts(chart){var c=[],bs=chart&&chart.beats||[],i;for(i=0;i<bs.length;i+=4)c.push(bs[i]);((chart&&chart.sections)||[]).forEach(function(s){c.push(s[0]);});return c;}
+  function nearestCut(c,t,lo,hi){var b=null;c.forEach(function(x){if(x>=lo&&x<=hi&&(b===null||Math.abs(x-t)<Math.abs(b-t)))b=x;});return b===null?t:b;}
+  function planSet(games,D,chart){
     var n=games.length,cr=games.indexOf("crowd")>=0,I=Math.max(cr&&games[0]==="crowd"?36000:15000,Math.min(cr?45000:30000,D*0.1)),M0=games[1]==="crowd"?40000:20000,O0=12000,G,p=[];
-    if(n===2){G=Math.min(GAME_MAX,(D-I-M0-O0)/2);if(G<40000){n=1;games=games.slice(0,1);}}
-    if(n===1){G=Math.min(GAME_MAX,D-I-O0);if(G<30000){I=Math.max(8000,Math.min(I,D-O0-30000));G=Math.max(20000,D-I-O0);}}
+    if(n===2){G=Math.min(GAME_MAX,(D-I-M0-O0)/2);if(G<GAME_MIN){n=1;games=games.slice(0,1);}}
+    if(n===1){G=Math.min(GAME_MAX,D-I-O0);if(G<GAME_MIN){I=Math.max(8000,Math.min(I,D-O0-GAME_MIN));G=Math.max(20000,Math.min(GAME_MAX,D-I-O0));}}
     var slack=Math.max(0,D-I-n*G-(n===2?M0:0)-O0),addI=Math.min(30000,slack*(n===2?0.25:0.4)),addM=n===2?Math.min(25000,slack*0.35):0;
     var t=I+addI;
     for(var k=0;k<n;k++){p.push({mode:games[k],start:Math.round(t),end:Math.round(t+G)});t+=G+M0+addM;}
+    /* start and end on a bar or part change when there is one close by, keeping each game inside 60 to 90 s, the break after the
+       first game at least 15 s, and the last game 12 s clear of the end of the song */
+    if(chart){var cu=cuts(chart);p.forEach(function(q,k){var minS=k?p[k-1].end+15000:2000,len=q.end-q.start;
+      q.start=Math.max(minS,nearestCut(cu,q.start,q.start-6000,q.start+6000));
+      var lo=q.start+Math.min(GAME_MIN,len),hi=Math.min(q.start+GAME_MAX,D-O0);q.end=Math.max(lo,Math.min(hi,nearestCut(cu,q.start+len,lo,hi)));});}
     p.forEach(function(q,k){var room=(k?q.start-p[k-1].end-6000:q.start-2000)-(q.mode==="crowd"?VOTE_MS+2000:0);q.cd=Math.max(3000,Math.min(Math.max(10000,cfg.secs*1000),room));});
     return p;
   }
   function setPos(){if(!set)return 0;if(set.posFn){var q=set.posFn();if(q!=null&&isFinite(q))return q;}return backingAudio&&set.file?backingAudio.currentTime*1000:performance.now()-set.t0;}
   function startSet(chart,D,my){
-    var go=cur.go;set={plan:planSet(cur.setGames,D),chart:chart,D:D,title:cur.title,file:cur.file,posFn:cur.posFn,t0:performance.now(),my:my};
+    var go=cur.go;set={plan:planSet(cur.setGames,D,chart),chart:chart,D:D,title:cur.title,file:cur.file,posFn:cur.posFn,t0:performance.now(),my:my};
     cur=null;clearInterval(uiT);hideFloat();buttons();
     if(go)go();
     clearInterval(set.t);set.t=setInterval(setTick,250);setTick();
