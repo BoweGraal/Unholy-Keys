@@ -478,7 +478,7 @@ var ART=(function(){
     SEC="extra";
     /* extras */
     var ex=L.extra;
-    if(ex===1){px(-4,-11+hy,8,2,"#111018");px(-4,-11+hy,3,1,"#3a3650");}
+    if(ex===1){px(-4,-11+hy,8,2,"#111018");}
     if(ex===2){px(-6,-16+hy,12,1,"#2A2238");px(-7,-12+hy,2,4,"#2A2238");px(5,-12+hy,2,4,"#2A2238");px(-7,-11+hy,1,2,"#E8505B");px(6,-11+hy,1,2,"#E8505B");}
     if(ex===3){px(-5,-17+hy,10,3,"#E8505B");px(-5,-14+hy,10,1,"#B83A44");px(-8,-14+hy,4,1,"#B83A44");}
     if(ex===4){px(-5,-14+hy,10,2,"#D354A0");px(-6,-13+hy,1,3,"#D354A0");}
@@ -669,7 +669,7 @@ var ART=(function(){
      Sprint: hold the sprint button to run faster. It drains a meter that charges back up slowly, and you need some
      charge to start. The refill pick-ups fill it at once.
      Positions are in tiles (x across, y down); on the wire they're fractions of the map (0..1). */
-  var CTF={CH:".#><^vRBrbs",TEAM:["#E8505B","#3B7BE8"],TNAME:["RED","BLUE"],SPEED:6.2,CARRY:0.85,PAD:2.4,TAG_R:0.75,TAKE_R:0.9,CAP_R:1.2,
+  var CTF={CH:".#><^vRBrbs",TEAM:["#E8505B","#3B7BE8"],TNAME:["RED","BLUE"],SPEED:6.2,CARRY:0.85,PAD:2.4,TAG_R:1.0,TAKE_R:0.9,CAP_R:1.2,
     SPRINT:1.6,STAM:2.4,CHARGE:9,SPRINT_MIN:0.3,REFILL_MS:10000,REFILL_R:0.8};
   /* the built-in arena before sprint refills (a copy saved on this device that still matches is upgraded to the new one) */
   CTF.OLD_TWIN="#########################################......................................##............#............#............##.rr.........#.>>>....<<<.#.........bb.##.rr.........#.....##.....#.........bb.##.....>......#.....##.....#......<.....##......####..#.....##.....#..####......##............#...>....<...#............##......#........................#......##......#........................#......##.RRR............##..##............BBB.##.RRR............##..##............BBB.##.RRR.....>>>....##..##....<<<.....BBB.##.RRR............##..##............BBB.##......#........................#......##......#.........>....<.........#......##......#.....#............#.....#......##......####..#.....##.....#..####......##.....>......#.....##.....#......<.....##.rr.........#.....##.....#.........bb.##.rr.........#.>>>....<<<.#.........bb.##............#............#............##......................................#########################################";
@@ -733,7 +733,8 @@ var ART=(function(){
   CTF.step=function(st,I,id,x,y,now){
     var t=CTF.teamOf(st,id),ev=[],mine=st.flags[t],theirs=st.flags[1-t],add=function(n,who){st.score[who]=(st.score[who]||0)+n;};
     if(st.tagged[id]&&now-st.tagged[id]<1500)return ev;        /* just tagged: on the way back to spawn */
-    st.pos[id]=[x,y,now];
+    var pp=st.pos[id],px=x,py=y;if(pp&&now-pp[2]<600&&Math.hypot(pp[0]-x,pp[1]-y)<4){px=pp[0];py=pp[1];}   /* where they were a moment ago, for the swept touch test below */
+    st.pos[id]=[x,y,now,px,py];
     /* sprint refills: run over one that's there and it's yours (it comes back after REFILL_MS) */
     if(!st.refill)st.refill=I.refills.map(function(){return 0;});
     for(var ri=0;ri<I.refills.length;ri++){var rp=I.refills[ri];if(now-(st.refill[ri]||0)>=CTF.REFILL_MS&&Math.hypot(x-rp[0],y-rp[1])<CTF.REFILL_R){st.refill[ri]=now;ev.push({k:"refill",id:id,i:ri});}}
@@ -743,7 +744,9 @@ var ART=(function(){
     else if(theirs.at===null&&Math.hypot(x-theirs.x,y-theirs.y)<CTF.TAKE_R){theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     /* tags: two players from different teams meet; whoever is on the other team's half goes back to spawn */
     for(var o in st.pos){if(o===id||st.teams[o]===undefined||st.teams[o]===t)continue;var q=st.pos[o];if(now-q[2]>1500||(st.tagged[o]&&now-st.tagged[o]<1500))continue;
-      if(Math.hypot(q[0]-x,q[1]-y)>CTF.TAG_R)continue;var key=id<o?id+"|"+o:o+"|"+id;if(st.cool[key]&&now-st.cool[key]<1200)continue;st.cool[key]=now;
+      var qx=q[3]===undefined?q[0]:q[3],qy=q[4]===undefined?q[1]:q[4],near=1e9;   /* fast players can pass through each other between two updates: test along both paths */
+      for(var k4=0;k4<=4;k4++){var u=k4/4;near=Math.min(near,Math.hypot(qx+(q[0]-qx)*u-(px+(x-px)*u),qy+(q[1]-qy)*u-(py+(y-py)*u)));}
+      if(near>CTF.TAG_R)continue;var key=id<o?id+"|"+o:o+"|"+id;if(st.cool[key]&&now-st.cool[key]<1200)continue;st.cool[key]=now;
       var sd=I.side((q[0]+x)/2,(q[1]+y)/2),victim=sd===t?o:id,tagger=victim===o?id:o,vf=CTF.carrying(st,victim);
       if(vf>=0){var f2=st.flags[vf];f2.at=null;f2.x=I.base[f2.t][0];f2.y=I.base[f2.t][1];}
       st.tagged[victim]=now;add(vf>=0?250:150,tagger);ev.push({k:"tag",id:victim,by:tagger,carrier:vf>=0});if(victim===id)break;}
@@ -787,9 +790,14 @@ var ART=(function(){
     var m=Math.hypot(ax,ay);return m>1?[ax/m,ay/m]:[ax,ay];};
   /* ---- drawing: the floor in dance-floor tiles, walls as raised pixel blocks, boost pads with running chevrons, bases ---- */
   CTF.fit=function(I,W,H,top,bot){var s=Math.max(4,Math.floor(Math.min(W/I.w,(H-top-bot)/I.h))),ox=Math.round((W-s*I.w)/2),oy=Math.round(top+(H-top-bot-s*I.h)/2);return{s:s,ox:ox,oy:oy,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
+  /* a camera that follows you: about 15 tiles across on a phone, clamped to the arena. v.vw/v.vh/v.vt are the window it draws in. */
+  CTF.cam=function(I,W,H,top,bot,me){var f=CTF.fit(I,W,H,top,bot),vh=H-top-bot,s=Math.max(f.s,Math.round(W/(W<641?15:20))),ox,oy;
+    var mw=I.w*s,mh=I.h*s;ox=mw<=W?Math.round((W-mw)/2):Math.round(Math.min(0,Math.max(W-mw,W/2-me.x*s)));oy=mh<=vh?Math.round(top+(vh-mh)/2):Math.round(Math.min(top,Math.max(top+vh-mh,top+vh/2-me.y*s)));
+    return{s:s,ox:ox,oy:oy,vw:W,vh:vh,vt:top,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
   CTF.draw=function(g,m,I,v,now,st){
     var s=v.s,P=Math.max(1,Math.round(s/8)),x,y,ph=(now/90)%8;
-    for(y=0;y<I.h;y++)for(x=0;x<I.w;x++){var c=m.t[y*I.w+x],X=v.ox+x*s,Y=v.oy+y*s;
+    var cx0=Math.max(0,Math.floor(-v.ox/s)-1),cx1=Math.min(I.w,Math.ceil(((v.vw||1e5)-v.ox)/s)+1),cy0=Math.max(0,Math.floor((( v.vt||-1e5)-v.oy)/s)-2),cy1=Math.min(I.h,Math.ceil(((v.vt||0)+(v.vh||1e5)-v.oy)/s)+2);
+    for(y=cy0;y<cy1;y++)for(x=cx0;x<cx1;x++){var c=m.t[y*I.w+x],X=v.ox+x*s,Y=v.oy+y*s;
       if(c==="#"){continue;}
       var hs=Math.sin(x*12.9898+y*78.233)*43758.5453;hs-=Math.floor(hs);
       g.fillStyle=(x+y)%2?"#1a1430":"#120e1e";if(c==="R"||c==="r")g.fillStyle=(x+y)%2?"#3a1420":"#2c0f18";if(c==="B"||c==="b")g.fillStyle=(x+y)%2?"#14243e":"#0f1a30";
@@ -803,7 +811,7 @@ var ART=(function(){
       if(c==="s"){var ri2=-1;for(var qq=0;qq<I.refills.length;qq++)if(Math.floor(I.refills[qq][0])===x&&Math.floor(I.refills[qq][1])===y){ri2=qq;break;}
         CTF.refillIcon(g,X+s/2,Y+s/2,s,now,st?CTF.refillLeft(st,ri2,Date.now()):0);}}
     /* walls on top: raised blocks with a lit top edge and a shadow below */
-    for(y=0;y<I.h;y++)for(x=0;x<I.w;x++){if(m.t[y*I.w+x]!=="#")continue;var X2=v.ox+x*s,Y2=v.oy+y*s;
+    for(y=cy0;y<cy1;y++)for(x=cx0;x<cx1;x++){if(m.t[y*I.w+x]!=="#")continue;var X2=v.ox+x*s,Y2=v.oy+y*s;
       g.fillStyle="#3a3058";g.fillRect(X2,Y2-P*2,s,s);g.fillStyle="#5a4a88";g.fillRect(X2,Y2-P*2,s,P);g.fillStyle="#241c3a";g.fillRect(X2,Y2+s-P*2,s,P*2);
       if(I.at(x+0.5,y+1.5)!=="#"){g.fillStyle="rgba(0,0,0,.35)";g.fillRect(X2,Y2+s,s,P*2);}}
     /* the bases: a ring round where each flag lives */
@@ -836,7 +844,11 @@ var ART=(function(){
       if(b1-a1>=8000&&out.circles.length<3)out.circles.push([a1,Math.min(b1,a1+40000)]);
     });
     if(!out.circles.length){
-      if(dur>50000){var c0=dur*0.66,c1=c0+16000;if(!w||c1<w.split-3000||c0>w.end+3000)out.circles.push([c0,c1]);}
+      if(dur>50000){   /* always at least one circle pit: the middle of the longest stretch the wall of death leaves free */
+        var free=w?[[6000,w.split-3000],[w.end+3000,dur-6000]]:[[6000,dur-6000]],best=null;
+        free.forEach(function(r){if(r[1]-r[0]>=14000&&(!best||r[1]-r[0]>best[1]-best[0]))best=r;});
+        if(best){var cl=Math.min(18000,best[1]-best[0]),c0=best[0]+(best[1]-best[0]-cl)/2;out.circles.push([Math.round(c0),Math.round(c0+cl)]);}
+      }
       else if(!dur){for(var t=40000;t<600000;t+=70000)out.circles.push([t,t+16000]);}
     }
     return out;
@@ -852,7 +864,10 @@ var ART=(function(){
   /* a game that runs from start to end (ms of song): keep the drop and loud stretches inside it, or make some that fit */
   MOSHX.window=function(chart,start,end){
     if(!chart)return chart;var c={},k;for(k in chart)c[k]=chart[k];var len=end-start,D=chart.drop||0;
-    if(!(D>=start+20000&&D<=end-17000))D=len>=62000?Math.round(start+len*0.6):0;
+    /* one wall of death per song: only the game that holds the song's drop gets it (moved in from the edges if it has to be);
+       a song with no drop at all gets one in its first game */
+    if(D>0){if(D>=start&&D<=end&&len>=40000)D=Math.max(start+20000,Math.min(end-17000,D));else D=0;}
+    else D=start<=2000&&len>=62000?Math.round(start+len*0.6):0;
     c.drop=D;var wl=D?[D-12000,D+17300]:null,pk=[];
     (chart.peaks||[]).forEach(function(p){var a1=Math.max(p[0],start+4000),b1=Math.min(p[1],end-3000);if(b1-a1>=8000)pk.push([a1,b1]);});
     var clear=function(p){return !wl||p[1]<wl[0]||p[0]>wl[1];};
@@ -1860,8 +1875,8 @@ var ART=(function(){
   function adjCss(key){var a=ADJ[key];if(!a)return "";var o=[];if(a.bright&&a.bright!==1)o.push("brightness("+a.bright+")");if(a.contrast&&a.contrast!==1)o.push("contrast("+a.contrast+")");if(a.sat!==undefined&&a.sat!==1)o.push("saturate("+a.sat+")");if(a.hue)o.push("hue-rotate("+a.hue+"deg)");return o.join(" ");}
   var NOADJ=false;function withAdj(key,g,fn){var f=NOADJ?"":adjCss(key);if(!f||!("filter" in g)){return fn();}var was=g.filter;g.filter=f;try{return fn();}finally{g.filter=was;}}
   /* pixel edits painted in the Graphics lab (uk_paint): {layerKey:{"x,y":"#rrggbb" | "0" (a hole)}}, coordinates local to the part */
-  var PT={},PC={},POFF=false;/* shipped pixel edits (the shades): what this device has saved on top wins */
-  PT=JSON.parse("{\"hair:12\":{\"-2,-15\":\"#7f77dd\",\"-1,-15\":\"#7f77dd\",\"0,-15\":\"#7f77dd\",\"1,-15\":\"#7f77dd\",\"2,-15\":\"#7f77dd\",\"-3,-11\":\"#7f77dd\",\"-3,-10\":\"#7f77dd\",\"-3,-9\":\"#7f77dd\",\"-3,-12\":\"#7f77dd\",\"-2,-12\":\"#7f77dd\",\"-1,-12\":\"#7f77dd\",\"0,-12\":\"#7f77dd\",\"-2,-11\":\"#7f77dd\",\"-1,-11\":\"#7f77dd\",\"0,-11\":\"#7f77dd\",\"1,-11\":\"#7f77dd\",\"2,-11\":\"#7f77dd\",\"-7,-14\":\"#7f77dd\",\"-7,-13\":\"#7f77dd\",\"-7,-12\":\"#7f77dd\",\"-7,-11\":\"#7f77dd\",\"-7,-10\":\"#7f77dd\",\"-7,-9\":\"#7f77dd\",\"-7,-8\":\"#7f77dd\",\"-7,-7\":\"#7f77dd\",\"-7,-6\":\"#7f77dd\",\"-6,-6\":\"#7f77dd\",\"-6,-7\":\"#7f77dd\",\"-6,-8\":\"#7f77dd\",\"-6,-9\":\"#7f77dd\",\"-6,-10\":\"#7f77dd\",\"-6,-11\":\"#7f77dd\",\"-6,-12\":\"#7f77dd\",\"-6,-13\":\"#7f77dd\",\"-6,-14\":\"#7f77dd\",\"-5,-13\":\"#7f77dd\",\"-5,-14\":\"#7f77dd\",\"-5,-12\":\"#7f77dd\",\"-5,-11\":\"#7f77dd\",\"-5,-10\":\"#7f77dd\",\"-5,-9\":\"#7f77dd\",\"-5,-8\":\"#7f77dd\",\"-5,-7\":\"#7f77dd\",\"-5,-6\":\"#7f77dd\",\"-4,-6\":\"#7f77dd\",\"-3,-5\":\"#7f77dd\",\"-3,-6\":\"#7f77dd\",\"-4,-7\":\"#7f77dd\",\"-4,-8\":\"#7f77dd\",\"-4,-9\":\"#7f77dd\",\"-4,-10\":\"#7f77dd\",\"-4,-11\":\"#7f77dd\",\"-4,-12\":\"#7f77dd\",\"-4,-13\":\"#7f77dd\",\"-3,-13\":\"#7f77dd\",\"-2,-10\":\"#7f77dd\",\"-2,-9\":\"#7f77dd\",\"-3,-8\":\"#7f77dd\",\"-3,-7\":\"#7f77dd\",\"-2,-8\":\"#7f77dd\",\"-2,-7\":\"#7f77dd\",\"-2,-6\":\"#7f77dd\",\"-1,-10\":\"#7f77dd\",\"-1,-9\":\"#7f77dd\",\"-1,-8\":\"#7f77dd\",\"-1,-7\":\"#7f77dd\",\"-1,-6\":\"#7f77dd\",\"0,-10\":\"#7f77dd\",\"0,-9\":\"#7f77dd\",\"0,-8\":\"#7f77dd\"},\"extra:1\":{\"-1,-9\":\"0\",\"0,-9\":\"0\",\"3,-12\":\"#1a1033\",\"4,-11\":\"#7f77dd\",\"-4,-12\":\"#1a1033\",\"-5,-11\":\"#7f77dd\",\"-2,-12\":\"#1a1033\",\"-3,-12\":\"#1a1033\",\"2,-12\":\"#1a1033\",\"1,-12\":\"#1a1033\",\"-2,-10\":\"#7f77dd\",\"-1,-10\":\"#7f77dd\",\"-1,-11\":\"#7f77dd\",\"0,-11\":\"#7f77dd\",\"-1,-12\":\"#1a1033\",\"0,-12\":\"#1a1033\",\"1,-11\":\"#7f77dd\",\"-2,-11\":\"#7f77dd\",\"-3,-11\":\"#7f77dd\",\"-4,-11\":\"#7f77dd\",\"-4,-10\":\"#7f77dd\",\"-5,-10\":\"#7f77dd\",\"-3,-10\":\"#7f77dd\",\"-3,-9\":\"#7f77dd\",\"-4,-9\":\"#7f77dd\",\"0,-10\":\"#7f77dd\",\"2,-10\":\"#7f77dd\",\"1,-9\":\"0\",\"2,-9\":\"#7f77dd\",\"3,-9\":\"#7f77dd\",\"3,-10\":\"#7f77dd\",\"4,-10\":\"#7f77dd\",\"2,-11\":\"#7f77dd\",\"3,-11\":\"#7f77dd\",\"1,-10\":\"#7f77dd\",\"5,-12\":\"#1a1033\",\"4,-12\":\"#1a1033\",\"6,-11\":\"#1a1033\",\"-5,-12\":\"#1a1033\",\"-6,-12\":\"#1a1033\",\"-7,-11\":\"#1a1033\"},\"hair:3\":{\"4,-7\":\"#1f8fbf\"},\"hair:5\":{\"-8,-12\":\"0\",\"-7,-11\":\"0\",\"-6,-11\":\"0\",\"-5,-11\":\"0\",\"-4,-11\":\"0\",\"-3,-11\":\"0\",\"-2,-11\":\"0\",\"-1,-11\":\"0\",\"0,-11\":\"0\",\"1,-11\":\"0\",\"2,-11\":\"0\",\"3,-11\":\"0\",\"4,-11\":\"0\",\"5,-11\":\"0\",\"6,-11\":\"0\",\"6,-12\":\"#120d1e\",\"7,-12\":\"0\",\"-8,-13\":\"#120d1e\",\"-7,-12\":\"#120d1e\",\"7,-13\":\"#120d1e\",\"5,-12\":\"#120d1e\",\"-6,-12\":\"#120d1e\",\"-5,-12\":\"#120d1e\",\"-4,-12\":\"#120d1e\",\"-3,-12\":\"#120d1e\",\"-2,-12\":\"#120d1e\",\"-1,-12\":\"#120d1e\",\"0,-12\":\"#120d1e\",\"1,-12\":\"#120d1e\",\"2,-12\":\"#120d1e\",\"3,-12\":\"#120d1e\",\"4,-12\":\"#120d1e\",\"-8,-11\":\"0\",\"-6,-22\":\"#120d1e\",\"-5,-22\":\"#120d1e\",\"-4,-22\":\"#120d1e\",\"-3,-22\":\"#120d1e\",\"-2,-22\":\"#120d1e\",\"-1,-22\":\"#120d1e\",\"0,-22\":\"#120d1e\",\"1,-22\":\"#120d1e\",\"2,-22\":\"#120d1e\",\"3,-22\":\"#120d1e\",\"4,-22\":\"#120d1e\",\"5,-22\":\"#120d1e\",\"-7,-21\":\"#120d1e\",\"-8,-20\":\"#120d1e\",\"6,-21\":\"#120d1e\",\"7,-20\":\"#120d1e\",\"-5,-21\":\"#4a9be8\",\"-4,-21\":\"#4a9be8\",\"-3,-21\":\"#4a9be8\",\"-2,-21\":\"#4a9be8\",\"-1,-21\":\"#4a9be8\",\"0,-21\":\"#4a9be8\",\"1,-21\":\"#4a9be8\",\"2,-21\":\"#4a9be8\",\"3,-21\":\"#4a9be8\",\"4,-21\":\"#4a9be8\",\"5,-21\":\"#4a9be8\",\"-6,-21\":\"#4a9be8\"},\"hair:6\":{\"-4,-11\":\"0\",\"-5,-11\":\"0\",\"-6,-11\":\"0\",\"-5,-10\":\"0\",\"-6,-12\":\"0\",\"6,-14\":\"0\",\"6,-13\":\"#120d1e\",\"6,-12\":\"#120d1e\",\"6,-11\":\"#120d1e\",\"7,-11\":\"0\",\"7,-12\":\"0\",\"7,-13\":\"0\",\"7,-10\":\"0\",\"7,-9\":\"0\",\"7,-8\":\"0\",\"7,-7\":\"0\",\"6,-7\":\"0\",\"6,-8\":\"0\",\"6,-9\":\"#120d1e\",\"6,-10\":\"#120d1e\",\"-5,-12\":\"0\",\"-2,-13\":\"#120d1e\",\"1,-13\":\"#120d1e\",\"-1,-13\":\"#120d1e\",\"0,-13\":\"#120d1e\",\"2,-12\":\"0\",\"3,-11\":\"0\",\"2,-13\":\"#120d1e\",\"4,-11\":\"#120d1e\",\"5,-7\":\"0\",\"-3,-13\":\"#120d1e\",\"-4,-13\":\"#120d1e\",\"-5,-13\":\"#120d1e\",\"1,-15\":\"#4a9be8\",\"2,-15\":\"#4a9be8\",\"4,-15\":\"#120d1e\",\"3,-15\":\"#4a9be8\",\"5,-9\":\"#120d1e\",\"5,-8\":\"0\",\"1,-16\":\"#120d1e\",\"2,-16\":\"#120d1e\",\"3,-16\":\"#120d1e\",\"4,-16\":\"0\"}}");
+  var PT={},PC={},POFF=false;/* shipped pixel edits: what this device has saved on top wins */
+  PT=JSON.parse("{\"hair:12\":{\"-2,-15\":\"#7f77dd\",\"-1,-15\":\"#7f77dd\",\"0,-15\":\"#7f77dd\",\"1,-15\":\"#7f77dd\",\"2,-15\":\"#7f77dd\",\"-3,-11\":\"#7f77dd\",\"-3,-10\":\"#7f77dd\",\"-3,-9\":\"#7f77dd\",\"-3,-12\":\"#7f77dd\",\"-2,-12\":\"#7f77dd\",\"-1,-12\":\"#7f77dd\",\"0,-12\":\"#7f77dd\",\"-2,-11\":\"#7f77dd\",\"-1,-11\":\"#7f77dd\",\"0,-11\":\"#7f77dd\",\"1,-11\":\"#7f77dd\",\"2,-11\":\"#7f77dd\",\"-7,-14\":\"#7f77dd\",\"-7,-13\":\"#7f77dd\",\"-7,-12\":\"#7f77dd\",\"-7,-11\":\"#7f77dd\",\"-7,-10\":\"#7f77dd\",\"-7,-9\":\"#7f77dd\",\"-7,-8\":\"#7f77dd\",\"-7,-7\":\"#7f77dd\",\"-7,-6\":\"#7f77dd\",\"-6,-6\":\"#7f77dd\",\"-6,-7\":\"#7f77dd\",\"-6,-8\":\"#7f77dd\",\"-6,-9\":\"#7f77dd\",\"-6,-10\":\"#7f77dd\",\"-6,-11\":\"#7f77dd\",\"-6,-12\":\"#7f77dd\",\"-6,-13\":\"#7f77dd\",\"-6,-14\":\"#7f77dd\",\"-5,-13\":\"#7f77dd\",\"-5,-14\":\"#7f77dd\",\"-5,-12\":\"#7f77dd\",\"-5,-11\":\"#7f77dd\",\"-5,-10\":\"#7f77dd\",\"-5,-9\":\"#7f77dd\",\"-5,-8\":\"#7f77dd\",\"-5,-7\":\"#7f77dd\",\"-5,-6\":\"#7f77dd\",\"-4,-6\":\"#7f77dd\",\"-3,-5\":\"#7f77dd\",\"-3,-6\":\"#7f77dd\",\"-4,-7\":\"#7f77dd\",\"-4,-8\":\"#7f77dd\",\"-4,-9\":\"#7f77dd\",\"-4,-10\":\"#7f77dd\",\"-4,-11\":\"#7f77dd\",\"-4,-12\":\"#7f77dd\",\"-4,-13\":\"#7f77dd\",\"-3,-13\":\"#7f77dd\",\"-2,-10\":\"#7f77dd\",\"-2,-9\":\"#7f77dd\",\"-3,-8\":\"#7f77dd\",\"-3,-7\":\"#7f77dd\",\"-2,-8\":\"#7f77dd\",\"-2,-7\":\"#7f77dd\",\"-2,-6\":\"#7f77dd\",\"-1,-10\":\"#7f77dd\",\"-1,-9\":\"#7f77dd\",\"-1,-8\":\"#7f77dd\",\"-1,-7\":\"#7f77dd\",\"-1,-6\":\"#7f77dd\",\"0,-10\":\"#7f77dd\",\"0,-9\":\"#7f77dd\",\"0,-8\":\"#7f77dd\"},\"hair:3\":{\"4,-7\":\"#1f8fbf\"},\"hair:5\":{\"-8,-12\":\"0\",\"-7,-11\":\"0\",\"-6,-11\":\"0\",\"-5,-11\":\"0\",\"-4,-11\":\"0\",\"-3,-11\":\"0\",\"-2,-11\":\"0\",\"-1,-11\":\"0\",\"0,-11\":\"0\",\"1,-11\":\"0\",\"2,-11\":\"0\",\"3,-11\":\"0\",\"4,-11\":\"0\",\"5,-11\":\"0\",\"6,-11\":\"0\",\"6,-12\":\"#120d1e\",\"7,-12\":\"0\",\"-8,-13\":\"#120d1e\",\"-7,-12\":\"#120d1e\",\"7,-13\":\"#120d1e\",\"5,-12\":\"#120d1e\",\"-6,-12\":\"#120d1e\",\"-5,-12\":\"#120d1e\",\"-4,-12\":\"#120d1e\",\"-3,-12\":\"#120d1e\",\"-2,-12\":\"#120d1e\",\"-1,-12\":\"#120d1e\",\"0,-12\":\"#120d1e\",\"1,-12\":\"#120d1e\",\"2,-12\":\"#120d1e\",\"3,-12\":\"#120d1e\",\"4,-12\":\"#120d1e\",\"-8,-11\":\"0\",\"-6,-22\":\"#120d1e\",\"-5,-22\":\"#120d1e\",\"-4,-22\":\"#120d1e\",\"-3,-22\":\"#120d1e\",\"-2,-22\":\"#120d1e\",\"-1,-22\":\"#120d1e\",\"0,-22\":\"#120d1e\",\"1,-22\":\"#120d1e\",\"2,-22\":\"#120d1e\",\"3,-22\":\"#120d1e\",\"4,-22\":\"#120d1e\",\"5,-22\":\"#120d1e\",\"-7,-21\":\"#120d1e\",\"-8,-20\":\"#120d1e\",\"6,-21\":\"#120d1e\",\"7,-20\":\"#120d1e\",\"-5,-21\":\"#4a9be8\",\"-4,-21\":\"#4a9be8\",\"-3,-21\":\"#4a9be8\",\"-2,-21\":\"#4a9be8\",\"-1,-21\":\"#4a9be8\",\"0,-21\":\"#4a9be8\",\"1,-21\":\"#4a9be8\",\"2,-21\":\"#4a9be8\",\"3,-21\":\"#4a9be8\",\"4,-21\":\"#4a9be8\",\"5,-21\":\"#4a9be8\",\"-6,-21\":\"#4a9be8\"},\"hair:6\":{\"-4,-11\":\"0\",\"-5,-11\":\"0\",\"-6,-11\":\"0\",\"-5,-10\":\"0\",\"-6,-12\":\"0\",\"6,-14\":\"0\",\"6,-13\":\"#120d1e\",\"6,-12\":\"#120d1e\",\"6,-11\":\"#120d1e\",\"7,-11\":\"0\",\"7,-12\":\"0\",\"7,-13\":\"0\",\"7,-10\":\"0\",\"7,-9\":\"0\",\"7,-8\":\"0\",\"7,-7\":\"0\",\"6,-7\":\"0\",\"6,-8\":\"0\",\"6,-9\":\"#120d1e\",\"6,-10\":\"#120d1e\",\"-5,-12\":\"0\",\"-2,-13\":\"#120d1e\",\"1,-13\":\"#120d1e\",\"-1,-13\":\"#120d1e\",\"0,-13\":\"#120d1e\",\"2,-12\":\"0\",\"3,-11\":\"0\",\"2,-13\":\"#120d1e\",\"4,-11\":\"#120d1e\",\"5,-7\":\"0\",\"-3,-13\":\"#120d1e\",\"-4,-13\":\"#120d1e\",\"-5,-13\":\"#120d1e\",\"1,-15\":\"#4a9be8\",\"2,-15\":\"#4a9be8\",\"4,-15\":\"#120d1e\",\"3,-15\":\"#4a9be8\",\"5,-9\":\"#120d1e\",\"5,-8\":\"0\",\"1,-16\":\"#120d1e\",\"2,-16\":\"#120d1e\",\"3,-16\":\"#120d1e\",\"4,-16\":\"0\"}}");
   try{var pts=JSON.parse(localStorage.getItem("uk_paint")||"{}");if(pts&&typeof pts==="object")for(var pk in pts)PT[pk]=pts[pk];}catch(e){}
   function ptSave(){try{localStorage.setItem("uk_paint",JSON.stringify(PT));}catch(e){}}
   function ptBuild(key){return ptBuildM(PT[key]);}
@@ -2378,6 +2393,7 @@ var ART=(function(){
       dance:[".....##....",".....##..#.",".....##.#..","..#..###...","...######..",".....##....",".....##....","....#..#...","...#....#..","..##....##."],
       palette:["...#####...",".#########.","###..###.##","##..#######","###..##..##",".#########.","..#######.."],
       keys:["###########","#####.#####","#####.#####","#####.#####","#.#.#.#.#.#","#.#.#.#.#.#","###########"],
+      cross:["#.....#",".#...#.","..#.#..","...#...","..#.#..",".#...#.","#.....#"],
       talk:["###########","#.........#","#.........#","#.........#","###########","...###.....","....#......"],
       game:[".#########.","###########","##.#####.##","#..#####..#","##.#####.##","###########",".#########."]
     };
