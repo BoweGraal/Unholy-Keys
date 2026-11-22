@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.30"></script>
-<script src="gfx.js?v=1.79.30"></script>
-<script src="art.js?v=1.79.30"></script>
-<script src="instruments.js?v=1.79.30"></script>
-<script src="kart.js?v=1.79.30"></script>
-<script src="explain.js?v=1.79.30"></script>
+<script src="tune.js?v=1.79.31"></script>
+<script src="gfx.js?v=1.79.31"></script>
+<script src="art.js?v=1.79.31"></script>
+<script src="instruments.js?v=1.79.31"></script>
+<script src="kart.js?v=1.79.31"></script>
+<script src="explain.js?v=1.79.31"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2175,7 +2175,7 @@ var held={up:false,down:false,left:false,right:false},myDance=0,lastMoveT=0;
    - 40% is shared equally by everyone who took part, so nobody is ever left with nothing and a slow start isn't the end of you;
    - 60% goes by score, but softened (square root), so a big win is worth only a bit more than a solid second and steady
      rounds add up faster than the odd blowout. Largest remainders get the leftover points so it adds up to exactly 1000. */
-var SHARE_FLOOR = 0.4;
+var SHARE_FLOOR = 0.4, FIRST_BONUS = 50;
 function share1000(list) {
   var n = list.length; if (!n) return;
   var w = list.map(function(x) { return Math.sqrt(Math.max(0, +x.score || 0)); }), tw = 0; w.forEach(function(v) { tw += v; });
@@ -6024,7 +6024,7 @@ var PRACTICE=(function(){
     var ranking=[];
     if(plan)BATTLE.ranks(plan).forEach(function(x){var e=plan.entrants[x.e];ranking.push({id:e.id,name:e.name,score:x.wins,place:x.place+1,pts:0});});
     share1000(ranking);
-    ranking.forEach(function(r){var t=totals[r.name]||(totals[r.name]={name:r.name,pts:0,wins:0});t.pts+=r.pts;if(r.place===1)t.wins++;});
+    ranking.forEach(function(r){if(r.place===1)r.pts+=FIRST_BONUS;var t=totals[r.name]||(totals[r.name]={name:r.name,pts:0,wins:0});t.pts+=r.pts;if(r.place===1)t.wins++;});
     var tl=Object.keys(totals).map(function(k){return totals[k];}).sort(function(a,b){return b.pts-a.pts||b.wins-a.wins;});
     ROUND.onMsg({type:"round",phase:"result",n:n,battle:true,ranking:ranking.slice(0,10),totals:tl.slice(0,10)});
     document.body.classList.remove("pr-busy");
@@ -6078,7 +6078,7 @@ var PRACTICE=(function(){
     var ranking=[];share1000(list);
     list.forEach(function(x,i){
       var place=i>0&&x.score===list[i-1].score?ranking[i-1].place:i+1;
-      var pts=x.pts;
+      var pts=x.pts+(place===1&&x.score>0?FIRST_BONUS:0);   /* first place: +50 on top of the 1000 */
       ranking.push({id:x.id,name:x.name,score:x.score,pts:pts,place:place});
       var t=totals[x.name]||(totals[x.name]={name:x.name,pts:0,wins:0});t.pts+=pts;if(place===1&&x.score>0)t.wins++;
     });
@@ -6475,7 +6475,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.30",SERVER_VERSION="";
+var PAGE_VERSION="1.79.31",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6970,7 +6970,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.30"></script>
+<script src="lab.js?v=1.79.31"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

@@ -1573,3 +1573,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.30 — one chart for everyone
 - The two-thumb chart rule now applies to every player, phone or computer, so a round's notes are identical for all (checked: touch and non-touch give byte-identical charts at all three levels).
+
+## v1.79.31 — first place bonus
+- First place in a round gets +50 show points on top of the usual 1,000 split (ties for first all get it; needs a score above 0). Battles: the winner of the bracket. Works in practice too. Needs a Render redeploy (server.js).
