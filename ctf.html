@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Capture the flag &amp; Kart flag designer · Unholy Keys</title>
-<script src="art.js?v=1.81.0"></script>
+<script src="art.js?v=1.81.2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#07041a;color:#e8e4f4;font-family:system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
@@ -30,6 +30,7 @@ button.on{background:#7F77DD;border-color:#b9b2ff}
 <div id="app">
   <div id="bar">
     <h1>🚩🏎️ Flag arena designer</h1>
+    <select id="which" title="Capture the flag and Kart flag each keep their own arena"><option value="uk_ctf">🚩 CTF arena</option><option value="uk_kflag">🏎️ Kart flag arena</option></select>
     <button data-k="#" class="on">🧱 Wall</button>
     <button data-k=".">⬛ Floor</button>
     <button data-k="pad" id="padB">⚡ Boost ▶</button>
@@ -42,7 +43,7 @@ button.on{background:#7F77DD;border-color:#b9b2ff}
     <span class="sep"></span>
     <button id="mirror" class="on" title="Whatever you paint on one side is copied to the other, with the teams swapped">🪞 Mirror</button>
     <button id="undo">↶ Undo</button>
-    <select id="size" title="Arena size (changing it starts a fresh arena)"><option value="32x20">Small</option><option value="40x24" selected>Medium</option><option value="48x28">Large</option><option value="56x32">Huge</option></select>
+    <select id="size" title="Arena size (changing it starts a fresh arena)"><option value="32x20">Small</option><option value="40x24" selected>Medium</option><option value="48x28">Large</option><option value="56x32">Huge</option><option value="64x30">Kart wide</option><option value="72x34">Kart huge</option></select>
     <input id="name" maxlength="40" placeholder="Arena name">
     <button id="reset">↺ Reset</button>
     <button id="clear">🗑 Clear</button>
@@ -61,12 +62,14 @@ button.on{background:#7F77DD;border-color:#b9b2ff}
   var C=ART.CTF,cv=document.getElementById("cv"),g=cv.getContext("2d"),W=0,H=0,dpr=1;
   var map=null,tool="#",padDir=">",mirror=true,hist=[],painting=false,lastCell=null;
   var PADS=[">","v","<","^"],PADICON={">":"▶","v":"▼","<":"◀","^":"▲"};
-  try{map=C.clean(C.upgrade(JSON.parse(localStorage.getItem("uk_ctf")||"null")));}catch(e){}
-  if(!map)map=C.clean(C.defaultMap());
+  var KEY="uk_ctf";try{if(localStorage.getItem("uk_ctf_which")==="uk_kflag")KEY="uk_kflag";}catch(e){}
+  function dflt(){return C.clean(KEY==="uk_kflag"?C.kartDefault():C.defaultMap());}
+  function load(){map=null;try{map=C.clean(C.upgrade(JSON.parse(localStorage.getItem(KEY)||"null")));}catch(e){}if(!map)map=dflt();}
+  load();
   function $(id){return document.getElementById(id);}
   /* the map's tiles as an array while editing; saved back as the string the game uses */
   function grid(){return map.t.split("");}
-  function save(){var c=C.clean(map);if(c)try{localStorage.setItem("uk_ctf",JSON.stringify(map));}catch(e){}status();}
+  function save(){var c=C.clean(map);if(c)try{localStorage.setItem(KEY,JSON.stringify(map));}catch(e){}status();}
   function push(){hist.push(JSON.stringify(map));if(hist.length>80)hist.shift();}
   function status(){var t=map.t,nR=0,nB=0,nr=0,nb=0,np=0,ns=0,nx=0;for(var i=0;i<t.length;i++){var c=t[i];if(c==="R")nR++;if(c==="B")nB++;if(c==="r")nr++;if(c==="b")nb++;if(">v<^".indexOf(c)>=0)np++;if(c==="s")ns++;if(c==="p")nx++;}
     var ok=nR&&nB;$("status").innerHTML=(ok?"":"<b class='bad'>Needs a red base and a blue base before it can be played. </b>")+map.w+" × "+map.h+" tiles · red base "+nR+" · blue base "+nB+" · spawns "+nr+" / "+nb+" · boost pads "+np+" · sprint refills "+ns+" · power-up boxes "+nx+(nx?"":" (Kart flag uses the sprint refills as boxes when there are none)")+
@@ -92,7 +95,7 @@ button.on{background:#7F77DD;border-color:#b9b2ff}
       t+=edge?"#":(x>=2&&x<=4&&y>=mid-2&&y<=mid+1)?"R":(x>=w-5&&x<=w-3&&y>=mid-2&&y<=mid+1)?"B":(x===2&&(y===2||y===h-3))?"r":(x===w-3&&(y===2||y===h-3))?"b":".";}
     return{name:map&&map.name||"My arena",w:w,h:h,t:t};}
   $("size").onchange=function(){var p=this.value.split("x");if(!confirm("Start a fresh arena at this size? (Undo brings the old one back.)")){this.value=map.w+"x"+map.h;return;}push();map=blank(+p[0],+p[1]);save();draw();};
-  $("reset").onclick=function(){push();map=C.clean(C.defaultMap());$("name").value=map.name;$("size").value=map.w+"x"+map.h;save();draw();};
+  $("reset").onclick=function(){push();map=dflt();$("name").value=map.name;$("size").value=map.w+"x"+map.h;save();draw();};
   $("clear").onclick=function(){push();map=blank(map.w,map.h);save();draw();};
   $("name").value=map.name;$("name").oninput=function(){map.name=this.value.slice(0,40)||"My arena";save();};
   $("size").value=map.w+"x"+map.h;if($("size").selectedIndex<0){var o=document.createElement("option");o.value=o.textContent=map.w+"x"+map.h;$("size").appendChild(o);$("size").value=o.value;}
@@ -106,6 +109,7 @@ button.on{background:#7F77DD;border-color:#b9b2ff}
     /* a faint line down the middle while mirroring */
     if(mirror){g.fillStyle="rgba(255,255,255,.12)";for(var y=V.oy;y<V.oy+V.s*map.h;y+=8)g.fillRect(Math.round(V.ox+V.s*map.w/2)-1,y,2,4);}}
   window.addEventListener("resize",size);setInterval(draw,120);size();status();
+  $("which").value=KEY;$("which").onchange=function(){KEY=this.value;try{localStorage.setItem("uk_ctf_which",KEY);}catch(e){}hist=[];load();$("name").value=map.name;$("size").value=map.w+"x"+map.h;save();draw();};
   window.ukCtfMap=function(){return map;};
 })();
 </script>
