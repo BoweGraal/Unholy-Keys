@@ -1596,3 +1596,8 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.37 — free dance takes the whole song
 - Picking Free dance (alone or with another game) now always plays free dance for the whole song, never sharing it with a second minigame, so every dancer gets two centre turns when the song is long enough. Before, with Free dance as the second pick the first game was the one that ran.
+
+## v1.79.38 — the circle and the planner
+- Free dance turns: once the turns are fixed (8 s in) everyone forms an oval on the floor with a gold dashed outline and a "NEXT IN" marker at the top. Whoever is due north walks into the middle for their 15 s, walks back, the whole ring turns one place left, and the next dancer walks in.
+- While you wait, the bottom half of the screen is your planner (the sticks come back for your turn): "You're #3 of 8 · turn 1 of 2 · up in 0:44", and the first dancer gets "YOU'RE FIRST · you start in 15 s. Plan your moves!". Pick up to 3 dances and moves, reorder with the arrows, remove with the cross. 1 pick = 15 s, 2 = 7.5 s each, 3 = 5 s each. Picking a dance shows it live on your own dancer.
+- Needs the server redeploy (turn timing, ring order sent to late joiners).
