@@ -6007,7 +6007,7 @@ var CHART=(function(){
         var len=i+k<nb?(bt[i+k]-bt[i])*10*0.92:0,perMs=60000/bpm;     /* ends just before the next step there */
         if(len>=perMs*1.5&&len<=perMs*4.2&&holds(i,k)&&on>0.25){
           var hl=lane(tier);
-          if(add(t,1<<hl,hl,true,len)){heldLane=hl;heldUntil=i+k;lastHoldBeat=i;holdQuiet=tier<=1;
+          if(add(t,1<<hl,hl,true,len)){heldLane=hl;heldUntil=i+k;lastHoldBeat=i;holdQuiet=tier<=0;   /* only a calm part just holds: normal and busy parts keep other arrows coming */
             if(i+1<nb&&tier>=2){var h0=Math.round((bt[i]+bt[i+1])/2),hs0=near(e,h0,2)/hit;if(!fast&&tier===3&&hs0>0.25&&room(h0*10,1)){var lo0=lane(tier);add(h0*10,1<<lo0,lo0,false);}}
             continue;}
         }
@@ -6015,7 +6015,7 @@ var CHART=(function(){
       /* on the beat */
       if(tier>0||i%2===0||on>0.6){
         var l=lane(tier),mask=1<<l;
-        if((tier===3&&(bar||(on>0.8&&!fast)))||(tier===2&&bar&&on>0.55&&!fast))mask=two(l,tier);   /* doubles: bar starts, and crashes when there's time */
+        if((tier===3&&(bar||(on>0.8&&!fast)))||(tier===2&&bar&&on>0.4&&!fast)||(tier===1&&bar&&on>0.7&&!fast))mask=two(l,tier);   /* doubles: bar starts, and crashes when there's time */
         add(t,mask,l,true);
       }
       /* off the beat, where the music has a hit there */

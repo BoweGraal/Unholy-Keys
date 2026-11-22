@@ -2572,7 +2572,7 @@ var GAME=(function(){
   function diffOf(n){if(window.ukForceDiff!==undefined)return +window.ukForceDiff;n=+n||1;return n<=2?0:n<=4?1:2;}   /* ukForceDiff: for testing */
   /* thin a round's chart for its difficulty (Hard is the chart as analysed)
      Easy: about one note a beat at most, no doubles. Normal: no notes closer than half a beat, except in the
-     big moments; doubles only in the big moments. */
+     big moments; doubles where the chart has them. Steps keep coming under a hold (on the other arrows). */
   /* Everyone plays the same chart, made for two thumbs. Never more than two presses at once (a held arrow counts: while one is held,
      only single arrows), nothing faster than half beats, and steps that fall between the beats are dropped so
      the chart sits on the groove. Applied at every level, on top of the easing below. */
@@ -2601,14 +2601,17 @@ var GAME=(function(){
     if(!chart)return chart;
     chart=thumbChart(chart);   /* one chart for everyone, phone or computer, so every player has the same chances at points */
     if(diff>=2)return chart;
-    var per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9;
+    var per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9,heldMask=0,heldEnd=-1;
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
     for(var i=0;i<chart.steps.length;i++){
-      var s=chart.steps[i],big=inPk(s[0]),gap=diff===0?per*0.95:(big?0:per*0.45);
-      if(s[0]-last<gap)continue;
-      if(s.length>2){out.push(s);last=s[0]+(+s[2]||0);continue;}           /* holds stay */
-      var m=s[1];if(diff===0||!big){var lb=m&(-m);m=lb;}                    /* doubles become one arrow */
-      out.push([s[0],m]);last=s[0];
+      var s=chart.steps[i],t=s[0],big=inPk(t),gap=diff===0?per*0.95:(big?0:per*0.45);
+      if(t>=heldEnd)heldMask=0;                                            /* the hold has ended */
+      if(t-last<gap)continue;
+      if(s.length>2){if(heldMask)continue;out.push(s);last=t;heldMask=s[1];heldEnd=t+(+s[2]||0);continue;}   /* holds stay; the steps under them stay too (last is the hold's start, not its end) */
+      var m=s[1];
+      if(heldMask){m&=~heldMask;if(!m)continue;m=m&(-m);}                   /* a hold is down: one other arrow at a time, never on the held one */
+      else if(diff===0){m=m&(-m);}                                          /* easy: doubles become one arrow; normal keeps the doubles the chart has */
+      out.push([t,m]);last=t;
     }
     var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;
   }
@@ -5641,7 +5644,7 @@ var CHART=(function(){
         var len=i+k<nb?(bt[i+k]-bt[i])*10*0.92:0,perMs=60000/bpm;     /* ends just before the next step there */
         if(len>=perMs*1.5&&len<=perMs*4.2&&holds(i,k)&&on>0.25){
           var hl=lane(tier);
-          if(add(t,1<<hl,hl,true,len)){heldLane=hl;heldUntil=i+k;lastHoldBeat=i;holdQuiet=tier<=1;
+          if(add(t,1<<hl,hl,true,len)){heldLane=hl;heldUntil=i+k;lastHoldBeat=i;holdQuiet=tier<=0;   /* only a calm part just holds: normal and busy parts keep other arrows coming */
             if(i+1<nb&&tier>=2){var h0=Math.round((bt[i]+bt[i+1])/2),hs0=near(e,h0,2)/hit;if(!fast&&tier===3&&hs0>0.25&&room(h0*10,1)){var lo0=lane(tier);add(h0*10,1<<lo0,lo0,false);}}
             continue;}
         }
@@ -5649,7 +5652,7 @@ var CHART=(function(){
       /* on the beat */
       if(tier>0||i%2===0||on>0.6){
         var l=lane(tier),mask=1<<l;
-        if((tier===3&&(bar||(on>0.8&&!fast)))||(tier===2&&bar&&on>0.55&&!fast))mask=two(l,tier);   /* doubles: bar starts, and crashes when there's time */
+        if((tier===3&&(bar||(on>0.8&&!fast)))||(tier===2&&bar&&on>0.4&&!fast)||(tier===1&&bar&&on>0.7&&!fast))mask=two(l,tier);   /* doubles: bar starts, and crashes when there's time */
         add(t,mask,l,true);
       }
       /* off the beat, where the music has a hit there */
