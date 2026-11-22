@@ -1546,3 +1546,9 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.22
 - Kart rounds inside a show end after about 90 s of racing (other games unchanged).
+
+## v1.79.23 — free dance sticks
+- Left stick walks you around the floor while the dance loop keeps going (WASD on a computer); the dance reads the same stick so the footwork follows.
+- Right stick (arrows) is the per-dance control; help text for every dance now says what it does.
+- Shuffle: right stick UP = step up on toes with high knees, DOWN = low stomp, sideways = arms; left stick sets slide direction and speed.
+- Test hook: ukFree(i).

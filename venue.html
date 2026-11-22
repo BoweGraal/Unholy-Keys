@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.22"></script>
-<script src="gfx.js?v=1.79.22"></script>
-<script src="art.js?v=1.79.22"></script>
-<script src="instruments.js?v=1.79.22"></script>
-<script src="kart.js?v=1.79.22"></script>
-<script src="explain.js?v=1.79.22"></script>
+<script src="tune.js?v=1.79.23"></script>
+<script src="gfx.js?v=1.79.23"></script>
+<script src="art.js?v=1.79.23"></script>
+<script src="instruments.js?v=1.79.23"></script>
+<script src="kart.js?v=1.79.23"></script>
+<script src="explain.js?v=1.79.23"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2816,7 +2816,7 @@ var GAME=(function(){
     var sb=ui.querySelector(".fd-subs");sb.textContent="";
     d.subs.forEach(function(nm,k){var b=document.createElement("button");b.textContent=nm;b.setAttribute("data-sub",k);b.className=k===fSub?"on":"";b.title=nm+"  ("+"ZXCVB".charAt(k)+")";b.onclick=function(e){e.stopPropagation();b.blur();fdSub(k);};sb.appendChild(b);});
     fdqRender();
-    ui.querySelector(".fd-help").textContent=fStyle?d.help+(DEVICE.kind==="pc"?"  WASD moves the left dot, the arrow keys the right one.":""):"Freestyle: drag your hands and feet, or tap the floor to walk. Pick a dance on the sides for more.";
+    ui.querySelector(".fd-help").textContent=fStyle?d.help+(DEVICE.kind==="pc"?"  WASD is the left stick (walk), the arrow keys the right stick.":""):"Freestyle: drag your hands and feet, or tap the floor to walk. Pick a dance on the sides for more.";
     fdShow();
   }
   function fdShow(){
@@ -2836,6 +2836,11 @@ var GAME=(function(){
       if(kn&&fHeld[i]===null){var km=Math.hypot(kx,ky)||1;kx/=km;ky/=km;if(!kx&&!ky){kx=0;ky=0;}fCtl[i*2]+=(kx*0.95-fCtl[i*2])*0.35;fCtl[i*2+1]+=(ky*0.95-fCtl[i*2+1])*0.35;moved=true;}}   /* held keys push the dot that way */
     for(var i=0;i<2;i++)if(fHeld[i]===null&&!Object.keys(fkHeld).some(function(kc){return FKEYS[kc][0]===i;})&&(fCtl[i*2]||fCtl[i*2+1])){fCtl[i*2]*=0.82;fCtl[i*2+1]*=0.82;if(Math.abs(fCtl[i*2])<0.02&&Math.abs(fCtl[i*2+1])<0.02){fCtl[i*2]=0;fCtl[i*2+1]=0;}moved=true;}
     if(moved){fdShow();applyToMe();sendPose();}
+    /* the left stick walks you around the floor while the dance loop keeps going (the dance reads the same stick, so the footwork follows) */
+    var fm=me(),fdt=Math.min(0.1,(nowS-(fdSpring.t||nowS))/1000);fdSpring.t=nowS;
+    if(fm&&fStyle>0&&fdt>0){var lx=fCtl[0],ly=fCtl[1],lm=Math.hypot(lx,ly);
+      if(lm>0.18){var ff=ROUND.featured(),isF=ff&&ff.id===myId,k2=Math.min(1,(lm-0.18)/0.7),sp2=TUNE.v("walk.speed")*fdt*0.55*k2;
+        if(!isF){fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+lx/lm*sp2));fm.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),fm.ty+ly/lm*sp2*(W/H)));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}}
   }
   /* ---------- free dance ----------
      You dance right on the floor (or centre stage on your spotlight turn), where you can still see the
@@ -6087,6 +6092,7 @@ var PRACTICE=(function(){
   });
   /* tests: a dance walk race in practice with a steady 120 BPM beat and no song */
   window.ukSkiTest=function(nb){window.__testMode="ski";window.ukWalkTest(nb);};
+  window.ukFree=function(i){if(GAME.mode!=="free")GAME.start("free");GAME.fdPick(i);};   /* tests: free dance with dance number i */
   window.ukPipeTest=function(nb){window.__testMode="pipe";window.ukWalkTest(nb);};
   window.ukWalkTest=function(nb){var my=++job;makeBots(nb===undefined?3:nb);mode=window.__testMode||"walk";window.__testMode=null;battle=false;n++;var beats=[];for(var i=0;i<600;i++)beats.push(i*500);
     chart={bpm:120,beats:beats,steps:[],dur:300000};ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,chart:chart,ms:800,title:mode==="ctf"?"CTF test":mode==="ski"?"Ski test":mode==="pipe"?"Pipe test":"Walk test"});
@@ -6461,7 +6467,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.22",SERVER_VERSION="";
+var PAGE_VERSION="1.79.23",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6949,7 +6955,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.22"></script>
+<script src="lab.js?v=1.79.23"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
