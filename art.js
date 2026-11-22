@@ -32,20 +32,21 @@ var ART=(function(){
     topCol:{label:"Top colour",n:CLOTH.length,col:CLOTH},
     bottom:{label:"Bottoms",names:["Jeans","Shorts","Skirt","Track pants","Overalls","Long dress","Hose","Cargo pants","Kilt","Bell-bottoms","Ripped jeans","Shorts & leggings","Mini skirt"]},
     botCol:{label:"Bottoms colour",n:CLOTH.length,col:CLOTH},
-    extra:{label:"Extra",names:["Nothing","Shades","Headphones","Cap","Bandana"]},
+    extra:{label:"Extra",names:["Nothing","Shades","Headphones","Cap","Bandana","Mask"]},
     shoes:{label:"Shoes",names:["Sneakers","White sneakers","Red sneakers","Boots","High-tops","Dress shoes","Sandals","Pointy shoes","Rain boots","Platforms"]},
-    hat:{label:"Hat",names:["No hat","Hard hat","Chef hat","Fire helmet","Police cap","Top hat","Cowboy hat","Wizard hat","Crown","Beret","Feathered cap","Hood","Racing helmet","Goggles"]},
-    face:{label:"Face",names:["Plain","Moustache","Beard","Goatee","Glasses","Round glasses","Eye patch","Freckles","Blush","Stubble"]}
+    hat:{label:"Hat",names:["No hat","Hard hat","Chef hat","Fire helmet","Police cap","Top hat","Cowboy hat","Wizard hat","Crown","Beret","Feathered cap","Hood","Racing helmet","Goggles","Witch hat"]},
+    face:{label:"Face",names:["Plain","Moustache","Beard","Goatee","Glasses","Round glasses","Eye patch","Freckles","Blush","Stubble"]},
+    held:{label:"Holding",names:["Nothing","Violin","Electric guitar"]}
   };
   /* which options the character maker's Male / Female / Both switch shows: one letter per option, m or f (u = anyone) */
   OPTS.hair.g="muufuufufffffuuffmmmuffumuffuu";   /* Bald, Buzz, Bowl cut, Quiff, Widow's peak: m. Long, Ponytail, Bob, Bangs, Bun, Pigtails, Braid, Long waves, Pixie, Shoulder length, High ponytail, Bob & headband, Side tail: f */
   OPTS.face.g="ummmuuuuum";                        /* moustache, beard, goatee, stubble */
   OPTS.bottom.g="uufuuuuuuuuuf";                   /* skirt, mini skirt */
   function gOk(key,i,gd){var t=OPTS[key].g;if(!t||!gd||gd==="b")return true;var c=t[i]||"u";return c==="u"||c===gd;}
-  var KEYS=["skin","hair","hairCol","top","topCol","bottom","botCol","extra","shoes","hat","face"];
+  var KEYS=["skin","hair","hairCol","top","topCol","bottom","botCol","extra","shoes","hat","face","held"];
   function count(k){var o=OPTS[k];return o.names?o.names.length:o.n;}
   var B36="0123456789abcdefghijklmnopqrstuvwxyz";
-  /* a look packs into one character per option (11 now; older 8-character looks still read, the newer options plain) */
+  /* a look packs into one character per option (12 now; older 8-character looks still read, the newer options plain) */
   /* any colour: skin, hair, top or bottoms can be picked freely; those ride after a "~" as a letter and 6 hex digits each */
   var HEXK={s:"skinHex",h:"hairHex",t:"topHex",b:"botHex"};
   function hex6(v){return typeof v==="string"&&/^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():"";}
@@ -259,6 +260,7 @@ var ART=(function(){
       if(ht===11){var hd3="#6A4A30";px(-5,-16+hy,9,2,hd3);px(-7,-14+hy,4,10,hd3);px(-5,-5+hy,7,1,hd3);px(3,-15+hy,1,2,hd3);}
       if(ht===12){px(-5,-17+hy,10,10,"#D8303A");px(1,-13+hy,4,3,"#3a3a5a");px(2,-13+hy,2,1,"#8AC8FF");px(-5,-17+hy,10,1,WH);px(-5,-12+hy,1,5,WH);}
       if(ht===13){px(-4,-15+hy,8,1,"#3a3650");px(1,-17+hy,3,3,"#C8C8D8");px(2,-16+hy,1,1,"#6FE0C0");}
+      if(ht===14){var WH1="#4A4A5A",WH2="#666678",WH3="#2C2C38",WB="#F09A2E",WB2="#F5C518",WX="#F5E04A";px(-8,-13+hy,16,1,WH3);px(-6,-14+hy,13,1,WH1);px(-5,-16+hy,10,2,WB);px(-5,-16+hy,10,1,WB2);px(-5,-18+hy,9,2,WH1);px(-5,-20+hy,7,2,WH1);px(-6,-21+hy,5,1,WH1);px(-8,-22+hy,5,1,WH1);px(-10,-23+hy,3,1,WH1);px(-10,-22+hy,1,1,WH3);px(-1,-19+hy,1,1,WX);px(0,-18+hy,1,1,WX);px(1,-19+hy,1,1,WX);px(5,-14+hy,1,1,WX);}
     };
     var backHat=function(){var ht=HT;
       if(ht===1){px(-6,-17+hy,12,3,"#F5D03C");px(-7,-14+hy,14,1,"#D8B020");px(-4,-17+hy,2,1,"#FFF2A0");}
@@ -273,6 +275,7 @@ var ART=(function(){
       if(ht===10){px(-6,-17+hy,12,3,"#3A7A3A");px(-6,-14+hy,12,1,"#2A5A2A");px(-4,-21+hy,1,5,"#E8505B");px(-5,-22+hy,1,3,"#F08080");}
       if(ht===11){var hd4="#6A4A30";px(-6,-16+hy,12,12,hd4);px(-5,-17+hy,10,1,hd4);px(-1,-6+hy,2,2,shade(hd4,-0.2));}
       if(ht===12){px(-6,-17+hy,12,9,"#D8303A");px(-6,-17+hy,12,1,WH);px(-1,-17+hy,2,9,WH);}
+      if(ht===14){var WH1="#4A4A5A",WH2="#666678",WH3="#2C2C38",WB="#F09A2E",WB2="#F5C518",WX="#F5E04A";px(-9,-13+hy,18,1,WH3);px(-8,-14+hy,16,1,WH1);px(-6,-16+hy,12,2,WB);px(-5,-18+hy,10,2,WH1);px(-4,-20+hy,8,2,WH1);px(-3,-21+hy,5,1,WH1);px(-5,-22+hy,5,1,WH1);px(-7,-23+hy,3,1,WH1);px(-7,-22+hy,1,1,WH3);}
       if(ht===13){px(-6,-15+hy,12,1,"#3a3650");}
     };
     if(D===1){
@@ -321,6 +324,7 @@ var ART=(function(){
       if(EX===2){px(-4,-16+hy,8,1,"#2A2238");px(-2,-12+hy,3,4,"#2A2238");px(-1,-11+hy,1,2,"#E8505B");}
       if(EX===3){px(-4,-17+hy,8,3,"#E8505B");px(-4,-14+hy,8,1,"#B83A44");px(-6,-14+hy,2,1,"#B83A44");px(-7,-13+hy,2,2,"#B83A44");}
       if(EX===4){px(-4,-14+hy,8,2,"#D354A0");}
+      if(EX===5){px(-1,-9+hy,6,4,"#15121F");px(4,-9+hy,1,1,"#2E2A3C");px(-4,-10+hy,3,1,"#15121F");}   /* mask */
       SEC="face";
       var wk=HR===0?"#3a2a22":hcD;
       if(FC===1||FC===2||FC===3)px(3,-9+hy,2,1,wk);
@@ -332,7 +336,7 @@ var ART=(function(){
       if(FC===8)px(1,-9+hy,2,1,"#F08AA0");
       if(FC===9){var sb3=shade(skin,-0.3);px(0,-7+hy,1,1,sb3);px(2,-7+hy,1,1,sb3);px(1,-6+hy,1,1,sb3);px(3,-6+hy,1,1,sb3);}
       SEC="hat";sideHat();
-      PAINT.view("hair:"+HR,1,OX,OY+hy);PAINT.view("hat:"+HT,1,OX,OY+hy);PAINT.view("extra:"+EX,1,OX,OY+hy);
+      PAINT.view("hair:"+HR,1,OX,OY+hy);if(HT===14){SEC="hat";sideHat();}PAINT.view("hat:"+HT,1,OX,OY+hy);PAINT.view("extra:"+EX,1,OX,OY+hy);
     }else{
       /* ---- back: the arms and legs swap sides, no face, the hair covers the back of the head ---- */
       SEC="legL";limb(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));
@@ -374,8 +378,9 @@ var ART=(function(){
       if(EX===2){px(-6,-16+hy,12,1,"#2A2238");px(-7,-12+hy,2,4,"#2A2238");px(5,-12+hy,2,4,"#2A2238");}
       if(EX===3){px(-5,-17+hy,10,3,"#E8505B");px(-5,-14+hy,10,1,"#B83A44");px(-1,-14+hy,2,2,"#B83A44");px(-2,-12+hy,1,2,"#B83A44");px(1,-12+hy,1,2,"#B83A44");}
       if(EX===4)px(-5,-14+hy,10,2,"#D354A0");
+      if(EX===5){px(-6,-10+hy,12,1,"#15121F");px(-1,-10+hy,2,3,"#15121F");}   /* mask: the knot at the back */
       SEC="hat";backHat();
-      PAINT.view("hair:"+HR,2,OX,OY+hy);PAINT.view("hat:"+HT,2,OX,OY+hy);
+      PAINT.view("hair:"+HR,2,OX,OY+hy);if(HT===14){SEC="hat";backHat();}PAINT.view("hat:"+HT,2,OX,OY+hy);
     }
     }else{
     SEC="legL";limb(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));
@@ -482,6 +487,7 @@ var ART=(function(){
     if(ex===2){px(-6,-16+hy,12,1,"#2A2238");px(-7,-12+hy,2,4,"#2A2238");px(5,-12+hy,2,4,"#2A2238");px(-7,-11+hy,1,2,"#E8505B");px(6,-11+hy,1,2,"#E8505B");}
     if(ex===3){px(-5,-17+hy,10,3,"#E8505B");px(-5,-14+hy,10,1,"#B83A44");px(-8,-14+hy,4,1,"#B83A44");}
     if(ex===4){px(-5,-14+hy,10,2,"#D354A0");px(-6,-13+hy,1,3,"#D354A0");}
+    if(ex===5){px(-5,-9+hy,10,4,"#15121F");px(-5,-9+hy,10,1,"#2E2A3C");px(-6,-10+hy,1,2,"#15121F");px(5,-10+hy,1,2,"#15121F");}   /* mask over the nose and mouth */
     SEC="face";
     /* face */
     var fc=L.face|0,whisk=hair===0?"#3a2a22":hcD;
@@ -512,11 +518,14 @@ var ART=(function(){
     if(ht===11){var hd2="#6A4A30";px(-6,-16+hy,12,2,hd2);px(-7,-14+hy,2,9,hd2);px(5,-14+hy,2,9,hd2);px(-6,-15+hy,12,1,shade(hd2,0.2));px(-5,-5+hy,10,1,hd2);}   /* hood */
     if(ht===13){px(-6,-15+hy,12,1,"#3a3650");px(-5,-17+hy,4,3,"#C8C8D8");px(1,-17+hy,4,3,"#C8C8D8");px(-4,-16+hy,2,1,"#6FE0C0");px(2,-16+hy,2,1,"#6FE0C0");px(-1,-16+hy,2,1,"#3a3650");}   /* goggles pushed up on the head */
     if(ht===12){px(-6,-17+hy,12,9,"#D8303A");px(-6,-12+hy,12,1,BLK);px(-5,-12+hy,10,3,"#3a3a5a");px(-4,-12+hy,3,1,"#8AC8FF");px(-6,-17+hy,12,1,WH);px(-1,-17+hy,2,5,WH);}   /* racing helmet: the visor down */
+    var witchF=function(){var WH1="#4A4A5A",WH2="#666678",WH3="#2C2C38",WB="#F09A2E",WB2="#F5C518",WX="#F5E04A";px(-9,-13+hy,18,1,WH3);px(-8,-14+hy,16,1,WH1);px(-6,-16+hy,12,2,WB);px(-6,-16+hy,12,1,WB2);px(-5,-18+hy,10,2,WH1);px(-4,-20+hy,8,2,WH1);px(-2,-21+hy,5,1,WH1);px(0,-22+hy,5,1,WH1);px(4,-23+hy,3,1,WH1);px(6,-22+hy,1,1,WH3);px(-5,-18+hy,1,2,WH2);px(-4,-20+hy,1,2,WH2);px(-7,-14+hy,3,1,WH2);px(-3,-20+hy,1,1,WX);px(-1,-20+hy,1,1,WX);px(-2,-19+hy,1,1,WX);px(-3,-18+hy,1,1,WX);px(-1,-18+hy,1,1,WX);px(-6,-14+hy,1,1,WX);px(5,-14+hy,1,1,WX);};   /* witch hat (Bowe's): floppy brim, orange band, a cone curling over, its sigils */
+    if(ht===14)witchF();
     /* pixels painted in the Graphics lab, by part, before the outline goes round them */
-    var TO=TOFF||{};paintLayer("hair:"+(L.hair|0),OX+(TO.hair||0),OY+hy);paintLayer("hat:"+(L.hat|0),OX+(TO.hat||0),OY+hy);paintLayer("face:"+(L.face|0),OX+(TO.face||0),OY+hy);paintLayer("extra:"+(L.extra|0),OX+(TO.extra||0),OY+hy);
+    var TO=TOFF||{};paintLayer("hair:"+(L.hair|0),OX+(TO.hair||0),OY+hy);if(ht===14){SEC="hat";witchF();}paintLayer("hat:"+(L.hat|0),OX+(TO.hat||0),OY+hy);   /* the witch hat sits over any painted hair */paintLayer("face:"+(L.face|0),OX+(TO.face||0),OY+hy);paintLayer("extra:"+(L.extra|0),OX+(TO.extra||0),OY+hy);
     paintLayer("top:"+(L.top|0),OX,OY);paintLayer("bottom:"+(L.bottom|0),OX,OY);
     paintLayer("armL",Math.round(OX-6.5),Math.round(OY-4.5),aL);paintLayer("armR",Math.round(OX+6.5),Math.round(OY-4.5),aR);
     paintLayer("legL",Math.round(OX-2.5),OY+4,lL);paintLayer("legR",Math.round(OX+2.5),OY+4,lR);
+    if(ht===14){SEC="hat";witchF();}   /* the witch hat goes on last, over any hair */
     }   /* end of the front view */
     /* outline: a dark silhouette one pixel out all round, under the colours */
     og.globalCompositeOperation="source-over";og.clearRect(0,0,CWD,CHT);
@@ -559,6 +568,24 @@ var ART=(function(){
     if(NEON)g.restore();
     g.imageSmoothingEnabled=was;
     if(st.prop)handProp(g,x,y,q,dx,bob,s,st);
+    else if(L.held&&!st.rot&&!st.skates)heldInst(g,x,y,q,dx,bob,L.held|0,s.dir,SX);
+  }
+  /* an instrument you carry (Holding in the character maker): a violin tucked under the chin with its bow, or a black
+     sparkly electric guitar slung across the body. Drawn on the body, so it stays put while the arms dance. */
+  function heldInst(g,x,y,q,dx,bob,k,dir,SX){
+    var back=dir===2||dir===5;if(back&&k===1)return;
+    g.save();g.translate(Math.round(x+dx),Math.round(y+bob));g.scale(SX<0?-1:1,1);
+    function P(a,b,w,h,c){g.fillStyle=c;g.fillRect(Math.round(a*q),Math.round(b*q),Math.round(w*q),Math.round(h*q));}
+    if(k===2){   /* electric guitar: black body with sparkles at the hip, the neck up across the chest to the left shoulder */
+      P(0,0,7,5,"#0E0C16");P(1,-1,5,1,"#0E0C16");P(1,5,5,1,"#0E0C16");P(1,1,4,3,"#1C1A2A");
+      P(2,1,1,1,"#E8E4FF");P(5,3,1,1,"#B8B0FF");P(1,4,1,1,"#E8E4FF");P(5,0,1,1,"#9A90E0");P(3,3,1,1,"#9A90E0");
+      P(2,2,3,1,"#C9CEE0");   /* pickups */
+      for(var i=0;i<8;i++)P(0-i,-1-i,2,1,"#5A3A22");P(-9,-11,3,3,"#0E0C16");P(-8,-10,1,1,"#C9CEE0");}
+    else if(k===1){   /* violin: under the chin on the left shoulder, the bow across it */
+      P(-8,-7,5,6,"#8B3A1A");P(-7,-8,3,1,"#8B3A1A");P(-7,-1,3,1,"#8B3A1A");P(-7,-6,3,4,"#B5562A");P(-6,-5,1,2,"#2A1408");
+      P(-9,-9,1,1,"#2A1408");P(-10,-10,1,1,"#2A1408");P(-11,-11,2,1,"#4A2410");
+      for(var j=0;j<12;j++)P(-9+j,0-Math.round(j*0.6),1,1,"#EDE6D0");P(3,-7,1,1,"#4A2410");}
+    g.restore();
   }
   /* something held up in the right hand: a lit lighter or a phone torch, with a warm (or white) glow round it */
   function handProp(g,x,y,q,dx,bob,s,st){
@@ -1630,7 +1657,7 @@ var ART=(function(){
       dn.onclick=close;pop.onclick=function(e){if(e.target===pop)close();};document.addEventListener("keydown",esc,true);
       document.body.appendChild(pop);sync();
     }
-    var skr=stepper("skin","Skin");stepper("hair","Hair","hairCol");stepper("top","Top","topCol");stepper("bottom","Bottoms","botCol");stepper("shoes","Shoes");stepper("hat","Hat");stepper("face","Face");stepper("extra","Extra");
+    var skr=stepper("skin","Skin");stepper("hair","Hair","hairCol");stepper("top","Top","topCol");stepper("bottom","Bottoms","botCol");stepper("shoes","Shoes");stepper("hat","Hat");stepper("face","Face");stepper("extra","Extra");stepper("held","Holding");
     var rb=document.createElement("button");rb.type="button";rb.className="ukm-rand";rb.textContent="\uD83C\uDFB2 Surprise me";rb.onclick=function(){L=random();fitGender();changed();};rows.appendChild(rb);
     function paint(){
       KEYS.forEach(function(k){if(ctl[k])ctl[k].textContent=O[k].names[L[k]];if(ctl[k+"_btn"])ctl[k+"_btn"].style.background=colOf(L,PART[k][0]);});
