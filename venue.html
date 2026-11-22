@@ -489,6 +489,9 @@ body.practice.pr-busy #prDance{display:none}body.practice.pr-open #prDance{backg
 body.practice #prBar{display:none}body.practice.pr-open #prBar{display:block;top:104px;max-height:calc(100vh - 150px);overflow:auto}
 body.practice.pr-busy #prBar,body.practice.pr-busy.pr-open #prBar{display:none}
 #prBar .h{font:700 11px system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:#F5C518;margin-bottom:8px}
+/* the close button stays in view while the menu scrolls */
+#prBar .h{position:sticky;top:-10px;z-index:2;margin:-10px -14px 8px;padding:12px 56px 8px 14px;background:rgba(14,11,26,.97);border-radius:14px 14px 0 0}
+#prBar #prClose{position:absolute;top:4px;right:6px;width:44px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;border-radius:10px;letter-spacing:0;text-transform:none}
 #prBar .r{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 #prGames button{flex:1 1 0;padding:10px 8px;font-size:13px}
 #prGames button.on{background:linear-gradient(135deg,rgba(211,84,160,.75),rgba(127,119,221,.75));border-color:transparent}
@@ -722,7 +725,7 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
   <div id="roundBox"></div>
   <button id="prDance" type="button" title="Pick a mini game and a song">&#128131; Dance</button>
   <div id="prBar">
-    <div class="h">Dance practice · pick a mini game and a song</div>
+    <div class="h">Dance practice · pick a mini game and a song<button id="prClose" type="button" aria-label="Close menu" title="Close (Esc)">&#10005;</button></div>
     <div class="r" id="prGames">
       <button data-m="step" class="on">&#11014;&#65039; Step dance</button>
       <button data-m="aim">&#127919; Target dance</button>
@@ -5810,6 +5813,8 @@ var PRACTICE=(function(){
     var small=window.innerWidth<700||(window.matchMedia&&matchMedia("(pointer: coarse)").matches);
     document.body.classList.toggle("pr-open",!small);
     $("prDance").onclick=function(){document.body.classList.toggle("pr-open");};
+    $("prClose").onclick=function(e){e.preventDefault();document.body.classList.remove("pr-open");};
+    document.addEventListener("keydown",function(e){if(e.key==="Escape"&&document.body.classList.contains("pr-open")&&!/^(INPUT|SELECT|TEXTAREA)$/.test((e.target&&e.target.tagName)||""))document.body.classList.remove("pr-open");});
     $("danceBtn").innerHTML="&#128131; Free dance";$("prStart").onclick=function(e){e.currentTarget.blur();document.body.classList.toggle("pr-open");};
     document.getElementById("moveHint").innerHTML="Arrows or WASD to walk &middot; Space to dance";
     document.getElementById("joinScreen").classList.add("hidden");
