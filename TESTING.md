@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.17 — No bottom strip, version on the menu only, flag in the kart
+
+- **No bottom strip in games**: in practice, and on phones and tablets during a game, the chat bar is gone and nothing reserves space for it, so the arena runs to the bottom edge (Kart flag reads the real value now).
+- **Version** shows on the main menu only, not during a game.
+- **Kart flag**: a carried flag is planted in the kart and sized to it (it was floating well above).
+
 ## v1.81.16 — Rinks in landscape, no false bails, practice defaults
 
 - **Roller and ice rink, landscape**: the rink fills the floor down to the bottom edge (it was a thin strip under the stage), the long controls line is gone and the hint sits at the bottom.

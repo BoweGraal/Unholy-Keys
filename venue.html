@@ -17,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.16"></script>
-<script src="gfx.js?v=1.81.16"></script>
-<script src="art.js?v=1.81.16"></script>
-<script src="instruments.js?v=1.81.16"></script>
-<script src="kart.js?v=1.81.16"></script>
-<script src="explain.js?v=1.81.16"></script>
+<script src="tune.js?v=1.81.17"></script>
+<script src="gfx.js?v=1.81.17"></script>
+<script src="art.js?v=1.81.17"></script>
+<script src="instruments.js?v=1.81.17"></script>
+<script src="kart.js?v=1.81.17"></script>
+<script src="explain.js?v=1.81.17"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -575,6 +575,10 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
 /* the chat log folds away: speech shows above heads anyway; the log is there to look back at */
 :root{--chatH:54px}body.chat-open{--chatH:200px}
 #chatMsgs{display:none}body.chat-open #chatMsgs{display:block}
+body.practice,body.practice.chat-open,body.dev-phone[data-game]:not([data-game=""]):not([data-game=free]),body.dev-tablet[data-game]:not([data-game=""]):not([data-game=free]){--chatH:0px}
+body.dev-phone[data-game]:not([data-game=""]):not([data-game=free]) #chatPanel,body.dev-tablet[data-game]:not([data-game=""]):not([data-game=free]) #chatPanel{display:none}
+/* the version shows on the main menu only, not in a game */
+body[data-game]:not([data-game=""]) #verTag,body.pr-busy #verTag,body.gaming-ctf #verTag,body.gaming-walk #verTag,body.gaming-skate #verTag{display:none!important}
 #chatInput #chatLogBtn{position:relative;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;background:var(--bg3);border:1px solid var(--bg4);border-radius:var(--r);color:var(--tx);white-space:nowrap}
 body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
 #chatLogBtn i{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--pk);color:#fff;font:700 10px/16px 'Silkscreen',ui-monospace,monospace;font-style:normal;display:none}
@@ -4879,7 +4883,7 @@ var CTFG=(function(){
     var show=ctfRound()&&on,c=$("ctfCv");if(!c)return;c.classList.toggle("on",show);if(!show)return;
     var dpr=Math.min(2,window.devicePixelRatio||1),Wc=c.clientWidth,Hc=c.clientHeight;if(c.width!==Math.round(Wc*dpr)||c.height!==Math.round(Hc*dpr)){c.width=Math.round(Wc*dpr);c.height=Math.round(Hc*dpr);}
     g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;g.fillStyle="#07041a";g.fillRect(0,0,Wc,Hc);
-    var chatH=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--chatH"))||56,TOP=36,BOT=chatH+4,V=C.cam(I,Wc,Hc,TOP,BOT,me,kart),now=performance.now();
+    var chatH=parseFloat(getComputedStyle(document.body).getPropertyValue("--chatH"))||0,TOP=36,BOT=chatH>0?chatH+4:0,V=C.cam(I,Wc,Hc,TOP,BOT,me,kart),now=performance.now();
     g.save();g.beginPath();g.rect(0,TOP,Wc,Hc-TOP-BOT);g.clip();   /* the arena stays in its window as the camera follows you */
     C.draw(g,map,I,V,now,st);
     /* everyone in the game, back to front */
@@ -4905,7 +4909,7 @@ var CTFG=(function(){
         KART.preview(g,X,Y-2*sc,kh,p.id===myId?{color:tcol,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:""}:{color:tcol,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:p.v.name},C.K_Z*V.s/C.K_TILE,0,p.id===myId?{air:drift&&hopT>0,drifting:drift&&hopT<=0,lvl:dCharge*1000>=C.K_AIM_MS?1:dCharge>0.15?0:-1,boost:now<boostT}:{});
         if((st.shield[p.id]||0)>Date.now()){g.strokeStyle="#3DF2FF";g.lineWidth=2;g.globalAlpha=0.5+0.3*Math.sin(now/90);ART.PX.ring(g,X,Y-6*sc,V.s*0.85);g.globalAlpha=1;}
         if(st.mega[p.id]){g.strokeStyle="#ff6fae";g.lineWidth=2;g.globalAlpha=0.4+0.3*Math.sin(now/70);ART.PX.ring(g,X,Y-6*sc,V.s*0.65);g.globalAlpha=1;}
-        var cf2=C.carrying(st,p.id);if(cf2>=0)C.flag(g,X+4*sc,Y-24*sc,cf2,V.s,now);g.globalAlpha=1;return;}
+        var cf2=C.carrying(st,p.id);if(cf2>=0)C.flag(g,X+V.s*0.18,Y-V.s*0.12,cf2,V.s*0.72,now);g.globalAlpha=1;return;}
       AVDIR=p.f;drawAvatar(X,Y-14*sc+bump,p.v.color,p.id===myId?"You":p.v.name,sc,false,false,mv,run?0:4,p.v.seed||0,p.id===myId,[0.25,-0.25,0.05,-0.05],9999,p.v.look||lookOf(null,p.v.color,p.v.name),null);
       var cf=C.carrying(st,p.id);if(cf>=0)C.flag(g,X+4*sc,Y-30*sc,cf,V.s,now);g.globalAlpha=1;});}
     finally{ctx=saved;AVDIR=sDir;}
@@ -7087,7 +7091,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.16",SERVER_VERSION="";
+var PAGE_VERSION="1.81.17",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7665,7 +7669,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.16"></script>
+<script src="lab.js?v=1.81.17"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
