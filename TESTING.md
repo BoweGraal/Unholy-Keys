@@ -1651,3 +1651,8 @@ Needs a Render redeploy (server.js changed).
 - The 9 numpad instrument slots (with their FX presets) now come in 3 banks. PC: Num Lock = bank 1, / = bank 2, * = bank 3 (the visualizer random/alt keys on * and / are gone; F5 still cycles). Mobile: a 1/2/3 picker in the top bar. Setup > Presets also shows 1/2/3. Bank 1 is your existing slots.
 - Dropdown option lists get a dark background with white text (were white on white).
 - Check: set slot 1 in bank 1, press / and set a different one, press Num Lock to go back; reload and confirm all three kept.
+
+## v1.79.51 — pixel editor: one click, one pixel; Brush tool
+- Pen/Erase always change exactly the pixel you click. The extra pixel beside it was Mirror (left/right) being on: it paints the mirrored copy, which sits right next to the centre column. With Mirror on, the copies now show as yellow boxes before you click.
+- New Brush tool (pixel brush cursor, sizes 1-6, round-cornered from 4) in both the side panel and the full-screen bar.
+- Check: Mirror off, click a pixel at the centre line: only that pixel changes. Pick Brush, size 3: a 3x3 dab.

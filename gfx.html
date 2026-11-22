@@ -102,9 +102,9 @@ button.pe{background:#1f5f6e;box-shadow:inset -3px -3px 0 #0f3640,inset 3px 3px 
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.79.50"></script>
-<script src="art.js?v=1.79.50"></script>
-<script src="instruments.js?v=1.79.50"></script>
+<script src="gfx.js?v=1.79.51"></script>
+<script src="art.js?v=1.79.51"></script>
+<script src="instruments.js?v=1.79.51"></script>
 <script>
 (function(){
 /* pixel look: no emoji in any label (the lab writes a lot of its own text, so strip them as they appear) */
@@ -241,9 +241,9 @@ function palUI(box,compact){
   box.appendChild(row);var pal=mk("div","pal");box.appendChild(pal);palRender();}
 /* ---------- pixel editor ---------- */
 var PCPTR=!!(window.matchMedia&&matchMedia("(pointer:fine)").matches);
-var PX={shape:"rect",shapeFill:false,curve:null,preview:null,ds:null,bend:false,pal:"p0",palEdit:false,picCols:[],ref:false,refc:null,part:"hair",v:1,tool:"pen",col:"#ff3da8",mirror:false,grid:true,zoom:PCPTR?1.3:1,fs:false,undo:[],redo:[],map:{},spec:null,base:null,hover:null,cell:8,sig:"",down:false,last:null,pan:null};
+var PX={shape:"rect",shapeFill:false,curve:null,preview:null,ds:null,bend:false,pal:"p0",palEdit:false,picCols:[],ref:false,refc:null,part:"hair",v:1,tool:"pen",col:"#ff3da8",mirror:false,bsize:3,grid:true,zoom:PCPTR?1.3:1,fs:false,undo:[],redo:[],map:{},spec:null,base:null,hover:null,cell:8,sig:"",down:false,last:null,pan:null};
 var PARTS=[["hair","Head · Hair style"],["hat","Head · Hat"],["face","Head · Face"],["extra","Head · Extras (shades…)"],["top","Body · Top"],["bottom","Body · Bottoms (hips)"],["armL","Limb · Left arm"],["armR","Limb · Right arm"],["legL","Limb · Left leg"],["legR","Limb · Right leg"],["inst","Instrument"],["keyboard","Prop · Keyboard"],["mic","Prop · Mic stand"]];
-var TOOLS=[["pen","Pen","✏️"],["erase","Erase","🧽"],["fill","Fill","🪣"],["line","Line","📏"],["curve","Curve","〰️"],["shape","Shapes","⬠"]];
+var TOOLS=[["pen","Pen","✏️"],["erase","Erase","🧽"],["brush","Brush","🖌️"],["fill","Fill","🪣"],["line","Line","📏"],["curve","Curve","〰️"],["shape","Shapes","⬠"]];
 /* shapes for the Shapes tool, drawn in a 0..1 box (MS Paint style: drag out the box) */
 function starPts(n,ri){var a=[],i;for(i=0;i<n*2;i++){var r=i%2?ri:0.5,an=-Math.PI/2+i*Math.PI/n;a.push([0.5+Math.cos(an)*r,0.5+Math.sin(an)*r]);}return a;}
 function polyPts(n){var a=[];for(var i=0;i<n;i++){var an=-Math.PI/2+i*2*Math.PI/n;a.push([0.5+Math.cos(an)*0.5,0.5+Math.sin(an)*0.5]);}return a;}
@@ -309,11 +309,16 @@ function drawPixel(now){
   if(PX.mirror&&sp.sym){g.strokeStyle="rgba(245,197,24,.8)";g.lineWidth=1;g.setLineDash([4,4]);g.beginPath();g.moveTo(sp.ax*c+.5,0);g.lineTo(sp.ax*c+.5,H);g.stroke();g.setLineDash([]);}
   if(PX.preview){g.fillStyle=PX.col;g.globalAlpha=0.9;PX.preview.forEach(function(p){g.fillRect(p[0]*c,p[1]*c,c,c);});g.globalAlpha=1;}
   if(PX.curve){var cu=PX.curve;[cu.a,cu.b].forEach(function(p){g.strokeStyle="#3DF2FF";g.lineWidth=2;g.strokeRect(p[0]*c+1,p[1]*c+1,c-2,c-2);});g.fillStyle="#3a2f8a";g.font="700 12px system-ui";g.textAlign="left";g.fillText("Drag on the line to bend it · ✓ Done (Enter) to keep it",6,H-8);}
-  if(PX.hover&&PX.tool!=="move"){g.strokeStyle="#ff2fa0";g.lineWidth=2;g.strokeRect(PX.hover[0]*c+1,PX.hover[1]*c+1,c-2,c-2);}
+  if(PX.hover&&PX.tool!=="move"){g.strokeStyle="#ff2fa0";g.lineWidth=2;var hc=PX.tool==="brush"?pxBrushCells(PX.hover[0],PX.hover[1]):[PX.hover];
+    hc.forEach(function(p){g.strokeRect(p[0]*c+1,p[1]*c+1,c-2,c-2);});
+    if(PX.mirror&&sp.sym&&(PX.tool==="pen"||PX.tool==="erase"||PX.tool==="brush")){g.strokeStyle="rgba(245,197,24,.95)";hc.forEach(function(p){var mx=2*sp.ax-1-p[0];if(mx!==p[0])g.strokeRect(mx*c+1,p[1]*c+1,c-2,c-2);});}   /* Mirror is on: the yellow boxes are the copies */
+  }
 }
 function pxCell(e){var r=cv.getBoundingClientRect();return[Math.floor((e.clientX-r.left)*cv.width/r.width/PX.cell),Math.floor((e.clientY-r.top)*cv.height/r.height/PX.cell)];}
-function pxPut(cx,cy){var sp=PX.spec;if(cx<0||cy<0||cx>=sp.w||cy>=sp.h)return;var xs=[cx];if(PX.mirror&&sp.sym){var mx=2*sp.ax-1-cx;if(mx>=0&&mx<sp.w&&mx!==cx)xs.push(mx);}
-  xs.forEach(function(x){var k=(x-sp.ax)+","+(cy-sp.ay);if(PX.tool==="pen")PX.map[k]=PX.col;else if(PX.tool==="erase"){if(!PX.map["!"]&&pxOrigA()[(cy*sp.w+x)*4+3]>0)PX.map[k]="0";else delete PX.map[k];}});}
+function pxBrushCells(cx,cy){var s=PX.bsize,a=Math.floor(s/2),o=[];for(var dy=0;dy<s;dy++)for(var dx=0;dx<s;dx++){if(s>=4&&(dx===0||dx===s-1)&&(dy===0||dy===s-1))continue;o.push([cx-a+dx,cy-a+dy]);}return o;}
+function pxPut(cx,cy){if(PX.tool==="brush"){pxBrushCells(cx,cy).forEach(function(c){pxPutOne(c[0],c[1],"pen");});return;}pxPutOne(cx,cy,PX.tool);}
+function pxPutOne(cx,cy,tool){var sp=PX.spec;if(cx<0||cy<0||cx>=sp.w||cy>=sp.h)return;var xs=[cx];if(PX.mirror&&sp.sym){var mx=2*sp.ax-1-cx;if(mx>=0&&mx<sp.w&&mx!==cx)xs.push(mx);}
+  xs.forEach(function(x){var k=(x-sp.ax)+","+(cy-sp.ay);if(tool==="pen")PX.map[k]=PX.col;else if(tool==="erase"){if(!PX.map["!"]&&pxOrigA()[(cy*sp.w+x)*4+3]>0)PX.map[k]="0";else delete PX.map[k];}});}
 /* the untouched original's pixels (so Erase can rub out the original too, not just your paint) */
 function pxOrigA(){if(!PX.origA){var sp=PX.spec;PX.origA=pxGhost().getContext("2d").getImageData(0,0,sp.w,sp.h).data;}return PX.origA;}
 function pxLine(a,b){var dx=Math.abs(b[0]-a[0]),dy=Math.abs(b[1]-a[1]),sx=a[0]<b[0]?1:-1,sy=a[1]<b[1]?1:-1,err=dx-dy,x=a[0],y=a[1],n=0;while(n++<400){pxPut(x,y);if(x===b[0]&&y===b[1])break;var e2=2*err;if(e2>-dy){err-=dy;x+=sx;}if(e2<dx){err+=dx;y+=sy;}}}
@@ -328,7 +333,7 @@ function pxFill(cx,cy){var sp=PX.spec;if(cx<0||cy<0||cx>=sp.w||cy>=sp.h)return;p
 /* shared controls: the side panel and the full screen bar both use these */
 function pxTool(t){if(PX.tool==="curve"&&t!=="curve")pxCurveDone();PX.tool=t;PX.preview=null;pxStates();}
 function pxStates(){Array.prototype.forEach.call(document.querySelectorAll("[data-t]"),function(b){b.className=b.dataset.t===PX.tool?"on":"";});
-  Array.prototype.forEach.call(document.querySelectorAll(".shp"),function(s){s.style.display=PX.tool==="shape"?"flex":"none";});Array.prototype.forEach.call(document.querySelectorAll(".cdn"),function(s){s.style.display=PX.curve?"flex":"none";});
+  Array.prototype.forEach.call(document.querySelectorAll(".shp"),function(s){s.style.display=PX.tool==="shape"?"flex":"none";});Array.prototype.forEach.call(document.querySelectorAll(".bsz"),function(s){s.style.display=PX.tool==="brush"?"flex":"none";});Array.prototype.forEach.call(document.querySelectorAll("[data-bs]"),function(b){b.className=+b.dataset.bs===PX.bsize?"on":"";});try{cv.style.cursor=pxCursor();}catch(e){}Array.prototype.forEach.call(document.querySelectorAll(".cdn"),function(s){s.style.display=PX.curve?"flex":"none";});
   Array.prototype.forEach.call(document.querySelectorAll("[data-shape]"),function(b){b.className=b.dataset.shape===PX.shape?"on":"";});Array.prototype.forEach.call(document.querySelectorAll("[data-fillt]"),function(b){b.textContent=PX.shapeFill?"◼ Filled":"◻ Outline";b.className=PX.shapeFill?"on":"";});
   Array.prototype.forEach.call(document.querySelectorAll("[data-px=ref]"),function(b){b.className=PX.ref?"on":"";});Array.prototype.forEach.call(document.querySelectorAll("[data-px=ghost]"),function(b){b.className=PX.ghostOn?"on":"";});Array.prototype.forEach.call(document.querySelectorAll("[data-px=grid]"),function(b){b.className=PX.grid?"on":"";});Array.prototype.forEach.call(document.querySelectorAll("[data-px=mirror]"),function(b){b.className=PX.mirror?"on":"";});}
 function pxColor(h){PX.col=h;Array.prototype.forEach.call(document.querySelectorAll("input[data-col]"),function(i){i.value=h;});pxSwatches();palRender();}
@@ -346,7 +351,7 @@ function pxRedraw(){var sp=PX.spec;pxSnap();var c=pxGhost();PX.ghostC=c;PX.ghost
 function pxClear(){if(!Object.keys(PX.map).length)return;pxSnap();PX.map={};PX.ghostOn=false;pxStates();pxCommit();pxSwatches();share();}
 function pxSwatches(){var els=document.querySelectorAll(".sw");if(!els.length||!PX.spec)return;pxRender();var sp=PX.spec,d=(PX.ghostOn?(PX.ghostC||(PX.ghostC=pxGhost())):PX.base).getContext("2d").getImageData(0,0,sp.w,sp.h).data,cnt={},i;for(i=0;i<d.length;i+=4)if(d[i+3]>200){var h=hex([d[i],d[i+1],d[i+2]]);cnt[h]=(cnt[h]||0)+1;}
   var list=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).slice(0,16);PX.picCols=list.slice();
-  Array.prototype.forEach.call(els,function(el){el.textContent="";list.forEach(function(h){var e=document.createElement("i");e.style.background=h;e.className=h===PX.col.toLowerCase()?"on":"";e.onclick=function(){pxColor(h);if(PX.tool!=="pen"&&PX.tool!=="fill"){pxTool("pen");}};el.appendChild(e);});});}
+  Array.prototype.forEach.call(els,function(el){el.textContent="";list.forEach(function(h){var e=document.createElement("i");e.style.background=h;e.className=h===PX.col.toLowerCase()?"on":"";e.onclick=function(){pxColor(h);if(PX.tool!=="pen"&&PX.tool!=="fill"&&PX.tool!=="brush"){pxTool("pen");}};el.appendChild(e);});});}
 function pxToggle(k){PX[k]=!PX[k];pxStates();}
 function pxFull(on){PX.fs=!!on;$("app").classList.toggle("pxfs",PX.fs);if(PX.fs){pxBar();var de=document.documentElement;try{if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().catch(function(){});}catch(e){}}
   else{try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen();}catch(e){}}PX.sig="";}
@@ -515,7 +520,12 @@ function bindDance(){
   window.addEventListener("keydown",function(e){if(!AS.dfs)return;if(e.key==="Escape")dnFull(false);else if(e.key===",")dnGo(DN.fi-1);else if(e.key===".")dnGo(DN.fi+1);else if(e.key===" "){e.preventDefault();AS.play=!AS.play;if(!AS.play){DN.fi=Math.round(AS.q/(4/DN.N))%DN.N;AS.q=dnQ();}dnBar();dnTimeline();}});
 }
 /* the Shapes picker and the curve's Done button: only shown while those tools are picked */
-function pxShapeRow(r){var w=mk("span","shp");w.style.cssText="display:none;flex-wrap:wrap;gap:4px;align-items:center";
+function pxBrushRow(r){var w=mk("span","bsz");w.style.cssText="display:none;flex-wrap:wrap;gap:4px;align-items:center";w.appendChild(mk("span","","Size"));
+  [1,2,3,4,5,6].forEach(function(n){var b=mk("button","",String(n));b.dataset.bs=n;b.style.minWidth="34px";b.onclick=function(){PX.bsize=n;pxStates();};w.appendChild(b);});r.appendChild(w);}
+var BR_CUR=null;function pxCursor(){if(PX.tool!=="brush")return "";if(!BR_CUR){var c=document.createElement("canvas");c.width=c.height=16;var q=c.getContext("2d"),D=function(col,pts){q.fillStyle=col;pts.forEach(function(p){q.fillRect(p[0],p[1],1,1);});};
+  D("#000",[[0,15],[1,15],[0,14],[2,15],[1,13],[2,14],[3,13],[4,12],[5,11],[6,10],[7,9],[8,8],[9,7],[10,6],[11,5],[12,4],[13,3],[14,2],[15,1],[15,0],[14,0],[13,1],[12,2],[11,3],[10,4]]);
+  D("#ff2fa0",[[1,14],[2,13],[3,12],[2,12],[1,12]]);D("#e8c46a",[[4,11],[5,10],[6,9],[7,8],[8,7],[9,6],[10,5],[11,4],[12,3],[13,2],[14,1]]);BR_CUR="url("+c.toDataURL()+") 1 14, crosshair";}return BR_CUR;}
+function pxShapeRow(r){pxBrushRow(r);var w=mk("span","shp");w.style.cssText="display:none;flex-wrap:wrap;gap:4px;align-items:center";
   SHAPES.forEach(function(s){var b=mk("button","",s[1]);b.title=s[0];b.dataset.shape=s[0];b.style.minWidth="38px";b.onclick=function(){PX.shape=s[0];pxStates();};w.appendChild(b);});
   var f=mk("button","","◻ Outline");f.dataset.fillt="1";f.onclick=function(){PX.shapeFill=!PX.shapeFill;pxStates();};w.appendChild(f);r.appendChild(w);
   var d=mk("span","cdn");d.style.cssText="display:none;gap:6px";var ok=mk("button","go","✓ Done");ok.onclick=pxCurveDone;var no=mk("button","","✕ Drop curve");no.onclick=function(){PX.curve=null;PX.preview=null;pxStates();};d.appendChild(ok);d.appendChild(no);r.appendChild(d);}
