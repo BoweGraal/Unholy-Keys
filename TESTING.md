@@ -1593,3 +1593,6 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.36 — hand joysticks, 15 s centre turns
 - Free dance: two small hand rings sit above the big sticks (left hand / right hand). Hold one and that arm follows your finger (down = hanging, side = out, up = overhead; across the body works too) while the legs and body keep doing the selected dance. Let go and the arm goes back to the dance. Other players see it.
 - Centre turns: each dancer gets 15 s in the middle with 4.5 s between turns, first dancer is called 15 s ahead, and everyone gets two turns when the song is long enough. Free dance rounds already take the whole song.
+
+## v1.79.37 — free dance takes the whole song
+- Picking Free dance (alone or with another game) now always plays free dance for the whole song, never sharing it with a second minigame, so every dancer gets two centre turns when the song is long enough. Before, with Free dance as the second pick the first game was the one that ran.
