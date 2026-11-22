@@ -836,7 +836,11 @@ var ART=(function(){
       if(b1-a1>=8000&&out.circles.length<3)out.circles.push([a1,Math.min(b1,a1+40000)]);
     });
     if(!out.circles.length){
-      if(dur>50000){var c0=dur*0.66,c1=c0+16000;if(!w||c1<w.split-3000||c0>w.end+3000)out.circles.push([c0,c1]);}
+      if(dur>50000){   /* always at least one circle pit: the middle of the longest stretch the wall of death leaves free */
+        var free=w?[[6000,w.split-3000],[w.end+3000,dur-6000]]:[[6000,dur-6000]],best=null;
+        free.forEach(function(r){if(r[1]-r[0]>=14000&&(!best||r[1]-r[0]>best[1]-best[0]))best=r;});
+        if(best){var cl=Math.min(18000,best[1]-best[0]),c0=best[0]+(best[1]-best[0]-cl)/2;out.circles.push([Math.round(c0),Math.round(c0+cl)]);}
+      }
       else if(!dur){for(var t=40000;t<600000;t+=70000)out.circles.push([t,t+16000]);}
     }
     return out;
@@ -852,7 +856,10 @@ var ART=(function(){
   /* a game that runs from start to end (ms of song): keep the drop and loud stretches inside it, or make some that fit */
   MOSHX.window=function(chart,start,end){
     if(!chart)return chart;var c={},k;for(k in chart)c[k]=chart[k];var len=end-start,D=chart.drop||0;
-    if(!(D>=start+20000&&D<=end-17000))D=len>=62000?Math.round(start+len*0.6):0;
+    /* one wall of death per song: only the game that holds the song's drop gets it (moved in from the edges if it has to be);
+       a song with no drop at all gets one in its first game */
+    if(D>0){if(D>=start&&D<=end&&len>=40000)D=Math.max(start+20000,Math.min(end-17000,D));else D=0;}
+    else D=start<=2000&&len>=62000?Math.round(start+len*0.6):0;
     c.drop=D;var wl=D?[D-12000,D+17300]:null,pk=[];
     (chart.peaks||[]).forEach(function(p){var a1=Math.max(p[0],start+4000),b1=Math.min(p[1],end-3000);if(b1-a1>=8000)pk.push([a1,b1]);});
     var clear=function(p){return !wl||p[1]<wl[0]||p[0]>wl[1];};
