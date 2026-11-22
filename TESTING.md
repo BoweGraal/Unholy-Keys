@@ -1567,3 +1567,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.28 — eight-way right stick in free dance
 - Every dance except Robot, Worm and Puppet (which read the stick directly) has 8 named moves on the right stick (up, up-right, right, down-right, down, down-left, left, up-left); push it out past about half and the move name shows above the buttons. A light push still works as the dance's own control.
+
+## v1.79.29 — more rhythm on touch screens
+- The two-thumb chart rule is looser: off-beat steps (quarter-beat grid) stay in, minimum gap about half a beat (190 ms floor), and holds only count as busy thumbs: a hold plus one single arrow, or two holds, but never more than two presses at once. On a synthetic dense chart the notes kept went from 99 to 193 with the maximum still 2.
