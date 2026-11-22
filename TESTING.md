@@ -1558,3 +1558,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.25
 - Free dance: the dancer only turns to face the walking direction when the left stick is pushed right to its edge (others see it as full-pace movement); otherwise they keep facing front and just slide.
+
+## v1.79.26
+- Free dance: small buttons above the dots — 180 (half turn and back), 360 (fast full turn with a hop), Spin move (low spin, arms out). Keys Z / X / V. Server accepts the new reactions (redeploy Render).
