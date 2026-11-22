@@ -331,6 +331,7 @@ body.practice #reactBar{display:none}
 #gameHdr{display:flex;align-items:center;gap:8px;white-space:nowrap;padding:8px 8px 8px 12px;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff}
 #gameBpm{margin-left:auto;font:600 11px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.6)}
 #gameClose{font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(255,255,255,.1);border:0;border-radius:8px;width:28px;height:28px;cursor:pointer}
+#gameSpd,#gameLv{font:700 12px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(255,255,255,.14);border:0;border-radius:8px;height:28px;padding:0 8px;margin-right:6px;cursor:pointer;touch-action:manipulation}#gameLv{display:none}#gameLv.on{display:inline-block}#gameSpd:active,#gameLv:active{background:rgba(245,197,24,.5)}
 #gameClose:hover{background:rgba(224,80,80,.6)}
 #gameCv{display:block;width:100%;height:240px;touch-action:none;cursor:pointer}
 /* you, big, dancing on top of the game */
@@ -778,7 +779,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <div class="note" id="prNote">Arrow keys or the pad step, D F J K or drag in free dance, Esc or the X sits a round out. Points add up across practice rounds until you close the page.</div>
   </div>
   <div id="gamePanel">
-    <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameBpm"></span><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
+    <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameBpm"></span><button id="gameSpd" aria-label="Scroll speed" title="How fast the notes fall">1.0&times;</button><button id="gameLv" aria-label="Level" title="Practice level"></button><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
     <canvas id="gameMe"></canvas>
     <canvas id="gameCv"></canvas>
     <div id="gameFoot"></div>
@@ -2615,9 +2616,9 @@ var GAME=(function(){
      - Outside the big moments the hand stays on the middle five keys (S to H); in them it can reach A and J,
        and two arrows at once become a chord.
      Worked out once from the start, so everyone gets the same notes. */
-  /* Difficulty ramps up through the show: rounds 1 and 2 are Easy, 3 and 4 Normal, 5 on Hard. Everyone in a
+  /* Difficulty ramps up through the show: rounds 1 and 2 are Easy, 3 and 4 Normal, 5 and 6 Hard, 7 on Expert. Everyone in a
      round works it out from the round number, so everyone still gets the same notes. */
-  function diffOf(n){if(window.ukForceDiff!==undefined)return +window.ukForceDiff;n=+n||1;return n<=2?0:n<=4?1:2;}   /* ukForceDiff: for testing */
+  function diffOf(n){if(window.ukForceDiff!==undefined&&typeof PRACTICE!=="undefined"&&PRACTICE.on)return +window.ukForceDiff;n=+n||1;return n<=2?0:n<=4?1:n<=6?2:3;}   /* ukForceDiff: for testing */
   /* thin a round's chart for its difficulty (Hard is the chart as analysed)
      Easy: about one note a beat at most, no doubles. Normal: no notes closer than half a beat, except in the
      big moments; doubles where the chart has them. Steps keep coming under a hold (on the other arrows). */
@@ -2645,23 +2646,90 @@ var GAME=(function(){
     }
     var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;
   }
+  /* The difficulty ladder. One chart goes in, and each level is built from the song's own rhythm:
+     Easy   - on the beat only, every other beat in the quiet parts, no doubles, holds kept (about 1 step a second)
+     Normal - beats plus a few half beats in the louder parts, a double on a big bar start (about 2 a second)
+     Hard   - the groove's half beats, a stream of them in the loud parts, fills at the ends of phrases (about 2.5 a second)
+     Expert - streams through the loud parts, ta-ka pairs, quarter-beat bursts at phrase ends (3+ a second, in bursts)
+     Quiet parts (intro, breakdown, the build before the drop) stay sparse at every level so the drop lands. */
+  /* levelChart(chart,diff): the difficulty ladder. diff 0 easy, 1 medium, 2 hard, 3 expert. Works from the chart alone (beats, steps, sections, peaks, drop). */
+  function levelChart(chart,diff){
+    var V={};if(!chart||!chart.steps||!chart.steps.length)return chart;
+    var bpm=chart.bpm||120,per=60000/bpm,bt=chart.beats||[],pk=chart.peaks||[],sec=chart.sections||[],drop=chart.drop||0;
+    var SW={intro:0.2,verse:0.5,chorus:0.8,breakdown:0.25,finale:1,bridge:0.55,outro:0.2};
+    function secW(ms){var w=0.5;for(var i=0;i<sec.length;i++)if(ms>=sec[i][0])w=SW[sec[i][1]]!==undefined?SW[sec[i][1]]:0.5;return w;}
+    function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
+    function I(ms){var w=secW(ms);if(inPk(ms))w=1;if(drop){var d=ms-drop;if(d>-per*6&&d<0)w=Math.min(w,0.3);else if(d>=0&&d<per*8)w=1;}return w;}
+    var bi=0;function grid(ms){if(bt.length<8)return{c:3,bar:0,bi:0};while(bi<bt.length-1&&bt[bi+1]<=ms+per*0.12)bi++;while(bi>0&&bt[bi]>ms+per*0.12)bi--;
+      var b0=bt[bi],g=(bi+1<bt.length?bt[bi+1]-b0:per)||per,f=(ms-b0)/g,c;
+      if(f<0.12)c=bi%4===0?0:1;else if(Math.abs(f-0.5)<0.14)c=2;else if(f>0.88)c=(bi+1)%4===0?0:1;else c=3;
+      return{c:c,bar:Math.floor(bi/4),bi:bi};}
+    var P=[{beat:1,offCap:[0,0,0],dbl:9,q:9,fill:9,gap:0.95},                       /* easy: on the beat; quiet parts every other beat */
+           {beat:0,offCap:[0,1,1],dbl:0.75,q:9,fill:9,gap:0.45},                     /* medium: beats, a few half beats, a double on a big bar start */
+           {beat:0,offCap:[0,3,4],dbl:0.5,q:9,fill:0.45,gap:0.45,tpl:0},             /* hard: the groove's half beats plus fills */
+           {beat:0,offCap:[0,4,8],dbl:0.4,q:0.8,fill:0.3,gap:0.24,tpl:1}][diff]||{};  /* expert: streams, quarter-beat bursts, doubles */
+    var st=chart.steps,out=[],held=0,heldEnd=-1,last=-1e9,offN={};
+    function lowbit(m){return m&(-m);}
+    function push(t,m,hold){if(hold)out.push([t,m,hold]);else out.push([t,m]);last=t;}
+    for(var i=0;i<st.length;i++){
+      var s=st[i],t=s[0],isHold=s.length>2,m=s[1],g=grid(t),w=I(t),wi=w>=0.8?2:w>=0.45?1:0;
+      if(t>=heldEnd)held=0;
+      if(isHold){if(held)continue;if(diff===0&&w<0.4&&g.c>1)continue;push(t,m,s[2]);held=lowbit(m);heldEnd=t+(+s[2]||0);continue;}
+      if(held){m&=~held;if(!m)continue;m=lowbit(m);}
+      if(diff===0){
+        if(g.c>1)continue;
+        if(w<0.55&&g.bi%2===1)continue;
+        if(t-last<per*P.gap)continue;m=lowbit(m);
+      }else{
+        if(g.c===3){if(w<P.q)continue;if(t-last<per*P.gap)continue;}
+        else if(g.c===2){var k=g.bar;offN[k]=offN[k]||0;if(offN[k]>=P.offCap[wi])continue;if(t-last<per*0.45)continue;offN[k]++;}
+        else{var need=diff===1&&w<0.45?0.9:diff>=2?0.45:0.45;if(t-last<per*need)continue;}
+        if(diff===1&&g.c===1&&w<0.45&&g.bi%2===1)continue;
+        if(m&(m-1)){var okd=w>=P.dbl&&g.c<=1&&(diff>=2||g.bar%2===0);if(!okd)m=lowbit(m);}
+      }
+      push(t,m);
+    }
+    if(diff>=2&&bt.length>8){
+      var add=[],ln=0;
+      var occ=function(t,tol){for(var q=0;q<out.length;q++){var s=out[q];if(Math.abs(s[0]-t)<tol)return 1;if(s.length>2&&t>s[0]-tol&&t<s[0]+s[2])return 1;}return 0;};
+      var T=[[[1,0,1,0,1,0,1,1],[1,0,1,1,1,0,1,0],[1,1,1,0,1,1,1,0],[1,0,1,0,1,1,1,1]],
+             [[1,1,1,0,1,1,1,1],[1,1,1,1,1,0,1,1],[1,1,1,1,1,1,1,0],[1,0,1,1,1,1,1,1]]][P.tpl];
+      var FULL=[1,1,1,1,1,1,1,1],hz=function(a,b){return ((a*73856093)^(b*19349663))>>>0;};
+      var nextRaw=function(t){for(var q=0;q<out.length;q++)if(out[q][0]>t+per*0.05)return out[q][0];return 1e9;};
+      for(var b=4;b<bt.length-1;b++){
+        var t0=bt[b],t1=bt[b+1],gap=t1-t0,w2=I(t0);
+        if(t0<2500||w2<P.fill)continue;
+        var bar=Math.floor(b/4),tp=T[hz(bar,Math.floor(secW(t0)*10))%T.length],slot=(b%4)*2,dir=bar%2;
+        if(w2>=(diff===3?0.5:0.8)&&!(b%4===3&&bar%4===3))tp=FULL;   /* the loud parts are a stream of half beats (a breath at the end of every fourth bar) */
+        for(var k2=0;k2<2;k2++){
+          if(!tp[slot+k2])continue;var t=Math.round(t0+k2*gap/2);if(occ(t,per*0.2))continue;
+          if(k2===1&&occ(t,per*0.45))continue;
+          var l=dir?3-(ln++%4):(ln++%4);add.push([t,1<<l]);
+        }
+        if(diff===3&&w2>=0.5){   /* ta-ka: a quick pair on some beats, when the next step is a way off */
+          var tk=Math.round(t0+gap*0.25);
+          if(hz(b,bar)%3!==0&&!occ(tk,per*0.12)&&occ(t0,per*0.15)&&nextRaw(t0)-t0>=per*0.45){var l3=dir?3-(ln++%4):(ln++%4);add.push([tk,1<<l3]);}
+        }
+        if(diff===3&&w2>=0.7&&b%4===3&&bar%2===1){var q4=w2<0.9?[0.5,0.75]:[0.5,0.625,0.75,0.875];q4.forEach(function(f){var tq=Math.round(t0+gap*f);if(!occ(tq,per*0.1)){var l2=dir?3-(ln++%4):(ln++%4);add.push([tq,1<<l2]);}});}
+      }
+      out=out.concat(add);out.sort(function(a,b){return a[0]-b[0];});
+      var res=[],run=0,hm=0,he=-1,pl=-1,pt=-1e9;
+      out.forEach(function(s){var t=s[0];if(t>=he)hm=0;var gp=t-pt;
+        if(s.length>2){res.push(s);hm=lowbit(s[1]);he=t+s[2];pt=t;pl=lowbit(s[1]);run=0;return;}
+        var m=s[1];if(hm){m&=~hm;if(!m)return;m=lowbit(m);}
+        if(gp<(diff===3?120:150))return;
+        run=gp<per*0.4?run+1:0;if(run>(diff===3?5:3))return;
+        if(lowbit(m)===pl&&gp<260){m=lowbit(m)<<1;if(m>8)m=1;if(m&hm)return;}
+        res.push([t,m]);pt=t;pl=lowbit(m);});
+      out=res;
+    }
+    var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;
+  }
+
   function easeChart(chart,diff){
     if(!chart)return chart;
     chart=thumbChart(chart);   /* one chart for everyone, phone or computer, so every player has the same chances at points */
-    if(diff>=2)return chart;
-    var per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9,heldMask=0,heldEnd=-1;
-    function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
-    for(var i=0;i<chart.steps.length;i++){
-      var s=chart.steps[i],t=s[0],big=inPk(t),gap=diff===0?per*0.95:(big?0:per*0.45);
-      if(t>=heldEnd)heldMask=0;                                            /* the hold has ended */
-      if(t-last<gap)continue;
-      if(s.length>2){if(heldMask)continue;out.push(s);last=t;heldMask=s[1];heldEnd=t+(+s[2]||0);continue;}   /* holds stay; the steps under them stay too (last is the hold's start, not its end) */
-      var m=s[1];
-      if(heldMask){m&=~heldMask;if(!m)continue;m=m&(-m);}                   /* a hold is down: one other arrow at a time, never on the held one */
-      else if(diff===0){m=m&(-m);}                                          /* easy: doubles become one arrow; normal keeps the doubles the chart has */
-      out.push([t,m]);last=t;
-    }
-    var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;
+    return levelChart(chart,diff|0);
   }
   window.ukEase=easeChart;window.ukDiffOf=diffOf;window.ukThumb=thumbChart;
   /* The 4-key highway's mapping, for the rhythm rather than the tune: beats 1 and 3 on the left hand, 2 and 4
@@ -2673,7 +2741,7 @@ var GAME=(function(){
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
     for(var i=0;i<st.length;i++){
       var s=st[i],n=0;for(var b=0;b<4;b++)if(s[1]&(1<<b))n++;
-      var big=inPk(s[0]),gap=diff===0?per*0.95:diff===1?(big?per*0.45:per*0.9):(big?per*0.45:per*0.45);
+      var big=inPk(s[0]),gap=diff>=3?per*0.2:diff===2?per*0.4:per*0.45;   /* the ladder has already thinned the chart */
       if(!n||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
       while(bi<bt.length-1&&bt[bi+1]<=s[0]+per*0.25)bi++;
       var bn=bi,half=bt.length?Math.abs(s[0]-bt[bi])>per*0.25:false,inBar=bn%4,alt=Math.floor(bn/4)%2,lane;
@@ -2690,9 +2758,9 @@ var GAME=(function(){
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
     for(var i=0;i<st.length;i++){
       var s=st[i],bits=[];for(var b=0;b<4;b++)if(s[1]&(1<<b))bits.push(b);
-      var big=inPk(s[0]),gap=diff===0?per*0.95:diff===1?(big?per*0.45:per*0.9):(big?per*0.25:per*0.45);
+      var big=inPk(s[0]),gap=diff>=3?per*0.2:diff===2?per*0.3:per*0.45;
       if(!bits.length||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
-      var wide=diff===2||(diff===1&&big),lo=wide?0:1,hi=wide?6:5;
+      var wide=diff>=2||(diff===1&&big),lo=wide?0:1,hi=wide?6:5;
       c+=D[bits[0]];if(c<lo)c=lo+1;if(c>hi)c=hi-1;
       last=s[0]+(s[2]>0?+s[2]:0);
       if(bits.length>1&&big&&diff>0){var c2=c+2<=hi?c+2:c-2;out.push([c,c2]);}else out.push([c]);
@@ -3088,7 +3156,9 @@ var GAME=(function(){
   }
 
   /* ---------- step dance ---------- */
-  function travel(per){var t=Math.max(TUNE.v("step.travelMin"),Math.min(TUNE.v("step.travelMax"),per*TUNE.v("step.travelBeats")));return mode==="keys"?t*(four?TUNE.v("hw.fall4"):TUNE.v("hw.fall7")):t;}   /* the highway: quicker notes */
+  var SPDS=[0.6,0.8,1,1.25,1.5,1.8,2.2],spdI=2;try{var sv=parseFloat(localStorage.getItem("uk_scroll"));if(sv>0){var bi2=0;SPDS.forEach(function(v,i){if(Math.abs(v-sv)<Math.abs(SPDS[bi2]-sv))bi2=i;});spdI=bi2;}}catch(e){}
+  function spdLabel(){return SPDS[spdI].toFixed(SPDS[spdI]%1?2:1).replace(/0$/,"")+"\u00d7";}
+  function travel(per){var t=Math.max(TUNE.v("step.travelMin"),Math.min(TUNE.v("step.travelMax"),per*TUNE.v("step.travelBeats")));return (mode==="keys"?t*(four?TUNE.v("hw.fall4"):TUNE.v("hw.fall7")):t)/SPDS[spdI];}   /* scroll speed: 1x is the tuned fall time, higher is faster */   /* the highway: quicker notes */
   function makeNotes(now,bt){
     if(rnd&&rnd.chart){feedRound(now,bt);return;}
     /* free play: no new steps until the music has a beat to follow (talking, a quiet intro, silence) */
@@ -3619,7 +3689,7 @@ var GAME=(function(){
     if(mode)stop(true);
     four=m==="keys4";if(four)m="keys";
     rnd=round||null;rndIdx=0;sentScore=-1;fCtl=[0,0,0,0];
-    if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart)rnd.chart=easeChart(rnd.chart,rnd.diff);}clkOff=null;clkJumps=0;swoopEnd=-1e9;finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
+    if(window.ukLvRefresh)window.ukLvRefresh();if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart)rnd.chart=easeChart(rnd.chart,rnd.diff);}clkOff=null;clkJumps=0;swoopEnd=-1e9;finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
     mode=m;myDance=m==="free"||m==="mosh"||m==="skate"||m==="keepy"||m==="kart"||m==="walk"||m==="pipe"||m==="ski"||m==="ctf"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
@@ -3680,6 +3750,16 @@ var GAME=(function(){
 
   document.getElementById("danceBtn").addEventListener("click",function(e){e.currentTarget.blur();toggle();});
   Array.prototype.forEach.call(document.querySelectorAll("#danceMenu button"),function(b){b.addEventListener("click",function(){b.blur();if(!ROUND.active())start(b.getAttribute("data-g"));});});
+  var gSpd=document.getElementById("gameSpd"),gLv=document.getElementById("gameLv");
+  gSpd.textContent=spdLabel();
+  gSpd.addEventListener("click",function(e){e.stopPropagation();spdI=(spdI+1)%SPDS.length;gSpd.textContent=spdLabel();try{localStorage.setItem("uk_scroll",String(SPDS[spdI]));}catch(x){}});
+  /* practice only: pick the level yourself (Auto follows the round number). Takes effect from the next song. */
+  var LVN=["Auto","Easy","Normal","Hard","Expert"];
+  function lvShow(){var f=window.ukForceDiff;gLv.textContent=LVN[f===undefined?0:(f|0)+1];}
+  gLv.addEventListener("click",function(e){e.stopPropagation();var f=window.ukForceDiff,i=f===undefined?0:(f|0)+1;i=(i+1)%LVN.length;if(i===0)window.ukForceDiff=undefined;else window.ukForceDiff=i-1;try{localStorage.setItem("uk_lv",String(i));}catch(x){}lvShow();});
+  try{var lv0=parseInt(localStorage.getItem("uk_lv"),10);if(lv0>0&&typeof PRACTICE!=="undefined")window.ukForceDiff=lv0-1;}catch(e){}
+  lvShow();
+  window.ukLvRefresh=function(){gLv.classList.toggle("on",typeof PRACTICE!=="undefined"&&PRACTICE.on);lvShow();};
   document.getElementById("gameClose").addEventListener("click",function(){stop();if(ROUND.active())ROUND.sitOut();});
   var pad=document.getElementById("gameCv");
   pad.addEventListener("pointerdown",function(e){
@@ -3701,7 +3781,7 @@ var GAME=(function(){
       following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
       spin:mySpin.on?+mySpin.vel.toFixed(1):0,handles:mode==="free"?floorHandles():null,fd:mode==="free"?fdState():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{spinStart:spinStart,turnBy:turnBy,get back(){return fBack;},get spinDir(){return mySpin.on&&mode==="free"?ART.face8(Math.sin(mySpin.ang+fBack*Math.PI/2),Math.cos(mySpin.ang+fBack*Math.PI/2),-1):-1;},get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},REST:REST};
+  return{spinStart:spinStart,turnBy:turnBy,get back(){return fBack;},get spinDir(){return mySpin.on&&mode==="free"?ART.face8(Math.sin(mySpin.ang+fBack*Math.PI/2),Math.cos(mySpin.ang+fBack*Math.PI/2),-1):-1;},get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard","Expert"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},REST:REST};
 })();
 /* ============================================================
    MOSH PIT ROUND
