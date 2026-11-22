@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.44"></script>
-<script src="gfx.js?v=1.79.44"></script>
-<script src="art.js?v=1.79.44"></script>
-<script src="instruments.js?v=1.79.44"></script>
-<script src="kart.js?v=1.79.44"></script>
-<script src="explain.js?v=1.79.44"></script>
+<script src="tune.js?v=1.79.45"></script>
+<script src="gfx.js?v=1.79.45"></script>
+<script src="art.js?v=1.79.45"></script>
+<script src="instruments.js?v=1.79.45"></script>
+<script src="kart.js?v=1.79.45"></script>
+<script src="explain.js?v=1.79.45"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -6329,31 +6329,40 @@ var vYT=null;
 function handleVideo(msg){
   var screen=document.getElementById("bigScreen");
   var frame=document.getElementById("ytFrame");
-  if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};}
+  if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};frame.style.pointerEvents="none";}   /* the video is not for clicking: nobody can pause it, seek it or click through to YouTube */
+  if(+msg.dur>0)vYT.exp=+msg.dur;   /* the real length, from the performer: a different length means an ad is on */
   if(msg.action==="stop"){JT.video=false;vYT.clear();updTapHint();return;}
   var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
   if(!vid)return;
   JT.video=true;
   var playing=msg.action==="play";
   var target=Math.max(0,+msg.time||0)+(playing?0.2:0);   /* ~network delay */
+  vYT.target=target;
   var rate=+msg.rate;if(!(rate>0&&rate<=4))rate=1;
   if(vYT.vid!==vid){
     vYT.load(vid,target,{paused:!playing});
     clearTimeout(handleVideo._hint);handleVideo._hint=setTimeout(updTapHint,3000);
   }else{
-    if(Math.abs(vYT.now()-target)>1.2)vYT.cmd("seekTo",[target,true]);
+    if(!vYT.ad&&Math.abs(vYT.now()-target)>1.2)vYT.cmd("seekTo",[target,true]);
     if(playing&&vYT.state!==1&&vYT.state!==3)vYT.cmd("playVideo");
     if(!playing&&(vYT.state===1||vYT.state===3))vYT.cmd("pauseVideo");
   }
   if(Math.abs(rate-(vYT.rate||1))>0.01)vYT.cmd("setPlaybackRate",[rate]);
   vYT.want=playing?"play":"pause";
 }
+/* an ad on this screen: the video is a different length from the song. Hide it and mute it until it ends, then it unmutes and the next sync puts it back on the beat */
+setInterval(function(){
+  if(!vYT||!vYT.vid)return;
+  var fr=vYT.iframe,ad=vYT.exp>0&&vYT.dur>0&&Math.abs(vYT.dur-vYT.exp)>3&&vYT.state!==0&&vYT.state!==-1;
+  if(ad!==!!vYT.ad){vYT.ad=ad;fr.style.visibility=ad?"hidden":"";vYT.cmd(ad?"mute":"unMute");if(!ad)vYT.cmd("seekTo",[Math.max(0,vYT.target||0),true]);updTapHint();}
+},300);
 function updTapHint(){
   var h=document.getElementById("tapHint");if(!h)return;
-  var stuck=vYT&&vYT.vid&&vYT.want==="play"&&vYT.state!==1&&vYT.state!==3;
-  var muted=vYT&&vYT.vid&&vYT.state===1&&vYT.muted;
-  h.textContent=muted?"Tap the speaker on the video for sound":"Tap \u25B6 on the video for the music";
-  h.style.display=(stuck||muted)?"block":"none";
+  var stuck=vYT&&vYT.vid&&vYT.want==="play"&&vYT.state!==1&&vYT.state!==3&&!vYT.ad;
+  var muted=vYT&&vYT.vid&&vYT.state===1&&vYT.muted&&!vYT.ad;
+  h.textContent=vYT&&vYT.ad?"Ad playing \u00b7 the music joins when it ends":muted?"Tap the speaker on the video for sound":"Tap \u25B6 on the video for the music";
+  h.style.display=(stuck||muted||(vYT&&vYT.ad))?"block":"none";
+  if(vYT&&vYT.iframe)vYT.iframe.style.pointerEvents=(stuck||muted)?"auto":"none";   /* only clickable while a phone needs the one tap to allow sound */
 }
 
 /* ============================================================
@@ -6638,7 +6647,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.44",SERVER_VERSION="";
+var PAGE_VERSION="1.79.45",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7148,7 +7157,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.44"></script>
+<script src="lab.js?v=1.79.45"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

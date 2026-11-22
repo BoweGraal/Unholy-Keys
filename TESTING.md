@@ -1623,3 +1623,9 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.44 — bending down keeps the dance; scroll-wheel zoom
 - Pushing the right stick down / down-diagonal (a bend) keeps the dance's own arm and leg motions (hands on knees stays hands on knees) and just lowers the body with bent, slightly wider knees. Before, it swapped to a generic arms-out pose.
 - PC: the scroll wheel zooms the venue floor in and out (up = in, down = out, up to 2.6x). Taps and clicks still land where you point. Remembered between visits. Works in free dance and on the plain floor; other minigames keep their own cameras.
+
+## v1.79.45 — YouTube: not clickable, ads handled before the game starts
+- Audience screens: the YouTube overlay can no longer be clicked (no pausing, seeking or clicking through to YouTube). It only becomes clickable while a phone needs its one tap to allow sound.
+- Audience ads: the host now tells the room the song's real length. If a screen's video is a different length (an ad), it is hidden and muted with "Ad playing · the music joins when it ends", then unmutes and syncs to the beat.
+- Host: picking a YouTube song now loads it muted and hidden first, so any ad plays then. The Now Playing bar says "An ad is playing (muted and hidden). Waiting for it to finish…" and then the song is parked at 1 s. The countdown/game starts only once it is ready (45 s at most), and the song then unmutes and starts from 0.
+- NOT tested against real YouTube from the build machine (no network): try one song with an ad on both host and phone.
