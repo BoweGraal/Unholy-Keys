@@ -16,12 +16,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.80.2"></script>
-<script src="gfx.js?v=1.80.2"></script>
-<script src="art.js?v=1.80.2"></script>
-<script src="instruments.js?v=1.80.2"></script>
-<script src="kart.js?v=1.80.2"></script>
-<script src="explain.js?v=1.80.2"></script>
+<script src="tune.js?v=1.80.3"></script>
+<script src="gfx.js?v=1.80.3"></script>
+<script src="art.js?v=1.80.3"></script>
+<script src="instruments.js?v=1.80.3"></script>
+<script src="kart.js?v=1.80.3"></script>
+<script src="explain.js?v=1.80.3"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2941,7 +2941,7 @@ var GAME=(function(){
     if(plBuilt)return;plBuilt=true;var P=document.getElementById("fdPlan"),D=P.querySelector(".pl-dances");
     P.querySelector(".pl-stop").onclick=function(e){e.stopPropagation();stop();};
     ART.DANCES.forEach(function(d,i){if(!i)return;var b=document.createElement("button");b.setAttribute("data-s",i);b.textContent=d.name;b.onclick=function(e){e.stopPropagation();b.blur();fdPick(i);plSig="";};D.appendChild(b);});
-    P.querySelector(".pl-add").onclick=function(e){e.stopPropagation();if(fStyle>0&&fdQ.length<3){fdQ.push([fStyle,fSub]);fdqSave();fdqRender();plSig="";}};
+    P.querySelector(".pl-add").onclick=function(e){e.stopPropagation();if(fStyle>0&&fdQ.length<3){fdQ.push([fStyle,0]);fdqSave();   /* you pick styles here; each starts on its default sub-style when you step into the ring, and you swap from there */fdqRender();plSig="";}};
     P.addEventListener("pointerdown",function(e){e.stopPropagation();});
   }
   function plMove(k,d){var j=k+d;if(j<0||j>=fdQ.length)return;var t=fdQ[k];fdQ[k]=fdQ[j];fdQ[j]=t;fdqSave();fdqRender();plSig="";}
@@ -2963,9 +2963,7 @@ var GAME=(function(){
       else{var t2=document.createElement("div");t2.className="t";t2.textContent=(k+1);var n2=document.createElement("div");n2.className="n";n2.style.opacity=".6";n2.textContent="empty";c.appendChild(t2);c.appendChild(n2);}
       sl.appendChild(c);}
     Array.prototype.forEach.call(P.querySelectorAll(".pl-dances button"),function(b){b.classList.toggle("on",+b.getAttribute("data-s")===fStyle);});
-    var sb=P.querySelector(".pl-subs");sb.textContent="";var dd=ART.DANCES[fStyle];sb.classList.toggle("has",!!(dd&&dd.subs&&dd.subs.length));
-    if(dd&&dd.subs&&dd.subs.length){var sl2=document.createElement("div");sl2.className="pl-lbl";sl2.textContent="Sub-styles of "+dd.name+": pick one";sb.appendChild(sl2);}
-    if(dd&&dd.subs)dd.subs.forEach(function(nm,k){var b=document.createElement("button");b.textContent=nm;b.className=k===fSub?"on":"";b.onclick=function(ev){ev.stopPropagation();b.blur();fdSub(k);plSig="";};sb.appendChild(b);});
+    var sb=P.querySelector(".pl-subs");sb.textContent="";sb.classList.remove("has");   /* no sub-style picker in the planner */
     P.querySelector(".pl-add").disabled=fdQ.length>=3||fStyle<=0;
   }
   var fdqPlaceT=0;
@@ -6940,7 +6938,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.80.2",SERVER_VERSION="";
+var PAGE_VERSION="1.80.3",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7490,7 +7488,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.80.2"></script>
+<script src="lab.js?v=1.80.3"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
