@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.79.35"></script>
-<script src="art.js?v=1.79.35"></script>
-<script src="instruments.js?v=1.79.35"></script>
-<script src="kart.js?v=1.79.35"></script>
+<script src="gfx.js?v=1.79.36"></script>
+<script src="art.js?v=1.79.36"></script>
+<script src="instruments.js?v=1.79.36"></script>
+<script src="kart.js?v=1.79.36"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4800,7 +4800,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.79.35",SERVER_VERSION="";
+var PAGE_VERSION="1.79.36",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6527,7 +6527,11 @@ var ROUNDS=(function(){
   function txt(v,n){return String(v==null?"":v).slice(0,n);}
   function onMsg(m){
     if(m.type==="round-scores"){if(cur&&cur.phase==="play"){top={top:(m.top||[]).slice(0,5).map(function(x){return{name:txt(x.name,24),score:Math.floor(+x.score||0)};}),players:Math.floor(+m.players||0)};draw();}return;}
-    if(m.type==="spotlight"){if(cur&&cur.phase==="play"){cur.spot=(m.turns||[]).slice(0,200).map(function(t){return{name:txt(t.name,24),a:+t.a||0,b:+t.b||0};});draw();}return;}
+    if(m.type==="spotlight"){if(cur&&cur.phase==="play"){cur.spot=(m.turns||[]).slice(0,200).map(function(t){return{name:txt(t.name,24),a:+t.a||0,b:+t.b||0};});
+        /* every dancer gets a full turn: stretch a show's free-dance game to fit them (but not into the next game or the last seconds of the song) */
+        if(set&&cur.setQ&&cur.mode==="free"&&cur.spot.length){var q0=cur.setQ,nx0=null;set.plan.forEach(function(q1){if(q1!==q0&&q1.start>q0.start&&(!nx0||q1.start<nx0.start))nx0=q1;});
+          var want=q0.start+cur.spot[cur.spot.length-1].b+6000,cap=nx0?nx0.start-nx0.cd-6000:set.D-8000;if(want>q0.end)q0.end=Math.max(q0.end,Math.min(want,cap));}
+        draw();}return;}
     if(m.type==="round-votes"){votes={cast:Math.floor(+m.cast||0),of:Math.floor(+m.of||0)};draw();return;}
     if(m.type==="battle"&&cur){
       if(m.none){cur.bNone=true;draw();return;}

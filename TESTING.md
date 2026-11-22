@@ -1589,3 +1589,7 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.35 — real 3D spins
 - Spin, Twirl, 180, 360 and Spin move now turn the dancer through all the facings (front, three-quarter, side, back) instead of squeezing flat like paper.
 - Your own spin keeps going if you swing the right stick round in a circle (either way; faster swing = faster spin, up to a cap). Let go and it slows and lands facing front. Other players see the button spin only.
+
+## v1.79.36 — hand joysticks, 15 s centre turns
+- Free dance: two small hand rings sit above the big sticks (left hand / right hand). Hold one and that arm follows your finger (down = hanging, side = out, up = overhead; across the body works too) while the legs and body keep doing the selected dance. Let go and the arm goes back to the dance. Other players see it.
+- Centre turns: each dancer gets 15 s in the middle with 4.5 s between turns, first dancer is called 15 s ahead, and everyone gets two turns when the song is long enough. Free dance rounds already take the whole song.

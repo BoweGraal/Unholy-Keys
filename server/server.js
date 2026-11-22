@@ -161,39 +161,19 @@ function cleanChart(c) {
   }
   return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks, drop: intIn(c.drop, 0, 3600000, 0), keys: keys, sections: sections };
 }
-/* Spotlight plan for free dance rounds: who takes the centre stage when, in song time (ms).
-   dancers: [{id,name,color}] in turn order; chart: {dur, beats} or null; lockPos: song position now.
-   Turns start on bar starts and go round everyone twice before the last two bars of the song, each turn
-   1 to 4 bars long; if that doesn't fit, once round. Without a chart (no song length): 8 s turns, starting
-   15 s from now, twice round. Returns [{id,name,color,a,b}] or [] if there's nobody, or no room. */
+/* Spotlight plan for free dance rounds: everyone dances in a ring; one at a time the dancer due north walks down to the
+   middle for a 15 s turn, walks back, and the ring dances round (left) until the next dancer is due north.
+   dancers: [{id,name,color}] in ring order; chart: {dur} or null; lockPos: song position now (ms).
+   Each turn is TURN_MS in the middle, then TRANS_MS of walking back + ring turning + the next one walking in
+   (1.5 s back, 1.5 s turn, 1.5 s in). The first dancer has FIRST_NOTICE ms to plan. If the song can't fit everyone,
+   only as many as fit get a turn. Returns [{id,name,color,a,b}] (a..b = the 15 s in the middle). */
+var TURN_MS = 15000, TRANS_MS = 4500, FIRST_NOTICE = 15000;
 function spotPlan(dancers, chart, lockPos) {
   if (!dancers || !dancers.length) return [];
-  var out = [], i, N = dancers.length;
-  if (!chart || !(chart.dur > 0) || !chart.beats || chart.beats.length < 16) {
-    var t = lockPos + 15000;
-    for (var r = 0; r < 2; r++) for (i = 0; i < N; i++) { out.push({ id: dancers[i].id, name: dancers[i].name, color: dancers[i].color, a: t, b: t + 8000 }); t += 8000; }
-    return out;
-  }
-  var beats = chart.beats, bars = [];
-  for (i = 0; i < beats.length; i += 4) bars.push(beats[i]);
-  var barMs = bars.length > 2 ? (bars[bars.length - 1] - bars[0]) / (bars.length - 1) : 2000;
-  var endBar = bars.length - 1;
-  while (endBar > 0 && bars[endBar] > chart.dur - 2 * barMs) endBar--;       /* leave the last two bars before voting */
-  var firstBar = 0; while (firstBar < bars.length && bars[firstBar] < lockPos + 4000) firstBar++;   /* a few seconds' notice */
-  var room = endBar - firstBar;
-  if (room < N) return [];
-  for (var rounds = 2; rounds >= 1; rounds--) {
-    var per = Math.min(4, Math.floor(room / (rounds * N)));
-    if (per >= 1) {
-      var b0 = endBar - per * rounds * N;
-      for (r = 0; r < rounds; r++) for (i = 0; i < N; i++) {
-        var s = b0 + (r * N + i) * per;
-        out.push({ id: dancers[i].id, name: dancers[i].name, color: dancers[i].color, a: Math.round(bars[s]), b: Math.round(bars[s + per] !== undefined ? bars[s + per] : bars[s] + per * barMs) });
-      }
-      return out;
-    }
-  }
-  return [];
+  var N = dancers.length, firstA = lockPos + FIRST_NOTICE, end = chart && chart.dur > 0 ? chart.dur - 5000 : Infinity;
+  var fit = end === Infinity ? N * 2 : Math.floor((end - firstA + TRANS_MS) / (TURN_MS + TRANS_MS)), n = Math.min(N * 2, fit), out = [];   /* everyone dances twice if the song is long enough */
+  for (var i = 0; i < n; i++) { var a = firstA + i * (TURN_MS + TRANS_MS); out.push({ id: dancers[i % N].id, name: dancers[i % N].name, color: dancers[i % N].color, pass: Math.floor(i / N), a: Math.round(a), b: Math.round(a + TURN_MS) }); }
+  return out;
 }
 /* ---------- battle rounds: a knockout of quick 1 v 1s during the song (see battle.js) ----------
    Everyone free dances; a little way into the song, whoever is dancing is entered and seeded at random.
@@ -266,7 +246,7 @@ function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
   var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1; if (rd.track) o.track = rd.track; if (rd.ski) o.ski = rd.ski; if (rd.ctf) o.ctf = ctfPublic(rd.ctf);
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
-  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) o.spot = rd.spot; if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
+  if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) { o.spot = rd.spot; o.ring = rd.ring; } if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
   return o;
 }
@@ -284,8 +264,8 @@ function spotLock(code) {
   for (var i = list.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = list[i]; list[i] = list[j]; list[j] = t; }
   var turns = spotPlan(list, rd.chart, Date.now() - rd.playAt);
   if (!turns.length) return;
-  rd.spot = turns;
-  broadcast(code, { type: "spotlight", n: rd.n, turns: turns });
+  rd.spot = turns; rd.ring = list.map(function(d) { return d.id; });
+  broadcast(code, { type: "spotlight", n: rd.n, turns: turns, ring: rd.ring });
 }
 function roundStandings(code) {
   var r = rooms[code]; if (!r || !r.round) return;
@@ -384,8 +364,8 @@ function roundMessage(ws, msg) {
         Math.max(0, rd.chart.drop + TUG_AT + TUG_MS + 400 - (Date.now() - rd.playAt)));
     }
     if (first && rd.mode === "free") {
-      /* lock in the spotlight dancers 35% of the way into the song (at least 20 s in), or at 30 s without a song length */
-      var dur = rd.chart && rd.chart.dur > 0 ? rd.chart.dur : 0, lockAt = dur ? Math.max(20000, dur * 0.35) : 30000;
+      /* lock in the ring a few seconds into the round, so everyone's turn fits */
+      var dur = rd.chart && rd.chart.dur > 0 ? rd.chart.dur : 0, lockAt = 8000;   /* everyone dancing then goes in the ring; the first turn is 15 s later */
       rd.spotTimer = setTimeout(function() { spotLock(code); }, Math.max(0, lockAt - (Date.now() - rd.playAt)));
     }
     return;
@@ -482,7 +462,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", 
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.79.35";
+var VERSION = "1.79.36";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -730,7 +710,13 @@ function onMessage(ws, raw, isBinary) {
         var fs = Math.floor(+msg.fd.s), fm = Math.floor(+msg.fd.m), fc = [];
         if (fs >= 0 && fs <= 16 && fm >= 0 && fm <= 7 && Array.isArray(msg.fd.c) && msg.fd.c.length === 4) {
           for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
-          if (fc) fd = { s: fs, m: fm, c: fc };
+          if (fc) {
+            fd = { s: fs, m: fm, c: fc };
+            if (Array.isArray(msg.fd.h) && msg.fd.h.length === 2) {
+              var hh = msg.fd.h.map(function (v) { return v === null || v === undefined || !isFinite(+v) ? null : Math.max(-400, Math.min(400, Math.round(+v))); });
+              if (hh[0] !== null || hh[1] !== null) fd.h = hh;
+            }
+          }
         }
       }
       var pv = rooms[ws.room].viewers.get(ws.viewerId);
