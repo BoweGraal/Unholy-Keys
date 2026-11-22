@@ -673,7 +673,7 @@ var ART=(function(){
     SPRINT:1.6,STAM:2.4,CHARGE:9,SPRINT_MIN:0.3,REFILL_MS:10000,REFILL_R:0.8,
     /* Kart Flag (st.kart): the same arenas, driven in karts. No tagging; the PULSE (a shockwave round you, with a cooldown)
        knocks your flag out of a carrier's hands and home, and spins other enemies out. Power-up boxes (map tile p) give one item. */
-    K_SPEED:9.5,K_PULSE_R:3,K_PULSE_MS:8000,K_SPIN_MS:1300,K_BOX_MS:8000,K_BOX_R:0.85,K_OIL_R:0.75,K_OIL_MS:20000,K_SHIELD_MS:4000,K_NITRO_MS:2200,
+    K_SPEED:9.5,K_PULSE_R:3,K_PULSE_MS:8000,K_SPIN_MS:1300,K_BOX_MS:8000,K_BOX_R:0.85,K_OIL_R:0.75,K_OIL_MS:20000,K_SHIELD_MS:4000,K_NITRO_MS:2200,K_DRIFT1:0.45,K_DRIFT2:1.0,K_DBOOST:[0,650,1150],
     ITEMS:["nitro","oil","shield","mega"],ITEM_ICON:{nitro:"\u26A1",oil:"\uD83D\uDEE2",shield:"\uD83D\uDEE1",mega:"\uD83D\uDCA5"}};
   /* the built-in arena before sprint refills (a copy saved on this device that still matches is upgraded to the new one) */
   CTF.OLD_TWIN="#########################################......................................##............#............#............##.rr.........#.>>>....<<<.#.........bb.##.rr.........#.....##.....#.........bb.##.....>......#.....##.....#......<.....##......####..#.....##.....#..####......##............#...>....<...#............##......#........................#......##......#........................#......##.RRR............##..##............BBB.##.RRR............##..##............BBB.##.RRR.....>>>....##..##....<<<.....BBB.##.RRR............##..##............BBB.##......#........................#......##......#.........>....<.........#......##......#.....#............#.....#......##......####..#.....##.....#..####......##.....>......#.....##.....#......<.....##.rr.........#.....##.....#.........bb.##.rr.........#.>>>....<<<.#.........bb.##............#............#............##......................................#########################################";
@@ -704,6 +704,18 @@ var ART=(function(){
     "#............#............#............#",
     "#......................................#",
     "########################################"].join("")};};
+  /* the built-in Kart flag arena: wide and open (64 x 30), a few pillars to drift round, boost lanes down both sides and boxes at the crossings */
+  CTF.kartDefault=function(){var w=64,h=30,G=[],x,y,mid=15;for(y=0;y<h;y++){G[y]=[];for(x=0;x<w;x++)G[y][x]=(x===0||y===0||x===w-1||y===h-1)?"#":".";}
+    function set(x,y,c){if(x<=0||y<=0||x>=w-1||y>=h-1)return;G[y][x]=c;var mx=w-1-x,mc=c==="R"?"B":c==="r"?"b":c===">"?"<":c==="<"?">":c;G[y][mx]=mc;}
+    function rect(x0,y0,x1,y1,c){for(var yy=y0;yy<=y1;yy++)for(var xx=x0;xx<=x1;xx++)set(xx,yy,c);}
+    rect(3,mid-2,6,mid+1,"R");set(3,3,"r");set(3,h-4,"r");set(5,3,"r");set(5,h-4,"r");   /* base and spawns */
+    rect(10,6,11,7,"#");rect(10,h-8,11,h-7,"#");rect(13,mid-1,13,mid,"#");   /* pillars near home */
+    rect(20,3,21,5,"#");rect(20,h-6,21,h-4,"#");rect(19,mid-4,20,mid-4,"#");rect(19,mid+3,20,mid+3,"#");
+    rect(27,9,28,10,"#");rect(27,h-11,28,h-10,"#");rect(30,mid-1,30,mid,"#");   /* the middle */
+    for(x=9;x<=17;x+=4){set(x,2,">");set(x,h-3,">");}   /* boost lanes along the top and bottom, towards the middle */
+    set(24,mid-6,">");set(24,mid+5,">");
+    set(16,mid-3,"p");set(16,mid+2,"p");set(25,mid,"p");set(28,4,"p");set(28,h-5,"p");   /* power-up boxes */
+    return{name:"Open Circuit",w:w,h:h,t:G.map(function(r){return r.join("");}).join("")};};
   CTF.clean=function(m){
     if(!m||typeof m!=="object")return null;var w=m.w|0,h=m.h|0,t=String(m.t||"");
     if(w<16||w>80||h<10||h>50||t.length!==w*h)return null;var out="",i,hasR=false,hasB=false;
@@ -822,7 +834,7 @@ var ART=(function(){
   /* ---- drawing: the floor in dance-floor tiles, walls as raised pixel blocks, boost pads with running chevrons, bases ---- */
   CTF.fit=function(I,W,H,top,bot){var s=Math.max(4,Math.floor(Math.min(W/I.w,(H-top-bot)/I.h))),ox=Math.round((W-s*I.w)/2),oy=Math.round(top+(H-top-bot-s*I.h)/2);return{s:s,ox:ox,oy:oy,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
   /* a camera that follows you: about 15 tiles across on a phone, clamped to the arena. v.vw/v.vh/v.vt are the window it draws in. */
-  CTF.cam=function(I,W,H,top,bot,me){var f=CTF.fit(I,W,H,top,bot),vh=H-top-bot,s=Math.max(f.s,Math.round(W/(W<641?15:20))),ox,oy;
+  CTF.cam=function(I,W,H,top,bot,me,kart){var f=CTF.fit(I,W,H,top,bot),vh=H-top-bot,s=Math.max(f.s,Math.round(W/(W<641?(kart?19:15):(kart?26:20)))),ox,oy;
     var mw=I.w*s,mh=I.h*s;ox=mw<=W?Math.round((W-mw)/2):Math.round(Math.min(0,Math.max(W-mw,W/2-me.x*s)));oy=mh<=vh?Math.round(top+(vh-mh)/2):Math.round(Math.min(top,Math.max(top+vh-mh,top+vh/2-me.y*s)));
     return{s:s,ox:ox,oy:oy,vw:W,vh:vh,vt:top,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
   CTF.draw=function(g,m,I,v,now,st){
@@ -2459,6 +2471,6 @@ var ART=(function(){
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.0",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.1",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

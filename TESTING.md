@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.1 — Kart flag: open arena and drift boost
+
+- Kart flag has its own arena: by default "Open Circuit", 64 x 30, wide and open with a few pillars, boost lanes and power-up boxes. The camera shows more of it.
+- **DRIFT** (big button bottom right, or Shift / X): hold it while turning to slide, sparks go blue at 0.45 s and orange at 1 s; let go for a boost (orange is longer and faster). PULSE moves above it.
+- Designer: pick "Kart flag arena" at the top to edit that arena separately (new Kart wide / Kart huge sizes). The performer page sends it with every Kart flag round.
+
 ## v1.81.0 — Kart flag
 
 A new game: Capture the flag in karts, on the same arenas.

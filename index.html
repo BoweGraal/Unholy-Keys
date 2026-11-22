@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.81.0"></script>
-<script src="art.js?v=1.81.0"></script>
-<script src="instruments.js?v=1.81.0"></script>
-<script src="kart.js?v=1.81.0"></script>
+<script src="gfx.js?v=1.81.1"></script>
+<script src="art.js?v=1.81.1"></script>
+<script src="instruments.js?v=1.81.1"></script>
+<script src="kart.js?v=1.81.1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4847,7 +4847,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.81.0",SERVER_VERSION="";
+var PAGE_VERSION="1.81.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6419,7 +6419,8 @@ var ROUNDS=(function(){
     cur.chart=chart;cur.phase="countdown";cur.endAt=performance.now()+cdS;
     var ktTrack=null;if(cur.mode==="kart"){try{ktTrack=JSON.parse(localStorage.getItem("uk_track")||"null");}catch(e){}}
     var skCourse=null;if(cur.mode==="ski"){try{skCourse=JSON.parse(localStorage.getItem("uk_ski")||"null");}catch(e){}}
-    var ctfMap=null;if(cur.mode==="ctf"||cur.mode==="kflag"){try{ctfMap=ART.CTF.upgrade(JSON.parse(localStorage.getItem("uk_ctf")||"null"));}catch(e){}}
+    var ctfMap=null;if(cur.mode==="ctf"){try{ctfMap=ART.CTF.upgrade(JSON.parse(localStorage.getItem("uk_ctf")||"null"));}catch(e){}}
+    if(cur.mode==="kflag"){try{ctfMap=ART.CTF.upgrade(JSON.parse(localStorage.getItem("uk_kflag")||"null"));}catch(e){}if(!ctfMap)ctfMap=ART.CTF.kartDefault();}   /* Kart flag: its own arena, wide and open by default */
     liveSend({type:"round-start",track:ktTrack,ski:skCourse,ctf:ctfMap,mode:cur.mode==="ice"?"skate":cur.mode==="kflag"?"ctf":cur.mode,ice:cur.mode==="ice"?1:0,kflag:cur.mode==="kflag"?1:0,battle:!!cur.battle,title:cur.title,countdown:cdS,chart:chart});
     status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file"+(why?" ("+String(why).slice(0,60)+")":"")+", so there are no notes for the Note highway on this one. Try an mp3 or wav copy. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cdS);
