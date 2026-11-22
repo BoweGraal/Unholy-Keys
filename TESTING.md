@@ -1637,3 +1637,8 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.47 — new shades (graphics defaults)
 - Brian's graphics-lab export is now the shipped look for everyone: stage lights (brighter, wider, faster beams, hazier, purple/indigo/mauve/red colours, stronger floor and sign glow), the Two-step bob tweaks, and the purple hair:12 and shades (extra:1) pixel edits. Anyone who has saved their own values on a device keeps those on top.
+
+## v1.79.48 — missed pixel assets
+- The STREAK pop-up ("10 STREAK!") is pixel font with a pixel-drawn bolt (flame from 50) instead of emoji; the streak aura/lightning is drawn chunky-pixel.
+- All remaining canvas text (scores, combo/judge, pops, tug of war, names, NEXT IN, kart HUD) and the game HUD CSS (score/combo/banners/hints/buttons) now use Silkscreen; emoji icons on score HUDs and banners removed.
+- Check: hit a 10 streak in a rhythm minigame; look at each minigame's score text. Silkscreen is wider, so watch for text overflowing buttons.
