@@ -300,7 +300,7 @@ function roundStandings(code) {
    - 40% is shared equally by everyone who took part, so nobody is ever left with nothing and a slow start isn't the end of you;
    - 60% goes by score, but softened (square root), so a big win is worth only a bit more than a solid second and steady
      rounds add up faster than the odd blowout. Largest remainders get the leftover points so it adds up to exactly 1000. */
-var SHARE_FLOOR = 0.4;
+var SHARE_FLOOR = 0.4, FIRST_BONUS = 50;   /* first place gets 50 more on top of the round's 1000 */
 function share1000(list) {
   var n = list.length; if (!n) return;
   var w = list.map(function(x) { return Math.sqrt(Math.max(0, +x.score || 0)); }), tw = 0; w.forEach(function(v) { tw += v; });
@@ -318,7 +318,7 @@ function roundFinish(code) {
     /* battle: placed by how far each got in the bracket; the score shown is matches won */
     if (rd.battle) BATTLE.ranks(rd.battle).forEach(function(x) { var e = rd.battle.entrants[x.e]; list.push({ id: e.id, name: e.name, color: e.color, score: x.wins, bplace: x.place }); });
     share1000(list);
-    list.forEach(function(x) { x.place = x.bplace; var key = x.name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: x.name, color: x.color, pts: 0, wins: 0 }); t.pts += x.pts; t.color = x.color; if (x.place === 0) t.wins++; });
+    list.forEach(function(x) { x.place = x.bplace; if (x.place === 0) x.pts += FIRST_BONUS; var key = x.name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: x.name, color: x.color, pts: 0, wins: 0 }); t.pts += x.pts; t.color = x.color; if (x.place === 0) t.wins++; });
     rd.phase = "result";
     broadcast(code, { type: "round", phase: "result", n: rd.n, mode: rd.mode, battle: true, title: rd.title, players: list.length,
       ranking: list.slice(0, 10).map(function(x) { return { id: x.id, name: x.name, color: x.color, score: x.score, pts: x.pts, place: x.place + 1 }; }),
@@ -338,6 +338,7 @@ function roundFinish(code) {
   for (var i = 0; i < list.length; i++) {
     var place = (i > 0 && list[i].score === list[i - 1].score) ? list[i - 1].place : i;
     list[i].place = place;
+    if (place === 0 && list[i].score > 0) list[i].pts += FIRST_BONUS;   /* first place: +50 on top of the 1000 */
     var key = list[i].name.toLowerCase(), t = r.totals[key] || (r.totals[key] = { name: list[i].name, color: list[i].color, pts: 0, wins: 0 });
     t.pts += list[i].pts; t.color = list[i].color;
     if (place === 0 && list[i].score > 0) t.wins++;
@@ -481,7 +482,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", 
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.79.27";
+var VERSION = "1.79.32";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);

@@ -1564,3 +1564,18 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.27
 - Half pipe: one FLICK meter (right side). Starts empty, only fills as the right stick moves (faster = more), sets jump height, holds in the air, resets on landing/bail.
+
+## v1.79.28 — eight-way right stick in free dance
+- Every dance except Robot, Worm and Puppet (which read the stick directly) has 8 named moves on the right stick (up, up-right, right, down-right, down, down-left, left, up-left); push it out past about half and the move name shows above the buttons. A light push still works as the dance's own control.
+
+## v1.79.29 — more rhythm on touch screens
+- The two-thumb chart rule is looser: off-beat steps (quarter-beat grid) stay in, minimum gap about half a beat (190 ms floor), and holds only count as busy thumbs: a hold plus one single arrow, or two holds, but never more than two presses at once. On a synthetic dense chart the notes kept went from 99 to 193 with the maximum still 2.
+
+## v1.79.30 — one chart for everyone
+- The two-thumb chart rule now applies to every player, phone or computer, so a round's notes are identical for all (checked: touch and non-touch give byte-identical charts at all three levels).
+
+## v1.79.31 — first place bonus
+- First place in a round gets +50 show points on top of the usual 1,000 split (ties for first all get it; needs a score above 0). Battles: the winner of the bracket. Works in practice too. Needs a Render redeploy (server.js).
+
+## v1.79.32 — show leaderboard
+- A small STANDINGS panel (top right, tap to shrink) stays up all show with points and ▲/▼ moves since the last round; hidden inside minigames. After each round a toast says who took the lead and who passed who ("Moth takes the lead!", "Phyl passed Rook for 3rd"). Test: ukTotals([...]) twice with different orders.
