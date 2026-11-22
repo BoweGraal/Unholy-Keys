@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.34"></script>
-<script src="gfx.js?v=1.79.34"></script>
-<script src="art.js?v=1.79.34"></script>
-<script src="instruments.js?v=1.79.34"></script>
-<script src="kart.js?v=1.79.34"></script>
-<script src="explain.js?v=1.79.34"></script>
+<script src="tune.js?v=1.79.35"></script>
+<script src="gfx.js?v=1.79.35"></script>
+<script src="art.js?v=1.79.35"></script>
+<script src="instruments.js?v=1.79.35"></script>
+<script src="kart.js?v=1.79.35"></script>
+<script src="explain.js?v=1.79.35"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2355,6 +2355,7 @@ function react(k){
   if(REACT.last.length>=6)return;                                     /* no more than the server lets through */
   if(k==="bigheart"){if(now-REACT.big<4000)return;REACT.big=now;var bb=document.querySelector('#reactBar [data-r="bigheart"]');if(bb){bb.classList.add("cool");setTimeout(function(){bb.classList.remove("cool");},4000);}}
   REACT.last.push(now);addReact(myId,k);
+  if((k==="spin"||k==="twirl"||k==="turn360"||k==="spinmove")&&GAME.mode==="free")GAME.spinStart(k);
   var btn=document.querySelector('#reactBar [data-r="'+k+'"]');if(btn){btn.classList.add("pop");setTimeout(function(){btn.classList.remove("pop");},160);}
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on))wsSend({type:"react",k:k});
 }
@@ -2838,7 +2839,19 @@ var GAME=(function(){
       k.style.transform="translate("+(sx*rad*(0.78+st))+"px,"+(sy*rad*(0.78+st))+"px)";}
   }
   /* let go of a dot and it drifts back to the middle */
+  /* your own spin: it starts with the button, slows down on its own, and swinging the right stick round (either way) keeps it going and speeds it up */
+  var mySpin={on:false,ang:0,vel:0,pa:null,t:0};
+  function spinStart(k){var turns={spin:1,twirl:2,turn360:1,spinmove:1.5}[k]||1;mySpin.on=true;mySpin.ang=0;mySpin.vel=turns*6.2*1.25*(k==="turn360"?1.25:1);mySpin.pa=null;mySpin.t=performance.now();}
+  function spinStep(now){
+    if(!mySpin.on)return;var dt=Math.min(0.1,(now-mySpin.t)/1000);mySpin.t=now;
+    var sx2=fCtl[2],sy2=fCtl[3],mg=Math.hypot(sx2,sy2),swing=false;
+    if(mg>0.5){var th=Math.atan2(sy2,sx2);if(mySpin.pa!==null){var d=th-mySpin.pa;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;mySpin.vel+=d*5.5;if(Math.abs(d)>0.02)swing=true;}mySpin.pa=th;}else mySpin.pa=null;
+    mySpin.vel=Math.max(-14,Math.min(14,mySpin.vel));
+    if(Math.abs(mySpin.vel)>1.4||swing){mySpin.ang+=mySpin.vel*dt;mySpin.vel*=Math.pow(swing?0.9:0.3,dt);}
+    else{var tg=Math.round(mySpin.ang/(2*Math.PI))*2*Math.PI;mySpin.ang+=(tg-mySpin.ang)*Math.min(1,dt*9);if(Math.abs(tg-mySpin.ang)<0.04){mySpin.on=false;mySpin.ang=0;mySpin.vel=0;}}
+  }
   function fdSpring(){
+    spinStep(performance.now());
     var moved=false,nowS=performance.now();
     fdqTick();
     if(fdAuto(nowS)){fdShow();applyToMe();sendPose();return;}
@@ -3545,9 +3558,9 @@ var GAME=(function(){
     return{mode:mode,letGo:letGos,round:!!rnd,chartSteps:rnd&&rnd.chart?rnd.chart.steps.length:0,bigMoments:rnd&&rnd.chart&&rnd.chart.peaks?rnd.chart.peaks.map(function(p){return [Math.round(p[0]/100)/10,Math.round(p[1]/100)/10];}):[],onFire:onFire,songPos:rnd?Math.round(ROUND.pos()):null,pose:pose.map(function(a){return Math.round(a*100)/100;}),score:score,combo:combo,best:best,hits:hits,misses:misses,
       upcoming:notes.filter(function(n){return !n.j&&!n.holding&&!n.headJ;}).map(function(n){var o={dir:laneName(n.lane),inMs:Math.round(n.t-now),x:Math.round(n.x*CW),y:Math.round(n.y*CH)};if(n.hold>0)o.holdMs=Math.round(n.hold);if(n.x2!==undefined){o.swoop=true;o.cx=Math.round(n.cx*CW);o.cy=Math.round(n.cy*CH);o.x2=Math.round(n.x2*CW);o.y2=Math.round(n.y2*CH);}return o;}),holding:notes.filter(function(n){return n.holding;}).map(function(n){return{dir:laneName(n.lane),leftMs:Math.round(n.t+n.hold-now)};}),
       following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
-      handles:mode==="free"?floorHandles():null,fd:mode==="free"?fdState():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
+      spin:mySpin.on?+mySpin.vel.toFixed(1):0,handles:mode==="free"?floorHandles():null,fd:mode==="free"?fdState():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},REST:REST};
+  return{spinStart:spinStart,get spinDir(){return mySpin.on&&mode==="free"?ART.face8(Math.sin(mySpin.ang),Math.cos(mySpin.ang),-1):-1;},get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},REST:REST};
 })();
 /* ============================================================
    MOSH PIT ROUND
@@ -6526,7 +6539,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.34",SERVER_VERSION="";
+var PAGE_VERSION="1.79.35",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6966,7 +6979,9 @@ function renderLoop(){
       var skl=v===PH?null:RINK?SKATE.looks(v,ids[i]===myId,sc2):keepyOn()?KEEPY.looks(v,ids[i]===myId,sc2):WALK.walkRound()&&v.dance===4?WALK.looks(v,ids[i]===myId,sc2):PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.looks(v,ids[i]===myId,sc2):null;
       if(!cdn&&!ck||skl)ART.footShadow(ctx,vx,vy,sc2,(rpo?rpo.lift:0)+(epo?epo.lift:0)+(skl?skl.lift:0));
       if(skl)AVO=AVO?Object.assign(AVO,{sk:skl}):{sk:skl};
-      AVDIR=PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.facing(v,ids[i]===myId):WALK.walkRound()&&v.dance===4?WALK.facing(v):ck?0:cdn===4?(RINK?(wk.face|0):GAME.mode==="free"?(fdTurn(wk,ids[i]===myId,vx,vy,pnow)?(wk.face|0):0):(wk.k>0.3?(wk.face|0):0)):cdn?0:(wk.face|0);   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
+      AVDIR=PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.facing(v,ids[i]===myId):WALK.walkRound()&&v.dance===4?WALK.facing(v):ck?0:cdn===4?(RINK?(wk.face|0):GAME.mode==="free"?(fdTurn(wk,ids[i]===myId,vx,vy,pnow)?(wk.face|0):0):(wk.k>0.3?(wk.face|0):0)):cdn?0:(wk.face|0);
+      if(rpo&&rpo.dir!==undefined)AVDIR=rpo.dir;   /* a spin or turn goes round through all the facings */
+      if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;   /* your own spin: the stick keeps it going */   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
       drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,skl?null:walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
       AVO=null;AVDIR=0;
       if(ck)ART.crowdFx(ctx,ck,vx,dyy,sc2,cAge,v.seed||0,hands,v._tg);
@@ -7021,7 +7036,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.34"></script>
+<script src="lab.js?v=1.79.35"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
