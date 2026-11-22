@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.23 — Cap and witch hat on turned views
+
+- **Cap** (and headphones, bandana): in the three-quarter views they now sit on the head instead of a pixel off to the side. Shades and the mask still sit on the face.
+- **Witch hat**: turning left no longer flips the curl. The tip curls the same way in the front, three-quarter and back views (side views still show it trailing behind).
+- A cap under a hat is hidden, so it doesn't poke out from under the brim.
+
 ## v1.81.22 — Standards sweep
 
 I went through every game in portrait and landscape (practice, with bots) and checked each one against the standards:
