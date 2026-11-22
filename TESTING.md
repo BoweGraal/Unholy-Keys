@@ -1688,6 +1688,19 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.21 — Character preview stays in view; afro fix
+
+- **Character maker**: the preview stays pinned at the top while you scroll through the options (smaller on phones so the options have room). This also applies to the performer's character dialog.
+- **Afro**: the dark band and the erased row under the afro are gone, so it sits on the head with nothing dead underneath. A copy of your pixel edits saved on a device gets the same fix once.
+
+## v1.81.20 — Plan your turn by dragging
+
+In free dance, while you wait in the circle:
+- **Tap a style** to try it on your dancer, as before.
+- **Drag a style into a slot** to plan it. Dropped on an empty slot it fills the next open spot; dropped on a filled slot it replaces that one.
+- **Drag a planned slot** onto another to swap their order, or drag it out of the slots to take it off. The small ✕ in the corner also takes it off.
+- The ◀ ▶ ✕ button row and the "Add to my turn" button are gone, so the panel is shorter.
+
 ## v1.81.19 — Performer stands on the stage
 
 - The performer and the piano now stand on the stage, with the legs on the stage edge. In portrait they no longer float halfway up the wall.
