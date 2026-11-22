@@ -1579,3 +1579,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.32 — show leaderboard
 - A small STANDINGS panel (top right, tap to shrink) stays up all show with points and ▲/▼ moves since the last round; hidden inside minigames. After each round a toast says who took the lead and who passed who ("Moth takes the lead!", "Phyl passed Rook for 3rd"). Test: ukTotals([...]) twice with different orders.
+
+## v1.79.33 — phone keyboard buttons like the real keyboard
+- Phone play screen, left side: two small buttons on top (E and 3, same as Space+E and Space+3), then a peanut: top half = D, bottom half = Space, the waist = both (Space+D). A finger on each half also counts as both, and you can slide between halves to change level. Root (no finger) is unchanged.
