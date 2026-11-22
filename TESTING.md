@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.18 — Kart flag boost pads
+
+- The two pads that fired straight into the middle pillars are gone. The arena is mirrored, so each team gets the same set:
+  - top and bottom lanes (3 each, towards the middle), as before
+  - **2 out of each base** along the open rows either side of it (a 39-tile clear run)
+  - **2 across the middle**, between the pillars (a 20-tile clear run)
+- Every pad now has at least 20 clear tiles in front of it.
+- If you saved your own Kart flag arena in the designer, practice uses that one. Reset it in the designer to get the new pads.
+
 ## v1.81.17 — No bottom strip, version on the menu only, flag in the kart
 
 - **No bottom strip in games**: in practice, and on phones and tablets during a game, the chat bar is gone and nothing reserves space for it, so the arena runs to the bottom edge (Kart flag reads the real value now).
