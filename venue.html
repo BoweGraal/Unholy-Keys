@@ -11,6 +11,7 @@
 <script>/* iPhones can't make a web page fullscreen (and the Home Screen app already is), so the fullscreen buttons are hidden there */
 (function(){try{var d=document.documentElement,ios=/iPhone|iPod/.test(navigator.userAgent),api=!!(d.requestFullscreen||d.webkitRequestFullscreen),app=window.navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);if(ios||!api||app)d.classList.add("no-fs");}catch(e){}})();</script>
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}@media (orientation:landscape) and (max-height:520px){#skiHint{left:150px!important;right:380px;transform:none!important;bottom:calc(var(--chatH) + 14px)!important;max-width:none!important;font-size:11px!important}}   /* short landscape: the ski hint sits between the stick and the buttons */
+body.vz-turn #fdUI .fd-help{display:none}   /* your turn: the camera is on your body, keep it clear */
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -373,16 +374,16 @@ body.gaming-free #moveHint{display:none}
 #fdUI .fd-ring[data-i="1"] .fd-knob{background:radial-gradient(circle at 35% 35%,#fff,#7F77DD 70%);box-shadow:0 0 14px rgba(127,119,221,.8)}
 #fdUI .fd-help{position:absolute;left:50%;transform:translateX(-50%);bottom:252px;font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000;text-align:center;max-width:calc(100% - 190px)}
 #fdUI.free .fd-pads,#fdUI.free .fd-subs{display:none}
-#fdUI .fd-queue{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 22px);display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 250px);pointer-events:none}
-#fdUI .fd-queue button{pointer-events:auto;padding:4px 8px;font-size:11px;border-radius:14px}
-#fdUI .fd-queue .q{background:rgba(21,18,31,.85)}#fdUI .fd-queue .q.now{background:linear-gradient(135deg,#F5C518,#D354A0);color:#15131f;border-color:#fff;transform:scale(1.12);box-shadow:0 0 14px rgba(245,197,24,.7)}
+#fdUI .fd-queue{position:absolute;left:50%;transform:translateX(-50%);top:120px;display:flex;gap:4px;align-items:center;flex-wrap:nowrap;justify-content:center;max-width:calc(100% - 16px);pointer-events:none}
+#fdUI .fd-queue button{pointer-events:auto;padding:3px 6px;font-size:10px;border-radius:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34vw;height:auto;min-height:0}
+#fdUI .fd-queue .q{background:rgba(21,18,31,.85)}#fdUI .fd-queue .q.now{background:linear-gradient(135deg,#F5C518,#D354A0);color:#15131f;border-color:#fff;box-shadow:0 0 14px rgba(245,197,24,.7)}#fdUI .fd-queue.manual .q.now{background:rgba(21,18,31,.85);color:#fff;box-shadow:none}
 #fdUI .fd-queue .q.done{opacity:.45}#fdUI .fd-queue .lbl{font:700 10px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.7);pointer-events:none}
 
 #fdUI .fd-jump{pointer-events:auto;align-self:center;width:56px;height:56px;border-radius:50%;border:2px solid rgba(245,208,60,.6);background:rgba(20,18,32,.85);color:#F5D03C;font:800 20px/1 'Silkscreen',ui-monospace,monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 #fdUI .fd-hand{position:absolute;bottom:100%;margin-bottom:6px;width:54px;height:54px;border-radius:50%;border:2px dashed rgba(245,208,60,.55);background:rgba(10,8,22,.4);pointer-events:auto;touch-action:none;cursor:grab}
 #fdUI .fd-hand[data-h="0"]{left:-12px}#fdUI .fd-hand[data-h="1"]{right:-12px}
 #fdUI .fd-hand i{position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#F5C518 70%);box-shadow:0 0 8px rgba(245,197,24,.7);pointer-events:none;opacity:.7}
-#fdUI .fd-hand.on{border-style:solid;border-color:#F5C518;box-shadow:0 0 14px rgba(245,197,24,.7)}#fdUI .fd-hand.on i{opacity:1}
+#fdUI .fd-hand.on{border-style:solid;border-color:#F5C518;box-shadow:0 0 14px rgba(245,197,24,.7)}#fdUI .fd-hand.sync i{opacity:.7}#fdUI .fd-hand.on i{opacity:1}
 #fdUI.free .fd-hand{display:none}
 #fdPlan{display:none;position:fixed;left:0;right:0;bottom:0;height:50vh;height:50dvh;z-index:23;box-sizing:border-box;padding:8px 10px;background:linear-gradient(rgba(14,10,28,.93),rgba(10,8,22,.98));border-top:2px solid #F5C518;flex-direction:column;gap:6px;overflow-y:auto;color:#fff;font:600 12px 'Silkscreen',ui-monospace,monospace;user-select:none;-webkit-user-select:none}
 body.fd-plan #fdPlan{display:flex}
@@ -1804,7 +1805,20 @@ function resize(){
 var VZ=1,VZ_AY=0.62;
 try{VZ=Math.max(1,Math.min(2.6,+localStorage.getItem("uk_vz")||1));}catch(e){}
 function vzActive(){return VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
-function floorPt(e){var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(vzActive()){x=W/2+(x-W/2)/VZ;y=H*VZ_AY+(y-H*VZ_AY)/VZ;}return [x,y];}
+/* the camera: the wheel zoom, plus an automatic push in on you while it's your turn in the spotlight, so you can see (and steer) the whole body */
+var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null;
+function vzCalc(){
+  var now=performance.now(),dt=Math.min(0.1,(now-(vzT||now))/1000);vzT=now;
+  var f=null;try{f=GAME.mode==="free"&&typeof ROUND!=="undefined"?ROUND.featured():null;}catch(e){}
+  var want=f&&f.id===myId&&VZ_ME&&!(typeof PIPE!=="undefined"&&PIPE.on)?1:0;
+  vzTz+=(want-vzTz)*Math.min(1,dt*3);if(vzTz<0.01)vzTz=0;
+  var base=vzActive(),Z0=base?VZ:1;
+  document.body.classList.toggle("vz-turn",vzTz>0.3);
+  if(!base&&!vzTz){VZS.on=false;return;}
+  var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-Math.min(W,H)*0.12:H*VZ_AY,Zt=Math.max(Z0,(W<640||H>W)?2.1:1.9);
+  VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=W/2+(fx-W/2)*tz;VZS.cy=H*VZ_AY+(fy-H*VZ_AY)*tz;VZS.ay=H*VZ_AY+(H*0.4-H*VZ_AY)*tz;VZS.on=true;
+}
+function floorPt(e){var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(VZS.on){x=VZS.cx+(x-W/2)/VZS.Z;y=VZS.cy+(y-VZS.ay)/VZS.Z;}return [x,y];}
 window.addEventListener("wheel",function(e){
   if(e.ctrlKey||!canvas||(e.target.closest&&e.target.closest("#prBar,#chatPanel,#fdPlan,select,textarea,input,.modal,[role=dialog]")))return;if(GAME.mode&&GAME.mode!=="free")return;
   e.preventDefault();VZ=Math.max(1,Math.min(2.6,VZ*(e.deltaY<0?1.12:1/1.12)));if(VZ<1.02)VZ=1;
@@ -2812,13 +2826,13 @@ var GAME=(function(){
   function beatPos(){var b=BEAT.get(),now=performance.now();return b.known&&b.period>0?(now-b.t0)/b.period:now/500;}
   /* Move queue: line up dances and moves ahead of time. When it's your turn in the middle, they play in order and
      split your turn evenly between them; the one on now is lit. Kept on this device. */
-  var fdQ=[],fdQNow=-1;try{var qs=JSON.parse(localStorage.getItem("uk_fdq")||"[]");if(Array.isArray(qs))fdQ=qs.filter(function(e){return Array.isArray(e)&&e[0]>0&&e[0]<ART.DANCES.length;}).map(function(e){return[e[0]|0,Math.max(0,e[1]|0)];}).slice(0,3);}catch(e){}
+  var fdQ=[],fdQNow=-1,fdManual=false;try{var qs=JSON.parse(localStorage.getItem("uk_fdq")||"[]");if(Array.isArray(qs))fdQ=qs.filter(function(e){return Array.isArray(e)&&e[0]>0&&e[0]<ART.DANCES.length;}).map(function(e){return[e[0]|0,Math.max(0,e[1]|0)];}).slice(0,3);}catch(e){}
   function fdqSave(){try{localStorage.setItem("uk_fdq",JSON.stringify(fdQ));}catch(e){}}
   function fdqIndex(into,left,n){var tot=into+left;if(n<1||tot<=0)return -1;return Math.max(0,Math.min(n-1,Math.floor(into/tot*n)));}
   function fdqName(e){var d=ART.DANCES[e[0]],sb=d.subs&&d.subs[e[1]];return d.icon+" "+d.name+(sb?" · "+sb:"");}
   function fdqRender(){
     var box=document.getElementById("fdQueue");if(!box)return;box.textContent="";
-    var lb=document.createElement("span");lb.className="lbl";lb.textContent="Your turn plays:";if(fdQ.length)box.appendChild(lb);
+    var lb=document.createElement("span");lb.className="lbl";lb.textContent=fdManual?"You're driving:":"Your turn plays:";box.classList.toggle("manual",!!fdManual);if(fdQ.length)box.appendChild(lb);
     fdQ.forEach(function(e,k){var b=document.createElement("button");b.className="q"+(k===fdQNow?" now":fdQNow>k?" done":"");b.textContent=(k+1)+". "+fdqName(e);b.title="Tap to remove";b.onclick=function(ev){ev.stopPropagation();b.blur();fdQ.splice(k,1);fdqSave();fdqRender();};box.appendChild(b);});
   }
   /* the planning panel (bottom half while waiting in the circle): up to three dance + move picks, in order, sharing the 15 s */
@@ -2855,13 +2869,26 @@ var GAME=(function(){
   }
   var fdqPlaceT=0;
   function fdqPlace(){var box=document.getElementById("fdQueue"),rb=document.getElementById("roundBox");if(!box)return;
-    var top=58;if(rb&&rb.classList.contains("on")){var r=rb.getBoundingClientRect();if(r.bottom>0)top=Math.max(top,Math.round(r.bottom+8));}}
+    var top=58;if(rb&&rb.classList.contains("on")){var r=rb.getBoundingClientRect();if(r.bottom>0)top=Math.max(top,Math.round(r.bottom+8));}box.style.top=top+"px";box.style.bottom="auto";}
   function fdSet(st,m){fStyle=st;fSub=m;fkHeld={};fdRender();applyToMe();sendPose(true);}
+  var fdLbl=false;
+  /* the hand rings: when you're not holding one, its dot rides where that hand of the dance is, so you can see it and grab just that hand while the rest of the dance carries on */
+  function handSync(){
+    var ui=document.getElementById("fdUI");if(!ui||mode!=="free"||fStyle<=0)return;
+    var rg=null;try{rg=ART.dance(fStyle,fSub,fCtl.map(function(v){return v/100;}),beatPos());}catch(e){}
+    Array.prototype.forEach.call(ui.querySelectorAll(".fd-hand"),function(hd){
+      var h=+hd.getAttribute("data-h"),dot=hd.firstChild;if(fHandP[h]!==null||!rg||!dot)return;
+      var a=h?rg.armR:rg.armL,rad=hd.clientWidth/2,x=(h?1:-1)*Math.sin(a)*0.7*rad,y=Math.cos(a)*0.7*rad;
+      hd.classList.add("sync");dot.style.transform="translate("+x.toFixed(1)+"px,"+y.toFixed(1)+"px)";});
+  }
   function fdqTick(){
+    handSync();
+    if(fdLbl!==fdManual){fdLbl=fdManual;fdqRender();}
     var nw=performance.now();if(nw-fdqPlaceT>500){fdqPlaceT=nw;fdqPlace();}
     if(nw-plT>200){plT=nw;plTick();}
     var f=ROUND.featured(),on=f&&f.id===myId&&fdQ.length&&mode==="free";
-    if(!on){if(fdQNow!==-1){fdQNow=-1;fdqRender();}return;}
+    if(!on){fdManual=false;if(fdQNow!==-1){fdQNow=-1;fdqRender();}return;}
+    if(fdManual)return;   /* you picked something yourself this turn: you're driving, the plan stops switching your dance */
     var k=fdqIndex(f.into,f.left,fdQ.length);
     if(k!==fdQNow){fdQNow=k;fdSet(fdQ[k][0],fdQ[k][1]);fdqRender();}
   }
@@ -2958,8 +2985,8 @@ var GAME=(function(){
   var FKEYS={KeyW:[0,0,-1],KeyS:[0,0,1],KeyA:[0,-1,0],KeyD:[0,1,0],ArrowUp:[1,0,-1],ArrowDown:[1,0,1],ArrowLeft:[1,-1,0],ArrowRight:[1,1,0]},fkHeld={};
   function fdKey(code,down){if(mode!=="free"||fStyle===0||!FKEYS[code])return false;if(down)fkHeld[code]=1;else delete fkHeld[code];return true;}
   function turnBy(q){setTimeout(function(){fBack=(fBack+q)&3;applyToMe();sendPose(true);},q===1?600:700);}
-  function fdPick(i){fStyle=i;fSub=0;fCtl=[0,0,0,0];fHand=[null,null];fkHeld={};if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
-  function fdSub(k){fSub=k;fdRender();applyToMe();sendPose(true);}
+  function fdPick(i){fdManual=true;fStyle=i;fSub=0;fCtl=[0,0,0,0];fHand=[null,null];fkHeld={};if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
+  function fdSub(k){fdManual=true;fSub=k;fdRender();applyToMe();sendPose(true);}
   function fdRender(){
     fdBuild();
     var ui=document.getElementById("fdUI"),d=ART.DANCES[fStyle];
@@ -7080,7 +7107,7 @@ function renderLoop(){
   /* the floor runs down to the chat bar (or the bottom of the screen when there's none), so tall phones don't get a black band */
   var cpE=document.getElementById("chatPanel"),cpH=cpE?cpE.offsetHeight:0;FLOOR_BOTTOM=Math.max(0.78,Math.min(1,1-cpH/H));
   ctx.clearRect(0,0,W,H);LAYV.stageBottom=STAGE_BOTTOM;LAYV.floorBottom=FLOOR_BOTTOM;
-  var vzOn=vzActive();if(vzOn){ctx.save();ctx.translate(W/2,H*VZ_AY);ctx.scale(VZ,VZ);ctx.translate(-W/2,-H*VZ_AY);}   /* scroll-wheel zoom (PC) */
+  vzCalc();var vzOn=VZS.on;if(vzOn){ctx.save();ctx.translate(W/2,VZS.ay);ctx.scale(VZS.Z,VZS.Z);ctx.translate(-VZS.cx,-VZS.cy);}   /* scroll-wheel zoom (PC) */
 
   /* Background */
   ctx.fillStyle="#0a0a0f";
@@ -7195,6 +7222,7 @@ function renderLoop(){
 
     var vx=(PIPE.pipeRound()&&v.dance===4&&v!==PH?PIPE.sx(v.x):WALK.walkRound()&&v.dance===4&&v!==PH?WALK.sx(v.x):v.x*W), vy=v.y*H;
     if(RP&&RP.pos[ids[i]]){var rp=RP.pos[ids[i]];vx=vx*(1-RP.k)+rp[0]*RP.k;vy=vy*(1-RP.k)+rp[1]*RP.k;}
+    if(ids[i]===myId)VZ_ME=[vx,vy];
     if(spec&&ids[i]!==myId&&ids[i]!=="__perf"){var sl=spec.slot[ids[i]];if(!sl)continue;vx=sl[0];vy=sl[1];}   /* raised above the game panel */
     if(v.seed===undefined)v.seed=(ids[i].charCodeAt(0)||0)%7+(v.name.length%5);
     /* limbs glide toward the latest pose so remote dancers move smoothly between updates */
