@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.25 — Planner timing in free dance
+
+- **Everyone free dances for about 30 s** before the circle forms. The ring is locked in at 22 s, the first dancer is told then, and the first turn starts about 37 s in (was 23 s).
+- **The planner only shows once the circle has formed.** The exception is the first dancer, who gets it as soon as they're told, so they have about 15 s to plan. After the circle forms it stays up while you're in the circle and not in the spotlight (between turns, and after your turns are done).
+- Server change: a live show needs the server redeployed to get the 30 s.
+
 ## v1.81.24 — Turn planner the whole time
 
 - In free dance, the half-screen drag-and-drop planner now shows the whole time you're in the circle and not in the spotlight: before the circle forms, between your turns, after your turns are done, and when you're not in the turns this song. The header says which.

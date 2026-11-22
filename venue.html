@@ -17,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.24"></script>
-<script src="gfx.js?v=1.81.24"></script>
-<script src="art.js?v=1.81.24"></script>
-<script src="instruments.js?v=1.81.24"></script>
-<script src="kart.js?v=1.81.24"></script>
-<script src="explain.js?v=1.81.24"></script>
+<script src="tune.js?v=1.81.25"></script>
+<script src="gfx.js?v=1.81.25"></script>
+<script src="art.js?v=1.81.25"></script>
+<script src="instruments.js?v=1.81.25"></script>
+<script src="kart.js?v=1.81.25"></script>
+<script src="explain.js?v=1.81.25"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5626,8 +5626,10 @@ var ROUND=(function(){
     var sp=rd.spot,p=pos(),f=featured(),N=ringIds().length,nx=null,total=0;
     for(var i=0;i<sp.length;i++)if(sp[i].id===myId){total++;if(!nx&&sp[i].b>p)nx={i:i,a:sp[i].a};}
     if(f&&f.id===myId)return null;   /* the planner shows the whole time you're in the circle and not in the spotlight */
-    if(!nx)return{show:true,done:total>0,none:total===0,inMs:0,first:false,now:f?f.name:"",nowI:f?f.i:-1};
-    return{show:true,pre:p<sp[0].a,ord:nx.i+1,of:sp.length,pass:Math.floor(nx.i/Math.max(1,N))+1,passes:Math.max(1,Math.ceil(sp.length/Math.max(1,N))),inMs:Math.max(0,nx.a-p),first:nx.i===0,now:f?f.name:"",nowI:f?f.i:-1,nextName:(sp[nx.i-1]&&nx.i>0&&!f)?sp[nx.i-1].name:""};
+    var formed=p>=sp[0].a-7000;   /* before the circle forms everyone free dances; only the first dancer gets the planner early */
+    if(!nx)return formed?{show:true,done:total>0,none:total===0,inMs:0,first:false,now:f?f.name:"",nowI:f?f.i:-1}:null;
+    if(!formed&&nx.i>0)return null;
+    return{show:true,ord:nx.i+1,of:sp.length,pass:Math.floor(nx.i/Math.max(1,N))+1,passes:Math.max(1,Math.ceil(sp.length/Math.max(1,N))),inMs:Math.max(0,nx.a-p),first:nx.i===0,now:f?f.name:"",nowI:f?f.i:-1,nextName:(sp[nx.i-1]&&nx.i>0&&!f)?sp[nx.i-1].name:""};
   }
   function spotOn(){if(!rd||rd.phase!=="play"||!rd.spot||!rd.spot.length)return 0;var p=pos(),a=rd.spot[0].a,b=rd.spot[rd.spot.length-1].b;if(p<a-2500||p>b+1500)return 0;return Math.max(0,Math.min(1,(p-(a-2500))/1500,(b+1500-p)/1500));}
   function drawPlay(){
@@ -6573,7 +6575,7 @@ var PRACTICE=(function(){
     if(battle){battleStart(my);return;}
     /* free dance: lock in the spotlight 35% of the way through (at least 20 s in), as the server does in a show */
     if(mode==="free"&&chart){
-      var lockAt=8000;
+      var lockAt=22000;   /* as the server: ~30 s of free dance before the circle forms, first turn at ~37 s */
       spotT=setTimeout(function(){
         if(my!==job)return;
         var list=bots.map(function(b){return{id:b.id,name:b.name,color:b.color};});
@@ -7110,7 +7112,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.24",SERVER_VERSION="";
+var PAGE_VERSION="1.81.25",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7689,7 +7691,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.24"></script>
+<script src="lab.js?v=1.81.25"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
