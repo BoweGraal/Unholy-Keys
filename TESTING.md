@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.4 — Practice menu sorted into kinds of game
+
+The practice menu starts with four tabs: Rhythm (step, target, note highway, 4 keys), Dance (free dance, mosh pit, dance walk race), Ride & race (roller rink, ice rink, keepy uppy, Mars Rally, half pipe, ski) and Team (capture the flag, kart flag). Only that kind's games show below.
+
 ## v1.81.3 — Capture the flag / Kart flag: more room
 
 - One thin bar at the top: score (your team underlined) and the clock. The performer is small in the top-right corner. The arena gets the rest of the screen in both orientations; upright phones get a closer camera that follows you.
