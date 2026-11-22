@@ -1806,7 +1806,7 @@ var VZ=1,VZ_AY=0.62;
 try{VZ=Math.max(1,Math.min(2.6,+localStorage.getItem("uk_vz")||1));}catch(e){}
 function vzActive(){return VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
 /* the camera: the wheel zoom, plus an automatic push in on you while it's your turn in the spotlight, so you can see (and steer) the whole body */
-var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null;
+var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null,VZ_H=60;
 function vzCalc(){
   var now=performance.now(),dt=Math.min(0.1,(now-(vzT||now))/1000);vzT=now;
   var f=null;try{f=GAME.mode==="free"&&typeof ROUND!=="undefined"?ROUND.featured():null;}catch(e){}
@@ -1815,8 +1815,8 @@ function vzCalc(){
   var base=vzActive(),Z0=base?VZ:1;
   document.body.classList.toggle("vz-turn",vzTz>0.3);
   if(!base&&!vzTz){VZS.on=false;return;}
-  var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-Math.min(W,H)*0.12:H*VZ_AY,Zt=Math.max(Z0,(W<640||H>W)?2.1:1.9);
-  VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=W/2+(fx-W/2)*tz;VZS.cy=H*VZ_AY+(fy-H*VZ_AY)*tz;VZS.ay=H*VZ_AY+(H*0.4-H*VZ_AY)*tz;VZS.on=true;
+  var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-VZ_H*0.16:H*VZ_AY,Zt=Math.max(Z0,Math.min(6,0.8*H/VZ_H));   /* zoom until your body is about 70% of the screen tall */
+  VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=W/2+(fx-W/2)*tz;VZS.cy=H*VZ_AY+(fy-H*VZ_AY)*tz;VZS.ay=H*VZ_AY+(H*0.47-H*VZ_AY)*tz;VZS.on=true;
 }
 function floorPt(e){var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(VZS.on){x=VZS.cx+(x-W/2)/VZS.Z;y=VZS.cy+(y-VZS.ay)/VZS.Z;}return [x,y];}
 window.addEventListener("wheel",function(e){
@@ -7245,6 +7245,7 @@ function renderLoop(){
     if(!v.look)v.look=lookOf(null,v.color,v.name);
     /* a crowd surprise: float up, or point both hands at the stage and fire lasers, sparkle or burn */
     var cAge=crowdAge(),ck=cAge<ART.CROWD_MS?CROWD.kind:"",sc2=freeMe?GAME.freeS():(v!==PH&&PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?3:2),dyy=vy+ART.crowdLift(ck,cAge,sc2),cp=freeMe?GAME.pose:vp,cdn=v.dance,cfd=freeMe?GAME.fd:v.fd,hands=null;
+    if(ids[i]===myId)VZ_H=Math.max(40,sc2*31);
     if(ck==="lasers"){
       var JJ=limbJoints(vx,dyy,sc2,0),tg=v._tg={x:W/2+Math.sin(now/650+(v.seed||0))*W*0.32,y:STAGE_TOP*H+12};
       var aL=Math.atan2(-(tg.x-JJ[0][0]),tg.y-JJ[0][1]),aR=Math.atan2(-(tg.x-JJ[1][0]),tg.y-JJ[1][1]);
