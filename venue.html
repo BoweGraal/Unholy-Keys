@@ -17,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.23"></script>
-<script src="gfx.js?v=1.81.23"></script>
-<script src="art.js?v=1.81.23"></script>
-<script src="instruments.js?v=1.81.23"></script>
-<script src="kart.js?v=1.81.23"></script>
-<script src="explain.js?v=1.81.23"></script>
+<script src="tune.js?v=1.81.24"></script>
+<script src="gfx.js?v=1.81.24"></script>
+<script src="art.js?v=1.81.24"></script>
+<script src="instruments.js?v=1.81.24"></script>
+<script src="kart.js?v=1.81.24"></script>
+<script src="explain.js?v=1.81.24"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3001,7 +3001,7 @@ var GAME=(function(){
     var tm=Math.floor(secs/60)+":"+("0"+secs%60).slice(-2);
     var first=ps.first&&secs<=16;
     head.className="pl-head"+(first?" first":"");
-    head.textContent=first?"\u2B50 YOU'RE FIRST \u00b7 you start in "+secs+" s. Plan your moves!":"You're #"+ps.ord+" of "+ps.of+(ps.passes>1?" \u00b7 turn "+ps.pass+" of "+ps.passes:"")+" \u00b7 up in "+tm;
+    head.textContent=ps.done?"Your turns are done this song \u00b7 plan your moves for next time":ps.none?"You're not in the spotlight this song \u00b7 plan your moves for next time":first?"\u2B50 YOU'RE FIRST \u00b7 you start in "+secs+" s. Plan your moves!":"You're #"+ps.ord+" of "+ps.of+(ps.passes>1?" \u00b7 turn "+ps.pass+" of "+ps.passes:"")+" \u00b7 up in "+tm;
     P.querySelector(".pl-sub").textContent=(ps.now?"In the middle now: "+ps.now+". ":"")+"Pick up to 3 dances: 1 = 15 s, 2 = 7.5 s each, 3 = 5 s each.";
     var sig=fdQ.map(function(e){return e.join(".");}).join(",")+"|"+fStyle+"."+fSub;if(sig===plSig)return;plSig=sig;
     var sl=P.querySelector(".pl-slots");sl.textContent="";var per=fdQ.length?15/fdQ.length:0;
@@ -5625,9 +5625,9 @@ var ROUND=(function(){
     if(!rd||rd.phase!=="play"||rd.mode!=="free"||rd.isBattle||!rd.spot||!rd.spot.length)return null;
     var sp=rd.spot,p=pos(),f=featured(),N=ringIds().length,nx=null,total=0;
     for(var i=0;i<sp.length;i++)if(sp[i].id===myId){total++;if(!nx&&sp[i].b>p)nx={i:i,a:sp[i].a};}
-    if(!nx||(f&&f.id===myId))return null;
-    if(nx.i>0&&p<sp[0].a-7000)return null;   /* until the circle forms everyone just free dances; only the first dancer is called in early */
-    return{show:true,ord:nx.i+1,of:sp.length,pass:Math.floor(nx.i/Math.max(1,N))+1,passes:Math.max(1,Math.ceil(sp.length/Math.max(1,N))),inMs:Math.max(0,nx.a-p),first:nx.i===0,now:f?f.name:"",nowI:f?f.i:-1,nextName:(sp[nx.i-1]&&nx.i>0&&!f)?sp[nx.i-1].name:""};
+    if(f&&f.id===myId)return null;   /* the planner shows the whole time you're in the circle and not in the spotlight */
+    if(!nx)return{show:true,done:total>0,none:total===0,inMs:0,first:false,now:f?f.name:"",nowI:f?f.i:-1};
+    return{show:true,pre:p<sp[0].a,ord:nx.i+1,of:sp.length,pass:Math.floor(nx.i/Math.max(1,N))+1,passes:Math.max(1,Math.ceil(sp.length/Math.max(1,N))),inMs:Math.max(0,nx.a-p),first:nx.i===0,now:f?f.name:"",nowI:f?f.i:-1,nextName:(sp[nx.i-1]&&nx.i>0&&!f)?sp[nx.i-1].name:""};
   }
   function spotOn(){if(!rd||rd.phase!=="play"||!rd.spot||!rd.spot.length)return 0;var p=pos(),a=rd.spot[0].a,b=rd.spot[rd.spot.length-1].b;if(p<a-2500||p>b+1500)return 0;return Math.max(0,Math.min(1,(p-(a-2500))/1500,(b+1500-p)/1500));}
   function drawPlay(){
@@ -7110,7 +7110,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.23",SERVER_VERSION="";
+var PAGE_VERSION="1.81.24",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7689,7 +7689,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.23"></script>
+<script src="lab.js?v=1.81.24"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

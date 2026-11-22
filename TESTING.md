@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.24 — Turn planner the whole time
+
+- In free dance, the half-screen drag-and-drop planner now shows the whole time you're in the circle and not in the spotlight: before the circle forms, between your turns, after your turns are done, and when you're not in the turns this song. The header says which.
+- Before, it only showed when you had a turn coming up and the circle had formed, otherwise you got the full-screen style columns.
+
 ## v1.81.23 — Cap and witch hat on turned views
 
 - **Cap** (and headphones, bandana): in the three-quarter views they now sit on the head instead of a pixel off to the side. Shades and the mask still sit on the face.
