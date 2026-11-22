@@ -7058,6 +7058,23 @@ function renderLoop(){
     PH.name=performer.name?"\u2605 "+performer.name:"";PH.look=performer.look||lookOf(null,PH.color,performer.name);
     var pk=0;while(pk<ids.length&&ids[pk]!==myId&&viewers[ids[pk]].y<=PH.y)pk++;ids.splice(pk,0,"__perf");
   }
+  /* while a game panel covers the floor (phones and tablets), the big you stands on top of it, so the small you on the floor
+     is left out, and everyone else is raised into the strip above the panel, best score nearest the middle, so you can see
+     who's doing well while you play */
+  var bdc=document.body.classList,meBigOn=bdc.contains("gaming")&&!bdc.contains("gaming-free")&&!!(meEl&&meEl.offsetWidth&&getComputedStyle(meEl).display!=="none");
+  var spec=null;
+  (function(){
+    if(!bdc.contains("gaming")||bdc.contains("gaming-free"))return;
+    var gp=document.getElementById("gamePanel");if(!gp||!gp.classList.contains("on"))return;
+    var gr=gp.getBoundingClientRect();if(gr.width<W*0.6)return;
+    var oth=ids.filter(function(k){return k!==myId&&k!=="__perf";});
+    oth.sort(function(a,b){var A=viewers[a],B=viewers[b];return ((B.dance===5?1:0)-(A.dance===5?1:0))||((B.combo||0)-(A.combo||0))||(a<b?-1:1);});
+    var base=gr.top-24,rowH=54,off0=meBigOn?105:44,sp=62,jmax=Math.max(0,Math.floor((W/2-26-off0)/sp)),per=2*(jmax+1);
+    var rows=Math.max(1,Math.floor((base-(STAGE_BOTTOM*H+60))/rowH)+1);
+    spec={slot:{},lead:null};
+    oth.forEach(function(id,k){var row=Math.floor(k/per);if(row>=rows)return;var c=k%per,j=Math.floor(c/2),side=c%2?1:-1;spec.slot[id]=[W/2+side*(off0+j*sp),base-row*rowH];});
+    if(oth.length&&viewers[oth[0]].dance===5&&(viewers[oth[0]].combo||0)>0)spec.lead=oth[0];
+  })();
   for(var i=0;i<ids.length;i++){
     if(KON&&KART.hide())continue;                          /* the kart game draws everyone itself once the floor has faded to space */
     if(PIPE.hide(ids[i]))continue;                         /* the half pipe: only your group is on your pipe */
@@ -7071,6 +7088,7 @@ function renderLoop(){
 
     var vx=(PIPE.pipeRound()&&v.dance===4&&v!==PH?PIPE.sx(v.x):WALK.walkRound()&&v.dance===4&&v!==PH?WALK.sx(v.x):v.x*W), vy=v.y*H;
     if(RP&&RP.pos[ids[i]]){var rp=RP.pos[ids[i]];vx=vx*(1-RP.k)+rp[0]*RP.k;vy=vy*(1-RP.k)+rp[1]*RP.k;}
+    if(spec&&ids[i]!==myId&&ids[i]!=="__perf"){var sl=spec.slot[ids[i]];if(!sl)continue;vx=sl[0];vy=sl[1];}   /* raised above the game panel */
     if(v.seed===undefined)v.seed=(ids[i].charCodeAt(0)||0)%7+(v.name.length%5);
     /* limbs glide toward the latest pose so remote dancers move smoothly between updates */
     var vp=null;
@@ -7081,12 +7099,13 @@ function renderLoop(){
       vp=v.poseCur;
     }else v.poseCur=null;
     /* while the big you is dancing over the game, the small you on the floor sits out of sight */
-    var bigMe=ids[i]===myId&&document.body.classList.contains("gaming")&&!document.body.classList.contains("gaming-free")&&window.innerWidth>520;
+    var bigMe=ids[i]===myId&&meBigOn;
     var combo=v.dance>=4?(v.combo||0):0;
     STREAK.track(v,combo);
     if(combo>=10&&!bigMe&&!(bp&&(bp.A.id===ids[i]||bp.B.id===ids[i]))&&!(feat&&feat.id===ids[i]))STREAK.draw(ctx,vx,vy,2,combo,now,v.seed||0);
     var onStage=(feat&&feat.id===ids[i])||(bp&&(bp.A.id===ids[i]||bp.B.id===ids[i]));
-    if((feat||bp)&&!onStage){ctx.save();ctx.globalAlpha=0.55;}
+    var dimSpec=!!spec&&ids[i]!==myId&&ids[i]!=="__perf"&&v.dance!==5;
+    if(((feat||bp)&&!onStage)||dimSpec){ctx.save();ctx.globalAlpha=0.55;}
     var freeMe=ids[i]===myId&&GAME.mode==="free";
     if(!v.look)v.look=lookOf(null,v.color,v.name);
     /* a crowd surprise: float up, or point both hands at the stage and fire lasers, sparkle or burn */
@@ -7115,7 +7134,8 @@ function renderLoop(){
       var lyy=dyy+(rpo?rpo.lift:0)+(epo?epo.lift:0);
       ART.reactFx(ctx,v.reacts,now,vx,lyy,sc2,v.seed||0);if(epo)ART.envFx(ctx,LAYV,H,vx,lyy,sc2,now,v.seed||0);
     }
-    if((feat||bp)&&!onStage)ctx.restore();
+    if(((feat||bp)&&!onStage)||dimSpec)ctx.restore();
+    if(spec&&spec.lead===ids[i]){ctx.save();ctx.font="800 16px system-ui,sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.75)";ctx.strokeText("\u2605",vx,vy-66);ctx.fillStyle="#F5C518";ctx.fillText("\u2605",vx,vy-66);ctx.restore();}   /* whoever is doing best */
     if(v.msT&&!bigMe&&now-v.msT<1700)STREAK.pop(ctx,vx,vy-50,v.msN,now-v.msT,1);
     else if(v.dance===5&&v.combo>=3&&!bigMe){
       /* step and target game combo over the dancer's head */
