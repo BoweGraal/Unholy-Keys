@@ -102,9 +102,9 @@ button.pe{background:#1f5f6e;box-shadow:inset -3px -3px 0 #0f3640,inset 3px 3px 
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.79.52"></script>
-<script src="art.js?v=1.79.52"></script>
-<script src="instruments.js?v=1.79.52"></script>
+<script src="gfx.js?v=1.79.53"></script>
+<script src="art.js?v=1.79.53"></script>
+<script src="instruments.js?v=1.79.53"></script>
 <script>
 (function(){
 /* pixel look: no emoji in any label (the lab writes a lot of its own text, so strip them as they appear) */
@@ -384,8 +384,8 @@ function bindPixel(){
       if(PX.down){PX.down=false;if(PX.undo.length)PX.map=JSON.parse(PX.undo.pop());pxCommit();}
       PX.lock=true;var m=mid(t);PX.pan={x:m.x,y:m.y,d:Math.hypot(t[0].x-t[1].x,t[0].y-t[1].y)||1};return;}
     if(PX.lock)return;
-    if(e.button===2)return;   /* right click is undo (see contextmenu) */
     var c=pxCell(e);PX.hover=c;
+    if(e.button===2){if(PX.curve)return;pxSnap();PX.rt=PX.tool;PX.tool="erase";PX.down=true;PX.last=c;pxPut(c[0],c[1]);pxCommit(true);return;}   /* right click rubs out, drag to keep rubbing; Ctrl+Z undoes */
     if(PX.tool==="line"||PX.tool==="shape"){PX.ds=c;PX.preview=PX.tool==="line"?[c]:pxShapeCells(c,c);return;}
     if(PX.tool==="curve"){var cu=PX.curve;
       if(cu){var near=pxCurveCells(cu).some(function(p){return Math.abs(p[0]-c[0])<=2&&Math.abs(p[1]-c[1])<=2;});if(near){PX.bend=true;return;}pxCurveDone();}
@@ -404,8 +404,8 @@ function bindPixel(){
     if(PX.ds){var a0=PX.ds,c0=PX.hover||a0;PX.ds=null;
       if(PX.tool==="curve"){PX.curve={a:a0,b:c0,c:null};PX.preview=pxCurveCells(PX.curve);pxStates();return;}
       var cells=PX.preview||[a0];PX.preview=null;pxSnap();pxPaintCells(cells);pxCommit();pxSwatches();share();return;}
-    if(PX.down){PX.down=false;pxCommit();pxSwatches();share();}};
-  cv.addEventListener("contextmenu",function(e){if(mode!=="assets")return;if(AS.cat==="pixel"){e.preventDefault();if(PX.curve){PX.curve=null;PX.preview=null;pxStates();}else pxUndo();}else if(AS.dfs){e.preventDefault();dnUndo();}});
+    if(PX.down){PX.down=false;if(PX.rt){PX.tool=PX.rt;PX.rt=null;}pxCommit();pxSwatches();share();}};
+  cv.addEventListener("contextmenu",function(e){if(mode!=="assets")return;if(AS.cat==="pixel"){e.preventDefault();if(PX.curve){PX.curve=null;PX.preview=null;pxStates();}}else if(AS.dfs){e.preventDefault();dnUndo();}});
   view.onwheel=function(e){if(AS.cat!=="pixel"||mode!=="assets")return;e.preventDefault();zoomAt(Math.exp(-e.deltaY*0.0015),e.clientX,e.clientY);};
   cv.onpointerup=up;cv.onpointercancel=up;cv.onpointerleave=function(){PX.hover=null;};
   document.addEventListener("fullscreenchange",function(){if(PX.fs&&!document.fullscreenElement){/* the browser left full screen (Esc): keep the editor big, the Exit button is still there */}});

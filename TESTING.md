@@ -1660,3 +1660,7 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.52 — pixel editor: Shift all
 - New "Shift all" arrows (up/down/left/right) in the pixel editor, side panel and full screen bar: the whole part, original art and your paint together, moves one pixel. Pixels pushed off the edge are lost; Undo (right click) puts it back.
 - Check: open a part, press up: the whole thing is one pixel higher; down returns it.
+
+## v1.79.53 — pixel editor: right click erases
+- Right click (and drag) rubs out pixels in the pixel editor; right click no longer undoes. Ctrl+Z undoes, Ctrl+Shift+Z redoes. (With a curve open, right click still drops the curve.)
+- Check: right click a pixel: only it disappears; Ctrl+Z brings it back.
