@@ -1555,3 +1555,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.24
 - Free dance: dragging a dot out of its ring no longer tears it off to hover over buttons; dances and sub-moves are picked by tapping their buttons.
+
+## v1.79.25
+- Free dance: the dancer only turns to face the walking direction when the left stick is pushed right to its edge (others see it as full-pace movement); otherwise they keep facing front and just slide.
