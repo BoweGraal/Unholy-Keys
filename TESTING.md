@@ -1608,3 +1608,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.40 — no walking to the bottom from the controls
 - Free dance: tapping the floor in the lower half of the screen (where the sticks, dance buttons and planner are) no longer walks you there. A tap that just missed a button used to send your dancer to the bottom edge.
+
+## v1.79.41 — no "Add this move" on the sticks screen
+- The "Line up moves for your turn / Add this move / Clear" strip is gone from the stick controls; moves are planned in the planner panel. If you have planned moves, a small "Your turn plays:" list shows them during your turn.
