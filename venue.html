@@ -3486,10 +3486,10 @@ var GAME=(function(){
     g.restore();
     return true;
   }
-  /* 8-bit arrows: the arrow shape is cut into a 13 x 13 grid of whole pixels, with a dark outline, a light top-left edge and a shaded bottom-right edge */
-  var ARW=null,ARN=13;
+  /* 8-bit arrows: the arrow shape is cut into a 17 x 17 grid of whole pixels, with a dark outline, a light top-left edge and a shaded bottom-right edge */
+  var ARW=null,ARN=17;
   function arrowMask(){
-    if(ARW)return ARW;var P=[[1,0],[0,-1],[0,-0.42],[-1,-0.42],[-1,0.42],[0,0.42],[0,1]],m=[],x,y,i,j;
+    if(ARW)return ARW;var P=[[1,0],[0.05,-1],[0.05,-0.5],[-1,-0.5],[-1,0.5],[0.05,0.5],[0.05,1]],m=[],x,y,i,j;
     function inside(px,py){var c=false;for(i=0,j=P.length-1;i<P.length;j=i++){if((P[i][1]>py)!==(P[j][1]>py)&&px<(P[j][0]-P[i][0])*(py-P[i][1])/(P[j][1]-P[i][1])+P[i][0])c=!c;}return c;}
     for(y=0;y<ARN;y++){m[y]=[];for(x=0;x<ARN;x++)m[y][x]=inside(-1+(x+0.5)*2/ARN,-1+(y+0.5)*2/ARN)?1:0;}
     function at(x,y){return x>=0&&y>=0&&x<ARN&&y<ARN&&m[y][x]?1:0;}
@@ -3501,13 +3501,13 @@ var GAME=(function(){
     var M=arrowMask(),cell=Math.max(2,Math.round(2*sz/ARN)),half=cell*ARN/2,k;
     g.save();g.translate(Math.round(x),Math.round(y));g.rotate(rot);
     for(k=0;k<M.length;k++){var c=M[k],px=-half+c.x*cell,py=-half+c.y*cell;
-      if(c.e){if(stroke){g.fillStyle=fill?"rgba(10,6,24,.85)":stroke;g.fillRect(px,py,cell,cell);}else if(fill){g.fillStyle="rgba(10,6,24,.85)";g.fillRect(px,py,cell,cell);}}
+      if(c.e){if(fill||stroke){g.fillStyle=fill?(stroke==="#333"||stroke==="#555"?"#8a8a96":"#f4f2ff"):stroke;g.fillRect(px,py,cell,cell);}}   /* same pixels as the target arrows: a light outline round a coloured, bevelled body */
       else if(fill){g.fillStyle=fill;g.fillRect(px,py,cell,cell);
         if(c.hl){g.fillStyle="rgba(255,255,255,.38)";g.fillRect(px,py,cell,cell);}else if(c.sh){g.fillStyle="rgba(0,0,0,.28)";g.fillRect(px,py,cell,cell);}}}
     g.restore();
   }
   function drawStep(now){
-    var bt=grid(),tv=travel(bt.period),ty=CH*0.13,sz=Math.min(CW/11,22),i;
+    var bt=grid(),tv=travel(bt.period),sz=Math.min(CW/9,Math.round(CH/9),46),ty=Math.max(CH*0.13,sz*1.35),i;   /* big arrows: nearly a lane wide */
     makeNotes(now,bt);
     expire(now);var n;
     g.clearRect(0,0,CW,CH);
