@@ -458,7 +458,7 @@ function castVote(ws, voter, target, weight) {
 /* the show's effects, checked: anything unknown is dropped */
 var FX_LIGHTS = ["auto", "party", "edm", "strobe", "spot", "warm", "cool", "off"], FX_WEATHER = ["none", "rain", "storm", "snow"];
 var FX_CROWD = ["sparkle", "fire", "lasers", "float"];
-var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", "turn180", "turn360", "spinmove"];
+var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", "turn180", "turn90", "spinmove"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
@@ -712,7 +712,7 @@ function onMessage(ws, raw, isBinary) {
           for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
           if (fc) {
             fd = { s: fs, m: fm, c: fc };
-            if (+msg.fd.b === 1) fd.b = 1;
+            var fb = Math.floor(+msg.fd.b); if (fb >= 1 && fb <= 3) fd.b = fb;   // facing: 1 = turned round, 2 = a quarter turn right, 3 = a quarter turn left
             if (Array.isArray(msg.fd.h) && msg.fd.h.length === 2) {
               var hh = msg.fd.h.map(function (v) { return v === null || v === undefined || !isFinite(+v) ? null : Math.max(-400, Math.min(400, Math.round(+v))); });
               if (hh[0] !== null || hh[1] !== null) fd.h = hh;

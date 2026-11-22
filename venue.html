@@ -669,7 +669,7 @@ button:not(#ppPad):not(#skJump):not(#kpJump):not(#skiJump):not(.ktB),#prExit{cli
   <!-- free dance: dance buttons down both edges, the dance's own moves along the bottom, two control dots in the middle -->
   <div id="fdUI" aria-label="Free dance controls">
     <div class="fd-col fd-l"></div><div class="fd-col fd-r"></div>
-    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><button class="fd-jump" aria-label="Jump" title="Jump (Space)">&#10514;<small>Jump</small></button><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div><div class="fd-hand" data-h="0" title="Left hand (hold to control it)"><i></i></div><div class="fd-hand" data-h="1" title="Right hand (hold to control it)"><i></i></div><div class="fd-moveName"></div><div class="fd-mini"><button data-r="turn180" title="180 turn (Z)">180</button><button data-r="turn360" title="360 turn (X)">360</button><button data-r="spinmove" title="Spin move (V)">Spin move</button></div></div>
+    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><button class="fd-jump" aria-label="Jump" title="Jump (Space)">&#10514;<small>Jump</small></button><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div><div class="fd-hand" data-h="0" title="Left hand (hold to control it)"><i></i></div><div class="fd-hand" data-h="1" title="Right hand (hold to control it)"><i></i></div><div class="fd-moveName"></div><div class="fd-mini"><button data-r="turn90" title="90 turn (X)">90</button><button data-r="turn180" title="180 turn (Z)">180</button><button data-r="spinmove" title="Spin (V)">Spin</button></div></div>
     <div class="fd-help"></div>
     <div class="fd-subs"></div>
     <div class="fd-queue" id="fdQueue"></div>
@@ -2400,13 +2400,14 @@ function react(k){
   if(REACT.last.length>=6)return;                                     /* no more than the server lets through */
   if(k==="bigheart"){if(now-REACT.big<4000)return;REACT.big=now;var bb=document.querySelector('#reactBar [data-r="bigheart"]');if(bb){bb.classList.add("cool");setTimeout(function(){bb.classList.remove("cool");},4000);}}
   REACT.last.push(now);addReact(myId,k);
-  if((k==="spin"||k==="twirl"||k==="turn360"||k==="spinmove")&&GAME.mode==="free")GAME.spinStart(k);
-  if(k==="turn180"&&GAME.mode==="free")GAME.turnToggle();
+  if((k==="spin"||k==="twirl"||k==="spinmove")&&GAME.mode==="free")GAME.spinStart(k);
+  if(k==="turn180"&&GAME.mode==="free")GAME.turnBy(2);
+  if(k==="turn90"&&GAME.mode==="free")GAME.turnBy(1);
   var btn=document.querySelector('#reactBar [data-r="'+k+'"]');if(btn){btn.classList.add("pop");setTimeout(function(){btn.classList.remove("pop");},160);}
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on))wsSend({type:"react",k:k});
 }
 Array.prototype.forEach.call(document.querySelectorAll("#reactBar button"),function(b){b.addEventListener("click",function(e){e.preventDefault();b.blur();react(b.getAttribute("data-r"));});});
-var REACTKEY={KeyQ:"jump",KeyE:"hearts",KeyR:"bigheart",KeyY:"clap",KeyU:"whistle",KeyT:"spin",KeyG:"twirl",KeyZ:"turn180",KeyX:"turn360",KeyV:"spinmove"};
+var REACTKEY={KeyQ:"jump",KeyE:"hearts",KeyR:"bigheart",KeyY:"clap",KeyU:"whistle",KeyT:"spin",KeyG:"twirl",KeyZ:"turn180",KeyX:"turn90",KeyV:"spinmove"};
 /* the sounds, made on the spot (quieter for other people's) */
 function reactSound(k,mine){
   if(!audioReady||!lim)return;
@@ -2743,7 +2744,7 @@ var GAME=(function(){
     var now=Date.now(),fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():null,msg=pose.map(function(a){return Math.round(a*100);});
     if(fd){var rg=ART.dance(fd.s,fd.m,fd.c.map(function(v){return v/100;}),beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
     var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():mode==="walk"?WALK.wire():mode==="pipe"?PIPE.wire():mode==="ski"?SKI.wire():null;
-    var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(",")+(fd.h?"h"+fd.h.join("."):"")+(fd.b?"b":""):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
+    var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(",")+(fd.h?"h"+fd.h.join("."):"")+(fd.b?"b"+fd.b:""):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
     if(key===lastSent&&!force&&(!sk||now-lastSend<1000))return;   /* in a game, resend now and then: someone who just (re)joined needs it */
     if(now-lastSend<90&&!force){if(!sendTimer)sendTimer=setTimeout(function(){sendTimer=null;sendPose();},95-(now-lastSend));return;}
     lastSend=now;lastSent=key;
@@ -2755,8 +2756,8 @@ var GAME=(function(){
   /* ---------- free dance styles (see ART.dance) ----------
      A dance button picks the dance; its own move buttons add variety; the two dots steer it (each -1..1).
      Freestyle (0) is the grab-your-limbs dance below. */
-  var fStyle=0,fSub=0,fCtl=[0,0,0,0],fHeld=[null,null],fdBuilt=false,fHand=[null,null],fHandP=[null,null],fBack=0;   /* fBack: a 180 turns you round and you stay facing away until the next 180 */
-  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fSub,c:fCtl.map(function(v,i){return mySpin.on&&i>=2?0:Math.round(v*100);})};   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=1;return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
+  var fStyle=0,fSub=0,fCtl=[0,0,0,0],fHeld=[null,null],fdBuilt=false,fHand=[null,null],fHandP=[null,null],fBack=0;   /* fBack: quarter turns from facing front (0 front, 1 right, 2 away, 3 left): 90 and 180 turn you and you stay that way. Sent as fd.b: 1 = away, 2 = right, 3 = left (1 matches the old turned-round flag) */
+  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fSub,c:fCtl.map(function(v,i){return mySpin.on&&i>=2?0:Math.round(v*100);})};   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=[0,2,1,3][fBack];return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
   function beatPos(){var b=BEAT.get(),now=performance.now();return b.known&&b.period>0?(now-b.t0)/b.period:now/500;}
   /* Move queue: line up dances and moves ahead of time. When it's your turn in the middle, they play in order and
      split your turn evenly between them; the one on now is lit. Kept on this device. */
@@ -2904,7 +2905,7 @@ var GAME=(function(){
   /* on a computer: WASD moves the left dot, the arrow keys the right one (the mouse can still drag either) */
   var FKEYS={KeyW:[0,0,-1],KeyS:[0,0,1],KeyA:[0,-1,0],KeyD:[0,1,0],ArrowUp:[1,0,-1],ArrowDown:[1,0,1],ArrowLeft:[1,-1,0],ArrowRight:[1,1,0]},fkHeld={};
   function fdKey(code,down){if(mode!=="free"||fStyle===0||!FKEYS[code])return false;if(down)fkHeld[code]=1;else delete fkHeld[code];return true;}
-  function turnToggle(){setTimeout(function(){fBack=fBack?0:1;applyToMe();sendPose(true);},700);}
+  function turnBy(q){setTimeout(function(){fBack=(fBack+q)&3;applyToMe();sendPose(true);},q===1?600:700);}
   function fdPick(i){fStyle=i;fSub=0;fCtl=[0,0,0,0];fHand=[null,null];fkHeld={};if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
   function fdSub(k){fSub=k;fdRender();applyToMe();sendPose(true);}
   function fdRender(){
@@ -2929,7 +2930,7 @@ var GAME=(function(){
   /* let go of a dot and it drifts back to the middle */
   /* your own spin: it starts with the button, slows down on its own, and swinging the right stick round (either way) keeps it going and speeds it up */
   var mySpin={on:false,ang:0,vel:0,pa:null,t:0};
-  function spinStart(k){var turns={spin:1,twirl:2,turn360:1,spinmove:1.5}[k]||1;mySpin.on=true;mySpin.ang=0;mySpin.vel=turns*6.2*1.25*(k==="turn360"?1.25:1);mySpin.pa=null;mySpin.t=performance.now();}
+  function spinStart(k){var turns={spin:1,twirl:2,spinmove:1.5}[k]||1;mySpin.on=true;mySpin.ang=0;mySpin.vel=turns*6.2*1.25;mySpin.pa=null;mySpin.t=performance.now();}
   function spinStep(now){
     if(!mySpin.on)return;var dt=Math.min(0.1,(now-mySpin.t)/1000);mySpin.t=now;
     var sx2=fCtl[2],sy2=fCtl[3],mg=Math.hypot(sx2,sy2),swing=false;
@@ -3648,7 +3649,7 @@ var GAME=(function(){
       following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
       spin:mySpin.on?+mySpin.vel.toFixed(1):0,handles:mode==="free"?floorHandles():null,fd:mode==="free"?fdState():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{spinStart:spinStart,turnToggle:turnToggle,get back(){return fBack;},get spinDir(){return mySpin.on&&mode==="free"?ART.face8(Math.sin(mySpin.ang),Math.cos(mySpin.ang),-1):-1;},get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},REST:REST};
+  return{spinStart:spinStart,turnBy:turnBy,get back(){return fBack;},get spinDir(){return mySpin.on&&mode==="free"?ART.face8(Math.sin(mySpin.ang+fBack*Math.PI/2),Math.cos(mySpin.ang+fBack*Math.PI/2),-1):-1;},get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},REST:REST};
 })();
 /* ============================================================
    MOSH PIT ROUND
@@ -6778,6 +6779,9 @@ function followState(){
 /* ---------- crowd surprises: everyone sparkles, catches fire, shoots lasers or floats, for a few seconds ---------- */
 var CROWD={kind:"",t0:-1e9,lastT:0};
 /* free dance: you only turn to face the way you're walking when the left stick is pushed right to its edge (for other players: when they're moving at full pace) */
+/* turn a facing (0-7) round by q quarter turns, the way a 90 or 180 sweeps it */
+var R8=[1,4,0,7,3,6,2,5],R8A={1:0,4:1,0:2,7:3,3:4,6:5,2:6,5:7};
+function rot8(id,q){return R8[(((R8A[id]-2*q)%8)+8)%8];}
 function fdTurn(wk,isMe,x,y,t){
   if(isMe)return GAME.fdEdge;
   if(wk.fx===undefined){wk.fx=x;wk.fy=y;wk.ft=t;wk.fs=0;}
@@ -7080,9 +7084,9 @@ function renderLoop(){
       var skl=v===PH?null:RINK?SKATE.looks(v,ids[i]===myId,sc2):keepyOn()?KEEPY.looks(v,ids[i]===myId,sc2):WALK.walkRound()&&v.dance===4?WALK.looks(v,ids[i]===myId,sc2):PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.looks(v,ids[i]===myId,sc2):null;
       if(!cdn&&!ck||skl)ART.footShadow(ctx,vx,vy,sc2,(rpo?rpo.lift:0)+(epo?epo.lift:0)+(skl?skl.lift:0));
       if(skl)AVO=AVO?Object.assign(AVO,{sk:skl}):{sk:skl};
-      AVDIR=PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.facing(v,ids[i]===myId):WALK.walkRound()&&v.dance===4?WALK.facing(v):ck?0:cdn===4?(RINK?(wk.face|0):GAME.mode==="free"?(fdTurn(wk,ids[i]===myId,vx,vy,pnow)?(wk.face|0):(cfd&&cfd.b?2:0)):(wk.k>0.3?(wk.face|0):0)):cdn?0:(wk.face|0);
-      if(rpo&&rpo.dir!==undefined)AVDIR=(rpo.dir+(cdn===4&&cfd&&cfd.b&&GAME.mode==="free"?4:0))%8;   /* a spin or turn goes round through all the facings */
-      if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=(GAME.spinDir+(GAME.back?4:0))%8;   /* your own spin: the stick keeps it going */   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
+      AVDIR=PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.facing(v,ids[i]===myId):WALK.walkRound()&&v.dance===4?WALK.facing(v):ck?0:cdn===4?(RINK?(wk.face|0):GAME.mode==="free"?(fdTurn(wk,ids[i]===myId,vx,vy,pnow)?(wk.face|0):(cfd&&cfd.b?[0,2,1,3][cfd.b]:0)):(wk.k>0.3?(wk.face|0):0)):cdn?0:(wk.face|0);
+      if(rpo&&rpo.dir!==undefined)AVDIR=cdn===4&&cfd&&cfd.b&&GAME.mode==="free"?rot8(rpo.dir,[0,2,1,3][cfd.b]):rpo.dir;   /* a spin or turn goes round through all the facings */
+      if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;   /* your own spin: the stick keeps it going */   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
       drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,skl?null:walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
       AVO=null;AVDIR=0;
       if(ck)ART.crowdFx(ctx,ck,vx,dyy,sc2,cAge,v.seed||0,hands,v._tg);
