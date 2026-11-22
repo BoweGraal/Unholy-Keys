@@ -1885,8 +1885,47 @@ var ART=(function(){
   var DT={},DT_F=["armL","armR","legL","legR","bob","dx","rot"];
   try{var dts=JSON.parse(localStorage.getItem("uk_dtweak")||"{}");if(dts&&typeof dts==="object")DT=dts;}catch(e){}
   function dtSave(){try{localStorage.setItem("uk_dtweak",JSON.stringify(DT));}catch(e){}}
+  /* ---- the right stick, eight ways: once it's pushed out, its direction picks one of eight moves that are part of the dance
+     (up, up-right, right, down-right, down, down-left, left, up-left), laid over the dance loop. A light push still works
+     as the dance's own sliding control. Robot, worm and puppet already read the stick directly. ---- */
+  var DIRNAMES={
+    1:["Hands up","Point right","Slide right","Dip right","Squat bounce","Dip left","Slide left","Point left"],
+    2:["Stand tall","Right knee knock","Lean right","Right low","Deep squat","Left low","Lean left","Left knee knock"],
+    3:["Hands up shake","Right hip pop","Sway right","Drop right","Drop it","Drop left","Sway left","Left hip pop"],
+    4:["High knees","Right punch run","Run right","Right dip run","Low run","Left dip run","Run left","Left punch run"],
+    5:["Big knees","Right punch","Skank right","Right elbow","Crouch skank","Left elbow","Skank left","Left punch"],
+    8:["Chicken wings","Right sprinkler","Floss right","Right wave","Waddle low","Left wave","Floss left","Left sprinkler"],
+    9:["Toe steps","Right cut","T-step right","Right low glide","Low stomp","Left low glide","T-step left","Left cut"],
+    10:["Claw up","Right claw","Lurch right","Right shoulder pop","Hunch","Left shoulder pop","Lurch left","Left claw"],
+    11:["Knees high","Right pose","Hop right","Sweep right","Drop pose","Sweep left","Hop left","Left pose"],
+    12:["Hands up","Right chop","Stomp right","Right sweep","Low stomp","Left sweep","Stomp left","Left chop"],
+    13:["Head up","Right air guitar","Bang right","Right windmill","Full bang","Left windmill","Bang left","Left air guitar"],
+    14:["Both high","Right high","Sway right","Right low","Lower both","Left low","Sway left","Left high"],
+    15:["High march","Right point","March right","Right flex","Low march","Left flex","March left","Left point"]
+  };
+  function octant(c){
+    if(!c)return null;var bx=c[2]||0,by=c[3]||0,mg=Math.hypot(bx,by);if(mg<0.55)return null;
+    var a=Math.atan2(bx,-by),i=((Math.round(a/(Math.PI/4))%8)+8)%8;return{i:i,m:clamp((mg-0.45)/0.4,0,1)};
+  }
+  function danceMove(style,c){var oc=DIRNAMES[style]?octant(c):null;return oc?DIRNAMES[style][oc.i]:"";}
+  /* the shape of each of the eight, from the dancer's point of view on screen (right = the screen's right) */
+  function dirApply(o,style,oc,bp){
+    var i=oc.i,m=oc.m,mir=i>4?-1:1,k=i>4?8-i:i,ph=((bp%1)+1)%1,pulse=Math.pow(1-ph,2),sw=Math.sin(bp*Math.PI),
+      aR=0.3,aL=0.3,lR=0,lL=0,bob=0,dx=0,rot=0;   /* aR/aL: the arm on the screen's right / left; lR/lL the legs; mirrored for the left half */
+    if(k===0){aR=aL=2.5-pulse*0.4;lR=0.22*Math.max(0,sw);lL=0.22*Math.max(0,-sw);bob=-1-pulse*2.5;}
+    else if(k===1){aR=2.5-pulse*0.5;aL=0.35;rot=0.12;dx=2;lR=0.3;bob=-pulse*2;}
+    else if(k===2){aR=aL=1.25+sw*0.25;dx=7+sw*2;rot=0.14;lR=0.38;lL=-0.1;bob=-pulse*1.5;}
+    else if(k===3){aR=1.0;aL=0.15;rot=0.2;dx=4;bob=3-pulse*1.5;lR=0.45;lL=-0.2;}
+    else if(k===4){aR=aL=0.5+pulse*0.5;bob=5.5-pulse*2.5;lR=0.5;lL=-0.5;}
+    /* (armL is the arm on the screen's left) */
+    var tgt={armL:mir>0?aL:aR,armR:-(mir>0?aR:aL),legL:mir>0?lL:-lR,legR:mir>0?lR:-lL};
+    if(k===4){tgt.armL=aL;tgt.armR=-aR;tgt.legL=lR;tgt.legR=lL;}
+    ["armL","armR","legL","legR"].forEach(function(f){o[f]+=(tgt[f]-o[f])*m;});
+    o.bob+=bob*m;o.dx+=dx*mir*m;o.rot+=rot*mir*m;
+  }
   function dance(style,sub,c,bp){
-    var o=danceBase(style,sub,c,bp),kf=DT[style+"."+(sub|0)];
+    var oc=DIRNAMES[style]?octant(c):null,o=danceBase(style,sub,oc?[c[0],c[1],0,0]:c,bp),kf=DT[style+"."+(sub|0)];
+    if(oc)dirApply(o,style,oc,bp);
     if(kf&&kf.length){
       var q=((bp%4)+4)%4,k,f,d,w,wt;
       for(k=0;k<kf.length;k++){
@@ -2321,6 +2360,6 @@ var ART=(function(){
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.79.27",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.79.28",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

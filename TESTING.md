@@ -1564,3 +1564,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.27
 - Half pipe: one FLICK meter (right side). Starts empty, only fills as the right stick moves (faster = more), sets jump height, holds in the air, resets on landing/bail.
+
+## v1.79.28 — eight-way right stick in free dance
+- Every dance except Robot, Worm and Puppet (which read the stick directly) has 8 named moves on the right stick (up, up-right, right, down-right, down, down-left, left, up-left); push it out past about half and the move name shows above the buttons. A light push still works as the dance's own control.
