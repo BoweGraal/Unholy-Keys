@@ -1682,3 +1682,8 @@ Needs a Render redeploy (server.js changed).
 - Shift all used to copy the whole rendered part (including its outline and the current hair colour) into your paint, which gave the thick double outline. It now keeps a shift offset with the part: the original art moves with its own colours and outline, and your paint and holes move with it. Applies to hair, hat, face, extra, top, bottom (other parts shift their paint only). On the side and back views only the up/down part applies.
 - If a part was already shifted with the old version, undo (Ctrl+Z) or use Redraw/reset on it.
 - Check: open the afro, press up: it moves one pixel with the same single outline; down puts it back.
+
+## v1.79.58 — game panel: no more size jumps, see-through
+- The panel's score line (Score · Combo · Best) wrapped onto a second line when the numbers got long, which made the whole panel grow and jump. The line now has a fixed two-line height and a smaller font, so the panel never changes size.
+- The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
+- Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
