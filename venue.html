@@ -16,12 +16,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.80.5"></script>
-<script src="gfx.js?v=1.80.5"></script>
-<script src="art.js?v=1.80.5"></script>
-<script src="instruments.js?v=1.80.5"></script>
-<script src="kart.js?v=1.80.5"></script>
-<script src="explain.js?v=1.80.5"></script>
+<script src="tune.js?v=1.80.6"></script>
+<script src="gfx.js?v=1.80.6"></script>
+<script src="art.js?v=1.80.6"></script>
+<script src="instruments.js?v=1.80.6"></script>
+<script src="kart.js?v=1.80.6"></script>
+<script src="explain.js?v=1.80.6"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -157,7 +157,7 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 @media (pointer:fine){#ctfSprint{width:84px;height:84px}}
 #ctfBanner{position:absolute;left:50%;top:22%;transform:translateX(-50%);font:700 clamp(22px,5vw,46px)/1 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:4px 4px 0 #000;white-space:nowrap;opacity:0}
 #ctfBanner.pop{animation:moshPop 2.2s ease-out forwards}
-#ctfScore{position:absolute;left:50%;top:14px;transform:translateX(-50%);font:700 22px 'Silkscreen',ui-monospace,monospace;text-shadow:3px 3px 0 #000;white-space:nowrap}
+#ctfScore{position:absolute;left:50%;top:14px;transform:translateX(-50%);font:700 22px 'Silkscreen',ui-monospace,monospace;text-shadow:3px 3px 0 #000;white-space:nowrap;text-align:center}#ctfScore .ck{font-size:16px;color:#fff;margin-top:4px}
 #ctfTeam{position:absolute;right:14px;top:56px;font:700 14px 'Silkscreen',ui-monospace,monospace;text-shadow:2px 2px 0 #000}
 #ctfHint{position:absolute;left:50%;bottom:calc(var(--chatH) + 14px);transform:translateX(-50%);font:700 12px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(10,7,20,.75);padding:3px 10px;white-space:nowrap}
 body.gaming-ctf #reactBar,body.gaming-ctf #moveHint,body.gaming-ctf #actBtns{display:none}
@@ -4718,7 +4718,10 @@ var CTFG=(function(){
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
   function beat(){var p=songPos();return p>-1e8?ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),p):-99;}
   function banner(t,col){var b=$("ctfBanner");if(!b)return;b.textContent=t;b.style.color=col||"#fff";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
-  function hud(){var h=$("ctfScore");if(!h||!st)return;h.innerHTML='<span style="color:'+C.TEAM[0]+'">RED '+st.caps[0]+'</span> &nbsp;·&nbsp; <span style="color:'+C.TEAM[1]+'">'+st.caps[1]+' BLUE</span>';
+  var hudSig="";
+  function clock(){var ch=ROUND.chart&&ROUND.chart(),end=ch?(ch.gameMs||ch.dur||0):0,p=songPos();if(!end||p<-1e8)return "";var s=Math.max(0,Math.ceil((end-p)/1000));return Math.floor(s/60)+":"+("0"+s%60).slice(-2);}
+  function hud(){var h=$("ctfScore");if(!h||!st)return;var ck=clock(),sig=st.caps.join(",")+"|"+ck+"|"+team;if(sig===hudSig)return;hudSig=sig;   /* team score, and the time left */
+    h.innerHTML='<span style="color:'+C.TEAM[0]+'">RED '+st.caps[0]+'</span> &nbsp;·&nbsp; <span style="color:'+C.TEAM[1]+'">'+st.caps[1]+' BLUE</span>'+(ck?'<div class="ck">\u23F1 '+ck+'</div>':'');
     var t=$("ctfTeam");if(t){t.textContent="You're on "+C.TNAME[team];t.style.color=C.TEAM[team];}}
   function start(round){
     on=true;roundN=round?round.n:roundN+1;var rc=round&&round.ctf;
@@ -4799,16 +4802,22 @@ var CTFG=(function(){
     var list=[];Object.keys(viewers).forEach(function(id){var vv=viewers[id];if(!vv||vv===PH)return;if(id!==myId&&vv.dance!==4)return;
       var o=others[id]||(others[id]={x:vv.x*I.w,y:vv.y*I.h,f:0});var tx=id===myId?me.x:vv.x*I.w,ty=id===myId?me.y:vv.y*I.h;
       if(id===myId){o.x=tx;o.y=ty;}else{var mvx=tx-o.x,mvy=ty-o.y;if(Math.hypot(mvx,mvy)>4){o.x=tx;o.y=ty;}else{o.x+=mvx*0.3;o.y+=mvy*0.3;if(Math.hypot(mvx,mvy)>0.05)o.f=ART.face8(mvx,mvy,o.f);}}
-      list.push({id:id,v:vv,x:o.x,y:o.y,f:id===myId?face:o.f});});
+      /* how fast they're going (tiles a second, smoothed) drives a stride: feet step with the distance covered, sprinting lifts the knees */
+      var tn=now,dtp=Math.min(0.2,Math.max(0.001,(tn-(o.pt||tn))/1000)),dd=o.px===undefined?0:Math.hypot(o.x-o.px,o.y-o.py);if(dd>3)dd=0;
+      o.sp=(o.sp||0)+((dd/dtp)-(o.sp||0))*Math.min(1,dtp*10);o.ph=(o.ph||0)+dd*1.7;var ddx=o.px===undefined?0:o.x-o.px;if(Math.abs(ddx)>0.002||dd<0.002)o.dx=(o.dx||0)*0.8+ddx/Math.max(dd,1e-6)*0.2;o.px=o.x;o.py=o.y;o.pt=tn;
+      list.push({id:id,v:vv,x:o.x,y:o.y,f:id===myId?face:o.f,sp:o.sp,ph:o.ph,dx:o.dx||0});});
     list.sort(function(a,b){return a.y-b.y;});
     var sc=Math.max(1,Math.round(V.s/16)),saved=ctx;ctx=g;var sDir=AVDIR;
     try{list.forEach(function(p){var X=V.X(p.x),Y=V.Y(p.y),t=st.teams[p.id],tg=st.tagged[p.id]&&Date.now()-st.tagged[p.id]<1500;
       g.fillStyle=t===undefined?"#888":C.TEAM[t];g.globalAlpha=0.55;ART.PX.oval(g,X,Y+2,V.s*0.42,V.s*0.18,0);g.globalAlpha=tg?(Math.floor(now/120)%2?0.3:0.8):1;
-      AVDIR=p.f;drawAvatar(X,Y-14*sc,p.v.color,p.id===myId?"You":p.v.name,sc,false,false,null,4,p.v.seed||0,p.id===myId,p.v.pose||[0.4,-0.4,0.1,-0.1],9999,p.v.look||lookOf(null,p.v.color,p.v.name),null);
+      var run=p.sp>0.6,rk=Math.min(1,p.sp/(C.SPEED*C.SPRINT)),bump=-Math.round(Math.pow(1-BEAT.phase(now),3)*1.5*sc);   /* running: a stride from the distance covered; standing: a small bump on each beat */
+      var mv=run?{k:1,ph:p.ph,dx:p.dx,dy:0,sp:0.5*rk*rk}:null;
+      AVDIR=p.f;drawAvatar(X,Y-14*sc+bump,p.v.color,p.id===myId?"You":p.v.name,sc,false,false,mv,run?0:4,p.v.seed||0,p.id===myId,[0.25,-0.25,0.05,-0.05],9999,p.v.look||lookOf(null,p.v.color,p.v.name),null);
       var cf=C.carrying(st,p.id);if(cf>=0)C.flag(g,X+4*sc,Y-30*sc,cf,V.s,now);g.globalAlpha=1;});}
     finally{ctx=saved;AVDIR=sDir;}
     g.restore();
     perfInset(g,78,82);   /* the performer, top left above the arena */
+    hud();
     markers(g,V,list,Wc,now);
     /* the count in */
     var b=beat();if(b<GO_BEAT){var n=Math.ceil(GO_BEAT-b);ART.pixText(g,b<0?"GET READY":n<=4?String(n):"GET READY",Wc/2,Hc*0.42,Math.max(3,Math.round(V.s/5)),"#fff","center","#000");}
@@ -5617,20 +5626,21 @@ var ROUND=(function(){
   function end(){try{EXPLAIN.hide();}catch(e){}document.getElementById("gamePanel").classList.remove("spotlit");document.body.classList.remove("battle-match");document.body.classList.remove("rd-paused");rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
   function reset(){if(rd&&GAME.mode)GAME.stop();end();hide();}
   /* ---- the show leaderboard: a small standings panel that stays up all show, with who moved and who passed who ---- */
-  var lbPrev={},lbCollapsed=false,lbToastT=null;
+  var lbPrev={},lbCollapsed=true,lbToastT=null,lbOpenT=null;   /* small by default: a pill with your place; tap for the list for a few seconds */
   function lbEls(){
     var p=document.getElementById("showLB");if(p)return p;
     var st=document.createElement("style");
-    st.textContent="#showLB{position:fixed;left:50%;transform:translateX(-50%);bottom:8px;z-index:18;width:150px;background:rgba(14,11,26,.88);border:1px solid rgba(245,197,24,.5);border-radius:10px;color:#fff;font:700 11px 'Silkscreen',ui-monospace,monospace;padding:5px 7px;display:none;cursor:pointer}"+
+    st.textContent="#showLB{position:fixed;left:8px;top:58px;z-index:15;width:150px;background:rgba(14,11,26,.88);border:1px solid rgba(245,197,24,.5);border-radius:10px;color:#fff;font:700 11px 'Silkscreen',ui-monospace,monospace;padding:5px 7px;display:none;cursor:pointer}"+
      "#showLB .h{display:flex;justify-content:space-between;color:#F5C518;font-size:10px;letter-spacing:.6px;margin-bottom:3px}#showLB .r{display:flex;gap:5px;align-items:center;padding:1px 0;white-space:nowrap}"+
      "#showLB .r.me{color:#3DF2FF}#showLB .r .n{flex:1;overflow:hidden;text-overflow:ellipsis}#showLB .r .a{width:20px;text-align:right;font-size:10px}#showLB .up{color:#4CC38A}#showLB .dn{color:#FF4D6D}"+
-     "body.pr-open #showLB,body.fd-plan #showLB{display:none!important}"+
+     "body.pr-open #showLB,body.fd-plan #showLB,body.gaming-free #showLB,body.lb-hide #showLB{display:none!important}"+"#showLB.col:not(:has(.r.me)){display:none!important}#showLB.col{width:auto;padding:3px 7px}#showLB.col .h{display:none}#showLB.col .r.me:before{content:\"\\1F3C6 \";}"+
      "#showLB.col .r{display:none}#showLB.col .r.me{display:flex}"+
      "body.gaming #showLB,body[class*=\"gaming-\"]:not(.gaming-free) #showLB,body.mosh-tug #showLB{display:none!important}"+
      "#lbToast{position:fixed;left:50%;top:228px;transform:translateX(-50%);z-index:40;max-width:min(92vw,420px);text-align:center;background:rgba(14,11,26,.92);border:1px solid #F5C518;border-radius:12px;color:#fff;font:800 14px 'Silkscreen',ui-monospace,monospace;padding:8px 14px;display:none;pointer-events:none;line-height:1.35}"+
      "#lbToast b{color:#F5C518}";
     document.head.appendChild(st);
-    p=document.createElement("div");p.id="showLB";p.title="Show standings (tap to shrink)";p.addEventListener("click",function(){lbCollapsed=!lbCollapsed;p.classList.toggle("col",lbCollapsed);});document.body.appendChild(p);
+    p=document.createElement("div");p.id="showLB";p.title="Show standings (tap to shrink)";p.classList.add("col");p.addEventListener("click",function(){lbCollapsed=!lbCollapsed;p.classList.toggle("col",lbCollapsed);clearTimeout(lbOpenT);if(!lbCollapsed)lbOpenT=setTimeout(function(){lbCollapsed=true;p.classList.add("col");},5000);});
+    setInterval(function(){var rb=document.getElementById("roundBox"),dm=document.getElementById("danceMenu"),gm=GAME&&GAME.mode;document.body.classList.toggle("lb-hide",!!(gm||(rb&&rb.classList.contains("on")&&!rb.classList.contains("fade"))||(dm&&dm.offsetParent)));},300);   /* out of the way of the round banner, games and menus */document.body.appendChild(p);
     var tt=document.createElement("div");tt.id="lbToast";document.body.appendChild(tt);return p;
   }
   function lbShowToast(lines){
@@ -5672,7 +5682,7 @@ var ROUND=(function(){
     var st=document.createElement("style");st.textContent="#miniLB{position:fixed;left:8px;top:52px;z-index:16;width:134px;background:rgba(14,11,26,.82);border:1px solid rgba(245,197,24,.45);padding:3px 5px;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#fff;pointer-events:none;display:none;box-shadow:3px 3px 0 rgba(0,0,0,.55);line-height:1.35}#miniLB .r{display:flex;gap:4px;white-space:nowrap}#miniLB .n{flex:1;overflow:hidden;text-overflow:ellipsis}#miniLB .i{color:#3DF2FF}#miniLB .me{color:#3DF2FF;border-top:1px solid rgba(255,255,255,.22);margin-top:2px;padding-top:2px}#miniLB .p{color:#F5C518}";
     document.head.appendChild(st);e=document.createElement("div");e.id="miniLB";document.body.appendChild(e);return e;}
   function mlbTick(){
-    var e=mlbEl(),ok=active()&&!rd.isBattle&&rd.mode&&rd.mode!=="free"&&top&&top.top&&top.top.length&&myId;
+    var e=mlbEl(),ok=active()&&!rd.isBattle&&rd.mode&&rd.mode!=="free"&&rd.mode!=="ctf"&&top&&top.top&&top.top.length&&myId;
     if(!ok){if(mlbSig!==""){mlbSig="";e.style.display="none";}return;}
     var ms=typeof GAME!=="undefined"&&GAME.mode?GAME.score:0,t3=top.top.slice(0,3),rank=0,n=Math.max(top.players,1);
     if(top.all){var hi=0,others=0;top.all.forEach(function(x){if(x[0]===myId)return;others++;if(x[1]>ms)hi++;});rank=hi+1;n=Math.max(n,others+1);}
@@ -6380,7 +6390,8 @@ var PRACTICE=(function(){
     try{Tone.start();Tone.getContext().rawContext.resume();}catch(e){}
     (function(){var sel=$("prLevel"),i=sel.selectedIndex;if(i<0){var q=+sel.value||1;i=q<0.9?0:q<1.1?1:q<1.35?2:3;sel.selectedIndex=i;}window.ukForceDiff=i;try{localStorage.setItem("uk_lv",String(i+1));}catch(e){}if(window.ukLvRefresh)window.ukLvRefresh();})();   /* the menu picks the real difficulty: Easy, Normal, Hard, Expert */
     mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk"&&mode!=="pipe"&&mode!=="ski"&&mode!=="ctf";plan=null;var secs=Math.max(18,+$("prSecs").value||18),level=+$("prLevel").value;
-    stopSong();makeBots(+$("prBots").value);
+    var nbt=+$("prBots").value||0;if(mode==="ctf"&&(nbt+1)%2)nbt++;   /* capture the flag needs even teams: one more practice dancer if you'd be odd */
+    stopSong();makeBots(nbt);
     document.body.classList.add("pr-busy");
     n++;
     var go=function(c){
@@ -6953,7 +6964,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.80.5",SERVER_VERSION="";
+var PAGE_VERSION="1.80.6",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7503,7 +7514,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.80.5"></script>
+<script src="lab.js?v=1.80.6"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

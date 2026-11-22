@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.80.6 — CTF: team score and clock, real running
+
+The mini leaderboard is gone in Capture the Flag; the top shows the team score and the time left. Players run with a proper stride (knees higher when sprinting) instead of gliding, and bump a little on each beat when standing.
+
+CTF teams are always even: in a show with an odd number of people a bot joins for that game and leaves after it (needs the server redeployed); in practice an extra practice dancer is added.
+
+Standings: now a small pill in the top-left corner showing your place. Tap it to see the top five for 5 seconds. It hides during every game, the round banner, the practice menu, the planner and the dance menu.
+
 ## v1.80.5 — Your turn: only your styles, and a smaller camera
 
 During your spotlight turn the style buttons are only the styles you picked in the planner (none picked: the game picks two different ones for you). The camera now stops at a zoom where your whole body, arms out, fits between the two button columns.

@@ -255,7 +255,7 @@ function totalsList(r) {
   out.sort(function(a, b) { return b.pts - a.pts || b.wins - a.wins; });
   return out.slice(0, 10);
 }
-function roundStop(r) { var rd = r.round; if (!rd) return; clearInterval(rd.tick); clearTimeout(rd.timer); clearTimeout(rd.spotTimer); clearTimeout(rd.tugTimer); clearTimeout(rd.tugSend); rd.tick = rd.timer = rd.spotTimer = null; (rd.battleTimers || []).forEach(clearTimeout); rd.battleTimers = []; }
+function roundStop(r) { var rd = r.round; if (!rd) return; clearInterval(rd.tick); clearTimeout(rd.timer); clearTimeout(rd.spotTimer); clearTimeout(rd.tugTimer); clearTimeout(rd.tugSend); rd.tick = rd.timer = rd.spotTimer = null; (rd.battleTimers || []).forEach(clearTimeout); rd.battleTimers = []; if (r.ctfBot) BOTS.ctfEnd(r.ctfBot.room); }   /* the bot that evened up a CTF game leaves with it */
 /* free dance: partway through the song, take who's dancing, shuffle them, and plan their spotlight turns */
 function spotLock(code) {
   var r = rooms[code], rd = r && r.round; if (!rd || rd.phase !== "play" || rd.spot) return;
@@ -338,7 +338,7 @@ function roundMessage(ws, msg) {
     rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, ski: mode === "ski" ? cleanSki(msg.ski) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
-    if (mode === "ctf") { var cm = CTF.clean(msg.ctf) || CTF.defaultMap(), ci = CTF.info(cm); rd.ctf = { map: cm, I: ci, st: CTF.newState(ci, Array.from(r.viewers.keys())) }; rd.isBattle = false; }
+    if (mode === "ctf") { BOTS.ctfEven(code); var cm = CTF.clean(msg.ctf) || CTF.defaultMap(), ci = CTF.info(cm); rd.ctf = { map: cm, I: ci, st: CTF.newState(ci, Array.from(r.viewers.keys())) }; rd.isBattle = false; }
     broadcast(code, roundPublic(r));
     return;
   }
@@ -462,7 +462,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", 
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.80.5";
+var VERSION = "1.80.6";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);

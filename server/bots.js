@@ -40,7 +40,7 @@ module.exports = function(api) {
   var rooms = api.rooms;
 
   function realCount(r) { var n = 0; r.viewers.forEach(function(v) { if (!(v.ws && v.ws.bot)) n++; }); return n; }
-  function botsIn(r) { var out = []; r.viewers.forEach(function(v) { if (v.ws && v.ws.bot) out.push(v.ws); }); return out; }
+  function botsIn(r) { var out = []; r.viewers.forEach(function(v) { if (v.ws && v.ws.bot && !v.ws.ctfFill) out.push(v.ws); }); return out; }   /* the fill bots (not the one evening up a CTF game) */
 
   function makeBot(code, r) {
     var used = {}; r.viewers.forEach(function(v) { used[v.name] = 1; });
@@ -375,5 +375,12 @@ module.exports = function(api) {
     b.act(pm);
   }
 
-  return { setFill: setFill, rebalance: rebalance, stopRoom: stopRoom, isBot: function(ws) { return !!(ws && ws.bot); } };
+  /* capture the flag needs even teams: with an odd number in the room, one bot joins for that game and leaves after it */
+  function ctfEven(code) {
+    var r = rooms[code]; if (!r) return;
+    var n = r.viewers.size; if (n % 2 === 0 || n < 1) return;
+    var b = makeBot(code, r); if (b) { b.ctfFill = true; r.ctfBot = b; }
+  }
+  function ctfEnd(code) { var r = rooms[code]; if (!r || !r.ctfBot) return; var b = r.ctfBot; r.ctfBot = null; if (!b.dead) removeBot(b); }
+  return { ctfEven: ctfEven, ctfEnd: ctfEnd, setFill: setFill, rebalance: rebalance, stopRoom: stopRoom, isBot: function(ws) { return !!(ws && ws.bot); } };
 };
