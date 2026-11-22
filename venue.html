@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.42"></script>
-<script src="gfx.js?v=1.79.42"></script>
-<script src="art.js?v=1.79.42"></script>
-<script src="instruments.js?v=1.79.42"></script>
-<script src="kart.js?v=1.79.42"></script>
-<script src="explain.js?v=1.79.42"></script>
+<script src="tune.js?v=1.79.43"></script>
+<script src="gfx.js?v=1.79.43"></script>
+<script src="art.js?v=1.79.43"></script>
+<script src="instruments.js?v=1.79.43"></script>
+<script src="kart.js?v=1.79.43"></script>
+<script src="explain.js?v=1.79.43"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2741,7 +2741,7 @@ var GAME=(function(){
   function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;m.fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():null;if(hit)m.hitT=Date.now();}
   function sendPose(force){
     var now=Date.now(),fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():null,msg=pose.map(function(a){return Math.round(a*100);});
-    if(fd){var rg=ART.dance(fd.s,fd.m,fCtl,beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
+    if(fd){var rg=ART.dance(fd.s,fd.m,fd.c.map(function(v){return v/100;}),beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
     var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():mode==="walk"?WALK.wire():mode==="pipe"?PIPE.wire():mode==="ski"?SKI.wire():null;
     var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(",")+(fd.h?"h"+fd.h.join("."):"")+(fd.b?"b":""):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
     if(key===lastSent&&!force&&(!sk||now-lastSend<1000))return;   /* in a game, resend now and then: someone who just (re)joined needs it */
@@ -2756,7 +2756,7 @@ var GAME=(function(){
      A dance button picks the dance; its own move buttons add variety; the two dots steer it (each -1..1).
      Freestyle (0) is the grab-your-limbs dance below. */
   var fStyle=0,fSub=0,fCtl=[0,0,0,0],fHeld=[null,null],fdBuilt=false,fHand=[null,null],fHandP=[null,null],fBack=0;   /* fBack: a 180 turns you round and you stay facing away until the next 180 */
-  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fSub,c:fCtl.map(function(v){return Math.round(v*100);})};if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=1;return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
+  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fSub,c:fCtl.map(function(v,i){return mySpin.on&&i>=2?0:Math.round(v*100);})};   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=1;return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
   function beatPos(){var b=BEAT.get(),now=performance.now();return b.known&&b.period>0?(now-b.t0)/b.period:now/500;}
   /* Move queue: line up dances and moves ahead of time. When it's your turn in the middle, they play in order and
      split your turn evenly between them; the one on now is lit. Kept on this device. */
@@ -6629,7 +6629,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.42",SERVER_VERSION="";
+var PAGE_VERSION="1.79.43",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7137,7 +7137,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.42"></script>
+<script src="lab.js?v=1.79.43"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
