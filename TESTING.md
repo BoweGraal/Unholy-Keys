@@ -1589,3 +1589,19 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.35 — real 3D spins
 - Spin, Twirl, 180, 360 and Spin move now turn the dancer through all the facings (front, three-quarter, side, back) instead of squeezing flat like paper.
 - Your own spin keeps going if you swing the right stick round in a circle (either way; faster swing = faster spin, up to a cap). Let go and it slows and lands facing front. Other players see the button spin only.
+
+## v1.79.36 — hand joysticks, 15 s centre turns
+- Free dance: two small hand rings sit above the big sticks (left hand / right hand). Hold one and that arm follows your finger (down = hanging, side = out, up = overhead; across the body works too) while the legs and body keep doing the selected dance. Let go and the arm goes back to the dance. Other players see it.
+- Centre turns: each dancer gets 15 s in the middle with 4.5 s between turns, first dancer is called 15 s ahead, and everyone gets two turns when the song is long enough. Free dance rounds already take the whole song.
+
+## v1.79.37 — free dance takes the whole song
+- Picking Free dance (alone or with another game) now always plays free dance for the whole song, never sharing it with a second minigame, so every dancer gets two centre turns when the song is long enough. Before, with Free dance as the second pick the first game was the one that ran.
+
+## v1.79.38 — the circle and the planner
+- Free dance turns: once the turns are fixed (8 s in) everyone forms an oval on the floor with a gold dashed outline and a "NEXT IN" marker at the top. Whoever is due north walks into the middle for their 15 s, walks back, the whole ring turns one place left, and the next dancer walks in.
+- While you wait, the bottom half of the screen is your planner (the sticks come back for your turn): "You're #3 of 8 · turn 1 of 2 · up in 0:44", and the first dancer gets "YOU'RE FIRST · you start in 15 s. Plan your moves!". Pick up to 3 dances and moves, reorder with the arrows, remove with the cross. 1 pick = 15 s, 2 = 7.5 s each, 3 = 5 s each. Picking a dance shows it live on your own dancer.
+- Needs the server redeploy (turn timing, ring order sent to late joiners).
+
+## v1.79.39 — start in the Two-step, planner only once the circle forms
+- Free dance no longer has the blank Freestyle option: you start in the Two-step and the dance list begins there. Number keys 1–9 pick Two-step … Shuffle, 0 Thriller, then - = ] [ \ ' for the rest.
+- Before the circle forms everyone just free dances with the sticks. The planner appears when the circle forms (7 s before the first turn); only the first dancer is called into it early, 15 s before their turn.
