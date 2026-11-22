@@ -1688,6 +1688,37 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.7 — Tuning lab, round two
+
+- The lab (performer page → Tuning lab) picks games by kind (Rhythm, Dance, Ride & race, Team), has a **search** box across every setting, a compact **Table** view, and one-tap links to every editor (Notes, Arenas, Tracks, Ski, Graphics).
+- New settings: base scroll speed for all rhythm games, Capture the flag (speeds, sprint, carrying, pads, tag reach), Kart flag (speed, launch power and charge, IMPACT reach and cooldown, spin, box, shield, nitro, zoom), dance battle match length, free dance spotlight zoom, mosh pit push-war length.
+- Sliders apply live in practice while the game runs; the share box sends them to lock in. Shows use the locked-in numbers.
+- Performer page: Note editor link; the flag designer is named for both flag games.
+
+## v1.81.6 — Note editor, Exit button, mosh pit layout
+
+- **Note editor** (charts.html): pick a song from the songs folder (or your computer). It finds the beat, then shows the notes in four lanes (← ↓ ↑ → / D F J K) scrolling up past a line. Tap a lane to add a note, tap again to remove it, drag up from a new note for a hold. Snap to 1, ½, ¼, ⅓ or ⅛ of a beat, zoom, play at 1× / 0.75× / 0.5× with a tick on every note, or **Record** (play and press D F J K). Preview what Hard / Normal / Easy make from your notes. Drafts save on the device; **Save** downloads `<song>.chart.json`, **Share** gives the text to send.
+- Put `<song>.chart.json` in the songs folder next to the song and practice and shows use it: Expert exactly as written, easier levels thinned from it, Note highway · 4 keys keeps your lanes.
+- Practice: an **Exit** button is always at the top left during any game (the panel games keep their X), so you can never get stuck.
+- Mosh pit: every song is mosh pit, circle pit, mosh pit, circle pit, and one wall of death at the drop.
+
+## v1.81.5 — Sweep: only the game on screen
+
+- Scroll speed: the old 1.5× is the new 1.0× in every rhythm game; the speed button still adjusts it (your old saved speed is reset once).
+- Note highway · 4 keys: every tap note is the same short tile; only holds are long.
+- In every game (not free dance): no instrument box, no Talk / Start game / Leave practice; Stop becomes a small button at the top left so it never sits on JUMP, DRIFT or SPRINT.
+- Kart flag uses the same fixed zoom as Mars Rally.
+
+## v1.81.4 — Practice menu sorted into kinds of game
+
+The practice menu starts with four tabs: Rhythm (step, target, note highway, 4 keys), Dance (free dance, mosh pit, dance walk race), Ride & race (roller rink, ice rink, keepy uppy, Mars Rally, half pipe, ski) and Team (capture the flag, kart flag). Only that kind's games show below.
+
+## v1.81.3 — Capture the flag / Kart flag: more room
+
+- One thin bar at the top: score (your team underlined) and the clock. The performer is small in the top-right corner. The arena gets the rest of the screen in both orientations; upright phones get a closer camera that follows you.
+- The how-to line only shows for the first few seconds (and when you're tagged), under the bar, and Kart flag has its own words.
+- Karts are painted in their team's colour.
+
 ## v1.81.2 — Kart flag: jump, aim, launch and IMPACT
 
 - **LAUNCH** (big button bottom right, or Shift / X) replaces drift: hold it and the kart hops and slides to a stop while you aim it anywhere with the stick. An arrow grows as it charges (blue, then orange when full at 0.7 s). Let go and the kart shoots off the way you aimed, harder the longer you held.

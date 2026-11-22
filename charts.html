@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Note editor · Unholy Keys</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#07041a;color:#e8e4f4;font-family:system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+#app{display:flex;flex-direction:column;height:100%}
+#bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;background:#120e22;border-bottom:1px solid rgba(155,127,224,.35)}
+#bar h1{font:800 15px system-ui;margin-right:6px;white-space:nowrap}
+button,.btn,select,label.f{background:#2a2440;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:7px 10px;font:700 13px system-ui;cursor:pointer;text-decoration:none;white-space:nowrap;touch-action:manipulation}
+label.f input{display:none}
+button.on{background:#7F77DD;border-color:#b9b2ff}
+button:disabled{opacity:.4;cursor:default}
+.btn.go,#play{background:linear-gradient(135deg,#D354A0,#7F77DD);border:0}
+#rec.on{background:#E8505B;border-color:#ff9aa2}
+.sep{width:1px;height:26px;background:rgba(255,255,255,.15);margin:0 2px}
+#wrap{flex:1;position:relative;min-height:0}
+#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block;cursor:crosshair}
+#scrub{width:100%;margin:0;accent-color:#D354A0}
+#status{padding:6px 10px;font:600 12px system-ui;background:#120e22;border-top:1px solid rgba(155,127,224,.35);line-height:1.45}
+#status b{color:#F5C518}
+#share{display:none;position:absolute;inset:auto 10px 10px 10px;background:#1b1630;border:1px solid rgba(155,127,224,.5);border-radius:12px;padding:10px;z-index:5}
+#share.on{display:block}
+#share textarea{width:100%;height:110px;background:#0e0a1c;color:#e8e4f4;border:1px solid rgba(255,255,255,.15);border-radius:8px;font:12px ui-monospace,monospace;padding:7px;margin:6px 0;-webkit-user-select:text;user-select:text}
+#share .r{display:flex;gap:6px;flex-wrap:wrap}
+#busy{display:none;position:absolute;inset:0;background:rgba(7,4,26,.8);align-items:center;justify-content:center;font:700 15px system-ui;z-index:6}
+#busy.on{display:flex}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar">
+    <h1>🎼 Note editor</h1>
+    <select id="song"><option value="">Pick a song from the songs folder…</option></select>
+    <label class="f">🎵 Song from computer<input type="file" id="file" accept="audio/*"></label>
+    <span class="sep"></span>
+    <button id="play" disabled>▶ Play</button>
+    <select id="rate" title="Playback speed"><option value="1">1×</option><option value="0.75">0.75×</option><option value="0.5">0.5×</option></select>
+    <button id="rec" disabled title="While it plays, press D F J K (or the arrow keys) to drop notes on the beat">● Record</button>
+    <select id="snap" title="Notes snap to this much of a beat"><option value="1">Snap 1 beat</option><option value="2" selected>Snap ½</option><option value="4">Snap ¼</option><option value="3">Snap ⅓</option><option value="8">Snap ⅛</option><option value="0">No snap</option></select>
+    <button id="zin" title="Zoom in">＋</button><button id="zout" title="Zoom out">－</button>
+    <select id="view" title="See what each level makes from your notes (only Expert can be edited)"><option value="3">Edit (Expert)</option><option value="2">Preview Hard</option><option value="1">Preview Normal</option><option value="0">Preview Easy</option></select>
+    <span class="sep"></span>
+    <button id="undo">↶ Undo</button>
+    <button id="auto" title="Throw away your notes and start again from the worked-out steps">↺ Auto steps</button>
+    <button id="clear">🗑 Clear</button>
+    <button id="save" class="btn go">💾 Save</button>
+    <button id="shareB">📋 Share</button>
+  </div>
+  <div id="wrap"><canvas id="cv"></canvas>
+    <div id="share"><b>Share these notes</b> — copy them to send, or paste someone's and press Load. To put them in the game, upload the saved <b id="fname">.chart.json</b> into the <b>songs</b> folder next to the song.<textarea id="shareT"></textarea>
+      <div class="r"><button id="copyB">Copy</button><button id="dlB">Download file</button><button id="loadB">Load pasted</button><button id="closeB">Close</button></div></div>
+    <div id="busy">Working out the beat…</div>
+  </div>
+  <input id="scrub" type="range" min="0" max="1000" value="0" step="1">
+  <div id="status">Pick a song. Tap a lane to add a note, tap it again to remove it, drag up from a new note to make it a hold. Space plays, scroll or drag the bar to move.</div>
+</div>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var cv=$("cv"),g=cv.getContext("2d"),W=0,H=0,dpr=1;
+  var CHART=null,LADDER=null,auto=null,chart=null,steps=[],hist=[],songName="",songUrl=null,audio=new Audio(),ac=null,ready=false;
+  var pps=220,view=3,rec=false,lastTick=-1;
+  var LCOL=["#3CCB8A","#5FB4F0","#F5C518","#FF7A2B"],LNAME=["←","↓","↑","→"],KEYMAP={KeyD:0,KeyF:1,KeyJ:2,KeyK:3,ArrowLeft:0,ArrowDown:1,ArrowUp:2,ArrowRight:3};
+  /* the beat-finder and the difficulty ladder are the game's own: borrowed from venue.html so the notes line up exactly */
+  function borrow(){return fetch("venue.html",{cache:"no-cache"}).then(function(r){return r.text();}).then(function(t){
+    var a=t.indexOf("var CHART=(function(){"),b=t.indexOf("\n})();",a);CHART=new Function(t.slice(a,b+6)+";return CHART;")();
+    var c=t.indexOf("  function thumbChart(chart){"),d=t.indexOf("  function easeChart(chart,diff){",c);
+    LADDER=new Function(t.slice(c,d)+";return{thumb:thumbChart,level:levelChart};")();});}
+  var borrowing=borrow().catch(function(){status("Couldn't load the game's beat finder (open this page from the site).");});
+  function status(h){$("status").innerHTML=h;}
+  function key(){return "uk_chart_"+songName;}
+  function per(){return chart?60000/chart.bpm:500;}
+  function now(){return audio.currentTime*1000;}
+
+  /* ---- songs ---- */
+  function repoInfo(){var h=location.hostname,m=h.match(/^([^.]+)\.github\.io$/i),seg=location.pathname.split("/").filter(Boolean)[0];if(m&&seg&&!/\.html$/i.test(seg))return{owner:m[1],repo:seg};return{owner:"BoweGraal",repo:"Unholy-Keys"};}
+  var EXT=/\.(mp3|ogg|m4a|wav|flac|aac|opus)$/i,SONGS=[];
+  function useList(files){SONGS=files.filter(function(f){return EXT.test(f.name);}).sort(function(a,b){return a.name.localeCompare(b.name);});
+    SONGS.forEach(function(f,i){var o=document.createElement("option");o.value=i;o.textContent=f.name.replace(EXT,"");$("song").appendChild(o);});}
+  fetch("songs/list.json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(n){useList(n.map(function(x){return{name:String(x)};}));})
+    .catch(function(){var ri=repoInfo();return fetch("https://api.github.com/repos/"+ri.owner+"/"+ri.repo+"/contents/songs").then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(it){useList(it.filter(function(x){return x&&x.type==="file";}).map(function(x){return{name:x.name,alt:x.download_url};}));});}).catch(function(){});
+  $("song").onchange=function(){var f=SONGS[+this.value];if(!f)return;var u="songs/"+encodeURIComponent(f.name);
+    load(fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob();}).catch(function(){if(f.alt)return fetch(f.alt).then(function(r){return r.blob();});throw 0;}),f.name.replace(EXT,""),u);};
+  $("file").onchange=function(){var f=this.files&&this.files[0];if(f)load(Promise.resolve(f),f.name.replace(EXT,""),null);$("song").value="";};
+  function load(blobP,name,url){ready=false;$("busy").classList.add("on");$("busy").textContent="Loading "+name+"…";songName=name;songUrl=url;
+    Promise.all([blobP,borrowing]).then(function(r){var blob=r[0];audio.src=URL.createObjectURL(blob);audio.playbackRate=+$("rate").value;
+      return blob.arrayBuffer().then(function(ab){ac=ac||new (window.AudioContext||window.webkitAudioContext)();return ac.decodeAudioData(ab);});})
+    .then(function(buf){$("busy").textContent="Working out the beat…";return new Promise(function(res){CHART.analyse(buf,{level:1},res);});})
+    .then(function(c){auto=c;chart=c;
+      /* start from: a draft on this device, else the song's saved notes in the songs folder, else the worked-out steps */
+      var draft=null;try{draft=JSON.parse(localStorage.getItem(key())||"null");}catch(e){}
+      if(draft&&draft.steps)return useNotes(draft,"your draft on this device");
+      if(url)return fetch(url.replace(/\.[a-z0-9]+$/i,"")+".chart.json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(h){useNotes(h,"the saved notes in the songs folder");}).catch(function(){useNotes({steps:LADDER.thumb(c).steps},"the worked-out steps");});
+      useNotes({steps:LADDER.thumb(c).steps},"the worked-out steps");})
+    .catch(function(e){status("Couldn't open that song ("+(e&&e.message||"unknown")+").");})
+    .then(function(){$("busy").classList.remove("on");});}
+  function useNotes(h,from){steps=(h.steps||[]).map(function(s){return s.slice(0,3);}).sort(function(a,b){return a[0]-b[0];});if(h.sections&&h.sections.length)chart.sections=h.sections;if(h.drop)chart.drop=h.drop;hist=[];ready=true;
+    $("play").disabled=$("rec").disabled=false;audio.currentTime=0;scrubSync();
+    status("<b>"+esc(songName)+"</b> · "+Math.round(chart.bpm)+" BPM · started from "+from+". Tap a lane to add a note, tap it again to remove it, drag up to make a hold. <b>Record</b>: play and press D F J K. Save makes the file for the songs folder.");draw();}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+  /* ---- editing ---- */
+  function push(){hist.push(JSON.stringify(steps));if(hist.length>120)hist.shift();autosave();}
+  function autosave(){clearTimeout(autosave.t);autosave.t=setTimeout(function(){try{localStorage.setItem(key(),JSON.stringify(out()));}catch(e){}},400);}
+  function snap(ms){var d=+$("snap").value;if(!d||!chart||!chart.beats||chart.beats.length<2)return Math.round(ms);var bt=chart.beats,lo=0,hi=bt.length-1;
+    while(hi-lo>1){var m=(lo+hi)>>1;if(bt[m]<=ms)lo=m;else hi=m;}var b0=bt[lo],b1=lo+1<bt.length?bt[lo+1]:b0+per(),step=(b1-b0)/d,k=Math.round((ms-b0)/step);return Math.round(b0+k*step);}
+  function find(ms,lane,tol){for(var i=0;i<steps.length;i++){var s=steps[i];if(!(s[1]&(1<<lane)))continue;if(Math.abs(s[0]-ms)<=tol||(s[2]>0&&ms>=s[0]&&ms<=s[0]+s[2]))return i;}return -1;}
+  function addNote(ms,lane,hold){ms=snap(ms);var i;for(i=0;i<steps.length;i++)if(Math.abs(steps[i][0]-ms)<2){steps[i][1]|=(1<<lane);if(hold)steps[i][2]=hold;return steps[i];}
+    var s=hold?[ms,1<<lane,hold]:[ms,1<<lane];steps.push(s);steps.sort(function(a,b){return a[0]-b[0];});return s;}
+  function removeAt(i,lane){var s=steps[i];s[1]&=~(1<<lane);if(!s[1])steps.splice(i,1);}
+  function out(){return{v:1,song:songName,bpm:chart?Math.round(chart.bpm*100)/100:0,steps:steps.map(function(s){return s[2]>0?[s[0],s[1],Math.round(s[2])]:[s[0],s[1]];}),sections:chart?chart.sections:[],drop:chart?chart.drop||0:0};}
+
+  /* ---- the view: time runs up the screen, the playhead line sits near the bottom ---- */
+  var laneX=function(l){var lw=Math.min(110,(W-70)/4),x0=Math.round((W-lw*4)/2)+20;return{x:x0+l*lw,w:lw};};
+  function headY(){return Math.round(H*0.82);}
+  function yOf(ms){return headY()-(ms-now())/1000*pps;}
+  function msOf(y){return now()+(headY()-y)/pps*1000;}
+  function shown(){if(view>=3||!chart)return steps;var c={};for(var k in chart)c[k]=chart[k];c.steps=steps;c.hand=1;return LADDER.level(LADDER.thumb(c),view).steps;}
+  function draw(){g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle="#07041a";g.fillRect(0,0,W,H);if(!ready){return;}
+    var t0=msOf(H+40),t1=msOf(-40),i,L0=laneX(0),L3=laneX(3),xL=L0.x,xR=L3.x+L3.w;
+    for(i=0;i<4;i++){var L=laneX(i);g.fillStyle=i%2?"#100c22":"#0d0a1d";g.fillRect(L.x,0,L.w,H);}
+    /* parts of the song, down the left */
+    (chart.sections||[]).forEach(function(s,k){var y=yOf(s[0]);if(y<-20||y>H+20)return;g.fillStyle="rgba(245,197,24,.5)";g.fillRect(4,Math.round(y),xL-8,1);g.fillStyle="#F5C518";g.font="700 11px system-ui";g.fillText(s[1],6,Math.round(y)-4);});
+    if(chart.drop){var dy=yOf(chart.drop);g.fillStyle="#E8505B";g.fillRect(xL,Math.round(dy)-1,xR-xL,3);g.font="800 11px system-ui";g.fillText("DROP",xR+6,Math.round(dy)+4);}
+    /* beat lines: bars bold, beats faint, the snap grid fainter */
+    var bt=chart.beats||[],d=+$("snap").value||1;
+    for(i=0;i<bt.length;i++){if(bt[i]<t0-per()||bt[i]>t1)continue;var y=Math.round(yOf(bt[i]));g.fillStyle=i%4===0?"rgba(255,255,255,.4)":"rgba(255,255,255,.16)";g.fillRect(xL,y,xR-xL,i%4===0?2:1);
+      if(i%4===0){g.fillStyle="rgba(255,255,255,.5)";g.font="10px system-ui";g.fillText(String(i/4+1),xL-24,y+4);}
+      var b1=i+1<bt.length?bt[i+1]:bt[i]+per();for(var k=1;k<d;k++){var ys=Math.round(yOf(bt[i]+(b1-bt[i])*k/d));g.fillStyle="rgba(255,255,255,.06)";g.fillRect(xL,ys,xR-xL,1);}}
+    /* notes */
+    var S=shown(),nh=Math.max(10,Math.min(18,pps*0.06));
+    S.forEach(function(s){if(s[0]+(s[2]||0)<t0||s[0]>t1)return;for(var l=0;l<4;l++){if(!(s[1]&(1<<l)))continue;var L=laneX(l),y=yOf(s[0]);
+      if(s[2]>0){var ye=yOf(s[0]+s[2]);g.fillStyle=LCOL[l];g.globalAlpha=0.45;g.fillRect(L.x+L.w*0.3,ye,L.w*0.4,y-ye);g.globalAlpha=1;}
+      g.fillStyle="#000";g.fillRect(L.x+5,Math.round(y-nh/2)-1,L.w-10,nh+2);g.fillStyle=view<3?"#bbb":LCOL[l];g.fillRect(L.x+6,Math.round(y-nh/2),L.w-12,nh);
+      g.fillStyle="rgba(255,255,255,.35)";g.fillRect(L.x+6,Math.round(y-nh/2),L.w-12,2);}});
+    /* playhead and lane names */
+    var hy=headY();g.fillStyle="#E8505B";g.fillRect(xL-6,hy-1,xR-xL+12,3);
+    for(i=0;i<4;i++){var L2=laneX(i);g.fillStyle=LCOL[i];g.font="800 20px system-ui";g.textAlign="center";g.fillText(LNAME[i],L2.x+L2.w/2,hy+28);g.fillStyle="rgba(255,255,255,.55)";g.font="700 11px system-ui";g.fillText("DFJK"[i],L2.x+L2.w/2,hy+44);}g.textAlign="left";
+    g.fillStyle="#fff";g.font="700 12px ui-monospace,monospace";g.fillText(fmt(now())+" / "+fmt(audio.duration*1000||0)+"  ·  "+steps.length+" notes"+(view<3?"  ·  previewing "+["Easy","Normal","Hard"][view]+" ("+S.length+")":""),10,18);}
+  function fmt(ms){var s=Math.max(0,ms/1000);return Math.floor(s/60)+":"+("0"+Math.floor(s%60)).slice(-2)+"."+Math.floor(s*10%10);}
+
+  /* ---- input: tap a lane to add or remove; drag up from a new note to stretch it into a hold; wheel / drag the bar to move ---- */
+  var drag=null;
+  function laneAt(x){for(var l=0;l<4;l++){var L=laneX(l);if(x>=L.x&&x<L.x+L.w)return l;}return -1;}
+  cv.addEventListener("pointerdown",function(e){if(!ready||view<3)return;var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,l=laneAt(x);if(l<0)return;
+    var ms=msOf(y),i=find(ms,l,Math.max(40,9/pps*1000));push();
+    if(i>=0&&e.button!==2){removeAt(i,l);drag=null;}else if(i>=0){removeAt(i,l);}else{var s=addNote(ms,l,0);drag={s:s,y:y,l:l};}
+    cv.setPointerCapture(e.pointerId);draw();e.preventDefault();});
+  cv.addEventListener("pointermove",function(e){if(!drag)return;var r=cv.getBoundingClientRect(),y=e.clientY-r.top,len=snap(msOf(y))-drag.s[0];
+    if(drag.y-y>14&&len>per()*0.4){drag.s[2]=len;}else if(drag.s.length>2){drag.s.length=2;}draw();});
+  ["pointerup","pointercancel"].forEach(function(n){cv.addEventListener(n,function(){if(drag)autosave();drag=null;});});
+  cv.addEventListener("contextmenu",function(e){e.preventDefault();});
+  cv.addEventListener("wheel",function(e){if(!ready)return;e.preventDefault();audio.currentTime=Math.max(0,Math.min(audio.duration||0,audio.currentTime+(e.deltaY/pps)));scrubSync();draw();},{passive:false});
+  $("scrub").oninput=function(){if(!ready||!audio.duration)return;audio.currentTime=this.value/1000*audio.duration;draw();};
+  function scrubSync(){if(audio.duration)$("scrub").value=Math.round(audio.currentTime/audio.duration*1000);}
+  $("play").onclick=function(){if(!ready)return;if(audio.paused){audio.play();this.textContent="❚❚ Pause";}else{audio.pause();this.textContent="▶ Play";}};
+  audio.addEventListener("ended",function(){$("play").textContent="▶ Play";});
+  $("rate").onchange=function(){audio.playbackRate=+this.value;};
+  $("rec").onclick=function(){rec=!rec;this.classList.toggle("on",rec);};
+  $("zin").onclick=function(){pps=Math.min(900,pps*1.3);draw();};$("zout").onclick=function(){pps=Math.max(60,pps/1.3);draw();};
+  $("view").onchange=function(){view=+this.value;draw();};
+  $("snap").onchange=draw;
+  $("undo").onclick=function(){if(!hist.length)return;steps=JSON.parse(hist.pop());autosave();draw();};
+  $("auto").onclick=function(){if(!auto||!confirm("Start again from the worked-out steps? (Undo brings yours back.)"))return;push();steps=LADDER.thumb(auto).steps.map(function(s){return s.slice();});autosave();draw();};
+  $("clear").onclick=function(){if(!ready||!confirm("Clear every note? (Undo brings them back.)"))return;push();steps=[];autosave();draw();};
+  document.addEventListener("keydown",function(e){if(e.target.tagName==="TEXTAREA")return;
+    if(e.code==="Space"){e.preventDefault();$("play").onclick();return;}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();$("undo").onclick();return;}
+    var l=KEYMAP[e.code];if(l===undefined||!ready||e.repeat)return;e.preventDefault();
+    if(rec&&!audio.paused){push();addNote(now()-20,l,0);draw();}   /* recording: a note where you pressed (a touch early, for your reaction) */
+    else if(audio.paused){var i=find(snap(now()),l,30);push();if(i>=0)removeAt(i,l);else addNote(now(),l,0);draw();}});
+  /* a tick as each note crosses the line, so you hear where they sit */
+  function tick(){var t=now();if(!audio.paused&&ac){shown().forEach(function(s){if(s[0]>lastTick&&s[0]<=t){var o=ac.createOscillator(),gn=ac.createGain();o.frequency.value=1600;gn.gain.setValueAtTime(0.12,ac.currentTime);gn.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.04);o.connect(gn).connect(ac.destination);o.start();o.stop(ac.currentTime+0.05);}});}lastTick=t;}
+  function loop(){if(ready&&!audio.paused){tick();scrubSync();draw();}else lastTick=now();requestAnimationFrame(loop);}requestAnimationFrame(loop);
+
+  /* ---- save and share ---- */
+  function fileName(){return (songName||"song")+".chart.json";}
+  $("save").onclick=function(){if(!ready)return;try{localStorage.setItem(key(),JSON.stringify(out()));}catch(e){}download();$("fname").textContent=fileName();
+    status("Saved <b>"+esc(fileName())+"</b>. Upload it into the <b>songs</b> folder next to the song (Add file → Upload files) and the game uses your notes for every level: Expert exactly as written, easier levels thinned from it. Or press Share and send the text.");};
+  function download(){var b=new Blob([JSON.stringify(out())],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=fileName();document.body.appendChild(a);a.click();a.remove();}
+  $("dlB").onclick=download;
+  $("shareB").onclick=function(){if(!ready)return;$("fname").textContent=fileName();$("shareT").value=JSON.stringify(out());$("share").classList.add("on");};
+  $("closeB").onclick=function(){$("share").classList.remove("on");};
+  $("copyB").onclick=function(){$("shareT").select();try{navigator.clipboard.writeText($("shareT").value);}catch(e){document.execCommand("copy");}};
+  $("loadB").onclick=function(){var h=null;try{h=JSON.parse($("shareT").value);}catch(e){}if(!h||!Array.isArray(h.steps)){alert("That doesn't look like a set of notes.");return;}push();useNotes(h,"pasted notes");autosave();$("share").classList.remove("on");};
+
+  function size(){dpr=Math.min(2,window.devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);draw();}
+  window.addEventListener("resize",size);size();
+  window.ukNotes=function(){return{ready:ready,steps:steps.length,bpm:chart&&chart.bpm,song:songName};};
+})();
+</script>
+</body>
+</html>

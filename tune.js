@@ -4,13 +4,13 @@
 var TUNE=(function(){
   function V(k,label,def,min,max,step,help,unit){return{k:k,label:label,def:def,min:min,max:max,step:step,help:help,unit:unit||""};}
   var GROUPS=[
-  {id:"walk",name:"Walking",icon:"🚶",mode:"free",
+  {id:"walk",name:"Walking",icon:"🚶",mode:"free",cat:"Dance",
    about:"How you move around the floor outside the skating and mosh games. Arrow keys, WASD, the joystick and tap-to-walk all use the same speed.",
    vars:[
     V("walk.speed","Walk speed",0.33,0.1,1,0.01,"Fraction of the room width crossed per second. 0.33 is about 3 seconds to cross the room.","room/s"),
     V("walk.moshBoost","Mosh pit speed boost",1.45,1,3,0.05,"Walking is this many times faster while the mosh pit is on.","×"),
     V("walk.ease","Avatar catch-up",0.35,0.05,1,0.05,"How tightly the drawn avatar follows where you are heading. 1 is instant, small is floaty.","")]},
-  {id:"step",name:"Step & Target dance",icon:"⬆️",mode:"step",
+  {id:"step",name:"Step & Target dance",icon:"⬆️",mode:"step",cat:"Rhythm",
    about:"Arrows fall to the hit line (Target dance: rings close on a spot). Press the matching key as it lands. Closer to the beat means a better call. Combo adds a score bonus and everyone in the show plays the same chart.",
    vars:[
     V("hit.perfect","PERFECT window",60,20,200,5,"Milliseconds either side of the beat that count as PERFECT.","ms"),
@@ -25,7 +25,7 @@ var TUNE=(function(){
     V("step.travelMin","Fall time, shortest",1400,600,3500,50,"The fastest an arrow takes to reach the line (fast songs). Lower is faster.","ms"),
     V("step.travelMax","Fall time, longest",2300,800,4500,50,"The slowest an arrow takes to reach the line (slow songs).","ms"),
     V("step.travelBeats","Fall time in beats",3.5,1,8,0.1,"Fall time is this many beats, clamped between the shortest and longest above.","beats")]},
-  {id:"hw",name:"Note highway",icon:"🎹",mode:"keys",
+  {id:"hw",name:"Note highway",icon:"🎹",mode:"keys",cat:"Rhythm",
    about:"Notes fall down seven lanes (A S D F G H J) or four fat keys (D F J K). Hold bars need holding and letting go at the right moment. Hype fills as you play well and speeds up the stage lights.",
    vars:[
     V("hw.fall7","Fall speed factor, 7 keys",0.85,0.3,1.5,0.01,"Multiplies the fall time. Lower is faster notes, higher is slower.","×"),
@@ -43,7 +43,7 @@ var TUNE=(function(){
     V("hype.good","Hype gain, GOOD",0.012,0,0.2,0.002,"Hype per GOOD.",""),
     V("hype.miss","Hype loss, miss / let go",0.08,0,0.4,0.01,"Hype lost on a miss or letting go early.",""),
     V("hype.drift","Hype drift back",0.0008,0,0.01,0.0001,"How fast hype drifts back to its resting level each frame when nothing is happening.","")]},
-  {id:"ski",name:"Ski",icon:"⛷",mode:"ski",
+  {id:"ski",name:"Ski",icon:"⛷",mode:"ski",cat:"Ride & race",
    about:"Ski down an endless mountain. Point where you want to go: straight down is fastest, sideways slows you, uphill stops you. Go between the slalom flags for points (in a row for a combo), hit ramps for air and press a trick key; trees and rocks knock you down (hop over rocks).",
    vars:[
     V("ski.maxSpeed","Top speed",230,60,300,5,"Fastest you can go, pointing straight down the slope.","u/s"),
@@ -55,7 +55,7 @@ var TUNE=(function(){
     V("ski.rampAir","Ramp air time",1.3,0.4,2,0.05,"How long a ramp keeps you in the air at top speed.","s"),
     V("ski.crash","Crash time",1.4,0.4,4,0.1,"How long a crash keeps you down.","s"),
     V("ski.gatePts","Points per gate",100,10,500,10,"Points for going between a pair of flags (before the combo multiplier).","")]},
-  {id:"pipe",name:"Half pipe",icon:"🛹",mode:"pipe",
+  {id:"pipe",name:"Half pipe",icon:"🛹",mode:"pipe",cat:"Ride & race",
    about:"Groups of 4 or 5 share a half pipe, each rolling at their own pace. Tap BEAT (Space) on the beat to build momentum; lean with the left stick (A/D). At the top of the ramp, swipe: the direction picks a dance trick, how hard sets the height. In the air, spin with the stick to line the board up with the wall, and add style with 1–4. Clean landings fill the SUPER meter.",
    vars:[
     V("pp.cross","Time to cross the pipe",2.8,1,4,0.1,"Seconds to roll from one wall to the other. Higher is slower.","s"),
@@ -67,7 +67,42 @@ var TUNE=(function(){
     V("pp.clean","Clean landing angle",25,8,60,1,"How far off the wall's angle you can land and still be clean (twice this is sketchy).","°"),
     V("pp.superPts","Points to fill SUPER",2500,500,10000,100,"Clean-landing points needed to fill the SUPER meter.",""),
     V("pp.bail","Bail time",1.2,0.4,3,0.1,"How long a bail keeps you down.","s")]},
-  {id:"walk",name:"Dance walk race",icon:"💃",mode:"walk",
+  {id:"rhythm",name:"Rhythm games (all)",icon:"🎵",mode:"keys4",cat:"Rhythm",
+   about:"Shared by Step dance, Target dance and both Note highways. The players' own speed button (1.0×, 1.25×…) multiplies this.",
+   vars:[
+    V("rhythm.scroll","Base scroll speed",1.5,0.6,3,0.05,"What 1.0× on the speed button means. 1.5 is the old 1.5× (faster notes, more reading room). Higher is faster.","×")]},
+  {id:"ctf",name:"Capture the flag",icon:"🚩",mode:"ctf",cat:"Team",
+   about:"Two teams on a tile arena: grab their flag, bring it home, tag anyone on your half. Practice uses these numbers straight away; shows use the server's until you send them to lock in.",
+   vars:[
+    V("ctf.speed","Run speed",6.2,2,14,0.1,"Tiles a second running.","tiles/s"),
+    V("ctf.sprint","Sprint multiplier",1.6,1,3,0.05,"Speed while sprinting.","×"),
+    V("ctf.stam","Sprint meter",2.4,0.5,8,0.1,"Seconds of sprint in a full meter.","s"),
+    V("ctf.carry","Carrying the flag",0.85,0.4,1,0.01,"Speed while you carry their flag.","×"),
+    V("ctf.pad","Boost pad push",2.4,0,6,0.1,"How hard a boost pad throws you.","×"),
+    V("ctf.tagR","Tag reach",1,0.4,2,0.05,"How close two players have to get to tag.","tiles")]},
+  {id:"kflag",name:"Kart flag",icon:"🏎️",mode:"kflag",cat:"Team",
+   about:"Capture the flag in karts: LAUNCH (hold, aim, let go) to fly, IMPACT to knock your flag out of a carrier, power-up boxes for items. Practice uses these straight away; shows use the server's until you send them.",
+   vars:[
+    V("kf.speed","Top speed",9.5,3,20,0.1,"Tiles a second at full stick.","tiles/s"),
+    V("kf.launch0","Launch, quick tap",1.25,1,3,0.05,"Speed after a tap of LAUNCH, as a multiple of top speed.","×"),
+    V("kf.launch1","Launch, fully charged",2.4,1,4,0.05,"Speed after a full charge.","×"),
+    V("kf.aim","Launch charge time",700,200,2000,50,"How long to hold LAUNCH for a full charge.","ms"),
+    V("kf.impactR","IMPACT reach",3,1,8,0.1,"Radius of the IMPACT blast.","tiles"),
+    V("kf.impactCd","IMPACT cooldown",8000,1000,20000,250,"Time before you can IMPACT again.","ms"),
+    V("kf.spin","Spin-out time",1300,300,4000,50,"How long a hit kart spins.","ms"),
+    V("kf.box","Box comes back after",8000,1000,30000,500,"Respawn time of a power-up box.","ms"),
+    V("kf.shield","Shield time",4000,500,10000,250,"How long a shield lasts.","ms"),
+    V("kf.nitro","Nitro time",2200,500,6000,100,"How long nitro lasts.","ms"),
+    V("kf.tile","Zoom (tile size)",54,24,90,1,"Pixels per tile on screen. 54 matches Mars Rally.","px")]},
+  {id:"battle",name:"Dance battle",icon:"⚔️",mode:"free",cat:"Dance",
+   about:"Battle rounds: a knockout of 1 v 1s inside one song, the crowd votes live, the final takes the end of the song. Practice uses this straight away; shows use the server's until you send it.",
+   vars:[
+    V("battle.match","Match length",20000,8000,45000,500,"Length of each 1 v 1 (the final takes the finale).","ms")]},
+  {id:"fd",name:"Free dance",icon:"🕺",mode:"free",cat:"Dance",
+   about:"Dancing on the floor and the spotlight turns in the middle.",
+   vars:[
+    V("fd.turnH","Spotlight zoom",0.5,0.2,0.9,0.01,"In your spotlight turn the camera zooms until you are this much of the screen tall (it never goes past the gap between the button columns).","of screen")]},
+  {id:"walk",name:"Dance walk race",icon:"💃",mode:"walk",cat:"Dance",
    about:"Race across the floor. Keep your cursor (or finger) in the circle as it moves along an invisible path to walk at full speed. The dance, and the circle's path, change every 8 beats. Out of the circle you slow down; stay out too long and you trip.",
    vars:[
     V("wk.time","Race time at full speed",75,30,180,1,"Seconds to run the whole track if you never leave the circle (the track is a few screens long, so the finish is off screen at the start).","s"),
@@ -76,7 +111,7 @@ var TUNE=(function(){
     V("wk.tripTime","Time out before tripping",1.4,0.4,4,0.1,"How long you can stay outside the circle before you trip.","s"),
     V("wk.stun","Trip time",1.3,0.3,4,0.1,"How long a trip stops you.","s"),
     V("wk.loopBeats","Beats per loop",5,2,8,1,"How many beats the circle takes to go once round its path. Lower is faster and harder.","beats")]},
-  {id:"keepy",name:"Keepy uppy",icon:"🎈",mode:"keepy",
+  {id:"keepy",name:"Keepy uppy",icon:"🎈",mode:"keepy",cat:"Ride & race",
    about:"Keep balloons, balls and feathers off the floor. Get under one and head it up. Jump (Space) once for a hop, again in the air for a double jump that hits harder and scores double.",
    vars:[
     V("kp.speed","Move speed",0.42,0.1,1.2,0.01,"Walking speed on the keepy floor, fraction of room width per second.","room/s"),
@@ -91,7 +126,7 @@ var TUNE=(function(){
     V("kp.dblKick","Double-jump kick boost",1.25,1,3,0.05,"How much harder a double-jump hit launches the object.","×"),
     V("kp.dblPts","Double-jump points",2,1,5,0.5,"Score multiplier for a double-jump hit.","×"),
     V("kp.streak","Streak bonus",0.15,0,1,0.05,"Extra score per hit in a row on the same object.","×")]},
-  {id:"skate",name:"Roller & Ice rink",icon:"🛼",mode:"skate",
+  {id:"skate",name:"Roller & Ice rink",icon:"🛼",mode:"skate",cat:"Ride & race",
    about:"Skate laps round the island. Build speed, jump for air, then hold a direction on the wheel for tricks and switch for a chain. Let go before you land or you bail. Laps and tricks score.",
    vars:[
     V("sk.accel","Acceleration",900,300,2500,50,"How hard you push when steering. Scaled by rink size.",""),
@@ -110,7 +145,7 @@ var TUNE=(function(){
     V("sk.landPts","Landing bonus per chain",40,0,300,5,"Flat points per trick in the chain, banked on a clean landing.","pts"),
     V("sk.lapPts","Lap points",100,0,500,10,"Points for each full lap of the island.","pts"),
     V("sk.rail","Rail bounce",1.5,1,2.5,0.1,"How hard you bounce off the rails. 1 is a dead stop against the rail, 2 is a full rebound.","×")]},
-  {id:"kart",name:"Mars Rally (kart)",icon:"🏍",mode:"kart",
+  {id:"kart",name:"Mars Rally (kart)",icon:"🏍",mode:"kart",cat:"Ride & race",
    about:"Space kart racing on the dance floor. The stick (or the mouse on a computer) is speed and direction; point behind you and the kart swings round. Tap DRIFT to hop, swing into the turn, land at a good angle and hold it; let go for a boost. Points for distance, laps, boosts, overtakes and running near the front.",
    vars:[
     V("kt.maxSpeed","Top speed",260,70,400,5,"Track units per second with the stick pushed all the way (a lap is 2000 to 3000 units).",""),
@@ -139,7 +174,7 @@ var TUNE=(function(){
     V("kt.rankPts","Front-runner points",6,0,40,1,"Points per second for the leader, fewer further back.","pts/s"),
     V("kt.passPts","Overtake points",30,0,300,5,"Points each time you move up a place.","pts"),
     V("kt.driftPts","Boost points",50,0,300,5,"Points for a mini-turbo (super pays double, ultra triple).","pts")]},
-  {id:"mosh",name:"Mosh pit",icon:"🤘",mode:"mosh",
+  {id:"mosh",name:"Mosh pit",icon:"🤘",mode:"mosh",cat:"Dance",
    about:"Pick a side, wait for the drop and charge. Win the tug of war by tapping, then circle pits: push forward to sprint, in or out to change lanes, and shove people for points.",
    vars:[
     V("mp.sprint","Circle sprint",1.8,1,4,0.1,"Speed multiplier when pushing forward in the circle pit.","×"),
@@ -151,7 +186,8 @@ var TUNE=(function(){
     V("mp.charge","Charge speed",1.1,0.3,3,0.05,"Speed of the wall charge when the drop hits.",""),
     V("mp.tug","Tug-of-war approach",0.9,0.3,3,0.05,"Speed to your place in the push war.",""),
     V("mp.damp","Shove damping",0.04,0.005,0.5,0.005,"Fraction of a shove's speed left after one second. Lower stops sooner.",""),
-    V("mp.lapPts","Lap points",150,0,500,10,"Points per lap of the circle pit.","pts")]}
+    V("mp.lapPts","Lap points",150,0,500,10,"Points per lap of the circle pit.","pts"),
+    V("mp.tugMs","Push war length",10000,4000,30000,500,"How long the push war after the wall of death charge lasts.","ms")]}
   ];
   var DEF={},VALS={},BYK={},listeners=[];
   GROUPS.forEach(function(g){g.vars.forEach(function(x){DEF[x.k]=x.def;BYK[x.k]=x;});});

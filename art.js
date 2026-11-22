@@ -673,7 +673,7 @@ var ART=(function(){
     SPRINT:1.6,STAM:2.4,CHARGE:9,SPRINT_MIN:0.3,REFILL_MS:10000,REFILL_R:0.8,
     /* Kart Flag (st.kart): the same arenas, driven in karts. No tagging; the PULSE (a shockwave round you, with a cooldown)
        knocks your flag out of a carrier's hands and home, and spins other enemies out. Power-up boxes (map tile p) give one item. */
-    K_SPEED:9.5,K_PULSE_R:3,K_PULSE_MS:8000,K_SPIN_MS:1300,K_BOX_MS:8000,K_BOX_R:0.85,K_OIL_R:0.75,K_OIL_MS:20000,K_SHIELD_MS:4000,K_NITRO_MS:2200,K_AIM_MS:700,
+    K_SPEED:9.5,K_PULSE_R:3,K_PULSE_MS:8000,K_SPIN_MS:1300,K_BOX_MS:8000,K_BOX_R:0.85,K_OIL_R:0.75,K_OIL_MS:20000,K_SHIELD_MS:4000,K_NITRO_MS:2200,K_AIM_MS:700,K_TILE:54,K_Z:1.68,
     ITEMS:["nitro","oil","shield","mega"],ITEM_ICON:{nitro:"\u26A1",oil:"\uD83D\uDEE2",shield:"\uD83D\uDEE1",mega:"\uD83D\uDCA5"}};
   /* the built-in arena before sprint refills (a copy saved on this device that still matches is upgraded to the new one) */
   CTF.OLD_TWIN="#########################################......................................##............#............#............##.rr.........#.>>>....<<<.#.........bb.##.rr.........#.....##.....#.........bb.##.....>......#.....##.....#......<.....##......####..#.....##.....#..####......##............#...>....<...#............##......#........................#......##......#........................#......##.RRR............##..##............BBB.##.RRR............##..##............BBB.##.RRR.....>>>....##..##....<<<.....BBB.##.RRR............##..##............BBB.##......#........................#......##......#.........>....<.........#......##......#.....#............#.....#......##......####..#.....##.....#..####......##.....>......#.....##.....#......<.....##.rr.........#.....##.....#.........bb.##.rr.........#.>>>....<<<.#.........bb.##............#............#............##......................................#########################################";
@@ -834,7 +834,7 @@ var ART=(function(){
   /* ---- drawing: the floor in dance-floor tiles, walls as raised pixel blocks, boost pads with running chevrons, bases ---- */
   CTF.fit=function(I,W,H,top,bot){var s=Math.max(4,Math.floor(Math.min(W/I.w,(H-top-bot)/I.h))),ox=Math.round((W-s*I.w)/2),oy=Math.round(top+(H-top-bot-s*I.h)/2);return{s:s,ox:ox,oy:oy,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
   /* a camera that follows you: about 15 tiles across on a phone, clamped to the arena. v.vw/v.vh/v.vt are the window it draws in. */
-  CTF.cam=function(I,W,H,top,bot,me,kart){var f=CTF.fit(I,W,H,top,bot),vh=H-top-bot,s=Math.max(f.s,Math.round(W/(W<641?(kart?19:15):(kart?26:20)))),ox,oy;
+  CTF.cam=function(I,W,H,top,bot,me,kart){var f=CTF.fit(I,W,H,top,bot),vh=H-top-bot,s=kart?CTF.K_TILE:Math.max(f.s,Math.round(W/(W<641?15:20))),ox,oy;   /* Kart flag: the same fixed zoom as Mars Rally, on any screen */
     var mw=I.w*s,mh=I.h*s;ox=mw<=W?Math.round((W-mw)/2):Math.round(Math.min(0,Math.max(W-mw,W/2-me.x*s)));oy=mh<=vh?Math.round(top+(vh-mh)/2):Math.round(Math.min(top,Math.max(top+vh-mh,top+vh/2-me.y*s)));
     return{s:s,ox:ox,oy:oy,vw:W,vh:vh,vt:top,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
   CTF.draw=function(g,m,I,v,now,st){
@@ -889,20 +889,13 @@ var ART=(function(){
   MOSHX.plan=function(chart){
     var dur=chart&&chart.dur||0,D=chart&&chart.drop||0,out={wall:null,circles:[]},TA=MOSHX.TUG_AT,TM=MOSHX.TUG_MS;
     if(D>12000&&(!dur||D<dur-14000)){var split=Math.max(D-9000,4000);out.wall={split:split,count:D-3000,go:D,t0:D+TA,t1:D+TA+TM,end:D+TA+TM+3500};}
-    var w=out.wall,pk=(chart&&chart.peaks)||[];
-    pk.forEach(function(p){
-      var a1=p[0],b1=p[1];
-      if(w&&b1>w.split-3000&&a1<w.end+3000){if(a1<w.split-3000)b1=w.split-3000;else if(b1>w.end+3000)a1=w.end+3000;else return;}
-      if(b1-a1>=8000&&out.circles.length<3)out.circles.push([a1,Math.min(b1,a1+40000)]);
-    });
-    if(!out.circles.length){
-      if(dur>50000){   /* always at least one circle pit: the middle of the longest stretch the wall of death leaves free */
-        var free=w?[[6000,w.split-3000],[w.end+3000,dur-6000]]:[[6000,dur-6000]],best=null;
-        free.forEach(function(r){if(r[1]-r[0]>=14000&&(!best||r[1]-r[0]>best[1]-best[0]))best=r;});
-        if(best){var cl=Math.min(18000,best[1]-best[0]),c0=best[0]+(best[1]-best[0]-cl)/2;out.circles.push([Math.round(c0),Math.round(c0+cl)]);}
-      }
-      else if(!dur){for(var t=40000;t<600000;t+=70000)out.circles.push([t,t+16000]);}
-    }
+    /* every song is five parts: mosh pit, circle pit, mosh pit, circle pit, and the wall of death at the drop (the song's
+       biggest quiet-to-loud moment), wherever that falls. The time the wall leaves is cut into four equal blocks in that order;
+       a block the wall lands in carries on after it. */
+    var w=out.wall,endT=dur||300000,zones=w?[[0,w.split],[w.end,endT]]:[[0,endT]],F=0;zones.forEach(function(z){F+=Math.max(0,z[1]-z[0]);});
+    function at(f){var r=f;for(var q=0;q<zones.length;q++){var L=zones[q][1]-zones[q][0];if(r<=L)return zones[q][0]+r;r-=L;}return endT;}
+    function span(f0,f1){var a0=at(f0),a1=at(f1);if(w&&a0<w.split&&a1>w.end)return[[a0,w.split],[w.end,a1]];if(w&&a0<w.split&&a1>w.split)return[[a0,w.split]];return[[a0,a1]];}
+    [[F/4,F/2],[F*3/4,F]].forEach(function(bk){span(bk[0],bk[1]).forEach(function(iv){if(iv[1]-iv[0]>500)out.circles.push([Math.round(iv[0]),Math.round(iv[1])]);});});
     return out;
   };
   MOSHX.phaseAt=function(P,pos){
@@ -2471,6 +2464,6 @@ var ART=(function(){
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.2",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.7",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

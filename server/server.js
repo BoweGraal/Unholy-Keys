@@ -159,7 +159,7 @@ function cleanChart(c) {
     var sc = c.sections[i]; if (!Array.isArray(sc)) continue;
     var stt = intIn(sc[0], 0, 3600000, -1); if (stt >= 0 && SECTION_NAMES.indexOf(sc[1]) >= 0) sections.push([stt, sc[1]]);
   }
-  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), gameMs: intIn(c.gameMs, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks, drop: intIn(c.drop, 0, 3600000, 0), keys: keys, sections: sections };
+  return { bpm: bpm, dur: intIn(c.dur, 0, 3600000, 0), gameMs: intIn(c.gameMs, 0, 3600000, 0), beats: beats, steps: steps, arrows: arrows, peaks: peaks, drop: intIn(c.drop, 0, 3600000, 0), keys: keys, sections: sections, hand: c.hand ? 1 : 0 };   /* hand: the steps were written in the note editor */
 }
 /* Spotlight plan for free dance rounds: everyone dances in a ring; one at a time the dancer due north walks down to the
    middle for a 15 s turn, walks back, and the ring dances round (left) until the next dancer is due north.
@@ -466,7 +466,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", 
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.81.2";
+var VERSION = "1.81.7";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
