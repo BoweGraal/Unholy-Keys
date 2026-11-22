@@ -1646,3 +1646,8 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.49 — same track for everyone
 - The round's notes now follow the round's shared clock whenever this device's own sound clock drifts more than 4 s from it (slow phone, stalled sound stream), instead of waiting on the bad clock, so nobody gets an empty highway or starts late.
 - Check: join a round on a throttled phone; the notes should start with everyone else's.
+
+## v1.79.50 — three preset banks; dark dropdown lists
+- The 9 numpad instrument slots (with their FX presets) now come in 3 banks. PC: Num Lock = bank 1, / = bank 2, * = bank 3 (the visualizer random/alt keys on * and / are gone; F5 still cycles). Mobile: a 1/2/3 picker in the top bar. Setup > Presets also shows 1/2/3. Bank 1 is your existing slots.
+- Dropdown option lists get a dark background with white text (were white on white).
+- Check: set slot 1 in bank 1, press / and set a different one, press Num Lock to go back; reload and confirm all three kept.
