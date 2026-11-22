@@ -453,7 +453,7 @@
       Object.keys(remotes).forEach(function (id) { var r = remotes[id]; if (!r.race) return; var dx = mk.x - r.x, dy = mk.y - r.y, d = Math.hypot(dx, dy); if (d > 0 && d < 18) { var o = (18 - d) / 2; mk.x += dx / d * o; mk.y += dy / d * o; mk.vx *= 0.985; mk.vy *= 0.985; } });
       var r2 = myP.update(mk.x, mk.y);
       if (mk.ev) { var lv = mk.ev === "ultra" ? 3 : mk.ev === "turbo" ? 2 : 1, colE = ["", "#3DF2FF", "#FF8A2B", "#D04DFF"][lv]; add(T("driftPts") * lv, mk.x, mk.y, ["", "MINI-TURBO", "SUPER TURBO", "ULTRA TURBO"][lv], colE); burst(mk.x, mk.y, colE, 10 + lv * 5); }
-      if (myP.acc > myP.best) { var dd = myP.acc - myP.best; if (dd < 60) { var before = Math.floor(myP.best / tr.L), after = Math.floor(myP.acc / tr.L); distAcc += dd / 100 * T("distPts"); if (distAcc >= 1) { var dp = Math.floor(distAcc); distAcc -= dp; add(dp); } if (after > before && after > 0) { add(T("lapPts"), mk.x, mk.y, "LAP " + after, "#F5F23D"); banner("LAP " + (after + 1)); } } myP.best = myP.acc; }
+      if (myP.acc > myP.best) { var dd = myP.acc - myP.best; if (dd < 60) { var before = Math.floor(myP.best / tr.L), after = Math.floor(myP.acc / tr.L); distAcc += dd / 100 * T("distPts"); if (distAcc >= 1) { var dp = Math.floor(distAcc); distAcc -= dp; add(dp); } if (after > before && after > 0 && after <= LAPS) { add(T("lapPts"), mk.x, mk.y, "LAP " + after, "#F5F23D"); var togo = LAPS - after; banner(togo <= 0 ? "🏁 FINISH!" : togo === 1 ? "FINAL LAP!" : togo + " LAPS TO GO"); } } myP.best = myP.acc; }
       wrong = clamp(wrong + ((Math.cos(Math.atan2(mk.vy, mk.vx) - r2.a) < -0.3 && mk.spd > 25) ? dt : -dt * 2), 0, 1);
     }
     if (!pre) { var e = enc(mk.x, mk.y); me.tx = me.x = clamp(e[0], 0.002, 0.998); me.ty = me.y = clamp(e[1], 0.002, 0.998); env.sendPos(me.tx, me.ty); }
@@ -639,7 +639,7 @@
     el.classList.toggle("on", !!show); el.classList.remove("ready"); document.body.classList.toggle("gaming-kart", !!show); document.body.classList.remove("kt-ready");
     if (show) { driftHold = false; MOUSE.down = false; MOUSE.on = false; var lg = $("ktLights"); if (lg) lg.style.display = "none"; speedUI(); }
   }
-  function speedUI() { var w = $("ktSpeed"); if (!w) return; w.style.display = env.practice && env.practice() ? "flex" : "none"; var v = $("ktSpV"); if (v) v.textContent = Math.round(T("maxSpeed")); }
+  function speedUI() { var w = $("ktSpeed"); if (!w) return; w.style.display = "none";   /* (set it in the Tuning lab) */ var v = $("ktSpV"); if (v) v.textContent = Math.round(T("maxSpeed")); }
   function banner(t) { var b = $("ktBanner"); if (!b) return; b.textContent = t; b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
   function hud() { var s = $("ktScore"); if (s) s.textContent = score.toLocaleString(); }
   function lights(lt) {
@@ -647,9 +647,10 @@
     for (var q = 0; q < 3; q++) bs[q].className = (3 - q) <= n ? "r" : ""; $("ktNum").textContent = String(n); $("ktGasCue").style.display = lt >= 1 ? "block" : "none";
   }
   function goGo() { var el = $("ktLights"); if (el) { Array.prototype.forEach.call(el.querySelectorAll(".row b"), function (b) { b.className = "g"; }); $("ktNum").textContent = "GO!"; $("ktGasCue").style.display = "none"; setTimeout(function () { el.style.display = "none"; }, 800); } }
+  var LAPS = 5;   /* a race is this many laps */
   function ordinal(n) { return n + (n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"); }
   function hudLive(tt, T_) {
-    var r = $("ktRank"); if (r) r.innerHTML = ordinal(rank) + (nKarts > 1 ? " <span style='font-size:15px;color:#fff'>/ " + nKarts + "</span>" : "") + "<small>LAP " + (Math.max(0, Math.floor(myP.acc / tr.L)) + 1) + "</small>";
+    var r = $("ktRank"); if (r) r.innerHTML = ordinal(rank) + (nKarts > 1 ? " <span style='font-size:15px;color:#fff'>/ " + nKarts + "</span>" : "") + "<small>" + (function () { var l = Math.min(LAPS, Math.max(0, Math.floor(myP.acc / tr.L)) + 1); return l >= LAPS ? "FINAL LAP " + l + "/" + LAPS : "LAP " + l + "/" + LAPS; })() + "</small>";
     var sp = $("ktSp"), dr = $("ktDr"); if (sp && sp.firstChild) sp.firstChild.style.width = Math.round(Math.min(1, mk.spd / (T("maxSpeed") * 1.3)) * 100) + "%";
     if (dr && dr.firstChild) { dr.firstChild.style.width = Math.round(Math.min(1, mk.charge / T("ultraT")) * 100) + "%"; dr.firstChild.style.background = SPARK_COL[level(mk.charge)]; }
     var w = $("ktWrong"); if (w) w.style.display = wrong > 0.6 ? "block" : "none";
@@ -734,7 +735,7 @@
       var px = W - pr + 14, py = pt + 6, rw = pr - 28;
       ctx.save(); ctx.fillStyle = "rgba(8,6,20,.82)"; ctx.strokeStyle = "rgba(61,242,255,.45)"; ctx.lineWidth = 1.5;
       var n = Math.min(out.length, 10), ph = 40 + Math.max(1, n) * 26; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(px, py, rw, ph, 10); else ctx.rect(px, py, rw, ph); ctx.fill(); ctx.stroke();
-      ctx.textBaseline = "middle"; ctx.textAlign = "left"; ctx.font = "900 12px system-ui"; ctx.fillStyle = "#3DF2FF"; ctx.fillText("🏁 MARS RALLY" + (out.length ? "  ·  LAP " + out[0].lap : ""), px + 12, py + 20);
+      ctx.textBaseline = "middle"; ctx.textAlign = "left"; ctx.font = "900 12px system-ui"; ctx.fillStyle = "#3DF2FF"; ctx.fillText("🏁 MARS RALLY" + (out.length ? "  ·  LAP " + Math.min(LAPS, out[0].lap) + "/" + LAPS : ""), px + 12, py + 20);
       if (!out.length) { ctx.font = "700 12px system-ui"; ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.fillText("Racers getting into their karts…", px + 12, py + 46); }
       for (var i = 0; i < n; i++) { var r = out[i], yy = py + 46 + i * 26, m2 = i < 3 ? MEDAL[i] : null;
         if (m2) { ctx.fillStyle = m2; ART.PX.disc(ctx,px + 22, yy, 10,KP); ctx.fillStyle = "#1a1200"; } else ctx.fillStyle = "rgba(255,255,255,.55)";

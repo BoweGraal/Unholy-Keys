@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.79.15"></script>
-<script src="art.js?v=1.79.15"></script>
-<script src="instruments.js?v=1.79.15"></script>
-<script src="kart.js?v=1.79.15"></script>
+<script src="gfx.js?v=1.79.22"></script>
+<script src="art.js?v=1.79.22"></script>
+<script src="instruments.js?v=1.79.22"></script>
+<script src="kart.js?v=1.79.22"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4791,7 +4791,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.79.15",SERVER_VERSION="";
+var PAGE_VERSION="1.79.22",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6415,7 +6415,7 @@ var ROUNDS=(function(){
       if(q.mode==="crowd"&&!q.voting&&pos>=q.start-q.cd-VOTE_MS-1000&&pos<q.start-q.cd){var op=voteOpts();q.voting=true;q.voteOpts=op;q.voteId=-1;liveSend({type:"gvote-open",opts:op,ms:VOTE_MS});}
       if(q.voting&&q.voteId<0&&gv&&!gv.done&&gv.opts.join()===q.voteOpts.join())q.voteId=gv.id;
       if(q.mode==="crowd"&&pos>=q.start-q.cd){q.voting=false;var op2=q.voteOpts||voteOpts();q.mode=op2[Math.floor(Math.random()*op2.length)];}   /* the vote never came back: pick one */
-      if(!q.sent&&q.mode!=="crowd"&&pos>=q.start-q.cd&&pos<q.end-5000){q.sent=1;markPlayed(q.mode);
+      if(!q.sent&&q.mode!=="crowd"&&pos>=q.start-q.cd&&pos<q.end-5000){q.sent=1;markPlayed(q.mode);if(q.mode==="kart")q.end=Math.min(q.end,q.start+90000);   /* a kart race is about 90 s */
         if(cur&&cur.phase!=="result")return;   /* something else is still on */
         cur={n:0,battle:false,mode:q.mode,title:set.title,phase:"countdown",go:null,endAt:0,file:set.file,posFn:set.posFn,setQ:q};
         send(set.chart,job,false,null,Math.max(3000,q.start-pos));}

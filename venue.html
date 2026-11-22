@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.15"></script>
-<script src="gfx.js?v=1.79.15"></script>
-<script src="art.js?v=1.79.15"></script>
-<script src="instruments.js?v=1.79.15"></script>
-<script src="kart.js?v=1.79.15"></script>
-<script src="explain.js?v=1.79.15"></script>
+<script src="tune.js?v=1.79.22"></script>
+<script src="gfx.js?v=1.79.22"></script>
+<script src="art.js?v=1.79.22"></script>
+<script src="instruments.js?v=1.79.22"></script>
+<script src="kart.js?v=1.79.22"></script>
+<script src="explain.js?v=1.79.22"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -384,6 +384,7 @@ body.gaming-free #hudBR{display:none}
 #roundBox{display:none;position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:26;width:min(420px,92vw);box-sizing:border-box;padding:12px 16px;text-align:center;background:rgba(14,11,26,.93);border:1px solid rgba(211,84,160,.55);border-radius:14px;color:#fff;font-family:system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
 #roundBox.on{display:block}
 #roundBox.strip{padding:8px 14px;width:min(520px,92vw)}
+#roundBox.fade{opacity:0;pointer-events:none;transition:opacity .8s ease}
 /* the Jumbotron or a banner is down: the round's line slims to the top edge so it doesn't cover them */
 body.jt-top #roundBox.strip{top:6px;padding:5px 14px;width:auto;max-width:min(560px,94vw);display:flex;align-items:baseline;gap:10px;justify-content:center;white-space:nowrap}
 body.jt-top #roundBox.strip .rb-head{font-size:10px}
@@ -443,6 +444,8 @@ body[data-game=ctf] #roundBox.strip{left:50%;transform:translateX(-50%);top:60px
 /* ── Practice mode (venue.html?practice) ── */
 #prExit{display:none;position:fixed;left:62px;top:10px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;text-decoration:none;background:rgba(20,18,32,.85);border:1px solid rgba(232,80,91,.6)}
 body.practice #prExit{display:block}
+body.practice[class*="gaming"] #prExit{display:none}
+body.practice[class*="gaming"] #hudTR{display:none}
 #prExit:hover{border-color:#E8505B;background:rgba(232,80,91,.3)}
 #prBar{display:none;position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:25;width:min(560px,94vw);box-sizing:border-box;padding:10px 14px;background:rgba(14,11,26,.93);border:1px solid rgba(245,197,24,.45);border-radius:14px;color:#fff;font:500 12px system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #prDance{display:none;position:fixed;left:12px;top:58px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px system-ui,sans-serif;color:#fff;background:rgba(20,18,32,.88);border:1px solid rgba(245,197,24,.7);cursor:pointer}
@@ -3807,7 +3810,7 @@ var WALK=(function(){
    (you only see your own group). Everyone rolls at their own, slow pace:
    - the BEAT button (Space), pressed on the beat, builds momentum through the song;
    - the left stick (A/D, ←/→) leans you on the ramp, setting how you hit the lip, and spins you in the air;
-   - near the top of the ramp the right side becomes a SWIPE: its direction picks a dance trick, how hard sets the height;
+   - press the right stick at the incline line to crouch, then FLICK it at the lip: the flick is the trick, its speed sets the height (a gauge each side shows it);
    - in the air, line the board up with the wall to land (stance buttons 1–4 add style); land clean to build your SUPER meter,
      and when it's full your next pop is a SUPER MOVE.
    ============================================================ */
@@ -3822,7 +3825,7 @@ var PIPE=(function(){
     {name:"Shuffle",pts:220,d:9,col:"#F5C518",how:"down, then up",g:[[3,2],[3,9],[7,9],[7,1]]},
     {name:"Boogie",pts:350,d:3,col:"#FF4D6D",how:"spin round, then up",g:[[5,5],[7,4],[7,7],[4,8],[2,6],[3,3],[6,2],[8,3],[8,1]]}];
   var STN=[null,{name:"Point",p:[3.0,-0.4,0.3,-0.1]},{name:"Vogue",p:[2.4,-2.9,0.1,-0.5]},{name:"Kick",p:[1.6,-1.6,1.3,-0.2]},{name:"Freeze",p:[-0.6,0.6,0.9,-0.9]}];
-  var keyLane=0,prevU=0,boostT=0,on=false,phi=0,A=0.3,lean=0,keyLean=0,air=null,r=0,score=0,combo=0,superK=0,bailUntil=0,lastT=0,lastBeat=-1,pressedBeat={},trick=0,stance=0,stanceT=0,stances={},pops=[],warp=0,warpAt=-1e9,wasRound=false,lane=0.6,grp=null,swipe=null,wasWin=false,lastJudgeT=0,bots={},rem={},tuck=false,charge=0,prX=0,prY=0,camC=0.5,myDir=1,lastXW=0.5,camT=0,grind=null,rs={x:0,y:0},prevRs={x:0,y:0},rsHoldT=0,rsHoldSign=0,kh={};
+  var keyLane=0,prevU=0,boostT=0,on=false,phi=0,A=0.3,lean=0,keyLean=0,air=null,r=0,score=0,combo=0,superK=0,bailUntil=0,lastT=0,lastBeat=-1,pressedBeat={},trick=0,stance=0,stanceT=0,stances={},pops=[],warp=0,warpAt=-1e9,wasRound=false,lane=0.6,grp=null,swipe=null,wasWin=false,lastJudgeT=0,bots={},rem={},tuck=false,charge=0,prX=0,prY=0,camC=0.5,myDir=1,lastXW=0.5,camT=0,grind=null,rs={x:0,y:0},prevRs={x:0,y:0},rsHoldT=0,rsHoldSign=0,kh={},padDown=false;
   function $(id){return document.getElementById(id);}
   function T(k){return TUNE.v("pp."+k);}
   function pipeRound(){return GAME.mode==="pipe"||(typeof ROUND!=="undefined"&&ROUND.mode==="pipe");}
@@ -3834,8 +3837,8 @@ var PIPE=(function(){
   function zoomS(){return (W<640||H>W)?2.1:1;}
   function sx(x){return W/2+(x-camC)*zoomS()*W;}
   function camStep(){var now=performance.now(),dt=Math.min(0.1,(now-(camT||now))/1000);camT=now;var S=zoomS(),me=myId&&viewers[myId],tg=0.5;
-    if(S>1){if(me&&grp&&grp.members.indexOf(myId)>=0)tg=me.x;tg=Math.max(XL+0.5/S,Math.min(XR-0.5/S,tg));}
-    camC+=(tg-camC)*Math.min(1,dt*7);}
+    if(S>1){if(me&&grp&&grp.members.indexOf(myId)>=0)tg=me.x;if(!air&&!grind)tg=Math.max(XL+0.5/S,Math.min(XR-0.5/S,tg));}
+    camC+=(tg-camC)*Math.min(1,dt*(air?10:7));}
   function ids(){return Object.keys(viewers).filter(function(k){return viewers[k]!==PH;});}
   function myGroup(){return PP.group(ids(),myId);}
   function banner(t,col){var b=$("ppBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
@@ -3846,7 +3849,7 @@ var PIPE=(function(){
   function uNow(){return Math.min(0.995,Math.max(0.2,A))*Math.sin(phi);}
   function popWindow(){var u=uNow();return !air&&!grind&&A>=0.95&&Math.abs(u)>0.9*Math.min(0.995,A)&&Math.cos(phi)*Math.sign(Math.sin(phi))>0;}   /* climbing, near the top */
   function start(round){
-    on=true;phi=0.01;A=0.3;air=null;r=0;score=0;combo=0;superK=0;bailUntil=0;pressedBeat={};trick=0;stance=0;stances={};pops=[];bots={};rem={};swipe=null;grind=null;charge=0;tuck=false;rs.x=rs.y=0;
+    on=true;phi=0.01;A=0.3;air=null;r=0;score=0;combo=0;superK=0;bailUntil=0;pressedBeat={};trick=0;stance=0;stances={};pops=[];bots={};rem={};swipe=null;grind=null;charge=0;tuck=false;rs.x=rs.y=0;padDown=false;
     grp=myGroup();lane=grp.y;prevU=0;keyLane=0;
     document.body.classList.add("gaming-pipe");$("pipeUI").classList.add("on");hud();banner(grp.G>1?"🛹 HALF PIPE · GROUP "+(grp.g+1)+" OF "+grp.G:"🛹 HALF PIPE");
   }
@@ -3882,7 +3885,7 @@ var PIPE=(function(){
     if(!on||air||performance.now()<bailUntil||!k)return;
     if(!popWindow()){if(A>=0.95){queued={k:k,pw:pw,t:performance.now()};}else judge("BUILDING SPEED…","#aaa");return;}
     queued=null;
-    var sup=superK>=1,side=Math.sign(Math.sin(phi)),str=0.4+1.0*charge,h=(A-0.6)*str*(sup?1.5:1),dur=Math.min(3.2,0.9+1.35*h);charge=0;
+    var sup=superK>=1,side=Math.sign(Math.sin(phi)),str=(0.35+0.85*(pw-0.5))*(tuck?1:0.6),h=(A-0.6)*str*(sup?1.5:1),dur=Math.min(3.2,0.9+1.35*h);charge=Math.min(1,str/1.2);
     air={t0:performance.now(),dur:dur,h:Math.min(1.4,h),side:side,trick:k,sup:sup,pw:pw,phi0:phi};r=lean*30;stance=0;stances={};trick=k;
     if(sup){superK=0;banner("⚡ SUPER MOVE!","#F5C518");}else banner(TRK[k].name.toUpperCase()+"!",TRK[k].col);
     hud();
@@ -3978,10 +3981,11 @@ var PIPE=(function(){
     /* the incline line: cross it climbing and you tuck in, angle locked, until you leave the ground (or roll back down) */
     var au0=Math.abs(uNow()),clim=Math.cos(phi)*Math.sign(Math.sin(phi))>0;
     if(air||now<bailUntil)tuck=false;
-    else{if(!tuck&&clim&&au0>PP.FLAT){tuck=true;lean=0;}if(tuck&&(!clim||au0<PP.FLAT-0.01))tuck=false;}
+    else{if(!tuck&&clim&&au0>PP.FLAT&&(padDown||window.__ppBot)){tuck=true;lean=0;}if(tuck&&(!clim||au0<PP.FLAT-0.01))tuck=false;}
     /* the power: how hard and fast you work the left stick sets how high you'll go */
     var rawx=joy.id!==null?joy.x:keyLean,rawy=joy.id!==null?joy.y:keyLane,mv=Math.abs(rawx-prX)+Math.abs(rawy-prY),spd=mv/Math.max(0.001,dt);prX=rawx;prY=rawy;
-    if(!air){charge=Math.min(1,charge+mv*0.18*Math.min(2,spd/5));if(spd<2)charge=Math.max(0,charge-0.1*dt);}
+    /* the gauge shows how hard you flick the right stick (peak held a moment); in the air it shows the strength you launched with */
+    if(!air){var rsp=Math.hypot(rs.x-prevRs.x,rs.y-prevRs.y)/Math.max(0.001,dt);charge=Math.max(charge-0.8*dt,Math.min(1,rsp/14));}
     var jx=joy.id!==null&&Math.abs(joy.x)>0.15?joy.x:keyLean;if(tuck&&!air)jx=0;lean+=(jx-lean)*Math.min(1,dt*8);
     if(air){r+=lean*T("spin")*dt;var p=(now-air.t0)/1000/air.dur;if(p>=1)land(now);}
     else if(!grind&&now>=bailUntil)phi+=Math.PI/T("cross")*dt;
@@ -3998,7 +4002,7 @@ var PIPE=(function(){
     var pk=now-boostT<300?Math.sin((now-boostT)/300*Math.PI):0,pl=1;   /* pumping: one knee bends then the other */
     GAME.moshPose(now<bailUntil?[2.6,-2.6,1.2,-1.2]:st?st:grind?[1.9+grind.th*0.6,-1.9+grind.th*0.6,0.45,-0.45]:air?[2.3,-2.3,0.5,-0.5]:tuck?TUCK_POSE:pushPose(now,au0));
     if(PRACTICE.on)botTick(now,dt);
-    var hn=$("ppHint");if(hn)hn.textContent=grind?"Grinding! Left stick to balance · flick the right stick for a move · let go to hop off":air?"Line the board up with the wall to land":tuck&&!win?"Tucked in: pump the left stick for power, then flick the right stick up at the lip":win?"Draw your trick on the right stick, ending with a flick up · harder = higher":"Left stick: up/down to line up with the lit pad, left/right to lean · right stick: tricks";
+    var hn=$("ppHint");if(hn)hn.textContent=grind?"Grinding! Left stick to balance · flick the right stick for a move · let go to hop off":air?"Line the board up with the wall to land":tuck&&!win?"Crouched: keep steering with the left stick, then flick the right stick at the lip · harder flick = higher":win?"Draw your trick on the right stick, ending with a flick up · harder = higher":"Left stick: steer · press the right stick at the yellow line to crouch, then flick it at the lip · harder flick = higher";
     hud();
   }
   /* practice: the practice skaters build speed and throw tricks at their own pace */
@@ -4045,7 +4049,7 @@ var PIPE=(function(){
       g.globalAlpha=tuck?1:0.55+0.25*Math.sin(now/300);g.fillStyle=tuck?"#3DF2FF":"#F5C518";
       for(var yy=y0;yy<y1;yy+=P*4)g.fillRect(x-P,yy,P*2,P*2.5);g.globalAlpha=1;});
   }
-  /* a power gauge down each side: fills as you work the left stick, and sets how high you go */
+  /* a gauge down each side: how hard you flick the right stick, which sets how high you go */
   function gauges(g){
     var P=ART.PX.unit(g),w=Math.max(10,P*3),h=Math.round(H*0.34),y=Math.round(H*0.30),now=performance.now(),hot=popWindow();
     [8,W-8-w].forEach(function(x){
@@ -4053,7 +4057,7 @@ var PIPE=(function(){
       var f=Math.round(h*charge/P)*P;g.fillStyle=charge>0.75?"#FF4D6D":charge>0.4?"#F5C518":"#4CC38A";g.fillRect(x,y+h-f,w,f);
       g.strokeStyle=hot?"#F5C518":"#9B7FE0";g.lineWidth=2;g.strokeRect(x-2,y-2,w+4,h+4);
       for(var k=1;k<4;k++){g.fillStyle="rgba(255,255,255,.35)";g.fillRect(x,y+h*k/4,w,1);}
-      try{ART.pixText(g,"PWR",Math.max(20,Math.min(W-20,x+w/2)),y-P*4,Math.max(1,P/2),hot?"#F5C518":"#fff","center",0.7);}catch(e){}});
+      try{ART.pixText(g,"FLICK",Math.max(20,Math.min(W-20,x+w/2)),y-P*4,Math.max(1,P/2),hot?"#F5C518":"#fff","center",0.7);}catch(e){}});
   }
   function front(g){
     if(!pipeRound()||warp<0.5)return;var now=performance.now(),sc=3;
@@ -4107,17 +4111,17 @@ var PIPE=(function(){
     /* the right-hand pad: a PUMP button on the flat; going up the wall it becomes a stick, and the move you draw on it is your trick */
     var stk=null,knob=p.querySelector(".knob");
     p.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();p.classList.add("dn");
-      stk={pts:[[e.clientX,e.clientY,performance.now()]],x:e.clientX,y:e.clientY,id:e.pointerId};try{p.setPointerCapture(e.pointerId);}catch(x2){}});
+      padDown=true;stk={pts:[[e.clientX,e.clientY,performance.now()]],x:e.clientX,y:e.clientY,id:e.pointerId};try{p.setPointerCapture(e.pointerId);}catch(x2){}});
     p.addEventListener("pointermove",function(e){if(!stk||e.pointerId!==stk.id)return;stk.pts.push([e.clientX,e.clientY,performance.now()]);
       var dx0=e.clientX-stk.x,dy0=e.clientY-stk.y;rs.x=Math.max(-1,Math.min(1,dx0/40));rs.y=Math.max(-1,Math.min(1,dy0/40));
       if(knob){var dx=e.clientX-stk.x,dy=e.clientY-stk.y,d=Math.hypot(dx,dy),m=Math.min(d,40)/(d||1);knob.style.transform="translate("+Math.round(dx*m)+"px,"+Math.round(dy*m)+"px)";}});
-    var stkEnd=function(e){rs.x=rs.y=0;p.classList.remove("dn");if(knob)knob.style.transform="";if(!stk)return;var pts=stk.pts;stk=null;pts.push([e.clientX,e.clientY,performance.now()]);
+    var stkEnd=function(e){padDown=false;rs.x=rs.y=0;p.classList.remove("dn");if(knob)knob.style.transform="";if(!stk)return;var pts=stk.pts;stk=null;pts.push([e.clientX,e.clientY,performance.now()]);
       if(span(pts)<14)return;var gg=gesture(pts);if(gg)trickGo(gg.k,gg.pw);else judge("FINISH WITH A FLICK UP","#aaa");};
-    p.addEventListener("pointerup",stkEnd);p.addEventListener("pointercancel",function(){rs.x=rs.y=0;stk=null;p.classList.remove("dn");if(knob)knob.style.transform="";});
+    p.addEventListener("pointerup",stkEnd);p.addEventListener("pointercancel",function(){padDown=false;rs.x=rs.y=0;stk=null;p.classList.remove("dn");if(knob)knob.style.transform="";});
     /* on a computer, drag the mouse anywhere to draw the flick */
-    var ms=null;document.addEventListener("pointerdown",function(e){if(!on||e.pointerType!=="mouse"||e.target.closest&&e.target.closest("button,#ppPad,#chatPanel,input"))return;ms=[[e.clientX,e.clientY,performance.now()]];});
+    var ms=null;document.addEventListener("pointerdown",function(e){if(!on||e.pointerType!=="mouse"||e.target.closest&&e.target.closest("button,#ppPad,#chatPanel,input"))return;ms=[[e.clientX,e.clientY,performance.now()]];padDown=true;});
     document.addEventListener("pointermove",function(e){if(ms){ms.push([e.clientX,e.clientY,performance.now()]);rs.x=Math.max(-1,Math.min(1,(e.clientX-ms[0][0])/40));rs.y=Math.max(-1,Math.min(1,(e.clientY-ms[0][1])/40));}});
-    document.addEventListener("pointerup",function(e){if(!ms)return;rs.x=rs.y=0;var pts=ms;ms=null;pts.push([e.clientX,e.clientY,performance.now()]);if(span(pts)<24)return;var gg=gesture(pts);if(gg)trickGo(gg.k,gg.pw);else judge("FINISH WITH A FLICK UP","#aaa");});
+    document.addEventListener("pointerup",function(e){if(!ms)return;padDown=false;rs.x=rs.y=0;var pts=ms;ms=null;pts.push([e.clientX,e.clientY,performance.now()]);if(span(pts)<24)return;var gg=gesture(pts);if(gg)trickGo(gg.k,gg.pw);else judge("FINISH WITH A FLICK UP","#aaa");});
     guides();
     Array.prototype.forEach.call(document.querySelectorAll("#ppStances button"),function(bb){bb.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();stanceGo(+bb.getAttribute("data-s"));});});
   }
@@ -5101,7 +5105,8 @@ var ROUND=(function(){
     }else line="Hit the steps: highest score wins.";
     var nodes=[mk("div","rb-head","Round "+rd.n+" · "+(rd.isBattle?"⚔ ":"")+rd.title+lvl()),mk("div","rb-sub",line)].concat(extra);
     if(sat){var j=mk("button","rb-btn","Join the round");j.onclick=function(){join();};nodes.push(j);}
-    show(nodes,"strip"+(mine?" myturn":"")+((rd.mode==="free"&&spotOn()>0)||bpr?" spot":""));
+    var quiet=!rd.isBattle&&rd.mode!=="free"&&!sat;   /* the live leaderboard line just fades away once the game starts */
+    show(nodes,"strip"+(mine?" myturn":"")+((rd.mode==="free"&&spotOn()>0)||bpr?" spot":"")+(quiet?" fade":""));
   }
   function drawVote(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000)),row=mk("div","rb-votes");
@@ -6456,7 +6461,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.15",SERVER_VERSION="";
+var PAGE_VERSION="1.79.22",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6944,7 +6949,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.15"></script>
+<script src="lab.js?v=1.79.22"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

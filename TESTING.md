@@ -1524,3 +1524,25 @@ Needs a Render redeploy (server.js changed).
 - Left stick = power/height (quicker work = higher jump); a gauge each side shows jump strength; power resets after each jump/bail. Jumps and skating are slower.
 - Grind: hold right stick down (or up) as you reach the lip, slide along the rail, balance with the left stick, flick right stick sideways/up for moves, release to hop off. Falls off past the red zone.
 - Check: practice pipe test, hold right stick down at the lip → BALANCE meter, points; super meter resets on use.
+
+## v1.79.16
+- Half pipe camera no longer clamps to the pipe edge while airborne/grinding: skater stays centred mid-jump.
+
+## v1.79.17 — half pipe controls
+- Left stick steers only. Press the right stick at the yellow incline line to crouch; flick it at the lip: flick = trick, flick speed = height (no crouch = weaker jump). Side gauges show flick strength live and launched strength in the air.
+
+## v1.79.18
+- The "Round N · title / Leading: …" strip fades out when a normal round starts (still shown for free dance, battles and the join prompt).
+
+## v1.79.19
+- Kart: Speed -/+ box removed from the game screen (Tuning lab still sets it).
+- Practice: top "Leave practice" button hidden while a minigame is on (the bottom STOP does the job).
+
+## v1.79.20
+- Practice minigames: the "Viewers: N" counter is hidden (players on screen are untouched).
+
+## v1.79.21 — kart laps
+- Race is 5 laps: counter shows LAP n/5, banners "3 LAPS TO GO", "2 LAPS TO GO", "FINAL LAP!", "FINISH!"; lap points stop after lap 5.
+
+## v1.79.22
+- Kart rounds inside a show end after about 90 s of racing (other games unchanged).
