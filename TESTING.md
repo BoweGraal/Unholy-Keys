@@ -1687,3 +1687,7 @@ Needs a Render redeploy (server.js changed).
 - The panel's score line (Score · Combo · Best) wrapped onto a second line when the numbers got long, which made the whole panel grow and jump. The line now has a fixed two-line height and a smaller font, so the panel never changes size.
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
+
+## v1.79.59 — Auto key is off until you tick it
+- "Auto key" (sets your instrument's key from the song and follows key changes) was on by default and remembered. It now always starts unticked and has to be ticked each time.
+- Check: reload the host page: Auto key is unchecked; play a backing track and the key stays where you set it until you tick it.
