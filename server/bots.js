@@ -201,8 +201,8 @@ module.exports = function(api) {
   /* the dance walk race: line up in the same lane the players' screens use, wait for GO (beat 8), then dance-walk
      to the finish at this bot's pace, losing the circle now and then (slower) and tripping once in a while.
      The style order and lanes match venue.html's WALK exactly. */
-  var WK = { X0: 0.06, X1: 0.68, Y0: 0.35, Y1: 0.73, GO: 8, SEG: 32, TIME: 75, D: [1, 11, 9, 3, 4, 6] };   /* TIME matches the wk.time tuning default in tune.js */
-  function wkOrder(n) { var o = [0, 1, 2, 3, 4, 5], s = (n * 9301 + 49297) % 233280; for (var i = o.length - 1; i > 0; i--) { s = (s * 9301 + 49297) % 233280; var j = Math.floor(s / 233280 * (i + 1)), t = o[i]; o[i] = o[j]; o[j] = t; } return o; }
+  var WK = { X0: 0.06, X1: 0.68, Y0: 0.35, Y1: 0.73, GO: 8, SEG: 32, TIME: 75, D: [1, 11, 9, 3, 4, 6, 7] };   /* TIME matches the wk.time tuning default in tune.js */
+  function wkOrder(n) { var o = [0, 1, 2, 3, 4, 5, 6], s = (n * 9301 + 49297) % 233280; for (var i = o.length - 1; i > 0; i--) { s = (s * 9301 + 49297) % 233280; var j = Math.floor(s / 233280 * (i + 1)), t = o[i]; o[i] = o[j]; o[j] = t; } return o; }
   function wkBeat(rd, pos) {
     var c = rd.chart, bs = c && c.beats, per = c && c.bpm ? 60000 / c.bpm : 500;
     if (!bs || bs.length < 2) return pos / per;
@@ -221,7 +221,7 @@ module.exports = function(api) {
     }
     var w = b.wk, dt = Math.min(0.5, (now - w.t) / 1000); w.t = now;
     var beat = wkBeat(rd, now - rd.playAt), going = beat >= WK.GO;
-    w.si = w.order[Math.max(0, Math.floor((beat - WK.GO) / WK.SEG)) % 6];
+    w.si = w.order[Math.max(0, Math.floor((beat - WK.GO) / WK.SEG)) % 7];
     if (going && !w.fin) {
       var f = Math.max(0.3, Math.min(1, w.sp + 0.25 * Math.sin(now / 1100 + w.ph)));
       if (!w.trip && Math.random() < dt * 0.05 * (1.2 - w.sp)) w.trip = now + 1300;
@@ -353,6 +353,7 @@ module.exports = function(api) {
       var dx = k.wp[0] - k.x + av[0] * 1.6, dy = k.wp[1] - k.y + av[1] * 1.6, d = Math.hypot(dx, dy) || 1, sp2 = (st.kart ? C.K_SPEED * (0.5 + 0.2 * b.skill) * ((st.spin[id] || 0) > Date.now() ? 0 : 1) : C.SPEED * (0.7 + 0.3 * b.skill) * sm) * (C.carrying(st, id) >= 0 ? C.CARRY : 1);
       var pd = I.pad(k.x, k.y); if (pd) { k.push = [pd[0] * C.SPEED * C.PAD, pd[1] * C.SPEED * C.PAD]; }
       C.move(I, k, (dx / d * sp2 + k.push[0]) * dt + Math.sin(now / 700 + k.jit) * 0.01, (dy / d * sp2 + k.push[1]) * dt);
+      if (C.bump) C.bump(I, st, id, k, now);   /* the other team is solid */
       var dm = Math.pow(0.08, dt); k.push = [k.push[0] * dm, k.push[1] * dm];
     }
     if (st.kart && going && now > (k.actAt || 0)) {   /* Kart Flag: pulse an enemy carrier (or now and then anyone) in range, use items when they get one */

@@ -1688,6 +1688,18 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.15 — Walk race portrait, Spin and Worm; CTF blocking
+
+**Dance walk race**
+- **Portrait**: the pad is centred at the bottom and the racers get their own band between the stage and the pad (spread to its edges), so they no longer sit under the pad. Landscape is unchanged.
+- **Spin**: racers turn all the way round (a turn every 2 beats) as they race.
+- **Worm** 🐛 is a new dance in the rotation: the circle wriggles low along the pad and the body does the worm on the floor.
+
+**Capture the flag (on foot)**
+- **Tags only hit the flag carrier** (the flag flies home and they go back). Anyone else just bumps: the other team is solid, so you can block for a teammate.
+- **Sprint drains and refills twice as fast** (1.2 s meter, 4.5 s refill).
+- **Twin Forts has 4 ⚡ refills**: the middle pair, and one in front of each base.
+
 ## v1.81.14 — Kart flag tune-up, skip timer
 
 - **Flag pick-up**: the pick-up is now tested along the kart's path since the last update and karts get a bigger reach (1.25 tiles), so stopping on or driving fast over the flag always grabs it. A hiccup in the button display can no longer stop the rules from running.
