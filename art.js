@@ -1600,21 +1600,21 @@ var ART=(function(){
      device works this out from the same style, sub-move and dots, so a dance looks the same to everyone. */
   var DANCES=[
     {name:"Freestyle",icon:"\uD83D\uDD7A",subs:[]},
-    {name:"Two-step",icon:"\uD83D\uDC63",subs:["Basic","Clap","Point","Shimmy"],help:"Left dot: step width and bounce. Right dot: arm swing."},
-    {name:"Hands on knees",icon:"\uD83E\uDDB5",subs:["Knock knees","Bounce","Low","Lean back"],help:"Left dot: how low and how wide. Right dot: lean."},
-    {name:"Shake it",icon:"\uD83C\uDF51",subs:["Wiggle","Drop it","Hands up","Fast"],help:"Left dot: sway and height. Right dot: lean and arms."},
-    {name:"Running man",icon:"\uD83C\uDFC3",subs:["Classic","Fast","Moonwalk","Arms pump"],help:"Left dot moves you: up and down, and slide. Right dot: knee lift and arms."},
-    {name:"Skank",icon:"\uD83C\uDFBA",subs:["Classic","Windmill","Pogo","Elbows","Kicks"],help:"Left dot: knee height and travel. Right dot: punches."},
-    {name:"Robot",icon:"\uD83E\uDD16",subs:["Arms","Wave","Pop","Freeze"],help:"Each dot points an arm; it snaps like a robot."},
-    {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop","Dive in"],help:"Slide your thumbs up and down: left lifts the chest, right lifts the hips."},
-    {name:"Silly",icon:"\uD83E\uDD2A",subs:["Chicken","Sprinkler","YMCA","Floss","Macarena"],help:"Left dot: size and speed. Right dot: bounce."},
-    {name:"Shuffle",icon:"\uD83D\uDC5F",subs:["Running man","T-step","Spin","Mix it up"],help:"Left dot: how far you travel and how low. Right dot: knee lift and arms."},
-    {name:"Thriller",icon:"\uD83E\uDDDF",subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left dot: how low and how wide. Right dot: lean and arm reach."},
-    {name:"Street jam",icon:"\uD83D\uDCA5",subs:["High knees","Strike a pose","Hop step","Floor spin","Mix it up"],help:"Left dot: how low and how far you travel. Right dot: knee height and arms."},
-    {name:"Cyber goth",icon:"\uD83E\uDD16",subs:["Stomp & punch","Arm sweep","Hands up","Windmill","Arm roll","Chop","Mix it up"],help:"Left dot: stomp width and how low. Right dot: arm size and speed."},
-    {name:"Headbang",icon:"\uD83E\uDD18",subs:["Headbang","Hair windmill","Air guitar","Rock on","Mix it up"],help:"Left dot: stance width and how low. Right dot: how hard and how fast."},
-    {name:"Lighters up",icon:"\uD83D\uDD25",subs:["Lighter sway","Phone light","Wave it","Both hands","Glow sticks"],help:"Left dot: how far you sway. Right dot: how high you hold it."},
-    {name:"Techno march",icon:"\uD83E\uDD7E",subs:["March","Point","Arm swing","Flex","Mix it up"],help:"Left dot: stride and how low. Right dot: arm power."},
+    {name:"Two-step",icon:"\uD83D\uDC63",subs:["Basic","Clap","Point","Shimmy"],help:"Left stick: walk around, wider steps the further you push. Right stick: up raises your arms, left and right swing them."},
+    {name:"Hands on knees",icon:"\uD83E\uDDB5",subs:["Knock knees","Bounce","Low","Lean back"],help:"Left stick: shuffle around in the squat, down sinks lower. Right stick: left and right lean."},
+    {name:"Shake it",icon:"\uD83C\uDF51",subs:["Wiggle","Drop it","Hands up","Fast"],help:"Left stick: sway your way around the floor. Right stick: lean and throw your arms."},
+    {name:"Running man",icon:"\uD83C\uDFC3",subs:["Classic","Fast","Moonwalk","Arms pump"],help:"Left stick: run around the floor. Right stick: up lifts the knees higher, left and right pump the arms."},
+    {name:"Skank",icon:"\uD83C\uDFBA",subs:["Classic","Windmill","Pogo","Elbows","Kicks"],help:"Left stick: skank around the floor, up kicks the knees higher. Right stick: up throws bigger punches."},
+    {name:"Robot",icon:"\uD83E\uDD16",subs:["Arms","Wave","Pop","Freeze"],help:"Left stick: walk like a robot, and your left arm points the way you go. Right stick: point your right arm."},
+    {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop","Dive in"],help:"Left stick: wriggle across the floor, up lifts your chest. Right stick: up kicks your hips up."},
+    {name:"Silly",icon:"\uD83E\uDD2A",subs:["Chicken","Sprinkler","YMCA","Floss","Macarena"],help:"Left stick: wander around doing it. Right stick: up and down for the bounce."},
+    {name:"Shuffle",icon:"\uD83D\uDC5F",subs:["Running man","T-step","Spin","Mix it up"],help:"Left stick: slide around as you step (flip it to slide back). Right stick: UP = step up on your toes, DOWN = low stomp, sideways = arms."},
+    {name:"Thriller",icon:"\uD83E\uDDDF",subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left stick: lurch around the floor. Right stick: lean and reach your arms."},
+    {name:"Street jam",icon:"\uD83D\uDCA5",subs:["High knees","Strike a pose","Hop step","Floor spin","Mix it up"],help:"Left stick: travel around the floor. Right stick: up for higher knees, sideways for the arms."},
+    {name:"Cyber goth",icon:"\uD83E\uDD16",subs:["Stomp & punch","Arm sweep","Hands up","Windmill","Arm roll","Chop","Mix it up"],help:"Left stick: stomp around the floor. Right stick: arm size and speed."},
+    {name:"Headbang",icon:"\uD83E\uDD18",subs:["Headbang","Hair windmill","Air guitar","Rock on","Mix it up"],help:"Left stick: move around while you bang. Right stick: how hard and how fast."},
+    {name:"Lighters up",icon:"\uD83D\uDD25",subs:["Lighter sway","Phone light","Wave it","Both hands","Glow sticks"],help:"Left stick: sway your way around the floor. Right stick: how high you hold it."},
+    {name:"Techno march",icon:"\uD83E\uDD7E",subs:["March","Point","Arm swing","Flex","Mix it up"],help:"Left stick: march around the floor. Right stick: arm power."},
     {name:"Puppet",icon:"\uD83C\uDFAD",subs:["Arms","Legs","Arms + legs","Cross"],help:"Nothing moves on its own. Left dot is your body: slide it to shift and lean, up to rise, down to crouch. Right dot is your limbs: up raises them, left and right swing them. Hit Spin or Twirl to turn on the spot."}
   ];
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
@@ -1806,18 +1806,18 @@ var ART=(function(){
       }
       break;}
     case 9:{ /* the shuffle (Melbourne shuffle / cutting shapes): quick footwork on the eighth notes, arms loose and low */
-      var trav=0.5+(ax+1)*0.6,low=Math.max(0,ay)*3,kl=0.55+Math.max(0,-by)*0.5+(bx+1)*0.05,arm=0.25+(bx+1)*0.25,mv=sub;
+      var trav=(0.6+Math.abs(ax)*0.9)*(ax<-0.25?-1:1),low=Math.max(0,ay)*2+Math.max(0,by)*4,kl=0.55+Math.max(0,-by)*0.8,arm=0.25+(bx+1)*0.25,mv=sub,toe=Math.max(0,-by)*2.5;   /* left stick: slide direction and speed; right stick up/down: step up on the toes / step down low */
       if(sub===3){var bar=Math.floor(bp/4)%4;mv=bar===0?0:bar===1?1:bar===2?1:(((bp%4)+4)%4>=2?2:0);if(bar===2)trav=-trav;}   /* running man, T-step right, T-step left, running man into a spin */
       var e=bp*2,ep=((e%1)+1)%1,side=Math.floor(e)%2?1:-1;
       if(mv===0){   /* running man: knee up on the "and", stomp down on the beat while the other foot slides back */
         var up=Math.sin(ep*Math.PI);
         if(side>0){o.legL=up*kl*0.6;o.lgL=7-up*3.5;o.legR=-0.18-(1-up)*0.25;}else{o.legR=-up*kl*0.6;o.lgR=7-up*3.5;o.legL=0.18+(1-up)*0.25;}   /* the knee comes up: a shorter leg */
-        o.bob=low-up*2.5+(1-up)*1;o.dx=Math.sin(bp*Math.PI*0.5)*2*trav;
+        o.bob=low-toe-up*2.5+(1-up)*1;o.dx=Math.sin(bp*Math.PI*0.5)*2*trav;
         o.armL=0.3+Math.max(0,side)*arm*0.8;o.armR=-0.3-Math.max(0,-side)*arm*0.8;
       }else if(mv===1){   /* T-step: one foot taps, the other swivels heel-out then toe-out, gliding you sideways */
         var sw=Math.sin(e*Math.PI);o.legL=0.15+Math.abs(sw)*0.45;o.legR=-0.15-Math.max(0,-sw)*0.2;
         if(trav<0){var t3=o.legL;o.legL=-o.legR;o.legR=-t3;}
-        o.dx=((bp%4+4)%4/4-0.5)*14*trav;o.bob=low-Math.abs(sw)*1.5;o.rot=-0.06*Math.sign(trav);
+        o.dx=((bp%4+4)%4/4-0.5)*14*trav;o.bob=low-toe-Math.abs(sw)*1.5;o.rot=-0.06*Math.sign(trav);
         o.armL=0.5+sw*arm*0.5;o.armR=-0.5+sw*arm*0.5;
       }else{   /* spin: arms tuck in, feet together, a quick turn (shown as a blur of a twist) then pop back out */
         var u=((bp%2)+2)%2/2,tw=Math.sin(u*Math.PI*4);
@@ -2315,6 +2315,6 @@ var ART=(function(){
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.79.22",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.79.23",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
