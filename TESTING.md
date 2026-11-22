@@ -1656,3 +1656,7 @@ Needs a Render redeploy (server.js changed).
 - Pen/Erase always change exactly the pixel you click. The extra pixel beside it was Mirror (left/right) being on: it paints the mirrored copy, which sits right next to the centre column. With Mirror on, the copies now show as yellow boxes before you click.
 - New Brush tool (pixel brush cursor, sizes 1-6, round-cornered from 4) in both the side panel and the full-screen bar.
 - Check: Mirror off, click a pixel at the centre line: only that pixel changes. Pick Brush, size 3: a 3x3 dab.
+
+## v1.79.52 — pixel editor: Shift all
+- New "Shift all" arrows (up/down/left/right) in the pixel editor, side panel and full screen bar: the whole part, original art and your paint together, moves one pixel. Pixels pushed off the edge are lost; Undo (right click) puts it back.
+- Check: open a part, press up: the whole thing is one pixel higher; down returns it.

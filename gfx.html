@@ -102,9 +102,9 @@ button.pe{background:#1f5f6e;box-shadow:inset -3px -3px 0 #0f3640,inset 3px 3px 
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.79.51"></script>
-<script src="art.js?v=1.79.51"></script>
-<script src="instruments.js?v=1.79.51"></script>
+<script src="gfx.js?v=1.79.52"></script>
+<script src="art.js?v=1.79.52"></script>
+<script src="instruments.js?v=1.79.52"></script>
 <script>
 (function(){
 /* pixel look: no emoji in any label (the lab writes a lot of its own text, so strip them as they appear) */
@@ -525,7 +525,12 @@ function pxBrushRow(r){var w=mk("span","bsz");w.style.cssText="display:none;flex
 var BR_CUR=null;function pxCursor(){if(PX.tool!=="brush")return "";if(!BR_CUR){var c=document.createElement("canvas");c.width=c.height=16;var q=c.getContext("2d"),D=function(col,pts){q.fillStyle=col;pts.forEach(function(p){q.fillRect(p[0],p[1],1,1);});};
   D("#000",[[0,15],[1,15],[0,14],[2,15],[1,13],[2,14],[3,13],[4,12],[5,11],[6,10],[7,9],[8,8],[9,7],[10,6],[11,5],[12,4],[13,3],[14,2],[15,1],[15,0],[14,0],[13,1],[12,2],[11,3],[10,4]]);
   D("#ff2fa0",[[1,14],[2,13],[3,12],[2,12],[1,12]]);D("#e8c46a",[[4,11],[5,10],[6,9],[7,8],[8,7],[9,6],[10,5],[11,4],[12,3],[13,2],[14,1]]);BR_CUR="url("+c.toDataURL()+") 1 14, crosshair";}return BR_CUR;}
-function pxShapeRow(r){pxBrushRow(r);var w=mk("span","shp");w.style.cssText="display:none;flex-wrap:wrap;gap:4px;align-items:center";
+function pxShift(dx,dy){var sp=PX.spec;pxSnap();pxRender();var d=PX.base.getContext("2d").getImageData(0,0,sp.w,sp.h).data,m={"!":"1"},x,y,n=0;
+  for(y=0;y<sp.h;y++)for(x=0;x<sp.w;x++){var i=(y*sp.w+x)*4;if(d[i+3]<8)continue;var nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=sp.w||ny>=sp.h)continue;m[(nx-sp.ax)+","+(ny-sp.ay)]=hex([d[i],d[i+1],d[i+2]]);n++;}
+  PX.map=m;PX.ghostC=null;pxCommit();pxSwatches();share();pxStates();}   /* the whole part, original art and your paint together, moves one pixel (anything pushed off the edge is lost) */
+function pxShiftRow(r){var w=mk("span","shf");w.style.cssText="display:flex;gap:4px;align-items:center";w.appendChild(mk("span","","Shift all"));
+  [["⬆",0,-1,"Shift everything up one pixel"],["⬇",0,1,"Shift everything down one pixel"],["⬅",-1,0,"Shift everything left one pixel"],["➡",1,0,"Shift everything right one pixel"]].forEach(function(t){var b=mk("button","",t[0]);b.title=t[3];b.style.minWidth="34px";b.onclick=function(){pxShift(t[1],t[2]);};w.appendChild(b);});r.appendChild(w);}
+function pxShapeRow(r){pxShiftRow(r);pxBrushRow(r);var w=mk("span","shp");w.style.cssText="display:none;flex-wrap:wrap;gap:4px;align-items:center";
   SHAPES.forEach(function(s){var b=mk("button","",s[1]);b.title=s[0];b.dataset.shape=s[0];b.style.minWidth="38px";b.onclick=function(){PX.shape=s[0];pxStates();};w.appendChild(b);});
   var f=mk("button","","◻ Outline");f.dataset.fillt="1";f.onclick=function(){PX.shapeFill=!PX.shapeFill;pxStates();};w.appendChild(f);r.appendChild(w);
   var d=mk("span","cdn");d.style.cssText="display:none;gap:6px";var ok=mk("button","go","✓ Done");ok.onclick=pxCurveDone;var no=mk("button","","✕ Drop curve");no.onclick=function(){PX.curve=null;PX.preview=null;pxStates();};d.appendChild(ok);d.appendChild(no);r.appendChild(d);}
