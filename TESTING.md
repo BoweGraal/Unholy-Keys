@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.3 — Capture the flag / Kart flag: more room
+
+- One thin bar at the top: score (your team underlined) and the clock. The performer is small in the top-right corner. The arena gets the rest of the screen in both orientations; upright phones get a closer camera that follows you.
+- The how-to line only shows for the first few seconds (and when you're tagged), under the bar, and Kart flag has its own words.
+- Karts are painted in their team's colour.
+
 ## v1.81.2 — Kart flag: jump, aim, launch and IMPACT
 
 - **LAUNCH** (big button bottom right, or Shift / X) replaces drift: hold it and the kart hops and slides to a stop while you aim it anywhere with the stick. An arrow grows as it charges (blue, then orange when full at 0.7 s). Let go and the kart shoots off the way you aimed, harder the longer you held.
