@@ -790,7 +790,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <button id="prGo" disabled>Start round</button>
       <div class="song" id="prSong">Pick a song from the list, or one from your computer.</div>
     </div>
-    <div class="note" id="prNote">Arrow keys or the pad step, D F J K or drag in free dance, Esc or the X sits a round out. Points add up across practice rounds until you close the page.</div>
+    <div class="note" id="prNote">Arrow keys or the pad step, D F J K or drag in free dance, Esc or STOP ends the round and puts you back on the dance floor. Points add up across practice rounds until you close the page.</div>
   </div>
   <div id="gamePanel">
     <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameCombo"></span><span id="gameBpm"></span><button id="gameSpd" aria-label="Scroll speed" title="How fast the notes fall">1.0&times;</button><button id="gameLv" aria-label="Level" title="Practice level"></button><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
@@ -2434,7 +2434,7 @@ document.addEventListener("keydown",function(e){
   if(d){e.preventDefault();setHeld(d,true);return;}
   if(e.key==="Enter"||e.code==="KeyT"){e.preventDefault();openTalk();return;}
   if(e.code==="Space"){e.preventDefault();if(!e.repeat)GAME.toggle();return;}
-  if(e.key==="Escape"&&GAME.mode){e.preventDefault();GAME.stop();if(ROUND.active())ROUND.sitOut();return;}
+  if(e.key==="Escape"&&GAME.mode){e.preventDefault();GAME.stop();if(ROUND.active())ROUND.sitOut();if(window.ukPracticeStop)window.ukPracticeStop();return;}
 });
 var LIMBKEY={KeyD:0,KeyK:1,KeyF:2,KeyJ:3};   /* left arm, right arm, left leg, right leg */
 var HWKEY={KeyA:0,KeyS:1,KeyD:2,KeyF:3,KeyG:4,KeyH:5,KeyJ:6};   /* note highway lanes */
@@ -3816,7 +3816,7 @@ var GAME=(function(){
   function closeMenu(){document.getElementById("danceMenu").classList.remove("on");}
   /* the Dance button and Space: stop if dancing, otherwise show the two choices */
   function toggle(){
-    if(mode){stop();if(ROUND.active())ROUND.sitOut();}
+    if(mode){stop();if(ROUND.active())ROUND.sitOut();if(window.ukPracticeStop)window.ukPracticeStop();}
     else if(ROUND.active())ROUND.join();          /* a round is on: Dance joins it */
     /* no round on: in Dance practice, open the practice panel to pick a game; at a show, just start dancing (the old game list is gone) */
     else{closeMenu();document.body.classList.remove("pr-open");start("free");}   /* no round on: free dance, at a show or in practice (Start game opens the practice menu) */
@@ -3834,7 +3834,7 @@ var GAME=(function(){
   try{var lv0=parseInt(localStorage.getItem("uk_lv"),10);if(lv0>0&&typeof PRACTICE!=="undefined")window.ukForceDiff=lv0-1;}catch(e){}
   lvShow();
   window.ukLvRefresh=function(){gLv.classList.toggle("on",typeof PRACTICE!=="undefined"&&PRACTICE.on);lvShow();};
-  document.getElementById("gameClose").addEventListener("click",function(){stop();if(ROUND.active())ROUND.sitOut();});
+  document.getElementById("gameClose").addEventListener("click",function(){stop();if(ROUND.active())ROUND.sitOut();if(window.ukPracticeStop)window.ukPracticeStop();});   /* in practice STOP ends the run and puts you back on the dance floor */
   var pad=document.getElementById("gameCv");
   pad.addEventListener("pointerdown",function(e){
     e.preventDefault();
@@ -6558,6 +6558,7 @@ var PRACTICE=(function(){
     chart=window.__testChart||{bpm:120,beats:beats,steps:[],dur:300000};window.__testChart=null;var off=window.__testPos||0;window.__testPos=0;ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,chart:chart,ms:800,title:mode==="ctf"?"CTF test":mode==="ski"?"Ski test":mode==="pipe"?"Pipe test":"Walk test"});
     setTimeout(function(){if(my===job)afterStart(my,-off);},800);};
   window.ukMoshTest=function(nb,c,pos){window.__testMode="mosh";window.__testChart=c||null;window.__testPos=pos||0;window.ukWalkTest(nb);};   /* tests: a mosh round at song position pos (ms) */
+  window.ukPracticeStop=function(){if(on&&document.body.classList.contains("pr-busy")){stopAll();note("Back on the dance floor.");}};   /* STOP / Esc in any practice game */
   window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
   window.ukPracticeBattle=function(){return plan?pub():null;};
   return{get on(){return on;},enter:enter,vote:vote,bvote:bvote,moshBonus:moshBonus,
