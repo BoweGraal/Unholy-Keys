@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.9 — The app updates itself
+
+Phones, and most of all the home-screen app on iPhone, could open an old copy of the page after a new version was out. Now the page asks the site for its version (with caching off) when it opens and whenever the app comes back to the front: if there's a newer one it reloads straight into it on open, or, in the middle of a game or a show, shows a yellow "Update ready · tap" button. There's also a **Check for update** button on the main menu (and in the performer page's menu) that checks right away and says "Up to date" or updates.
+
 ## v1.81.8 — Kart flag has its own how-to card
 
 The card before a Kart flag round was the old Capture the flag one. It now has its own preview (karts, LAUNCH hold-aim-let go, IMPACT sending the flag home, a ? box) and its own how-to and rules.

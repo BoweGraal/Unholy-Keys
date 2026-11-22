@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -16,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.8"></script>
-<script src="gfx.js?v=1.81.8"></script>
-<script src="art.js?v=1.81.8"></script>
-<script src="instruments.js?v=1.81.8"></script>
-<script src="kart.js?v=1.81.8"></script>
-<script src="explain.js?v=1.81.8"></script>
+<script src="tune.js?v=1.81.9"></script>
+<script src="gfx.js?v=1.81.9"></script>
+<script src="art.js?v=1.81.9"></script>
+<script src="instruments.js?v=1.81.9"></script>
+<script src="kart.js?v=1.81.9"></script>
+<script src="explain.js?v=1.81.9"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -681,6 +682,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <button class="mm-btn mm-char" id="mmChar"><i class="pxi" data-pxi="palette"></i> Character<small>change your look</small></button>
       <button class="mm-btn mm-inst" id="mmInst"><i class="pxi" data-pxi="keys"></i> Instrument<small>play the phone instrument</small></button>
     </div>
+    <button id="mmUpd" type="button" onclick="ukCheckUpdate(this)" style="display:block;margin:10px auto 0;background:none;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75);font:700 11px 'Silkscreen',ui-monospace,monospace;padding:6px 12px;border-radius:8px;cursor:pointer">&#8635; Check for update</button>
   </div>
   <!-- join a show -->
   <div class="jv jv-join join-box">
@@ -7066,7 +7068,35 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.8",SERVER_VERSION="";
+var PAGE_VERSION="1.81.9",SERVER_VERSION="";
+/* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
+   one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
+   button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
+   from the button) reload straight into it with a fresh address, so nothing cached is reused; in the middle of a game or a
+   show, show a small "update ready" button instead of interrupting. */
+(function(){
+  var asked=0,booted=performance.now(),shown=false;
+  function busy(){var b=document.body;return !!(b&&(b.getAttribute("data-game")||b.classList.contains("pr-busy")||(typeof liveOn!=="undefined"&&liveOn)));}
+  function go(v){try{sessionStorage.setItem("uk_upd",v);}catch(e){}var q=location.search.replace(/[?&]upd=[^&]*/g,"").replace(/^&/,"?");var u=location.pathname+q;u+=(u.indexOf("?")<0?"?":"&")+"upd="+encodeURIComponent(v)+location.hash;location.replace(u);}
+  function offer(v){if(shown)return;shown=true;var b=document.createElement("button");b.id="updBtn";b.textContent="\u21BB Update ready (v"+v+") \u00b7 tap";
+    b.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 34px);z-index:100000;font:700 12px 'Silkscreen',ui-monospace,monospace;color:#1a1030;background:#F5C518;border:2px solid #000;border-radius:8px;padding:7px 12px;cursor:pointer";
+    b.onclick=function(){go(v);};document.body.appendChild(b);}
+  function check(byHand,cb){var now=Date.now();if(!byHand&&now-asked<20000)return;asked=now;
+    fetch(location.pathname+"?vc="+now,{cache:"no-store"}).then(function(r){return r.ok?r.text():"";}).then(function(t){
+      var m=/PAGE_VERSION="([0-9.]+)"/.exec(t||"");if(!m){if(cb)cb("err");return;}if(m[1]===PAGE_VERSION){if(cb)cb("ok");return;}
+      if(byHand){if(cb)cb("new",m[1]);go(m[1]);return;}
+      var tried=null;try{tried=sessionStorage.getItem("uk_upd");}catch(e){}
+      if(tried===m[1]){offer(m[1]);return;}   /* already reloaded once for it and still old: don't loop, just offer */
+      if(performance.now()-booted<6000&&!busy())go(m[1]);else offer(m[1]);}).catch(function(){if(cb)cb("err");});}
+  setTimeout(function(){check(false);},800);
+  document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")check(false);});
+  window.addEventListener("pageshow",function(e){if(e.persisted)check(false);});
+  setInterval(function(){check(false);},10*60*1000);
+  /* the Check for update button: says what it found */
+  window.ukCheckUpdate=function(btn){var t0=btn?btn.textContent:"";if(btn)btn.textContent="Checking…";
+    check(true,function(r,v){if(!btn)return;btn.textContent=r==="ok"?"\u2713 Up to date (v"+PAGE_VERSION+")":r==="new"?"Updating to v"+v+"…":"Couldn't check, try again";if(r!=="new")setTimeout(function(){btn.textContent=t0;},2500);});};
+})();
+
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7616,7 +7646,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.8"></script>
+<script src="lab.js?v=1.81.9"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
