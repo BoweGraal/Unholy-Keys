@@ -1576,3 +1576,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.31 — first place bonus
 - First place in a round gets +50 show points on top of the usual 1,000 split (ties for first all get it; needs a score above 0). Battles: the winner of the bracket. Works in practice too. Needs a Render redeploy (server.js).
+
+## v1.79.32 — show leaderboard
+- A small STANDINGS panel (top right, tap to shrink) stays up all show with points and ▲/▼ moves since the last round; hidden inside minigames. After each round a toast says who took the lead and who passed who ("Moth takes the lead!", "Phyl passed Rook for 3rd"). Test: ukTotals([...]) twice with different orders.
