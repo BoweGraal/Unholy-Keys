@@ -1629,3 +1629,8 @@ Needs a Render redeploy (server.js changed).
 - Audience ads: the host now tells the room the song's real length. If a screen's video is a different length (an ad), it is hidden and muted with "Ad playing · the music joins when it ends", then unmutes and syncs to the beat.
 - Host: picking a YouTube song now loads it muted and hidden first, so any ad plays then. The Now Playing bar says "An ad is playing (muted and hidden). Waiting for it to finish…" and then the song is parked at 1 s. The countdown/game starts only once it is ready (45 s at most), and the song then unmutes and starts from 0.
 - NOT tested against real YouTube from the build machine (no network): try one song with an ad on both host and phone.
+
+## v1.79.46 — the big screen always shows the notes and the visualizer
+- Host: the visuals stream to the venue's big screen now runs outside jam mode too (jam visualizer behind the note roll), so it no longer falls back to just the YouTube video. Needs sound sharing on (Go live → share tab).
+- Venue: if the performer's visuals still aren't arriving while a video is on the big screen (sound sharing off), a note roll is drawn over the video from the notes the room hears.
+- Check: go live without opening jam mode and play; the big screen should show the visualizer with notes, not the video.

@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.79.45"></script>
-<script src="art.js?v=1.79.45"></script>
-<script src="instruments.js?v=1.79.45"></script>
-<script src="kart.js?v=1.79.45"></script>
+<script src="gfx.js?v=1.79.46"></script>
+<script src="art.js?v=1.79.46"></script>
+<script src="instruments.js?v=1.79.46"></script>
+<script src="kart.js?v=1.79.46"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4814,7 +4814,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.79.45",SERVER_VERSION="";
+var PAGE_VERSION="1.79.46",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6745,9 +6745,13 @@ var STREAM=(function(){
     vTimer=setInterval(frame,1000/VFPS);
   }
   function frame(){
-    if(!vEnc||vEnc.state!=="configured"||!visualsOn||!jamOn||!jCanvas||vEnc.encodeQueueSize>2)return;
+    if(!vEnc||vEnc.state!=="configured"||!visualsOn||vEnc.encodeQueueSize>2)return;
     vCtx.fillStyle="#000";vCtx.fillRect(0,0,VW,VH);
-    try{vCtx.drawImage(jCanvas,0,0,VW,VH);}catch(e){}
+    if(jamOn&&jCanvas){try{vCtx.drawImage(jCanvas,0,0,VW,VH);}catch(e){}}
+    else{   /* not in jam mode: the big screen still gets the jam visualizer behind the notes, so it is never just a video */
+      try{var vt=Date.now()/1000,vg=JNR.notes.some(function(n){return !n.t1;})?0.7:0.15;
+        vCtx.setTransform(1,0,0,1,0,0);VIZFX.draw(vCtx,VW,VH,vt,(vt*25)%360,analyser?analyser.getValue():[],getMediaFft(),vg,!!activeVoice);}catch(e){}
+    }
     jumboNote(vCtx,0,0,VW,VH,Date.now());
     /* small caption: instrument and key */
     var ins=findInst(S.eng);vCtx.font="600 13px system-ui,sans-serif";vCtx.fillStyle="rgba(0,0,0,.45)";
