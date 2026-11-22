@@ -778,6 +778,8 @@ var ART=(function(){
     else if(it==="shield")st.shield[id]=now+CTF.K_SHIELD_MS;
     else if(it==="mega")st.mega[id]=1;
     ev.push({k:"use",id:id,it:it,x:p[0],y:p[1]});return ev;};
+  /* Kart Flag on a map with no power-up boxes: the sprint refills become boxes */
+  CTF.kartMap=function(m){if(!m||m.t.indexOf("p")>=0)return m;return{name:m.name,w:m.w,h:m.h,t:m.t.replace(/s/g,"p")};};
   CTF.cdLeft=function(st,id,now){return Math.max(0,CTF.K_PULSE_MS-(now-(st.cd[id]||-1e9)));};
   CTF.boxLeft=function(st,i,now){var t=st.box&&st.box[i]||0;return t?Math.max(0,CTF.K_BOX_MS-(now-t)):0;};
   /* the sprint meter s = {e: 0..1, on}: holding sprint with enough charge runs you faster and drains it; otherwise it charges.
