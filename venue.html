@@ -11,6 +11,7 @@
 <script>/* iPhones can't make a web page fullscreen (and the Home Screen app already is), so the fullscreen buttons are hidden there */
 (function(){try{var d=document.documentElement,ios=/iPhone|iPod/.test(navigator.userAgent),api=!!(d.requestFullscreen||d.webkitRequestFullscreen),app=window.navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);if(ios||!api||app)d.classList.add("no-fs");}catch(e){}})();</script>
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}@media (orientation:landscape) and (max-height:520px){#skiHint{left:150px!important;right:380px;transform:none!important;bottom:calc(var(--chatH) + 14px)!important;max-width:none!important;font-size:11px!important}}   /* short landscape: the ski hint sits between the stick and the buttons */
+body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board */
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -5475,7 +5476,24 @@ var ROUND=(function(){
   function setTotals(t){var prev={};totals.forEach(function(x,i){prev[x.name.toLowerCase()]=i;});
     totals=Array.isArray(t)?t.slice(0,10).map(function(x){return{name:safeText(x.name,24),pts:Math.max(0,Math.floor(+x.pts||0)),wins:Math.max(0,Math.floor(+x.wins||0))};}):[];
     try{lbUpdate(prev);}catch(e){}}
-  function scores(m){if(rd&&m.n===rd.n&&active()){top={top:Array.isArray(m.top)?m.top.slice(0,5).map(function(x){return{id:String(x.id),name:safeText(x.name,24),score:Math.max(0,Math.floor(+x.score||0))};}):[],players:Math.max(0,Math.floor(+m.players||0))};drawPlay();}}
+  function scores(m){if(rd&&m.n===rd.n&&active()){top={top:Array.isArray(m.top)?m.top.slice(0,5).map(function(x){return{id:String(x.id),name:safeText(x.name,24),score:Math.max(0,Math.floor(+x.score||0))};}):[],players:Math.max(0,Math.floor(+m.players||0)),all:Array.isArray(m.all)?m.all.slice(0,60).map(function(x){return[String(x[0]),Math.max(0,Math.floor(+x[1]||0))];}):null};drawPlay();mlbTick();}}
+  /* ---- the little top-3 board in the corner of every scored game (voted games, the battles and free dance, don't get one) ---- */
+  var mlbSig="";
+  function mlbEl(){var e=document.getElementById("miniLB");if(e)return e;
+    var st=document.createElement("style");st.textContent="#miniLB{position:fixed;left:8px;top:52px;z-index:16;width:134px;background:rgba(14,11,26,.82);border:1px solid rgba(245,197,24,.45);padding:3px 5px;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#fff;pointer-events:none;display:none;box-shadow:3px 3px 0 rgba(0,0,0,.55);line-height:1.35}#miniLB .r{display:flex;gap:4px;white-space:nowrap}#miniLB .n{flex:1;overflow:hidden;text-overflow:ellipsis}#miniLB .i{color:#3DF2FF}#miniLB .me{color:#3DF2FF;border-top:1px solid rgba(255,255,255,.22);margin-top:2px;padding-top:2px}#miniLB .p{color:#F5C518}";
+    document.head.appendChild(st);e=document.createElement("div");e.id="miniLB";document.body.appendChild(e);return e;}
+  function mlbTick(){
+    var e=mlbEl(),ok=active()&&!rd.isBattle&&rd.mode&&rd.mode!=="free"&&top&&top.top&&top.top.length&&myId;
+    if(!ok){if(mlbSig!==""){mlbSig="";e.style.display="none";}return;}
+    var ms=typeof GAME!=="undefined"&&GAME.mode?GAME.score:0,t3=top.top.slice(0,3),rank=0,n=Math.max(top.players,1);
+    if(top.all){var hi=0,others=0;top.all.forEach(function(x){if(x[0]===myId)return;others++;if(x[1]>ms)hi++;});rank=hi+1;n=Math.max(n,others+1);}
+    else{var ix=-1;top.top.forEach(function(x,i){if(x.id===myId)ix=i;});rank=ix>=0?ix+1:(ms>=(top.top[top.top.length-1].score)?top.top.length:top.top.length+1);if(ix<0&&top.players<=top.top.length)n=top.players+1;}
+    var sig=t3.map(function(x){return x.id+x.score;}).join(",")+"|"+rank+"/"+n+"|"+ms;if(sig===mlbSig)return;mlbSig=sig;
+    e.textContent="";
+    t3.forEach(function(x,i){var r=document.createElement("div");r.className="r"+(x.id===myId?" i":"");var a=document.createElement("span");a.className="p";a.textContent=i+1;var nm=document.createElement("span");nm.className="n";nm.textContent=x.id===myId?"You":x.name;var sc=document.createElement("span");sc.textContent=(x.id===myId?ms:x.score).toLocaleString();r.appendChild(a);r.appendChild(nm);r.appendChild(sc);e.appendChild(r);});
+    var me=document.createElement("div");me.className="r me";var l=document.createElement("span");l.className="n";l.textContent="YOU #"+rank+"/"+n;var v=document.createElement("span");v.textContent=ms.toLocaleString();me.appendChild(l);me.appendChild(v);e.appendChild(me);
+    e.style.display="block";}
+  setInterval(mlbTick,400);
   window.ukRoundMsg=function(m){onMsg(m);};   /* for testing: feed the round a message */
   window.ukTotals=function(t){setTotals(t);};   /* for testing */
   window.ukRound=function(){return rd?{round:rd.n,mode:rd.mode,phase:rd.phase,title:rd.title,songPos:Math.round(pos()),usingLiveSoundClock:rd.ts0!==null&&SP.songPos(rd.ts0)!==null,timingTrim:Math.round(corr),beatOffset:lastD===null?null:Math.round(lastD),steps:rd.chart?rd.chart.steps.length:0,sittingOut:sat,spotlight:rd.spot||null,featured:featured(),battle:rd.isBattle?{bracket:rd.b||null,none:rd.bNone,onStage:(function(){var q=pair();return q?{match:q.k,label:q.s.label,a:q.A.name,b:q.B.name,sa:q.sa,sb:q.sb,leftMs:Math.round(q.left)}:null;})()}:null}:{round:null,totals:totals};};
@@ -6164,7 +6182,7 @@ var PRACTICE=(function(){
     var list=bots.map(function(b){return{id:b.id,name:b.name,score:b.score};});
     if(GAME.mode)list.push({id:"me",name:myName,score:GAME.score});
     list.sort(function(a,b){return b.score-a.score;});
-    ROUND.scores({n:n,top:list.slice(0,5),players:list.length});
+    ROUND.scores({n:n,top:list.slice(0,5),players:list.length,all:list.map(function(x){return[x.id,x.score];})});
   }
   function start(){
     if(!file&&!ytSel)return;

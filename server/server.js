@@ -272,7 +272,7 @@ function roundStandings(code) {
   var list = [];
   r.viewers.forEach(function(v, id) { if (v.roundScore > 0) list.push({ id: id, name: v.name, color: v.color, score: v.roundScore }); });
   list.sort(function(a, b) { return b.score - a.score; });
-  broadcast(code, { type: "round-scores", n: r.round.n, top: list.slice(0, 5), players: list.length });
+  broadcast(code, { type: "round-scores", n: r.round.n, top: list.slice(0, 5), players: list.length, all: list.slice(0, 60).map(function(x) { return [x.id, x.score]; }) });   /* all: everyone's place, for the little board in each game */
   /* the performer sees everyone's points over their heads */
   if (r.performer) send(r.performer, { type: "round-all", n: r.round.n, s: list.slice(0, 60).map(function(x) { return [x.id, x.score]; }) });
 }
