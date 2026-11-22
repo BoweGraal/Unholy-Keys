@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.19 — Performer stands on the stage
+
+- The performer and the piano now stand on the stage, with the legs on the stage edge. In portrait they no longer float halfway up the wall.
+- On a short landscape stage they're drawn at two-thirds size, so the lid stays below the UNHOLY KEYS sign.
+
 ## v1.81.18 — Kart flag boost pads
 
 - The two pads that fired straight into the middle pillars are gone. The arena is mirrored, so each team gets the same set:
