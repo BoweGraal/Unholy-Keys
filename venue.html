@@ -17,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.18"></script>
-<script src="gfx.js?v=1.81.18"></script>
-<script src="art.js?v=1.81.18"></script>
-<script src="instruments.js?v=1.81.18"></script>
-<script src="kart.js?v=1.81.18"></script>
-<script src="explain.js?v=1.81.18"></script>
+<script src="tune.js?v=1.81.19"></script>
+<script src="gfx.js?v=1.81.19"></script>
+<script src="art.js?v=1.81.19"></script>
+<script src="instruments.js?v=1.81.19"></script>
+<script src="kart.js?v=1.81.19"></script>
+<script src="explain.js?v=1.81.19"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -7065,8 +7065,9 @@ var LIMB_LEN=ART.LIMB;
 /* the performer holding the instrument they picked, playing the notes as they come (instruments.js) */
 var PERF={kind:"synth",id:null,off:0,n:0};
 function perfKind(){if(PERF.id!==activeInst){var ins=findInst(activeInst);PERF.id=activeInst;PERF.kind=ART.INST.kindOf(activeInst,ins&&ins.l);PERF.band=ART.INST.section(activeInst,ins&&ins.l);}return PERF.kind;}
+var PERF_S=3;
 function drawPerformer(x,y){
-  var s=3,now=Date.now();
+  var s=PERF_S,now=Date.now();
   if(isPerformerPlaying){var pulse=0.35+0.25*Math.sin(now*0.008);ctx.save();ctx.globalAlpha=pulse;var gl=ART.PX.rg(ctx,x,y-6*s,2,x,y-6*s,22*s);gl.addColorStop(0,hexA(performer.color,0.9));gl.addColorStop(1,hexA(performer.color,0));ctx.fillStyle=gl;ART.PX.disc(ctx,x,y-6*s,22*s);ctx.restore();}
   var _pk=perfKind(),_ps={midi:lastNoteMidi,on:isPerformerPlaying,t0:lastNoteTime,off:PERF.off,now:now,n:PERF.n};
   /* practice: the stand-in performer plays a little riff on the song's beat (or a steady one when there's no song) */
@@ -7091,7 +7092,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.18",SERVER_VERSION="";
+var PAGE_VERSION="1.81.19",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7484,7 +7485,8 @@ function renderLoop(){
   if(PIPE.pipeRound())side=Math.max(side,Math.min(W*0.3,300));              /* half pipe: the trick callouts and SUPER meter fill the middle of the top */
   if(bp)side=Math.min(side,-Math.min(W*0.45,440));                  /* a battle match: the performer steps right aside */
   perfShift+=(side-perfShift)*0.12;perfPx+=perfShift;
-  var perfPy=(STAGE_TOP+STAGE_BOTTOM)/2*H+20;
+  /* the performer stands on the stage: the piano's legs on the stage edge, the lid below the sign (smaller on a short landscape stage) */
+  var seY=STAGE_BOTTOM*H;PERF_S=Math.max(2,Math.min(3,Math.floor((seY+4-36)/40)));var perfPy=seY+4-21*PERF_S;
   jumboTick();crowdCheck();
   if(JT.rect&&JT.k>0.01){var py2=Math.min(STAGE_BOTTOM*H-14*3,JT.rect.y+JT.rect.h+20+19*3);if(py2>perfPy)perfPy+=(py2-perfPy)*JT.k;}
   /* the roller rink: the performer plays on the island in the middle */
@@ -7669,7 +7671,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.18"></script>
+<script src="lab.js?v=1.81.19"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
