@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.48"></script>
-<script src="gfx.js?v=1.79.48"></script>
-<script src="art.js?v=1.79.48"></script>
-<script src="instruments.js?v=1.79.48"></script>
-<script src="kart.js?v=1.79.48"></script>
-<script src="explain.js?v=1.79.48"></script>
+<script src="tune.js?v=1.79.49"></script>
+<script src="gfx.js?v=1.79.49"></script>
+<script src="art.js?v=1.79.49"></script>
+<script src="instruments.js?v=1.79.49"></script>
+<script src="kart.js?v=1.79.49"></script>
+<script src="explain.js?v=1.79.49"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5078,6 +5078,8 @@ var ROUND=(function(){
     if(p!==null){rd.liveP=p;rd.liveT=now;}
     /* the live sound dropped out for a moment: carry on from where it was, rather than jump to another clock */
     else if(rd.liveT&&now-rd.liveT<15000)p=rd.liveP+(now-rd.liveT);
+    /* this device's sound clock is way off the round's own clock (a slow phone or stalled stream): the notes follow the round's clock, so everyone plays the same track at the same time */
+    if(p!==null&&playPerf>0&&Math.abs(p-(now-playPerf))>4000){p=now-playPerf;rd.liveP=p;rd.liveT=now;}
     if(p===null)p=now-playPerf;                           /* no live sound here: go by when the round said the song began */
     return p+corr+(window.ukPosShift||0);                 /* ukPosShift: for testing how the steps ride out a timing jump */
   }
@@ -6666,7 +6668,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.48",SERVER_VERSION="";
+var PAGE_VERSION="1.79.49",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7190,7 +7192,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.48"></script>
+<script src="lab.js?v=1.79.49"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

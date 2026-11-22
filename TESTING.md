@@ -1642,3 +1642,7 @@ Needs a Render redeploy (server.js changed).
 - The STREAK pop-up ("10 STREAK!") is pixel font with a pixel-drawn bolt (flame from 50) instead of emoji; the streak aura/lightning is drawn chunky-pixel.
 - All remaining canvas text (scores, combo/judge, pops, tug of war, names, NEXT IN, kart HUD) and the game HUD CSS (score/combo/banners/hints/buttons) now use Silkscreen; emoji icons on score HUDs and banners removed.
 - Check: hit a 10 streak in a rhythm minigame; look at each minigame's score text. Silkscreen is wider, so watch for text overflowing buttons.
+
+## v1.79.49 — same track for everyone
+- The round's notes now follow the round's shared clock whenever this device's own sound clock drifts more than 4 s from it (slow phone, stalled sound stream), instead of waiting on the bad clock, so nobody gets an empty highway or starts late.
+- Check: join a round on a throttled phone; the notes should start with everyone else's.
