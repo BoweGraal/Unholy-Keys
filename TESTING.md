@@ -1688,6 +1688,8 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.80.2 — No "You" label under your own character
+
 ## v1.80.1 — Calmer beat pulse on the step arrows
 
 The target arrows no longer jump in size on every beat; the outline just glows softly.
