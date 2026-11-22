@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.80.8 — Battle matches are 20 seconds
+
+In a battle round (Battle in practice, the battle box on the performer page) every 1 v 1 is now 20 s, voted on live by the crowd; the winner goes through and the final takes the end of the song. If the song can't fit everyone, the lowest seeds sit out.
+
 ## v1.80.7 — Mars Rally minimap
 
 No leaderboard box in Mars Rally. Your place stays top right, and under it a tiny map of the track shows you (pulsing, coloured by your place) and the karts in 1st, 2nd and 3rd (gold, silver, bronze). No name under your own kart, and the instrument box no longer sits on STOP.

@@ -4,7 +4,7 @@
    battlePlan(entrants, chart, lockPos)
      entrants: [{id,name,color}], best seeds first. chart: {dur, beats} or null. lockPos: song position now (ms).
      One match at a time, back to back, with a short gap; the final takes the song's finale (the last 15-30 s).
-     Earlier matches share the time between now and the final, 9 to 25 s each. If that's too tight, the lowest
+     Earlier matches are 20 s each. If that's too tight, the lowest
      seeds are left out until it fits. Not a power of two: the top seeds get a bye through the first round.
      Without a song length: 18 s matches and a 25 s final, starting 5 s from now.
      Returns {entrants, slots} or null. Each slot (a match):
@@ -15,7 +15,7 @@
    battleLive(plan, pos, lead): the index of the match on at song position pos (lead ms early), or -1.
    battleRanks(plan): [{e, place, wins}] best first: champion, finalist, then by the round they went out in. */
 var BATTLE = (function() {
-  var GAP = 2000, MIN = 9000, MAX = 25000;
+  var GAP = 2000, MIN = 20000, MAX = 20000;   /* every match is 20 s (the final takes the song's finale) */
   function seeds(P) { var a = [1, 2]; while (a.length < P) { var n = a.length * 2 + 1, b = []; for (var i = 0; i < a.length; i++) b.push(a[i], n - a[i]); a = b; } return a; }
   function label(r, R) { return r === 0 ? "Final" : r === 1 ? "Semifinal" : r === 2 ? "Quarterfinal" : "Round " + (R - r); }
   function snap(t, beats) {
