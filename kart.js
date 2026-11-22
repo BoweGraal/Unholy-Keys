@@ -114,7 +114,7 @@
   if (!hasDom) return;
 
   var on = false, rnd = null, tr = TR[0], trIdx = 0, MASK = null, ROADP = null, PZ = TR[0].plaza, me = null, mk = null, myP = null, remotes = {}, bots = {}, fx = [], pops = [], introPos = {};
-  var startAt = 0, lastT = 0, score = 0, rank = 1, nKarts = 1, rankAcc = 0, lastRankChg = 0, wrong = 0, distAcc = 0, stall = 0, lastBan = false;
+  var order = [], startAt = 0, lastT = 0, score = 0, rank = 1, nKarts = 1, rankAcc = 0, lastRankChg = 0, wrong = 0, distAcc = 0, stall = 0, lastBan = false;
   var driftHold = false, gasPress = null, wasGas = false, camB = null, poppedAt = -1, sentGo = false;
   var cam = { x: 500, y: 310, z: 1 }, bgCv = null, bgKey = "";
   var TAU = Math.PI * 2, STEP16 = TAU / 16;
@@ -468,7 +468,7 @@
       var r = remoteStep(id, v, dt); if (r.race) list.push({ id: id, t: r.P.acc });
     });
     Object.keys(remotes).forEach(function (id) { if (!vs[id]) delete remotes[id]; });
-    list.sort(function (a, b) { return b.t - a.t; }); nKarts = list.length; var nr = 1 + list.findIndex(function (e2) { return e2.id === "me"; });
+    list.sort(function (a, b) { return b.t - a.t; }); order = list; nKarts = list.length; var nr = 1 + list.findIndex(function (e2) { return e2.id === "me"; });
     if (racing) {
       if (nr < rank && now - lastRankChg > 1200) { lastRankChg = now; add(T("passPts"), mk.x, mk.y, "PASS!", "#FF3DA8"); }
       if (nKarts > 1) { rankAcc += dt * T("rankPts") * (nKarts - nr) / (nKarts - 1); if (rankAcc >= 1) { var rp = Math.floor(rankAcc); rankAcc -= rp; add(rp); } }
@@ -536,7 +536,7 @@
     ctx.drawImage(fr.over, bx, by, FW * ks, FH * ks);
     if (k.boost && back) fr.ex.forEach(function (p) { flame(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks - lift, k.a, ks, now, k.boost > 1); });
     if (k.lvl !== undefined && k.lvl >= 0 && k.drifting && !k.air) fr.rw.forEach(function (p, i) { spark(ctx, sc[0] + p[0] * ks, sc[1] + p[1] * ks, ks, k.lvl, now, i); });
-    if (k.v.name) { ctx.font = "800 " + Math.round(clamp(10 * s, 10, 15)) + "px 'Silkscreen',ui-monospace,monospace"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,.75)"; var ny = sc[1] + 16 * ks; ctx.strokeText(k.v.name, sc[0], ny); ctx.fillStyle = k.me ? "#F5C518" : "#fff"; ctx.fillText(k.v.name, sc[0], ny); }
+    if (k.v.name && !k.me) { ctx.font = "800 " + Math.round(clamp(10 * s, 10, 15)) + "px 'Silkscreen',ui-monospace,monospace"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,.75)"; var ny = sc[1] + 16 * ks; ctx.strokeText(k.v.name, sc[0], ny); ctx.fillStyle = k.me ? "#F5C518" : "#fff"; ctx.fillText(k.v.name, sc[0], ny); }
     ctx.restore();
   }
   function dancer(ctx, v, isMe, w, tt) {
@@ -551,6 +551,23 @@
     pads(ctx, now);
     ctx.restore();
     effects(ctx, tt, T_, now, vs, myId);
+    if (tt >= T_.pop) minimap(ctx, now, myId);
+  }
+  /* a tiny copy of the track in the corner: the road, you (pulsing white) and the karts in 1st, 2nd and 3rd (gold, silver, bronze) */
+  var MM = null;
+  function minimap(ctx, now, myId) {
+    if (!MM || MM.tr !== tr) { var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; tr.P.forEach(function (p) { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }); MM = { tr: tr, x0: x0, y0: y0, w: Math.max(1, x1 - x0), h: Math.max(1, y1 - y0) }; }
+    var phone = VW <= 640 || VH <= 520, short = VH <= 420, box = short ? 62 : phone ? 96 : 140, sc = Math.min(box / MM.w, box / MM.h), mw = MM.w * sc, mh = MM.h * sc, pad = 8;
+    var bx = Math.round(VW - 10 - mw - pad * 2), by = Math.round(short ? 141 : phone ? 150 : 270);
+    function at(x, y) { return [bx + pad + (x - MM.x0) * sc, by + pad + (y - MM.y0) * sc]; }
+    ctx.save(); ctx.fillStyle = "rgba(8,6,20,.72)"; ctx.fillRect(bx, by, mw + pad * 2, mh + pad * 2); ctx.strokeStyle = "rgba(61,242,255,.45)"; ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, by + 0.5, mw + pad * 2 - 1, mh + pad * 2 - 1);
+    ctx.strokeStyle = "rgba(180,160,255,.75)"; ctx.lineWidth = Math.max(2, tr.hw * sc * 1.2); ctx.lineJoin = "round"; ctx.beginPath(); tr.P.forEach(function (p, i) { var q = at(p.x, p.y); if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.stroke();
+    var s0 = at(pointAt(tr, 0, -tr.hw).x, pointAt(tr, 0, -tr.hw).y), s1 = at(pointAt(tr, 0, tr.hw).x, pointAt(tr, 0, tr.hw).y); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s0[0], s0[1]); ctx.lineTo(s1[0], s1[1]); ctx.stroke();   /* start / finish */
+    var MED = ["#F5C518", "#C8D0DC", "#D08A4A"];
+    for (var i = Math.min(3, order.length) - 1; i >= 0; i--) { var e = order[i], x, y; if (e.id === "me") continue; var r = remotes[e.id]; if (!r) continue; x = r.x; y = r.y;
+      var q = at(x, y); ctx.fillStyle = "#000"; ctx.fillRect(Math.round(q[0]) - 4, Math.round(q[1]) - 4, 8, 8); ctx.fillStyle = MED[i]; ctx.fillRect(Math.round(q[0]) - 3, Math.round(q[1]) - 3, 6, 6); }
+    if (mk) { var m = at(mk.x, mk.y), pz = 4 + Math.round((Math.sin(now / 160) + 1)); ctx.fillStyle = "#000"; ctx.fillRect(Math.round(m[0]) - pz - 1, Math.round(m[1]) - pz - 1, pz * 2 + 2, pz * 2 + 2); ctx.fillStyle = rank <= 3 ? MED[rank - 1] : "#fff"; ctx.fillRect(Math.round(m[0]) - pz, Math.round(m[1]) - pz, pz * 2, pz * 2); ctx.fillStyle = "#3DF2FF"; ctx.fillRect(Math.round(m[0]) - 1, Math.round(m[1]) - 1, 2, 2); }
+    ctx.restore();
   }
   function pads(ctx, now) {
     /* boost pads, in pixel art: every pixel is on the same grid as the track (4 per floor tile), and the chevrons

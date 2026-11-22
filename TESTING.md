@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.80.7 — Mars Rally minimap
+
+No leaderboard box in Mars Rally. Your place stays top right, and under it a tiny map of the track shows you (pulsing, coloured by your place) and the karts in 1st, 2nd and 3rd (gold, silver, bronze). No name under your own kart, and the instrument box no longer sits on STOP.
+
 ## v1.80.6 — CTF: team score and clock, real running
 
 The mini leaderboard is gone in Capture the Flag; the top shows the team score and the time left. Players run with a proper stride (knees higher when sprinting) instead of gliding, and bump a little on each beat when standing.
