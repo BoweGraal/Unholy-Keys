@@ -29,6 +29,11 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
   --pk:#D354A0;--pu:#7F77DD;--tl:#1D9E75;--co:#D85A30;--ro:#D4537E;--sk:#378ADD;--am:#EF9F27;--r:8px}
 body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;
   min-height:100vh;overflow:hidden;-webkit-tap-highlight-color:transparent}
+/* it's a game: no text selection, no long-press Copy / Look Up / Translate callout, no image or link dragging, no pull-to-refresh or pinch/double-tap zoom. Typing boxes and the chat log stay selectable. */
+html,body{overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
+*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
+input,textarea,[contenteditable],#chatMsgs,#chatMsgs *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 
 /* JOIN SCREEN */
 #joinScreen{display:flex;flex-direction:column;align-items:center;justify-content:safe center;
@@ -831,6 +836,11 @@ function resolveWsUrl(){
 }
 var LIVE_URL = resolveWsUrl();
 /* an audience link can carry the room code (?room=ABCD): it's filled in on the join screen */
+(function(){function ok(t){return t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable||(t.closest&&t.closest("#chatMsgs")));}
+  document.addEventListener("selectstart",function(e){if(!ok(e.target))e.preventDefault();});
+  document.addEventListener("dragstart",function(e){if(!ok(e.target))e.preventDefault();});
+  ["gesturestart","gesturechange","gestureend"].forEach(function(n){document.addEventListener(n,function(e){e.preventDefault();});});   /* iOS pinch zoom */
+  document.addEventListener("selectionchange",function(){var s=window.getSelection&&window.getSelection();if(s&&!s.isCollapsed&&!ok(s.anchorNode&&s.anchorNode.parentElement))s.removeAllRanges();});})();
 document.addEventListener("contextmenu",function(e){var t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable))return;e.preventDefault();});   /* no browser menu over the game */
 window.addEventListener("load",function(){try{var rc=new URLSearchParams(location.search).get("room");if(rc&&/^[A-Za-z0-9]{4}$/.test(rc)){var ir=document.getElementById("inRoom");if(ir&&!ir.value)ir.value=rc.toUpperCase();}}catch(e){}});
 /* ── Which server: Render (the cloud one) or self-hosted (your own computer, a home tunnel) ──
