@@ -1677,3 +1677,17 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.56 — performer can play the round
 - Host page: new "Play round" button (next to Dance). While live it opens your own room as a player in an overlay (auto-joins with your stage name, muted so your backing track is the only sound), so you play the minigame instead of your instrument for that round. "Back to instrument" closes it; your instrument keys go to the game while it's open. Not live: it says to go live first.
 - Check (needs a live room): go live, start a round from a second device, press Play round, play, close it and confirm the instrument works again. Untested here: the live join itself (no server on the build machine).
+
+## v1.79.57 — Shift all no longer bakes the part
+- Shift all used to copy the whole rendered part (including its outline and the current hair colour) into your paint, which gave the thick double outline. It now keeps a shift offset with the part: the original art moves with its own colours and outline, and your paint and holes move with it. Applies to hair, hat, face, extra, top, bottom (other parts shift their paint only). On the side and back views only the up/down part applies.
+- If a part was already shifted with the old version, undo (Ctrl+Z) or use Redraw/reset on it.
+- Check: open the afro, press up: it moves one pixel with the same single outline; down puts it back.
+
+## v1.79.58 — game panel: no more size jumps, see-through
+- The panel's score line (Score · Combo · Best) wrapped onto a second line when the numbers got long, which made the whole panel grow and jump. The line now has a fixed two-line height and a smaller font, so the panel never changes size.
+- The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
+- Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
+
+## v1.79.59 — Auto key is off until you tick it
+- "Auto key" (sets your instrument's key from the song and follows key changes) was on by default and remembered. It now always starts unticked and has to be ticked each time.
+- Check: reload the host page: Auto key is unchecked; play a backing track and the key stays where you set it until you tick it.
