@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.12 — Swept mop hair and Open coat
+
+Matching Brian's teal-haired Graal character more closely:
+- **Hair → Swept mop**: a big rounded mop, the fringe swept across the brow, a swoop up and back from the side, ending above the neck at the back.
+- **Top → Open coat**: an open coat (in your top colour) over a light blue shirt with a dark blue line down the middle.
+
 ## v1.81.11 — Graal home assets
 
 New in the character maker, after Brian's Graal characters:
