@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.80.0 — Four difficulty levels, pinch zoom, CTF camera, and more
+
+- Easy, Normal, Hard and Expert, built from the song's own rhythm; scroll speed button; practice level menu has Expert.
+- Step dance: bigger 8-bit arrows. Phone game panel has more room. CTF follows you with flag and teammate pointers and tagging a carrier works. Pinch to zoom the venue. STOP in practice returns to the dance floor. The Mars Rally hint no longer covers the kart.
+- The version tag in the corner is now always on top and easier to read.
+
 ## v1.79.59 — Auto key is off until you tick it
 - "Auto key" (sets your instrument's key from the song and follows key changes) was on by default and remembered. It now always starts unticked and has to be ticked each time.
 - Check: reload the host page: Auto key is unchecked; play a backing track and the key stays where you set it until you tick it.
