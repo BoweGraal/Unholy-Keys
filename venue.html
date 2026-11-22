@@ -3778,8 +3778,24 @@ var WALK=(function(){
     {name:"Box step",icon:"🤖",d:6,col:"#FF4D6D",p:function(u){var s=(u-Math.floor(u))*4,i=Math.floor(s),f=s-i,a=BOX[i%4],b=BOX[(i+1)%4];return[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];}}];
   var on=false,x=X0,y=0.56,laneY=0.56,fin=-1,place=0,tripUntil=0,outT=0,lastT=0,score=0,sentFin=false,cur=null,speedF=0,order=[0,1,2,3,4,5],roundN=0,finOrder=[],seen={},bots={},doneAsked=false,lastStyle=-1,lastCount=-1;
   var pad=null,pg=null,PS=0;
+  /* The track is a few screens long and the camera follows the racers, so the finish is out of sight at the start and the race
+     takes a minute or more. Everyone is sent as before (x from X0 to X1 = the whole race); sx() turns that into where they are on
+     this screen. Until GO, everyone stands on the start line. */
+  var TRK=3.2,CAMA=0.35,camOff=0,goingC=false;
+  function prog(vx){return Math.max(0,Math.min(1,(vx-X0)/(X1-X0)));}
+  function camUpdate(){
+    if(!walkRound()){camOff=0;goingC=false;return;}
+    goingC=beatAt(songPos())>=GO_BEAT;var p=0;
+    if(goingC){if(on)p=prog(x);else Object.keys(viewers).forEach(function(id){var v=viewers[id];if(v&&v!==PH&&v.dance===4)p=Math.max(p,prog(v.x));});}   /* watching: follow the leader */
+    var tgt=Math.max(0,p*W*TRK-(CAMA-X0)*W);
+    camOff=Math.abs(tgt-camOff)>W*2?tgt:camOff+(tgt-camOff)*Math.min(1,FRAME_DT*6);
+  }
+  function sx(vx){return X0*W+(goingC?prog(vx):0)*W*TRK-camOff;}
   function $(id){return document.getElementById(id);}
   function T(k){return TUNE.v("wk."+k);}
+  /* how long a full-speed run takes. In a show the host sends how long this game has (a slot of 60 to 90 s in the song), and the race is
+     fitted to it so a typical finish lands just inside it; otherwise the tuning value. Same sum as server/bots.js wkTime. */
+  function raceTime(){var c=ROUND.chart&&ROUND.chart(),g=c&&c.gameMs>0?c.gameMs:0;return g?Math.max(45,Math.min(90,(g/1000-6)*0.8)):T("time");}
   function walkRound(){return GAME.mode==="walk"||(typeof ROUND!=="undefined"&&ROUND.mode==="walk");}
   /* the song's beat, from the chart's beat times when there are some (the same on every screen) */
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
@@ -3837,7 +3853,7 @@ var WALK=(function(){
       if(outT>T("tripTime")){tripUntil=now+T("stun")*1000;outT=0;banner("💥 TRIPPED!","#FF4D6D");}
     }
     speedF+=((going&&fin<0&&!tripped?f:0)-speedF)*Math.min(1,dt*8);
-    if(going&&fin<0){x+=(X1-X0)/T("time")*speedF*dt;
+    if(going&&fin<0){x+=(X1-X0)/raceTime()*speedF*dt;
       if(x>=X1){x=X1;fin=pos;if(finOrder.indexOf(myId)<0)finOrder.push(myId);place=finOrder.indexOf(myId)+1;banner("🏁 FINISHED · "+ord(place)+"!","#F5C518");}}
     /* score: distance, then a finish bonus that's bigger the sooner you got there */
     /* score: up to 1000 for distance; over the line it's 1000 + 3000 / your place (1st 4000, 2nd 2500, 3rd 2000…).
@@ -3871,7 +3887,7 @@ var WALK=(function(){
         var t=now/1000;bt.f=Math.max(0.3,Math.min(1,bt.sp+0.25*Math.sin(t*0.9+bt.wob)));
         if(!bt.trip&&Math.random()<dt*0.04*(1.2-bt.sp))bt.trip=now+T("stun")*1000;
         if(bt.trip&&now>bt.trip)bt.trip=0;
-        if(!bt.trip)bt.x+=(X1-X0)/T("time")*bt.f*dt;
+        if(!bt.trip)bt.x+=(X1-X0)/raceTime()*bt.f*dt;
         if(bt.x>=X1){bt.x=X1;bt.fin=true;if(finOrder.indexOf(id)<0)finOrder.push(id);PRACTICE.botScore(id,1000+Math.round(3000/(finOrder.indexOf(id)+1)));}
         else PRACTICE.botScore(id,Math.round(1000*(bt.x-X0)/(X1-X0)));
       }
@@ -3885,31 +3901,36 @@ var WALK=(function(){
     var g=pg;g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,hh);
     var S=Math.min(w,hh)/2,cx=w/2,cy=hh/2,si=b>=GO_BEAT?styleAt(b):order[0],st=STY[si],beatK=1-((b%1)+1)%1;
     var warn=Math.min(1,outT/T("tripTime"));
-    g.fillStyle="rgba(12,9,24,.78)";g.strokeStyle=warn>0.05?"rgba(255,"+Math.round(180-150*warn)+",60,"+(0.5+0.5*warn)+")":"rgba(255,255,255,.18)";g.lineWidth=2+3*warn;
-    /* a pixel panel: notched corners and a stepped border, with the warning colour as the border */
-    var Q=4,bc=g.strokeStyle,bw2=Math.round((2+3*warn)/2)*2||2;g.fillRect(Q,Q,w-2*Q,hh-2*Q);g.fillStyle=bc;
-    g.fillRect(2*Q,0,w-4*Q,bw2);g.fillRect(2*Q,hh-bw2,w-4*Q,bw2);g.fillRect(0,2*Q,bw2,hh-4*Q);g.fillRect(w-bw2,2*Q,bw2,hh-4*Q);
-    g.fillRect(Q,Q,Q,Q);g.fillRect(w-2*Q,Q,Q,Q);g.fillRect(Q,hh-2*Q,Q,Q);g.fillRect(w-2*Q,hh-2*Q,Q,Q);
+    /* no card behind the pad: the runners show through (the warning colour goes on the circle instead) */
     /* the circle: pulses on the beat, fills when you're in it */
     var px=cx+c[0]*S,py=cy+c[1]*S,rp=r*S*(1+0.06*beatK),inside=d<=r;
     g.save();g.globalAlpha=inside?0.35:0.12;g.fillStyle=st.col;ART.PX.disc(g,px,py,rp);g.restore();
-    g.strokeStyle=st.col;g.save();g.globalAlpha=inside?0.3:0.15;ART.PX.ring(g,px,py,rp,inside?16:9);g.restore();g.lineWidth=inside?5:3;ART.PX.ring(g,px,py,rp);
+    g.strokeStyle=warn>0.05?"rgb(255,"+Math.round(180-150*warn)+",60)":st.col;g.save();g.globalAlpha=inside?0.3:0.15;ART.PX.ring(g,px,py,rp,inside?16:9);g.restore();g.lineWidth=inside?5:3;ART.PX.ring(g,px,py,rp);
     /* your cursor */
     if(cur){var qx=cx+cur[0]*S,qy=cy+cur[1]*S;g.fillStyle=inside?"#fff":"rgba(255,255,255,.75)";ART.PX.disc(g,qx,qy,6);g.strokeStyle="rgba(0,0,0,.6)";g.lineWidth=2;g.stroke();}
     /* the dance now, and what's coming */
-    g.textAlign="center";g.textBaseline="top";g.font="700 14px Silkscreen,ui-monospace,monospace";g.fillStyle=st.col;g.fillText(st.icon+" "+st.name,cx,12);
+    g.textAlign="center";g.textBaseline="top";g.font="700 14px Silkscreen,ui-monospace,monospace";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.8)";g.strokeText(st.icon+" "+st.name,cx,12);g.fillStyle=st.col;g.fillText(st.icon+" "+st.name,cx,12);
     var into=b-GO_BEAT-seg(b)*SEG;
-    if(b>=GO_BEAT&&into>=SEG-2){var nx=STY[order[(seg(b)+1)%order.length]];g.font="700 11px Silkscreen,ui-monospace,monospace";g.fillStyle="rgba(255,255,255,.75)";g.fillText("Next: "+nx.icon+" "+nx.name+" in "+Math.ceil(SEG-into),cx,32);}
+    if(b>=GO_BEAT&&into>=SEG-2){var nx=STY[order[(seg(b)+1)%order.length]];g.font="700 11px Silkscreen,ui-monospace,monospace";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.8)";g.strokeText("Next: "+nx.icon+" "+nx.name+" in "+Math.ceil(SEG-into),cx,32);g.fillStyle="rgba(255,255,255,.75)";g.fillText("Next: "+nx.icon+" "+nx.name+" in "+Math.ceil(SEG-into),cx,32);}
     /* speed */
     var bw=w-40,by=hh-20;g.fillStyle="rgba(255,255,255,.12)";g.fillRect(20,by,bw,7);g.fillStyle=tripped?"#FF4D6D":f>0.95?"#4CC38A":f>0.6?"#F5C518":"#FF8A2B";g.fillRect(20,by,bw*(tripped?0:speedF),7);
   }
   /* the start and finish lines on the floor, and place numbers once people finish */
   function draw(g){
-    if(!walkRound())return;var gy0=Y0*H-34,gy1=Y1*H+18,fx=X1*W,sx=X0*W,sq=6;
-    g.save();g.globalAlpha=0.5;g.fillStyle="#fff";g.fillRect(sx-1,gy0,2,gy1-gy0);g.globalAlpha=0.85;
-    for(var yy=gy0,k=0;yy<gy1;yy+=sq,k++){g.fillStyle=k%2?"#fff":"#111";g.fillRect(fx-sq,yy,sq,sq);g.fillStyle=k%2?"#111":"#fff";g.fillRect(fx,yy,sq,sq);}
-    g.globalAlpha=1;g.font="900 12px system-ui";g.textAlign="center";g.fillStyle="#fff";g.fillText("FINISH",fx,gy0-6);
-    finOrder.slice(0,3).forEach(function(id,i){var v=viewers[id];if(!v)return;var vx=v.x*W,vy=v.y*H-62;g.fillStyle=["#F5C518","#C9D3E6","#D9894A"][i];ART.PX.disc(g,vx,vy,10);g.fillStyle="#1a1200";g.font="900 12px system-ui";g.textBaseline="middle";g.fillText(String(i+1),vx,vy+1);});
+    if(!walkRound())return;var gy0=Y0*H-34,gy1=Y1*H+18,trk=W*TRK,fx=X0*W+trk-camOff,sx0=X0*W-camOff,sq=6;
+    g.save();
+    /* faint markers along the floor so you can see the track going by */
+    g.globalAlpha=0.12;g.fillStyle="#fff";var mk=W*0.25;for(var mx=Math.ceil((camOff-X0*W)/mk)*mk+X0*W-camOff;mx<W;mx+=mk){if(mx>0&&mx<fx-4)g.fillRect(Math.round(mx),gy0,1,gy1-gy0);}
+    g.globalAlpha=0.5;g.fillStyle="#fff";if(sx0>-4&&sx0<W+4)g.fillRect(sx0-1,gy0,2,gy1-gy0);g.globalAlpha=0.85;
+    if(fx>-sq&&fx<W+sq){for(var yy=gy0,k=0;yy<gy1;yy+=sq,k++){g.fillStyle=k%2?"#fff":"#111";g.fillRect(fx-sq,yy,sq,sq);g.fillStyle=k%2?"#111":"#fff";g.fillRect(fx,yy,sq,sq);}
+      g.globalAlpha=1;g.font="900 12px system-ui";g.textAlign="center";g.fillStyle="#fff";g.fillText("FINISH",fx,gy0-6);}
+    /* the whole race along the top of the floor: everyone's dot, so you can see who's ahead even when they're off screen */
+    var bx0=W*0.1,bx1=W*0.9,by=Math.max(STAGE_BOTTOM*H+14,gy0-24);g.globalAlpha=0.85;g.fillStyle="rgba(10,8,20,.7)";g.fillRect(bx0-8,by-9,bx1-bx0+16,18);g.fillStyle="rgba(255,255,255,.3)";g.fillRect(bx0,by-1,bx1-bx0,2);
+    g.fillStyle="#fff";g.font="900 11px system-ui";g.textAlign="center";g.textBaseline="middle";g.fillText("\u2691",bx1+1,by+1);
+    Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4||id===myId)return;var dx=bx0+(goingC?prog(v.x):0)*(bx1-bx0);g.fillStyle=v.color||"#aaa";g.beginPath();g.arc(dx,by,4,0,6.283);g.fill();});
+    var mv0=myId&&viewers[myId];if(mv0){var mdx=bx0+(goingC?prog(on?x:mv0.x):0)*(bx1-bx0);g.fillStyle=mv0.color||"#fff";g.strokeStyle="#fff";g.lineWidth=2;g.beginPath();g.arc(mdx,by,6,0,6.283);g.fill();g.stroke();}
+    g.globalAlpha=1;g.textBaseline="alphabetic";
+    finOrder.slice(0,3).forEach(function(id,i){var v=viewers[id];if(!v)return;var vx=sx(v.x),vy=v.y*H-62;g.fillStyle=["#F5C518","#C9D3E6","#D9894A"][i];ART.PX.disc(g,vx,vy,10);g.fillStyle="#1a1200";g.font="900 12px system-ui";g.textBaseline="middle";g.fillText(String(i+1),vx,vy+1);});
     g.restore();
   }
   function wire(){var b=beatAt(songPos());return{h:fin>=0?1:0,f:performance.now()<tripUntil?1:0,t:b>=GO_BEAT?styleAt(b):order[0]};}
@@ -3920,7 +3941,7 @@ var WALK=(function(){
   window.ukWalk=function(){var b=beatAt(songPos());return{on:on,x:+x.toFixed(3),fin:fin,place:place,score:score,beat:+b.toFixed(2),style:b>=GO_BEAT?STY[styleAt(b)].name:"(not started)",cursor:cur,circle:circleAt(b),out:+outT.toFixed(2),tripped:performance.now()<tripUntil,finOrder:finOrder.slice()};};
   window.ukWalkCursor=function(px,py){cur=px===null?null:[px,py];};      /* tests: put the cursor somewhere on the pad (-1..1) */
   window.ukWalkFollow=function(on2){window.__wkFollow=!!on2;};
-  return{start:start,stop:stop,tick:tick,draw:draw,wire:wire,fd:fd,looks:looks,facing:facing,walkRound:walkRound,circleNow:function(){return circleAt(beatAt(songPos()));},get on(){return on;}};
+  return{start:start,stop:stop,tick:tick,draw:draw,wire:wire,fd:fd,looks:looks,facing:facing,walkRound:walkRound,camUpdate:camUpdate,sx:sx,circleNow:function(){return circleAt(beatAt(songPos()));},get on(){return on;}};
 })();
 /* ============================================================
    HALF PIPE (the pipe round)
@@ -7027,6 +7048,7 @@ function renderLoop(){
 
   /* Audience avatars */
   var now=Date.now(),pnow=performance.now();FRAME_DT=Math.min(0.05,Math.max(0.001,(pnow-(LAST_FRAME||pnow))/1000));LAST_FRAME=pnow;
+  WALK.camUpdate();   /* the dance walk race: where the camera is this frame */
   var ids=Object.keys(viewers);
   function yOf(id){var r=RP&&RP.pos[id];return r?viewers[id].y*(1-RP.k)+r[1]/H*RP.k:viewers[id].y;}
   ids.sort(function(a,b){return yOf(a)-yOf(b);});                                 /* back to front, so nearer people overlap farther ones */
@@ -7047,7 +7069,7 @@ function renderLoop(){
     if(ids[i]===myId||gap>0.3){v.x=v.tx;v.y=v.ty;}
     else if(gap>0){var stp=Math.min(gap,(0.36+gap*3)*FRAME_DT);v.x+=dx/gap*stp;v.y+=dy/gap*stp;}
 
-    var vx=(PIPE.pipeRound()&&v.dance===4&&v!==PH?PIPE.sx(v.x):v.x*W), vy=v.y*H;
+    var vx=(PIPE.pipeRound()&&v.dance===4&&v!==PH?PIPE.sx(v.x):WALK.walkRound()&&v.dance===4&&v!==PH?WALK.sx(v.x):v.x*W), vy=v.y*H;
     if(RP&&RP.pos[ids[i]]){var rp=RP.pos[ids[i]];vx=vx*(1-RP.k)+rp[0]*RP.k;vy=vy*(1-RP.k)+rp[1]*RP.k;}
     if(v.seed===undefined)v.seed=(ids[i].charCodeAt(0)||0)%7+(v.name.length%5);
     /* limbs glide toward the latest pose so remote dancers move smoothly between updates */
