@@ -1585,3 +1585,7 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.34
 - Practice: the viewer count is gone, and Leave practice moves into the bottom stack with Dance and Start game, all hugging the right edge. Still hidden while a minigame is on.
+
+## v1.79.35 — real 3D spins
+- Spin, Twirl, 180, 360 and Spin move now turn the dancer through all the facings (front, three-quarter, side, back) instead of squeezing flat like paper.
+- Your own spin keeps going if you swing the right stick round in a circle (either way; faster swing = faster spin, up to a cap). Let go and it slows and lands facing front. Other players see the button spin only.
