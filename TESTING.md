@@ -1688,6 +1688,31 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.0 — Kart flag
+
+A new game: Capture the flag in karts, on the same arenas.
+- Steer with the stick (gas is automatic). Drive over the enemy flag to grab it, bring it home to score. Bumping does nothing.
+- **PULSE** (big pink button, Space): a shockwave about 3 tiles round you. An enemy carrying your flag drops it and it flies home; other enemies spin out. 8 s cooldown, shown filling up on the button.
+- **Power-up boxes** (rainbow ? blocks, back after 8 s) give one item; use it with the item button (E / Shift): Nitro (speed burst), Oil (slick behind you that spins enemies out), Shield (immune to pulses for 4 s), Mega (next pulse has double the reach).
+- Arena designer (ctf.html): new Power-up box tool and a Test kart flag button. Arenas without boxes use their sprint refills as boxes.
+- Practice: the Kart flag tile. Shows: pick Kart flag on the performer page (or in a crowd vote). Bots pulse carriers and use items. Needs the server redeployed.
+
+## v1.80.8 — Battle matches are 20 seconds
+
+In a battle round (Battle in practice, the battle box on the performer page) every 1 v 1 is now 20 s, voted on live by the crowd; the winner goes through and the final takes the end of the song. If the song can't fit everyone, the lowest seeds sit out.
+
+## v1.80.7 — Mars Rally minimap
+
+No leaderboard box in Mars Rally. Your place stays top right, and under it a tiny map of the track shows you (pulsing, coloured by your place) and the karts in 1st, 2nd and 3rd (gold, silver, bronze). No name under your own kart, and the instrument box no longer sits on STOP.
+
+## v1.80.6 — CTF: team score and clock, real running
+
+The mini leaderboard is gone in Capture the Flag; the top shows the team score and the time left. Players run with a proper stride (knees higher when sprinting) instead of gliding, and bump a little on each beat when standing.
+
+CTF teams are always even: in a show with an odd number of people a bot joins for that game and leaves after it (needs the server redeployed); in practice an extra practice dancer is added.
+
+Standings: now a small pill in the top-left corner showing your place. Tap it to see the top five for 5 seconds. It hides during every game, the round banner, the practice menu, the planner and the dance menu.
+
 ## v1.80.5 — Your turn: only your styles, and a smaller camera
 
 During your spotlight turn the style buttons are only the styles you picked in the planner (none picked: the game picks two different ones for you). The camera now stops at a zoom where your whole body, arms out, fits between the two button columns.

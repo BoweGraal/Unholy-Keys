@@ -16,12 +16,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.80.5"></script>
-<script src="gfx.js?v=1.80.5"></script>
-<script src="art.js?v=1.80.5"></script>
-<script src="instruments.js?v=1.80.5"></script>
-<script src="kart.js?v=1.80.5"></script>
-<script src="explain.js?v=1.80.5"></script>
+<script src="tune.js?v=1.81.0"></script>
+<script src="gfx.js?v=1.81.0"></script>
+<script src="art.js?v=1.81.0"></script>
+<script src="instruments.js?v=1.81.0"></script>
+<script src="kart.js?v=1.81.0"></script>
+<script src="explain.js?v=1.81.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -155,9 +155,13 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 #ctfSprint span{position:relative;display:block;font:700 9px 'Silkscreen',ui-monospace,monospace;opacity:.85}
 #ctfSprint.ready{opacity:1}#ctfSprint.on{background:#3DF2FF!important;color:#082028}#ctfSprint.on b{text-shadow:none}#ctfSprint.dn{transform:scale(.95)}
 @media (pointer:fine){#ctfSprint{width:84px;height:84px}}
+#ctfItem{display:none;position:absolute;right:132px;bottom:calc(var(--chatH) + 24px);width:76px;height:76px;pointer-events:auto;touch-action:none;background:#2a1a48;border:2px solid #7F77DD;color:#fff;opacity:.5}
+#ctfItem b{display:block;font-size:30px;line-height:1.1}#ctfItem span{display:block;font:700 9px 'Silkscreen',ui-monospace,monospace}#ctfItem.has{opacity:1;border-color:#F5C518;animation:itemGlow .6s ease-in-out infinite alternate}
+@keyframes itemGlow{from{box-shadow:0 0 0 rgba(245,197,24,0)}to{box-shadow:0 0 18px rgba(245,197,24,.8)}}
+body.ctf-kart #ctfItem{display:block}body.ctf-kart #ctfSprint{background:#4a1530!important}body.ctf-kart #ctfSprint i{background:repeating-linear-gradient(0deg,#c9407e 0 6px,#ff6fae 6px 12px)}
 #ctfBanner{position:absolute;left:50%;top:22%;transform:translateX(-50%);font:700 clamp(22px,5vw,46px)/1 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:4px 4px 0 #000;white-space:nowrap;opacity:0}
 #ctfBanner.pop{animation:moshPop 2.2s ease-out forwards}
-#ctfScore{position:absolute;left:50%;top:14px;transform:translateX(-50%);font:700 22px 'Silkscreen',ui-monospace,monospace;text-shadow:3px 3px 0 #000;white-space:nowrap}
+#ctfScore{position:absolute;left:50%;top:14px;transform:translateX(-50%);font:700 22px 'Silkscreen',ui-monospace,monospace;text-shadow:3px 3px 0 #000;white-space:nowrap;text-align:center}#ctfScore .ck{font-size:16px;color:#fff;margin-top:4px}body[data-game=kart] #hudBR{display:none!important}
 #ctfTeam{position:absolute;right:14px;top:56px;font:700 14px 'Silkscreen',ui-monospace,monospace;text-shadow:2px 2px 0 #000}
 #ctfHint{position:absolute;left:50%;bottom:calc(var(--chatH) + 14px);transform:translateX(-50%);font:700 12px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(10,7,20,.75);padding:3px 10px;white-space:nowrap}
 body.gaming-ctf #reactBar,body.gaming-ctf #moveHint,body.gaming-ctf #actBtns{display:none}
@@ -735,7 +739,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <div id="partBanner"></div>
   <canvas id="skiCv"></canvas>
   <canvas id="ctfCv"></canvas>
-  <div id="ctfUI"><div id="ctfBanner"></div><div id="ctfScore"></div><div id="ctfTeam"></div><div id="ctfHint"></div><button id="ctfSprint" aria-label="Sprint"><i></i><b>SPRINT</b><span>hold</span></button></div>
+  <div id="ctfUI"><div id="ctfBanner"></div><div id="ctfScore"></div><div id="ctfTeam"></div><div id="ctfHint"></div><button id="ctfSprint" aria-label="Sprint"><i></i><b>SPRINT</b><span>hold</span></button><button id="ctfItem" aria-label="Use item"><b>&middot;</b><span>item</span></button></div>
   <div id="skiUI"><div id="skiBanner"></div><div id="skiScore">0</div><div id="skiCombo"></div><div id="skiSpeed"></div><div id="skiHint"></div>
     <button id="skiJump">HOP<small>Space</small></button>
     <div id="skiTricks"><button data-t="1"><b>&#11013;</b>360</button><button data-t="2"><b>&#11014;</b>Backflip</button><button data-t="3"><b>&#10145;</b>Daffy</button></div>
@@ -768,6 +772,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <button data-m="pipe">&#128761; Half pipe</button>
       <button data-m="ski">&#9975; Ski</button>
       <button data-m="ctf">&#128681; Capture the flag</button>
+      <button data-m="kflag">&#127950;&#65039; Kart flag</button>
     </div>
     <div class="r" style="margin-top:8px">
       <select id="prList" style="flex:1 1 220px;min-width:0"><option value="">Pick a song…</option></select>
@@ -782,7 +787,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <button id="prYtCancel">Stop adding</button>
     </div>
     <div class="r" style="margin-top:8px">
-      <select id="prMode" style="display:none"><option value="step">Step dance</option><option value="aim">Target dance</option><option value="keys">Note highway</option><option value="keys4">Note highway (4 keys)</option><option value="free">Free dance (vote)</option><option value="skate">Roller rink</option><option value="ice">Ice rink</option><option value="keepy">Keepy uppy</option><option value="kart">Mars Rally</option><option value="mosh">Mosh pit</option><option value="walk">Dance walk race</option><option value="pipe">Half pipe</option><option value="ski">Ski</option><option value="ctf">Capture the flag</option></select>
+      <select id="prMode" style="display:none"><option value="step">Step dance</option><option value="aim">Target dance</option><option value="keys">Note highway</option><option value="keys4">Note highway (4 keys)</option><option value="free">Free dance (vote)</option><option value="skate">Roller rink</option><option value="ice">Ice rink</option><option value="keepy">Keepy uppy</option><option value="kart">Mars Rally</option><option value="mosh">Mosh pit</option><option value="walk">Dance walk race</option><option value="pipe">Half pipe</option><option value="ski">Ski</option><option value="ctf">Capture the flag</option><option value="kflag">Kart flag</option></select>
       <select id="prSecs"><option value="18">18 s countdown</option><option value="25">25 s countdown</option><option value="30">30 s countdown</option></select>
       <select id="prLevel"><option value="0.8">Easy</option><option value="1" selected>Normal</option><option value="1.2">Hard</option><option value="1.5">Expert</option></select>
       <select id="prBots"><option value="0">No other dancers</option><option value="3" selected>3 practice dancers</option><option value="8">8 practice dancers</option></select>
@@ -1905,7 +1910,7 @@ function connectWS(){
 
 /* ── The crowd picks the next game: a vote panel with the choices, live counts and a timer ── */
 var GVOTE=(function(){
-  var NM={step:"\u2B06\uFE0F Step dance",aim:"\uD83C\uDFAF Target dance",keys:"\uD83C\uDFB9 Note highway",keys4:"\uD83E\uDD41 Highway \u00B7 4 keys",mosh:"\uD83E\uDD18 Mosh pit",skate:"\uD83D\uDEFC Roller rink",ice:"\u26F8\uFE0F Ice rink",keepy:"\uD83C\uDF88 Keepy uppy",kart:"\uD83C\uDFCD Mars Rally",walk:"\uD83D\uDC83 Dance walk race",pipe:"\uD83D\uDEF9 Half pipe",ski:"\u26F7 Ski"};
+  var NM={kflag:"\uD83C\uDFCE\uFE0F Kart flag",step:"\u2B06\uFE0F Step dance",aim:"\uD83C\uDFAF Target dance",keys:"\uD83C\uDFB9 Note highway",keys4:"\uD83E\uDD41 Highway \u00B7 4 keys",mosh:"\uD83E\uDD18 Mosh pit",skate:"\uD83D\uDEFC Roller rink",ice:"\u26F8\uFE0F Ice rink",keepy:"\uD83C\uDF88 Keepy uppy",kart:"\uD83C\uDFCD Mars Rally",walk:"\uD83D\uDC83 Dance walk race",pipe:"\uD83D\uDEF9 Half pipe",ski:"\u26F7 Ski"};
   var st=null,mine=null,tmr=null,hideT=null;
   function el(){var p=document.getElementById("gvPanel");if(!p){p=document.createElement("div");p.id="gvPanel";document.body.appendChild(p);}return p;}
   function draw(){var p=el();if(!st){p.className="";return;}
@@ -4712,29 +4717,47 @@ var SKI=(function(){
    rules are in art.js, ART.CTF); in practice they run here, with the practice dancers as bots.
    ============================================================ */
 var CTFG=(function(){
-  var C=ART.CTF,spr={e:1,on:false},sprWant=false,on=false,map=null,I=null,st=null,me={x:0,y:0},push=[0,0],hold=0,lastT=0,team=0,others={},bots={},banT=0,roundN=0,face=0,cv=null,g=null,GO_BEAT=8;
+  var C=ART.CTF,kart=false,ka=0,kv=0,nitroT=0,kfx=[],spr={e:1,on:false},sprWant=false,on=false,map=null,I=null,st=null,me={x:0,y:0},push=[0,0],hold=0,lastT=0,team=0,others={},bots={},banT=0,roundN=0,face=0,cv=null,g=null,GO_BEAT=8;
   function $(id){return document.getElementById(id);}
   function ctfRound(){return GAME.mode==="ctf"||(typeof ROUND!=="undefined"&&ROUND.mode==="ctf");}
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
   function beat(){var p=songPos();return p>-1e8?ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),p):-99;}
   function banner(t,col){var b=$("ctfBanner");if(!b)return;b.textContent=t;b.style.color=col||"#fff";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
-  function hud(){var h=$("ctfScore");if(!h||!st)return;h.innerHTML='<span style="color:'+C.TEAM[0]+'">RED '+st.caps[0]+'</span> &nbsp;·&nbsp; <span style="color:'+C.TEAM[1]+'">'+st.caps[1]+' BLUE</span>';
+  var hudSig="";
+  function clock(){var ch=ROUND.chart&&ROUND.chart(),end=ch?(ch.gameMs||ch.dur||0):0,p=songPos();if(!end||p<-1e8)return "";var s=Math.max(0,Math.ceil((end-p)/1000));return Math.floor(s/60)+":"+("0"+s%60).slice(-2);}
+  function hud(){var h=$("ctfScore");if(!h||!st)return;var ck=clock(),sig=st.caps.join(",")+"|"+ck+"|"+team;if(sig===hudSig)return;hudSig=sig;   /* team score, and the time left */
+    h.innerHTML='<span style="color:'+C.TEAM[0]+'">RED '+st.caps[0]+'</span> &nbsp;·&nbsp; <span style="color:'+C.TEAM[1]+'">'+st.caps[1]+' BLUE</span>'+(ck?'<div class="ck">\u23F1 '+ck+'</div>':'');
     var t=$("ctfTeam");if(t){t.textContent="You're on "+C.TNAME[team];t.style.color=C.TEAM[team];}}
   function start(round){
     on=true;roundN=round?round.n:roundN+1;var rc=round&&round.ctf;
     map=rc&&rc.map?C.clean(rc.map):null;if(!map&&PRACTICE.on){try{map=C.clean(C.upgrade(JSON.parse(localStorage.getItem("uk_ctf")||"null")));}catch(e){map=null;}}if(!map)map=C.clean(C.defaultMap());
-    I=C.info(map);st=C.newState(I,Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}));
-    if(rc){if(rc.teams)st.teams=rc.teams;if(rc.flags)st.flags=rc.flags;if(rc.caps)st.caps=rc.caps;}
+    kart=!!(round&&round.kflag);if(kart)map=C.kartMap(map);I=C.info(map);st=C.newState(I,Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}),kart);
+    if(rc){if(rc.teams)st.teams=rc.teams;if(rc.flags)st.flags=rc.flags;if(rc.caps)st.caps=rc.caps;kmirror(rc);}
+    ka=team?Math.PI:0;kv=0;nitroT=0;kfx=[];document.body.classList.toggle("ctf-kart",kart);
     team=C.teamOf(st,myId);var sp=C.spawnOf(I,st,myId);me={x:sp[0],y:sp[1]};push=[0,0];hold=0;others={};bots={};spr={e:1,on:false};sprWant=false;wireSprint();
-    cv=$("ctfCv");g=cv.getContext("2d");cv.classList.add("on");document.body.classList.add("gaming-ctf");$("ctfUI").classList.add("on");hud();banner("🚩 CAPTURE THE FLAG","#F5C518");
+    cv=$("ctfCv");g=cv.getContext("2d");cv.classList.add("on");document.body.classList.add("gaming-ctf");$("ctfUI").classList.add("on");hud();banner(kart?"🏎️ KART FLAG":"🚩 CAPTURE THE FLAG","#F5C518");if(kart)setTimeout(function(){if(on&&kart)banner("PULSE knocks your flag home","#ff6fae");},2200);
   }
-  function stop(){on=false;document.body.classList.remove("gaming-ctf");var u=$("ctfUI");if(u)u.classList.remove("on");var c=$("ctfCv");if(c)c.classList.remove("on");}
+  function stop(){on=false;document.body.classList.remove("gaming-ctf","ctf-kart");var u=$("ctfUI");if(u)u.classList.remove("on");var c=$("ctfCv");if(c)c.classList.remove("on");}
   /* the sprint button (bottom right) and Space / Shift: hold to sprint while the meter has charge */
-  function sprintHud(){var b=$("ctfSprint");if(!b)return;var f=b.querySelector("i");if(f)f.style.height=Math.round(spr.e*100)+"%";b.classList.toggle("ready",spr.e>=C.SPRINT_MIN||spr.on);b.classList.toggle("on",spr.on);}
+  /* Kart Flag: pulse / use, the server decides (practice: here) */
+  function act(a){if(!on||!kart||!st||beat()<GO_BEAT)return;var nw=Date.now();
+    if(a==="pulse"){if(C.cdLeft(st,myId,nw)>0||(st.spin[myId]||0)>nw)return;}else if(!st.held[myId])return;
+    if(PRACTICE.on){st.pos[myId]=st.pos[myId]||[me.x,me.y,nw];events(a==="pulse"?C.pulse(st,I,myId,nw):C.use(st,I,myId,nw));}
+    else{if(a==="pulse")st.cd[myId]=nw;wsSend({type:"ctf-act",a:a});}}
+  /* the server's copy of the kart bits */
+  function kmirror(m){if(!st||!st.kart)return;var dn=Date.now();if(m.box)st.box=m.box.map(function(ms){return ms>0?dn-(C.K_BOX_MS-ms):0;});if(m.oil)st.oil=m.oil.map(function(o){return{x:o[0],y:o[1],t:dn,team:o[2]};});
+    if(m.held)st.held=m.held;if(m.sh){st.shield={};Object.keys(m.sh).forEach(function(k){st.shield[k]=dn+m.sh[k];});}if(m.spin){Object.keys(m.spin).forEach(function(k){st.spin[k]=dn+m.spin[k];});}if(m.mega)st.mega=m.mega;if(m.cd&&m.cd[myId]!==undefined)st.cd[myId]=dn-(C.K_PULSE_MS-m.cd[myId]);}
+  function sprintHud(){var b=$("ctfSprint");if(!b)return;
+    if(kart){var nw=Date.now(),cl=C.cdLeft(st,myId,nw),f2=b.querySelector("i");if(f2)f2.style.height=Math.round((1-cl/C.K_PULSE_MS)*100)+"%";b.classList.toggle("ready",cl<=0);b.classList.remove("on");
+      var bb=b.querySelector("b"),ss=b.querySelector("span");if(bb&&bb.textContent!=="PULSE"){bb.textContent="PULSE";}if(ss)ss.textContent=cl>0?Math.ceil(cl/1000)+"s":(st.mega[myId]?"MEGA!":"tap");
+      var ib=$("ctfItem"),it=st.held[myId];if(ib){ib.classList.toggle("has",!!it);ib.querySelector("b").textContent=it?C.ITEM_ICON[it]:"\u00b7";ib.querySelector("span").textContent=it||"item";}return;}
+    var bs=b.querySelector("b");if(bs&&bs.textContent!=="SPRINT"){bs.textContent="SPRINT";b.querySelector("span").textContent="hold";}var f=b.querySelector("i");if(f)f.style.height=Math.round(spr.e*100)+"%";b.classList.toggle("ready",spr.e>=C.SPRINT_MIN||spr.on);b.classList.toggle("on",spr.on);}
   function wireSprint(){var b=$("ctfSprint");if(!b||b._w)return;b._w=1;
-    var dn=function(e){e.preventDefault();sprWant=true;b.classList.add("dn");try{b.setPointerCapture(e.pointerId);}catch(x){}},up=function(){sprWant=false;b.classList.remove("dn");};
+    var ib=$("ctfItem");if(ib){ib.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();act("use");});ib.addEventListener("contextmenu",function(e){e.preventDefault();});}
+    document.addEventListener("keydown",function(e){if(on&&kart&&(e.code==="KeyE"||e.code==="KeyF"||e.code==="Enter")){e.preventDefault();act("use");}});
+    var dn=function(e){e.preventDefault();if(kart){act("pulse");b.classList.add("dn");return;}sprWant=true;b.classList.add("dn");try{b.setPointerCapture(e.pointerId);}catch(x){}},up=function(){sprWant=false;b.classList.remove("dn");};
     b.addEventListener("pointerdown",dn);b.addEventListener("pointerup",up);b.addEventListener("pointercancel",up);b.addEventListener("contextmenu",function(e){e.preventDefault();});
-    document.addEventListener("keydown",function(e){if(on&&(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight"))sprWant=true;});
+    document.addEventListener("keydown",function(e){if(on&&(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight")){if(kart){if(!e.repeat)act(e.code==="Space"?"pulse":"use");return;}sprWant=true;}});
     document.addEventListener("keyup",function(e){if(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight")sprWant=false;});}
   function respawn(){var sp=C.spawnOf(I,st,myId);me.x=sp[0];me.y=sp[1];push=[0,0];hold=performance.now()+1500;}
   function nameOf(id){return id===myId?"You":(viewers[id]&&viewers[id].name)||"Someone";}
@@ -4743,15 +4766,31 @@ var CTFG=(function(){
     else if(e.k==="cap"){banner(C.TNAME[e.t]+" SCORES! 🚩",C.TEAM[e.t]);if(e.id===myId&&PRACTICE.on)GAME.moshPts(500);}
     else if(e.k==="refill"&&e.id===myId){spr.e=1;banner("SPRINT REFILLED","#3DF2FF");}
     else if(e.k==="tag"){if(e.id===myId){respawn();banner(e.carrier?"TAGGED! FLAG RETURNED":"TAGGED! BACK TO SPAWN","#fff");}else if(e.by===myId)banner(e.carrier?"FLAG SAVED!":"TAGGED "+nameOf(e.id).toUpperCase(),C.TEAM[team]);}
+    if(e.k==="pulse")kfx.push({x:e.x,y:e.y,r:e.r,t:performance.now(),col:C.TEAM[e.t]});
+    else if(e.k==="save"){if(e.id===myId)banner("PULSED! FLAG LOST","#fff");else if(e.by===myId)banner("FLAG KNOCKED HOME!",C.TEAM[team]);else banner(C.TNAME[e.t]+" SAVES THEIR FLAG",C.TEAM[e.t]);}
+    else if(e.k==="spin"){if(e.id===myId)banner(e.oil?"OIL! SPUN OUT":"SPUN OUT","#fff");if(st.kart)st.spin[e.id]=Date.now()+C.K_SPIN_MS;}
+    else if(e.k==="block"&&(e.id===myId||e.by===myId))banner("SHIELD BLOCKED IT","#3DF2FF");
+    else if(e.k==="box"&&e.id===myId)banner("GOT "+e.it.toUpperCase()+" "+C.ITEM_ICON[e.it],"#F5C518");
+    else if(e.k==="use"){if(e.it==="nitro"&&e.id===myId)nitroT=performance.now()+C.K_NITRO_MS;if(e.it==="shield"&&st.kart)st.shield[e.id]=Date.now()+C.K_SHIELD_MS;if(e.it==="mega"&&e.id===myId)banner("NEXT PULSE IS MEGA","#ff6fae");}
+    if(PRACTICE.on&&e.by===myId&&(e.k==="save"||e.k==="spin"))GAME.moshPts(e.k==="save"?250:60);
     if(PRACTICE.on&&e.id===myId&&e.k==="take")GAME.moshPts(100);if(PRACTICE.on&&e.by===myId)GAME.moshPts(e.carrier?250:150);});hud();}
   /* from the server */
-  function onMsg(m){if(!on||!st)return;if(m.teams)st.teams=m.teams;if(m.flags)st.flags=m.flags;if(m.caps)st.caps=m.caps;if(m.rf){var dn=Date.now();st.refill=m.rf.map(function(ms){return ms>0?dn-(C.REFILL_MS-ms):0;});}team=C.teamOf(st,myId);events(m.ev);}
+  function onMsg(m){if(!on||!st)return;kmirror(m);if(m.teams)st.teams=m.teams;if(m.flags)st.flags=m.flags;if(m.caps)st.caps=m.caps;if(m.rf){var dn=Date.now();st.refill=m.rf.map(function(ms){return ms>0?dn-(C.REFILL_MS-ms):0;});}team=C.teamOf(st,myId);events(m.ev);}
   function input(){var x=(held.right?1:0)-(held.left?1:0),y=(held.down?1:0)-(held.up?1:0);if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){x=joy.x;y=joy.y;}var mm=Math.hypot(x,y);if(mm>1){x/=mm;y/=mm;}return{x:x,y:y};}
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
     var going=beat()>=GO_BEAT;
     var sm=C.sprint(spr,sprWant&&going&&now>hold&&Math.hypot(input().x,input().y)>0.2,dt);sprintHud();
-    if(going&&now>hold){var inp=input(),sp=C.SPEED*(C.carrying(st,myId)>=0?C.CARRY:1)*sm,pd=I.pad(me.x,me.y);
+    if(kart){var inp2=input(),mg=Math.hypot(inp2.x,inp2.y),spin=(st.spin[myId]||0)>Date.now(),carry=C.carrying(st,myId)>=0;
+      if(going&&!spin){if(mg>0.2){var ta=Math.atan2(inp2.y,inp2.x),da=Math.atan2(Math.sin(ta-ka),Math.cos(ta-ka)),tr2=dt*(7-3*Math.min(1,kv/C.K_SPEED));ka+=Math.max(-tr2,Math.min(tr2,da));face=ART.face8(Math.cos(ka),Math.sin(ka),face);}
+        var tv=C.K_SPEED*Math.min(1,mg)*(carry?C.CARRY:1)*(now<nitroT?1.6:1);kv+=(tv-kv)*Math.min(1,dt*(tv>kv?2.4:3.2));}
+      else{kv*=Math.pow(0.02,dt);if(spin)ka+=dt*14;}
+      var pd2=I.pad(me.x,me.y);if(pd2)push=[pd2[0]*C.SPEED*C.PAD,pd2[1]*C.SPEED*C.PAD];
+      var wx=(Math.cos(ka)*kv+push[0])*dt,wy=(Math.sin(ka)*kv+push[1])*dt,ox=me.x,oy=me.y;C.move(I,me,wx,wy);var dmp=Math.pow(0.08,dt);push=[push[0]*dmp,push[1]*dmp];
+      var got=Math.hypot(me.x-ox,me.y-oy),want=Math.hypot(wx,wy);if(want>0.001&&got<want*0.5)kv*=0.55;   /* hit a wall: lose speed */
+      sprintHud();
+    }
+    else if(going&&now>hold){var inp=input(),sp=C.SPEED*(C.carrying(st,myId)>=0?C.CARRY:1)*sm,pd=I.pad(me.x,me.y);
       if(pd)push=[pd[0]*C.SPEED*C.PAD,pd[1]*C.SPEED*C.PAD];
       C.move(I,me,(inp.x*sp+push[0])*dt,(inp.y*sp+push[1])*dt);var dm=Math.pow(0.08,dt);push=[push[0]*dm,push[1]*dm];
       if(Math.hypot(inp.x,inp.y)>0.2)face=ART.face8(inp.x,inp.y,face);}
@@ -4765,9 +4804,11 @@ var CTFG=(function(){
       if(!b){var sp=C.spawnOf(I,st,id),mates=Object.keys(st.teams).filter(function(k){return st.teams[k]===st.teams[id];}).sort();b=bots[id]={x:sp[0],y:sp[1],wp:null,wpAt:0,push:[0,0],role:mates.indexOf(id)%3===2?"d":"a",hold:0,tag:0,sp:{e:1,on:false}};}
       if(st.tagged[id]&&st.tagged[id]!==b.tag){b.tag=st.tagged[id];var s2=C.spawnOf(I,st,id);b.x=s2[0];b.y=s2[1];b.hold=now+1500;b.wp=null;}
       if(now>b.hold){var goal=C.botGoal(st,I,id,b.x,b.y,b.role,b.sp.e),bsm=C.sprint(b.sp,C.botSprint(st,I,id,b.x,b.y,goal,b.sp),dt);if(!b.wp||now>b.wpAt){b.wp=C.path(I,b.x,b.y,goal[0],goal[1]);b.wpAt=now+250;}
-        var av=C.botAvoid(st,I,id,b.x,b.y),dx=b.wp[0]-b.x+av[0]*1.6,dy=b.wp[1]-b.y+av[1]*1.6,d=Math.hypot(dx,dy)||1,sp2=C.SPEED*0.8*(C.carrying(st,id)>=0?C.CARRY:1)*bsm,pd=I.pad(b.x,b.y);if(pd)b.push=[pd[0]*C.SPEED*C.PAD,pd[1]*C.SPEED*C.PAD];
+        var av=C.botAvoid(st,I,id,b.x,b.y),dx=b.wp[0]-b.x+av[0]*1.6,dy=b.wp[1]-b.y+av[1]*1.6,d=Math.hypot(dx,dy)||1,sp2=(kart?C.K_SPEED*0.62*((st.spin[id]||0)>Date.now()?0:1):C.SPEED*0.8*bsm)*(C.carrying(st,id)>=0?C.CARRY:1),pd=I.pad(b.x,b.y);if(pd)b.push=[pd[0]*C.SPEED*C.PAD,pd[1]*C.SPEED*C.PAD];
         C.move(I,b,(dx/d*sp2+b.push[0])*dt,(dy/d*sp2+b.push[1])*dt);var dm=Math.pow(0.08,dt);b.push=[b.push[0]*dm,b.push[1]*dm];}
-      v.x=v.tx=b.x/I.w;v.y=v.ty=b.y/I.h;v.dance=4;var bev=C.step(st,I,id,b.x,b.y,Date.now());bev.forEach(function(e){if(e.k==="refill")b.sp.e=1;});events(bev);});
+      v.x=v.tx=b.x/I.w;v.y=v.ty=b.y/I.h;v.dance=4;var bev=C.step(st,I,id,b.x,b.y,Date.now());
+      if(kart){var bn=Date.now(),bt=st.teams[id];if(C.cdLeft(st,id,bn)<=0){for(var oq in st.pos){if(st.teams[oq]===bt||st.teams[oq]===undefined)continue;var qp=st.pos[oq];if(bn-qp[2]<800&&Math.hypot(qp[0]-b.x,qp[1]-b.y)<C.K_PULSE_R*(st.mega[id]?1.8:0.85)&&(C.carrying(st,oq)>=0||Math.random()<0.01)){bev=bev.concat(C.pulse(st,I,id,bn));break;}}}
+        if(st.held[id]&&Math.random()<dt*0.5)bev=bev.concat(C.use(st,I,id,bn));}bev.forEach(function(e){if(e.k==="refill")b.sp.e=1;});events(bev);});
   }
   /* pointers at the edge of the arena window for what's off screen: both flags (where they are, or who has them), and your team */
   function mark(g,V,tx,ty,col,txt,pulse,now){
@@ -4799,16 +4840,28 @@ var CTFG=(function(){
     var list=[];Object.keys(viewers).forEach(function(id){var vv=viewers[id];if(!vv||vv===PH)return;if(id!==myId&&vv.dance!==4)return;
       var o=others[id]||(others[id]={x:vv.x*I.w,y:vv.y*I.h,f:0});var tx=id===myId?me.x:vv.x*I.w,ty=id===myId?me.y:vv.y*I.h;
       if(id===myId){o.x=tx;o.y=ty;}else{var mvx=tx-o.x,mvy=ty-o.y;if(Math.hypot(mvx,mvy)>4){o.x=tx;o.y=ty;}else{o.x+=mvx*0.3;o.y+=mvy*0.3;if(Math.hypot(mvx,mvy)>0.05)o.f=ART.face8(mvx,mvy,o.f);}}
-      list.push({id:id,v:vv,x:o.x,y:o.y,f:id===myId?face:o.f});});
+      /* how fast they're going (tiles a second, smoothed) drives a stride: feet step with the distance covered, sprinting lifts the knees */
+      var tn=now,dtp=Math.min(0.2,Math.max(0.001,(tn-(o.pt||tn))/1000)),dd=o.px===undefined?0:Math.hypot(o.x-o.px,o.y-o.py);if(dd>3)dd=0;
+      o.sp=(o.sp||0)+((dd/dtp)-(o.sp||0))*Math.min(1,dtp*10);o.ph=(o.ph||0)+dd*1.7;var ddx=o.px===undefined?0:o.x-o.px,ddy=o.py===undefined?0:o.y-o.py;if(Math.abs(ddx)>0.002||dd<0.002)o.dx=(o.dx||0)*0.8+ddx/Math.max(dd,1e-6)*0.2;o.px=o.x;o.py=o.y;o.pt=tn;
+      list.push({id:id,v:vv,x:o.x,y:o.y,f:id===myId?face:o.f,sp:o.sp,ph:o.ph,dx:o.dx||0,dx2:ddx,dy2:o.py!==undefined?ddy:0});});
     list.sort(function(a,b){return a.y-b.y;});
     var sc=Math.max(1,Math.round(V.s/16)),saved=ctx;ctx=g;var sDir=AVDIR;
     try{list.forEach(function(p){var X=V.X(p.x),Y=V.Y(p.y),t=st.teams[p.id],tg=st.tagged[p.id]&&Date.now()-st.tagged[p.id]<1500;
       g.fillStyle=t===undefined?"#888":C.TEAM[t];g.globalAlpha=0.55;ART.PX.oval(g,X,Y+2,V.s*0.42,V.s*0.18,0);g.globalAlpha=tg?(Math.floor(now/120)%2?0.3:0.8):1;
-      AVDIR=p.f;drawAvatar(X,Y-14*sc,p.v.color,p.id===myId?"You":p.v.name,sc,false,false,null,4,p.v.seed||0,p.id===myId,p.v.pose||[0.4,-0.4,0.1,-0.1],9999,p.v.look||lookOf(null,p.v.color,p.v.name),null);
+      var run=p.sp>0.6,rk=Math.min(1,p.sp/(C.SPEED*C.SPRINT)),bump=-Math.round(Math.pow(1-BEAT.phase(now),3)*1.5*sc);   /* running: a stride from the distance covered; standing: a small bump on each beat */
+      var mv=run?{k:1,ph:p.ph,dx:p.dx,dy:0,sp:0.5*rk*rk}:null;
+      if(kart){var kh=p.id===myId?ka:(Math.hypot(p.dx2||0,p.dy2||0)>0.002?Math.atan2(p.dy2,p.dx2):(others[p.id]&&others[p.id].ka)||0);if(others[p.id])others[p.id].ka=kh;if((st.spin[p.id]||0)>Date.now())kh+=now/60;
+        KART.preview(g,X,Y-2*sc,kh,p.id===myId?{color:p.v.color,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:""}:{color:p.v.color,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:p.v.name},Math.max(0.8,V.s/22),0);
+        if((st.shield[p.id]||0)>Date.now()){g.strokeStyle="#3DF2FF";g.lineWidth=2;g.globalAlpha=0.5+0.3*Math.sin(now/90);ART.PX.ring(g,X,Y-6*sc,V.s*0.85);g.globalAlpha=1;}
+        if(st.mega[p.id]){g.strokeStyle="#ff6fae";g.lineWidth=2;g.globalAlpha=0.4+0.3*Math.sin(now/70);ART.PX.ring(g,X,Y-6*sc,V.s*0.65);g.globalAlpha=1;}
+        var cf2=C.carrying(st,p.id);if(cf2>=0)C.flag(g,X+4*sc,Y-24*sc,cf2,V.s,now);g.globalAlpha=1;return;}
+      AVDIR=p.f;drawAvatar(X,Y-14*sc+bump,p.v.color,p.id===myId?"You":p.v.name,sc,false,false,mv,run?0:4,p.v.seed||0,p.id===myId,[0.25,-0.25,0.05,-0.05],9999,p.v.look||lookOf(null,p.v.color,p.v.name),null);
       var cf=C.carrying(st,p.id);if(cf>=0)C.flag(g,X+4*sc,Y-30*sc,cf,V.s,now);g.globalAlpha=1;});}
     finally{ctx=saved;AVDIR=sDir;}
+    kfx=kfx.filter(function(f){var a=(now-f.t)/450;if(a>1)return false;g.strokeStyle=f.col;g.lineWidth=Math.max(2,V.s/8);g.globalAlpha=1-a;ART.PX.ring(g,V.X(f.x),V.Y(f.y),f.r*V.s*(0.3+0.7*a));g.globalAlpha=0.18*(1-a);g.fillStyle=f.col;ART.PX.disc(g,V.X(f.x),V.Y(f.y),f.r*V.s*(0.3+0.7*a));g.globalAlpha=1;return true;});   /* pulses */
     g.restore();
     perfInset(g,78,82);   /* the performer, top left above the arena */
+    hud();
     markers(g,V,list,Wc,now);
     /* the count in */
     var b=beat();if(b<GO_BEAT){var n=Math.ceil(GO_BEAT-b);ART.pixText(g,b<0?"GET READY":n<=4?String(n):"GET READY",Wc/2,Hc*0.42,Math.max(3,Math.round(V.s/5)),"#fff","center","#000");}
@@ -4816,6 +4869,7 @@ var CTFG=(function(){
     var hn=$("ctfHint");if(hn){var cf2=C.carrying(st,myId);hn.textContent=now<hold?"Tagged! Back in a moment…":cf2>=0?"You've got the flag! Get it back to your base":st.flags[team].at?"They've got your flag! Tag the carrier on your half":"Grab the "+C.TNAME[1-team].toLowerCase()+" flag · tag anyone on your half · hold SPRINT (Space) · ⚡ refills fill it";}
   }
   window.ukCtf=function(){return{spr:{e:+spr.e.toFixed(2),on:spr.on},refill:st&&st.refill,on:on,me:{x:+me.x.toFixed(2),y:+me.y.toFixed(2)},team:team,caps:st&&st.caps,flags:st&&st.flags,score:st&&st.score,teams:st&&st.teams};};
+  window.ukKflagTest=function(nb){window.__testKflag=1;window.__testMode="ctf";ukWalkTest(nb===undefined?5:nb);window.__testKflag=0;};
   window.ukCtfTest=function(nb){window.__testMode="ctf";ukWalkTest(nb===undefined?5:nb);};
   return{start:start,stop:stop,tick:tick,draw:draw,onMsg:onMsg,ctfRound:ctfRound,get on(){return on;}};
 })();
@@ -5246,7 +5300,7 @@ function spotPlan(dancers, chart, lockPos) {
    battleLive(plan, pos, lead): the index of the match on at song position pos (lead ms early), or -1.
    battleRanks(plan): [{e, place, wins}] best first: champion, finalist, then by the round they went out in. */
 var BATTLE = (function() {
-  var GAP = 2000, MIN = 9000, MAX = 25000;
+  var GAP = 2000, MIN = 20000, MAX = 20000;   /* every match is 20 s (the final takes the song's finale) */
   function seeds(P) { var a = [1, 2]; while (a.length < P) { var n = a.length * 2 + 1, b = []; for (var i = 0; i < a.length; i++) b.push(a[i], n - a[i]); a = b; } return a; }
   function label(r, R) { return r === 0 ? "Final" : r === 1 ? "Semifinal" : r === 2 ? "Quarterfinal" : "Round " + (R - r); }
   function snap(t, beats) {
@@ -5568,7 +5622,7 @@ var ROUND=(function(){
     if(rd.phase==="countdown")drawCountdown();
     else if(rd.phase==="vote")drawVote();
   }
-  function join(){if(!active())return;sat=false;if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n,ski:rd.ski,track:rd.track,ctf:rd.ctf});drawPlay();}
+  function join(){if(!active())return;sat=false;if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n,ski:rd.ski,track:rd.track,ctf:rd.ctf,kflag:rd.kflag});drawPlay();}
   function sitOut(){sat=true;if(active())drawPlay();}
   function cleanChart(c){
     if(!c||!Array.isArray(c.steps)||!Array.isArray(c.beats)||!(c.bpm>=30&&c.bpm<=300))return null;
@@ -5580,7 +5634,7 @@ var ROUND=(function(){
     if(ph==="countdown"||ph==="play"||ph==="vote"){
       if(!rd||rd.n!==m.n){
         ICE=!!m.ice&&m.mode==="skate";
-        rd={n:+m.n||0,mode:NAMES[m.mode]?m.mode:"step",isBattle:!!m.battle,title:safeText(m.title,80),chart:cleanChart(m.chart),ts0:null,phase:"",dancers:[],ski:m.mode==="ski"&&m.ski?ART.SKI.clean(m.ski):null,track:m.mode==="kart"?KART.geo.clean(m.track):null,ctf:m.mode==="ctf"&&m.ctf?m.ctf:null};
+        rd={n:+m.n||0,mode:NAMES[m.mode]?m.mode:"step",isBattle:!!m.battle,title:safeText(m.title,80),chart:cleanChart(m.chart),ts0:null,phase:"",dancers:[],ski:m.mode==="ski"&&m.ski?ART.SKI.clean(m.ski):null,track:m.mode==="kart"?KART.geo.clean(m.track):null,ctf:m.mode==="ctf"&&m.ctf?m.ctf:null,kflag:m.mode==="ctf"&&!!(m.kflag||(m.ctf&&m.ctf.kart))};
         corr=0;bi=0;sat=false;myVote="";top=null;bres=null;bvoted={};
         if(GAME.mode)GAME.stop();                           /* free-play ends; the round takes over */
         GAME.closeMenu();
@@ -5600,7 +5654,7 @@ var ROUND=(function(){
       if(m.b)setBattle({n:rd.n,b:m.b});                         /* joined after the bracket was drawn */
       if(first){
         clearInterval(alignT);alignT=setInterval(align,500);
-        if(!sat){if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n,ski:rd.ski,track:rd.track,ctf:rd.ctf});}
+        if(!sat){if(rd.isBattle){GAME.start("free",{chart:null,n:rd.n});battleSync();}else GAME.start(rd.mode,{chart:rd.mode==="free"?null:rd.chart,n:rd.n,ski:rd.ski,track:rd.track,ctf:rd.ctf,kflag:rd.kflag});}
         drawPlay();
       }
     }
@@ -5617,20 +5671,21 @@ var ROUND=(function(){
   function end(){try{EXPLAIN.hide();}catch(e){}document.getElementById("gamePanel").classList.remove("spotlit");document.body.classList.remove("battle-match");document.body.classList.remove("rd-paused");rd=null;clearInterval(timer);clearInterval(alignT);timer=alignT=null;}
   function reset(){if(rd&&GAME.mode)GAME.stop();end();hide();}
   /* ---- the show leaderboard: a small standings panel that stays up all show, with who moved and who passed who ---- */
-  var lbPrev={},lbCollapsed=false,lbToastT=null;
+  var lbPrev={},lbCollapsed=true,lbToastT=null,lbOpenT=null;   /* small by default: a pill with your place; tap for the list for a few seconds */
   function lbEls(){
     var p=document.getElementById("showLB");if(p)return p;
     var st=document.createElement("style");
-    st.textContent="#showLB{position:fixed;left:50%;transform:translateX(-50%);bottom:8px;z-index:18;width:150px;background:rgba(14,11,26,.88);border:1px solid rgba(245,197,24,.5);border-radius:10px;color:#fff;font:700 11px 'Silkscreen',ui-monospace,monospace;padding:5px 7px;display:none;cursor:pointer}"+
+    st.textContent="#showLB{position:fixed;left:8px;top:58px;z-index:15;width:150px;background:rgba(14,11,26,.88);border:1px solid rgba(245,197,24,.5);border-radius:10px;color:#fff;font:700 11px 'Silkscreen',ui-monospace,monospace;padding:5px 7px;display:none;cursor:pointer}"+
      "#showLB .h{display:flex;justify-content:space-between;color:#F5C518;font-size:10px;letter-spacing:.6px;margin-bottom:3px}#showLB .r{display:flex;gap:5px;align-items:center;padding:1px 0;white-space:nowrap}"+
      "#showLB .r.me{color:#3DF2FF}#showLB .r .n{flex:1;overflow:hidden;text-overflow:ellipsis}#showLB .r .a{width:20px;text-align:right;font-size:10px}#showLB .up{color:#4CC38A}#showLB .dn{color:#FF4D6D}"+
-     "body.pr-open #showLB,body.fd-plan #showLB{display:none!important}"+
+     "body.pr-open #showLB,body.fd-plan #showLB,body.gaming-free #showLB,body.lb-hide #showLB{display:none!important}"+"#showLB.col:not(:has(.r.me)){display:none!important}#showLB.col{width:auto;padding:3px 7px}#showLB.col .h{display:none}#showLB.col .r.me:before{content:\"\\1F3C6 \";}"+
      "#showLB.col .r{display:none}#showLB.col .r.me{display:flex}"+
      "body.gaming #showLB,body[class*=\"gaming-\"]:not(.gaming-free) #showLB,body.mosh-tug #showLB{display:none!important}"+
      "#lbToast{position:fixed;left:50%;top:228px;transform:translateX(-50%);z-index:40;max-width:min(92vw,420px);text-align:center;background:rgba(14,11,26,.92);border:1px solid #F5C518;border-radius:12px;color:#fff;font:800 14px 'Silkscreen',ui-monospace,monospace;padding:8px 14px;display:none;pointer-events:none;line-height:1.35}"+
      "#lbToast b{color:#F5C518}";
     document.head.appendChild(st);
-    p=document.createElement("div");p.id="showLB";p.title="Show standings (tap to shrink)";p.addEventListener("click",function(){lbCollapsed=!lbCollapsed;p.classList.toggle("col",lbCollapsed);});document.body.appendChild(p);
+    p=document.createElement("div");p.id="showLB";p.title="Show standings (tap to shrink)";p.classList.add("col");p.addEventListener("click",function(){lbCollapsed=!lbCollapsed;p.classList.toggle("col",lbCollapsed);clearTimeout(lbOpenT);if(!lbCollapsed)lbOpenT=setTimeout(function(){lbCollapsed=true;p.classList.add("col");},5000);});
+    setInterval(function(){var rb=document.getElementById("roundBox"),dm=document.getElementById("danceMenu"),gm=GAME&&GAME.mode;document.body.classList.toggle("lb-hide",!!(gm||(rb&&rb.classList.contains("on")&&!rb.classList.contains("fade"))||(dm&&dm.offsetParent)));},300);   /* out of the way of the round banner, games and menus */document.body.appendChild(p);
     var tt=document.createElement("div");tt.id="lbToast";document.body.appendChild(tt);return p;
   }
   function lbShowToast(lines){
@@ -5672,7 +5727,7 @@ var ROUND=(function(){
     var st=document.createElement("style");st.textContent="#miniLB{position:fixed;left:8px;top:52px;z-index:16;width:134px;background:rgba(14,11,26,.82);border:1px solid rgba(245,197,24,.45);padding:3px 5px;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#fff;pointer-events:none;display:none;box-shadow:3px 3px 0 rgba(0,0,0,.55);line-height:1.35}#miniLB .r{display:flex;gap:4px;white-space:nowrap}#miniLB .n{flex:1;overflow:hidden;text-overflow:ellipsis}#miniLB .i{color:#3DF2FF}#miniLB .me{color:#3DF2FF;border-top:1px solid rgba(255,255,255,.22);margin-top:2px;padding-top:2px}#miniLB .p{color:#F5C518}";
     document.head.appendChild(st);e=document.createElement("div");e.id="miniLB";document.body.appendChild(e);return e;}
   function mlbTick(){
-    var e=mlbEl(),ok=active()&&!rd.isBattle&&rd.mode&&rd.mode!=="free"&&top&&top.top&&top.top.length&&myId;
+    var e=mlbEl(),ok=active()&&!rd.isBattle&&rd.mode&&rd.mode!=="free"&&rd.mode!=="ctf"&&rd.mode!=="kart"&&top&&top.top&&top.top.length&&myId;
     if(!ok){if(mlbSig!==""){mlbSig="";e.style.display="none";}return;}
     var ms=typeof GAME!=="undefined"&&GAME.mode?GAME.score:0,t3=top.top.slice(0,3),rank=0,n=Math.max(top.players,1);
     if(top.all){var hi=0,others=0;top.all.forEach(function(x){if(x[0]===myId)return;others++;if(x[1]>ms)hi++;});rank=hi+1;n=Math.max(n,others+1);}
@@ -6098,6 +6153,7 @@ var PRACTICE=(function(){
     try{var sv=JSON.parse(localStorage.getItem("uk_practice")||"{}");if(sv.kind)$("prKind").value=sv.kind;if(sv.mode)$("prMode").value=sv.mode;if(sv.secs)$("prSecs").value=String(sv.secs);if(sv.level)$("prLevel").value=String(sv.level);if(sv.bots!==undefined)$("prBots").value=String(sv.bots);}catch(e){}
     ["prMode","prSecs","prLevel","prBots","prKind"].forEach(function(id){$(id).onchange=save;});
     if(/[?&]embed\b/.test(location.search))document.body.classList.add("embed");
+    if(/[?&]kflagTest\b/.test(location.search))setTimeout(function(){document.body.classList.remove("pr-open");window.ukKflagTest(5);},900);   /* test run from the designer: Kart flag */
     if(/[?&]ctfTest\b/.test(location.search))setTimeout(function(){document.body.classList.remove("pr-open");window.ukCtfTest(5);},900);   /* test run from the CTF designer */
     if(/[?&]skiTest\b/.test(location.search))setTimeout(function(){document.body.classList.remove("pr-open");window.ukSkiTest(3);},900);   /* test run from the Ski designer */
     if(/[?&]kartTest\b/.test(location.search))setTimeout(function(){document.body.classList.remove("pr-open");window.ukKartTest(0,3);},900);   /* test drive from the Track builder */
@@ -6379,17 +6435,18 @@ var PRACTICE=(function(){
     initAudio();save();
     try{Tone.start();Tone.getContext().rawContext.resume();}catch(e){}
     (function(){var sel=$("prLevel"),i=sel.selectedIndex;if(i<0){var q=+sel.value||1;i=q<0.9?0:q<1.1?1:q<1.35?2:3;sel.selectedIndex=i;}window.ukForceDiff=i;try{localStorage.setItem("uk_lv",String(i+1));}catch(e){}if(window.ukLvRefresh)window.ukLvRefresh();})();   /* the menu picks the real difficulty: Easy, Normal, Hard, Expert */
-    mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk"&&mode!=="pipe"&&mode!=="ski"&&mode!=="ctf";plan=null;var secs=Math.max(18,+$("prSecs").value||18),level=+$("prLevel").value;
-    stopSong();makeBots(+$("prBots").value);
+    mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";var kflag=mode==="kflag";if(kflag)mode="ctf";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk"&&mode!=="pipe"&&mode!=="ski"&&mode!=="ctf";plan=null;var secs=Math.max(18,+$("prSecs").value||18),level=+$("prLevel").value;
+    var nbt=+$("prBots").value||0;if(mode==="ctf"&&(nbt+1)%2)nbt++;   /* capture the flag needs even teams: one more practice dancer if you'd be odd */
+    stopSong();makeBots(nbt);
     document.body.classList.add("pr-busy");
     n++;
     var go=function(c){
       if(my!==job)return;
       chart=c;
-      ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,ice:ice,battle:battle,title:title,chart:c,ms:secs*1000});
+      ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,ice:ice,kflag:kflag,battle:battle,title:title,chart:c,ms:secs*1000});
       startT=setTimeout(function(){if(my===job)playSong(my);},secs*1000);
     };
-    ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,ice:ice,battle:battle,title:title,chart:null,ms:secs*1000+60000});
+    ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,ice:ice,kflag:kflag,battle:battle,title:title,chart:null,ms:secs*1000+60000});
     /* a YouTube song: its steps come from the analysis saved when it was added */
     if(ytSel){var ys=ytSel;
       YTS.features(ys.yt).then(function(f){if(my!==job)return;go(CHART.fromFeatures(f,{level:level}));})
@@ -6569,7 +6626,7 @@ var PRACTICE=(function(){
   window.ukFree=function(i){if(GAME.mode!=="free")GAME.start("free");GAME.fdPick(i);};   /* tests: free dance with dance number i */
   window.ukPipeTest=function(nb){window.__testMode="pipe";window.ukWalkTest(nb);};
   window.ukWalkTest=function(nb){var my=++job;makeBots(nb===undefined?3:nb);mode=window.__testMode||"walk";window.__testMode=null;battle=false;n++;var beats=[];for(var i=0;i<600;i++)beats.push(i*500);
-    chart=window.__testChart||{bpm:120,beats:beats,steps:[],dur:300000};window.__testChart=null;var off=window.__testPos||0;window.__testPos=0;ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,chart:chart,ms:800,title:mode==="ctf"?"CTF test":mode==="ski"?"Ski test":mode==="pipe"?"Pipe test":"Walk test"});
+    chart=window.__testChart||{bpm:120,beats:beats,steps:[],dur:300000};window.__testChart=null;var off=window.__testPos||0;window.__testPos=0;ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,kflag:!!window.__testKflag,chart:chart,ms:800,title:mode==="ctf"?"CTF test":mode==="ski"?"Ski test":mode==="pipe"?"Pipe test":"Walk test"});
     setTimeout(function(){if(my===job)afterStart(my,-off);},800);};
   window.ukMoshTest=function(nb,c,pos){window.__testMode="mosh";window.__testChart=c||null;window.__testPos=pos||0;window.ukWalkTest(nb);};   /* tests: a mosh round at song position pos (ms) */
   window.ukPracticeStop=function(){if(on&&document.body.classList.contains("pr-busy")){stopAll();note("Back on the dance floor.");}};   /* STOP / Esc in any practice game */
@@ -6953,7 +7010,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.80.5",SERVER_VERSION="";
+var PAGE_VERSION="1.81.0",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7503,7 +7560,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.80.5"></script>
+<script src="lab.js?v=1.81.0"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
