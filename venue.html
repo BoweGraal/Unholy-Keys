@@ -16,12 +16,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.6"></script>
-<script src="gfx.js?v=1.81.6"></script>
-<script src="art.js?v=1.81.6"></script>
-<script src="instruments.js?v=1.81.6"></script>
-<script src="kart.js?v=1.81.6"></script>
-<script src="explain.js?v=1.81.6"></script>
+<script src="tune.js?v=1.81.7"></script>
+<script src="gfx.js?v=1.81.7"></script>
+<script src="art.js?v=1.81.7"></script>
+<script src="instruments.js?v=1.81.7"></script>
+<script src="kart.js?v=1.81.7"></script>
+<script src="explain.js?v=1.81.7"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1855,7 +1855,7 @@ function vzCalc(){
   /* zoomed in: the camera follows you, kept inside the room so you never see past the edges */
   var aY=H*VZ_AY,bx=W/2,by=aY;if(base&&VZ_ME){bx=Math.max(W/(2*Z0),Math.min(W-W/(2*Z0),VZ_ME[0]));by=Math.max(aY/Z0,Math.min(H-(H-aY)/Z0,VZ_ME[1]-VZ_H*0.3));}
   VZ_B[0]+=(bx-VZ_B[0])*Math.min(1,dt*5);VZ_B[1]+=(by-VZ_B[1])*Math.min(1,dt*5);bx=VZ_B[0];by=VZ_B[1];
-  var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-VZ_H*0.16:H*VZ_AY,Zt=Math.max(Z0,Math.min(6,Math.min(0.5*H,Math.max(120,(W-192)*1.08))/VZ_H));   /* zoom so your whole body, arms out, fits in the gap between the two columns of buttons */
+  var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-VZ_H*0.16:H*VZ_AY,Zt=Math.max(Z0,Math.min(6,Math.min(TUNE.v("fd.turnH")*H,Math.max(120,(W-192)*1.08))/VZ_H));   /* zoom so your whole body, arms out, fits in the gap between the two columns of buttons */
   VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=bx+(fx-bx)*tz;VZS.cy=by+(fy-by)*tz;VZS.ay=H*VZ_AY+(H*0.47-H*VZ_AY)*tz;VZS.on=true;
 }
 function floorPt(e){var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(VZS.on){x=VZS.cx+(x-W/2)/VZS.Z;y=VZS.cy+(y-VZS.ay)/VZS.Z;}return [x,y];}
@@ -3251,7 +3251,7 @@ var GAME=(function(){
   /* ---------- step dance ---------- */
   var SPDS=[0.6,0.8,1,1.25,1.5,1.8,2.2],spdI=2;try{var sv=parseFloat(localStorage.getItem("uk_scroll2"));if(sv>0){var bi2=0;SPDS.forEach(function(v,i){if(Math.abs(v-sv)<Math.abs(SPDS[bi2]-sv))bi2=i;});spdI=bi2;}}catch(e){}
   function spdLabel(){var s=String(Math.round(SPDS[spdI]*100)/100);if(s.indexOf(".")<0)s+=".0";return s+"\u00d7";}
-  function travel(per){var t=Math.max(TUNE.v("step.travelMin"),Math.min(TUNE.v("step.travelMax"),per*TUNE.v("step.travelBeats")));return (mode==="keys"?t*(four?TUNE.v("hw.fall4"):TUNE.v("hw.fall7")):t)/(SPDS[spdI]*1.5);}   /* scroll speed: 1x is now what used to be 1.5x (faster notes, more reading room); the button still adjusts from there */   /* the highway: quicker notes */
+  function travel(per){var t=Math.max(TUNE.v("step.travelMin"),Math.min(TUNE.v("step.travelMax"),per*TUNE.v("step.travelBeats")));return (mode==="keys"?t*(four?TUNE.v("hw.fall4"):TUNE.v("hw.fall7")):t)/(SPDS[spdI]*TUNE.v("rhythm.scroll"));}   /* scroll speed: 1x is now what used to be 1.5x (faster notes, more reading room); the button still adjusts from there */   /* the highway: quicker notes */
   function makeNotes(now,bt){
     if(rnd&&rnd.chart){feedRound(now,bt);return;}
     /* free play: no new steps until the music has a beat to follow (talking, a quiet intro, silence) */
@@ -4732,6 +4732,11 @@ var SKI=(function(){
    rules are in art.js, ART.CTF); in practice they run here, with the practice dancers as bots.
    ============================================================ */
 var CTFG=(function(){
+  /* the tuning lab's numbers for capture the flag and kart flag (practice runs the rules here, so they apply straight away) */
+  function ctfTune(){var T=TUNE.v,C2=ART.CTF;if(!PRACTICE.on)return;C2.SPEED=T("ctf.speed");C2.SPRINT=T("ctf.sprint");C2.STAM=T("ctf.stam");C2.CARRY=T("ctf.carry");C2.PAD=T("ctf.pad");C2.TAG_R=T("ctf.tagR");
+    C2.K_SPEED=T("kf.speed");C2.K_AIM_MS=T("kf.aim");C2.K_PULSE_R=T("kf.impactR");C2.K_PULSE_MS=T("kf.impactCd");C2.K_SPIN_MS=T("kf.spin");C2.K_BOX_MS=T("kf.box");C2.K_SHIELD_MS=T("kf.shield");C2.K_NITRO_MS=T("kf.nitro");C2.K_TILE=T("kf.tile");
+    if(ART.MOSH)ART.MOSH.TUG_MS=T("mp.tugMs");}
+  setTimeout(function(){ctfTune();TUNE.onChange(ctfTune);},0);
   var C=ART.CTF,kart=false,ka=0,ma=0,kv=0,nitroT=0,kfx=[],drift=false,dCharge=0,dDir=0,boostT=0,launchCd=0,sparks=[],spr={e:1,on:false},sprWant=false,on=false,map=null,I=null,st=null,me={x:0,y:0},push=[0,0],hold=0,lastT=0,team=0,others={},bots={},banT=0,roundN=0,face=0,cv=null,g=null,GO_BEAT=8;
   function $(id){return document.getElementById(id);}
   function ctfRound(){return GAME.mode==="ctf"||(typeof ROUND!=="undefined"&&ROUND.mode==="ctf");}
@@ -4746,7 +4751,7 @@ var CTFG=(function(){
   function start(round){
     on=true;roundN=round?round.n:roundN+1;var rc=round&&round.ctf;
     var kf0=!!(round&&round.kflag);map=rc&&rc.map?C.clean(rc.map):null;if(!map&&PRACTICE.on){try{map=C.clean(C.upgrade(JSON.parse(localStorage.getItem(kf0?"uk_kflag":"uk_ctf")||"null")));}catch(e){map=null;}}if(!map)map=C.clean(kf0?C.kartDefault():C.defaultMap());   /* Kart flag has its own arena (wide and open by default) */
-    kart=!!(round&&round.kflag);if(kart)map=C.kartMap(map);I=C.info(map);st=C.newState(I,Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}),kart);
+    ctfTune();kart=!!(round&&round.kflag);if(kart)map=C.kartMap(map);I=C.info(map);st=C.newState(I,Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}),kart);
     if(rc){if(rc.teams)st.teams=rc.teams;if(rc.flags)st.flags=rc.flags;if(rc.caps)st.caps=rc.caps;kmirror(rc);}
     ka=ma=team?Math.PI:0;kv=0;nitroT=0;kfx=[];drift=false;dCharge=0;boostT=0;sparks=[];document.body.classList.toggle("ctf-kart",kart);
     team=C.teamOf(st,myId);var sp=C.spawnOf(I,st,myId);me={x:sp[0],y:sp[1]};push=[0,0];hold=0;others={};bots={};spr={e:1,on:false};sprWant=false;wireSprint();
@@ -4757,7 +4762,7 @@ var CTFG=(function(){
   /* Kart flag drift: hold to slide, let go for a boost if it charged */
   function driftOn(d){if(!on||!kart)return;if(d){if(!drift&&beat()>=GO_BEAT&&!((st.spin[myId]||0)>Date.now())&&performance.now()>launchCd){drift=true;dCharge=0;}return;}
     if(drift){var f=Math.min(1,dCharge*1000/C.K_AIM_MS);drift=false;dCharge=0;launchCd=performance.now()+250;
-      ma=ka;kv=C.K_SPEED*(1.25+1.15*f);boostT=performance.now()+300+600*f;   /* let go: the kart shoots off the way you aimed, harder the longer you charged */
+      ma=ka;kv=C.K_SPEED*(TUNE.v("kf.launch0")+(TUNE.v("kf.launch1")-TUNE.v("kf.launch0"))*f);boostT=performance.now()+300+600*f;   /* let go: the kart shoots off the way you aimed, harder the longer you charged */
       kfx.push({x:me.x,y:me.y,r:0.9+0.6*f,t:performance.now(),col:f>=1?"#FF9A2E":"#3DF2FF"});if(f>=1)banner("FULL LAUNCH!","#FF9A2E");}
   }
   /* Kart Flag: pulse / use, the server decides (practice: here) */
@@ -5338,7 +5343,8 @@ function spotPlan(dancers, chart, lockPos) {
    battleLive(plan, pos, lead): the index of the match on at song position pos (lead ms early), or -1.
    battleRanks(plan): [{e, place, wins}] best first: champion, finalist, then by the round they went out in. */
 var BATTLE = (function() {
-  var GAP = 2000, MIN = 20000, MAX = 20000;   /* every match is 20 s (the final takes the song's finale) */
+  var GAP = 2000, MIN = 20000, MAX = 20000;
+  if (typeof TUNE !== "undefined") { var bm = function() { MIN = MAX = TUNE.v("battle.match"); }; bm(); TUNE.onChange(bm); }   /* the tuning lab's match length (practice) */   /* every match is 20 s (the final takes the song's finale) */
   function seeds(P) { var a = [1, 2]; while (a.length < P) { var n = a.length * 2 + 1, b = []; for (var i = 0; i < a.length; i++) b.push(a[i], n - a[i]); a = b; } return a; }
   function label(r, R) { return r === 0 ? "Final" : r === 1 ? "Semifinal" : r === 2 ? "Quarterfinal" : "Round " + (R - r); }
   function snap(t, beats) {
@@ -7060,7 +7066,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.6",SERVER_VERSION="";
+var PAGE_VERSION="1.81.7",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7610,7 +7616,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.6"></script>
+<script src="lab.js?v=1.81.7"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

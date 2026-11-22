@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.7 — Tuning lab, round two
+
+- The lab (performer page → Tuning lab) picks games by kind (Rhythm, Dance, Ride & race, Team), has a **search** box across every setting, a compact **Table** view, and one-tap links to every editor (Notes, Arenas, Tracks, Ski, Graphics).
+- New settings: base scroll speed for all rhythm games, Capture the flag (speeds, sprint, carrying, pads, tag reach), Kart flag (speed, launch power and charge, IMPACT reach and cooldown, spin, box, shield, nitro, zoom), dance battle match length, free dance spotlight zoom, mosh pit push-war length.
+- Sliders apply live in practice while the game runs; the share box sends them to lock in. Shows use the locked-in numbers.
+- Performer page: Note editor link; the flag designer is named for both flag games.
+
 ## v1.81.6 — Note editor, Exit button, mosh pit layout
 
 - **Note editor** (charts.html): pick a song from the songs folder (or your computer). It finds the beat, then shows the notes in four lanes (← ↓ ↑ → / D F J K) scrolling up past a line. Tap a lane to add a note, tap again to remove it, drag up from a new note for a hold. Snap to 1, ½, ¼, ⅓ or ⅛ of a beat, zoom, play at 1× / 0.75× / 0.5× with a tick on every note, or **Record** (play and press D F J K). Preview what Hard / Normal / Easy make from your notes. Drafts save on the device; **Save** downloads `<song>.chart.json`, **Share** gives the text to send.
