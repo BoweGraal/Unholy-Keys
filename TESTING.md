@@ -1543,3 +1543,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.21 — kart laps
 - Race is 5 laps: counter shows LAP n/5, banners "3 LAPS TO GO", "2 LAPS TO GO", "FINAL LAP!", "FINISH!"; lap points stop after lap 5.
+
+## v1.79.22
+- Kart rounds inside a show end after about 90 s of racing (other games unchanged).
