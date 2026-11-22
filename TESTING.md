@@ -1611,3 +1611,8 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.41 — no "Add this move" on the sticks screen
 - The "Line up moves for your turn / Add this move / Clear" strip is gone from the stick controls; moves are planned in the planner panel. If you have planned moves, a small "Your turn plays:" list shows them during your turn.
+
+## v1.79.42 — 180 keeps you turned, lighter from behind, pixel pass 2
+- The 180 button turns you round and you stay facing away until you press 180 again (other players see it too). Spin, twirl and 360 start from whichever way you face.
+- The lighter / phone light is drawn in the correct hand when you face away (it floated off to the side before).
+- Pixel pass: the practice picker, the round banner, leaderboard panel and toasts, top-left HUD, hints, free dance help text, planner, sticks and hand rings (now the pixel stick art, not smooth circles) all use the pixel font and square corners.

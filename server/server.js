@@ -462,7 +462,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", 
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.79.41";
+var VERSION = "1.79.42";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -712,6 +712,7 @@ function onMessage(ws, raw, isBinary) {
           for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
           if (fc) {
             fd = { s: fs, m: fm, c: fc };
+            if (+msg.fd.b === 1) fd.b = 1;
             if (Array.isArray(msg.fd.h) && msg.fd.h.length === 2) {
               var hh = msg.fd.h.map(function (v) { return v === null || v === undefined || !isFinite(+v) ? null : Math.max(-400, Math.min(400, Math.round(+v))); });
               if (hh[0] !== null || hh[1] !== null) fd.h = hh;
