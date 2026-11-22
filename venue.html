@@ -16,12 +16,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.80.0"></script>
-<script src="gfx.js?v=1.80.0"></script>
-<script src="art.js?v=1.80.0"></script>
-<script src="instruments.js?v=1.80.0"></script>
-<script src="kart.js?v=1.80.0"></script>
-<script src="explain.js?v=1.80.0"></script>
+<script src="tune.js?v=1.80.1"></script>
+<script src="gfx.js?v=1.80.1"></script>
+<script src="art.js?v=1.80.1"></script>
+<script src="instruments.js?v=1.80.1"></script>
+<script src="kart.js?v=1.80.1"></script>
+<script src="explain.js?v=1.80.1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3516,8 +3516,8 @@ var GAME=(function(){
     for(i=0;i<4;i++){
       var lx=CW*(i+0.5)/4,fl=Math.max(0,1-(now-flash[i])/160);
       if(fl>0){g.fillStyle="rgba(255,255,255,"+(0.10*fl)+")";g.fillRect(CW*i/4,0,CW/4,CH);}
-      var pulse=1+0.14*Math.pow(1-BEAT.phase(now),3);
-      arrow(lx,ty,sz*pulse,LROT[i],fl>0?"rgba(255,255,255,"+(0.35*fl)+")":null,"rgba(255,255,255,.55)",2);
+      var pulse=Math.pow(1-BEAT.phase(now),3);   /* the beat is a soft glow on the outline, not a size jump (pixels can't scale smoothly) */
+      arrow(lx,ty,sz,LROT[i],fl>0?"rgba(255,255,255,"+(0.35*fl)+")":(pulse>0.05?"rgba(255,255,255,"+(0.06*pulse)+")":null),"rgba(255,255,255,"+(0.55+0.25*pulse)+")",2);
     }
     /* big faint combo behind the arrows */
     if(combo>=5){g.fillStyle="rgba(255,255,255,.07)";g.font="800 "+Math.round(CW*0.42)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.textBaseline="middle";g.fillText(combo,CW/2,CH*0.6);g.textBaseline="alphabetic";}
@@ -6940,7 +6940,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.80.0",SERVER_VERSION="";
+var PAGE_VERSION="1.80.1",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7490,7 +7490,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.80.0"></script>
+<script src="lab.js?v=1.80.1"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
