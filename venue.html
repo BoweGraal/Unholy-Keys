@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.55"></script>
-<script src="gfx.js?v=1.79.55"></script>
-<script src="art.js?v=1.79.55"></script>
-<script src="instruments.js?v=1.79.55"></script>
-<script src="kart.js?v=1.79.55"></script>
-<script src="explain.js?v=1.79.55"></script>
+<script src="tune.js?v=1.79.56"></script>
+<script src="gfx.js?v=1.79.56"></script>
+<script src="art.js?v=1.79.56"></script>
+<script src="instruments.js?v=1.79.56"></script>
+<script src="kart.js?v=1.79.56"></script>
+<script src="explain.js?v=1.79.56"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1683,6 +1683,11 @@ function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s)
 function lookOf(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;name=String(name||"");for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return ART.looks.fromColor(color,h+1);}
 
 if(/[?&]practice\b/.test(location.search))setTimeout(function(){PRACTICE.enter();},0);
+/* the performer playing the round from the host page (index.html, Play round): join their own room automatically, muted */
+(function(){var q;try{q=new URLSearchParams(location.search);}catch(e){return;}
+  if(q.has("mute")){document.body.classList.add("embed");setInterval(function(){try{Tone.getDestination().mute=true;}catch(e){}try{if(typeof vYT!=="undefined"&&vYT&&vYT.vid)vYT.cmd("mute");}catch(e){}},1200);}
+  if(q.has("asplayer")){var nm=(q.get("name")||"Performer").slice(0,16),rm=(q.get("room")||"").toUpperCase();
+    setTimeout(function(){var i1=document.getElementById("inName"),i2=document.getElementById("inRoom");if(!i1||!i2||!/^[A-Z0-9]{4}$/.test(rm))return;i1.value=nm;i2.value=rm;document.getElementById("enterBtn").click();},400);}})();
 document.getElementById("enterBtn").addEventListener("click",function(){
   var name=document.getElementById("inName").value.trim();
   var room=document.getElementById("inRoom").value.trim();
@@ -6699,7 +6704,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.55",SERVER_VERSION="";
+var PAGE_VERSION="1.79.56",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7247,7 +7252,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.55"></script>
+<script src="lab.js?v=1.79.56"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

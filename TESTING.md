@@ -1673,3 +1673,7 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.55 — pony tail (hair 6) on every angle
 - Shipped Brian's pony tail edits (hair 6: blue hair band, trimmed tail). The paint is carried to the side view (tail hangs behind the head) and back view (tail swaps sides, as the back view draws it) as well as the front. Same for the long-hair lock pixel (hair 3).
 - Check: pick the ponytail, spin the dancer: band and tail should match from the side and back.
+
+## v1.79.56 — performer can play the round
+- Host page: new "Play round" button (next to Dance). While live it opens your own room as a player in an overlay (auto-joins with your stage name, muted so your backing track is the only sound), so you play the minigame instead of your instrument for that round. "Back to instrument" closes it; your instrument keys go to the game while it's open. Not live: it says to go live first.
+- Check (needs a live room): go live, start a round from a second device, press Play round, play, close it and confirm the instrument works again. Untested here: the live join itself (no server on the build machine).
