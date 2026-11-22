@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.43"></script>
-<script src="gfx.js?v=1.79.43"></script>
-<script src="art.js?v=1.79.43"></script>
-<script src="instruments.js?v=1.79.43"></script>
-<script src="kart.js?v=1.79.43"></script>
-<script src="explain.js?v=1.79.43"></script>
+<script src="tune.js?v=1.79.44"></script>
+<script src="gfx.js?v=1.79.44"></script>
+<script src="art.js?v=1.79.44"></script>
+<script src="instruments.js?v=1.79.44"></script>
+<script src="kart.js?v=1.79.44"></script>
+<script src="explain.js?v=1.79.44"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1779,7 +1779,16 @@ function resize(){
   var pf=document.getElementById("perfFront");if(pf){pf.width=W;pf.height=H;}
 }
 
-function floorPt(e){var r=canvas.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
+/* scroll-wheel zoom on the venue floor (PC): wheel up zooms in, wheel down out, anchored low so the dancers grow upward; taps are mapped back through it */
+var VZ=1,VZ_AY=0.62;
+try{VZ=Math.max(1,Math.min(2.6,+localStorage.getItem("uk_vz")||1));}catch(e){}
+function vzActive(){return VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
+function floorPt(e){var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(vzActive()){x=W/2+(x-W/2)/VZ;y=H*VZ_AY+(y-H*VZ_AY)/VZ;}return [x,y];}
+window.addEventListener("wheel",function(e){
+  if(e.ctrlKey||!canvas||(e.target.closest&&e.target.closest("#prBar,#chatPanel,#fdPlan,select,textarea,input,.modal,[role=dialog]")))return;if(GAME.mode&&GAME.mode!=="free")return;
+  e.preventDefault();VZ=Math.max(1,Math.min(2.6,VZ*(e.deltaY<0?1.12:1/1.12)));if(VZ<1.02)VZ=1;
+  try{localStorage.setItem("uk_vz",VZ.toFixed(2));}catch(x){}
+},{passive:false});
 var walkMark=null,FRAME_DT=0.016,LAST_FRAME=0;
 /* a tap or click on the venue: grab one of your limbs if you're free dancing and it's on you, otherwise walk there */
 function onFloorDown(e){
@@ -6629,7 +6638,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.43",SERVER_VERSION="";
+var PAGE_VERSION="1.79.44",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6949,6 +6958,7 @@ function renderLoop(){
   /* the floor runs down to the chat bar (or the bottom of the screen when there's none), so tall phones don't get a black band */
   var cpE=document.getElementById("chatPanel"),cpH=cpE?cpE.offsetHeight:0;FLOOR_BOTTOM=Math.max(0.78,Math.min(1,1-cpH/H));
   ctx.clearRect(0,0,W,H);LAYV.stageBottom=STAGE_BOTTOM;LAYV.floorBottom=FLOOR_BOTTOM;
+  var vzOn=vzActive();if(vzOn){ctx.save();ctx.translate(W/2,H*VZ_AY);ctx.scale(VZ,VZ);ctx.translate(-W/2,-H*VZ_AY);}   /* scroll-wheel zoom (PC) */
 
   /* Background */
   ctx.fillStyle="#0a0a0f";
@@ -7124,6 +7134,7 @@ function renderLoop(){
   /* standing behind the buttons: fade them so you can see yourself */
   if(myId&&viewers[myId]){var mv=viewers[myId],mx=mv.x*W,my=mv.y*H;["reactBar","moveCtl"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.offsetWidth)return;var r=el.getBoundingClientRect(),hit=mx>r.left-14&&mx<r.right+14&&my>r.top-6&&my-46<r.bottom;el.classList.toggle("dim",hit);});}
 
+  if(vzOn)ctx.restore();
   requestAnimationFrame(renderLoop);
 }
 
@@ -7137,7 +7148,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.43"></script>
+<script src="lab.js?v=1.79.44"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

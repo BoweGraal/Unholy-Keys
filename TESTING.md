@@ -1619,3 +1619,7 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.43 — spinning is locked in place
 - While you spin (Spin, Twirl, 360, Spin move) the right stick only keeps the spin going; it no longer drives dance moves, lifts or bounces, so the dancer stays put and just turns. Spin move no longer hops.
+
+## v1.79.44 — bending down keeps the dance; scroll-wheel zoom
+- Pushing the right stick down / down-diagonal (a bend) keeps the dance's own arm and leg motions (hands on knees stays hands on knees) and just lowers the body with bent, slightly wider knees. Before, it swapped to a generic arms-out pose.
+- PC: the scroll wheel zooms the venue floor in and out (up = in, down = out, up to 2.6x). Taps and clicks still land where you point. Remembered between visits. Works in free dance and on the plain floor; other minigames keep their own cameras.
