@@ -1570,3 +1570,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.29 — more rhythm on touch screens
 - The two-thumb chart rule is looser: off-beat steps (quarter-beat grid) stay in, minimum gap about half a beat (190 ms floor), and holds only count as busy thumbs: a hold plus one single arrow, or two holds, but never more than two presses at once. On a synthetic dense chart the notes kept went from 99 to 193 with the maximum still 2.
+
+## v1.79.30 — one chart for everyone
+- The two-thumb chart rule now applies to every player, phone or computer, so a round's notes are identical for all (checked: touch and non-touch give byte-identical charts at all three levels).
