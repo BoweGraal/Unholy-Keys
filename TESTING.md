@@ -1561,3 +1561,6 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.79.26
 - Free dance: small buttons above the dots — 180 (half turn and back), 360 (fast full turn with a hop), Spin move (low spin, arms out). Keys Z / X / V. Server accepts the new reactions (redeploy Render).
+
+## v1.79.27
+- Half pipe: one FLICK meter (right side). Starts empty, only fills as the right stick moves (faster = more), sets jump height, holds in the air, resets on landing/bail.

@@ -13,12 +13,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.79.26"></script>
-<script src="gfx.js?v=1.79.26"></script>
-<script src="art.js?v=1.79.26"></script>
-<script src="instruments.js?v=1.79.26"></script>
-<script src="kart.js?v=1.79.26"></script>
-<script src="explain.js?v=1.79.26"></script>
+<script src="tune.js?v=1.79.27"></script>
+<script src="gfx.js?v=1.79.27"></script>
+<script src="art.js?v=1.79.27"></script>
+<script src="instruments.js?v=1.79.27"></script>
+<script src="kart.js?v=1.79.27"></script>
+<script src="explain.js?v=1.79.27"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3893,7 +3893,7 @@ var PIPE=(function(){
     if(!on||air||performance.now()<bailUntil||!k)return;
     if(!popWindow()){if(A>=0.95){queued={k:k,pw:pw,t:performance.now()};}else judge("BUILDING SPEED…","#aaa");return;}
     queued=null;
-    var sup=superK>=1,side=Math.sign(Math.sin(phi)),str=(0.35+0.85*(pw-0.5))*(tuck?1:0.6),h=(A-0.6)*str*(sup?1.5:1),dur=Math.min(3.2,0.9+1.35*h);charge=Math.min(1,str/1.2);
+    var sup=superK>=1,side=Math.sign(Math.sin(phi)),str=(0.35+0.85*Math.max(charge,0.15))*(tuck?1:0.6),h=(A-0.6)*str*(sup?1.5:1),dur=Math.min(3.2,0.9+1.35*h);charge=Math.min(1,str/1.2);   /* the meter stays where it was while you're in the air */
     air={t0:performance.now(),dur:dur,h:Math.min(1.4,h),side:side,trick:k,sup:sup,pw:pw,phi0:phi};r=lean*30;stance=0;stances={};trick=k;
     if(sup){superK=0;banner("⚡ SUPER MOVE!","#F5C518");}else banner(TRK[k].name.toUpperCase()+"!",TRK[k].col);
     hud();
@@ -3941,7 +3941,7 @@ var PIPE=(function(){
   function endGrind(now,ok){
     var g=grind;grind=null;stance=0;
     if(ok){var pts=Math.round(g.pts*(1+0.25*combo));score+=pts;GAME.moshPts(pts);combo++;superK=Math.min(1,superK+pts/T("superPts"));judge("GRIND +"+pts,"#4CC38A");pops.push({x:PP.xOf(g.side),y:lane,t:now,txt:"GRIND +"+pts,col:"#3DF2FF"});}
-    else{bailUntil=now+T("bail")*1000;combo=0;A=Math.max(0.3,A*0.5);judge("FELL OFF!","#FF4D6D");banner("💥 BAIL!","#FF4D6D");}
+    else{charge=0;bailUntil=now+T("bail")*1000;combo=0;A=Math.max(0.3,A*0.5);judge("FELL OFF!","#FF4D6D");banner("💥 BAIL!","#FF4D6D");}
     phi=Math.PI-g.phi0;r=0;hud();
   }
   function grindStep(now,dt,rawx){
@@ -3993,7 +3993,7 @@ var PIPE=(function(){
     /* the power: how hard and fast you work the left stick sets how high you'll go */
     var rawx=joy.id!==null?joy.x:keyLean,rawy=joy.id!==null?joy.y:keyLane,mv=Math.abs(rawx-prX)+Math.abs(rawy-prY),spd=mv/Math.max(0.001,dt);prX=rawx;prY=rawy;
     /* the gauge shows how hard you flick the right stick (peak held a moment); in the air it shows the strength you launched with */
-    if(!air){var rsp=Math.hypot(rs.x-prevRs.x,rs.y-prevRs.y)/Math.max(0.001,dt);charge=Math.max(charge-0.8*dt,Math.min(1,rsp/14));}
+    if(!air){var rsp=Math.hypot(rs.x-prevRs.x,rs.y-prevRs.y)/Math.max(0.001,dt);charge=Math.min(1,charge+Math.hypot(rs.x-prevRs.x,rs.y-prevRs.y)*0.35*(1+Math.min(1,rsp/12)));}   /* one meter: starts empty and only fills as the right stick moves (faster = more) */
     var jx=joy.id!==null&&Math.abs(joy.x)>0.15?joy.x:keyLean;if(tuck&&!air)jx=0;lean+=(jx-lean)*Math.min(1,dt*8);
     if(air){r+=lean*T("spin")*dt;var p=(now-air.t0)/1000/air.dur;if(p>=1)land(now);}
     else if(!grind&&now>=bailUntil)phi+=Math.PI/T("cross")*dt;
@@ -4057,10 +4057,10 @@ var PIPE=(function(){
       g.globalAlpha=tuck?1:0.55+0.25*Math.sin(now/300);g.fillStyle=tuck?"#3DF2FF":"#F5C518";
       for(var yy=y0;yy<y1;yy+=P*4)g.fillRect(x-P,yy,P*2,P*2.5);g.globalAlpha=1;});
   }
-  /* a gauge down each side: how hard you flick the right stick, which sets how high you go */
+  /* one flick meter: starts empty and fills only as you move the right stick (faster fills it more); it sets how high you jump */
   function gauges(g){
     var P=ART.PX.unit(g),w=Math.max(10,P*3),h=Math.round(H*0.34),y=Math.round(H*0.30),now=performance.now(),hot=popWindow();
-    [8,W-8-w].forEach(function(x){
+    [W-8-w].forEach(function(x){
       g.fillStyle="rgba(8,6,16,.7)";g.fillRect(x-2,y-2,w+4,h+4);
       var f=Math.round(h*charge/P)*P;g.fillStyle=charge>0.75?"#FF4D6D":charge>0.4?"#F5C518":"#4CC38A";g.fillRect(x,y+h-f,w,f);
       g.strokeStyle=hot?"#F5C518":"#9B7FE0";g.lineWidth=2;g.strokeRect(x-2,y-2,w+4,h+4);
@@ -6470,7 +6470,7 @@ function perfInset(g2,x,y){
 (function(){try{var r=document.documentElement.style;r.setProperty("--uiStick","url("+ART.UI.stick("#7F77DD")+")");r.setProperty("--uiStickOn","url("+ART.UI.stick("#D354A0")+")");r.setProperty("--uiKnob","url("+ART.UI.knob("#E85AA8")+")");}catch(e){}})();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.79.26",SERVER_VERSION="";
+var PAGE_VERSION="1.79.27",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -6965,7 +6965,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.79.26"></script>
+<script src="lab.js?v=1.79.27"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
