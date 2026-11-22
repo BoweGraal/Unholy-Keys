@@ -201,7 +201,11 @@ try {
   vmx.createContext(actx); vmx.runInContext(fs.readFileSync(path.join(__dirname, "..", "art.js"), "utf8"), actx);
   CTF = (actx.window.ART || actx.ART).CTF;
 } catch (e) { console.log("capture the flag rules not loaded:", e.message); }
-function ctfPublic(c) { if (!c) return null; var nw = Date.now(); return { map: c.map, teams: c.st.teams, flags: c.st.flags, caps: c.st.caps, rf: c.I.refills.map(function(q, i) { return CTF.refillLeft(c.st, i, nw); }) }; }   /* rf: ms until each sprint refill is back (clocks differ, so not the time it was taken) */
+function ctfPublic(c) { if (!c) return null; var nw = Date.now(), st = c.st, o = { map: c.map, teams: st.teams, flags: st.flags, caps: st.caps, rf: c.I.refills.map(function(q, i) { return CTF.refillLeft(st, i, nw); }) };
+  if (st.kart) {   /* Kart Flag: ms left on timers (clocks differ), oil spots, who holds what */
+    var left = function(m) { var r = {}; for (var k in m) { var l = (m[k] || 0) - nw; if (l > 0) r[k] = l; } return r; }, cd = {}; for (var id in st.cd) { var l2 = CTF.cdLeft(st, id, nw); if (l2 > 0) cd[id] = l2; }
+    o.kart = 1; o.box = c.I.boxes.map(function(q, i) { return CTF.boxLeft(st, i, nw); }); o.oil = st.oil.map(function(q) { return [+q.x.toFixed(2), +q.y.toFixed(2), q.team]; }); o.held = st.held; o.sh = left(st.shield); o.spin = left(st.spin); o.mega = st.mega; o.cd = cd; }
+  return o; }   /* rf: ms until each sprint refill is back (clocks differ, so not the time it was taken) */
 function battlePublic(rd) {
   var b = rd.battle; if (!b) return null;
   return { entrants: b.entrants, slots: b.slots.map(function(s) { return { r: s.r, label: s.label, a: s.a, b: s.b, w: s.w, start: s.start, end: s.end, sa: s.sa || 0, sb: s.sb || 0 }; }) };
@@ -244,7 +248,7 @@ function battleNow(rd) { var b = rd.battle; if (!b) return -1; var p = Date.now(
 
 function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
-  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1; if (rd.track) o.track = rd.track; if (rd.ski) o.ski = rd.ski; if (rd.ctf) o.ctf = ctfPublic(rd.ctf);
+  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1; if (rd.track) o.track = rd.track; if (rd.ski) o.ski = rd.ski; if (rd.ctf) { o.ctf = ctfPublic(rd.ctf); if (rd.ctf.kart) o.kflag = 1; }
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
   if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) { o.spot = rd.spot; o.ring = rd.ring; } if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
@@ -338,7 +342,7 @@ function roundMessage(ws, msg) {
     rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, ski: mode === "ski" ? cleanSki(msg.ski) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
-    if (mode === "ctf") { BOTS.ctfEven(code); var cm = CTF.clean(msg.ctf) || CTF.defaultMap(), ci = CTF.info(cm); rd.ctf = { map: cm, I: ci, st: CTF.newState(ci, Array.from(r.viewers.keys())) }; rd.isBattle = false; }
+    if (mode === "ctf") { BOTS.ctfEven(code); var kf = !!msg.kflag, cm = CTF.clean(msg.ctf) || CTF.defaultMap(); if (kf) cm = CTF.kartMap(cm); var ci = CTF.info(cm); rd.ctf = { map: cm, I: ci, kart: kf, st: CTF.newState(ci, Array.from(r.viewers.keys()), kf) }; rd.isBattle = false; }
     broadcast(code, roundPublic(r));
     return;
   }
@@ -401,7 +405,7 @@ function roundMessage(ws, msg) {
 /* ── The crowd picks the next game ──
    The performer opens a vote between a few games (gvote-open); everyone taps one (gvote-pick); when time is up the
    game with the most votes wins (ties drawn at random, nobody voting = a random pick). Bots vote too. */
-var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf"];
+var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf", "kflag"];
 function gvotePublic(g) {
   var c = g.opts.map(function() { return 0; });
   g.picks.forEach(function(m) { var i = g.opts.indexOf(m); if (i >= 0) c[i]++; });
@@ -462,7 +466,7 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", 
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 800, TUG_MS = 10000;
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.80.8";
+var VERSION = "1.81.0";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -677,7 +681,7 @@ function onMessage(ws, raw, isBinary) {
       if (crd && crd.ctf && crd.phase === "play") {
         var cc = crd.ctf, ev = CTF.step(cc.st, cc.I, ws.viewerId, x * cc.I.w, y * cc.I.h, Date.now());
         for (var sid in cc.st.score) { var sv2 = rooms[ws.room].viewers.get(sid); if (sv2) { sv2.roundScore = cc.st.score[sid]; sv2.danced = true; } }
-        if (ev.length || cc.st.flags.some(function(f) { return f.at; })) {
+        if (ev.length || cc.kart || cc.st.flags.some(function(f) { return f.at; })) {
           var now2 = Date.now();
           if (ev.length || now2 - (cc.sentAt || 0) > 200) { cc.sentAt = now2; var cm2 = ctfPublic(cc); delete cm2.map; cm2.type = "ctf"; cm2.ev = ev; broadcast(ws.room, cm2); }
         }
@@ -767,6 +771,13 @@ function onMessage(ws, raw, isBinary) {
     }
     if (msg.type === "vote") { castVote(ws, ws.viewerId, msg.id, 1); return; }
     if (msg.type === "gvote-pick") { if (allow(ws, "gv", 10, 2)) gvotePick(ws.room, ws.viewerId, msg.m); return; }
+    if (msg.type === "ctf-act") {   /* Kart Flag: the pulse, or using your item */
+      var ard = rooms[ws.room] && rooms[ws.room].round, ac = ard && ard.ctf;
+      if (!ac || !ac.kart || ard.phase !== "play" || !allow(ws, "ctfact", 4, 2)) return;
+      var aev = msg.a === "pulse" ? CTF.pulse(ac.st, ac.I, ws.viewerId, Date.now()) : msg.a === "use" ? CTF.use(ac.st, ac.I, ws.viewerId, Date.now()) : [];
+      if (aev.length) { for (var asid in ac.st.score) { var asv = rooms[ws.room].viewers.get(asid); if (asv) { asv.roundScore = ac.st.score[asid]; asv.danced = true; } } var am = ctfPublic(ac); delete am.map; am.type = "ctf"; am.ev = aev; broadcast(ws.room, am); }
+      return;
+    }
     if (msg.type === "bvote") { if (allow(ws, "bvote", 6, 2)) battleVote(ws, ws.viewerId, msg.side, 1); return; }
     return; // anything else from a viewer is dropped (it used to be relayed to the whole room as-is)
   }

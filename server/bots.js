@@ -350,10 +350,15 @@ module.exports = function(api) {
       var sm = C.sprint(k.sp, C.botSprint(st, I, id, k.x, k.y, goal, k.sp), dt);
       if (!k.wp || now > k.wpAt) { k.wp = C.path(I, k.x, k.y, goal[0], goal[1]); k.wpAt = now + 250; }
       var av = C.botAvoid(st, I, id, k.x, k.y);
-      var dx = k.wp[0] - k.x + av[0] * 1.6, dy = k.wp[1] - k.y + av[1] * 1.6, d = Math.hypot(dx, dy) || 1, sp2 = C.SPEED * (0.7 + 0.3 * b.skill) * (C.carrying(st, id) >= 0 ? C.CARRY : 1) * sm;
+      var dx = k.wp[0] - k.x + av[0] * 1.6, dy = k.wp[1] - k.y + av[1] * 1.6, d = Math.hypot(dx, dy) || 1, sp2 = (st.kart ? C.K_SPEED * (0.5 + 0.2 * b.skill) * ((st.spin[id] || 0) > Date.now() ? 0 : 1) : C.SPEED * (0.7 + 0.3 * b.skill) * sm) * (C.carrying(st, id) >= 0 ? C.CARRY : 1);
       var pd = I.pad(k.x, k.y); if (pd) { k.push = [pd[0] * C.SPEED * C.PAD, pd[1] * C.SPEED * C.PAD]; }
       C.move(I, k, (dx / d * sp2 + k.push[0]) * dt + Math.sin(now / 700 + k.jit) * 0.01, (dy / d * sp2 + k.push[1]) * dt);
       var dm = Math.pow(0.08, dt); k.push = [k.push[0] * dm, k.push[1] * dm];
+    }
+    if (st.kart && going && now > (k.actAt || 0)) {   /* Kart Flag: pulse an enemy carrier (or now and then anyone) in range, use items when they get one */
+      k.actAt = now + 300;
+      if (C.cdLeft(st, id, Date.now()) <= 0) for (var oq in st.pos) { if (st.teams[oq] === undefined || st.teams[oq] === t) continue; var qp = st.pos[oq]; if (Date.now() - qp[2] < 800 && Math.hypot(qp[0] - k.x, qp[1] - k.y) < C.K_PULSE_R * (st.mega[id] ? 1.8 : 0.85) && (C.carrying(st, oq) >= 0 || Math.random() < 0.05)) { b.act({ type: "ctf-act", a: "pulse" }); break; } }
+      if (st.held[id] && Math.random() < 0.15) b.act({ type: "ctf-act", a: "use" });
     }
     if (now - k.posAt > 110) { k.posAt = now; b.x = +(k.x / I.w).toFixed(4); b.y = +(k.y / I.h).toFixed(4); b.act({ type: "pos", x: b.x, y: b.y }); }
   }
