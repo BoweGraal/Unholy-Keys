@@ -94,7 +94,8 @@ var ART=(function(){
   var TOFF=null;   /* three-quarter views: some parts (face, hair, hat) slide a pixel toward the way they're turned */
   var SHF=null;   /* per-part shifts made with Shift all in the pixel editor: {hair:[dx,dy],...} */
   var MIRHAT=false;   /* the witch hat's curl keeps its side when a turned-left view is the turned-right one mirrored */
-  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;if(MIRHAT)x=-x-w;var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
+  var HATCLIP=null;   /* a hat on: hair above its brim line is under the hat, so it isn't drawn (y is head-relative, like px) */
+  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;if(MIRHAT)x=-x-w;if(HATCLIP!==null&&SEC==="hair"){if(y+h<=HATCLIP)return;if(y<HATCLIP){h-=HATCLIP-y;y=HATCLIP;}}var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
   /* a limb: a 3-pixel-wide strip from the joint along the angle, coloured in bands (cols = [[upTo, colour],...]) */
   function limb(jx,jy,a,len,cols,stripes){
     if(ISO&&SEC!==ISO)return;
@@ -132,6 +133,7 @@ var ART=(function(){
     var skin=colOf(L,"skin"),hc=colOf(L,"hair"),tc=colOf(L,"top"),bc=colOf(L,"bot");
     var tcD=shade(tc,-0.25),tcL=shade(tc,0.25),bcD=shade(bc,-0.25),skD=shade(skin,-0.18),hcD=shade(hc,-0.3),shoe="#2A2238";
     var aL=st.armL,aR=st.armR,lL=st.legL,lR=st.legR,hd=st.head||0,hy=Math.round(Math.max(0,hd)*3);   /* head: bowed forward (1) or flung back (-1) */
+    var HTc=L.hat|0;HATCLIP=HTc&&HTc!==8&&HTc!==13?-14+hy:null;   /* every hat but the crown and goggles (they sit on top of the hair) */
     SEC="hair";
     /* behind the head: afro, long hair, the hood */
     if(L.hair===5){px(-7,-19,14,9,hc);px(-6,-20,12,1,hc);px(-8,-17,1,6,hc);px(7,-17,1,6,hc);}
@@ -1994,7 +1996,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       var r=fn(o);o.globalCompositeOperation="destination-out";o.drawImage(e.h,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.h.width*p,e.h.height*p);o.globalCompositeOperation="source-over";
       g.save();g.setTransform(1,0,0,1,0,0);var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(oc,0,0);g.imageSmoothingEnabled=was;g.restore();return r;},
     at:function(g,key,x,y,p){var e=ptGet(key);if(!e||!e.c)return;var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(e.c,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.c.width*p,e.c.height*p);g.imageSmoothingEnabled=was;}};
-  function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var e=ptGet(key);if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(rot)sg.rotate(rot);
+  function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var e=ptGet(key);if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(rot)sg.rotate(rot);if(HATCLIP!==null&&key.indexOf("hair:")===0){sg.beginPath();sg.rect(-200,-14,400,400);sg.clip();}
     if(e.h){sg.globalCompositeOperation="destination-out";sg.drawImage(e.h,e.x0,e.y0);sg.globalCompositeOperation="source-over";}
     if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();
     masks();MUSED=true;[[pmg,e.c],[hmg,e.h]].forEach(function(m){if(!m[1])return;m[0].save();m[0].imageSmoothingEnabled=false;m[0].translate(tx,ty);if(rot)m[0].rotate(rot);m[0].drawImage(m[1],e.x0,e.y0);m[0].restore();});
@@ -2012,7 +2014,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
         else nx=D===2?x:Math.round(-8+(x+8)*11/15);
         var nk=nx+","+y;if(m[k]==="0"){if(o[nk]===undefined)o[nk]="0";}else o[nk]=m[k];}
       PC[ck]=ptBuildM(o);}
-    var e=PC[ck];if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);
+    var e=PC[ck];if(!e)return;sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(HATCLIP!==null&&part==="hair"){sg.beginPath();sg.rect(-200,-14,400,400);sg.clip();}
     if(e.h){sg.globalCompositeOperation="destination-out";sg.drawImage(e.h,e.x0,e.y0);sg.globalCompositeOperation="source-over";}
     if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();}
   var DT={},DT_F=["armL","armR","legL","legR","bob","dx","rot"];
@@ -2514,6 +2516,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.25",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.26",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

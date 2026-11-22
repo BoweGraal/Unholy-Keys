@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.26 — Hair goes under hats
+
+- With a hat on, hair above the hat's brim isn't drawn, so spikes, mohawks, afros, buns and the rest no longer poke out around the hat. Hair below the brim still shows: sides, fringes, long hair, ponytails.
+- This covers the drawn hair and your painted hair edits, in the front, three-quarter, side and back views.
+- The crown and the goggles sit on top of the hair, so hair still shows with those.
+- Swept: every hair with every hat (30+ × 14), plus close-ups of the tricky ones in all views.
+
 ## v1.81.25 — Planner timing in free dance
 
 - **Everyone free dances for about 30 s** before the circle forms. The ring is locked in at 22 s, the first dancer is told then, and the first turn starts about 37 s in (was 23 s).
