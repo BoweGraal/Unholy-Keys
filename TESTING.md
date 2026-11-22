@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.8 — Kart flag has its own how-to card
+
+The card before a Kart flag round was the old Capture the flag one. It now has its own preview (karts, LAUNCH hold-aim-let go, IMPACT sending the flag home, a ? box) and its own how-to and rules.
+
 ## v1.81.7 — Tuning lab, round two
 
 - The lab (performer page → Tuning lab) picks games by kind (Rhythm, Dance, Ride & race, Team), has a **search** box across every setting, a compact **Table** view, and one-tap links to every editor (Notes, Arenas, Tracks, Ski, Graphics).

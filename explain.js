@@ -55,7 +55,10 @@ var EXPLAIN=(function(){
       rules:["Gates, speed and tricks score (tricks are worth more in jump zones)","Hop and land on a new line for a CUT boost","Highest score wins the round"]},
     ctf:{n:"Capture the flag",i:"🚩",goal:"Steal their flag and bring it home.",
       how:[["Run with the stick. Hold SPRINT for a burst","Run with the arrows or WASD. Hold Space or Shift to sprint"],"Grab the other team's flag, then run it back to your base","Collect ⚡ to refill your sprint"],
-      rules:["Capture while your own flag is at home: +500 and a point for your team","Bump a rival on your half to send them back to their spawn","Most team points wins"]}
+      rules:["Capture while your own flag is at home: +500 and a point for your team","Bump a rival on your half to send them back to their spawn","Most team points wins"]},
+    kflag:{n:"Kart flag",i:"🏎️",goal:"Capture the flag in karts: launch across the arena, blast your flag back.",
+      how:[["Steer with the stick, the gas is automatic","Steer with the arrows or WASD, the gas is automatic"],["LAUNCH: hold it, aim with the stick, let go to shoot off (longer hold, harder launch)","LAUNCH (Shift or X): hold, aim, let go to shoot off (longer hold, harder launch)"],["IMPACT: a blast round you, then a short cooldown","IMPACT (Space): a blast round you, then a short cooldown"],["Drive over ? boxes for an item, use it with the item button","Drive over ? boxes for an item, use it with E"]],
+      rules:["Grab their flag and drive it home: +500 and a point for your team","IMPACT a carrier and your flag flies home; anyone else spins out","Items: nitro, oil, shield (blocks IMPACT), mega IMPACT","Most team points wins"]}
   };
   function pick(a){return Array.isArray(a)?(touch?a[0]:a[1]):a;}
 
@@ -183,7 +186,28 @@ var EXPLAIN=(function(){
     av(4,rx,ry,1.2,{dir:rx===18?0:carry?3:1,legL:Math.sin(t*14)*0.5,legR:-Math.sin(t*14)*0.5,armL:1,armR:-1});
     if(u>0.35&&u<0.42)pop("FLAG! +100",rx,ry-18,(u-0.35)/0.07*0.6,COL.yel,1);if(u>0.8&&u<0.9)pop("CAPTURE! +500",110,50,(u-0.8)/0.1*0.7,COL.grn,1);
     TX("RED",90,6,2,COL.red,"center");TX(String(u>0.8?1:0),128,6,2,"#fff","center");TX("BLUE",166,6,2,COL.blu,"center");TX("0",128,22,1,"#888","center");}
-  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:function(t){d_skate(t,true);},keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf};
+  function d_kflag(t){R("#0e0b1a",0,0,W,H);for(var y=0;y<H;y+=16)for(var x=(y/16%2)*16;x<W;x+=32)R("#16122a",x,y,16,16);
+    R("#2a2244",0,0,W,4);R("#2a2244",0,H-4,W,4);R("#3a3070",60,30,8,8);R("#3a3070",188,98,8,8);R("#3a3070",124,64,8,8);   /* an open arena, a few pillars */
+    R("rgba(255,77,109,.3)",6,52,20,40);R("rgba(95,180,240,.3)",230,52,20,40);
+    function kart(x,y,a,c){g.save();g.translate(Math.round(x),Math.round(y));g.rotate(a);R("#000",-9,-6,18,12);R(c,-8,-5,16,10);R("#fff8",-8,-5,16,2);R("#111",-7,-7,4,2);R("#111",3,-7,4,2);R("#111",-7,5,4,2);R("#111",3,5,4,2);R("#f1c27d",-2,-3,5,5);g.restore();}
+    function flag(c,x,y){R("#ddd",x,y-12,1,16);R(c,x+1,y-12,8,5);}
+    var u=(t%8)/8;
+    /* blue kart: hop, aim (arrow grows), launch across to red's flag */
+    var bx,by,ba=Math.PI,aim=0,fly=0;
+    if(u<0.25){bx=200;by=72;aim=u/0.25;}else if(u<0.45){fly=(u-0.25)/0.2;bx=200-fly*170;by=72;}else{bx=30+Math.sin(t*3)*2;by=72;}
+    var carry=u>=0.45&&u<0.7;
+    if(u<0.25){var al=12+aim*36;for(var d=10;d<al;d+=5)R(aim>=0.95?COL.yel:"#3DF2FF",bx-d,by-1,2,2);R("rgba(0,0,0,.4)",bx-8,by+8,16,3);}
+    if(fly>0){for(var k=1;k<5;k++)R("rgba(255,154,46,"+(0.6-k*0.12)+")",bx+k*7,by-1,3,3);}
+    /* red kart chases; at 0.6 it IMPACTs and the flag flies home */
+    var rx=60+Math.max(0,u-0.45)*120,ry=60+Math.sin(t*2)*6;
+    if(u>=0.6&&u<0.75){var rr=(u-0.6)/0.15;g.strokeStyle=COL.red;g.globalAlpha=1-rr;g.lineWidth=2;g.beginPath();g.arc(rx,ry,8+rr*40,0,6.3);g.stroke();g.globalAlpha=1;}
+    var spin=u>=0.6&&u<0.8?t*14:0;
+    kart(rx,ry,0,COL.red);kart(bx,by+(u<0.25?-3:0),ba+spin,COL.blu);
+    flag(COL.blu,236,72);if(carry&&u<0.6)flag(COL.red,bx+6,by-4);else if(u>=0.6&&u<0.75){var fp=(u-0.6)/0.15;flag(COL.red,bx+(16-bx)*fp,by-4-Math.sin(fp*Math.PI)*20);}else flag(COL.red,16,72);
+    R("rgba(255,255,255,.08)",120,110,16,16);var hue=(t*80)%360;g.fillStyle="hsl("+hue+",90%,60%)";g.fillRect(122,112,12,12);TX("?",128,113,1,"#fff","center");
+    if(u<0.25)pop("LAUNCH: hold, aim…",150,40,0.2,"#3DF2FF",1);else if(u<0.45)pop("…let go!",120,40,0.2,COL.yel,1);else if(u>=0.6&&u<0.75)pop("IMPACT! FLAG HOME",110,30,(u-0.6)/0.15*0.6,COL.red,1);
+    TX("RED",90,6,2,COL.red,"center");TX("0",128,6,2,"#fff","center");TX("BLUE",166,6,2,COL.blu,"center");}
+  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:function(t){d_skate(t,true);},keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf,kflag:d_kflag};
 
   /* ---------- the card ---------- */
   var CSS="#explain{display:none;position:fixed;left:0;right:0;bottom:0;top:0;z-index:60;background:none;pointer-events:none;align-items:flex-start;justify-content:center;padding:4px 10px 10px;box-sizing:border-box;-webkit-tap-highlight-color:transparent}"+
@@ -222,7 +246,7 @@ var EXPLAIN=(function(){
   }
   function show(mode,key,opts){
     build();opts=opts||{};
-    var m=mode==="skate"&&opts.ice?"ice":mode,inf=INFO[m]||INFO.step;
+    var m=mode==="skate"&&opts.ice?"ice":mode==="ctf"&&opts.kflag?"kflag":mode,inf=INFO[m]||INFO.step;
     if(!on||curMode!==m||curKey!==key){
       curMode=m;curKey=key;t0=performance.now();
       root.querySelector(".xt").textContent=inf.i+" "+inf.n;
