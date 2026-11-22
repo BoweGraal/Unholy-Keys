@@ -76,7 +76,7 @@ var TUNE=(function(){
    vars:[
     V("ctf.speed","Run speed",6.2,2,14,0.1,"Tiles a second running.","tiles/s"),
     V("ctf.sprint","Sprint multiplier",1.6,1,3,0.05,"Speed while sprinting.","×"),
-    V("ctf.stam","Sprint meter",2.4,0.5,8,0.1,"Seconds of sprint in a full meter.","s"),
+    V("ctf.stam","Sprint meter",1.2,0.5,8,0.1,"Seconds of sprint in a full meter.","s"),
     V("ctf.carry","Carrying the flag",0.85,0.4,1,0.01,"Speed while you carry their flag.","×"),
     V("ctf.pad","Boost pad push",2.4,0,6,0.1,"How hard a boost pad throws you.","×"),
     V("ctf.tagR","Tag reach",1,0.4,2,0.05,"How close two players have to get to tag.","tiles")]},

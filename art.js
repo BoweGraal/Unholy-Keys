@@ -710,7 +710,7 @@ var ART=(function(){
      charge to start. The refill pick-ups fill it at once.
      Positions are in tiles (x across, y down); on the wire they're fractions of the map (0..1). */
   var CTF={CH:".#><^vRBrbsp",TEAM:["#E8505B","#3B7BE8"],TNAME:["RED","BLUE"],SPEED:6.2,CARRY:0.85,PAD:2.4,TAG_R:1.0,TAKE_R:0.9,CAP_R:1.2,
-    SPRINT:1.6,STAM:2.4,CHARGE:9,SPRINT_MIN:0.3,REFILL_MS:10000,REFILL_R:0.8,
+    SPRINT:1.6,STAM:1.2,CHARGE:4.5,BODY_R:0.8,SPRINT_MIN:0.3,REFILL_MS:10000,REFILL_R:0.8,
     /* Kart Flag (st.kart): the same arenas, driven in karts. No tagging; the PULSE (a shockwave round you, with a cooldown)
        knocks your flag out of a carrier's hands and home, and spins other enemies out. Power-up boxes (map tile p) give one item. */
     K_SPEED:9.5,K_PULSE_R:3,K_PULSE_MS:8000,K_SPIN_MS:1300,K_BOX_MS:8000,K_BOX_R:0.85,K_OIL_R:0.75,K_OIL_MS:20000,K_SHIELD_MS:4000,K_NITRO_MS:2200,K_AIM_MS:700,K_LAUNCH_CD:4000,K_ITEMS:false,K_TAKE_R:1.25,K_TILE:44,K_Z:1.68,
@@ -723,7 +723,7 @@ var ART=(function(){
     "########################################",
     "#......................................#",
     "#............#............#............#",
-    "#.rr.........#..s......s..#.........bb.#",
+    "#.rr.........#............#.........bb.#",
     "#.rr.........#.....##.....#.........bb.#",
     "#.....>......#.....##.....#......<.....#",
     "#......####..#.....##.....#..####......#",
@@ -731,8 +731,8 @@ var ART=(function(){
     "#......#.......s........s.......#......#",
     "#......#........................#......#",
     "#.RRR............##..##............BBB.#",
-    "#.RRR............##..##............BBB.#",
-    "#.RRR.....>>>....##..##....<<<.....BBB.#",
+    "#.RRR............##..##.........s..BBB.#",
+    "#.RRR..s..>>>....##..##....<<<.....BBB.#",
     "#.RRR............##..##............BBB.#",
     "#......#........................#......#",
     "#......#.........>....<.........#......#",
@@ -740,7 +740,7 @@ var ART=(function(){
     "#......####..#.....##.....#..####......#",
     "#.....>......#.....##.....#......<.....#",
     "#.rr.........#.....##.....#.........bb.#",
-    "#.rr.........#..s......s..#.........bb.#",
+    "#.rr.........#............#.........bb.#",
     "#............#............#............#",
     "#......................................#",
     "########################################"].join("")};};
@@ -753,7 +753,8 @@ var ART=(function(){
     rect(20,3,21,5,"#");rect(20,h-6,21,h-4,"#");rect(19,mid-4,20,mid-4,"#");rect(19,mid+3,20,mid+3,"#");
     rect(27,9,28,10,"#");rect(27,h-11,28,h-10,"#");rect(30,mid-1,30,mid,"#");   /* the middle */
     for(x=9;x<=17;x+=4){set(x,2,">");set(x,h-3,">");}   /* boost lanes along the top and bottom, towards the middle */
-    set(24,mid-6,">");set(24,mid+5,">");
+    set(8,mid-2,">");set(8,mid+1,">");   /* out of each base along the open rows */
+    set(22,mid-4,">");set(22,mid+3,">");   /* across the middle between the pillars, a clear run to the far side */
     set(16,mid-3,"p");set(16,mid+2,"p");set(25,mid,"p");set(28,4,"p");set(28,h-5,"p");   /* power-up boxes */
     return{name:"Open Circuit",w:w,h:h,t:G.map(function(r){return r.join("");}).join("")};};
   CTF.clean=function(m){
@@ -810,7 +811,8 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       var qx=q[3]===undefined?q[0]:q[3],qy=q[4]===undefined?q[1]:q[4],near=1e9;   /* fast players can pass through each other between two updates: test along both paths */
       for(var k4=0;k4<=4;k4++){var u=k4/4;near=Math.min(near,Math.hypot(qx+(q[0]-qx)*u-(px+(x-px)*u),qy+(q[1]-qy)*u-(py+(y-py)*u)));}
       if(near>CTF.TAG_R)continue;var key=id<o?id+"|"+o:o+"|"+id;if(st.cool[key]&&now-st.cool[key]<1200)continue;st.cool[key]=now;
-      var sd=I.side((q[0]+x)/2,(q[1]+y)/2),victim=sd===t?o:id,tagger=victim===o?id:o,vf=CTF.carrying(st,victim);
+      var cMe=CTF.carrying(st,id)>=0,cO=CTF.carrying(st,o)>=0;if(cMe===cO)continue;   /* only a flag carrier can be tagged; everyone else just bumps (CTF.bump) */
+      var victim=cMe?id:o,tagger=victim===o?id:o,vf=CTF.carrying(st,victim);
       if(vf>=0){var f2=st.flags[vf];f2.at=null;f2.x=I.base[f2.t][0];f2.y=I.base[f2.t][1];}
       st.tagged[victim]=now;add(vf>=0?250:150,tagger);ev.push({k:"tag",id:victim,by:tagger,carrier:vf>=0});if(victim===id)break;}
     return ev;};
@@ -837,6 +839,9 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
   CTF.boxLeft=function(st,i,now){var t=st.box&&st.box[i]||0;return t?Math.max(0,CTF.K_BOX_MS-(now-t)):0;};
   /* the sprint meter s = {e: 0..1, on}: holding sprint with enough charge runs you faster and drains it; otherwise it charges.
      Returns the speed multiplier for this step. */
+  /* bodies: you can't walk through the other team, so you can block for a teammate. b is {x,y}; pushes it out of any enemy nearby (on foot only) */
+  CTF.bump=function(I,st,id,b,now){if(st.kart)return;var t=st.teams[id];if(t===undefined)return;for(var o in st.pos){if(o===id||st.teams[o]===undefined||st.teams[o]===t)continue;var q=st.pos[o];if(now-q[2]>600||(st.tagged[o]&&now-st.tagged[o]<1500))continue;
+    var dx=b.x-q[0],dy=b.y-q[1],d=Math.hypot(dx,dy);if(d>=CTF.BODY_R)continue;if(d<1e-3){dx=t?1:-1;dy=0;d=1;}var k=(CTF.BODY_R-d)*0.5;CTF.move(I,b,dx/d*k,dy/d*k);}};
   CTF.sprint=function(s,want,dt){if(want&&s.e>0&&(s.on||s.e>=CTF.SPRINT_MIN)){s.on=true;s.e=Math.max(0,s.e-dt/CTF.STAM);if(s.e<=0)s.on=false;}
     else{s.on=false;s.e=Math.min(1,s.e+dt/CTF.CHARGE);}return s.on?CTF.SPRINT:1;};
   /* how long until refill i is back (ms, 0 = it's there) */
@@ -2505,6 +2510,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.14",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.18",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

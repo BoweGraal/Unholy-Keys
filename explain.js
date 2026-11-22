@@ -55,7 +55,7 @@ var EXPLAIN=(function(){
       rules:["Gates, speed and tricks score (tricks are worth more in jump zones)","Hop and land on a new line for a CUT boost","Highest score wins the round"]},
     ctf:{n:"Capture the flag",i:"🚩",goal:"Steal their flag and bring it home.",
       how:[["Run with the stick. Hold SPRINT for a burst","Run with the arrows or WASD. Hold Space or Shift to sprint"],"Grab the other team's flag, then run it back to your base","Collect ⚡ to refill your sprint"],
-      rules:["Capture while your own flag is at home: +500 and a point for your team","Bump a rival on your half to send them back to their spawn","Most team points wins"]},
+      rules:["Capture while your own flag is at home: +500 and a point for your team","Tag their flag carrier and the flag flies home","Everyone else is solid: block for your teammates","Most team points wins"]},
     kflag:{n:"Kart flag",i:"🏎️",goal:"Capture the flag in karts: launch across the arena, blast your flag back.",
       how:[["Steer with the stick, the gas is automatic","Steer with the arrows or WASD, the gas is automatic"],["LAUNCH: hold it, aim with the stick, let go to shoot off (longer hold, harder launch)","LAUNCH (Shift or X): hold, aim, let go to shoot off (longer hold, harder launch)"],["IMPACT: a blast round you, then a short cooldown","IMPACT (Space): a blast round you, then a short cooldown"]],
       rules:["Grab their flag and drive it home: +500 and a point for your team","IMPACT a carrier and your flag flies home; anyone else spins out","Most team points wins"]}

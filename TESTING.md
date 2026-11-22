@@ -1688,6 +1688,39 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.18 — Kart flag boost pads
+
+- The two pads that fired straight into the middle pillars are gone. The arena is mirrored, so each team gets the same set:
+  - top and bottom lanes (3 each, towards the middle), as before
+  - **2 out of each base** along the open rows either side of it (a 39-tile clear run)
+  - **2 across the middle**, between the pillars (a 20-tile clear run)
+- Every pad now has at least 20 clear tiles in front of it.
+- If you saved your own Kart flag arena in the designer, practice uses that one. Reset it in the designer to get the new pads.
+
+## v1.81.17 — No bottom strip, version on the menu only, flag in the kart
+
+- **No bottom strip in games**: in practice, and on phones and tablets during a game, the chat bar is gone and nothing reserves space for it, so the arena runs to the bottom edge (Kart flag reads the real value now).
+- **Version** shows on the main menu only, not during a game.
+- **Kart flag**: a carried flag is planted in the kart and sized to it (it was floating well above).
+
+## v1.81.16 — Rinks in landscape, no false bails, practice defaults
+
+- **Roller and ice rink, landscape**: the rink fills the floor down to the bottom edge (it was a thin strip under the stage), the long controls line is gone and the hint sits at the bottom.
+- **Bails**: holding the stick to skate as you jump is no longer a trick, so you don't bail on landing. A trick starts when you change direction (or use the trick wheel) in the air, and you only bail if you're still holding a trick when you land.
+- **Practice**: Dip is picked to start with and the difficulty starts on Normal.
+
+## v1.81.15 — Walk race portrait, Spin and Worm; CTF blocking
+
+**Dance walk race**
+- **Portrait**: the pad is centred at the bottom and the racers get their own band between the stage and the pad (spread to its edges), so they no longer sit under the pad. Landscape is unchanged.
+- **Spin**: racers turn all the way round (a turn every 2 beats) as they race.
+- **Worm** 🐛 is a new dance in the rotation: the circle wriggles low along the pad and the body does the worm on the floor.
+
+**Capture the flag (on foot)**
+- **Tags only hit the flag carrier** (the flag flies home and they go back). Anyone else just bumps: the other team is solid, so you can block for a teammate.
+- **Sprint drains and refills twice as fast** (1.2 s meter, 4.5 s refill).
+- **Twin Forts has 4 ⚡ refills**: the middle pair, and one in front of each base.
+
 ## v1.81.14 — Kart flag tune-up, skip timer
 
 - **Flag pick-up**: the pick-up is now tested along the kart's path since the last update and karts get a bigger reach (1.25 tiles), so stopping on or driving fast over the flag always grabs it. A hiccup in the button display can no longer stop the rules from running.
