@@ -3897,21 +3897,17 @@ var WALK=(function(){
     var g=pg;g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,hh);
     var S=Math.min(w,hh)/2,cx=w/2,cy=hh/2,si=b>=GO_BEAT?styleAt(b):order[0],st=STY[si],beatK=1-((b%1)+1)%1;
     var warn=Math.min(1,outT/T("tripTime"));
-    g.fillStyle="rgba(12,9,24,.78)";g.strokeStyle=warn>0.05?"rgba(255,"+Math.round(180-150*warn)+",60,"+(0.5+0.5*warn)+")":"rgba(255,255,255,.18)";g.lineWidth=2+3*warn;
-    /* a pixel panel: notched corners and a stepped border, with the warning colour as the border */
-    var Q=4,bc=g.strokeStyle,bw2=Math.round((2+3*warn)/2)*2||2;g.fillRect(Q,Q,w-2*Q,hh-2*Q);g.fillStyle=bc;
-    g.fillRect(2*Q,0,w-4*Q,bw2);g.fillRect(2*Q,hh-bw2,w-4*Q,bw2);g.fillRect(0,2*Q,bw2,hh-4*Q);g.fillRect(w-bw2,2*Q,bw2,hh-4*Q);
-    g.fillRect(Q,Q,Q,Q);g.fillRect(w-2*Q,Q,Q,Q);g.fillRect(Q,hh-2*Q,Q,Q);g.fillRect(w-2*Q,hh-2*Q,Q,Q);
+    /* no card behind the pad: the runners show through (the warning colour goes on the circle instead) */
     /* the circle: pulses on the beat, fills when you're in it */
     var px=cx+c[0]*S,py=cy+c[1]*S,rp=r*S*(1+0.06*beatK),inside=d<=r;
     g.save();g.globalAlpha=inside?0.35:0.12;g.fillStyle=st.col;ART.PX.disc(g,px,py,rp);g.restore();
-    g.strokeStyle=st.col;g.save();g.globalAlpha=inside?0.3:0.15;ART.PX.ring(g,px,py,rp,inside?16:9);g.restore();g.lineWidth=inside?5:3;ART.PX.ring(g,px,py,rp);
+    g.strokeStyle=warn>0.05?"rgb(255,"+Math.round(180-150*warn)+",60)":st.col;g.save();g.globalAlpha=inside?0.3:0.15;ART.PX.ring(g,px,py,rp,inside?16:9);g.restore();g.lineWidth=inside?5:3;ART.PX.ring(g,px,py,rp);
     /* your cursor */
     if(cur){var qx=cx+cur[0]*S,qy=cy+cur[1]*S;g.fillStyle=inside?"#fff":"rgba(255,255,255,.75)";ART.PX.disc(g,qx,qy,6);g.strokeStyle="rgba(0,0,0,.6)";g.lineWidth=2;g.stroke();}
     /* the dance now, and what's coming */
-    g.textAlign="center";g.textBaseline="top";g.font="700 14px Silkscreen,ui-monospace,monospace";g.fillStyle=st.col;g.fillText(st.icon+" "+st.name,cx,12);
+    g.textAlign="center";g.textBaseline="top";g.font="700 14px Silkscreen,ui-monospace,monospace";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.8)";g.strokeText(st.icon+" "+st.name,cx,12);g.fillStyle=st.col;g.fillText(st.icon+" "+st.name,cx,12);
     var into=b-GO_BEAT-seg(b)*SEG;
-    if(b>=GO_BEAT&&into>=SEG-2){var nx=STY[order[(seg(b)+1)%order.length]];g.font="700 11px Silkscreen,ui-monospace,monospace";g.fillStyle="rgba(255,255,255,.75)";g.fillText("Next: "+nx.icon+" "+nx.name+" in "+Math.ceil(SEG-into),cx,32);}
+    if(b>=GO_BEAT&&into>=SEG-2){var nx=STY[order[(seg(b)+1)%order.length]];g.font="700 11px Silkscreen,ui-monospace,monospace";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.8)";g.strokeText("Next: "+nx.icon+" "+nx.name+" in "+Math.ceil(SEG-into),cx,32);g.fillStyle="rgba(255,255,255,.75)";g.fillText("Next: "+nx.icon+" "+nx.name+" in "+Math.ceil(SEG-into),cx,32);}
     /* speed */
     var bw=w-40,by=hh-20;g.fillStyle="rgba(255,255,255,.12)";g.fillRect(20,by,bw,7);g.fillStyle=tripped?"#FF4D6D":f>0.95?"#4CC38A":f>0.6?"#F5C518":"#FF8A2B";g.fillRect(20,by,bw*(tripped?0:speedF),7);
   }
