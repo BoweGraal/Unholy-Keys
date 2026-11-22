@@ -350,8 +350,11 @@ body.practice #reactBar{display:none}
 body.dev-phone.gaming #moveCtl,body.dev-phone.gaming #moveHint,body.dev-phone.gaming #hudBR,body.dev-phone.gaming #chatPanel,
 body.dev-tablet.gaming #moveCtl,body.dev-tablet.gaming #moveHint,body.dev-tablet.gaming #chatPanel,
 body.dev-pc.narrow.gaming #moveCtl,body.dev-pc.narrow.gaming #moveHint{display:none}
-body.dev-phone #gameHdr{padding:6px 6px 6px 10px}
-body.dev-phone #gameClose{width:34px;height:34px;font-size:15px}
+body.dev-phone #gameHdr{padding:4px 6px 4px 10px;font-size:12px;gap:6px}
+body.dev-phone #gameFoot{display:none}   /* phones: the score is already on the play area, so the strip under it goes and the game gets the room */
+body.dev-phone #gameSpd,body.dev-phone #gameLv{height:30px;margin-right:2px}
+#gameCombo{font:800 12px 'Silkscreen',ui-monospace,monospace;color:#F5C518;min-width:0}
+body.dev-phone #gameClose{width:32px;height:32px;font-size:15px}
 body.dev-tablet #gameHdr{font-size:15px;padding:10px 10px 10px 14px}
 body.dev-tablet #gameClose{width:36px;height:36px}
 body.dev-tablet #gameFoot{font-size:11px;line-height:14px;height:42px}
@@ -790,7 +793,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <div class="note" id="prNote">Arrow keys or the pad step, D F J K or drag in free dance, Esc or the X sits a round out. Points add up across practice rounds until you close the page.</div>
   </div>
   <div id="gamePanel">
-    <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameBpm"></span><button id="gameSpd" aria-label="Scroll speed" title="How fast the notes fall">1.0&times;</button><button id="gameLv" aria-label="Level" title="Practice level"></button><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
+    <div id="gameHdr"><span id="gameTitle">Dance</span><span id="gameCombo"></span><span id="gameBpm"></span><button id="gameSpd" aria-label="Scroll speed" title="How fast the notes fall">1.0&times;</button><button id="gameLv" aria-label="Level" title="Practice level"></button><button id="gameClose" aria-label="Stop dancing" title="Stop dancing (Space)">&#10005;</button></div>
     <canvas id="gameMe"></canvas>
     <canvas id="gameCv"></canvas>
     <div id="gameFoot"></div>
@@ -3214,7 +3217,7 @@ var GAME=(function(){
 
   /* ---------- step dance ---------- */
   var SPDS=[0.6,0.8,1,1.25,1.5,1.8,2.2],spdI=2;try{var sv=parseFloat(localStorage.getItem("uk_scroll"));if(sv>0){var bi2=0;SPDS.forEach(function(v,i){if(Math.abs(v-sv)<Math.abs(SPDS[bi2]-sv))bi2=i;});spdI=bi2;}}catch(e){}
-  function spdLabel(){return SPDS[spdI].toFixed(SPDS[spdI]%1?2:1).replace(/0$/,"")+"\u00d7";}
+  function spdLabel(){var s=String(Math.round(SPDS[spdI]*100)/100);if(s.indexOf(".")<0)s+=".0";return s+"\u00d7";}
   function travel(per){var t=Math.max(TUNE.v("step.travelMin"),Math.min(TUNE.v("step.travelMax"),per*TUNE.v("step.travelBeats")));return (mode==="keys"?t*(four?TUNE.v("hw.fall4"):TUNE.v("hw.fall7")):t)/SPDS[spdI];}   /* scroll speed: 1x is the tuned fall time, higher is faster */   /* the highway: quicker notes */
   function makeNotes(now,bt){
     if(rnd&&rnd.chart){feedRound(now,bt);return;}
@@ -3684,6 +3687,7 @@ var GAME=(function(){
   function foot(){
     var f=document.getElementById("gameFoot");if(!f)return;
     report();
+    var cb=document.getElementById("gameCombo");if(cb)cb.textContent=(mode==="step"||mode==="aim"||mode==="keys")&&combo>=3?"\u00d7"+combo:"";
     if(mode==="step"||mode==="aim"||mode==="keys")f.textContent=(onFire?"\uD83D\uDD25 \u00d72 \u00b7 ":"")+"Score "+score.toLocaleString()+" · Combo "+combo+" · Best "+best;
     else if(mode==="free")f.textContent=("ontouchstart" in window)?"Drag the hands and feet":"Drag the hands and feet, or tap D F J K";
   }
@@ -5148,7 +5152,7 @@ var DEVICE=(function(){
     var z=SIZE[kind],vh=innerHeight,vw=innerWidth;
     /* what stays at the bottom: the chat on a computer at a show; nothing on touch screens or in practice */
     var cp=document.getElementById("chatPanel"),chatH=cp&&getComputedStyle(cp).display!=="none"?cp.getBoundingClientRect().height:0;
-    var bottom=Math.round(chatH+(kind==="phone"?8:14));
+    var bottom=Math.round(chatH+(kind==="phone"?4:14));
     var short=vh<480;document.body.classList.toggle("short",short);
     var top=short?8:document.body.classList.contains("embed")?78:112;      /* below the round banner */
     /* on a phone or a tablet held upright the panel starts under the stage, so the performer and the Jumbotron stay in view above it */
