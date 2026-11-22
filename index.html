@@ -13,10 +13,10 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.81.5"></script>
-<script src="art.js?v=1.81.5"></script>
-<script src="instruments.js?v=1.81.5"></script>
-<script src="kart.js?v=1.81.5"></script>
+<script src="gfx.js?v=1.81.6"></script>
+<script src="art.js?v=1.81.6"></script>
+<script src="instruments.js?v=1.81.6"></script>
+<script src="kart.js?v=1.81.6"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4847,7 +4847,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.81.5",SERVER_VERSION="";
+var PAGE_VERSION="1.81.6",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="Unholy Keys v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh (Ctrl+Shift+R)</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -5832,6 +5832,12 @@ document.getElementById("jAudMin").innerHTML=AUD.min?"+":"&#8211;";
    Result: {bpm, dur, beats:[ms], steps:[[ms, lanes] or [ms, lane, holdMs]], peaks:[[startMs,endMs]]};
    lanes is a bit mask, 1=left 2=down 4=up 8=right; a third number makes it a hold arrow (one lane, held
    for that many ms); peaks are the big moments, where the steps get hardest. */
+/* Hand-made steps: a song in the songs folder can have a <song>.chart.json next to it, written in the note editor (charts.html).
+   Its steps (and parts / drop, if it has them) replace the worked-out ones; the beat grid still comes from the analysis. */
+function handChart(url,c){if(!c||!url||!/^songs\//.test(url))return Promise.resolve(c);
+  return fetch(url.replace(/\.[a-z0-9]+$/i,"")+".chart.json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(h){
+    if(!h||!Array.isArray(h.steps)||!h.steps.length)return c;c.steps=h.steps.filter(function(s){return Array.isArray(s)&&s[0]>=0&&s[1]>=1&&s[1]<=15;}).map(function(s){return s[2]>0?[Math.round(s[0]),s[1]|0,Math.round(s[2])]:[Math.round(s[0]),s[1]|0];});
+    if(Array.isArray(h.sections)&&h.sections.length)c.sections=h.sections;if(h.drop>0)c.drop=Math.round(h.drop);c.hand=1;return c;}).catch(function(){return c;});}
 var CHART=(function(){
   var FPS=100,NFFT=1024,LAG=14,PULSE=0.55;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
   function fft(re,im){
@@ -6403,7 +6409,7 @@ var ROUNDS=(function(){
         var full=buf,lim=Math.floor(900*full.sampleRate);
         buf={sampleRate:full.sampleRate,length:lim,numberOfChannels:full.numberOfChannels,duration:900,getChannelData:function(c){return full.getChannelData(c).subarray(0,lim);}};
       }
-      CHART.analyse(buf,{level:cfg.level,onProgress:function(p){if(my===job)fill.style.width=Math.round(p*100)+"%";}},function(chart){if(my===job)send(chart,my);});
+      CHART.analyse(buf,{level:cfg.level,onProgress:function(p){if(my===job)fill.style.width=Math.round(p*100)+"%";}},function(chart){handChart(f.url,chart).then(function(c2){if(my===job)send(c2,my);});});
     }).catch(function(e){
       console.warn("[Unholy Keys] could not analyse the song, using live detection:",e&&e.message);
       if(my===job)send(null,my,true,e&&e.message);

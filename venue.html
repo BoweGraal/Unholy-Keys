@@ -16,12 +16,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.5"></script>
-<script src="gfx.js?v=1.81.5"></script>
-<script src="art.js?v=1.81.5"></script>
-<script src="instruments.js?v=1.81.5"></script>
-<script src="kart.js?v=1.81.5"></script>
-<script src="explain.js?v=1.81.5"></script>
+<script src="tune.js?v=1.81.6"></script>
+<script src="gfx.js?v=1.81.6"></script>
+<script src="art.js?v=1.81.6"></script>
+<script src="instruments.js?v=1.81.6"></script>
+<script src="kart.js?v=1.81.6"></script>
+<script src="explain.js?v=1.81.6"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -441,6 +441,10 @@ body.gaming-free #dpad{display:none}
 body.gaming-free #moveCtl{display:none}
 #fdUI .fd-act{flex-direction:row;font-size:11px;padding:5px 2px}
 body.gaming-free #hudBR{display:none}
+/* practice: one Exit button, always on screen during any game, so you can never get stuck */
+#prQuit{display:none;position:fixed;left:52px;top:8px;z-index:9000;height:32px;padding:0 11px;border-radius:9px;font:700 12px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(200,64,126,.92);border:1px solid #ff8ac8;cursor:pointer;touch-action:manipulation}
+body.practice.pr-busy #prQuit{display:block}body.practice.pr-busy.gaming #prQuit{display:none}   /* the panel games have their own X */
+body.practice.pr-busy[data-game] #danceBtn{display:none!important}
 /* in a game only the game's own controls show: no instrument box, no Talk / Start game / Leave practice; the Stop button shrinks to a small X at the top left */
 body[data-game]:not([data-game=""]):not([data-game=free]) #hudBR,body[data-game]:not([data-game=""]):not([data-game=free]) #talkBtn,body[data-game]:not([data-game=""]):not([data-game=free]) #prStart,body[data-game]:not([data-game=""]):not([data-game=free]) #prExit{display:none!important}
 body[data-game]:not([data-game=""]):not([data-game=free]) #danceBtn{position:fixed!important;left:52px!important;top:8px!important;right:auto!important;bottom:auto!important;width:auto!important;min-width:0!important;height:32px!important;padding:0 10px!important;font-size:11px!important;z-index:70!important}
@@ -761,6 +765,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <div id="keepyUI"><div id="kpBanner">🎈 KEEPY UPPY</div><div id="kpScore">0</div><div id="kpHint"></div><button id="kpJump" aria-label="Jump">JUMP<small>tap twice</small></button></div>
   <div id="skateUI"><div id="skBanner">🛼 ROLLER RINK</div><div id="skScore">0</div><div id="skSpeed"><i></i></div><div id="skTrick"></div><div id="skHint"></div><button id="skJump" aria-label="Jump">JUMP</button><div id="skWheel"><b data-t="1" style="left:50%;top:9%">SUPERMAN</b><b data-t="2" style="left:50%;top:91%">TUCK</b><b data-t="3" style="left:13%;top:50%">KICK</b><b data-t="4" style="left:87%;top:50%">SPLIT</b><i id="skKnob"></i></div></div>
   <div id="roundBox"></div>
+  <button id="prQuit" type="button" title="End this practice round (Esc)">&#10005; Exit</button>
   <button id="prDance" type="button" title="Pick a mini game and a song">&#128131; Dance</button>
   <div id="prBar">
     <div class="h">Dance practice · pick a mini game and a song<button id="prClose" type="button" aria-label="Close menu" title="Close (Esc)">&#10005;</button></div>
@@ -2748,7 +2753,7 @@ var GAME=(function(){
       }
       push(t,m);
     }
-    if(diff>=2&&bt.length>8){
+    if(diff>=2&&bt.length>8&&!chart.hand){   /* hand-made steps get no extra fills */
       var add=[],ln=0;
       var occ=function(t,tol){for(var q=0;q<out.length;q++){var s=out[q];if(Math.abs(s[0]-t)<tol)return 1;if(s.length>2&&t>s[0]-tol&&t<s[0]+s[2])return 1;}return 0;};
       var T=[[[1,0,1,0,1,0,1,1],[1,0,1,1,1,0,1,0],[1,1,1,0,1,1,1,0],[1,0,1,0,1,1,1,1]],
@@ -2787,6 +2792,7 @@ var GAME=(function(){
 
   function easeChart(chart,diff){
     if(!chart)return chart;
+    if(chart.hand&&(diff|0)>=3)return chart;   /* hand-made steps: Expert is exactly what was written */
     chart=thumbChart(chart);   /* one chart for everyone, phone or computer, so every player has the same chances at points */
     return levelChart(chart,diff|0);
   }
@@ -2798,6 +2804,7 @@ var GAME=(function(){
     var st=chart.steps,bt=chart.beats||[],per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9,bi=0;
     if(diff===undefined)diff=1;
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
+    if(chart.hand){for(var hi2=0;hi2<st.length;hi2++){var hl=[];for(var hb=0;hb<4;hb++)if(st[hi2][1]&(1<<hb))hl.push(hb);out.push(hl);}return out;}   /* hand-made: the lanes as written (left D, down F, up J, right K) */
     for(var i=0;i<st.length;i++){
       var s=st[i],n=0;for(var b=0;b<4;b++)if(s[1]&(1<<b))n++;
       var big=inPk(s[0]),gap=diff>=3?per*0.2:diff===2?per*0.4:per*0.45;   /* the ladder has already thinned the chart */
@@ -5788,6 +5795,12 @@ var ROUND=(function(){
    Result: {bpm, dur, beats:[ms], steps:[[ms, lanes] or [ms, lane, holdMs]], peaks:[[startMs,endMs]]};
    lanes is a bit mask, 1=left 2=down 4=up 8=right; a third number makes it a hold arrow (one lane, held
    for that many ms); peaks are the big moments, where the steps get hardest. */
+/* Hand-made steps: a song in the songs folder can have a <song>.chart.json next to it, written in the note editor (charts.html).
+   Its steps (and parts / drop, if it has them) replace the worked-out ones; the beat grid still comes from the analysis. */
+function handChart(url,c){if(!c||!url||!/^songs\//.test(url))return Promise.resolve(c);
+  return fetch(url.replace(/\.[a-z0-9]+$/i,"")+".chart.json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(h){
+    if(!h||!Array.isArray(h.steps)||!h.steps.length)return c;c.steps=h.steps.filter(function(s){return Array.isArray(s)&&s[0]>=0&&s[1]>=1&&s[1]<=15;}).map(function(s){return s[2]>0?[Math.round(s[0]),s[1]|0,Math.round(s[2])]:[Math.round(s[0]),s[1]|0];});
+    if(Array.isArray(h.sections)&&h.sections.length)c.sections=h.sections;if(h.drop>0)c.drop=Math.round(h.drop);c.hand=1;return c;}).catch(function(){return c;});}
 var CHART=(function(){
   var FPS=100,NFFT=1024,LAG=14,PULSE=0.55;   /* readings come out 14 ms ahead of the sound; LAG puts them back */
   function fft(re,im){
@@ -6238,14 +6251,14 @@ var PRACTICE=(function(){
     return pick;
   }
   /* a song from the list: a Backing Track is already a file; a site song is downloaded when picked */
-  var pickSeq=0;
+  var pickSeq=0,songUrl=null;
   function pickTrack(t){
     if(t.file){setSong(t.file,t.name);return;}
     if(t.yt){pickSeq++;file=null;buf=null;ytSel=t;title=t.name;$("prSong").textContent="▶ "+t.name+" (YouTube)";$("prGo").disabled=false;YTS.cue(t.yt);return;}
     var my=++pickSeq;$("prSong").textContent="Loading "+t.name+"…";$("prGo").disabled=true;
     function get(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.blob();});}
     get(t.url).catch(function(e){if(t.alt)return get(t.alt);throw e;})
-      .then(function(b){if(my===pickSeq)setSong(b,t.name);})
+      .then(function(b){if(my===pickSeq){setSong(b,t.name);songUrl=t.url;}})
       .catch(function(){if(my===pickSeq){$("prSong").textContent="Couldn't load "+t.name+". Try another song.";}});
   }
   window.ukPracticeSongs=function(){return REPO.map(function(t){return t.name;});};
@@ -6429,7 +6442,7 @@ var PRACTICE=(function(){
     if(d.file)setSong(d.file,d.title||d.file.name);
   });
   function setSong(f,name){
-    file=f;buf=null;ytSel=null;title=String(name||"Song").replace(/\.(mp3|wav|flac|ogg|m4a|aac|opus|mp4|m4v|webm|mov|mkv)$/i,"").slice(0,80);
+    file=f;buf=null;ytSel=null;songUrl=null;title=String(name||"Song").replace(/\.(mp3|wav|flac|ogg|m4a|aac|opus|mp4|m4v|webm|mov|mkv)$/i,"").slice(0,80);
     $("prSong").textContent="♫ "+title;$("prGo").disabled=false;
   }
   function decode(){
@@ -6490,7 +6503,7 @@ var PRACTICE=(function(){
       return;}
     decode().then(function(b){
       if(my!==job)return;
-      CHART.analyse(b,{level:level},function(c){go(c);});        /* free dance too: the spotlight turns follow the bars */
+      CHART.analyse(b,{level:level},function(c){handChart(songUrl,c).then(go);});        /* free dance too: the spotlight turns follow the bars */
     }).catch(function(e){
       document.body.classList.remove("pr-busy");ROUND.onMsg({type:"round",phase:"off",n:n});
       note("Couldn’t open that file ("+(e&&e.message||"unknown format")+"). Try an MP3 or WAV.");
@@ -6665,6 +6678,7 @@ var PRACTICE=(function(){
     chart=window.__testChart||{bpm:120,beats:beats,steps:[],dur:300000};window.__testChart=null;var off=window.__testPos||0;window.__testPos=0;ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,kflag:!!window.__testKflag,chart:chart,ms:800,title:mode==="ctf"?"CTF test":mode==="ski"?"Ski test":mode==="pipe"?"Pipe test":"Walk test"});
     setTimeout(function(){if(my===job)afterStart(my,-off);},800);};
   window.ukMoshTest=function(nb,c,pos){window.__testMode="mosh";window.__testChart=c||null;window.__testPos=pos||0;window.ukWalkTest(nb);};   /* tests: a mosh round at song position pos (ms) */
+  document.getElementById("prQuit").addEventListener("click",function(e){e.preventDefault();try{if(GAME.mode)GAME.stop();}catch(x){}try{if(ROUND.active())ROUND.sitOut();}catch(x){}if(window.ukPracticeStop)window.ukPracticeStop();});
   window.ukPracticeStop=function(){if(on&&document.body.classList.contains("pr-busy")){stopAll();note("Back on the dance floor.");}};   /* STOP / Esc in any practice game */
   window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
   window.ukPracticeBattle=function(){return plan?pub():null;};
@@ -7046,7 +7060,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.5",SERVER_VERSION="";
+var PAGE_VERSION="1.81.6",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7596,7 +7610,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.5"></script>
+<script src="lab.js?v=1.81.6"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
