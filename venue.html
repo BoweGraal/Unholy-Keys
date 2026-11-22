@@ -16,12 +16,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.4"></script>
-<script src="gfx.js?v=1.81.4"></script>
-<script src="art.js?v=1.81.4"></script>
-<script src="instruments.js?v=1.81.4"></script>
-<script src="kart.js?v=1.81.4"></script>
-<script src="explain.js?v=1.81.4"></script>
+<script src="tune.js?v=1.81.5"></script>
+<script src="gfx.js?v=1.81.5"></script>
+<script src="art.js?v=1.81.5"></script>
+<script src="instruments.js?v=1.81.5"></script>
+<script src="kart.js?v=1.81.5"></script>
+<script src="explain.js?v=1.81.5"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -441,6 +441,9 @@ body.gaming-free #dpad{display:none}
 body.gaming-free #moveCtl{display:none}
 #fdUI .fd-act{flex-direction:row;font-size:11px;padding:5px 2px}
 body.gaming-free #hudBR{display:none}
+/* in a game only the game's own controls show: no instrument box, no Talk / Start game / Leave practice; the Stop button shrinks to a small X at the top left */
+body[data-game]:not([data-game=""]):not([data-game=free]) #hudBR,body[data-game]:not([data-game=""]):not([data-game=free]) #talkBtn,body[data-game]:not([data-game=""]):not([data-game=free]) #prStart,body[data-game]:not([data-game=""]):not([data-game=free]) #prExit{display:none!important}
+body[data-game]:not([data-game=""]):not([data-game=free]) #danceBtn{position:fixed!important;left:52px!important;top:8px!important;right:auto!important;bottom:auto!important;width:auto!important;min-width:0!important;height:32px!important;padding:0 10px!important;font-size:11px!important;z-index:70!important}
 #gameFoot{box-sizing:border-box;height:36px;overflow:hidden;padding:6px 10px 6px;line-height:12px;font:600 9px/12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.6);text-align:center}
 /* ── Dance rounds: countdown, standings, voting and results (top centre) ── */
 #roundBox{display:none;position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:26;width:min(420px,92vw);box-sizing:border-box;padding:12px 16px;text-align:center;background:rgba(14,11,26,.93);border:1px solid rgba(211,84,160,.55);border-radius:14px;color:#fff;font-family:system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
@@ -3239,9 +3242,9 @@ var GAME=(function(){
   }
 
   /* ---------- step dance ---------- */
-  var SPDS=[0.6,0.8,1,1.25,1.5,1.8,2.2],spdI=2;try{var sv=parseFloat(localStorage.getItem("uk_scroll"));if(sv>0){var bi2=0;SPDS.forEach(function(v,i){if(Math.abs(v-sv)<Math.abs(SPDS[bi2]-sv))bi2=i;});spdI=bi2;}}catch(e){}
+  var SPDS=[0.6,0.8,1,1.25,1.5,1.8,2.2],spdI=2;try{var sv=parseFloat(localStorage.getItem("uk_scroll2"));if(sv>0){var bi2=0;SPDS.forEach(function(v,i){if(Math.abs(v-sv)<Math.abs(SPDS[bi2]-sv))bi2=i;});spdI=bi2;}}catch(e){}
   function spdLabel(){var s=String(Math.round(SPDS[spdI]*100)/100);if(s.indexOf(".")<0)s+=".0";return s+"\u00d7";}
-  function travel(per){var t=Math.max(TUNE.v("step.travelMin"),Math.min(TUNE.v("step.travelMax"),per*TUNE.v("step.travelBeats")));return (mode==="keys"?t*(four?TUNE.v("hw.fall4"):TUNE.v("hw.fall7")):t)/SPDS[spdI];}   /* scroll speed: 1x is the tuned fall time, higher is faster */   /* the highway: quicker notes */
+  function travel(per){var t=Math.max(TUNE.v("step.travelMin"),Math.min(TUNE.v("step.travelMax"),per*TUNE.v("step.travelBeats")));return (mode==="keys"?t*(four?TUNE.v("hw.fall4"):TUNE.v("hw.fall7")):t)/(SPDS[spdI]*1.5);}   /* scroll speed: 1x is now what used to be 1.5x (faster notes, more reading room); the button still adjusts from there */   /* the highway: quicker notes */
   function makeNotes(now,bt){
     if(rnd&&rnd.chart){feedRound(now,bt);return;}
     /* free play: no new steps until the music has a beat to follow (talking, a quiet intro, silence) */
@@ -3578,12 +3581,12 @@ var GAME=(function(){
   }
   /* ---------- note highway ---------- */
   /* The 4-key highway as piano tiles: a board of white tiles in four columns whose rows scroll with the beat
-     (one row a beat). Each note is a big tile filling its column, blue on the left hand and green on the
+     (one row a beat). Each tap note is the same short tile filling its column's width, blue on the left hand and green on the
      right; hit it as its bottom edge reaches the bar at the bottom. Holds are tall tiles that shrink while
      you hold. Hit tiles flash and fade; missed ones turn red. The whole column is the key. */
   function drawTiles(now,bt,tv,top,px){
     var L=4,lw=CW/L,labH=Math.round(Math.max(26,Math.min(46,CH*0.085))),hitY=CH-labH-px*2,span=hitY-top,i,n;
-    var rowH=bt.known?bt.period/tv*span:span/4,th=Math.max(px*8,Math.round(rowH*0.94));
+    var th=Math.max(px*6,Math.round(Math.min(lw*0.42,span*0.075)));   /* every tap note is the same short tile, whatever the speed; only holds are long */
     /* white tiles: the column lines, and row lines on the beat rolling down */
     g.fillStyle="#F4F4F8";g.fillRect(0,top,CW,CH-top);
     for(i=0;i<L;i++){var fl=Math.max(0,1-(now-flash[i])/220);if(laneDown[i]||fl>0){g.fillStyle=hexA(KC()[i],0.16*Math.max(fl,laneDown[i]?1:0));g.fillRect(i*lw,top,lw,hitY-top);}}
@@ -3849,7 +3852,7 @@ var GAME=(function(){
   Array.prototype.forEach.call(document.querySelectorAll("#danceMenu button"),function(b){b.addEventListener("click",function(){b.blur();if(!ROUND.active())start(b.getAttribute("data-g"));});});
   var gSpd=document.getElementById("gameSpd"),gLv=document.getElementById("gameLv");
   gSpd.textContent=spdLabel();
-  gSpd.addEventListener("click",function(e){e.stopPropagation();spdI=(spdI+1)%SPDS.length;gSpd.textContent=spdLabel();try{localStorage.setItem("uk_scroll",String(SPDS[spdI]));}catch(x){}});
+  gSpd.addEventListener("click",function(e){e.stopPropagation();spdI=(spdI+1)%SPDS.length;gSpd.textContent=spdLabel();try{localStorage.setItem("uk_scroll2",String(SPDS[spdI]));}catch(x){}});
   /* practice only: pick the level yourself (Auto follows the round number). Takes effect from the next song. */
   var LVN=["Auto","Easy","Normal","Hard","Expert"];
   function lvShow(){var f=window.ukForceDiff;gLv.textContent=LVN[f===undefined?0:(f|0)+1];}
@@ -4876,7 +4879,7 @@ var CTFG=(function(){
           var fr2=Math.min(1,dCharge*1000/C.K_AIM_MS),al=V.s*(1.2+2.3*fr2),ac=fr2>=1?"#FF9A2E":"#3DF2FF";g.fillStyle=ac;for(var ad=V.s*0.7;ad<al;ad+=Math.max(4,V.s/5)){var az=Math.max(2,Math.round(V.s/9));g.fillRect(Math.round(X+Math.cos(ka)*ad)-az/2,Math.round(Y+Math.sin(ka)*ad)-az/2,az,az);}
           var hx=X+Math.cos(ka)*al,hy=Y+Math.sin(ka)*al,hz=V.s*0.35;g.beginPath();g.moveTo(hx+Math.cos(ka)*hz,hy+Math.sin(ka)*hz);g.lineTo(hx+Math.cos(ka+2.4)*hz,hy+Math.sin(ka+2.4)*hz);g.lineTo(hx+Math.cos(ka-2.4)*hz,hy+Math.sin(ka-2.4)*hz);g.closePath();g.fill();}   /* the aim arrow grows as it charges */
         var tcol=C.TEAM[st.teams[p.id]!==undefined?st.teams[p.id]:0];   /* karts are painted in their team's colour */
-        KART.preview(g,X,Y-2*sc-lift,kh,p.id===myId?{color:tcol,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:""}:{color:tcol,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:p.v.name},Math.max(0.8,V.s/22),0);
+        KART.preview(g,X,Y-2*sc-lift,kh,p.id===myId?{color:tcol,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:""}:{color:tcol,look:p.v.look||lookOf(null,p.v.color,p.v.name),name:p.v.name},C.K_Z*V.s/C.K_TILE,0);
         if((st.shield[p.id]||0)>Date.now()){g.strokeStyle="#3DF2FF";g.lineWidth=2;g.globalAlpha=0.5+0.3*Math.sin(now/90);ART.PX.ring(g,X,Y-6*sc,V.s*0.85);g.globalAlpha=1;}
         if(st.mega[p.id]){g.strokeStyle="#ff6fae";g.lineWidth=2;g.globalAlpha=0.4+0.3*Math.sin(now/70);ART.PX.ring(g,X,Y-6*sc,V.s*0.65);g.globalAlpha=1;}
         var cf2=C.carrying(st,p.id);if(cf2>=0)C.flag(g,X+4*sc,Y-24*sc,cf2,V.s,now);g.globalAlpha=1;return;}
@@ -7043,7 +7046,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.4",SERVER_VERSION="";
+var PAGE_VERSION="1.81.5",SERVER_VERSION="";
 function showVersion(){var el=document.getElementById("verTag");if(!el)return;var bad=[];
   if(ART.VERSION!==PAGE_VERSION)bad.push("art.js "+(ART.VERSION||"old"));if(!ART.INST||ART.INST.VERSION!==PAGE_VERSION)bad.push("instruments.js "+((ART.INST&&ART.INST.VERSION)||"old"));
   el.innerHTML="v"+PAGE_VERSION+(SERVER_VERSION?" · server v"+SERVER_VERSION:"")+(typeof SRV!=="undefined"?" · "+SRV.short():"")+(bad.length?"<br><b>Out of date: "+bad.join(", ")+". Hard refresh</b>":"")+(SERVER_VERSION&&SERVER_VERSION!==PAGE_VERSION?"<br><b>Server is on v"+SERVER_VERSION+"</b>":"");}
@@ -7593,7 +7596,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.4"></script>
+<script src="lab.js?v=1.81.5"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

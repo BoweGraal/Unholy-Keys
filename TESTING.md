@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.5 — Sweep: only the game on screen
+
+- Scroll speed: the old 1.5× is the new 1.0× in every rhythm game; the speed button still adjusts it (your old saved speed is reset once).
+- Note highway · 4 keys: every tap note is the same short tile; only holds are long.
+- In every game (not free dance): no instrument box, no Talk / Start game / Leave practice; Stop becomes a small button at the top left so it never sits on JUMP, DRIFT or SPRINT.
+- Kart flag uses the same fixed zoom as Mars Rally.
+
 ## v1.81.4 — Practice menu sorted into kinds of game
 
 The practice menu starts with four tabs: Rhythm (step, target, note highway, 4 keys), Dance (free dance, mosh pit, dance walk race), Ride & race (roller rink, ice rink, keepy uppy, Mars Rally, half pipe, ski) and Team (capture the flag, kart flag). Only that kind's games show below.
