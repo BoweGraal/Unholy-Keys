@@ -1664,3 +1664,8 @@ Needs a Render redeploy (server.js changed).
 ## v1.79.53 — pixel editor: right click erases
 - Right click (and drag) rubs out pixels in the pixel editor; right click no longer undoes. Ctrl+Z undoes, Ctrl+Shift+Z redoes. (With a curve open, right click still drops the curve.)
 - Check: right click a pixel: only it disappears; Ctrl+Z brings it back.
+
+## v1.79.54 — AFRO! (new pixel edits, on every angle)
+- Shipped Brian's new pixel edits: the afro (hair 5: dark outline and blue crown band), the blue pixel on hair 3, and the new shades (extra 1). The stage lights and dance tweaks in that export were already the shipped values.
+- Pixel paint used to show on the front view only. Hair and hat paint (from the forehead up) now also shows on the side and back views (squeezed to the side head's width), glasses/extras paint shows on the side view, and the front three-quarter view shifts the paint with the head. Faces, clothes, arms and legs stay front-only. This applies to any paint, so future edits carry across angles automatically.
+- Check: put on the afro and the shades; turn the dancer round (left stick all ways): the blue crown band and shades should read from the side, back and three-quarter views.
