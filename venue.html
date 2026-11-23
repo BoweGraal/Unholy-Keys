@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.65"></script>
-<script src="gfx.js?v=1.81.65"></script>
-<script src="art.js?v=1.81.65"></script>
-<script src="voice.js?v=1.81.65"></script>
-<script src="instruments.js?v=1.81.65"></script>
-<script src="kart.js?v=1.81.65"></script>
-<script src="explain.js?v=1.81.65"></script>
+<script src="tune.js?v=1.81.66"></script>
+<script src="gfx.js?v=1.81.66"></script>
+<script src="art.js?v=1.81.66"></script>
+<script src="voice.js?v=1.81.66"></script>
+<script src="instruments.js?v=1.81.66"></script>
+<script src="kart.js?v=1.81.66"></script>
+<script src="explain.js?v=1.81.66"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -630,6 +630,7 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
 /* ---------- pixel art game text and buttons: the in-game callouts, scores and action pads use a pixel font,
    hard drop shadows and notched square corners instead of smooth glows and round corners ---------- */
 #partBanner,#skiBanner,#ppBanner,#ppJudge,#ppScore,#ppCombo,#skiScore,#skiCombo,#wkBanner,#kpBanner,#skBanner,#moshBanner,#kpScore,#skScore,#moshScore,#ppSuper,.rb-title{font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700!important;letter-spacing:1px}
+.pxe{height:.82em;width:auto;image-rendering:pixelated;image-rendering:crisp-edges;vertical-align:-.06em;margin:0 .18em;filter:drop-shadow(3px 3px 0 #000)}
 #partBanner,#skiBanner,#ppBanner,#wkBanner,#kpBanner,#skBanner,#moshBanner{text-shadow:4px 4px 0 #000,-2px -2px 0 rgba(0,0,0,.5)!important}
 #ppJudge,#ppScore,#ppCombo,#skiScore,#skiCombo,#kpScore,#skScore,#moshScore{text-shadow:3px 3px 0 #000!important}
 #skiJump,#kpJump,#skJump,#skiTricks button,.ktB{border-radius:0!important;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px);font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700!important;background-image:none!important;box-shadow:inset -5px -5px 0 rgba(0,0,0,.28),inset 5px 5px 0 rgba(255,255,255,.22)!important}
@@ -779,7 +780,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <button data-r="spin" title="Spin (T)" aria-label="Spin">&#127744;</button>
     <button data-r="twirl" title="Twirl: two fast turns (G)" aria-label="Twirl">&#128171;</button>
   </div>
-  <div id="moshUI"><div id="moshBanner">🤘 MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><div id="moshStick" aria-label="Punch and swing your arms"><small>PUNCH</small><b></b></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
+  <div id="moshUI"><div id="moshBanner">MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><div id="moshStick" aria-label="Punch and swing your arms"><small>PUNCH</small><b></b></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
   <div id="partBanner"></div>
   <canvas id="skiCv"></canvas>
   <canvas id="ctfCv"></canvas>
@@ -2197,6 +2198,33 @@ function renderChat(){
 }
 
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* banner emoji as little pixel icons (the phone's own emoji look out of place); anything without an icon is dropped */
+var PXEMO=(function(){
+  var PAL={K:"#111",W:"#fff",R:"#FF3D5A",O:"#FF8A1F",Y:"#FFE14D",G:"#9aa0b4",C:"#7FE6FF",M:"#FF5FD2",S:"#F2B48A",B:"#3D7BFF"};
+  var I={
+    "💥":["K...K...K",".KR.R.RK.","..RORYR..",".RROYYRR.","KROYWYORK",".RRYYORR.","..RYROR..",".KR.R.RK.","K...K...K"],
+    "🏁":["GKWKWKW","GWKWKWK","GKWKWKW","GWKWKWK","G......","G......","G......","G......"],
+    "🚩":["GRRRRR.","GRRRRRR","GRRRRR.","GRRRR..","G......","G......","G......","G......"],
+    "⛷":["....C....","..C.C.C..","...CCC...",".C..C..C.","CCCCCCCCC",".C..C..C.","...CCC...","..C.C.C..","....C...."],
+    "🏎":[".........","...RRR...","..RRCRR..",".RRRRRRR.","RRRRRRRRR",".KK...KK.",".KK...KK."],
+    "💃":["...MMMM","...M..M","...M..M","...M..M",".MMM.MM","MMMMMMM",".MM.MM."],
+    "🎈":["..RRR..",".RRWRR.",".RRRRR.",".RRRRR.","..RRR..","...R...","...W...","..W....","...W..."],
+    "☠":[".WWWWW.","WWWWWWW","WKKWKKW","WKKWKKW","WWWKWWW",".WWWWW.",".W.W.W."],
+    "🌀":[".CCCCC.","C.....C","C.CCC.C","C.C.C.C","C.C...C","C.CCCCC","C......"],
+    "🤘":["S....S","S....S","SSSSSS","SSSSSS","SSSSSS",".SSSS.",".SSSS."]
+  },cache={};
+  function url(k){if(cache[k])return cache[k];var g=I[k],h=g.length,w=0,i,j;for(i=0;i<h;i++)w=Math.max(w,g[i].length);
+    var c=document.createElement("canvas");c.width=w;c.height=h;var x=c.getContext("2d");
+    for(i=0;i<h;i++)for(j=0;j<g[i].length;j++){var p=PAL[g[i][j]];if(p){x.fillStyle=p;x.fillRect(j,i,1,1);}}
+    return cache[k]=c.toDataURL();}
+  var RX;try{RX=new RegExp("(\\p{Extended_Pictographic})\\uFE0F?","gu");}catch(e){RX=/([\uD800-\uDBFF][\uDC00-\uDFFF]|[☀-➿])️?/g;}
+  function html(t){var out="",last=0,m;t=String(t==null?"":t);RX.lastIndex=0;
+    while((m=RX.exec(t))){out+=esc(t.slice(last,m.index));if(I[m[1]])out+='<img class="pxe" alt="" src="'+url(m[1])+'">';last=RX.lastIndex;}
+    return (out+esc(t.slice(last))).replace(/^\s+|\s+$/g,"");}
+  return{html:html,set:function(el,t){if(el)el.innerHTML=html(t);},has:function(k){return !!I[k];}};
+})();
+try{window.ukPxEmo=PXEMO;}catch(e){}
 
 document.getElementById("chatSend").addEventListener("click",sendChat);
 document.getElementById("chatText").addEventListener("keydown",function(e){
@@ -4042,7 +4070,7 @@ var KEEPY=(function(){
   function P(x,y,z){return[x*W,y*H-z*2];}
   function start(round){on=true;objs=ART.KEEPY.make(0,B);zp=0;vz=0;jumps=0;score=0;cool={};pops=[];botJ={};document.body.classList.add("gaming-keepy");$("keepyUI").classList.add("on");hud();banner("🎈 KEEPY UPPY");}
   function stop(){on=false;document.body.classList.remove("gaming-keepy");$("keepyUI").classList.remove("on");}
-  function banner(t){var b=$("kpBanner");if(!b)return;b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t){var b=$("kpBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("kpScore");if(h)h.textContent=score.toLocaleString();}
   function songT(){var p=ROUND.pos();return p>-1e8?Math.max(0,p):0;}
   function jump(){if(!on)return;if(jumps===0){vz=TUNE.v("kp.jump1");jumps=1;dbl=false;}else if(jumps===1){vz=TUNE.v("kp.jump2");jumps=2;dbl=true;}}
@@ -4173,7 +4201,7 @@ var WALK=(function(){
   function shuffle(n){var o=[0,1,2,3,4,5,6],s=(n*9301+49297)%233280;for(var i=o.length-1;i>0;i--){s=(s*9301+49297)%233280;var j=Math.floor(s/233280*(i+1)),t=o[i];o[i]=o[j];o[j]=t;}return o;}
   /* lanes: everyone in the room sorted the same way, so each screen puts each racer in the same lane */
   function laneFor(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(4,Math.min(8,ids.length));return Y0+((i%n)+0.5)/n*(Y1-Y0);}
-  function banner(t,col){var b=$("wkBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#D04DFF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t,col){var b=$("wkBanner");if(!b)return;PXEMO.set(b,t);b.style.textShadow="0 0 16px "+(col||"#D04DFF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function start(round){
     on=true;roundN=round?round.n:roundN+1;order=shuffle(roundN);x=X0;fin=-1;place=0;tripUntil=0;outT=0;score=0;sentFin=false;cur=null;speedF=0;finOrder=[];seen={};bots={};doneAsked=false;lastStyle=-1;lastCount=-1;
     laneY=laneFor(myId);y=laneY;var me=myId&&viewers[myId];if(me){me.tx=me.x=x;me.ty=me.y=y;}
@@ -4335,7 +4363,7 @@ var PIPE=(function(){
     camC+=(tg-camC)*Math.min(1,dt*(air?10:7));}
   function ids(){return Object.keys(viewers).filter(function(k){return viewers[k]!==PH;});}
   function myGroup(){return PP.group(ids(),myId);}
-  function banner(t,col){var b=$("ppBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t,col){var b=$("ppBanner");if(!b)return;PXEMO.set(b,t);b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function judge(t,col){var j=$("ppJudge");if(!j)return;j.textContent=t;j.style.color=col||"#fff";j.classList.remove("pop");void j.offsetWidth;j.classList.add("pop");}
   function hud(){var h=$("ppScore");if(h)h.textContent=score.toLocaleString();var c=$("ppCombo");if(c)c.textContent=combo>0?"COMBO ×"+(1+0.25*combo).toFixed(2):"";
     var sm=$("ppSuper");if(sm){sm.style.width=Math.round(superK*100)+"%";sm.classList.toggle("full",superK>=1);}var mo=$("ppMomentum");if(mo)mo.style.height=Math.round(Math.min(1,(A-0.25)/(AMAX-0.25))*100)+"%";}
@@ -4661,7 +4689,7 @@ var SKI=(function(){
   function enc(){return[+((x+800)/1600).toFixed(4),+((((y%1000)+1000)%1000)/1000).toFixed(4)];}
   function wire(){var t=performance.now()<crashUntil?9:air>0?(trick?8:7):Math.max(0,Math.min(6,Math.round(a/(Math.PI/6))+3));return{h:Math.max(0,Math.min(60,Math.floor(Math.max(0,y)/1000))),f:performance.now()<crashUntil?1:0,t:t};}
   function decode(v2,prevY){return SK.decode(+v2.x,+v2.y,v2.sk?v2.sk.h|0:0,prevY);}
-  function banner(t,col){var b=$("skiBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t,col){var b=$("skiBanner");if(!b)return;PXEMO.set(b,t);b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("skiScore");if(h)h.textContent=score.toLocaleString();var c=$("skiCombo");if(c)c.textContent=combo>1?"COMBO ×"+(1+0.1*combo).toFixed(1):"";}
   function laneX(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(2,Math.min(8,ids.length));return -85+170*((i%n)+0.5)/n;}
   function start(round){
@@ -4885,7 +4913,7 @@ var CTFG=(function(){
     var P=["left","top","width","height"];
     if(x===null){if(bs.classList.contains("ctfg")){bs.classList.remove("ctfg");P.forEach(function(k){bs.style.removeProperty(k);});}return;}
     bs.classList.add("ctfg");[x,y,w,h].forEach(function(n,i){bs.style.setProperty(P[i],Math.round(n)+"px","important");});}
-  function banner(t,col){var b=$("ctfBanner");if(!b)return;b.textContent=t;b.style.color=col||"#fff";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t,col){var b=$("ctfBanner");if(!b)return;PXEMO.set(b,t);b.style.color=col||"#fff";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   var hudSig="";
   function clock(){var ch=ROUND.chart&&ROUND.chart(),end=ch?(ch.gameMs||ch.dur||0):0,p=songPos();if(!end||p<-1e8)return "";var s=Math.max(0,Math.ceil((end-p)/1000));return Math.floor(s/60)+":"+("0"+s%60).slice(-2);}
   function hud(){var h=$("ctfScore");if(!h||!st)return;var ck=clock(),sig=st.caps.join(",")+"|"+ck+"|"+team;if(sig===hudSig)return;hudSig=sig;   /* team score, and the time left */
@@ -5095,7 +5123,7 @@ var SKATE=(function(){
     var me=myId&&viewers[myId];if(me){var G=geom(),a=Math.random()*6.283,r=0.62;me.tx=me.x=(G.cx+Math.cos(a)*(G.rx+G.ix)/2)/W;me.ty=me.y=(G.cy+Math.sin(a)*(G.ry+G.iy)/2)/H;sendPos(me.tx,me.ty);}
   }
   function stop(){on=false;document.body.classList.remove("gaming-skate");$("skateUI").classList.remove("on");}
-  function banner(t){var b=$("skBanner");if(!b)return;b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t){var b=$("skBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("skScore");if(h)h.textContent=score.toLocaleString();}
   function add(n,x,y,txt,col){if(!n)return;score+=n;GAME.moshPts(n);if(txt)pops.push({x:x,y:y,t:performance.now(),txt:txt+" +"+n,col:col||"#F5F23D"});hud();}
   function maxSp(G){return TUNE.v("sk.maxSpeed")*G.rx/560;}
@@ -5311,7 +5339,7 @@ var MOSH=(function(){
     if(ph==="split")assignTeams();
     if(ph==="tug"){document.body.classList.add("mosh-tug");}else document.body.classList.remove("mosh-tug");
     if(ph==="result")finishTug(me);
-    if(t&&b){b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+    if(t&&b){PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
     if(ph==="pit"&&was&&was!==""){team=-1;teams={};}
   }
   function finishTug(me){
@@ -7253,7 +7281,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.65",SERVER_VERSION="";
+var PAGE_VERSION="1.81.66",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7830,7 +7858,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.65"></script>
+<script src="lab.js?v=1.81.66"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

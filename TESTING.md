@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.66 — Pixel icons in game banners
+
+1. Crash into a tree or rock in Ski: the banner shows a pixel-art burst next to TREE! / ROCK!, not the phone's 💥 emoji.
+2. Check the other game banners too (Kart flag, Capture the flag, Dance walk race, Keepy uppy, Mosh pit, Wall of death, Circle pit, Bail/Tripped, Finished): every icon should be pixel art.
+
 ## v1.81.65 — Voice room: one mic opens voice for everyone
 
 **Needs a server redeploy on Render** (the server now tracks who has their mic on).
