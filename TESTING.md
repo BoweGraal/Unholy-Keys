@@ -1688,6 +1688,23 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.56 — Ski: flags side by side only judge the nearest one
+
+- **Paired slalom flags** (two flags at about the same height, within 60): only the flag you're nearest when you pass that line counts. Before, passing one flag of a pair scored "WRONG SIDE" on the other, because you were out of its range.
+- **Bot / auto line:** goes between a pair that faces each other. For a pair facing away, it goes round the flag nearer its line, and it passes every flag on its arrow side, not through the pole.
+- Measured on First run with the auto-skier: 0 wrong-side misses (was several), and about double the score over the same distance.
+
+## v1.81.55 — Ski on PC: click tricks
+
+- **Left click:** hops on the snow; in the air it does the highlighted trick.
+- **Right click:** moves the highlight to the next trick (360 → Backflip → Daffy). The highlighted button is yellow (PC only).
+- The arrow keys and the trick buttons still work as before. The hint says so on a computer.
+
+## v1.81.54 — Ski: Brian's "First run" is the house mountain (updated layout)
+
+- **"First run"** (latest layout: 14 slalom flags, 157 trees, 10 rocks, 5 ramps, 32 moguls, 300 m then repeating) is built in. It's used for every Ski round when the performer hasn't saved their own course, live and in practice, on both screens. The Ski designer starts from it, and Reset goes back to it.
+- A course saved in the designer still overrides it, as before.
+
 ## v1.81.52 — Ski designer: right click erases
 
 - **Ski designer:** a right click (without dragging) erases whatever's under the cursor, whichever tool is picked. Right-drag still scrolls the view.

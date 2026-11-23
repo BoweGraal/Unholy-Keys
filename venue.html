@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.52"></script>
-<script src="gfx.js?v=1.81.52"></script>
-<script src="art.js?v=1.81.52"></script>
-<script src="voice.js?v=1.81.52"></script>
-<script src="instruments.js?v=1.81.52"></script>
-<script src="kart.js?v=1.81.52"></script>
-<script src="explain.js?v=1.81.52"></script>
+<script src="tune.js?v=1.81.56"></script>
+<script src="gfx.js?v=1.81.56"></script>
+<script src="art.js?v=1.81.56"></script>
+<script src="voice.js?v=1.81.56"></script>
+<script src="instruments.js?v=1.81.56"></script>
+<script src="kart.js?v=1.81.56"></script>
+<script src="explain.js?v=1.81.56"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -196,6 +196,7 @@ body.gaming-ctf #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #skiTricks{position:absolute;left:16px;bottom:calc(var(--chatH) + 16px);display:flex;gap:6px;pointer-events:auto}
 #skiTricks button{width:62px;height:58px;border-radius:12px;font:800 11px/1.1 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(30,40,70,.85);border:2px solid rgba(255,255,255,.5);touch-action:none}
 #skiTricks button b{display:block;font-size:18px}
+@media (pointer:fine){#skiTricks button.sel{border-color:#F5C518!important;background:rgba(120,90,10,.9)!important;box-shadow:0 0 0 2px #F5C518}}   /* the trick a left click in the air does (right click picks) */
 body.gaming-ski #reactBar,body.gaming-ski #moveHint,body.gaming-ski #actBtns{display:none}
 body.gaming-ski #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}   /* the left stick steers */
 @media (pointer:fine){body.gaming-ski #moveCtl{display:none}}   /* on a computer the mouse steers */
@@ -4636,7 +4637,7 @@ var SKI=(function(){
   function laneX(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(2,Math.min(8,ids.length));return -85+170*((i%n)+0.5)/n;}
   function start(round){
     on=true;roundN=round?round.n:roundN+1;seed=SK.seedFor(roundN);
-    course=SK.clean(round&&round.ski);if(!course&&PRACTICE.on){try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}}chunks={};passed={};trail=[];pops=[];others={};bots={};
+    course=SK.clean(round&&round.ski);if(!course&&PRACTICE.on){try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}}if(!course)course=SK.defaultCourse();   /* no course of their own: the house mountain */chunks={};passed={};trail=[];pops=[];others={};bots={};
     hopAir=false;cutGrace=0;hopPush=0;puffs=[];sweep=null;x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
     cv=$("skiCv");g=cv.getContext("2d");document.body.classList.add("gaming-ski");$("skiUI").classList.add("on");hud();banner("⛷ SKI!");
   }
@@ -4715,7 +4716,11 @@ var SKI=(function(){
         var dx2=x-o.x,dy2=y-o.y;
         if(o.k==="gate"){if(py<o.y&&y>=o.y&&!passed[o.id]){passed[o.id]=1;if(Math.abs(x-o.x)<=GATE_W){combo++;addPts(T("gatePts"),"GATE",o.col==="#E8505B"?"#FF7A85":"#7FB0FF");}else{combo=0;hud();banner("MISSED GATE","#aaa");}}return;}
         /* a slalom flag: pass it on the side its arrow points (where the divot is) */
-        if(o.k==="flag"){if(py<o.y&&y>=o.y&&!passed[o.id]){passed[o.id]=1;var ok=o.pass<0?(x<o.x&&x>o.x-150):(x>o.x&&x<o.x+150);
+        if(o.k==="flag"){if(py<o.y&&y>=o.y&&!passed[o.id]){passed[o.id]=1;
+            /* flags side by side (about the same height on the slope): only the one you're nearest counts, so a pair isn't a miss on the far one */
+            var nearer=objsNear(o.y-60,o.y+60).some(function(q){return q.k==="flag"&&q.id!==o.id&&Math.abs(q.y-o.y)<=60&&Math.abs(x-q.x)<Math.abs(x-o.x);});
+            if(nearer)return;
+            var ok=o.pass<0?(x<o.x&&x>o.x-150):(x>o.x&&x<o.x+150);
             if(ok){combo++;addPts(T("gatePts"),"FLAG",o.col==="#E8505B"?"#FF7A85":"#7FB0FF");}else{combo=0;hud();banner("WRONG SIDE","#aaa");}}
           else if(air<=0&&now>ghostUntil&&Math.abs(dx2)<3&&Math.abs(dy2)<4){crash("FLAG!");x=o.x-o.pass*12;ghostUntil=crashUntil+1200;}return;}
         if(o.k==="zone"){if(py<o.y&&y>=o.y)banner(o.z==="jump"?"🚀 JUMP ZONE":"🚩 FLAG ZONE",o.z==="jump"?"#3DF2FF":"#FF7A85");return;}
@@ -4733,7 +4738,7 @@ var SKI=(function(){
     var e=enc();me.tx=me.x=e[0];me.ty=me.y=e[1];sendPos(e[0],e[1]);me.sk=wire();
     GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:trick&&trick.k===3?[2.9,-0.4,0.9,-0.9]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
     if(PRACTICE.on)botTick(dt,now,going);
-    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · pass each flag on its arrow side · click or Space to hop · land in a divot to swoop");
+    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · left click: hop, in the air: the yellow trick · right click: next trick · land in a divot to swoop");
   }
   /* practice: the practice skiers follow the slalom line at their own pace, now and then crashing */
   function botTick(dt,now,going){
@@ -4803,8 +4808,12 @@ var SKI=(function(){
   /* pointer: hover with a mouse, or touch and drag anywhere on the slope */
   function wire2(){var c=$("skiCv");if(c)c.style.touchAction="none";if(!c||c._w)return;c._w=1;
     c.addEventListener("pointermove",function(e){if(!on)return;if(e.pointerType==="mouse"||e.buttons)pointer=[e.clientX,e.clientY];});
-    c.addEventListener("pointerdown",function(e){if(!on)return;pointer=[e.clientX,e.clientY];if(e.pointerType==="mouse"){if(e.button===0)jump();return;}try{c.setPointerCapture(e.pointerId);}catch(x2){}});   /* on a computer: point to steer, click to hop */
+    c.addEventListener("contextmenu",function(e){if(on)e.preventDefault();});hiTrick();
+    c.addEventListener("pointerdown",function(e){if(!on)return;pointer=[e.clientX,e.clientY];if(e.pointerType==="mouse"){if(e.button===0){if(air>0)doTrick(tsel);else jump();}else if(e.button===2){tsel=tsel%3+1;hiTrick();}return;}try{c.setPointerCapture(e.pointerId);}catch(x2){}});   /* on a computer: point to steer, click to hop */
     c.addEventListener("contextmenu",function(e){e.preventDefault();});}
+  /* on a computer: left click hops, and in the air does the highlighted trick; right click picks the next trick */
+  var tsel=1;
+  function hiTrick(){Array.prototype.forEach.call(document.querySelectorAll("#skiTricks button"),function(b){b.classList.toggle("sel",+b.getAttribute("data-t")===tsel);});}
   window.ukSki=function(){return{others:Object.keys(others).map(function(id){return[viewers[id]?viewers[id].name:id,Math.round(others[id].x),Math.round(others[id].y)];}),on:on,x:Math.round(x),y:Math.round(y),a:+a.toFixed(2),v:Math.round(v),air:+air.toFixed(2),crashed:performance.now()<crashUntil,score:score,combo:combo,trick:trick?TRK[trick.k].name:null};};
   window.ukSkiAuto=function(o){window.__skAuto=!!o;};
   window.ukSkiToRamp=function(back){var r=null;objsNear(y,y+3000).forEach(function(o){if(o.k==="ramp"&&!r&&o.y>y+40)r=o;});if(!r)return null;x=camX=r.x;y=r.y-(back===undefined?80:back);v=200;a=ta=0;sweep=null;return{x:Math.round(r.x),y:Math.round(r.y)};};   /* testing: put the skier above the next ramp */
@@ -7202,7 +7211,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.52",SERVER_VERSION="";
+var PAGE_VERSION="1.81.56",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7779,7 +7788,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.52"></script>
+<script src="lab.js?v=1.81.56"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
