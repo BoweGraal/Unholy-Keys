@@ -14,11 +14,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.81.61"></script>
-<script src="art.js?v=1.81.61"></script>
-<script src="voice.js?v=1.81.61"></script>
-<script src="instruments.js?v=1.81.61"></script>
-<script src="kart.js?v=1.81.61"></script>
+<script src="gfx.js?v=1.81.62"></script>
+<script src="art.js?v=1.81.62"></script>
+<script src="voice.js?v=1.81.62"></script>
+<script src="instruments.js?v=1.81.62"></script>
+<script src="kart.js?v=1.81.62"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4776,6 +4776,10 @@ function liveSend(msg){if(msg&&msg.type==="note")pvNoteT=Date.now();if(msg&&msg.
 var pvNoteT=0,pvVideo=false,pvPart=false;
 function pvShow(st){var b=document.getElementById("liveVoice");if(!b)return;b.textContent={off:"\uD83C\uDF99 Voice",on:"\uD83C\uDF99 Mic on",song:"\uD83D\uDD07 Song on",full:"Voice full (8)",denied:"No mic access"}[st]||"\uD83C\uDF99 Voice";b.style.borderColor=st==="on"?"#4CC38A":"";b.style.color=st==="on"?"#4CC38A":"";}
 VOICE.init({send:function(o){liveSend(o);},myId:function(){return "performer";},songOn:function(){return Date.now()-pvNoteT<6000||pvVideo||pvPart;},onChange:pvShow});
+/* hover the Voice button: who you're connected to, and whether their sound is getting through */
+setInterval(function(){var b=document.getElementById("liveVoice");if(!b||!VOICE.links)return;var L=VOICE.links();
+  if(!L.length){b.title=VOICE.state==="off"?"Voice chat with the audience between songs: your mic switches off while you play":"In voice: nobody else has joined yet";return;}
+  b.title="Voice: "+L.map(function(l){var p=typeof AUD!=="undefined"&&AUD.people[l.id],nm=p&&p.name||l.id;return nm+" "+(l.state==="connected"?(l.hearing?"\u2713":"\u2713 (tap the page to hear)"):l.state==="failed"?"\u2715 retrying":"\u2026 connecting");}).join(" \u00B7 ");},2000);
 setInterval(function(){VOICE.tick();},200);
 function goLive(){
   if(liveOn){endLive();return;}
@@ -4878,7 +4882,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.81.61",SERVER_VERSION="";
+var PAGE_VERSION="1.81.62",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5825,11 +5829,13 @@ var CTFVIEW=(function(){
     C.draw(g,map,I,V,now,st.flags.length?st:null);
     C.platform(g,V,CS.plat,now);try{perfDraw(g,V.X(CS.px),V.Y(CS.py),Math.max(1,Math.round(V.s/16)),Date.now(),null,null,0,false);}catch(e){}
     var list=[];Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p||p.dance!==4)return;var s=sm[id]||(sm[id]={x:p.x*I.w,y:p.y*I.h,f:0}),tx=p.x*I.w,ty=p.y*I.h,dx=tx-s.x,dy=ty-s.y;
-      if(Math.hypot(dx,dy)>4){s.x=tx;s.y=ty;}else{s.x+=dx*0.3;s.y+=dy*0.3;if(Math.hypot(dx,dy)>0.05)s.f=ART.face8(dx,dy,s.f);}list.push({id:id,p:p,x:s.x,y:s.y,f:s.f});});
+      if(Math.hypot(dx,dy)>4){s.x=tx;s.y=ty;}else{s.x+=dx*0.3;s.y+=dy*0.3;if(Math.hypot(dx,dy)>0.05){s.f=ART.face8(dx,dy,s.f);s.a=Math.atan2(dy,dx);}}list.push({id:id,p:p,x:s.x,y:s.y,f:s.f,a:s.a});});
     list.sort(function(a,b){return a.y-b.y;});
-    var sc=Math.max(1,Math.round(V.s/14)),rc=ROUNDS.current;
+    var sc=Math.max(1,Math.round(V.s/14)),rc=ROUNDS.current,kartRound=!!(rc&&(rc.mode==="kflag"||rc.kflag));
     list.forEach(function(q){var X=V.X(q.x),Y=V.Y(q.y),t=st.teams[q.id];g.globalAlpha=0.55;g.fillStyle=t===undefined?"#888":C.TEAM[t];ART.PX.oval(g,X,Y+2,V.s*0.42,V.s*0.18,0);g.globalAlpha=1;
-      ART.drawChar(g,X,Y-14*sc,sc,q.p.look||audLook("",q.p.color,q.p.name),{armL:0.5,armR:-0.5,legL:0.1,legR:-0.1,dir:q.f});
+      var lk=q.p.look||audLook("",q.p.color,q.p.name);
+      if(kartRound&&typeof KART!=="undefined"&&KART.preview){var ha=q.a!==undefined?q.a:(t===1?Math.PI:0);try{KART.preview(g,X,Y-2*sc,ha,{color:t===undefined?"#888":C.TEAM[t],look:lk,name:""},C.K_Z*V.s/C.K_TILE,0,{avatar:function(x2,y2,v2,me2,s2,pose,nn,dir){ART.drawChar(g,x2,y2,s2,v2.look||lk,{armL:pose[0],armR:pose[1],legL:pose[2],legR:pose[3],dir:dir|0});}});}catch(e){}}   /* Kart flag: everyone in their kart, in team colours */
+      else ART.drawChar(g,X,Y-14*sc,sc,lk,{armL:0.5,armR:-0.5,legL:0.1,legR:-0.1,dir:q.f});
       var cf=-1;st.flags.forEach(function(f,k){if(f.at===q.id)cf=k;});if(cf>=0)C.flag(g,X+4*sc,Y-30*sc,cf,V.s,now);
       g.font="800 "+Math.max(10,Math.round(V.s*0.42))+"px system-ui";g.textAlign="center";g.textBaseline="top";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.8)";var nm=String(q.p.name||"");g.strokeText(nm,X,Y+V.s*0.3);g.fillStyle=t===undefined?"#fff":C.TEAM[t];g.fillText(nm,X,Y+V.s*0.3);g.textBaseline="alphabetic";
       PSCORE.draw(g,q.p,X,Y-32*sc,Date.now(),sc,rc);});

@@ -12,20 +12,26 @@
    VOICE.state             "off" | "on" | "song" (in voice, muted for the song) | "full" | "denied" */
 var VOICE=(function(){
   var cfg=null,state="off",peers={},mic=null,micOn=false,talk={},ac=null,an=null,anBuf=null,amTalking=false,lastTalkT=0,fullT=0;
-  var ICE=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}];
+  /* STUN finds a direct route; when two networks block that (mobile data, strict routers), the TURN relays carry the sound instead */
+  var ICE=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},
+    {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}];
+  var tries={},blocked=[];
   function setState(s){if(s===state)return;state=s;if(cfg&&cfg.onChange)try{cfg.onChange(s);}catch(e){}}
   function send(o){if(cfg)cfg.send(o);}
   /* one connection per other talker; the one who joins later makes the offers */
   function peer(id,offer){
     if(peers[id])return peers[id];
-    var pc=new RTCPeerConnection({iceServers:ICE}),p={pc:pc,id:id,tx:null,el:null};peers[id]=p;
+    var pc=new RTCPeerConnection({iceServers:ICE}),p={pc:pc,id:id,tx:null,el:null,offer:!!offer};peers[id]=p;
     /* the offerer adds the audio line; the answerer uses the one the offer brings (see voice-sig) */
     if(offer){p.tx=pc.addTransceiver("audio",{direction:"sendrecv"});if(mic&&micOn)try{p.tx.sender.replaceTrack(mic.getAudioTracks()[0]);}catch(e){}}
     pc.onicecandidate=function(e){if(e.candidate)send({type:"voice-sig",to:id,d:{c:e.candidate}});};
     pc.ontrack=function(e){
       if(!p.el){p.el=document.createElement("audio");p.el.autoplay=true;p.el.setAttribute("playsinline","");p.el.style.display="none";document.body.appendChild(p.el);}
-      p.el.srcObject=e.streams&&e.streams[0]?e.streams[0]:new MediaStream([e.track]);var pr=p.el.play();if(pr&&pr.catch)pr.catch(function(){});};
-    pc.onconnectionstatechange=function(){if(pc.connectionState==="failed")drop(id);};
+      p.el.srcObject=e.streams&&e.streams[0]?e.streams[0]:new MediaStream([e.track]);var pr=p.el.play();
+      if(pr&&pr.catch)pr.catch(function(){if(blocked.indexOf(p.el)<0)blocked.push(p.el);});};   /* the browser wants a tap first: played on the next tap or key */
+    pc.onconnectionstatechange=function(){if(pc.connectionState==="connected")tries[id]=0;
+      if(pc.connectionState==="failed"){var was=p.offer;drop(id);tries[id]=(tries[id]||0)+1;   /* try again (a few times) rather than going quiet for good */
+        if(was&&tries[id]<=3&&(state==="on"||state==="song"))setTimeout(function(){if(!peers[id]&&(state==="on"||state==="song"))peer(id,true);},1500*tries[id]);}};
     if(offer)pc.createOffer().then(function(o){return pc.setLocalDescription(o);}).then(function(){send({type:"voice-sig",to:id,d:{sdp:pc.localDescription}});}).catch(function(){});
     return p;
   }
@@ -50,8 +56,12 @@ var VOICE=(function(){
   }
   function join(){if(!window.RTCPeerConnection){setState("denied");return;}setState("on");send({type:"voice-join"});}
   function leave(){send({type:"voice-leave"});closeMic();dropAll();setState("off");}
+  function unblock(){if(!blocked.length)return;var b=blocked;blocked=[];b.forEach(function(el){var pr=el.play();if(pr&&pr.catch)pr.catch(function(){blocked.push(el);});});}
+  ["pointerdown","keydown","touchstart"].forEach(function(ev){window.addEventListener(ev,unblock,true);});
   return{
     init:function(c){cfg=c;},
+    /* how the calls are going: [{id, state, hearing}] (for the voice button's tooltip, and tests) */
+    links:function(){return Object.keys(peers).map(function(k){var p=peers[k];return{id:k,state:p.pc.connectionState||p.pc.iceConnectionState,hearing:!!(p.el&&p.el.srcObject&&!p.el.paused)};});},
     get state(){return state;},
     toggle:function(){if(state==="on"||state==="song")leave();else join();},
     reset:function(){closeMic();dropAll();if(state!=="off")setState("off");},
