@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.53 — Ski: Brian's "First run" is the house mountain
+
+- **"First run"** (14 slalom flags, 159 trees, 6 rocks, 5 ramps, 36 moguls, 300 m then repeating) is built in. It's used for every Ski round when the performer hasn't saved their own course, live and in practice, on both screens. The Ski designer starts from it, and Reset goes back to it.
+- A course saved in the designer still overrides it, as before.
+
 ## v1.81.52 — Ski designer: right click erases
 
 - **Ski designer:** a right click (without dragging) erases whatever's under the cursor, whichever tool is picked. Right-drag still scrolls the view.
