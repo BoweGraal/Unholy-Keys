@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.55 — Ski on PC: click tricks
+
+- **Left click:** hops on the snow; in the air it does the highlighted trick.
+- **Right click:** moves the highlight to the next trick (360 → Backflip → Daffy). The highlighted button is yellow (PC only).
+- The arrow keys and the trick buttons still work as before. The hint says so on a computer.
+
 ## v1.81.54 — Ski: Brian's "First run" is the house mountain (updated layout)
 
 - **"First run"** (latest layout: 14 slalom flags, 157 trees, 10 rocks, 5 ramps, 32 moguls, 300 m then repeating) is built in. It's used for every Ski round when the performer hasn't saved their own course, live and in practice, on both screens. The Ski designer starts from it, and Reset goes back to it.
