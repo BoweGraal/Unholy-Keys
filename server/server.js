@@ -464,9 +464,11 @@ var FX_LIGHTS = ["auto", "party", "edm", "strobe", "spot", "warm", "cool", "off"
 var FX_CROWD = ["sparkle", "fire", "lasers", "float"];
 var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", "turn180", "turn90", "spinmove"];
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
-var TUG_AT = 0, TUG_MS = 10000;   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
+var TUG_AT = 0, TUG_MS = 10000;
+/* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
+var VOICE_MAX = 8;   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.81.34";
+var VERSION = "1.81.35";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -590,6 +592,32 @@ function onMessage(ws, raw, isBinary) {
   }
 
   /* ── Performer broadcasts ── */
+  /* ── Voice between songs (performer and audience): the server only introduces people and passes their WebRTC
+     setup messages along; the audio itself goes straight between players. At most VOICE_MAX talkers per room. ── */
+  if (ws.room && rooms[ws.room] && typeof msg.type === "string" && msg.type.indexOf("voice-") === 0) {
+    var vr = rooms[ws.room], vid = ws.role === "performer" ? "performer" : ws.viewerId;
+    if (!vid) return;
+    vr.voice = vr.voice || {};
+    if (msg.type === "voice-join") {
+      if (!allow(ws, "vjoin", 4, 0.2)) return;
+      var vids = Object.keys(vr.voice).filter(function(k) { return k !== vid; });
+      if (!vr.voice[vid] && vids.length >= VOICE_MAX) { try { ws.send(JSON.stringify({ type: "voice-full", max: VOICE_MAX })); } catch(e) {} return; }
+      vr.voice[vid] = 1;
+      try { ws.send(JSON.stringify({ type: "voice-peers", ids: vids })); } catch(e) {}
+      broadcast(ws.room, { type: "voice-on", id: vid }, ws);
+      return;
+    }
+    if (msg.type === "voice-leave") { if (vr.voice[vid]) { delete vr.voice[vid]; broadcast(ws.room, { type: "voice-off", id: vid }, ws); } return; }
+    if (!vr.voice[vid]) return;
+    if (msg.type === "voice-talk") { if (!allow(ws, "vtalk", 12, 4)) return; broadcast(ws.room, { type: "voice-talk", id: vid, on: msg.on ? 1 : 0 }, ws); return; }
+    if (msg.type === "voice-sig") {
+      var to = String(msg.to || ""); if (!vr.voice[to] || !allow(ws, "vsig", 60, 20)) return;
+      var tws = to === "performer" ? vr.performer : (vr.viewers.get(to) || {}).ws;
+      if (tws) try { tws.send(JSON.stringify({ type: "voice-sig", from: vid, d: msg.d })); } catch(e) {}
+      return;
+    }
+    return;
+  }
   if (ws.role === "performer" && ws.room && rooms[ws.room]) {
     if (msg.type === "round-start" || msg.type === "round-play" || msg.type === "round-end" || msg.type === "round-vote" || msg.type === "round-bvote") { roundMessage(ws, msg); return; }
     /* fill the room with bots up to this many people (0 = no bots) */
@@ -784,6 +812,9 @@ function onMessage(ws, raw, isBinary) {
 }
 function onClose(ws) {
   if (!ws.room) return;
+  /* leaving drops you out of voice */
+  var vr0 = rooms[ws.room], vid0 = ws.role === "performer" ? "performer" : ws.viewerId;
+  if (vr0 && vr0.voice && vid0 && vr0.voice[vid0]) { delete vr0.voice[vid0]; broadcast(ws.room, { type: "voice-off", id: vid0 }, ws); }
   if (ws.role === "performer" && rooms[ws.room] && rooms[ws.room].performer === ws) {
     /* a blip: keep the room (audience, round, scores) for a minute so the performer's page can reconnect */
     var code = ws.room, r0 = rooms[code];

@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.35 — Voice between songs
+
+- **🎙 Voice** button: next to Talk for the audience, and next to End Stream on the performer page. Tap it to join voice. Your browser asks for the mic the first time.
+- **Your mic is open between songs and fully off during them.** It turns off while a mini game round plays, the video plays, a song map runs, or the performer has played a note in the last 6 s. The button shows 🔇 Song on while it's off. The mic is released completely, not just muted, so an iPhone stays in music mode.
+- A little green speaker shows over anyone talking.
+- **Up to 8 people in voice per room.** Everyone connects straight to everyone (WebRTC, free); the server only introduces people. The 9th person sees "Voice full".
+- Not in practice (there's no one to talk to). Some strict mobile or work networks may not connect; we'd add a relay (TURN) server if that comes up.
+- Server change: needs a server redeploy (new voice messages).
+- Test: two phones or a phone and a PC in the same show. Join voice on both, talk between songs, check it cuts out when a song starts and comes back after.
+
 ## v1.81.34 — Mobile instrument: D is a side trigger
 
 - On the phone instrument, **D is now a tall trigger button down the left edge**, like the side or shoulder buttons in mobile games. Hold it to raise the notes.

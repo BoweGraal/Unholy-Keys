@@ -17,12 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.34"></script>
-<script src="gfx.js?v=1.81.34"></script>
-<script src="art.js?v=1.81.34"></script>
-<script src="instruments.js?v=1.81.34"></script>
-<script src="kart.js?v=1.81.34"></script>
-<script src="explain.js?v=1.81.34"></script>
+<script src="tune.js?v=1.81.35"></script>
+<script src="gfx.js?v=1.81.35"></script>
+<script src="art.js?v=1.81.35"></script>
+<script src="voice.js?v=1.81.35"></script>
+<script src="instruments.js?v=1.81.35"></script>
+<script src="kart.js?v=1.81.35"></script>
+<script src="explain.js?v=1.81.35"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -455,7 +456,7 @@ body.gaming-free #hudBR{display:none}
 body.practice.pr-busy #prQuit{display:block}body.practice.pr-busy.gaming #prQuit{display:none}   /* the panel games have their own X */
 body.practice.pr-busy[data-game] #danceBtn{display:none!important}
 /* in a game only the game's own controls show: no instrument box, no Talk / Start game / Leave practice; the Stop button shrinks to a small X at the top left */
-body[data-game]:not([data-game=""]):not([data-game=free]) #hudBR,body[data-game]:not([data-game=""]):not([data-game=free]) #talkBtn,body[data-game]:not([data-game=""]):not([data-game=free]) #prStart,body[data-game]:not([data-game=""]):not([data-game=free]) #prExit{display:none!important}
+body[data-game]:not([data-game=""]):not([data-game=free]) #hudBR,body[data-game]:not([data-game=""]):not([data-game=free]) #talkBtn,body[data-game]:not([data-game=""]):not([data-game=free]) #voiceBtn,body[data-game]:not([data-game=""]):not([data-game=free]) #prStart,body[data-game]:not([data-game=""]):not([data-game=free]) #prExit{display:none!important}
 body[data-game]:not([data-game=""]):not([data-game=free]) #danceBtn{position:fixed!important;left:52px!important;top:8px!important;right:auto!important;bottom:auto!important;width:auto!important;min-width:0!important;height:32px!important;padding:0 10px!important;font-size:11px!important;z-index:70!important}
 #gameFoot{box-sizing:border-box;height:36px;overflow:hidden;padding:6px 10px 6px;line-height:12px;font:600 9px/12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.6);text-align:center}
 /* ── Dance rounds: countdown, standings, voting and results (top centre) ── */
@@ -566,7 +567,8 @@ body.rd-paused::after{content:"\23F8  Paused";position:fixed;top:64px;left:50%;t
 #prYtQ .q i{font-style:normal;opacity:.75;white-space:nowrap}
 #prYtQ .q.done i{color:#5DCB42;opacity:1}#prYtQ .q.err i{color:#ff8a8a;opacity:1}
 /* practice has no chat: the controls drop to the bottom of the screen */
-body.practice #chatPanel,body.practice #talkBtn,body.practice #hudTL{display:none}
+body.practice #chatPanel,body.practice #talkBtn,body.practice #voiceBtn,body.practice #hudTL{display:none}
+#voiceBtn.on{border-color:#4CC38A;color:#4CC38A}#voiceBtn.song{border-color:#8f88b8;color:#8f88b8}#voiceBtn.talk{background:#1f3a2c}
 body.practice #moveCtl{bottom:18px}
 body.practice #moveHint{bottom:190px}
 body.practice #hudBR{bottom:18px}
@@ -743,6 +745,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <div id="dpad" role="application" aria-label="Drag to walk"><i class="joy-tick t-u"></i><i class="joy-tick t-d"></i><i class="joy-tick t-l"></i><i class="joy-tick t-r"></i><div class="joy-knob"></div></div>
     <div id="actBtns">
       <button id="talkBtn" title="Say something (Enter)">&#128172; Talk</button>
+      <button id="voiceBtn" title="Voice chat between songs: your mic switches off while a song plays">&#127897; Voice</button>
       <button id="danceBtn" title="Dance (Space)">&#128131; Dance</button>
       <button id="prStart" title="Pick a mini game and a song">&#127918; Start game</button>
       <button id="prSkip" title="Skip the countdown">&#9193; Skip timer</button>
@@ -1825,7 +1828,7 @@ function enterVenue(){
 function backToJoin(msg){
   stopReconnect=true;
   try{if(ws)ws.close();}catch(e){}
-  wsReady=false;viewers={};myId=null;
+  wsReady=false;viewers={};myId=null;try{VOICE.reset();}catch(e){}
   silenceNote();isPerformerPlaying=false;
   document.getElementById("venue").classList.remove("on");
   document.getElementById("joinScreen").classList.remove("hidden");
@@ -2084,6 +2087,7 @@ function handleMsg(msg){
   }
   else if(t==="tug"){MOSH.onTug(msg);}
   else if(t==="react"){if(msg.id!==myId&&viewers[msg.id])addReact(msg.id,String(msg.k));}
+  else if(typeof t==="string"&&t.indexOf("voice-")===0){VOICE.onMsg(msg);}
   else if(t==="note"){
     if(msg.on){
       var _m=+msg.midi;if(isFinite(_m)&&_m>=0&&_m<=128){lastNoteMidi=_m;lastNoteTime=Date.now();isPerformerPlaying=true;PERF.n++;JN.push({m:_m,t0:Date.now(),t1:0,h:((_m%12)+12)%12*30});if(JN.length>80)JN.shift();}
@@ -2430,6 +2434,15 @@ joyEl.addEventListener("contextmenu",function(e){e.preventDefault();});
 window.ukJoy=function(){return{x:Math.round(joy.x*100)/100,y:Math.round(joy.y*100)/100,on:joyOn(),step:joy.step};};
 function openTalk(){var inp=document.getElementById("chatText");inp.focus();}
 document.getElementById("talkBtn").addEventListener("click",function(e){e.preventDefault();openTalk();});
+/* voice between songs: tap to join; the mic is open between songs and fully off while one plays (a game, the video, the performer playing) */
+(function(){
+  var vb=document.getElementById("voiceBtn");
+  function songOn(){return !!(JT&&JT.video)||Date.now()-lastNoteTime<6000||(typeof ROUND!=="undefined"&&ROUND.active())||!!PART||(typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free");}
+  function show(st){var lb={off:"\uD83C\uDF99 Voice",on:"\uD83C\uDF99 Mic on",song:"\uD83D\uDD07 Song on",full:"Voice full (8)",denied:"No mic access"}[st]||"\uD83C\uDF99 Voice";vb.textContent=lb;vb.classList.toggle("on",st==="on");vb.classList.toggle("song",st==="song");}
+  VOICE.init({send:wsSend,myId:function(){return myId;},songOn:songOn,onChange:show});
+  vb.addEventListener("click",function(e){e.preventDefault();vb.blur();if(!myId)return;VOICE.toggle();});
+  setInterval(function(){VOICE.tick();vb.classList.toggle("talk",VOICE.state==="on"&&VOICE.talking(myId));},200);
+})();
 var chatInp=document.getElementById("chatText");
 chatInp.addEventListener("focus",function(){document.getElementById("talkBtn").classList.add("on");held={up:false,down:false,left:false,right:false};joyEnd();});
 chatInp.addEventListener("blur",function(){document.getElementById("talkBtn").classList.remove("on");});
@@ -7133,7 +7146,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.34",SERVER_VERSION="";
+var PAGE_VERSION="1.81.35",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7171,6 +7184,8 @@ var AVO=null,PERF_AT=null;   /* PERF_AT: where the performer is drawn this frame
 function rinkOn(){return GAME.mode==="skate"||(typeof ROUND!=="undefined"&&ROUND.mode==="skate");}
 /* the part of the song the performer's playing: a banner as each starts (the finale burns the dance games' border too) */
 var PART="";var PART_NAMES={intro:"🌅 INTRO",verse:"🎤 VERSE",chorus:"🔥 CHORUS",solo:"🎸 SOLO",bridge:"🌉 BRIDGE",breakdown:"🌑 BREAKDOWN",finale:"🎆 FINALE",outro:"🌙 OUTRO"};
+/* a little pixel speaker with sound waves, over someone talking on voice */
+function voiceIcon(x,y,s,now){var p=Math.max(2,Math.round(s));x=Math.round(x);y=Math.round(y);ctx.fillStyle="#120d1e";ctx.fillRect(x-p,y-p*3,p*4,p*6);ctx.fillStyle="#4CC38A";ctx.fillRect(x,y-p,p,p*2);ctx.fillRect(x+p,y-p*2,p,p*4);var w=Math.floor(now/180)%3;for(var k=0;k<=w;k++){ctx.fillRect(x+p*(3+k*2),y-p*(1+k),p,p*(2+k*2));}}
 function songPart(k){k=PART_NAMES[k]?k:"";if(k===PART)return;PART=k;if(!k)return;var b=document.getElementById("partBanner");if(!b)return;b.textContent=PART_NAMES[k];b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
 window.ukPart=function(){return PART;};
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
@@ -7657,6 +7672,7 @@ function renderLoop(){
       if(rpo&&rpo.dir!==undefined)AVDIR=cdn===4&&cfd&&cfd.b&&GAME.mode==="free"?rot8(rpo.dir,[0,2,1,3][cfd.b]):rpo.dir;   /* a spin or turn goes round through all the facings */
       if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;   /* your own spin: the stick keeps it going */   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
       drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,skl?null:walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
+      if(VOICE.talking(ids[i]))voiceIcon(vx+9*sc2,dyy-23*sc2,sc2,now);   /* talking on voice */
       AVO=null;AVDIR=0;
       if(ck)ART.crowdFx(ctx,ck,vx,dyy,sc2,cAge,v.seed||0,hands,v._tg);
       var lyy=dyy+(rpo?rpo.lift:0)+(epo?epo.lift:0);
@@ -7712,7 +7728,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.34"></script>
+<script src="lab.js?v=1.81.35"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
