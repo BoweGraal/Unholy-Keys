@@ -192,6 +192,7 @@ var TUNE=(function(){
     V("mp.swingBeatPts","Swing on the beat",20,0,100,1,"The same swing, on the beat.","pts"),
     V("mp.punchPts","Punch lands",40,0,200,5,"A punch that hits someone.","pts"),
     V("mp.punchBeatPts","Punch lands on the beat",60,0,200,5,"A punch that hits someone on the beat.","pts"),
+    V("mp.bangPerfect","Headbang perfect window",40,15,120,5,"How close to the beat a headbang must be for PERFECT (GREAT is twice this, GOOD about three times).","ms"),
     V("mp.tugMs","Push war length",10000,4000,30000,500,"How long the push war after the wall of death charge lasts.","ms")]}
   ];
   var DEF={},VALS={},BYK={},listeners=[];

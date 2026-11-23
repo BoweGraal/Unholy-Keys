@@ -972,6 +972,59 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     for(var i=0;i<P.circles.length;i++)if(pos>=P.circles[i][0]&&pos<P.circles[i][1])return "circle";
     return "pit";
   };
+  /* ---------------- the ice rink: a figure skating routine, planned from the song (the same on every screen and in the bots) ----------------
+     FIG.plan(chart) -> {per, dur, segs:[{k,t0,t1}], moments:[ms], axel:ms}
+       intro  - the opening: a preset dance on the ice, one move every 2 beats (hit each on the beat)
+       glide  - skating the routine's path together (stroke on the beat); big moments (loud entrances) ask for a big move
+       spin   - a long spin in a calm part (breakdown / bridge): hold it, keep it going to the end
+       free   - a free dance section (a chorus / solo): dance with the stick in the ice dance style
+       build  - the 16 beats before the drop: stroke on every beat to build speed...
+       axel   - ...and JUMP right on the drop: single, double or triple axel by your speed
+       finale - the last 8 beats: strike the final pose on the last beat */
+  var FIG={LAP:16};
+  FIG.plan=function(chart){
+    chart=chart||{};var bpm=chart.bpm||120,per=60000/bpm,dur=chart.gameMs||chart.dur||240000,bt=chart.beats&&chart.beats.length?chart.beats:null,i;
+    function snap(t){if(!bt)return Math.round(t/per)*per;var lo=0,hi=bt.length-1;if(t<=bt[0])return bt[0];if(t>=bt[hi])return bt[hi]+Math.round((t-bt[hi])/per)*per;
+      while(hi-lo>1){var m=(lo+hi)>>1;if(bt[m]<=t)lo=m;else hi=m;}return t-bt[lo]<bt[hi]-t?bt[lo]:bt[hi];}
+    function B(n){return n*per;}
+    var secs=(chart.sections||[]).map(function(x,j,a){return{s:x[0],e:j+1<a.length?a[j+1][0]:dur,n:x[1]};});
+    var used=[],segs=[];
+    function free2(a,b){for(var q=0;q<used.length;q++)if(a<used[q][1]+B(2)&&b>used[q][0]-B(2))return false;return a>=0&&b<=dur;}
+    function put(k,a,b,x){a=Math.round(a);b=Math.round(b);used.push([a,b]);var o={k:k,t0:a,t1:b};for(var kk in x)o[kk]=x[kk];segs.push(o);return o;}
+    /* the intro, and the final pose */
+    var s0=secs.length&&secs[0].n==="intro"?secs[0].e:B(16),i1=snap(Math.max(B(8),Math.min(B(32),s0)));
+    put("intro",0,i1);
+    var fin=snap(dur-B(8));if(fin>i1+B(8))put("finale",fin,dur);else fin=dur;
+    /* the axel: on the drop (or the biggest loud entrance), after a 16-beat speed build */
+    var D=chart.drop||0;
+    if(!(D>i1+B(18)&&D<fin-B(6))){D=0;var pk=(chart.peaks||[]).filter(function(p){return p[0]>i1+B(18)&&p[0]<fin-B(6);});pk.sort(function(a,b){return (b[1]-b[0])-(a[1]-a[0]);});if(pk.length)D=pk[0][0];}
+    if(!D&&fin-i1>B(30))D=i1+(fin-i1)*0.62;
+    var ax=0;if(D){D=snap(D);var b0=Math.max(i1+B(2),D-B(16));if(D-b0>=B(6)){put("build",b0,D);put("axel",D,Math.min(fin,D+B(4)),{at:D});ax=D;}}
+    /* long spins in the calm parts; a free dance section in a chorus or a solo */
+    function fill(names,k,minB,maxB,count,fallback){var got=0;
+      secs.forEach(function(x){if(got>=count||names.indexOf(x.n)<0)return;var a=snap(x.s),b=Math.min(x.e,a+B(maxB));b=a+Math.floor((b-a)/per)*per;if(b-a<B(minB))return;if(free2(a,b)){put(k,a,b);got++;}});
+      fallback.forEach(function(f){if(got>=count)return;var a=snap(i1+(fin-i1)*f),b=a+B(minB+2);if(free2(a,b)){put(k,a,b);got++;}});return got;}
+    fill(["breakdown","bridge"],"spin",6,12,2,[0.3,0.82]);
+    fill(["chorus","solo"],"free",8,32,2,[0.45,0.2]);
+    /* everything else is the glide round the path */
+    segs.sort(function(a,b){return a.t0-b.t0;});
+    var out=[],t=0;segs.forEach(function(sg){if(sg.t0>t+50)out.push({k:"glide",t0:Math.round(t),t1:sg.t0});out.push(sg);t=sg.t1;});if(t<dur-50)out.push({k:"glide",t0:Math.round(t),t1:Math.round(dur)});
+    /* big moments: where the song comes in loud during a glide */
+    var mo=[],lastM=-1e9;(chart.peaks||[]).forEach(function(p){var m=snap(p[0]);if(m-lastM<B(8))return;for(var q=0;q<out.length;q++)if(out[q].k==="glide"&&m>=out[q].t0+B(1)&&m<out[q].t1-B(2)){mo.push(m);lastM=m;break;}});
+    /* a long glide with no loud entrance still gets a big move every 24 beats or so */
+    out.forEach(function(g){if(g.k!=="glide")return;for(var m=snap(g.t0+B(12));m<g.t1-B(4);m=snap(m+B(24))){if(mo.every(function(x){return Math.abs(x-m)>=B(10);}))mo.push(m);}});
+    mo.sort(function(a,b){return a-b;});
+    return{per:per,dur:dur,segs:out,moments:mo,axel:ax,beats:bt};
+  };
+  FIG.segAt=function(P,pos){if(!P)return null;for(var i=0;i<P.segs.length;i++)if(pos<P.segs[i].t1)return P.segs[i];return P.segs[P.segs.length-1]||null;};
+  /* how far round the path everyone is (laps): the path speeds up for the build, slows for the free dance, stops for a spin */
+  FIG.SPEED={intro:0.6,glide:1,build:1.45,axel:1.1,spin:0,free:0.35,finale:0.4};
+  FIG.lapAt=function(P,pos){if(!P)return pos/(FIG.LAP*500);var L=0,per=P.per;for(var i=0;i<P.segs.length;i++){var sg=P.segs[i],e=Math.min(pos,sg.t1);if(e>sg.t0)L+=(e-sg.t0)/per/FIG.LAP*(FIG.SPEED[sg.k]||1);if(pos<sg.t1)break;}return L;};
+  /* a spot on the path for a skater in the formation (slot 0 leads; the others trail just behind, inside and outside lanes) */
+  FIG.spot=function(G,lap,slot,lane){var u=lap-slot*0.04,a=u*Math.PI*2-Math.PI/2,k=0.5+((slot%3)-1)*0.16+(lane||0)*0.12,rx=G.ix+(G.rx-G.ix)*k,ry=G.iy+(G.ry-G.iy)*k;
+    return{x:G.cx+Math.cos(a)*rx,y:G.cy+Math.sin(a)*ry,dx:-Math.sin(a)*rx,dy:Math.cos(a)*ry};};
+  FIG.NAMES={intro:"INTRO",glide:"GLIDE",spin:"SPIN",free:"FREE DANCE",build:"BUILD SPEED",axel:"AXEL!",finale:"FINALE"};
+
   /* the circle pit: centred on the floor (top..bot as fractions of the room) */
   MOSHX.circle=function(top,bot){return{x:0.5,y:(top+bot)/2,ry:Math.max(0.06,(bot-top)/2-0.03)};};
   /* a game that runs from start to end (ms of song): keep the drop and loud stretches inside it, or make some that fit */
@@ -2613,6 +2666,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.82",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.85",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

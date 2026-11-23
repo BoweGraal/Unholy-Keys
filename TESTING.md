@@ -1688,6 +1688,36 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.85 — Ice rink: a figure skating routine
+
+The ice rink is now a routine planned from the song's analysis (the roller rink is unchanged). Everyone skates the same path round the rink in formation, in time with the music. A timeline across the top shows the parts, and a prompt at the bottom says what to do now. Space on a keyboard; the TAP button on a phone.
+
+1. **Intro:** a preset dance on the ice (Arms up, Arabesque, Swan, Present, Cross, Reach), one move every 2 beats. Tap as the ring closes on each.
+2. **Glide:** skate the path with everyone. Tap every 2 beats to stroke. On the song's big moments, **BIG MOVE!** asks for a spiral (arms out, leg up), worth more.
+3. **Spin** (in a calm part like a breakdown or bridge): hold the button to spin faster and faster. Keep it held to the end for PERFECT SPIN.
+4. **Free dance** (a chorus or solo): you dance the Two-step on the ice. The stick / arrows move your arms, the move changes every 8 beats, and Space on the beat twirls.
+5. **Build speed** (16 beats before the drop): tap every beat to fill the speed meter (left).
+6. **Axel** (on the drop): jump right on the beat. Speed decides SINGLE, DOUBLE or TRIPLE (triple needs a full meter and a GREAT or better). Miss it and you fall.
+7. **Finale:** strike the final pose on the last beat. **BRAVO!**
+8. Everyone sees each other's spins and jumps turning round, the free dance, and the poses. So does the performer's view.
+
+Timing: PERFECT within 45 ms, GREAT 90, GOOD 140. A streak adds up to double points.
+
+## v1.81.84 — Ski jump: 70s dance moves instead of tricks
+
+1. In the air in Ski, the three trick buttons are now 70s dance moves (same keys/clicks, same points and timing):
+   - **⬅ Sinking Swim**: pinch your nose, wave the other hand up, shimmy down like you're going under
+   - **⬆ YMCA**: spells Y, M, C, A with your arms
+   - **➡ Disco Point**: the Saturday Night Fever point, up to the side then down across, hand on hip
+2. No more spinning skis or flipping. You face the crowd while you do the move, and everyone else sees your arms doing it.
+3. Combos, the repeat penalty and the trick mouse guide all work the same with the new moves.
+
+## v1.81.83 — Mosh pit: headbang
+
+1. In the mosh pit (and the circle pit), a little BANG track sits bottom right: a white dot races up and down (with a slight sway), hitting the red line on every beat.
+2. Press BANG right as it hits (Space or B on a keyboard, or tap the track). PERFECT is a tight window (40 ms by default, "Headbang perfect window" in the tuning lab), then GREAT and GOOD; too far off is a MISS and breaks your streak. One bang per beat, so mashing doesn't help.
+3. A good bang plays the Headbang dance for a couple of beats, and everyone sees it. Streaks add up to double points.
+
 ## v1.81.82 — Keepy uppy: locked in a shuffle
 
 1. Start Keepy uppy. Your dancer shuffles the whole game (running man), standing still or moving. Everyone else sees it too.
