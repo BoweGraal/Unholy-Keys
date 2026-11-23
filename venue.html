@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.35"></script>
-<script src="gfx.js?v=1.81.35"></script>
-<script src="art.js?v=1.81.35"></script>
-<script src="voice.js?v=1.81.35"></script>
-<script src="instruments.js?v=1.81.35"></script>
-<script src="kart.js?v=1.81.35"></script>
-<script src="explain.js?v=1.81.35"></script>
+<script src="tune.js?v=1.81.37"></script>
+<script src="gfx.js?v=1.81.37"></script>
+<script src="art.js?v=1.81.37"></script>
+<script src="voice.js?v=1.81.37"></script>
+<script src="instruments.js?v=1.81.37"></script>
+<script src="kart.js?v=1.81.37"></script>
+<script src="explain.js?v=1.81.37"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -535,7 +535,9 @@ body.practice #moveCtl{right:12px;justify-content:space-between}
 #prDance{display:none;position:fixed;left:12px;top:58px;z-index:60;padding:7px 12px;border-radius:10px;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(20,18,32,.88);border:1px solid rgba(245,197,24,.7);cursor:pointer}
 body.practice #prDance{display:none}
 /* practice: Free dance starts dancing on the spot; Start game opens the mini game menu (hidden while a round is on) */
-#prSkip{display:none}body.practice.pr-count #prSkip{display:block;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:61;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#c8407e;border:2px solid #ff8ac8;padding:10px 18px;cursor:pointer;pointer-events:auto}
+#prSkip{display:none}body.practice.pr-count.explain-on #prSkip{display:block;position:fixed;left:50%;transform:translateX(-50%);top:calc(56px + env(safe-area-inset-top));z-index:400;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#c8407e;border:2px solid #ff8ac8;padding:10px 18px;cursor:pointer;pointer-events:auto}
+body.practice.pr-count #danceBtn,body.practice.pr-count #prExit{display:none!important}   /* counting down: just the card and its Skip timer (Exit stays top left) */
+#roundBox .rb-skip{display:block;margin:12px auto 0;pointer-events:auto;cursor:pointer;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#c8407e;border:2px solid #ff8ac8;padding:10px 18px}
 #prStart{display:none}body.practice:not(.pr-busy) #prStart{display:block;background:#c8407e!important;border-color:#ff8ac8!important}body.practice.pr-open #prStart{background:#5b4fc4!important}
    /* one Dance button: the one by the stick opens the practice menu */
 body.practice.pr-busy #prDance{display:none}body.practice.pr-open #prDance{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:#fff}
@@ -2732,14 +2734,14 @@ var GAME=(function(){
      only single arrows), nothing faster than half beats, and steps that fall between the beats are dropped so
      the chart sits on the groove. Applied at every level, on top of the easing below. */
   function touchScreen(){return !!(window.matchMedia&&matchMedia("(pointer: coarse)").matches)||!!window.ukForceTouch;}
-  function thumbChart(chart){
-    if(!chart||!chart.steps)return chart;
+  function thumbChart(chart,diff){
+    if(!chart||!chart.steps)return chart;diff=diff|0;
     var per=60000/(chart.bpm||120),bt=chart.beats||[],out=[],last=-1e9,holds=[],bi=0;
     function offGrid(ms){if(bt.length<4)return 0;while(bi<bt.length-1&&bt[bi+1]<=ms)bi++;var b0=bt[bi],b1=bi+1<bt.length?bt[bi+1]:b0+per,g=b1-b0||per,f=(ms-b0)/g;
       var d=Math.min(Math.abs(f),Math.abs(f-0.25),Math.abs(f-0.5),Math.abs(f-0.75),Math.abs(f-1));return d*g;}   /* ms from the nearest beat, half beat or quarter beat (off-beat steps stay in) */
     for(var i=0;i<chart.steps.length;i++){
       var s=chart.steps[i],t=s[0],m=s[1],hold=s.length>2?+s[2]||0:0;
-      if(t-last<Math.max(per*0.45,190))continue;                      /* no faster than about half beats, and never under 190 ms (fast or double-time songs) */
+      if(t-last<(diff>=3?Math.max(per*0.22,120):Math.max(per*0.45,190)))continue;   /* no faster than about half beats (quarter beats on Expert), and never under 190 ms (120 on Expert) */
       if(offGrid(t)>Math.max(45,per*0.1))continue;                    /* well between the grid: leave it out */
       holds=holds.filter(function(e){return e>t+30;});                /* the arrows still held right now */
       var nh=holds.length;                                            /* each one is a thumb that's busy: never more than two presses at once */
@@ -2750,6 +2752,10 @@ var GAME=(function(){
       if(hold&&cnt>1)m=m&(-m);                                        /* a double that holds becomes one held arrow */
       out.push(hold?[t,m,hold]:[t,m]);last=t;if(hold)holds.push(t+hold);
     }
+    /* a hold ends well before the next step on the same arrow, so you can let go and hit it cleanly (or it becomes a tap) */
+    var gapH=Math.max(per*0.5,260);
+    for(var hi=0;hi<out.length;hi++){var ho=out[hi];if(ho.length<3)continue;
+      for(var hj=hi+1;hj<out.length;hj++)if(out[hj][1]&ho[1]){var room=out[hj][0]-gapH-ho[0];if(ho[2]>room){if(room>=per*0.75)ho[2]=Math.round(room);else out[hi]=[ho[0],ho[1]];}break;}}
     var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;
   }
   /* The difficulty ladder. One chart goes in, and each level is built from the song's own rhythm:
@@ -2835,7 +2841,7 @@ var GAME=(function(){
   function easeChart(chart,diff){
     if(!chart)return chart;
     if(chart.hand&&(diff|0)>=3)return chart;   /* hand-made steps: Expert is exactly what was written */
-    chart=thumbChart(chart);   /* one chart for everyone, phone or computer, so every player has the same chances at points */
+    chart=thumbChart(chart,diff);   /* one chart for everyone, phone or computer, so every player has the same chances at points */
     return levelChart(chart,diff|0);
   }
   window.ukEase=easeChart;window.ukDiffOf=diffOf;window.ukThumb=thumbChart;
@@ -4804,13 +4810,14 @@ var CTFG=(function(){
   function ctfRound(){return GAME.mode==="ctf"||(typeof ROUND!=="undefined"&&ROUND.mode==="ctf");}
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
   function beat(){var p=songPos();return p>-1e8?ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),p):-99;}
+  var goCnt=-1;
   function banner(t,col){var b=$("ctfBanner");if(!b)return;b.textContent=t;b.style.color=col||"#fff";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   var hudSig="";
   function clock(){var ch=ROUND.chart&&ROUND.chart(),end=ch?(ch.gameMs||ch.dur||0):0,p=songPos();if(!end||p<-1e8)return "";var s=Math.max(0,Math.ceil((end-p)/1000));return Math.floor(s/60)+":"+("0"+s%60).slice(-2);}
   function hud(){var h=$("ctfScore");if(!h||!st)return;var ck=clock(),sig=st.caps.join(",")+"|"+ck+"|"+team;if(sig===hudSig)return;hudSig=sig;   /* team score, and the time left */
     h.innerHTML='<span style="color:'+C.TEAM[0]+'"'+(team===0?' class="me"':'')+'>RED '+st.caps[0]+'</span> &nbsp;·&nbsp; <span style="color:'+C.TEAM[1]+'"'+(team===1?' class="me"':'')+'>'+st.caps[1]+' BLUE</span>'+(ck?'<div class="ck">\u23F1 '+ck+'</div>':'');   /* your team is underlined */
     var t=$("ctfTeam");if(t){t.textContent="You're on "+C.TNAME[team];t.style.color=C.TEAM[team];}}
-  function start(round){
+  function start(round){goCnt=-1;
     on=true;roundN=round?round.n:roundN+1;var rc=round&&round.ctf;
     var kf0=!!(round&&round.kflag);map=rc&&rc.map?C.clean(rc.map):null;if(!map&&PRACTICE.on){try{map=C.clean(C.upgrade(JSON.parse(localStorage.getItem(kf0?"uk_kflag":"uk_ctf")||"null")));}catch(e){map=null;}}if(!map)map=C.clean(kf0?C.kartDefault():C.defaultMap());   /* Kart flag has its own arena (wide and open by default) */
     ctfTune();kart=!!(round&&round.kflag);if(kart)map=C.kartMap(map);I=C.info(map);st=C.newState(I,Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}),kart);
@@ -4870,7 +4877,9 @@ var CTFG=(function(){
   function input(){var x=(held.right?1:0)-(held.left?1:0),y=(held.down?1:0)-(held.up?1:0);if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){x=joy.x;y=joy.y;}var mm=Math.hypot(x,y);if(mm>1){x/=mm;y/=mm;}return{x:x,y:y};}
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
-    var going=beat()>=GO_BEAT;
+    var bnow=beat(),going=bnow>=GO_BEAT;
+    /* everyone waits on the start line for the first 8 beats: count it in so nobody thinks it's stuck */
+    var cnt=going?0:bnow>=GO_BEAT-4?Math.ceil(GO_BEAT-bnow):bnow>-50?9:-1;if(cnt!==goCnt){if(cnt===0&&goCnt>0)banner("GO!","#4CC38A");else if(cnt>0&&cnt<=4)banner(String(cnt),"#F5C518");else if(cnt===9)banner("GET READY","#F5C518");goCnt=cnt;}
     var sm=C.sprint(spr,sprWant&&going&&now>hold&&Math.hypot(input().x,input().y)>0.2,dt);try{sprintHud();}catch(e){}
     if(kart){var inp2=input(),mg=Math.hypot(inp2.x,inp2.y),spin=(st.spin[myId]||0)>Date.now(),carry=C.carrying(st,myId)>=0;
       if(going&&!spin){var da=0;
@@ -4973,7 +4982,7 @@ var CTFG=(function(){
     var hn=$("ctfHint");if(hn){var cf2=C.carrying(st,myId),early=beat()<GO_BEAT+16;hn.style.display=early||now<hold?"":"none";   /* just at the start (and when tagged), so it never sits over the game */
       hn.textContent=now<hold?"Tagged! Back in a moment…":cf2>=0?"You've got the flag! Get it back to your base":kart?"Grab their flag · LAUNCH: hold, aim, let go · IMPACT knocks your flag home":st.flags[team].at?"They've got your flag! Tag the carrier to send it home":"Grab the "+C.TNAME[1-team].toLowerCase()+" flag · block them with your body · hold SPRINT (Space)";}
   }
-  window.ukCtf=function(){return{spr:{e:+spr.e.toFixed(2),on:spr.on},refill:st&&st.refill,on:on,me:{x:+me.x.toFixed(2),y:+me.y.toFixed(2)},team:team,caps:st&&st.caps,flags:st&&st.flags,score:st&&st.score,teams:st&&st.teams};};
+  window.ukCtf=function(){return{spr:{e:+spr.e.toFixed(2),on:spr.on},refill:st&&st.refill,on:on,me:{x:+me.x.toFixed(2),y:+me.y.toFixed(2)},team:team,caps:st&&st.caps,flags:st&&st.flags,score:st&&st.score,teams:st&&st.teams,beat:+beat().toFixed(2),pos:st&&st.pos};};
   window.ukKflagTest=function(nb){window.__testKflag=1;window.__testMode="ctf";ukWalkTest(nb===undefined?5:nb);window.__testKflag=0;};
   window.ukCtfTest=function(nb){window.__testMode="ctf";ukWalkTest(nb===undefined?5:nb);};
   return{start:start,stop:stop,tick:tick,draw:draw,onMsg:onMsg,ctfRound:ctfRound,get on(){return on;}};
@@ -5557,7 +5566,7 @@ var ROUND=(function(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
     try{EXPLAIN.tick(rd.mode,(endAt-performance.now())/1000,"r"+rd.n,{ice:ICE,battle:rd.isBattle,kflag:rd.kflag});}catch(e){}
     show([head(),mk("div","rb-title",rd.title),mk("div","rb-big",left>0?String(left):"GO!"),
-      mk("div","rb-sub",rd.isBattle?"Everyone dances; then it's 1 v 1s on the stage, knockout style, with the final at the end of the song."+(rd.mode==="free"?" The room votes each match.":" Highest score in each match goes through."):rd.mode==="free"?"Dance however you like. Everyone votes when the song ends.":rd.mode==="kart"?"The performer takes off in a UFO and the dance floor becomes a space race track! The stick is your speed and direction. Push it when the 2 lights up for a rocket start. Tap DRIFT to hop, swing into the turn and hold it for a boost. Distance, laps, boosts and overtakes all score.":rd.mode==="skate"?"Skate the rink! Build speed, JUMP (Space), hold directions for tricks, let go before you land.":rd.mode==="keepy"?"Keep the balloon, the ball and the feather off the floor! Jump, double jump for height. The feather and double-jump hits score most.":rd.mode==="ctf"?(rd.kflag?"Grab their flag and drive it home. LAUNCH: hold, aim, let go. IMPACT knocks your flag home.":"Grab their flag and run it home. Tag their carrier; block everyone else with your body."):"Everyone gets the same steps. Highest score wins the round.")],"count");
+      mk("div","rb-sub",rd.isBattle?"Everyone dances; then it's 1 v 1s on the stage, knockout style, with the final at the end of the song."+(rd.mode==="free"?" The room votes each match.":" Highest score in each match goes through."):rd.mode==="free"?"Dance however you like. Everyone votes when the song ends.":rd.mode==="kart"?"The performer takes off in a UFO and the dance floor becomes a space race track! The stick is your speed and direction. Push it when the 2 lights up for a rocket start. Tap DRIFT to hop, swing into the turn and hold it for a boost. Distance, laps, boosts and overtakes all score.":rd.mode==="skate"?"Skate the rink! Build speed, JUMP (Space), hold directions for tricks, let go before you land.":rd.mode==="keepy"?"Keep the balloon, the ball and the feather off the floor! Jump, double jump for height. The feather and double-jump hits score most.":rd.mode==="ctf"?(rd.kflag?"Grab their flag and drive it home. LAUNCH: hold, aim, let go. IMPACT knocks your flag home.":"Grab their flag and run it home. Tag their carrier; block everyone else with your body."):"Everyone gets the same steps. Highest score wins the round.")].concat(document.body.classList.contains("practice")&&left>1?[mk("button","rb-btn rb-skip","\u23E9 Skip timer")]:[]),"count");
   }
   /* free dance spotlight: the plan, and who's on now */
   function setSpot(turns,ring){
@@ -6765,6 +6774,8 @@ var PRACTICE=(function(){
   function skipTimer(){if(!on||!startT||!chart)return false;clearTimeout(startT);startT=null;playSong(job);return true;}
   window.ukPrSkip=skipTimer;
   setTimeout(function(){var sb=document.getElementById("prSkip");if(sb)sb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();sb.blur();skipTimer();});},0);
+  /* on pointerup as well as click: a phone can swallow the click when something under the finger handles the touch */
+  ["pointerup","click"].forEach(function(ev){document.addEventListener(ev,function(e){var t=e.target&&e.target.closest&&e.target.closest(".rb-skip,#prSkip");if(!t)return;e.preventDefault();e.stopPropagation();skipTimer();},true);});
   window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
   window.ukPracticeBattle=function(){return plan?pub():null;};
   return{get on(){return on;},enter:enter,vote:vote,bvote:bvote,moshBonus:moshBonus,
@@ -7146,7 +7157,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.35",SERVER_VERSION="";
+var PAGE_VERSION="1.81.37",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7728,7 +7739,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.35"></script>
+<script src="lab.js?v=1.81.37"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
