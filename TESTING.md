@@ -1692,6 +1692,18 @@ Needs a Render redeploy (server.js changed).
 
 - **Pixel editor, with Show character on:** the canvas zooms out to show 8 pixels of the character around the part you're editing (the torso and other arm round an arm, the hips round a leg). The surrounding body is faint, and you still only paint inside the part's box. Turn Show character off to go back to the close-up.
 
+## v1.81.48 — Pixel editor: reference picture, layers, PNG export
+
+- **🖼 Reference picture:** pick an image from your device.
+  - **Behind (see-through):** fitted to the part, under your pixels; the slider sets how see-through it is.
+  - **Side by side:** next to the canvas, which takes half the width.
+  - **Hidden**, or **✕ Picture** to remove it.
+  - The picture is kept on the device if it fits in storage.
+- **Layers (up to 5):** the numbers pick which layer you paint on; 👁 shows or hides one; + adds a layer on top; 🗑 deletes the current one. The game gets them stacked into one (the top layer wins). Undo works on the layer you're on. Layers are saved per part on this device.
+- **⬇ Export PNG:** saves the current part as a PNG at 8× size, with crisp pixels.
+- All of these are in both the side panel and the full-screen editor's toolbar.
+- Includes #218 (body around the part); merging this brings it too.
+
 ## v1.81.45 — Graphics lab: Part list grouped
 
 - **Pixel editor → Part:** three groups:
