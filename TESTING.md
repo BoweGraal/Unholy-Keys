@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.58 — Ski: swoop tiers and the flag streak
+
+- **Hop into a divot (HOP SWOOP)** is worth more than **riding into one on the snow (SWOOP)**, which is worth more than passing the flag outside its divot. Each swoop also scores the flag.
+  - Hop swoop: flag + 300
+  - Ski swoop: flag + 150. This is new: riding into the top of a divot without hopping now swoops you too.
+  - Outside the divot: the flag only
+- **Flag streak:** each flag passed on the right side adds ×0.1 to the bonus on flag and swoop points (FLAG +100, ×1.1 +110, ×1.2 +120…). A wrong-side flag or a crash ends the streak. The label shows the multiplier.
+- Measured with the auto-skier: FLAG +100 → ×1.1 +110 → ×1.2 +120 → SWOOP ×1.3 +195.
+
 ## v1.81.57 — Ski: mix up your tricks
 
 - **The same trick again is worth less:** ×0.75 each time, not below ×0.2. The points label shows it, e.g. "Backflip ×0.56 +629".
