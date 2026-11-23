@@ -1688,12 +1688,42 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
-## v1.81.47 — Playtest zoom for every game
+## v1.81.51 — Playtest zoom for every game
 
 - **A − / + zoom box at the top of the screen in every game** (dance practice; or add `?zoom` to a live link). It shows the game and the zoom, e.g. "CTF 60%". Steps are 10%, from 50% to 250%. Tap the label to reset to 100%. Each game remembers its own zoom on that device.
 - **Camera games** (CTF, Kart flag, Ski, Mars Rally, Half pipe): the game's own camera zooms.
 - **Floor games** (Free dance, Mosh pit, rinks, Keepy uppy, Walk race, Step, Target, the highways): the whole room zooms. Zoomed in follows you; zoomed out shows the room smaller.
 - To use: play each game on phone and PC, set the zoom that feels right, and send me the numbers (e.g. "CTF PC 80%, phone 110%"). I'll make those the defaults.
+
+## v1.81.50 — Colour keys: painted and imported art follows the player's colours
+
+- **Colour keys:** in painted or imported art, pure magenta = hair colour, cyan = top colour, yellow = bottoms colour, orange = skin. Lighter or darker shades of a key keep their shading on the player's colour. Other colours stay fixed. One PNG now works for every hair/clothes/skin colour.
+- **Import PNG and the pen** turn key colours into these tokens. **Export PNG** writes anything that follows the player's colours out in key colours, ready to edit and re-import.
+- New palette: **Colour keys (follow the player)**, with each key's base, light and dark shades.
+- **Fix:** three hand-painted hair fixes stored fixed colours: Braid had a 70-pixel patch in palette purple, and two styles had pixels in the blue hair colour. Everyone saw those colours whatever hair colour they picked. They now follow each player's hair colour (also on devices with a saved copy).
+- **Fix:** the held instrument no longer leaks into a part's picture in the pixel editor (and so into exports).
+- Check: Graphics lab → Hat → Import a hat with a magenta band → change the character's hair colour → the band follows.
+
+## v1.81.49 — Pixel editor: Import PNG (for the designer templates)
+
+- **⬆ Import PNG:** brings in a PNG drawn on the template, at the exact canvas size or any whole-number multiple (e.g. the 8× template, 160 × 176 for head parts). It replaces the current layer, and the original art underneath is cleared, the same as Redraw. A wrong-size picture gets a message with the size it needs.
+- Pixels less than half opaque are dropped; the rest become solid.
+- Tested round trip: a hat drawn on `hat-BLANK-8x.png`, imported over Beret, renders pixel for pixel.
+
+## v1.81.48 — Pixel editor: reference picture, layers, PNG export
+
+- **🖼 Reference picture:** pick an image from your device.
+  - **Behind (see-through):** fitted to the part, under your pixels; the slider sets how see-through it is.
+  - **Side by side:** next to the canvas, which takes half the width.
+  - **Hidden**, or **✕ Picture** to remove it.
+  - The picture is kept on the device if it fits in storage.
+- **Layers (up to 5):** the numbers pick which layer you paint on; 👁 shows or hides one; + adds a layer on top; 🗑 deletes the current one. The game gets them stacked into one (the top layer wins). Undo works on the layer you're on. Layers are saved per part on this device.
+- **⬇ Export PNG:** saves the current part as a PNG at 8× size, with crisp pixels.
+- All of these are in both the side panel and the full-screen editor's toolbar.
+- Includes #218 (body around the part); merging this brings it too.
+## v1.81.46 — Graphics lab: see the body around the part
+
+- **Pixel editor, with Show character on:** the canvas zooms out to show 8 pixels of the character around the part you're editing (the torso and other arm round an arm, the hips round a leg). The surrounding body is faint, and you still only paint inside the part's box. Turn Show character off to go back to the close-up.
 
 ## v1.81.45 — Graphics lab: Part list grouped
 
