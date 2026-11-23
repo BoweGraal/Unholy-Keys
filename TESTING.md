@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.34 — Mobile instrument: D is a side trigger
+
+- On the phone instrument, **D is now a tall trigger button down the left edge**, like the side or shoulder buttons in mobile games. Hold it to raise the notes.
+- The peanut's separate D half and its middle "Both" spot are gone. Next to the trigger: E and 3 on top, Space below.
+- **Four levels from D and Space**, the same as the keyboard: neither (root), D, Space, or D and Space together (two fingers) for the top level. E and 3 work as before.
+
 ## v1.81.33 — Character maker: Undo, Save changes, unsaved warning
 
 - **↶ Undo** (next to Surprise me) steps back through your last 60 changes, including Surprise me rolls.
