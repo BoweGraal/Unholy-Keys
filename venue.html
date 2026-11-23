@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.79"></script>
-<script src="gfx.js?v=1.81.79"></script>
-<script src="art.js?v=1.81.79"></script>
-<script src="voice.js?v=1.81.79"></script>
-<script src="instruments.js?v=1.81.79"></script>
-<script src="kart.js?v=1.81.79"></script>
-<script src="explain.js?v=1.81.79"></script>
+<script src="tune.js?v=1.81.80"></script>
+<script src="gfx.js?v=1.81.80"></script>
+<script src="art.js?v=1.81.80"></script>
+<script src="voice.js?v=1.81.80"></script>
+<script src="instruments.js?v=1.81.80"></script>
+<script src="kart.js?v=1.81.80"></script>
+<script src="explain.js?v=1.81.80"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1888,13 +1888,14 @@ function resize(){
 /* ---------- playtest zoom: a − / + for each game, saved per game on this device, to try out zoom levels ----------
    The camera games (CTF, Kart flag, Ski, Mars Rally, Half pipe) scale their own camera; the others zoom the room. */
 var GZS={};try{GZS=JSON.parse(localStorage.getItem("uk_gz")||"{}")||{};}catch(e){GZS={};}
-window.ukGZ=function(k){var z=k&&+GZS[k];return z>0.2&&z<5?z:1;};
+function gzDef(k){return k==="keepy"&&typeof W!=="undefined"&&W>H&&W>700?1.5:1;}   /* keepy uppy on a computer starts at 150% */
+window.ukGZ=function(k){var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
 var GZNAME={ctf:"CTF",kflag:"Kart flag",ski:"Ski",kart:"Mars Rally",pipe:"Half pipe",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",walk:"Walk race",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Highway 4 keys",crowd:"Crowd vote"};
 function gzKey(){var m=typeof GAME!=="undefined"&&GAME.mode;if(!m)return null;if(m==="ctf")return document.body.classList.contains("ctf-kart")?"kflag":"ctf";if(m==="skate"&&typeof ICE!=="undefined"&&ICE)return "ice";return m;}
 function gzUI(){var k=gzKey(),show=!!k&&((typeof PRACTICE!=="undefined"&&PRACTICE.on)||/[?&]zoom\b/.test(location.search)||localStorage.getItem("uk_gzui")==="1"),b=document.getElementById("gzBox");
   if(!b){if(!show)return;b=document.createElement("div");b.id="gzBox";b.innerHTML='<button data-z="-1" aria-label="Zoom out">\u2212</button><span title="Tap to reset to 100%"></span><button data-z="1" aria-label="Zoom in">+</button>';document.body.appendChild(b);
     b.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();var t=e.target.closest("[data-z],span"),k2=gzKey();if(!t||!k2)return;
-      var z=window.ukGZ(k2);z=t.tagName==="SPAN"?1:Math.max(0.5,Math.min(2.5,Math.round((z+0.1*(+t.getAttribute("data-z")))*10)/10));if(Math.abs(z-1)<0.001)delete GZS[k2];else GZS[k2]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}gzUI();},true);}
+      var z=window.ukGZ(k2);z=t.tagName==="SPAN"?1:Math.max(0.5,Math.min(2.5,Math.round((z+0.1*(+t.getAttribute("data-z")))*10)/10));if(Math.abs(z-gzDef(k2))<0.001)delete GZS[k2];else GZS[k2]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}gzUI();},true);}
   b.classList.toggle("on",show);if(show)b.querySelector("span").textContent=(GZNAME[k]||k)+" "+Math.round(window.ukGZ(k)*100)+"%";}
 setInterval(gzUI,400);
 window.ukGzSet=function(k,z){if(z===1)delete GZS[k];else GZS[k]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}};   /* test hook */
@@ -4098,7 +4099,7 @@ var KEEPY=(function(){
     var me=myId&&viewers[myId];if(!me)return;
     var t=songT();objs.forEach(function(o){ART.KEEPY.advance(o,t,B);});
     /* moving: a bit quicker than walking; jumping */
-    var inp=input(),spd=TUNE.v("kp.speed");vx=inp.x*spd;vy=inp.y*spd*(W/H)*0.6;
+    var inp=input(),spd=TUNE.v("kp.speed")*Math.max(0.5,Math.min(1,sc()*195/W));vx=inp.x*spd;vy=inp.y*spd*(W/H)*0.6;   /* the same pace for your character on a wide screen as on a phone (it was ~3x quicker on PC) */
     me.tx=Math.max(B.x0,Math.min(B.x1,me.tx+vx*dt));me.ty=Math.max(B.y0,Math.min(B.y1,me.ty+vy*dt));me.x=me.tx;me.y=me.ty;
     if(jumps||zp>0){vz-=TUNE.v("kp.gravity")*dt;zp+=vz*dt;if(zp<=0){zp=0;vz=0;jumps=0;dbl=false;}}
     sendPos(me.tx,me.ty);
@@ -7315,7 +7316,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.79",SERVER_VERSION="";
+var PAGE_VERSION="1.81.80",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7892,7 +7893,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.79"></script>
+<script src="lab.js?v=1.81.80"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

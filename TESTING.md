@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.80 — Keepy uppy on PC: calmer speed, 150% zoom
+
+1. Play Keepy uppy on a computer. It starts zoomed to 150% with the camera following you, and walking is about a third of the old speed on a wide screen, so it feels like the phone version.
+2. Phones are unchanged (100%). The zoom +/- in practice still works and remembers your choice.
+
 ## v1.81.79 — Abs feather turns with the hat
 
 1. Put on Abs and keep pressing rotate. The feather goes round the head like it's really attached: front right, then behind the dome (just the tip peeking over) as you turn right, across the back, round the near side, and back to the front.
