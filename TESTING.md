@@ -1688,6 +1688,18 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.38 — Shuffle and Cyber goth from the clips
+
+**Shuffle** (reworked from the shuffle clip): every move now **snaps** into place at the start of its eighth note and holds still, so it reads as stop-and-go rather than floaty.
+- **Running man**: plant and sink on the beat with the other foot slid back, then snap a knee up high on the "and" with the opposite arm swinging up.
+- **T-step**: the leading foot swivels heel-out then toe-out on each eighth, and the body hops sideways in little stops, out over half the bar and back.
+- **Spin**: a quick snap all the way round in half a beat (through all 8 facings), then pop out facing front with the arms open.
+- **Mix it up**: running man, T-step one way, T-step back, then running man into a spin.
+
+**Cyber goth**: the base is now the guy in the middle of the clip.
+- **Stomp & pump**: knees bent, stomping in place, fists pumping up and down in front of the chest in turn with the elbows bent, the shoulders dipping into each stomp.
+- **Mix it up** comes back to the stomp & pump every other bar, between the sweeps, arm rolls, windmills and chops (the arm roll is the girl in the second clip).
+
 ## v1.81.37 — Holds and Expert
 
 - **Holds no longer run into the next step on the same arrow.** A hold now ends at least half a beat (and at least 0.26 s) before the next step on that arrow, so you can let go and hit it cleanly. If there isn't room for a hold of at least three quarters of a beat, it becomes a normal step.
