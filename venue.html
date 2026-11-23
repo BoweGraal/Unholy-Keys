@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.60"></script>
-<script src="gfx.js?v=1.81.60"></script>
-<script src="art.js?v=1.81.60"></script>
-<script src="voice.js?v=1.81.60"></script>
-<script src="instruments.js?v=1.81.60"></script>
-<script src="kart.js?v=1.81.60"></script>
-<script src="explain.js?v=1.81.60"></script>
+<script src="tune.js?v=1.81.61"></script>
+<script src="gfx.js?v=1.81.61"></script>
+<script src="art.js?v=1.81.61"></script>
+<script src="voice.js?v=1.81.61"></script>
+<script src="instruments.js?v=1.81.61"></script>
+<script src="kart.js?v=1.81.61"></script>
+<script src="explain.js?v=1.81.61"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2753,6 +2753,10 @@ var GAME=(function(){
      only single arrows), nothing faster than half beats, and steps that fall between the beats are dropped so
      the chart sits on the groove. Applied at every level, on top of the easing below. */
   function touchScreen(){return !!(window.matchMedia&&matchMedia("(pointer: coarse)").matches)||!!window.ukForceTouch;}
+  /* trimming a double (or a held lane) down to one arrow: keep a fair, varied one, not always the leftmost (which piled every
+     trimmed step onto the left lanes). The same step always gives the same choice. */
+  function fairBit(m,t,avoid){var a=[];for(var q=0;q<4;q++)if(m&(1<<q))a.push(q);if(a.length<2)return m;
+    var c=a.filter(function(l){return !avoid||!(avoid&(1<<l));});if(!c.length)c=a;var h=(Math.imul((Math.round(t)/7|0)+1,2654435761)>>>0);return 1<<c[h%c.length];}
   function thumbChart(chart,diff){
     if(!chart||!chart.steps)return chart;diff=diff|0;
     var per=60000/(chart.bpm||120),bt=chart.beats||[],out=[],last=-1e9,holds=[],bi=0;
@@ -2766,9 +2770,9 @@ var GAME=(function(){
       var nh=holds.length;                                            /* each one is a thumb that's busy: never more than two presses at once */
       var cnt=0;for(var q0=0;q0<4;q0++)if(m&(1<<q0))cnt++;
       if(nh>=2)continue;                                              /* both thumbs are down: nothing new */
-      if(cnt>2){var lb0=m&(-m),rest0=m&~lb0;m=lb0|(rest0&(-rest0));cnt=2;}   /* at most two together */
-      if(nh+cnt>2){m=m&(-m);cnt=1;}                                   /* one thumb is held: a single arrow only */
-      if(hold&&cnt>1)m=m&(-m);                                        /* a double that holds becomes one held arrow */
+      if(cnt>2){var lb0=fairBit(m,t),rest0=m&~lb0;m=lb0|fairBit(rest0,t+1);cnt=2;}   /* at most two together */
+      if(nh+cnt>2){m=fairBit(m,t);cnt=1;}                             /* one thumb is held: a single arrow only */
+      if(hold&&cnt>1)m=fairBit(m,t);                                  /* a double that holds becomes one held arrow */
       out.push(hold?[t,m,hold]:[t,m]);last=t;if(hold)holds.push(t+hold);
     }
     /* a hold ends well before the next step on the same arrow, so you can let go and hit it cleanly (or it becomes a tap) */
@@ -2796,27 +2800,27 @@ var GAME=(function(){
       if(f<0.12)c=bi%4===0?0:1;else if(Math.abs(f-0.5)<0.14)c=2;else if(f>0.88)c=(bi+1)%4===0?0:1;else c=3;
       return{c:c,bar:Math.floor(bi/4),bi:bi};}
     var P=[{beat:1,offCap:[0,0,0],dbl:9,q:9,fill:9,gap:0.95},                       /* easy: on the beat; quiet parts every other beat */
-           {beat:0,offCap:[0,1,1],dbl:0.75,q:9,fill:9,gap:0.45},                     /* medium: beats, a few half beats, a double on a big bar start */
+           {beat:0,offCap:[0,1,2],dbl:0.75,q:9,fill:9,gap:0.45},                     /* medium: beats, a few half beats (more in the loud parts, so choruses drive), a double on a big bar start */
            {beat:0,offCap:[0,3,4],dbl:0.5,q:9,fill:0.45,gap:0.45,tpl:0},             /* hard: the groove's half beats plus fills */
            {beat:0,offCap:[0,4,8],dbl:0.4,q:0.8,fill:0.3,gap:0.24,tpl:1}][diff]||{};  /* expert: streams, quarter-beat bursts, doubles */
     var st=chart.steps,out=[],held=0,heldEnd=-1,last=-1e9,offN={};
     function lowbit(m){return m&(-m);}
-    function push(t,m,hold){if(hold)out.push([t,m,hold]);else out.push([t,m]);last=t;}
+    var lastM=0;function push(t,m,hold){if(hold)out.push([t,m,hold]);else out.push([t,m]);last=t;lastM=m;}
     for(var i=0;i<st.length;i++){
       var s=st[i],t=s[0],isHold=s.length>2,m=s[1],g=grid(t),w=I(t),wi=w>=0.8?2:w>=0.45?1:0;
       if(t>=heldEnd)held=0;
-      if(isHold){if(held)continue;if(diff===0&&w<0.4&&g.c>1)continue;push(t,m,s[2]);held=lowbit(m);heldEnd=t+(+s[2]||0);continue;}
-      if(held){m&=~held;if(!m)continue;m=lowbit(m);}
+      if(isHold){if(held)continue;if(diff===0&&w<0.4&&g.c>1)continue;m=fairBit(m,t);push(t,m,s[2]);held=m;heldEnd=t+(+s[2]||0);continue;}
+      if(held){m&=~held;if(!m)continue;m=fairBit(m,t);}
       if(diff===0){
         if(g.c>1)continue;
         if(w<0.55&&g.bi%2===1)continue;
-        if(t-last<per*P.gap)continue;m=lowbit(m);
+        if(t-last<per*P.gap)continue;m=fairBit(m,t,lastM);
       }else{
         if(g.c===3){if(w<P.q)continue;if(t-last<per*P.gap)continue;}
         else if(g.c===2){var k=g.bar;offN[k]=offN[k]||0;if(offN[k]>=P.offCap[wi])continue;if(t-last<per*0.45)continue;offN[k]++;}
         else{var need=diff===1&&w<0.45?0.9:diff>=2?0.45:0.45;if(t-last<per*need)continue;}
         if(diff===1&&g.c===1&&w<0.45&&g.bi%2===1)continue;
-        if(m&(m-1)){var okd=w>=P.dbl&&g.c<=1&&(diff>=2||g.bar%2===0);if(!okd)m=lowbit(m);}
+        if(m&(m-1)){var okd=w>=P.dbl&&g.c<=1&&(diff>=2||g.bar%2===0);if(!okd)m=fairBit(m,t,lastM);}
       }
       push(t,m);
     }
@@ -2846,8 +2850,8 @@ var GAME=(function(){
       out=out.concat(add);out.sort(function(a,b){return a[0]-b[0];});
       var res=[],run=0,hm=0,he=-1,pl=-1,pt=-1e9;
       out.forEach(function(s){var t=s[0];if(t>=he)hm=0;var gp=t-pt;
-        if(s.length>2){res.push(s);hm=lowbit(s[1]);he=t+s[2];pt=t;pl=lowbit(s[1]);run=0;return;}
-        var m=s[1];if(hm){m&=~hm;if(!m)return;m=lowbit(m);}
+        if(s.length>2){res.push(s);hm=s[1];he=t+s[2];pt=t;pl=lowbit(s[1]);run=0;return;}
+        var m=s[1];if(hm){m&=~hm;if(!m)return;m=fairBit(m,t);}
         if(gp<(diff===3?120:150))return;
         run=gp<per*0.4?run+1:0;if(run>(diff===3?5:3))return;
         if(lowbit(m)===pl&&gp<260){m=lowbit(m)<<1;if(m>8)m=1;if(m&hm)return;}
@@ -2861,32 +2865,44 @@ var GAME=(function(){
     if(!chart)return chart;
     if(chart.hand&&(diff|0)>=3)return chart;   /* hand-made steps: Expert is exactly what was written */
     chart=thumbChart(chart,diff);   /* one chart for everyone, phone or computer, so every player has the same chances at points */
-    return levelChart(chart,diff|0);
+    return sides(levelChart(chart,diff|0));
   }
-  window.ukEase=easeChart;window.ukDiffOf=diffOf;window.ukThumb=thumbChart;
+  /* keep both hands busy: after 6 single steps in a row on one side (left two or right two), the next one is mirrored to the
+     other side, so a quiet stretch never sits on one side for long */
+  function sides(chart){if(!chart||!chart.steps||chart.hand)return chart;var st=chart.steps,side=-1,run=0,heldM=0,heldEnd=-1,out=[];
+    for(var i=0;i<st.length;i++){var s=st[i].slice(),t=s[0],m=s[1];if(t>=heldEnd)heldM=0;
+      if(m&&!(m&(m-1))){var l=Math.log2(m),sd=l<2?0:1;
+        if(sd===side){run++;if(run>6){var mm=1<<(3-l);if(!(mm&heldM)){s[1]=mm;sd=1-sd;run=1;}}}else{side=sd;run=1;}
+        side=sd;}else run=0;
+      if(s.length>2){heldM=s[1];heldEnd=t+(+s[2]||0);}
+      out.push(s);}
+    var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;}
+  window.ukEase=easeChart;window.ukDiffOf=diffOf;window.ukThumb=thumbChart;window.ukKeyLanes4=function(c,d){return keyLanes4(c,d);};window.ukCHART=function(){return CHART;};window.ukKeyLanes=function(c,d){return keyLanes(c,d);};   /* test hooks: the chart lab */
   /* The 4-key highway's mapping, for the rhythm rather than the tune: beats 1 and 3 on the left hand, 2 and 4
      on the right (like a kick and a snare), switching between the inner and outer key every bar; half beats on
      the other hand's inner key. Both outer keys together on a bar start in the big moments. Never more than two. */
   function keyLanes4(chart,diff){
-    var st=chart.steps,bt=chart.beats||[],per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9,bi=0;
+    var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9,p1=-1,p2=-1,lastDbl=-1e9;
     if(diff===undefined)diff=1;
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
     if(chart.hand){for(var hi2=0;hi2<st.length;hi2++){var hl=[];for(var hb=0;hb<4;hb++)if(st[hi2][1]&(1<<hb))hl.push(hb);out.push(hl);}return out;}   /* hand-made: the lanes as written (left D, down F, up J, right K) */
+    /* the chart's own lanes (its runs and patterns flow across all four), not the beat number: picking lanes from the beat put
+       everything on the left whenever beats 2 and 4 were thinned out */
     for(var i=0;i<st.length;i++){
-      var s=st[i],n=0;for(var b=0;b<4;b++)if(s[1]&(1<<b))n++;
+      var s=st[i],bits=[];for(var b=0;b<4;b++)if(s[1]&(1<<b))bits.push(b);
       var big=inPk(s[0]),gap=diff>=3?per*0.2:diff===2?per*0.4:per*0.45;   /* the ladder has already thinned the chart */
-      if(!n||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
-      while(bi<bt.length-1&&bt[bi+1]<=s[0]+per*0.25)bi++;
-      var bn=bi,half=bt.length?Math.abs(s[0]-bt[bi])>per*0.25:false,inBar=bn%4,alt=Math.floor(bn/4)%2,lane;
-      if(!half)lane=inBar%2===0?(alt?1:0):(alt?2:3);
-      else lane=inBar%2===0?2:1;
+      if(!bits.length||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
+      var l=bits.length>1?Math.log2(fairBit(s[1],s[0],p1>=0?1<<p1:0)):bits[0];
+      if(l===p1&&l===p2)l=(l+(s[0]%2?1:3))%4;                         /* never the same key three times running */
       last=s[0]+(s[2]>0?+s[2]:0);
-      if(n>1&&big&&diff>0&&!half&&inBar===0&&!(s[2]>0))out.push([0,3]);else out.push([lane]);
+      if(bits.length>1&&big&&diff>0&&!(s[2]>0)&&(diff>=2||s[0]-lastDbl>=per*3.9)){var o2=bits.filter(function(x){return x!==l;});out.push([l,o2.length?o2[0]:(l+2)%4].sort());lastDbl=s[0];}   /* Normal: a chord at most once a bar */
+      else out.push([l]);
+      p2=p1;p1=l;
     }
     return out;
   }          /* for testing the difficulty levels */
   function keyLanes(chart,diff){
-    var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],c=3,out=[],last=-1e9,D=[-1,-1,1,1];
+    var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],c=3,out=[],last=-1e9,D=[-1,-1,1,1],half=0,hrun=0;
     if(diff===undefined)diff=1;
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
     for(var i=0;i<st.length;i++){
@@ -2894,7 +2910,9 @@ var GAME=(function(){
       var big=inPk(s[0]),gap=diff>=3?per*0.2:diff===2?per*0.3:per*0.45;
       if(!bits.length||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
       var wide=diff>=2||(diff===1&&big),lo=wide?0:1,hi=wide?6:5;
-      c+=D[bits[0]];if(c<lo)c=lo+1;if(c>hi)c=hi-1;
+      var pl0=bits.length>1?Math.log2(fairBit(s[1],s[0])):bits[0],dir=D[pl0],mid=(lo+hi)/2;
+      if(c!==mid){var hs=c<mid?-1:1;if(hs===half){hrun++;if(hrun>=6)dir=-hs;}else{half=hs;hrun=1;}}   /* six on one half of the keyboard: head back across */
+      c+=dir;if(c<lo)c=lo+1;if(c>hi)c=hi-1;   /* up or down from the chart's lane (a fair pick on a double) */
       last=s[0]+(s[2]>0?+s[2]:0);
       if(bits.length>1&&big&&diff>0){var c2=c+2<=hi?c+2:c-2;out.push([c,c2]);}else out.push([c]);
     }
@@ -7224,7 +7242,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.60",SERVER_VERSION="";
+var PAGE_VERSION="1.81.61",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7801,7 +7819,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.60"></script>
+<script src="lab.js?v=1.81.61"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
