@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.69 — Ski: hop over trees, small boost out of a swoop
+
+1. Hop and pass over a tree while you're properly up in the air: no crash. Clipping a tree right at take-off or just as you land still crashes you.
+2. Come out of a swoop: you get a small burst of speed (a puff of snow at the exit) that carries for about a second before settling back to normal.
+
 ## v1.81.68 — Ski: "HOP IN! +300" arrows on the first two divots
 
 1. Start a Ski round. The first two flag divots at the top each have a bouncing yellow arrow pointing into the start of the groove, with a **HOP IN! +300** label.
