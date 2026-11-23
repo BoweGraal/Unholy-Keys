@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.78 — Painted hats keep their sides when you turn
+
+1. Put on the Abs hat and turn the character with the rotate buttons. The white feather stays on the same side through front, front-left and front-right, and through back, back-left and back-right. It no longer jumps across when you turn slightly.
+
 ## v1.81.77 — Stage: 8-bit glow, lasers, banner and Go live
 
 1. Jam in Stage view and play a note: the pink glow behind you is now stepped pixel rings, not a smooth circle.
