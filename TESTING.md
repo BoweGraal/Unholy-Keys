@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.74 — Character maker: arrows stay put
+
+1. Open the character maker and click through Hats, Hair, Tops etc. with the ▶ arrow. The arrow no longer moves as the names change length, so you can keep clicking in the same spot. Long names shrink a little to fit.
+
 ## v1.81.73 — New hat: "Abs" (placeholder name)
 
 1. Open Character → Hat and go to the last one, **Abs**: your new grey-and-white hat from the graphics lab.
