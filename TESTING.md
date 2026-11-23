@@ -1688,6 +1688,34 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.74 — Character maker: arrows stay put
+
+1. Open the character maker and click through Hats, Hair, Tops etc. with the ▶ arrow. The arrow no longer moves as the names change length, so you can keep clicking in the same spot. Long names shrink a little to fit.
+
+## v1.81.73 — New hat: "Abs" (placeholder name)
+
+1. Open Character → Hat and go to the last one, **Abs**: your new grey-and-white hat from the graphics lab.
+2. Police cap still looks like the police cap.
+
+## v1.81.72 — Ski on PC: big mouse guide, cleaner controls
+
+1. On a computer, once you're moving, a big pixel mouse sits above the trick buttons: the left button reads **HOP or TRICK**, the right reads **NEXT TRICK**. Nothing else around it.
+2. The trick buttons show just their names (no arrows), and there's no HOP button on the right. On phones, the HOP button and arrows are unchanged.
+
+## v1.81.71 — Ski: no more CUT +25
+
+1. Hop and swing round to a new line: no "CUT +25" pop-up and no points. You still keep your speed through the turn.
+
+## v1.81.70 — Ski: trick combo bonus
+
+1. Take a ramp, do a trick, right-click to switch, do a different trick, and land clean: **TRICK COMBO! +200** (on top of each trick's own points).
+2. Three different tricks in one jump: **TRIPLE COMBO! +400**. The same trick twice doesn't count, and if you're still mid-trick when you land it's a wipeout with no bonus.
+
+## v1.81.69 — Ski: hop over trees, small boost out of a swoop
+
+1. Hop and pass over a tree while you're properly up in the air: no crash. Clipping a tree right at take-off or just as you land still crashes you.
+2. Come out of a swoop: you get a small burst of speed (a puff of snow at the exit) that carries for about a second before settling back to normal.
+
 ## v1.81.68 — Ski: "HOP IN! +300" arrows on the first two divots
 
 1. Start a Ski round. The first two flag divots at the top each have a bouncing yellow arrow pointing into the start of the groove, with a **HOP IN! +300** label.
