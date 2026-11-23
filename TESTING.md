@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.43 — Kart flag: right click for IMPACT
+
+- **Kart flag on PC:** right click is IMPACT (no browser menu). Left click is still hold for drift and aim, let go to LAUNCH. Space still works too.
+
 ## v1.81.42 — PC mouse controls, shoes, designer fixes
 
 - **Kart flag on PC:** point to drive (the further from your kart, the faster), hold left click to hop into a drift and aim, let go to LAUNCH (like Mars Rally). Space is still IMPACT. The hint says so on a computer.

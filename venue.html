@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.42"></script>
-<script src="gfx.js?v=1.81.42"></script>
-<script src="art.js?v=1.81.42"></script>
-<script src="voice.js?v=1.81.42"></script>
-<script src="instruments.js?v=1.81.42"></script>
-<script src="kart.js?v=1.81.42"></script>
-<script src="explain.js?v=1.81.42"></script>
+<script src="tune.js?v=1.81.43"></script>
+<script src="gfx.js?v=1.81.43"></script>
+<script src="art.js?v=1.81.43"></script>
+<script src="voice.js?v=1.81.43"></script>
+<script src="instruments.js?v=1.81.43"></script>
+<script src="kart.js?v=1.81.43"></script>
+<script src="explain.js?v=1.81.43"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4889,7 +4889,9 @@ var CTFG=(function(){
   function mouseTarget(e){var t=e.target;return !!t&&(t.tagName==="CANVAS"||t===document.body)&&!(t.closest&&t.closest("button,#chatInput,#hudTR,#hudBR,#ctfUI"));}
   /* on foot: point to run, hold the left button to sprint */
   window.addEventListener("mousemove",function(e){if(!on)return;mouse.on=true;mouse.x=e.clientX;mouse.y=e.clientY;});
-  window.addEventListener("mousedown",function(e){if(!on||e.button!==0||!mouseTarget(e))return;mouse.on=true;mouse.x=e.clientX;mouse.y=e.clientY;e.preventDefault();if(kart)driftOn(true);else{sprWant=true;mouse.spr=true;}});
+  window.addEventListener("contextmenu",function(e){if(on&&kart&&mouseTarget(e))e.preventDefault();});
+  window.addEventListener("mousedown",function(e){if(on&&kart&&e.button===2&&mouseTarget(e)){e.preventDefault();act("pulse");return;}   /* right click: IMPACT */
+    if(!on||e.button!==0||!mouseTarget(e))return;mouse.on=true;mouse.x=e.clientX;mouse.y=e.clientY;e.preventDefault();if(kart)driftOn(true);else{sprWant=true;mouse.spr=true;}});
   window.addEventListener("mouseup",function(e){if(e.button!==0||!on)return;if(kart){if(drift)driftOn(false);}else if(mouse.spr){sprWant=false;mouse.spr=false;}});
   function mouseStick(){if(!mouse.on||!lastV)return null;var dx=mouse.x-lastV.X(me.x),dy=mouse.y-lastV.Y(me.y),d=Math.hypot(dx,dy);if(d<18)return{x:0,y:0};var m=Math.min(1,(d-18)/150);return{x:dx/d*m,y:dy/d*m};}
   function input(){var x=(held.right?1:0)-(held.left?1:0),y=(held.down?1:0)-(held.up?1:0);if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){x=joy.x;y=joy.y;}
@@ -5004,7 +5006,7 @@ var CTFG=(function(){
     var b=beat();if(b<GO_BEAT){var n=Math.ceil(GO_BEAT-b);ART.pixText(g,b<0?"GET READY":n<=4?String(n):"GET READY",Wc/2,Hc*0.42,Math.max(3,Math.round(V.s/5)),"#fff","center","#000");}
     else if(b<GO_BEAT+1.5)ART.pixText(g,"GO!",Wc/2,Hc*0.42,Math.max(4,Math.round(V.s/4)),"#F5C518","center","#000");
     var hn=$("ctfHint");if(hn){var cf2=C.carrying(st,myId),early=beat()<GO_BEAT+16;hn.style.display=early||now<hold?"":"none";   /* just at the start (and when tagged), so it never sits over the game */
-      hn.textContent=now<hold?"Tagged! Back in a moment…":cf2>=0?"You've got the flag! Get it back to your base":kart?(matchMedia("(pointer:fine)").matches?"Point to drive · hold click: drift & aim, let go: LAUNCH · Space: IMPACT":"Grab their flag · LAUNCH: hold, aim, let go · IMPACT knocks your flag home"):st.flags[team].at?"They've got your flag! Tag the carrier to send it home":"Grab the "+C.TNAME[1-team].toLowerCase()+" flag · "+(matchMedia("(pointer:fine)").matches?"point to run · hold click to sprint":"block them with your body · hold SPRINT (Space)");}
+      hn.textContent=now<hold?"Tagged! Back in a moment…":cf2>=0?"You've got the flag! Get it back to your base":kart?(matchMedia("(pointer:fine)").matches?"Point to drive · hold left click: drift & aim, let go: LAUNCH · right click: IMPACT":"Grab their flag · LAUNCH: hold, aim, let go · IMPACT knocks your flag home"):st.flags[team].at?"They've got your flag! Tag the carrier to send it home":"Grab the "+C.TNAME[1-team].toLowerCase()+" flag · "+(matchMedia("(pointer:fine)").matches?"point to run · hold click to sprint":"block them with your body · hold SPRINT (Space)");}
   }
   window.ukCtf=function(){return{spr:{e:+spr.e.toFixed(2),on:spr.on},refill:st&&st.refill,on:on,me:{x:+me.x.toFixed(2),y:+me.y.toFixed(2)},team:team,caps:st&&st.caps,flags:st&&st.flags,score:st&&st.score,teams:st&&st.teams,beat:+beat().toFixed(2),pos:st&&st.pos};};
   window.ukCtfTp=function(x,y){if(!/[?&]practice/.test(location.search))return;me.x=x;me.y=y;};   /* test hook: move yourself (test runs only) */
@@ -7185,7 +7187,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.42",SERVER_VERSION="";
+var PAGE_VERSION="1.81.43",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7762,7 +7764,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.42"></script>
+<script src="lab.js?v=1.81.43"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
