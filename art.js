@@ -97,6 +97,9 @@ var ART=(function(){
   var HATCLIP=null;   /* a hat on: hair above its brim line is under the hat, so it isn't drawn (y is head-relative, like px) */
   function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;if(MIRHAT)x=-x-w;if(HATCLIP!==null&&SEC==="hair"){if(y+h<=HATCLIP)return;if(y<HATCLIP){h-=HATCLIP-y;y=HATCLIP;}}var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
   /* a limb: a 3-pixel-wide strip from the joint along the angle, coloured in bands (cols = [[upTo, colour],...]) */
+  /* the shoe: a little toe at the end of a leg, so feet aren't stick ends. dx: which way it points (-1/1), rows: how tall */
+  function toe(jx,jy,a,len,col,dx,rows){if(ISO&&SEC!==ISO)return;var ex=jx-Math.sin(a)*len,ey=jy+Math.cos(a)*len;sg.fillStyle=col;
+    sg.fillRect(Math.round(OX+ex-1.5+(dx<0?-1:0)),Math.round(OY+ey-rows),4,rows);}
   function limb(jx,jy,a,len,cols,stripes){
     if(ISO&&SEC!==ISO)return;
     var s=Math.sin(a),c=Math.cos(a),step=0.5;
@@ -289,8 +292,8 @@ var ART=(function(){
     if(D===1){
       /* ---- side: facing right, so the right arm and leg are nearest; the far ones are a shade darker, behind ---- */
       SEC="armL";limb(0,-4.5,aL,nL,dim(armC(nL)));
-      SEC="legL";limb(-0.5,4,lL,gL,dim(legC(legColsL,gL)),null);
-      SEC="legR";limb(0.5,4,lR,gR,legC(legColsR,gR),strC(gR));
+      SEC="legL";limb(-0.5,4,lL,gL,dim(legC(legColsL,gL)),null);if(!st.skates)toe(-0.5,4,lL,gL,shade(shoe,-0.25),1,2);
+      SEC="legR";limb(0.5,4,lR,gR,legC(legColsR,gR),strC(gR));if(!st.skates)toe(0.5,4,lR,gR,shoe,1,2);
       if(st.skates){var ic1=st.skates==="ice";SEC="legL";skate(-0.5,4,lL,gL,ic1);SEC="legR";skate(0.5,4,lR,gR,ic1);}
       SEC="top";
       px(-3,-5,6,10,base);px(-3,-5,1,10,shade(base,-0.25));px(-3,4,6,1,shade(base,-0.25));
@@ -347,7 +350,7 @@ var ART=(function(){
       PAINT.view("hair:"+HR,1,OX,OY+hy);if(HT===14){SEC="hat";sideHat();}PAINT.view("hat:"+HT,1,OX,OY+hy);PAINT.view("extra:"+EX,1,OX,OY+hy);
     }else{
       /* ---- back: the arms and legs swap sides, no face, the hair covers the back of the head ---- */
-      SEC="legL";limb(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));
+      SEC="legL";limb(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL));if(!st.skates)toe(2.5,4,-lL,gL,shoe,1,1);SEC="legR";limb(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));if(!st.skates)toe(BT?-2:-2.5,4,-lR,gR,shoe,-1,1);
       if(st.skates){var ic2=st.skates==="ice";SEC="legL";skate(2.5,4,-lL,gL,ic2);SEC="legR";skate(-2.5,4,-lR,gR,ic2);}
       /* from behind, the arms are on the far side of the body: drawn first, so the back covers them where they cross it */
       SEC="armL";limb(6.5,-4.5,-aL,nL,armC(nL));SEC="armR";limb(BT?-5.5:-6.5,-4.5,-aR,nR,BT?dimF(armC(nR)):armC(nR));
@@ -391,7 +394,7 @@ var ART=(function(){
       PAINT.view("hair:"+HR,2,OX,OY+hy);if(HT===14){SEC="hat";backHat();}PAINT.view("hat:"+HT,2,OX,OY+hy);
     }
     }else{
-    SEC="legL";limb(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL));SEC="legR";limb(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));
+    SEC="legL";limb(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL));if(!st.skates)toe(-2.5,4,lL,gL,shoe,-1,1);SEC="legR";limb(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));if(!st.skates)toe(FT?2:2.5,4,lR,gR,shoe,1,1);
     if(st.skates){var ic=st.skates==="ice";SEC="legL";skate(-2.5,4,lL,gL,ic);SEC="legR";skate(2.5,4,lR,gR,ic);}
     SEC="top";
     /* torso */
@@ -883,7 +886,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
   /* ---- drawing: the floor in dance-floor tiles, walls as raised pixel blocks, boost pads with running chevrons, bases ---- */
   CTF.fit=function(I,W,H,top,bot){var s=Math.max(4,Math.floor(Math.min(W/I.w,(H-top-bot)/I.h))),ox=Math.round((W-s*I.w)/2),oy=Math.round(top+(H-top-bot-s*I.h)/2);return{s:s,ox:ox,oy:oy,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
   /* a camera that follows you: about 15 tiles across on a phone, clamped to the arena. v.vw/v.vh/v.vt are the window it draws in. */
-  CTF.cam=function(I,W,H,top,bot,me,kart){var f=CTF.fit(I,W,H,top,bot),vh=H-top-bot,s=kart?CTF.K_TILE:Math.max(f.s,Math.round(W/(W<641?15:20))),ox,oy;   /* Kart flag: the same fixed zoom as Mars Rally, on any screen */
+  CTF.cam=function(I,W,H,top,bot,me,kart){var f=CTF.fit(I,W,H,top,bot),vh=H-top-bot,s=kart?CTF.K_TILE:Math.max(f.s,Math.min(46,Math.round(W/(W<641?15:20)))),ox,oy;   /* Kart flag: the same fixed zoom as Mars Rally, on any screen */
     var mw=I.w*s,mh=I.h*s;ox=mw<=W?Math.round((W-mw)/2):Math.round(Math.min(0,Math.max(W-mw,W/2-me.x*s)));oy=mh<=vh?Math.round(top+(vh-mh)/2):Math.round(Math.min(top,Math.max(top+vh-mh,top+vh/2-me.y*s)));
     return{s:s,ox:ox,oy:oy,vw:W,vh:vh,vt:top,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
   /* the centre stage: the performer on a little platform in the middle of the arena, the song's video on the ground just below it
@@ -995,16 +998,18 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     if(t>SK.BOREND+300)return skBase(yy,sd);var hv=skBase(b,sd);if(t<=SK.BOREND)return hv;var w=(t-SK.BOREND)/300;w=w*w*(3-2*w);return hv+(skBase(yy,sd)-hv)*w;};
   function skRng(s){return function(){s=(s*16807)%2147483647;return (s-1)/2147483646;};}
   /* a course from the Ski designer: {name, len, objs:[[kind, x, y, size]...]}; it repeats every len down the mountain */
-  SK.KINDS={gate:1,tree:1,rock:1,ramp:1,mogul:1};
+  SK.KINDS={gate:1,rflag:1,bflag:1,tree:1,rock:1,ramp:1,mogul:1};   /* rflag: a red slalom flag (pass it on its left), bflag: blue (on its right) */
   SK.clean=function(c){
     if(!c||typeof c!=="object"||!Array.isArray(c.objs))return null;var len=Math.max(1000,Math.min(20000,Math.round(+c.len||3000))),out=[];
-    for(var i=0;i<c.objs.length&&out.length<800;i++){var o=c.objs[i];if(!Array.isArray(o)||!SK.KINDS[o[0]])continue;var x=+o[1],y=+o[2],s=+o[3]||1;if(!isFinite(x)||!isFinite(y))continue;
+    var fl=0;for(var i=0;i<c.objs.length&&out.length<800;i++){var o=c.objs[i];if(Array.isArray(o)&&o[0]==="flag")o=[fl++%2?"bflag":"rflag",o[1],o[2],1];   /* older courses: plain flags, alternating */
+      if(!Array.isArray(o)||!SK.KINDS[o[0]])continue;var x=+o[1],y=+o[2],s=+o[3]||1;if(!isFinite(x)||!isFinite(y))continue;
       out.push([o[0],Math.round(Math.max(-700,Math.min(700,x))),Math.round(Math.max(60,Math.min(len-1,y))),Math.round(Math.max(0.7,Math.min(1.5,s))*100)/100]);}
     out.sort(function(p,q){return p[2]-q[2];});
     return{name:String(c.name||"My mountain").slice(0,40),len:len,objs:out};};
   SK.chunk=function(seed,ci,cache,course){
     if(cache[ci])return cache[ci];var r=skRng((seed*7919+ci*104729)%2147483646+1),o=[],y0=ci*SK.CH;
     if(course){var L=course.len,gi0=0;for(var rp=Math.floor(y0/L);rp*L<y0+SK.CH;rp++){gi0=0;course.objs.forEach(function(q,qi){var yy=rp*L+q[2];
+        if(q[0]==="rflag"||q[0]==="bflag"){var ps=q[0]==="rflag"?-1:1;if(yy>=y0&&yy<y0+SK.CH)o.push({k:"flag",x:q[1],y:yy,id:rp*1000+qi,pass:ps,col:ps<0?"#E8505B":"#3B7BE8"});return;}
         if(q[0]==="gate"){gi0++;if(yy>=y0&&yy<y0+SK.CH)o.push({k:"gate",x:q[1],y:yy,id:rp*1000+qi,col:gi0%2?"#E8505B":"#3B7BE8"});return;}
         if(yy>=y0&&yy<y0+SK.CH)o.push({k:q[0],x:q[1],y:yy,s:q[3]||1});});}}
     else if(y0>=60){
@@ -1032,12 +1037,12 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
   };
   /* the line through the gates (bots and the test skier follow it) */
   SK.lineAt=function(course,yy,seed){
-    if(!course)return SK.lineX(yy,seed);var gs=course.objs.filter(function(q){return q[0]==="gate";});if(!gs.length)return 0;
+    if(!course)return SK.lineX(yy,seed);var gs=course.objs.filter(function(q){return q[0]==="gate"||q[0]==="rflag"||q[0]==="bflag";});if(!gs.length)return 0;
     var L=course.len,m=((yy%L)+L)%L,prev=gs[gs.length-1],pY=prev[2]-L,next=gs[0],nY=next[2];
     for(var i=0;i<gs.length;i++){if(gs[i][2]>m){next=gs[i];nY=gs[i][2];prev=i?gs[i-1]:gs[gs.length-1];pY=i?gs[i-1][2]:gs[gs.length-1][2]-L;break;}if(i===gs.length-1){prev=gs[i];pY=gs[i][2];next=gs[0];nY=gs[0][2]+L;}}
     var t=(m-pY)/Math.max(1,nY-pY);t=t*t*(3-2*t);return prev[1]+(next[1]-prev[1])*t;};
   /* the default course for the designer: the first stretch of the made-up mountain */
-  SK.defaultCourse=function(){var cache={},objs=[];for(var ci=0;ci*SK.CH<3000;ci++)SK.chunk(1,ci,cache).forEach(function(o){if(o.edge||o.y>=3000)return;objs.push([o.k,Math.round(o.x),Math.round(o.y),o.s||1]);});return{name:"First run",len:3000,objs:objs};};
+  SK.defaultCourse=function(){var cache={},objs=[];for(var ci=0;ci*SK.CH<3000;ci++)SK.chunk(1,ci,cache).forEach(function(o){if(o.edge||o.y>=3000||o.k==="zone")return;objs.push([o.k==="flag"?(o.pass<0?"rflag":"bflag"):o.k,Math.round(o.x),Math.round(o.y),o.s||1]);});return{name:"First run",len:3000,objs:objs};};
   SK.near=function(seed,cache,y0,y1,course){var out=[];for(var ci=Math.floor(y0/SK.CH);ci<=Math.floor(y1/SK.CH);ci++)if(ci>=0)out=out.concat(SK.chunk(seed,ci,cache,course));return out.filter(function(o){return o.y>=y0&&o.y<=y1;});};
   /* someone's position from what they send: x and the last 1000 of y in pos, the thousands in sk.h (picks the y nearest last time) */
   SK.decode=function(px,py,hh,prevY){var best=null;for(var d=-1;d<=1;d++){var yy=(hh+d)*1000+py*1000;if(best===null||Math.abs(yy-prevY)<Math.abs(best-prevY))best=yy;}if(prevY===null||prevY===undefined)best=hh*1000+py*1000;return[px*1600-800,best];};
@@ -1133,7 +1138,9 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     var ox=Math.round(fx-SK.sprite("flag").width*k/2)+k*2,oy=Math.round(fy-SK.sprite("flag").height*k)+k;   /* the arrow, in white on the cloth */
     g.fillStyle="#fff";var rows=o.pass<0?["..#..",".##..","#####",".##..","..#.."]:["..#..","..##.","#####","..##.","..#.."];
     for(var r=0;r<5;r++)for(var c=0;c<5;c++)if(rows[r][c]==="#")g.fillRect(ox+c*k*0.8,oy+r*k*0.8,Math.ceil(k*0.8),Math.ceil(k*0.8));};
-  SK.obj=function(g,o,z,sx,sy,passedIt){var ox=sx(o.x),oy=sy(o.y),alt=((Math.round(o.x*7+o.y*3)%3)+3)%3===0;if(o.k==="tree")SK.tree(g,ox,oy,o.s,z,alt);else if(o.k==="rock")SK.rock(g,ox,oy,o.s,z,alt);else if(o.k==="ramp")SK.ramp(g,ox,oy,z);else if(o.k==="mogul")SK.mogul(g,ox,oy,z);else if(o.k==="zone")SK.zone(g,o,z,sx,sy);else if(o.k==="flag"){SK.divot(g,o,z,sx,sy,passedIt);SK.sflag(g,o,z,sx,sy,passedIt);}else if(o.k==="gate")SK.gate(g,o,z,sx,sy,passedIt);};
+  /* the divots lie in the snow: draw them all first, so skiers riding through one are never hidden under it */
+  SK.ground2=function(g,objs,z,sx,sy,passed){objs.forEach(function(o){if(o.k==="flag")SK.divot(g,o,z,sx,sy,passed?!!passed[o.id]:false);});SK.groundDone=true;};
+  SK.obj=function(g,o,z,sx,sy,passedIt){var ox=sx(o.x),oy=sy(o.y),alt=((Math.round(o.x*7+o.y*3)%3)+3)%3===0;if(o.k==="tree")SK.tree(g,ox,oy,o.s,z,alt);else if(o.k==="rock")SK.rock(g,ox,oy,o.s,z,alt);else if(o.k==="ramp")SK.ramp(g,ox,oy,z);else if(o.k==="mogul")SK.mogul(g,ox,oy,z);else if(o.k==="zone")SK.zone(g,o,z,sx,sy);else if(o.k==="flag"){if(!SK.groundDone)SK.divot(g,o,z,sx,sy,passedIt);SK.sflag(g,o,z,sx,sy,passedIt);}else if(o.k==="gate")SK.gate(g,o,z,sx,sy,passedIt);};
   /* snow with a faint grain, the start strip of dance floor, and the edges of the run, for the view from y0 to y1 */
   SK.ground=function(g,W,H,z,sx,sy,camX,y0,y1){
     g.fillStyle="#eef3fb";g.fillRect(0,0,W,H);
@@ -2554,6 +2561,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.41",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.42",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

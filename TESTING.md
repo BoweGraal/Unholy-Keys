@@ -1688,6 +1688,18 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.42 — PC mouse controls, shoes, designer fixes
+
+- **Kart flag on PC:** point to drive (the further from your kart, the faster), hold left click to hop into a drift and aim, let go to LAUNCH (like Mars Rally). Space is still IMPACT. The hint says so on a computer.
+- **CTF on foot on PC:** point to run, hold left click to sprint. Zoomed out on big screens (tiles capped at 46 px) so most of the arena fits.
+- **CTF players** stand on their shadows (they floated before).
+- **Ski:** click on the slope to hop (PC). HOP button colours are locked so it can't render blank. Skiers riding through a divot are no longer hidden under it (divots drawn as ground first, on both screens).
+- **Shoes:** every character gets a small toe at the end of each leg: forward in side views, outward from the front. Applies to every dance and game, not skates.
+- **Skip timer:** reacts on the press, before anything can grab the pointer. If the song is still loading it shows "Starting…" and goes as soon as it's ready.
+- **Practice:** no Talk button in the dance menu (there's no chat with only bots; Talk works when live).
+- **Ski designer:** Red flag and Blue flag tools (pass red on its left, blue on its right; flags keep their side when saved, and the default run's flags are no longer dropped). The mouse wheel scrolls down the mountain, Ctrl+wheel zooms, and arrows/PageUp/PageDown work.
+- **Flag arena designer:** one Boost button per direction (▶ ◀ ▲ ▼). With Mirror off you paint exactly that direction.
+
 ## v1.81.41 — Crowd picks the next song (videos)
 
 - **Start a song → Video → 🗳 Crowd picks:** while live, the room votes for 20 s between 4 random videos from your video folder (bots vote too). Viewers see "PICK THE NEXT SONG" with the song names, with the key part of the file name hidden.
