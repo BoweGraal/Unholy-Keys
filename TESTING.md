@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.32 — Mosh points
+
+| | off the beat | on the beat |
+|---|---|---|
+| Swing (windmilling your arms, or a punch that misses) | 10 | 20 |
+| Punch that lands | 40 | 60 |
+
+All four are in the lab: Mosh pit → Swing points, Swing on the beat, Punch lands, Punch lands on the beat.
+
 ## v1.81.31 — 4-key notes are squares
 
 - **Note highway, 4 keys**: every tap note is a square as wide as its column (never taller than 30% of the highway). Holds are still long bars. The 7-key highway is unchanged.
