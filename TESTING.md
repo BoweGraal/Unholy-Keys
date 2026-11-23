@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.47 — Playtest zoom for every game
+
+- **A − / + zoom box at the top of the screen in every game** (dance practice; or add `?zoom` to a live link). It shows the game and the zoom, e.g. "CTF 60%". Steps are 10%, from 50% to 250%. Tap the label to reset to 100%. Each game remembers its own zoom on that device.
+- **Camera games** (CTF, Kart flag, Ski, Mars Rally, Half pipe): the game's own camera zooms.
+- **Floor games** (Free dance, Mosh pit, rinks, Keepy uppy, Walk race, Step, Target, the highways): the whole room zooms. Zoomed in follows you; zoomed out shows the room smaller.
+- To use: play each game on phone and PC, set the zoom that feels right, and send me the numbers (e.g. "CTF PC 80%, phone 110%"). I'll make those the defaults.
+
 ## v1.81.45 — Graphics lab: Part list grouped
 
 - **Pixel editor → Part:** three groups:

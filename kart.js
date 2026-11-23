@@ -197,7 +197,7 @@
 
   /* ---- the camera ---- */
   var VW = 0, VH = 0;
-  function raceZoom() { return 1.68; }        /* your character at about 1/1.4 of their size on the dance floor */
+  function raceZoom() { return 1.68 * (root.ukGZ ? root.ukGZ("kart") : 1); }   /* times the playtest zoom */        /* your character at about 1/1.4 of their size on the dance floor */
   function toScreen(x, y) { return [(x - cam.x) * cam.z + VW / 2, (y - cam.y) * cam.z + VH / 2]; }
   function fromScreen(sx, sy, c) { c = c || cam; return [c.x + (sx - VW / 2) / c.z, c.y + (sy - VH / 2) / c.z]; }
   function camUpdate(t, T_, dt) {
