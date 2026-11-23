@@ -439,6 +439,42 @@ function gvoteClose(code, g) {
   gvoteTell(code, g);
   setTimeout(function() { if (r.gvote === g) r.gvote = null; }, 8000);
 }
+/* ── The crowd picks the next song ──
+   Like the game vote, but between up to 4 songs from the performer's own library (titles only; the files stay on the
+   performer's computer). The winner is picked for the performer, who presses Start. */
+function svotePublic(g) {
+  var c = g.opts.map(function() { return 0; });
+  g.picks.forEach(function(k) { if (c[k] !== undefined) c[k]++; });
+  return { type: "svote", id: g.id, opts: g.opts, counts: c, left: Math.max(0, g.end - Date.now()), done: g.done, win: g.win };
+}
+function svoteTell(code, g) { var r = rooms[code]; if (!r) return; var p = svotePublic(g); broadcast(code, p); if (r.performer) send(r.performer, p); }
+function svoteStop(r) { if (r.svote) { clearTimeout(r.svote.timer); r.svote = null; } }
+function svoteOpen(code, msg) {
+  var r = rooms[code]; if (!r) return;
+  svoteStop(r);
+  var opts = (Array.isArray(msg.opts) ? msg.opts : []).map(function(t) { return String(t || "").replace(/[\u0000-\u001f]/g, "").slice(0, 80).trim(); }).filter(function(t, i, a) { return t && a.indexOf(t) === i; }).slice(0, 4);
+  if (opts.length < 2) return;
+  var ms = intIn(msg.ms, 5000, 60000, 20000);
+  var g = r.svote = { id: (r.svoteN = (r.svoteN || 0) + 1), opts: opts, picks: new Map(), end: Date.now() + ms, done: false, win: -1 };
+  g.timer = setTimeout(function() { svoteClose(code, g); }, ms);
+  r.viewers.forEach(function(v, id) {
+    if (v.ws && v.ws.bot) setTimeout(function() { if (r.svote === g && !g.done) svotePick(code, id, Math.floor(Math.random() * opts.length)); }, 1500 + Math.random() * Math.max(500, ms - 3500));
+  });
+  svoteTell(code, g);
+}
+function svotePick(code, id, k) {
+  var r = rooms[code], g = r && r.svote; k = +k; if (!g || g.done || !(k >= 0 && k < g.opts.length)) return;
+  g.picks.set(id, k | 0); svoteTell(code, g);
+}
+function svoteClose(code, g) {
+  var r = rooms[code]; if (!r || r.svote !== g || g.done) return;
+  clearTimeout(g.timer); g.done = true;
+  var c = svotePublic(g).counts, best = -1, top = [];
+  c.forEach(function(n, i) { if (n > best) { best = n; top = [i]; } else if (n === best) top.push(i); });
+  g.win = top[Math.floor(Math.random() * top.length)];
+  svoteTell(code, g);
+  setTimeout(function() { if (r.svote === g) r.svote = null; }, 8000);
+}
 /* free dance battles: a vote for one side of the match that's on (not by the two dancing) */
 function battleVote(ws, voter, side, weight) {
   var r = rooms[ws.room], rd = r && r.round; if (!rd || !rd.battle || rd.mode !== "free" || rd.phase !== "play") return;
@@ -468,7 +504,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = 8;   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.81.39";
+var VERSION = "1.81.41";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -576,6 +612,7 @@ function onMessage(ws, raw, isBinary) {
       performer: { name: r.performerName || "Performer", look: r.performerLook || "" },
       round: roundPublic(r),
       gvote: r.gvote && !r.gvote.done ? gvotePublic(r.gvote) : null,
+      svote: r.svote && !r.svote.done ? svotePublic(r.svote) : null,
       totals: totalsList(r),
       fx: r.fx || null,
       perfPos: r.perfPos || null
@@ -623,6 +660,9 @@ function onMessage(ws, raw, isBinary) {
     /* fill the room with bots up to this many people (0 = no bots) */
     if (msg.type === "bots") { BOTS.setFill(ws.room, msg.fill); return; }
     if (msg.type === "gvote-open") { gvoteOpen(ws.room, msg); return; }
+    if (msg.type === "svote-open") { svoteOpen(ws.room, msg); return; }
+    if (msg.type === "svote-close") { var sr = rooms[ws.room]; if (sr.svote) svoteClose(ws.room, sr.svote); return; }
+    if (msg.type === "svote-cancel") { var sr2 = rooms[ws.room]; if (sr2.svote && !sr2.svote.done) { svoteStop(sr2); broadcast(ws.room, { type: "svote", cancel: 1 }); } return; }
     if (msg.type === "gvote-close") { var gr = rooms[ws.room]; if (gr.gvote) gvoteClose(ws.room, gr.gvote); return; }
     if (msg.type === "gvote-cancel") { var gr2 = rooms[ws.room]; if (gr2.gvote && !gr2.gvote.done) { gvoteStop(gr2); broadcast(ws.room, { type: "gvote", cancel: 1 }); } return; }
     if (!PERFORMER_TYPES[msg.type]) return;
@@ -799,6 +839,7 @@ function onMessage(ws, raw, isBinary) {
     }
     if (msg.type === "vote") { castVote(ws, ws.viewerId, msg.id, 1); return; }
     if (msg.type === "gvote-pick") { if (allow(ws, "gv", 10, 2)) gvotePick(ws.room, ws.viewerId, msg.m); return; }
+    if (msg.type === "svote-pick") { if (allow(ws, "sv", 10, 2)) svotePick(ws.room, ws.viewerId, msg.k); return; }
     if (msg.type === "ctf-act") {   /* Kart Flag: the pulse, or using your item */
       var ard = rooms[ws.room] && rooms[ws.room].round, ac = ard && ard.ctf;
       if (!ac || !ac.kart || ard.phase !== "play" || !allow(ws, "ctfact", 4, 2)) return;
