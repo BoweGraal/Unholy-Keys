@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.57 — Ski: mix up your tricks
+
+- **The same trick again is worth less:** ×0.75 each time, not below ×0.2. The points label shows it, e.g. "Backflip ×0.56 +629".
+- **Doing a different trick lets the others recover** by half a step each, so swapping between 360, Backflip and Daffy keeps tricks near full points.
+- It resets each round.
+- Measured: repeating Backflip went ×0.75 → ×0.56 → ×0.42.
+
 ## v1.81.56 — Ski: flags side by side only judge the nearest one
 
 - **Paired slalom flags** (two flags at about the same height, within 60): only the flag you're nearest when you pass that line counts. Before, passing one flag of a pair scored "WRONG SIDE" on the other, because you were out of its range.
