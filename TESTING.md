@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.84 — Ski jump: 70s dance moves instead of tricks
+
+1. In the air in Ski, the three trick buttons are now 70s dance moves (same keys/clicks, same points and timing):
+   - **⬅ Sinking Swim**: pinch your nose, wave the other hand up, shimmy down like you're going under
+   - **⬆ YMCA**: spells Y, M, C, A with your arms
+   - **➡ Disco Point**: the Saturday Night Fever point, up to the side then down across, hand on hip
+2. No more spinning skis or flipping. You face the crowd while you do the move, and everyone else sees your arms doing it.
+3. Combos, the repeat penalty and the trick mouse guide all work the same with the new moves.
+
 ## v1.81.83 — Mosh pit: headbang
 
 1. In the mosh pit (and the circle pit), a little BANG track sits bottom right: a white dot races up and down (with a slight sway), hitting the red line on every beat.
