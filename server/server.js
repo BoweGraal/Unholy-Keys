@@ -504,7 +504,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.81.80";
+var VERSION = "1.81.81";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -798,7 +798,11 @@ function onMessage(ws, raw, isBinary) {
           for (var fi = 0; fi < 4; fi++) { var fv = Math.round(+msg.fd.c[fi]); if (!isFinite(fv)) { fc = null; break; } fc.push(Math.max(-100, Math.min(100, fv))); }
           if (fc) {
             fd = { s: fs, m: fm, c: fc };
-            var fb = Math.floor(+msg.fd.b); if (fb >= 1 && fb <= 3) fd.b = fb;   // facing: 1 = turned round, 2 = a quarter turn right, 3 = a quarter turn left
+            var fb = Math.floor(+msg.fd.b); if (fb >= 1 && fb <= 3) fd.b = fb;
+            if (Array.isArray(msg.fd.sp) && msg.fd.sp.length === 2) {   // spinning: [angle x100, speed x10], so everyone sees the spin
+              var sa = Math.round(+msg.fd.sp[0]), sv = Math.round(+msg.fd.sp[1]);
+              if (isFinite(sa) && isFinite(sv)) fd.sp = [Math.max(-6284, Math.min(6284, sa)), Math.max(-140, Math.min(140, sv))];
+            }   // facing: 1 = turned round, 2 = a quarter turn right, 3 = a quarter turn left
             if (Array.isArray(msg.fd.h) && msg.fd.h.length === 2) {
               var hh = msg.fd.h.map(function (v) { return v === null || v === undefined || !isFinite(+v) ? null : Math.max(-400, Math.min(400, Math.round(+v))); });
               if (hh[0] !== null || hh[1] !== null) fd.h = hh;
