@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.68 — Ski: "HOP IN! +300" arrows on the first two divots
+
+1. Start a Ski round. The first two flag divots at the top each have a bouncing yellow arrow pointing into the start of the groove, with a **HOP IN! +300** label.
+2. Each arrow disappears once you've passed that flag (or while you're swooping). The divots after those have no arrow.
+
 ## v1.81.67 — Ski: mouse guide on PC
 
 1. Play Ski on a computer. Once you're moving, the line of text above the trick buttons is replaced by a pixel mouse: **left = HOP (in the air: trick)**, **right = NEXT TRICK**, with "point to steer · land in a divot to swoop" under it.

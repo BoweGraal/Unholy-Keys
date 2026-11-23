@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.67"></script>
-<script src="gfx.js?v=1.81.67"></script>
-<script src="art.js?v=1.81.67"></script>
-<script src="voice.js?v=1.81.67"></script>
-<script src="instruments.js?v=1.81.67"></script>
-<script src="kart.js?v=1.81.67"></script>
-<script src="explain.js?v=1.81.67"></script>
+<script src="tune.js?v=1.81.68"></script>
+<script src="gfx.js?v=1.81.68"></script>
+<script src="art.js?v=1.81.68"></script>
+<script src="voice.js?v=1.81.68"></script>
+<script src="instruments.js?v=1.81.68"></script>
+<script src="kart.js?v=1.81.68"></script>
+<script src="explain.js?v=1.81.68"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4704,7 +4704,8 @@ var SKI=(function(){
   function banner(t,col){var b=$("skiBanner");if(!b)return;PXEMO.set(b,t);b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("skiScore");if(h)h.textContent=score.toLocaleString();var c=$("skiCombo");if(c)c.textContent=combo>1?"COMBO ×"+(1+0.1*combo).toFixed(1):"";}
   function laneX(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(2,Math.min(8,ids.length));return -85+170*((i%n)+0.5)/n;}
-  function start(round){
+  var tipFlags=null;   /* the first two flags with a divot: they get a "HOP in here" arrow */
+  function start(round){tipFlags=null;
     on=true;tUse={};roundN=round?round.n:roundN+1;seed=SK.seedFor(roundN);
     course=SK.clean(round&&round.ski);if(!course&&PRACTICE.on){try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}}if(!course)course=SK.defaultCourse();   /* no course of their own: the house mountain */chunks={};passed={};trail=[];pops=[];others={};bots={};
     hopAir=false;cutGrace=0;hopPush=0;puffs=[];sweep=null;x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;fStreak=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
@@ -4877,6 +4878,17 @@ var SKI=(function(){
       var s=it.sk,st=s.v.sk||{},t=st.t|0,ang=t<=6?(t-3)*Math.PI/6:0;
       skier(V.sx(s.x),V.sy(it.y),s.v,false,ang,t===7||t===8?0.7:0,t===9||!!st.f,t===8?1:0,(now%450)/450,z,s.v.name);
     });}finally{SK.groundDone=false;}
+    /* the first two divots at the top: a bouncing arrow into the groove, "HOP IN! +300", so everyone learns the swoop */
+    if(!tipFlags)tipFlags=objsNear(-400,5000).filter(function(o){return o.k==="flag"&&o.pass;}).sort(function(p,q){return p.y-q.y;}).slice(0,2).map(function(o){return o.id;});
+    if(!sweep)objsNear(y0,y1).forEach(function(o){if(o.k!=="flag"||passed[o.id]||tipFlags.indexOf(o.id)<0)return;
+      var e=SK.arc(o,0.1),kp=Math.round(SK.px(z)*1.5),bob=Math.round(Math.sin(now/170)*2)*kp,ex=Math.round(V.sx(e[0])/kp)*kp,ey=Math.round(V.sy(e[1])/kp)*kp-3*kp+bob;
+      /* the arrow, pointing down into the start of the groove */
+      var A=["..KKK..","..KYK..","..KYK..","..KYK..","KKKYKKK",".KYYYK.","..KYK..","...K..."];
+      for(var r=0;r<A.length;r++)for(var cc=0;cc<7;cc++){var ch=A[r][cc];if(ch==="."||!ch)continue;g.fillStyle=ch==="K"?"#1d2740":"#FFE14D";g.fillRect(ex+(cc-3)*kp,ey+(r-8)*kp,kp,kp);}
+      var fs=Math.max(16,Math.round(10*z)),lb="HOP IN! +300";g.font="900 "+fs+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.textBaseline="middle";
+      var tw=Math.ceil(g.measureText(lb).width/kp)*kp+4*kp,th=Math.ceil(fs*1.5/kp)*kp,bx=ex-Math.round(tw/2/kp)*kp,by=ey-8*kp-th-kp;
+      g.fillStyle="rgba(0,0,0,.35)";g.fillRect(bx+kp,by+kp,tw,th);g.fillStyle="#1d2740";g.fillRect(bx,by,tw,th);g.fillStyle="#FFE14D";g.fillRect(bx,by,tw,kp/2|0||1);
+      g.fillText(lb,ex,by+th/2+1);g.textBaseline="alphabetic";});
     /* the pop's puff of snow: pixel flecks bursting out where you took off */
     puffs=puffs.filter(function(pf){var age=(now-pf.t)/1000;if(age>0.5)return false;var kp=SK.px(V.z),cx=V.sx(pf.x),cy=V.sy(pf.y);g.globalAlpha=1-age/0.5;g.fillStyle="#ffffff";
       for(var q=0;q<10;q++){var an=q*0.63,d=(4+age*46)*V.z;g.fillRect(Math.round((cx+Math.cos(an)*d)/kp)*kp,Math.round((cy+Math.sin(an)*d*0.5)/kp)*kp,kp,kp);}g.globalAlpha=1;return true;});
@@ -7296,7 +7308,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.67",SERVER_VERSION="";
+var PAGE_VERSION="1.81.68",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7873,7 +7885,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.67"></script>
+<script src="lab.js?v=1.81.68"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
