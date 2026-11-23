@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Capture the flag &amp; Kart flag designer · Unholy Keys</title>
-<script src="art.js?v=1.81.38"></script>
+<script src="art.js?v=1.81.44"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#07041a;color:#e8e4f4;font-family:system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
@@ -33,7 +33,10 @@ button.on{background:#7F77DD;border-color:#b9b2ff}
     <select id="which" title="Capture the flag and Kart flag each keep their own arena"><option value="uk_ctf">🚩 CTF arena</option><option value="uk_kflag">🏎️ Kart flag arena</option></select>
     <button data-k="#" class="on">🧱 Wall</button>
     <button data-k=".">⬛ Floor</button>
-    <button data-k="pad" id="padB">⚡ Boost ▶</button>
+    <button data-k="pad" data-d="&gt;" title="Boost pad pointing right">⚡ Boost ▶</button>
+    <button data-k="pad" data-d="&lt;" title="Boost pad pointing left">⚡ Boost ◀</button>
+    <button data-k="pad" data-d="^" title="Boost pad pointing up">⚡ ▲</button>
+    <button data-k="pad" data-d="v" title="Boost pad pointing down">⚡ ▼</button>
     <button data-k="R">🟥 Red base</button>
     <button data-k="B">🟦 Blue base</button>
     <button data-k="r">🔴 Red spawn</button>
@@ -73,7 +76,7 @@ button.on{background:#7F77DD;border-color:#b9b2ff}
   function push(){hist.push(JSON.stringify(map));if(hist.length>80)hist.shift();}
   function status(){var t=map.t,nR=0,nB=0,nr=0,nb=0,np=0,ns=0,nx=0;for(var i=0;i<t.length;i++){var c=t[i];if(c==="R")nR++;if(c==="B")nB++;if(c==="r")nr++;if(c==="b")nb++;if(">v<^".indexOf(c)>=0)np++;if(c==="s")ns++;if(c==="p")nx++;}
     var ok=nR&&nB;$("status").innerHTML=(ok?"":"<b class='bad'>Needs a red base and a blue base before it can be played. </b>")+map.w+" × "+map.h+" tiles · red base "+nR+" · blue base "+nB+" · spawns "+nr+" / "+nb+" · boost pads "+np+" · sprint refills "+ns+" · power-up boxes "+nx+(nx?"":" (Kart flag uses the sprint refills as boxes when there are none)")+
-      " · Drag to paint. Right-click (or Floor) to rub out. Click Boost again to turn it. Saved on this device: your arena goes out with every Capture the flag and Kart flag round you start. In Kart flag the sprint refills do nothing and the boxes give items; in Capture the flag the boxes are plain floor.";}
+      " · Drag to paint. Right-click (or Floor) to rub out. Each Boost button paints that direction (with Mirror on, the other side gets the opposite). Saved on this device: your arena goes out with every Capture the flag and Kart flag round you start. In Kart flag the sprint refills do nothing and the boxes give items; in Capture the flag the boxes are plain floor.";}
   function mirrorOf(c){return c==="R"?"B":c==="B"?"R":c==="r"?"b":c==="b"?"r":c===">"?"<":c==="<"?">":c;}
   function paint(x,y,c){if(x<=0||y<=0||x>=map.w-1||y>=map.h-1)return;var G=grid();G[y*map.w+x]=c;if(mirror){var mx=map.w-1-x;G[y*map.w+mx]=mirrorOf(c);}map={name:map.name,w:map.w,h:map.h,t:G.join("")};}   /* a fresh object each time, so the arena's worked-out details are redone */
   function view(){return C.fit(C.info(map),W,H,16,16);}
@@ -86,7 +89,7 @@ button.on{background:#7F77DD;border-color:#b9b2ff}
     var x0=lastCell[0],y0=lastCell[1],n=Math.max(Math.abs(c[0]-x0),Math.abs(c[1]-y0));for(var k=1;k<=n;k++)paint(Math.round(x0+(c[0]-x0)*k/n),Math.round(y0+(c[1]-y0)*k/n),painting);lastCell=c;draw();});
   ["pointerup","pointercancel"].forEach(function(ev){cv.addEventListener(ev,function(){if(painting){painting=false;save();}});});
   Array.prototype.forEach.call(document.querySelectorAll("[data-k]"),function(b){b.onclick=function(){var k=b.getAttribute("data-k");
-    if(k==="pad"&&tool==="pad"){padDir=PADS[(PADS.indexOf(padDir)+1)%4];}tool=k;$("padB").textContent="⚡ Boost "+PADICON[padDir];
+    if(k==="pad")padDir=b.getAttribute("data-d")||">";tool=k;   /* one button per direction */
     Array.prototype.forEach.call(document.querySelectorAll("[data-k]"),function(o){o.classList.toggle("on",o===b);});};});
   $("mirror").onclick=function(){mirror=!mirror;this.classList.toggle("on",mirror);};
   $("undo").onclick=function(){if(!hist.length)return;map=JSON.parse(hist.pop());$("name").value=map.name;save();draw();};

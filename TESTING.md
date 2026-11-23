@@ -1688,6 +1688,57 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.44 — Feet sweep: shoes on every angle, feet on the floor in every dance
+
+- **Toes follow the leg:** the shoe sits square across the end of the leg at any angle, so lying, kicking and sideways legs (the worm, kicks, floor spin) get a proper foot, not a longer leg. Checked in all 8 facing directions.
+- **Feet planted in every dance:** I measured the lowest foot pixel against the floor for every move of every dance, 16 moments each.
+  - Before: squats and leans (Hands on knees, Drop it, Thriller, Strike a pose, Cyber goth, Headbang) pushed the feet 3–7 px through the floor, and some wide stances floated.
+  - Now: squats bend the legs (down to 4.5 of 7 long, then the body stays up), and the lean of the body is included. Feet land within 1–2 px of the floor (pixel rounding). Hops and beat bounces still leave the floor by their own height.
+- Applies on both screens (audience and performer) and in the dance walk race. The worm and floor spins are left as they are.
+- Check: free dance → Hands on knees (Low), Thriller, Cyber goth (Chop), Headbang: no feet through the floor.
+
+## v1.81.43 — Kart flag: right click for IMPACT
+
+- **Kart flag on PC:** right click is IMPACT (no browser menu). Left click is still hold for drift and aim, let go to LAUNCH. Space still works too.
+
+## v1.81.42 — PC mouse controls, shoes, designer fixes
+
+- **Kart flag on PC:** point to drive (the further from your kart, the faster), hold left click to hop into a drift and aim, let go to LAUNCH (like Mars Rally). Space is still IMPACT. The hint says so on a computer.
+- **CTF on foot on PC:** point to run, hold left click to sprint. Zoomed out on big screens (tiles capped at 46 px) so most of the arena fits.
+- **CTF players** stand on their shadows (they floated before).
+- **Ski:** click on the slope to hop (PC). HOP button colours are locked so it can't render blank. Skiers riding through a divot are no longer hidden under it (divots drawn as ground first, on both screens).
+- **Shoes:** every character gets a small toe at the end of each leg: forward in side views, outward from the front. Applies to every dance and game, not skates.
+- **Skip timer:** reacts on the press, before anything can grab the pointer. If the song is still loading it shows "Starting…" and goes as soon as it's ready.
+- **Practice:** no Talk button in the dance menu (there's no chat with only bots; Talk works when live).
+- **Ski designer:** Red flag and Blue flag tools (pass red on its left, blue on its right; flags keep their side when saved, and the default run's flags are no longer dropped). The mouse wheel scrolls down the mountain, Ctrl+wheel zooms, and arrows/PageUp/PageDown work.
+- **Flag arena designer:** one Boost button per direction (▶ ◀ ▲ ▼). With Mirror off you paint exactly that direction.
+
+## v1.81.41 — Crowd picks the next song (videos)
+
+- **Start a song → Video → 🗳 Crowd picks:** while live, the room votes for 20 s between 4 random videos from your video folder (bots vote too). Viewers see "PICK THE NEXT SONG" with the song names, with the key part of the file name hidden.
+- **Performer:** a small yellow card bottom right shows the live counts. When the vote closes, the winner is picked in Start a song, the Key and Alt pickers fill from its file name, and you press Start.
+- The video list shows the key read from each file name ("F# Mixolydian") instead of "video".
+- **Needs a server redeploy** (new svote messages).
+- Check: go live with a video folder loaded, press Crowd picks, vote on a phone, see the winner selected with its key.
+
+## v1.81.40 — 8-bit pop-ups out of the way, pixel names, key pickers, Kart flag fix
+
+- **Kart flag on the performer screen:** the map view now covers Kart flag (it showed nothing before, e.g. after a mosh pit).
+- **Kart flag is a whole-song game:** picking it clears the other picks (like Free dance), and it isn't offered in the mid-song crowd vote.
+- **Pop-ups (performer screen):** the round result, the crowd vote and the countdown card sit bottom right. They're compact (top 3 only), with square corners, pixel lettering and a hard shadow, and the result hides after 7 s. Key and hotkey toasts are small pixel chips under the instrument button ("KEY G Major · ALT"), not a big pill over the stage. The duplicate "Round N: X wins" toast is gone.
+- **Names:** names under people, on both screens, use the pixel lettering. A bot's 🤖 is a pixel robot, in the result card too.
+- **Key pickers in Start a song:** Key and Alt (root and scale). They're filled from the song's name when it has a key in it, e.g. "Song - F# Gb Mixolydian", "Song - G Major.E Minor", "Song (A Dorian)", "Song - C#m", "A Major / F# minor". Applied when you press Start (the Shift swap uses Alt).
+- Check: pick "… - F# Gb Mixolydian" and Key shows F#/Gb Mixolydian; play Kart flag after another game; the end-of-round card is bottom right.
+
+## v1.81.39 — CTF centre stage; performer and video visible in every game
+
+- **CTF / Kart flag (audience):** the performer stands on a small lit platform in the middle of the arena. With a video playing, it lies on the ground just below him as part of the map, and players run or drive over it. Walls over the video are drawn as glass outlines (still solid). If the middle is off your screen, the small performer shows top right again.
+- **CTF (performer screen):** the whole map, you on the platform in the middle, and the video under you, enlarged to about 40% of the screen so the lyrics are readable.
+- **Performer screen, every other game** (crowd, step, target, both highways, free dance, mosh, both rinks, keepy uppy, half pipe, walk race): switches to the stage view during the round, so you see yourself and the video on the Jumbotron. With the video down, you stand beside the screen, not in front of the lyrics.
+- **Ski (performer screen):** the video is on a board at the top of the run; you ride the lift on the left.
+- **Sweep result:** the performer now sees the video and himself in all 16 games, and players see the performer in all of them.
+- Check: start a video song with CTF, look at the middle on both screens; walk away from the middle and the corner performer appears.
+
 ## v1.81.38 — Shuffle and Cyber goth from the clips
 
 **Shuffle** (reworked from the shuffle clip): every move now **snaps** into place at the start of its eighth note and holds still, so it reads as stop-and-go rather than floaty.

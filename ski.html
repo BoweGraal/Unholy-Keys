@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Ski designer · Unholy Keys</title>
-<script src="art.js?v=1.81.38"></script>
+<script src="art.js?v=1.81.44"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#07041a;color:#e8e4f4;font-family:system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
@@ -29,7 +29,9 @@ button.go,.btn.go{background:linear-gradient(135deg,#D354A0,#7F77DD);border:0}
 <div id="app">
   <div id="bar">
     <h1>⛷ Ski designer</h1>
-    <button data-k="gate" class="on">🚩 Gate</button>
+    <button data-k="rflag" class="on" title="Red slalom flag: pass it on its left">🚩 Red flag</button>
+    <button data-k="bflag" title="Blue slalom flag: pass it on its right">🏳 Blue flag</button>
+    <button data-k="gate" title="A two-pole gate (alternates red and blue)">⛳ Gate</button>
     <button data-k="tree">🌲 Tree</button>
     <button data-k="rock">🪨 Rock</button>
     <button data-k="ramp">⛸ Ramp</button>
@@ -52,15 +54,15 @@ button.go,.btn.go{background:linear-gradient(135deg,#D354A0,#7F77DD);border:0}
 <script>
 (function(){
   var SK=ART.SKI,cv=document.getElementById("cv"),g=cv.getContext("2d"),W=0,H=0,dpr=1;
-  var course=null,tool="gate",hist=[],cam={x:0,y:900,z:0.55},cache={};
+  var course=null,tool="rflag",hist=[],cam={x:0,y:900,z:0.55},cache={};
   try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){}
   if(!course)course=SK.defaultCourse();
   function $(id){return document.getElementById(id);}
   function save(){try{localStorage.setItem("uk_ski",JSON.stringify(course));}catch(e){}cache={};status();}
   function push(){hist.push(JSON.stringify(course));if(hist.length>80)hist.shift();}
-  function status(){var n={gate:0,tree:0,rock:0,ramp:0,mogul:0};course.objs.forEach(function(o){n[o[0]]++;});
+  function status(){var n={gate:0,rflag:0,bflag:0,tree:0,rock:0,ramp:0,mogul:0};course.objs.forEach(function(o){n[o[0]]++;});
     $("len").textContent=Math.round(course.len/10)+" m";$("name").value=course.name;
-    $("status").textContent=course.name+": "+n.gate+" gates, "+n.tree+" trees, "+n.rock+" rocks, "+n.ramp+" ramps, "+n.mogul+" moguls · "+Math.round(course.len/10)+" m, then it repeats · saved on this device, and sent with your Ski rounds";}
+    $("status").textContent=course.name+": "+n.rflag+" red flags, "+n.bflag+" blue flags, "+n.gate+" gates, "+n.tree+" trees, "+n.rock+" rocks, "+n.ramp+" ramps, "+n.mogul+" moguls · "+Math.round(course.len/10)+" m, then it repeats · wheel scrolls, Ctrl+wheel zooms · saved on this device, and sent with your Ski rounds";}
   function size(){dpr=Math.min(2,window.devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);draw();}
   function sx(x){return W/2+(x-cam.x)*cam.z;}function sy(y){return H/2+(y-cam.y)*cam.z;}
   function wx(px){return cam.x+(px-W/2)/cam.z;}function wy(py){return cam.y+(py-H/2)/cam.z;}
@@ -91,10 +93,13 @@ button.go,.btn.go{background:linear-gradient(135deg,#D354A0,#7F77DD);border:0}
   function up(e){delete pts[e.pointerId];if(pinch){if(Object.keys(pts).length<2)pinch=null;drag=null;return;}
     if(drag&&!drag.moved&&(e.button===0||e.pointerType==="touch"))place(e.clientX-cv.getBoundingClientRect().left,e.clientY-cv.getBoundingClientRect().top);drag=null;}
   cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",function(e){delete pts[e.pointerId];drag=null;pinch=null;});
-  cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,bx=wx(px),by=wy(py);
+  cv.addEventListener("wheel",function(e){e.preventDefault();
+    if(!e.ctrlKey&&!e.metaKey){cam.y=Math.max(-200,Math.min(course.len+400,cam.y+e.deltaY/cam.z));cam.x+=e.deltaX/cam.z;draw();return;}   /* the wheel scrolls down the mountain; Ctrl+wheel (or a pinch) zooms */
+    var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,bx=wx(px),by=wy(py);
     cam.z=Math.max(0.15,Math.min(2.5,cam.z*Math.exp(-e.deltaY*0.0015)));cam.x=bx-(px-W/2)/cam.z;cam.y=by-(py-H/2)/cam.z;draw();},{passive:false});
   window.addEventListener("keydown",function(e){if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")return;if(e.code==="Space"){space=true;e.preventDefault();}
-    if((e.ctrlKey||e.metaKey)&&e.code==="KeyZ"){e.preventDefault();$("undo").click();}});
+    if((e.ctrlKey||e.metaKey)&&e.code==="KeyZ"){e.preventDefault();$("undo").click();}
+    var st2={ArrowDown:120,ArrowUp:-120,PageDown:H*0.8,PageUp:-H*0.8}[e.code];if(st2){e.preventDefault();cam.y=Math.max(-200,Math.min(course.len+400,cam.y+st2/cam.z));draw();}});
   window.addEventListener("keyup",function(e){if(e.code==="Space")space=false;});
   Array.prototype.forEach.call(document.querySelectorAll("#bar button[data-k]"),function(b){b.onclick=function(){tool=b.getAttribute("data-k");Array.prototype.forEach.call(document.querySelectorAll("#bar button[data-k]"),function(x){x.classList.toggle("on",x===b);});};});
   $("undo").onclick=function(){if(!hist.length)return;course=JSON.parse(hist.pop());save();draw();};
