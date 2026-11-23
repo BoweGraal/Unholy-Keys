@@ -17,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.28"></script>
-<script src="gfx.js?v=1.81.28"></script>
-<script src="art.js?v=1.81.28"></script>
-<script src="instruments.js?v=1.81.28"></script>
-<script src="kart.js?v=1.81.28"></script>
-<script src="explain.js?v=1.81.28"></script>
+<script src="tune.js?v=1.81.32"></script>
+<script src="gfx.js?v=1.81.32"></script>
+<script src="art.js?v=1.81.32"></script>
+<script src="instruments.js?v=1.81.32"></script>
+<script src="kart.js?v=1.81.32"></script>
+<script src="explain.js?v=1.81.32"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -238,11 +238,12 @@ body.gaming-pipe #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #walkUI.on{display:block}
 #wkBanner{position:absolute;left:50%;top:18%;transform:translateX(-50%);font:900 clamp(24px,5.5vw,50px)/1 'Silkscreen',ui-monospace,monospace;color:#fff;white-space:nowrap;opacity:0}
 #wkBanner.pop{animation:moshPop 2.2s ease-out forwards}
-#wkPad{position:absolute;right:max(16px,3vw);bottom:calc(var(--chatH) + 12px);width:min(300px,44vw,46vh);height:min(300px,44vw,46vh);pointer-events:auto;touch-action:none;cursor:none}
+/* the pad is dead centre on the floor and as big as it fits (the racers run behind it, the progress bar shows the race) */
+#wkPad{position:absolute;left:50%;top:calc(65vh + 10px);transform:translate(-50%,-50%);width:min(94vw,64vh);height:min(94vw,64vh);pointer-events:auto;touch-action:none;cursor:none}
 #wkHint{position:absolute;right:16px;bottom:calc(var(--chatH) + min(300px,44vw,46vh) + 18px);width:min(300px,44vw,46vh);text-align:center;font:700 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.75);text-shadow:0 1px 2px #000}
 body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint,body.gaming-skate #moveHint{display:none}
 /* portrait: the pad big and centred at the bottom, the racers in a band between the stage and the pad (WALK.sy) */
-@media (orientation:portrait){#wkPad{left:50%;right:auto;transform:translateX(-50%);bottom:calc(var(--chatH) + 30px);width:min(92vw,30vh);height:min(92vw,30vh)}#wkHint{left:0;right:0;width:auto;font-size:12px;bottom:calc(var(--chatH) + 8px)}}
+#wkHint{left:0!important;right:0!important;width:auto!important;bottom:calc(var(--chatH) + 6px)!important;text-align:center}
 /* ── keepy uppy ── */
 #keepyUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
 #keepyUI.on{display:block}
@@ -3623,7 +3624,7 @@ var GAME=(function(){
      you hold. Hit tiles flash and fade; missed ones turn red. The whole column is the key. */
   function drawTiles(now,bt,tv,top,px){
     var L=4,lw=CW/L,labH=Math.round(Math.max(26,Math.min(46,CH*0.085))),hitY=CH-labH-px*2,span=hitY-top,i,n;
-    var th=Math.max(px*4,Math.round(Math.max(12,CH*0.045)*0.7));   /* every tap note is the same short tile as on the 7-key highway, whatever the speed; only holds are long */
+    var th=Math.min(Math.round(lw)-4,Math.round(span*0.3));   /* every tap note is a square as wide as its column (never more than 30% of the highway), whatever the speed; only holds are longer */
     /* white tiles: the column lines, and row lines on the beat rolling down */
     g.fillStyle="#F4F4F8";g.fillRect(0,top,CW,CH-top);
     for(i=0;i<L;i++){var fl=Math.max(0,1-(now-flash[i])/220);if(laneDown[i]||fl>0){g.fillStyle=hexA(KC()[i],0.16*Math.max(fl,laneDown[i]?1:0));g.fillRect(i*lw,top,lw,hitY-top);}}
@@ -4063,7 +4064,7 @@ var WALK=(function(){
   function sx(vx){return X0*W+(goingC?prog(vx):0)*W*TRK-camOff;}
   /* where a lane is on this screen: as sent in landscape; in portrait the lanes squeeze into the band between the stage and the pad */
   var syK=null,syAt=0;
-  function sy(vy){if(!(H>W*1.15))return vy*H;var nw=performance.now();if(!syK||nw-syAt>250){syAt=nw;var pe=$("wkPad"),pt=pe&&pe.offsetParent?pe.getBoundingClientRect().top:H*0.55,t0=STAGE_BOTTOM*H+64,t1=Math.max(t0+100,pt-22);syK=[t0,t1];}
+  function sy(vy){return vy*H;var nw=performance.now();if(!syK||nw-syAt>250){syAt=nw;var pe=$("wkPad"),pt=pe&&pe.offsetParent?pe.getBoundingClientRect().top:H*0.55,t0=STAGE_BOTTOM*H+64,t1=Math.max(t0+100,pt-22);syK=[t0,t1];}
     return syK[0]+((vy-Y0)/(Y1-Y0)-0.125)/0.75*(syK[1]-syK[0]);}   /* the first and last of 4 lanes sit right on the band's edges */
   function $(id){return document.getElementById(id);}
   function T(k){return TUNE.v("wk."+k);}
@@ -5086,7 +5087,7 @@ KART.bind({
 window.ukKartSheet=function(z,turn){var c=document.createElement("canvas");c.width=1200;c.height=340;var old=ctx;ctx=c.getContext("2d");ctx.fillStyle="#161128";ctx.fillRect(0,0,1200,340);var me=viewers[myId]||{};var vv={name:"",color:"#E8963C",look:me.look,seed:1};try{for(var i=0;i<16;i++)KART.preview(ctx,70+(i%8)*145,110+Math.floor(i/8)*165,i*Math.PI/8,vv,z||2.6,turn||0);}finally{ctx=old;}return c.toDataURL();};
 window.ukKartTest=function(track,nbots,intro){if(intro!==undefined)window.__kartIntro=intro;var C=["#3CCB8A","#5FB4F0","#D354A0","#F5C518","#FF7A2B"];for(var i=0;i<(nbots||0);i++)viewers["bot"+i]={name:"Bot"+(i+1),color:C[i%5],x:0.5,y:0.5,tx:0.5,ty:0.5,dance:4,look:null};GAME.start("kart",{n:track|0});};
 var MOSH=(function(){
-  var TUG_AT=800,TUG_MS=10000;                           /* the same as the server */
+  var TUG_AT=0,TUG_MS=10000;                           /* the same as the server: the walls meet on the drop */
   var on=false,rnd=null,P=null,phase="",lastPh="",team=-1,score=0,vx=0,vy=0,lastT=0,lastMe=null;
   var swing=null,swAng=0,swAcc=0,swRate=[],idleT=0,pops=[],puffs=[],cool={},tug={s:[0,0],done:false,mine:0,send:0,sent:0,res:null},circ={phi:0,r:0.22,acc:0,lap:0,inside:false};
   var bots={},teams={},sv=[0,0],rs={id:null,x:0,y:0,m:0,a:null,lowT:0,nextP:0,swT:0},punchUntil=0,punchA=0,stKnob=null;
@@ -5199,14 +5200,17 @@ var MOSH=(function(){
   /* ---- swinging your arms: drag round in circles on the floor ---- */
   function swingAdd(d,now){var me=viewers[myId];if(!me)return;swAcc+=Math.abs(d);swAng+=d;
     if(swAcc>=Math.PI*2){swAcc-=Math.PI*2;swRate=swRate.filter(function(t){return now-t<1000;});
-      if(swRate.length<2){swRate.push(now);var on2=Math.abs(GAME.beatPos()%1-0.5)>0.35;add(on2?60:40,me.x*W,me.y*H-70,on2?"ON BEAT":"SWING",on2?"#D354A0":"#F5D03C");}}}
+      if(swRate.length<2){swRate.push(now);var on2=onBeat();add(on2?TUNE.v("mp.swingBeatPts"):TUNE.v("mp.swingPts"),me.x*W,me.y*H-70,on2?"SWING ON BEAT":"SWING",on2?"#D354A0":"#F5D03C");}}}
+  /* points: a swing (windmill, or a punch that misses) 10, on the beat 20; a punch that lands 40, on the beat 60 */
+  function onBeat(){return Math.abs(GAME.beatPos()%1-0.5)>0.35;}
   /* the right stick: flick it out to punch that way (a fist that lands scores and knocks them back); circle it to windmill your arms */
   function punch(a){var me=viewers[myId];if(!on||!me)return;if(phase!=="pit"&&phase!=="circle"&&phase!=="charge")return;
     var now=performance.now();rs.nextP=now+320;punchUntil=now+260;punchA=a;
     var reach=Math.max(70,W*0.12),dx0=Math.cos(a),dy0=Math.sin(a),best=null,bd=1e9;
     Object.keys(viewers).forEach(function(id){if(id===myId)return;var o=viewers[id];if(!o)return;var dx=(o.x-me.x)*W,dy=(o.y-me.y)*H,d=Math.hypot(dx,dy);if(d>reach||d<1)return;if((dx*dx0+dy*dy0)/d<0.5)return;if(d<bd){bd=d;best=id;}});
     puff(me.x*W+dx0*34,me.y*H-16+dy0*34);
-    if(best&&now>(cool["p"+best]||0)){cool["p"+best]=now+450;var o=viewers[best];add(phase==="circle"?70:50,o.x*W,o.y*H-50,"PUNCH","#E8505B");puff(o.x*W,o.y*H-12);
+    var ob=onBeat();if(!(best&&now>(cool["p"+best]||0))){add(ob?TUNE.v("mp.swingBeatPts"):TUNE.v("mp.swingPts"),me.x*W,me.y*H-70,ob?"SWING ON BEAT":"SWING",ob?"#D354A0":"#F5D03C");return;}
+    if(best){cool["p"+best]=now+450;var o=viewers[best];add(ob?TUNE.v("mp.punchBeatPts"):TUNE.v("mp.punchPts"),o.x*W,o.y*H-50,ob?"PUNCH ON BEAT":"PUNCH","#E8505B");puff(o.x*W,o.y*H-12);
       if(bots[best]){bots[best].vx+=dx0*0.6;bots[best].vy+=dy0*0.6*(W/H);}}}
   function stickAt(e){var el=$("moshStick");if(!el)return;var r=el.getBoundingClientRect(),rad=r.width*0.4,x=(e.clientX-(r.left+r.width/2))/rad,y=(e.clientY-(r.top+r.height/2))/rad,m=Math.hypot(x,y),now=performance.now();
     if(m>1){x/=m;y/=m;m=1;}
@@ -6094,7 +6098,7 @@ var CHART=(function(){
     }
     /* The drop: the beat where the song comes in hardest. Loudness and intensity over the next 4 beats against the
        8 before, kept away from the very start and end; the biggest jump wins. (The mosh pit's wall of death.) */
-    var drop=-1,dropRise=0,ds=Math.max(8,Math.round(nb*0.12)),de=nb-Math.max(12,Math.round(nb*0.06));
+    var drop=-1,dropRise=0,ds=Math.max(8,Math.round(nb*0.3)),de=nb-Math.max(12,Math.round(nb*0.06));   /* not in the first 30% of the song */
     for(i=ds;i<de;i++){var a0=0,a1=0,e0=0,e1=0,q;for(q=1;q<=8;q++){a0+=loud[i-q];e0+=E[i-q];}for(q=0;q<4;q++){a1+=loud[i+q];e1+=E[i+q];}
       var rise=(a1/4-a0/8)/6+(e1/4-e0/8)+(near(e,bt[i],3)/hit)*0.15;if(rise>dropRise){dropRise=rise;drop=i;}}
     return{ii:ii,steps:out,drop:drop>=0&&dropRise>0.15?Math.round(bt[drop]*10+LAG):0,peaks:ii.peaks.map(function(p){return [Math.round(bt[p[0]]*10+LAG),Math.round((p[1]+1<nb?bt[p[1]+1]:bt[p[1]]+50)*10+LAG)];})};
@@ -7116,7 +7120,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.28",SERVER_VERSION="";
+var PAGE_VERSION="1.81.32",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7695,7 +7699,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.28"></script>
+<script src="lab.js?v=1.81.32"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

@@ -1688,6 +1688,32 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.32 — Mosh points
+
+| | off the beat | on the beat |
+|---|---|---|
+| Swing (windmilling your arms, or a punch that misses) | 10 | 20 |
+| Punch that lands | 40 | 60 |
+
+All four are in the lab: Mosh pit → Swing points, Swing on the beat, Punch lands, Punch lands on the beat.
+
+## v1.81.31 — 4-key notes are squares
+
+- **Note highway, 4 keys**: every tap note is a square as wide as its column (never taller than 30% of the highway). Holds are still long bars. The 7-key highway is unchanged.
+
+## v1.81.30 — Mosh: swing points, wall of death on the drop
+
+- **Swing**: a punch swing off the beat is worth **10** points (was 40). On the beat it's still 60. Both are tunable in the lab (Mosh pit: Swing points, On-beat swing points).
+- **Wall of death**: the two walls now meet right on the drop. The charge starts 0.8 s before it, the 3-2-1 before that, and the push war begins at the drop.
+- **Not too early**: the song analyser doesn't look for the drop in the first 30% of the song. A drop in a game's first 30 s, or first 30% of its length, is moved later.
+- Server change: a live show needs the server redeployed so the server and its bots time the push war from the drop.
+
+## v1.81.29 — Walk race pad dead centre
+
+- The dance pad is now centred on the floor in both portrait and landscape, and as big as it fits: up to 94% of the width, or 64% of the screen height, whichever is smaller. The racers run behind it, and the progress bar along the top shows the race.
+- The hint line sits at the bottom, centred.
+- This replaces the v1.81.15 portrait band layout.
+
 ## v1.81.28 — Late hits are misses
 
 - In step dance, target dance and both note highways, a hit that comes **after** the note's PERFECT window counts as a **MISS**: the streak ends and hype drops. Early and on-time hits still count (PERFECT, GREAT or GOOD by how close they are).

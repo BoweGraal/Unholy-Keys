@@ -171,7 +171,7 @@ module.exports = function(api) {
       b.act(sm); b.scoreAt = now + 2000;
     }
     /* the wall of death: push for your side */
-    if (rd.mode === "mosh" && ch && ch.drop && pos > ch.drop + 900 && pos < ch.drop + 10600 && now > b.tugAt) {
+    if (rd.mode === "mosh" && ch && ch.drop && pos > ch.drop + 100 && pos < ch.drop + 9800 && now > b.tugAt) {
       var tk = Math.ceil(rnd(1, 4) * b.skill * 2); b.act({ type: "tug", side: b.ms && b.ms.team >= 0 ? b.ms.team : (b.x < 0.5 ? 0 : 1), k: tk }); b.tugAt = now + rnd(250, 600); if (b.ms) b.ms.taps += tk;
     }
   }
