@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.38"></script>
-<script src="gfx.js?v=1.81.38"></script>
-<script src="art.js?v=1.81.38"></script>
-<script src="voice.js?v=1.81.38"></script>
-<script src="instruments.js?v=1.81.38"></script>
-<script src="kart.js?v=1.81.38"></script>
-<script src="explain.js?v=1.81.38"></script>
+<script src="tune.js?v=1.81.39"></script>
+<script src="gfx.js?v=1.81.39"></script>
+<script src="art.js?v=1.81.39"></script>
+<script src="voice.js?v=1.81.39"></script>
+<script src="instruments.js?v=1.81.39"></script>
+<script src="kart.js?v=1.81.39"></script>
+<script src="explain.js?v=1.81.39"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -149,6 +149,7 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 /* ── capture the flag ── */
 #ctfCv{display:none;position:fixed;inset:0;width:100%;height:100%;z-index:19;touch-action:none;image-rendering:pixelated}
 #ctfCv.on{display:block}
+#bigScreen.ctfg{position:fixed!important;z-index:18!important;border:0!important;box-shadow:none!important;aspect-ratio:auto!important;transform:none!important;visibility:visible!important;right:auto!important;bottom:auto!important}#bigScreen.ctfg::before,#bigScreen.ctfg::after{display:none}
 #ctfUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
 #ctfUI.on{display:block}
 /* the sprint button: a pixel pad that fills up as the meter charges; dim until there's enough charge to start */
@@ -4811,6 +4812,11 @@ var CTFG=(function(){
   function songPos(){var p=ROUND.pos();return p>-1e8?p:-1e9;}
   function beat(){var p=songPos();return p>-1e8?ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),p):-99;}
   var goCnt=-1;
+  /* the song's video under the centre stage: the big screen is moved beneath this canvas, lined up with the hole */
+  function ctfScreen(x,y,w,h){var bs=$("bigScreen");if(!bs)return;
+    var P=["left","top","width","height"];
+    if(x===null){if(bs.classList.contains("ctfg")){bs.classList.remove("ctfg");P.forEach(function(k){bs.style.removeProperty(k);});}return;}
+    bs.classList.add("ctfg");[x,y,w,h].forEach(function(n,i){bs.style.setProperty(P[i],Math.round(n)+"px","important");});}
   function banner(t,col){var b=$("ctfBanner");if(!b)return;b.textContent=t;b.style.color=col||"#fff";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   var hudSig="";
   function clock(){var ch=ROUND.chart&&ROUND.chart(),end=ch?(ch.gameMs||ch.dur||0):0,p=songPos();if(!end||p<-1e8)return "";var s=Math.max(0,Math.ceil((end-p)/1000));return Math.floor(s/60)+":"+("0"+s%60).slice(-2);}
@@ -4826,7 +4832,7 @@ var CTFG=(function(){
     team=C.teamOf(st,myId);var sp=C.spawnOf(I,st,myId);me={x:sp[0],y:sp[1]};push=[0,0];hold=0;others={};bots={};spr={e:1,on:false};sprWant=false;wireSprint();
     cv=$("ctfCv");g=cv.getContext("2d");cv.classList.add("on");document.body.classList.add("gaming-ctf");$("ctfUI").classList.add("on");hud();banner(kart?"🏎️ KART FLAG":"🚩 CAPTURE THE FLAG","#F5C518");if(kart)setTimeout(function(){if(on&&kart)banner("LAUNCH to fly · IMPACT steals your flag back","#ff6fae");},2200);
   }
-  function stop(){on=false;document.body.classList.remove("gaming-ctf","ctf-kart");var u=$("ctfUI");if(u)u.classList.remove("on");var c=$("ctfCv");if(c)c.classList.remove("on");}
+  function stop(){on=false;ctfScreen(null);document.body.classList.remove("gaming-ctf","ctf-kart");var u=$("ctfUI");if(u)u.classList.remove("on");var c=$("ctfCv");if(c)c.classList.remove("on");}
   /* the sprint button (bottom right) and Space / Shift: hold to sprint while the meter has charge */
   /* Kart flag drift: hold to slide, let go for a boost if it charged */
   function driftOn(d){if(!on||!kart)return;if(d){if(!drift&&beat()>=GO_BEAT&&!((st.spin[myId]||0)>Date.now())&&performance.now()>launchCd){drift=true;dCharge=0;hopT=0.3;}return;}
@@ -4941,7 +4947,12 @@ var CTFG=(function(){
     g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;g.fillStyle="#07041a";g.fillRect(0,0,Wc,Hc);
     var chatH=parseFloat(getComputedStyle(document.body).getPropertyValue("--chatH"))||0,TOP=36,BOT=chatH>0?chatH+4:0,V=C.cam(I,Wc,Hc,TOP,BOT,me,kart),now=performance.now();
     g.save();g.beginPath();g.rect(0,TOP,Wc,Hc-TOP-BOT);g.clip();   /* the arena stays in its window as the camera follows you */
+    /* the centre stage: the song's video lies on the ground in the middle of the arena (it shows through a hole in this canvas, so everyone drives over it) */
+    var CS=C.stage(I),vidOn=!!(JT&&JT.video)&&perfHere();V.hole=vidOn?CS.vid:null;
+    if(vidOn){var hx=V.X(CS.vid.x),hy=V.Y(CS.vid.y),hw=CS.vid.w*V.s,hh=CS.vid.h*V.s;g.clearRect(hx,hy,hw,hh);ctfScreen(hx,hy,hw,hh);}else ctfScreen(null);
     C.draw(g,map,I,V,now,st);
+    if(vidOn){var bw=Math.max(2,Math.round(V.s/8));g.strokeStyle="#2a2440";g.lineWidth=bw;g.strokeRect(V.X(CS.vid.x)-bw/2,V.Y(CS.vid.y)-bw/2,CS.vid.w*V.s+bw,CS.vid.h*V.s+bw);}
+    if(perfHere()){C.platform(g,V,CS.plat,now);var psv=PERF_S,pc=ctx;PERF_S=Math.max(1,Math.round(V.s/16));ctx=g;try{drawPerformer(V.X(CS.px),V.Y(CS.py));}finally{PERF_S=psv;ctx=pc;}}   /* the performer, in the middle of the arena on a little stage */
     /* everyone in the game, back to front */
     var list=[];Object.keys(viewers).forEach(function(id){var vv=viewers[id];if(!vv||vv===PH)return;if(id!==myId&&vv.dance!==4)return;
       var o=others[id]||(others[id]={x:vv.x*I.w,y:vv.y*I.h,f:0});var tx=id===myId?me.x:vv.x*I.w,ty=id===myId?me.y:vv.y*I.h;
@@ -4973,7 +4984,7 @@ var CTFG=(function(){
     if(kart&&now<boostT){g.fillStyle="#FF9A2E";for(var fq=0;fq<3;fq++){var fz=Math.max(2,Math.round(V.s/8)),bk=0.5+fq*0.25+Math.random()*0.1;g.globalAlpha=0.8-fq*0.2;g.fillRect(Math.round(V.X(me.x-Math.cos(ka)*bk))-fz/2,Math.round(V.Y(me.y-Math.sin(ka)*bk))-fz/2,fz,fz);}g.globalAlpha=1;}   /* boost flame */
     kfx=kfx.filter(function(f){var a=(now-f.t)/450;if(a>1)return false;g.strokeStyle=f.col;g.lineWidth=Math.max(2,V.s/8);g.globalAlpha=1-a;ART.PX.ring(g,V.X(f.x),V.Y(f.y),f.r*V.s*(0.3+0.7*a));g.globalAlpha=0.18*(1-a);g.fillStyle=f.col;ART.PX.disc(g,V.X(f.x),V.Y(f.y),f.r*V.s*(0.3+0.7*a));g.globalAlpha=1;return true;});   /* pulses */
     g.restore();
-    perfInset(g,Wc-(Wc<641?44:60),Wc<641?44:50);   /* the performer, small, top right (the fullscreen button has the left) */
+    if(perfHere()){var spx=V.X(CS.px),spy=V.Y(CS.py);if(spx<-20||spx>Wc+20||spy<TOP-20||spy>Hc-BOT+40)perfInset(g,Wc-(Wc<641?44:60),Wc<641?44:50);}   /* the centre stage is off screen: the performer, small, top right */
     hud();
     markers(g,V,list,Wc,now);
     /* the count in */
@@ -4983,6 +4994,7 @@ var CTFG=(function(){
       hn.textContent=now<hold?"Tagged! Back in a moment…":cf2>=0?"You've got the flag! Get it back to your base":kart?"Grab their flag · LAUNCH: hold, aim, let go · IMPACT knocks your flag home":st.flags[team].at?"They've got your flag! Tag the carrier to send it home":"Grab the "+C.TNAME[1-team].toLowerCase()+" flag · block them with your body · hold SPRINT (Space)";}
   }
   window.ukCtf=function(){return{spr:{e:+spr.e.toFixed(2),on:spr.on},refill:st&&st.refill,on:on,me:{x:+me.x.toFixed(2),y:+me.y.toFixed(2)},team:team,caps:st&&st.caps,flags:st&&st.flags,score:st&&st.score,teams:st&&st.teams,beat:+beat().toFixed(2),pos:st&&st.pos};};
+  window.ukCtfTp=function(x,y){if(!/[?&]practice/.test(location.search))return;me.x=x;me.y=y;};   /* test hook: move yourself (test runs only) */
   window.ukKflagTest=function(nb){window.__testKflag=1;window.__testMode="ctf";ukWalkTest(nb===undefined?5:nb);window.__testKflag=0;};
   window.ukCtfTest=function(nb){window.__testMode="ctf";ukWalkTest(nb===undefined?5:nb);};
   return{start:start,stop:stop,tick:tick,draw:draw,onMsg:onMsg,ctfRound:ctfRound,get on(){return on;}};
@@ -7157,7 +7169,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.38",SERVER_VERSION="";
+var PAGE_VERSION="1.81.39",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7313,6 +7325,7 @@ window.ukShowFx=function(f){if(f!==undefined)SHOWFX=f;return SHOWFX;};
    Down while a video or the performer's visuals are on (the performer can also keep it down or up). It hangs
    over the back of the stage; while it's down the performer steps forward to the front of the stage. */
 var JT={video:false,visuals:false,k:0,rect:null,key:""};
+window.ukJT=function(){return JT;};   /* test hook */
 /* the notes on the big screen, always: when the performer's own visuals aren't arriving and a video is up, a note roll is drawn over the video from the notes you hear */
 var JN=[];
 setInterval(function(){
@@ -7740,7 +7753,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.38"></script>
+<script src="lab.js?v=1.81.39"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

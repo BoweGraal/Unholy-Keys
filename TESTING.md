@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.39 — CTF centre stage; performer and video visible in every game
+
+- **CTF / Kart flag (audience):** the performer stands on a small lit platform in the middle of the arena. With a video playing, it lies on the ground just below him as part of the map, and players run or drive over it. Walls over the video are drawn as glass outlines (still solid). If the middle is off your screen, the small performer shows top right again.
+- **CTF (performer screen):** the whole map, you on the platform in the middle, and the video under you, enlarged to about 40% of the screen so the lyrics are readable.
+- **Performer screen, every other game** (crowd, step, target, both highways, free dance, mosh, both rinks, keepy uppy, half pipe, walk race): switches to the stage view during the round, so you see yourself and the video on the Jumbotron. With the video down, you stand beside the screen, not in front of the lyrics.
+- **Ski (performer screen):** the video is on a board at the top of the run; you ride the lift on the left.
+- **Sweep result:** the performer now sees the video and himself in all 16 games, and players see the performer in all of them.
+- Check: start a video song with CTF, look at the middle on both screens; walk away from the middle and the corner performer appears.
+
 ## v1.81.38 — Shuffle and Cyber goth from the clips
 
 **Shuffle** (reworked from the shuffle clip): every move now **snaps** into place at the start of its eighth note and holds still, so it reads as stop-and-go rather than floaty.

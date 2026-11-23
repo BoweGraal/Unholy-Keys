@@ -886,11 +886,21 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
   CTF.cam=function(I,W,H,top,bot,me,kart){var f=CTF.fit(I,W,H,top,bot),vh=H-top-bot,s=kart?CTF.K_TILE:Math.max(f.s,Math.round(W/(W<641?15:20))),ox,oy;   /* Kart flag: the same fixed zoom as Mars Rally, on any screen */
     var mw=I.w*s,mh=I.h*s;ox=mw<=W?Math.round((W-mw)/2):Math.round(Math.min(0,Math.max(W-mw,W/2-me.x*s)));oy=mh<=vh?Math.round(top+(vh-mh)/2):Math.round(Math.min(top,Math.max(top+vh-mh,top+vh/2-me.y*s)));
     return{s:s,ox:ox,oy:oy,vw:W,vh:vh,vt:top,X:function(x){return ox+x*s;},Y:function(y){return oy+y*s;}};};
+  /* the centre stage: the performer on a little platform in the middle of the arena, the song's video on the ground just below it
+     (in tiles). Same on the audience's screens and the performer's map view. */
+  CTF.stage=function(I){var cx=I.w/2,cy=I.h/2,vw=Math.max(5,Math.min(12,I.w*0.22)),vh=vw*9/16,vy=cy-vh/2+0.5;
+    return{px:cx,py:vy-0.15,plat:{x:cx-1.3,y:vy-0.8,w:2.6,h:0.75},vid:{x:cx-vw/2,y:vy,w:vw,h:vh}};};
+  /* the platform: a small lit stage block */
+  CTF.platform=function(g,v,pl,now){var X=Math.round(v.ox+pl.x*v.s),Y=Math.round(v.oy+pl.y*v.s),w=Math.round(pl.w*v.s),h=Math.round(pl.h*v.s),P=Math.max(1,Math.round(v.s/10));
+    g.fillStyle="#2c2448";g.fillRect(X,Y,w,h);g.fillStyle="#463a6e";g.fillRect(X,Y,w,P*2);g.fillStyle="#120e1e";g.fillRect(X,Y+h-P,w,P);
+    for(var i=0;i<6;i++){g.fillStyle=["#D354A0","#7F77DD","#3DF2FF","#F5C518"][(i+Math.floor(now/250))%4];g.fillRect(X+Math.round((i+0.5)*w/6)-P,Y+h-P*3,P*2,P);}};
   CTF.draw=function(g,m,I,v,now,st){
     var s=v.s,P=Math.max(1,Math.round(s/8)),x,y,ph=(now/90)%8;
     var cx0=Math.max(0,Math.floor(-v.ox/s)-1),cx1=Math.min(I.w,Math.ceil(((v.vw||1e5)-v.ox)/s)+1),cy0=Math.max(0,Math.floor((( v.vt||-1e5)-v.oy)/s)-2),cy1=Math.min(I.h,Math.ceil(((v.vt||0)+(v.vh||1e5)-v.oy)/s)+2);
+    var hl=v.hole;   /* tiles left unpainted (the video shows through from underneath) */
     for(y=cy0;y<cy1;y++)for(x=cx0;x<cx1;x++){var c=m.t[y*I.w+x],X=v.ox+x*s,Y=v.oy+y*s;
       if(c==="#"){continue;}
+      if(hl&&x+1>hl.x&&x<hl.x+hl.w&&y+1>hl.y&&y<hl.y+hl.h){var pd0=I.pad(x,y);if(!pd0)continue;}
       var hs=Math.sin(x*12.9898+y*78.233)*43758.5453;hs-=Math.floor(hs);
       g.fillStyle=(x+y)%2?"#1a1430":"#120e1e";if(c==="R"||c==="r")g.fillStyle=(x+y)%2?"#3a1420":"#2c0f18";if(c==="B"||c==="b")g.fillStyle=(x+y)%2?"#14243e":"#0f1a30";
       g.fillRect(X,Y,s,s);
@@ -906,6 +916,9 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
         CTF.boxIcon(g,X+s/2,Y+s/2,s,now,st&&st.kart?CTF.boxLeft(st,bi2,Date.now()):0);}}
     /* walls on top: raised blocks with a lit top edge and a shadow below */
     for(y=cy0;y<cy1;y++)for(x=cx0;x<cx1;x++){if(m.t[y*I.w+x]!=="#")continue;var X2=v.ox+x*s,Y2=v.oy+y*s;
+      if(hl&&x+1>hl.x&&x<hl.x+hl.w&&y+1>hl.y&&y<hl.y+hl.h){   /* a wall over the video: glass, so the lyrics stay readable (still solid) */
+        g.fillStyle="rgba(90,74,136,.22)";g.fillRect(X2,Y2,s,s);g.fillStyle="rgba(200,190,255,.55)";
+        if(I.at(x+0.5,y-0.5)!=="#")g.fillRect(X2,Y2,s,P);if(I.at(x+0.5,y+1.5)!=="#")g.fillRect(X2,Y2+s-P,s,P);if(I.at(x-0.5,y+0.5)!=="#")g.fillRect(X2,Y2,P,s);if(I.at(x+1.5,y+0.5)!=="#")g.fillRect(X2+s-P,Y2,P,s);continue;}
       g.fillStyle="#3a3058";g.fillRect(X2,Y2-P*2,s,s);g.fillStyle="#5a4a88";g.fillRect(X2,Y2-P*2,s,P);g.fillStyle="#241c3a";g.fillRect(X2,Y2+s-P*2,s,P*2);
       if(I.at(x+0.5,y+1.5)!=="#"){g.fillStyle="rgba(0,0,0,.35)";g.fillRect(X2,Y2+s,s,P*2);}}
     /* the bases: a ring round where each flag lives */
@@ -2532,6 +2545,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.38",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.39",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
