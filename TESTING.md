@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.71 — Ski: no more CUT +25
+
+1. Hop and swing round to a new line: no "CUT +25" pop-up and no points. You still keep your speed through the turn.
+
 ## v1.81.70 — Ski: trick combo bonus
 
 1. Take a ramp, do a trick, right-click to switch, do a different trick, and land clean: **TRICK COMBO! +200** (on top of each trick's own points).
