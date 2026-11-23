@@ -1688,6 +1688,21 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.63 — CTF: smaller video on the floor
+
+- **CTF and Kart flag:** the video on the arena floor is about half the size it was: about 4 tiles wide in CTF, 5.5 in Kart flag (was 9–12). The performer and platform stand just above it, clear of the picture.
+- **Performer screen:** your copy is still enlarged so you can read the lyrics.
+
+## v1.81.62 — Voice you can actually hear; karts on the performer's Kart flag map
+
+- **Voice:**
+  - **Relay fallback:** it now falls back to free public relay servers when two devices can't connect directly (mobile data, strict home routers). Before, it only tried a direct link, so someone could light up as talking (that signal goes through the game server) while their sound never arrived.
+  - **Retries:** a failed link retries up to 3 times instead of going quiet for good.
+  - **Blocked playback:** if the browser blocks the sound until you tap, it starts on your next tap or key press.
+  - **Status:** hover the performer's 🎙 button to see each person: ✓ connected, … connecting, ✕ retrying.
+- **Kart flag, performer screen:** everyone is drawn in their kart, in team colours, pointing the way they're going. Before, they were people walking, because the kart drawing needed a race to be running and quietly failed.
+- Check: join voice from two phones on mobile data and talk between songs; play Kart flag live and look at the performer's map.
+
 ## v1.81.61 — Rhythm games: notes use the whole pad again
 
 Measured with a chart lab on two structured test songs (100 and 128 BPM, intro/verse/chorus/breakdown/chorus/outro), every game and every level, from audio and from the stored analysis YouTube songs use (both gave the same results).
