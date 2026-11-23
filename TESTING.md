@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.73 — New hat: "Abs" (placeholder name)
+
+1. Open Character → Hat and go to the last one, **Abs**: your new grey-and-white hat from the graphics lab.
+2. Police cap still looks like the police cap.
+
 ## v1.81.72 — Ski on PC: big mouse guide, cleaner controls
 
 1. On a computer, once you're moving, a big pixel mouse sits above the trick buttons: the left button reads **HOP or TRICK**, the right reads **NEXT TRICK**. Nothing else around it.
