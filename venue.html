@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.40"></script>
-<script src="gfx.js?v=1.81.40"></script>
-<script src="art.js?v=1.81.40"></script>
-<script src="voice.js?v=1.81.40"></script>
-<script src="instruments.js?v=1.81.40"></script>
-<script src="kart.js?v=1.81.40"></script>
-<script src="explain.js?v=1.81.40"></script>
+<script src="tune.js?v=1.81.41"></script>
+<script src="gfx.js?v=1.81.41"></script>
+<script src="art.js?v=1.81.41"></script>
+<script src="voice.js?v=1.81.41"></script>
+<script src="instruments.js?v=1.81.41"></script>
+<script src="kart.js?v=1.81.41"></script>
+<script src="explain.js?v=1.81.41"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1963,17 +1963,18 @@ var GVOTE=(function(){
   function el(){var p=document.getElementById("gvPanel");if(!p){p=document.createElement("div");p.id="gvPanel";document.body.appendChild(p);}return p;}
   function draw(){var p=el();if(!st){p.className="";return;}
     var left=Math.max(0,Math.ceil((st.left-(performance.now()-st.at))/1000)),tot=st.counts.reduce(function(a,b){return a+b;},0);
-    p.textContent="";var h=document.createElement("div");h.className="gvH";h.textContent=st.done?"NEXT UP":"\uD83D\uDDF3 PICK THE NEXT GAME";p.appendChild(h);
-    st.opts.forEach(function(m,k){var b=document.createElement("button");b.className="gvB"+(mine===m?" me":"")+(st.done?(m===st.win?" win":" lose"):"");
+    p.textContent="";var h=document.createElement("div");h.className="gvH";h.textContent=st.done?(st.song?"NEXT SONG":"NEXT UP"):st.song?"\uD83D\uDDF3 PICK THE NEXT SONG":"\uD83D\uDDF3 PICK THE NEXT GAME";p.appendChild(h);
+    st.opts.forEach(function(m,k){var key=st.song?k:m;var b=document.createElement("button");b.className="gvB"+(mine===key?" me":"")+(st.done?(key===st.win?" win":" lose"):"");
       var bar=document.createElement("i");bar.style.width=(tot?Math.round(st.counts[k]/tot*100):0)+"%";b.appendChild(bar);
       var n=document.createElement("span");n.textContent=NM[m]||m;b.appendChild(n);var c=document.createElement("b");c.textContent=String(st.counts[k]||0);b.appendChild(c);
-      if(!st.done)b.onclick=function(e){e.stopPropagation();mine=m;wsSend({type:"gvote-pick",m:m});draw();};p.appendChild(b);});
+      if(st.song)n.textContent=String(m).replace(/\s+-\s+[A-G][#b]?(\s+[A-G][#b])?\s+[A-Za-z]+(\s+[a-z]+)?(\.[A-G][#b]?\s+[A-Za-z]+)?\s*$/,"");   /* hide the key in the name */
+      if(!st.done)b.onclick=function(e){e.stopPropagation();mine=key;wsSend(st.song?{type:"svote-pick",k:k}:{type:"gvote-pick",m:m});draw();};p.appendChild(b);});
     var f=document.createElement("div");f.className="gvF";f.textContent=st.done?"":left+" s left"+(mine?"":" \u00B7 tap one");p.appendChild(f);
     p.className="on";}
-  function on(m){
-    if(m.cancel){st=null;clearInterval(tmr);draw();return;}
-    if(!st||st.id!==m.id)mine=null;
-    st={id:m.id,opts:(m.opts||[]).slice(0,4),counts:(m.counts||[]).slice(0,4).map(function(x){return +x||0;}),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
+  function on(m,song){
+    song=!!song;if(m.cancel){if(!st||st.song===song){st=null;clearInterval(tmr);draw();}return;}
+    if(!st||st.id!==m.id||st.song!==song)mine=null;
+    st={song:song,id:m.id,opts:(m.opts||[]).slice(0,4),counts:(m.counts||[]).slice(0,4).map(function(x){return +x||0;}),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
     clearInterval(tmr);clearTimeout(hideT);draw();
     if(st.done)hideT=setTimeout(function(){st=null;draw();},4500);else tmr=setInterval(draw,500);
   }
@@ -2019,7 +2020,7 @@ function handleMsg(msg){
     ROUND.setTotals(msg.totals);
     SHOWFX=msg.fx||null;primeFx(SHOWFX);
     if(msg.round)ROUND.onMsg(msg.round);else ROUND.reset();
-    if(msg.gvote)GVOTE.on(msg.gvote);
+    if(msg.gvote)GVOTE.on(msg.gvote);if(msg.svote)GVOTE.on(msg.svote,true);
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
     if(msg.perfPos)perfPos(msg.perfPos);
@@ -2064,6 +2065,7 @@ function handleMsg(msg){
   else if(t==="round"){ROUND.onMsg(msg);}
   else if(t==="round-scores"){ROUND.scores(msg);}
   else if(t==="gvote"){GVOTE.on(msg);}
+  else if(t==="svote"){GVOTE.on(msg,true);}
   else if(t==="ctf"){CTFG.onMsg(msg);}
   else if(t==="spotlight"){ROUND.setSpot(msg.turns,msg.ring);}
   else if(t==="battle"){ROUND.setBattle(msg);}
@@ -7169,7 +7171,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.40",SERVER_VERSION="";
+var PAGE_VERSION="1.81.41",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7746,7 +7748,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.40"></script>
+<script src="lab.js?v=1.81.41"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
