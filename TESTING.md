@@ -1690,7 +1690,10 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.81.45 — Graphics lab: Part list grouped
 
-- **Pixel editor → Part:** two groups. **Body** holds the whole character, head to feet: Head · Hair style, Hat, Face, Extras, then Top, Bottoms, Left/Right arm, Left/Right leg. **Props** holds Instrument, Keyboard and Mic stand.
+- **Pixel editor → Part:** three groups:
+  - **Body:** Head · Hair style, Head · Face, Top, Bottoms, Left/Right arm, Left/Right leg.
+  - **Hats & accessories:** Hat, Extras (shades…).
+  - **Props:** Instrument, Keyboard, Mic stand.
 
 ## v1.81.44 — Feet sweep: shoes on every angle, feet on the floor in every dance
 
