@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.40 — 8-bit pop-ups out of the way, pixel names, key pickers, Kart flag fix
+
+- **Kart flag on the performer screen:** the map view now covers Kart flag (it showed nothing before, e.g. after a mosh pit).
+- **Kart flag is a whole-song game:** picking it clears the other picks (like Free dance), and it isn't offered in the mid-song crowd vote.
+- **Pop-ups (performer screen):** the round result, the crowd vote and the countdown card sit bottom right. They're compact (top 3 only), with square corners, pixel lettering and a hard shadow, and the result hides after 7 s. Key and hotkey toasts are small pixel chips under the instrument button ("KEY G Major · ALT"), not a big pill over the stage. The duplicate "Round N: X wins" toast is gone.
+- **Names:** names under people, on both screens, use the pixel lettering. A bot's 🤖 is a pixel robot, in the result card too.
+- **Key pickers in Start a song:** Key and Alt (root and scale). They're filled from the song's name when it has a key in it, e.g. "Song - F# Gb Mixolydian", "Song - G Major.E Minor", "Song (A Dorian)", "Song - C#m", "A Major / F# minor". Applied when you press Start (the Shift swap uses Alt).
+- Check: pick "… - F# Gb Mixolydian" and Key shows F#/Gb Mixolydian; play Kart flag after another game; the end-of-round card is bottom right.
+
 ## v1.81.39 — CTF centre stage; performer and video visible in every game
 
 - **CTF / Kart flag (audience):** the performer stands on a small lit platform in the middle of the arena. With a video playing, it lies on the ground just below him as part of the map, and players run or drive over it. Walls over the video are drawn as glass outlines (still solid). If the middle is off your screen, the small performer shows top right again.
