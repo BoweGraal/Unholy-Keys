@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.85"></script>
-<script src="gfx.js?v=1.81.85"></script>
-<script src="art.js?v=1.81.85"></script>
-<script src="voice.js?v=1.81.85"></script>
-<script src="instruments.js?v=1.81.85"></script>
-<script src="kart.js?v=1.81.85"></script>
-<script src="explain.js?v=1.81.85"></script>
+<script src="tune.js?v=1.81.86"></script>
+<script src="gfx.js?v=1.81.86"></script>
+<script src="art.js?v=1.81.86"></script>
+<script src="voice.js?v=1.81.86"></script>
+<script src="instruments.js?v=1.81.86"></script>
+<script src="kart.js?v=1.81.86"></script>
+<script src="explain.js?v=1.81.86"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -332,7 +332,14 @@ body.gaming-fig #skJump,body.gaming-fig #skWheel,body.gaming-fig #skSpeed,body.g
 #figUI .fgSpeed{display:none;position:absolute;left:14px;bottom:calc(var(--chatH) + 150px);width:22px;height:120px;background:#120d1e;border:3px solid #000;box-shadow:3px 3px 0 #000}#figUI .fgSpeed.on{display:block}
 #figUI .fgSpeed i{position:absolute;left:0;right:0;bottom:0;height:0}#figUI .fgSpeed span{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:4px;font:9px 'Silkscreen',ui-monospace,monospace;color:#fff}
 #figUI .fgBtn{position:absolute;right:18px;bottom:calc(var(--chatH) + 120px);width:96px;height:96px;background:#2a4a7a;border:3px solid #3DF2FF;color:#fff;font:700 18px 'Silkscreen',ui-monospace,monospace;box-shadow:4px 4px 0 #000;pointer-events:auto;touch-action:none;display:flex;flex-direction:column;align-items:center;justify-content:center}
-#figUI .fgBtn small{font-size:9px;opacity:.75;margin-top:3px}@media (pointer:fine){#figUI .fgBtn{display:none}}
+#figUI .fgBtn small{font-size:9px;opacity:.75;margin-top:3px}@media (pointer:fine){#figUI .fgBtn{width:84px;height:56px;font-size:14px;bottom:calc(var(--chatH) + 30px)}}
+.goal{animation:goalGlow .5s steps(2) infinite;position:relative;z-index:30}
+.goal.goalNow{filter:brightness(1.6)}
+#dpad.goal{border-color:#3DF2FF!important;box-shadow:0 0 0 4px #3DF2FF,0 0 22px 6px rgba(61,242,255,.75)!important}
+.fgBtn.goal{box-shadow:0 0 0 4px #F5D03C,4px 4px 0 #000,0 0 24px 6px rgba(245,208,60,.7)!important}
+@keyframes goalGlow{50%{box-shadow:0 0 0 2px #fff,0 0 10px 2px rgba(255,255,255,.5)}}
+#goalTag{display:none;position:fixed;z-index:9200;pointer-events:none;padding:5px 9px;background:#F5D03C;color:#1a0f2a;font:700 13px 'Silkscreen',ui-monospace,monospace;border:3px solid #1a0f2a;box-shadow:3px 3px 0 #000;white-space:nowrap;animation:goalTagF .5s steps(2) infinite}
+@keyframes goalTagF{50%{background:#fff}}
 @media (pointer:coarse){body.gaming-fig #skHint{display:none!important}#figUI .fgPrompt{bottom:calc(var(--chatH) + 150px)}}
 #moshTap{display:none;position:absolute;left:12px;right:12px;bottom:12px;height:38vh;border-radius:24px;border:3px solid #E8505B;background:radial-gradient(circle,rgba(232,80,91,.45),rgba(30,10,20,.85));color:#fff;pointer-events:auto;touch-action:manipulation;flex-direction:column;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;user-select:none}
 #moshTap b{font:900 clamp(36px,9vw,72px)/1 'Silkscreen',ui-monospace,monospace;letter-spacing:2px}#moshTap span{font:700 18px 'Silkscreen',ui-monospace,monospace;color:#F5D03C}
@@ -5310,6 +5317,19 @@ var SKATE=(function(){
    rink moves together. One button does everything (Space on a keyboard): tap it on the beat, hold it to spin, and the
    stick dances in the free section.
    ============================================================ */
+/* THE OBJECTIVE: the control that scores right now glows, with a flashing label beside it ("SPIN ↻", "TAP", "JUMP!").
+   goalHL(element, label) each frame (the same element just updates); goalHL(null) clears it. */
+var GOAL={el:null,tag:null};
+function goalHL(el,label){
+  if(GOAL.el&&GOAL.el!==el)GOAL.el.classList.remove("goal");
+  if(!GOAL.tag){GOAL.tag=document.createElement("div");GOAL.tag.id="goalTag";document.body.appendChild(GOAL.tag);}
+  GOAL.el=el;var t=GOAL.tag;
+  if(!el||!label||el.offsetParent===null){if(el)el.classList.remove("goal");t.style.display="none";return;}
+  el.classList.add("goal");var r=el.getBoundingClientRect(),right=r.left+r.width/2<window.innerWidth/2;
+  if(t.textContent!==label)t.textContent=label;t.style.display="block";
+  t.style.top=Math.round(Math.max(8,r.top-26))+"px";
+  if(right){t.style.left=Math.round(r.left+r.width*0.5)+"px";t.style.right="auto";t.style.transform="translateX(-30%)";}else{t.style.left="auto";t.style.right=Math.round(window.innerWidth-r.right+r.width*0.5)+"px";t.style.transform="translateX(30%)";}
+}
 var FIG=(function(){
   var F=ART.FIG,on=false,P=null,score=0,streak=0,tg=[],ti=0,pops=[],lastK="",btnDown=false,spin={ang:0,vel:0,revs:0,lastRev:0,holdT:0},
       speed=0,jump=null,fall=0,lastSend=0,moved=0,lastStick=[0,0],styleBeat=-1,bots={},finalDone=false,fx={t:0,txt:"",col:"#fff"};
@@ -5335,7 +5355,7 @@ var FIG=(function(){
     on=true;P=F.plan(round&&round.chart);score=0;streak=0;tg=targets();ti=0;pops=[];lastK="";btnDown=false;spin={ang:0,vel:0,revs:0,lastRev:0,holdT:0};speed=0;jump=null;fall=0;bots={};finalDone=false;moved=0;styleBeat=-1;
     document.body.classList.add("gaming-skate","gaming-fig");$("skateUI").classList.add("on");hud();banner("⛸ ICE ROUTINE");ui();
   }
-  function stop(){on=false;document.body.classList.remove("gaming-skate","gaming-fig");$("skateUI").classList.remove("on");}
+  function stop(){on=false;document.body.classList.remove("gaming-skate","gaming-fig");$("skateUI").classList.remove("on");goalHL(null);}
   function banner(t,col){var b=$("skBanner");if(!b)return;PXEMO.set(b,t);b.style.color=col||"";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("skScore");if(h)h.textContent=score.toLocaleString();}
   function add(n,txt,col){if(!n)return;var m=1+Math.min(1,streak*0.05),got=Math.round(n*m);score+=got;GAME.moshPts(got);var me=viewers[myId];if(me&&txt)pops.push({x:me.x*W,y:me.y*H-70,t:performance.now(),txt:txt+" +"+got,col:col||"#3DF2FF"});hud();}
@@ -5370,13 +5390,17 @@ var FIG=(function(){
   function tick(){
     if(!on)return;var me=myId&&viewers[myId];if(!me)return;var p=pos(),now=performance.now(),sg=F.segAt(P,p),k=sg?sg.k:"glide",dt=Math.min(0.05,(now-(tick.t||now))/1000);tick.t=now;
     if(k!==lastK){enter(k,lastK);lastK=k;}
-    if(window.__figAuto){for(var qa=ti;qa<tg.length&&tg[qa].t<p+20;qa++)if(!tg[qa].j&&Math.abs(tg[qa].t-p)<20){hit(tg[qa],0);}if(k==="spin"&&!btnDown)btnDown=true;if(k!=="spin"&&btnDown&&window.__figAuto)btnDown=false;}   /* tests: a perfect skater */
+    if(window.__figAuto){for(var qa=ti;qa<tg.length&&tg[qa].t<p+20;qa++)if(!tg[qa].j&&Math.abs(tg[qa].t-p)<20){hit(tg[qa],0);}if(k==="spin"){spin.vel=Math.min(22,spin.vel+0.6);}}   /* tests: a perfect skater */
     /* targets that went by untouched */
     while(ti<tg.length&&tg[ti].t<p-W_O){var t=tg[ti];if(!t.j){t.j=4;if(t.k==="build"){speed=Math.max(0,speed-0.05);}else if(t.k==="axel"){fall=now+1800;streak=0;banner("FALL!","#E8505B");}else if(t.k!=="stroke")streak=0;}ti++;}
     /* the spin: hold to keep turning faster; let go and it slows to a stop */
-    if(k==="spin"&&btnDown&&fall<=0){spin.vel=Math.min(18,spin.vel+dt*14);}else spin.vel=Math.max(0,spin.vel-dt*(k==="spin"?10:30));
-    spin.ang+=spin.vel*dt;var rv=Math.floor(spin.ang/(Math.PI*2));if(rv>spin.lastRev){if(k==="spin"&&btnDown)add(25,"",null);spin.lastRev=rv;}
-    if(k==="spin"&&btnDown&&p>sg.t1-per()*0.6&&!sg.done){sg.done=1;add(200,"PERFECT SPIN","#3DF2FF");}
+    /* circle the stick to spin: the faster you go round, the faster you spin (holding Space works too on a keyboard) */
+    var si=stick(),sm2=Math.hypot(si.x,si.y),circ=false;
+    if(k==="spin"&&fall<=0&&sm2>0.5){var th=Math.atan2(si.y,si.x);if(spin.pa!==null&&spin.pa!==undefined){var dd=th-spin.pa;while(dd>Math.PI)dd-=2*Math.PI;while(dd<-Math.PI)dd+=2*Math.PI;if(Math.abs(dd)>0.01){spin.vel=Math.min(22,spin.vel+Math.abs(dd)*4.2);circ=true;}}spin.pa=th;}else spin.pa=null;
+    if(k==="spin"&&btnDown&&fall<=0){spin.vel=Math.min(14,spin.vel+dt*12);circ=true;}
+    if(!circ)spin.vel=Math.max(0,spin.vel-dt*(k==="spin"?7:30));
+    spin.ang+=spin.vel*dt;var rv=Math.floor(spin.ang/(Math.PI*2));if(rv>spin.lastRev){if(k==="spin"&&spin.vel>2)add(Math.round(8+spin.vel*2.2),spin.vel>14?"FAST SPIN":"",spin.vel>14?"#3DF2FF":null);spin.lastRev=rv;}
+    if(k==="spin"&&spin.vel>4&&p>sg.t1-per()*0.6&&!sg.done){sg.done=1;add(Math.round(100+spin.vel*10),"SPIN TO THE END","#3DF2FF");}
     /* the free dance: moving the stick in time scores */
     var inp=stick();if(k==="free"){var bp=Math.floor(GAME.beatPos());moved+=Math.hypot(inp.x-lastStick[0],inp.y-lastStick[1]);if(bp!==styleBeat){if(styleBeat>=0&&moved>0.35)add(12,"",null);moved=0;styleBeat=bp;}}lastStick=[inp.x,inp.y];
     if(fall>0&&now>fall)fall=0;
@@ -5418,7 +5442,7 @@ var FIG=(function(){
       if(b.jump){h=Math.round((14+b.kind*6)*4*u*(1-u));t=1+Math.floor(u*[0,1.5,2.5,3.5][b.kind]*8)%8;}else if(k==="spin")t=1+ART.face8(Math.sin(b.ang),Math.cos(b.ang),-1);
       v.sk={h:h,f:0,t:t};v.pose=b.jump?[-0.35,0.35,0.12,-0.12]:pose(k,p,now,false);v.fd=k==="free"?{s:1,m:[0,2,3,1][Math.floor((p-sg.t0)/(per()*8))%4],c:[0,0,Math.round(Math.sin(now/400+n)*80),Math.round(Math.cos(now/530+n)*60)]}:null;});}
   /* the screen: the routine's timeline across the top, what to do now, the speed meter in the build */
-  function ui(){var u=$("figUI");if(!u){u=document.createElement("div");u.id="figUI";u.innerHTML='<div class="fgTL"><i class="fgCur"></i></div><div class="fgNow"></div><div class="fgPrompt"><canvas width="64" height="64"></canvas><b></b><small></small></div><div class="fgSpeed"><i></i><span>SPEED</span></div><button class="fgBtn" aria-label="Skate">TAP<small>hold to spin</small></button>';
+  function ui(){var u=$("figUI");if(!u){u=document.createElement("div");u.id="figUI";u.innerHTML='<div class="fgTL"><i class="fgCur"></i></div><div class="fgNow"></div><div class="fgPrompt"><canvas width="64" height="64"></canvas><b></b><small></small></div><div class="fgSpeed"><i></i><span>SPEED</span></div><button class="fgBtn" aria-label="Skate">'+(TOUCHF?"TAP":"SPACE")+'<small>'+(TOUCHF?"on the beat":"or click")+'</small></button>';
       $("skateUI").appendChild(u);var btn=u.querySelector(".fgBtn");btn.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();press(true);});["pointerup","pointercancel","pointerleave"].forEach(function(ev){btn.addEventListener(ev,function(){press(false);});});
       var tl=u.querySelector(".fgTL"),C={intro:"#9B7FE0",glide:"#4A9BE8",spin:"#3DF2FF",free:"#D354A0",build:"#F5D03C",axel:"#ffffff",finale:"#F5C518"};P.segs.forEach(function(sg){var s=document.createElement("span");s.style.left=(sg.t0/P.dur*100)+"%";s.style.width=((sg.t1-sg.t0)/P.dur*100)+"%";s.style.background=C[sg.k]||"#888";s.title=F.NAMES[sg.k];tl.appendChild(s);});}
     if(!on)return;var p=pos(),sg=F.segAt(P,p),k=sg?sg.k:"glide",now=performance.now();
@@ -5427,7 +5451,7 @@ var FIG=(function(){
     var nx=null;for(var i=ti;i<tg.length;i++)if(!tg[i].j){nx=tg[i];break;}
     var lab,sub,ring=-1;
     if(fx.t&&now-fx.t<400){lab=fx.txt;sub="";}
-    if(k==="spin"){lab=lab||(btnDown?"SPINNING":"HOLD TO SPIN");sub=Math.floor(spin.ang/(Math.PI*2))+" turns";}
+    if(k==="spin"){lab=lab||(spin.vel>3?(spin.vel>14?"SPINNING FAST!":"FASTER!"):"SPIN!");sub=spin.vel>3?Math.floor(spin.ang/(Math.PI*2))+" turns":(TOUCHF?"circle the stick":"circle the arrows (or hold Space)");}
     else if(k==="free"){lab=lab||"DANCE!";sub=TOUCHF?"stick to dance · tap to twirl":"arrows to dance · Space to twirl";}
     else if(nx){var dtn=nx.t-p;ring=Math.max(0,Math.min(1,dtn/(per()*(nx.k==="build"?1:2))));lab=lab||{step:"ON THE BEAT",stroke:"STROKE",big:"BIG MOVE!",build:"FASTER!",axel:dtn<per()*3.2&&dtn>0?"JUMP IN "+Math.ceil(dtn/per()):"JUMP!",final:"FINAL POSE"}[nx.k];sub=nx.k==="step"?INTRO[nx.m][0]:nx.k==="axel"?"right on the drop":"";}
     var pr=u.querySelector(".fgPrompt");pr.querySelector("b").textContent=lab||"";pr.querySelector("b").style.color=fx.t&&now-fx.t<400?fx.col:"";pr.querySelector("small").textContent=sub||"";
@@ -5437,7 +5461,13 @@ var FIG=(function(){
     else if(k==="spin"){var an2=spin.ang;g.fillStyle="#3DF2FF";for(var a2=0;a2<6;a2++){var aa=an2+a2*0.5;g.fillRect(Math.round(32+Math.cos(aa)*20)-2,Math.round(32+Math.sin(aa)*20)-2,4,4);}}
     g.fillStyle="#fff";g.fillRect(28,28,8,8);
     var spd=u.querySelector(".fgSpeed");spd.classList.toggle("on",k==="build"||k==="axel");spd.querySelector("i").style.height=Math.round(speed*100)+"%";spd.querySelector("i").style.background=speed>=0.85?"#3DF2FF":speed>=0.5?"#4CC38A":"#F5D03C";
-    var hn=$("skHint");if(hn)hn.textContent={intro:"Hit each move on the beat",glide:"Skate with everyone · tap on the beat to stroke · big moves on the big moments",spin:"Hold to spin, keep it going to the end",free:"Your free dance: move with the music",build:"Tap every beat to build speed: faster = more turns",axel:"Jump right on the drop!",finale:"Strike the final pose on the last beat"}[k]||"";}
+    /* the objective: the stick for spins and the free dance, the button for everything on the beat */
+    var dp=document.getElementById("dpad"),bt=u.querySelector(".fgBtn"),gl=null,gt="";
+    if(k==="spin"){gl=dp;gt=spin.vel>3?(spin.vel>14?"FAST! ↻":"FASTER ↻"):"SPIN ↻";}
+    else if(k==="free"){gl=dp;gt="DANCE";}
+    else if(nx){gl=bt;gt={step:"TAP",stroke:"TAP",big:"BIG MOVE!",build:"FASTER!",axel:"JUMP!",final:"POSE!"}[nx.k]||"TAP";}
+    if(gl)gl.classList.toggle("goalNow",ring>=0&&ring<0.18);goalHL(gl,gt);
+    var hn=$("skHint");if(hn)hn.textContent={intro:"Hit each move on the beat",glide:"Skate with everyone · tap on the beat to stroke · big moves on the big moments",spin:"Circle the stick to spin: the faster you go round, the more points",free:"Your free dance: move with the music",build:"Tap every beat to build speed: faster = more turns",axel:"Jump right on the drop!",finale:"Strike the final pose on the last beat"}[k]||"";}
   var TOUCHF=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
   function draw(g){if(!on)return;var now=performance.now();g.save();
     pops=pops.filter(function(p){var a3=(now-p.t)/900;if(a3>1)return false;g.globalAlpha=1-a3;g.font="900 16px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(p.txt,p.x,p.y-a3*30);g.fillStyle=p.col;g.fillText(p.txt,p.x,p.y-a3*30);return true;});
@@ -7533,7 +7563,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.85",SERVER_VERSION="";
+var PAGE_VERSION="1.81.86",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8112,7 +8142,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.85"></script>
+<script src="lab.js?v=1.81.86"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
