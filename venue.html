@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.82"></script>
-<script src="gfx.js?v=1.81.82"></script>
-<script src="art.js?v=1.81.82"></script>
-<script src="voice.js?v=1.81.82"></script>
-<script src="instruments.js?v=1.81.82"></script>
-<script src="kart.js?v=1.81.82"></script>
-<script src="explain.js?v=1.81.82"></script>
+<script src="tune.js?v=1.81.83"></script>
+<script src="gfx.js?v=1.81.83"></script>
+<script src="art.js?v=1.81.83"></script>
+<script src="voice.js?v=1.81.83"></script>
+<script src="instruments.js?v=1.81.83"></script>
+<script src="kart.js?v=1.81.83"></script>
+<script src="explain.js?v=1.81.83"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -319,6 +319,10 @@ body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint,
 #moshStick small{position:absolute;left:0;right:0;top:-16px;text-align:center;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#fff;opacity:.85;pointer-events:none}
 @media (pointer:coarse){body.gaming-mosh:not(.mosh-tug) #moshStick{display:block}}
 body.practice #moshStick{bottom:calc(var(--chatH) + 112px)}
+#moshBang{display:none;position:absolute;right:14px;bottom:calc(var(--chatH) + 150px);width:62px;padding:6px 0 5px;background:#2a1f4a;border:3px solid #E8505B;box-shadow:3px 3px 0 #000;flex-direction:column;align-items:center;gap:3px;pointer-events:auto;touch-action:manipulation;cursor:pointer;z-index:3}
+#moshBang.on{display:flex}#moshBang canvas{width:39px;height:90px;image-rendering:pixelated}#moshBang b{font:700 12px 'Silkscreen',ui-monospace,monospace;color:#fff}#moshBang small{font:9px 'Silkscreen',ui-monospace,monospace;color:#c8c2e8}
+@media (pointer:fine){#moshBang{bottom:calc(var(--chatH) + 20px)}}@media (pointer:coarse){#moshBang small{display:none}}
+body.mosh-tug #moshBang{display:none!important}
 #moshTap{display:none;position:absolute;left:12px;right:12px;bottom:12px;height:38vh;border-radius:24px;border:3px solid #E8505B;background:radial-gradient(circle,rgba(232,80,91,.45),rgba(30,10,20,.85));color:#fff;pointer-events:auto;touch-action:manipulation;flex-direction:column;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;user-select:none}
 #moshTap b{font:900 clamp(36px,9vw,72px)/1 'Silkscreen',ui-monospace,monospace;letter-spacing:2px}#moshTap span{font:700 18px 'Silkscreen',ui-monospace,monospace;color:#F5D03C}
 #moshTap.hit{animation:moshHit .12s}
@@ -2571,6 +2575,7 @@ document.addEventListener("keydown",function(e){
   if(GAME.mode==="keepy"&&(e.code==="KeyQ"||e.code==="KeyE")){e.preventDefault();if(!e.repeat)react(e.code==="KeyQ"?"spin":"twirl");return;}
   if(GAME.mode==="skate"&&e.code==="Space"){e.preventDefault();if(!e.repeat)SKATE.jump();return;}
   if(GAME.mode==="mosh"&&MOSH.tugOn&&!/^(Arrow|Key[WASD]$)/.test(e.code)){e.preventDefault();if(!e.repeat)MOSH.tap();return;}   /* tug of war: any key taps */
+  if(GAME.mode==="mosh"&&(e.code==="Space"||e.code==="KeyB")){e.preventDefault();if(!e.repeat)MOSH.bang();return;}   /* headbang */
   if(REACTKEY[e.code]&&GAME.mode!=="step"){e.preventDefault();if(!e.repeat)react(REACTKEY[e.code]);return;}
   if(d){e.preventDefault();setHeld(d,true);return;}
   if(e.key==="Enter"||e.code==="KeyT"){e.preventDefault();openTalk();return;}
@@ -3070,9 +3075,9 @@ var GAME=(function(){
   }
 
   function me(){return (myId&&viewers[myId])||null;}
-  function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;m.fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():mode==="keepy"?KEEPY.fd():null;if(hit)m.hitT=Date.now();}
+  function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;m.fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():mode==="keepy"?KEEPY.fd():mode==="mosh"?MOSH.fd():null;if(hit)m.hitT=Date.now();}
   function sendPose(force){
-    var now=Date.now(),fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():mode==="keepy"?KEEPY.fd():null,msg=pose.map(function(a){return Math.round(a*100);});
+    var now=Date.now(),fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():mode==="keepy"?KEEPY.fd():mode==="mosh"?MOSH.fd():null,msg=pose.map(function(a){return Math.round(a*100);});
     if(fd){var rg=ART.dance(fd.s,fd.m,fd.c.map(function(v){return v/100;}),beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
     var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():mode==="walk"?WALK.wire():mode==="pipe"?PIPE.wire():mode==="ski"?SKI.wire():null;
     var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(",")+(fd.h?"h"+fd.h.join("."):"")+(fd.b?"b"+fd.b:"")+(fd.sp?"s"+fd.sp.join("."):""):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
@@ -5311,8 +5316,33 @@ var MOSH=(function(){
   function start(round){
     on=true;rnd=round||null;P=plan(rnd&&rnd.chart);score=0;phase=lastPh="";team=-1;teams={};sv=[0,0];rs.id=null;rs.a=null;punchUntil=0;vx=vy=0;lastT=0;pops=[];puffs=[];cool={};swing=null;swAcc=0;
     tug={s:(rnd&&rnd.tug)||[0,0],done:false,mine:0,send:0,sent:0,res:null};circ={phi:0,r:0.22,acc:0,lap:0,inside:false};bots={};
-    document.body.classList.add("gaming-mosh");$("moshUI").classList.add("on");hud();
+    document.body.classList.add("gaming-mosh");$("moshUI").classList.add("on");hud();bangUI();bang.streak=0;bang.lastB=-1e9;bang.until=0;
   }
+  /* ---- HEADBANG: a dot races up and down a little track (and sways a touch side to side), hitting the bottom line on every beat.
+     Press BANG (Space / B, or tap the track) right as it hits: a tight window for a PERFECT. A good bang plays the Headbang dance. ---- */
+  var bang={streak:0,lastB:-1e9,until:0,fx:0,txt:"",col:"#fff",el:null,cv:null};
+  function bangOn(){return on&&(phase==="pit"||phase==="circle");}
+  function bangPer(){var b=BEAT.get();return b.known&&b.period>0?b.period:500;}
+  function bangUI(){if(bang.el)return;var d=document.createElement("div");d.id="moshBang";d.innerHTML='<canvas width="26" height="60"></canvas><b>BANG</b><small>Space</small>';
+    $("moshUI").appendChild(d);bang.el=d;bang.cv=d.querySelector("canvas");
+    d.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();bangPress();});}
+  function bangPress(){if(!bangOn())return;var me=viewers[myId];if(!me)return;
+    var bp=GAME.beatPos(),nb=Math.round(bp),err=Math.abs(bp-nb)*bangPer(),now=performance.now();
+    if(nb===bang.lastB)return;bang.lastB=nb;   /* one bang per beat: mashing doesn't help */
+    var g=err<=TUNE.v("mp.bangPerfect")?0:err<=TUNE.v("mp.bangPerfect")*2?1:err<=TUNE.v("mp.bangPerfect")*3.2?2:3,
+        J=[["PERFECT",60,"#3DF2FF"],["GREAT",35,"#4CC38A"],["GOOD",15,"#F5D03C"],["MISS",0,"#E8505B"]][g];
+    bang.fx=now;bang.txt=J[0];bang.col=J[2];
+    if(g<3){bang.streak++;bang.until=now+bangPer()*2.2;add(Math.round(J[1]*(1+Math.min(1,bang.streak*0.1))),me.x*W,me.y*H-70,J[0]+" BANG"+(bang.streak>2?" x"+bang.streak:""),J[2]);}
+    else bang.streak=0;}
+  function bangDraw(){if(!bang.el)return;var show=bangOn();bang.el.classList.toggle("on",show);if(!show)return;
+    var g=bang.cv.getContext("2d"),Wc=26,Hc=60,bp=GAME.beatPos(),u=bp-Math.floor(bp),y=1-2*Math.abs(u-0.5),now=performance.now();   /* 0 on the beat (the bottom line), 1 halfway between */
+    g.clearRect(0,0,Wc,Hc);g.fillStyle="#120d1e";g.fillRect(0,0,Wc,Hc);
+    var ty=Hc-8,fl=Math.max(0,1-(now-bang.fx)/220);
+    g.fillStyle=fl>0?bang.col:"#E8505B";g.fillRect(2,ty,Wc-4,2);g.globalAlpha=0.35;g.fillRect(2,ty-2,Wc-4,6);g.globalAlpha=1;   /* the line to hit */
+    var dx=Math.round(Math.sin(bp*Math.PI)*4),dy=Math.round(ty-1-y*(Hc-16));
+    g.fillStyle="#fff";g.fillRect(Wc/2-3+dx,dy-3,6,6);g.fillStyle="#D354A0";g.fillRect(Wc/2-1+dx,dy-1,2,2);
+    var lb=bang.el.querySelector("b");lb.textContent=fl>0?bang.txt:(bang.streak>2?"x"+bang.streak:"BANG");lb.style.color=fl>0?bang.col:"";}
+  function fd(){return on&&performance.now()<bang.until?{s:13,m:0,c:[0,0,0,0]}:null;}   /* the Headbang dance while a bang is going */
   function stop(){on=false;document.body.classList.remove("gaming-mosh","mosh-tug");$("moshUI").classList.remove("on");swing=null;}
   function add(n,x,y,txt,col){if(!n)return;score+=n;GAME.moshPts(n);if(txt)pops.push({x:x,y:y,t:performance.now(),txt:txt+" +"+n,col:col||"#F5D03C"});hud();}
   function hud(){var h=$("moshScore");if(h)h.textContent=score.toLocaleString();}
@@ -5336,6 +5366,7 @@ var MOSH=(function(){
     var pos=ROUND.pos();phase=phaseAt(pos);
     if(phase!==lastPh)enter(phase,lastPh,me);lastPh=phase;
     if(team<0&&(phase==="split"||phase==="count"||phase==="charge"||phase==="tug"))team=teamOf(myId);   /* joined mid-wall */
+    bangDraw();
     var f=fl(),w=P&&P.wall,inp=input();
     /* where you go this part */
     if(phase==="split"||phase==="count"){var sx=team?0.84:0.16;toward(me,sx+(me.tx-sx)*0.0,Math.max(f.top,Math.min(f.bot,me.ty)),TUNE.v("mp.split"),dt);me.tx=team?Math.max(0.56,me.tx):Math.min(0.44,me.tx);}
@@ -5405,7 +5436,7 @@ var MOSH=(function(){
     if(PRACTICE.on&&tug.res.win>=0)PRACTICE.moshBonus(Object.keys(bots).filter(function(id){return bots[id].team===tug.res.win;}),800);
   }
   function hint(){var h=$("moshHint");if(!h)return;
-    h.textContent=phase==="tug"?"Tap as fast as you can to push them back!":phase==="split"||phase==="count"?"Pick a side… wait for the drop":phase==="charge"?"Charge!":phase==="circle"?"Push forward to sprint · in/out to change lanes · shove people · right stick punches":"Run into people · right stick: flick to punch, circle to swing your arms";}
+    h.textContent=phase==="tug"?"Tap as fast as you can to push them back!":phase==="split"||phase==="count"?"Pick a side… wait for the drop":phase==="charge"?"Charge!":phase==="circle"?"Push forward to sprint · in/out to change lanes · shove people · right stick punches · BANG on the beat":"Run into people · right stick: flick to punch, circle to swing your arms · BANG (Space) as the dot hits the line to headbang";}
   /* ---- swinging your arms: drag round in circles on the floor ---- */
   function swingAdd(d,now){var me=viewers[myId];if(!me)return;swAcc+=Math.abs(d);swAng+=d;
     if(swAcc>=Math.PI*2){swAcc-=Math.PI*2;swRate=swRate.filter(function(t){return now-t<1000;});
@@ -5498,7 +5529,7 @@ var MOSH=(function(){
   }
   window.ukMosh=function(){return{teams:JSON.parse(JSON.stringify(teams)),swing:swing?{a:swing.a}:null,swAcc:Math.round(swAcc*100)/100,on:on,phase:phase,team:team,score:score,tug:tug.s.slice(),mine:tug.mine,res:tug.res,plan:P,circle:{lap:circ.lap,r:Math.round(circ.r*100)/100},me:viewers[myId]?{x:viewers[myId].tx,y:viewers[myId].ty}:null,others:Object.keys(viewers).filter(function(id){return id!==myId;}).map(function(id){return{id:id,x:viewers[id].x,y:viewers[id].y};})};};
   window.ukMoshPlan=plan;window.ukMoshWorld=function(){return{viewers:viewers,myId:myId};};
-  return{start:start,stop:stop,tick:tick,draw:draw,down:down,move:move,up:up,tap:tap,onTug:onTug,drives:drives,get on(){return on;},get tugOn(){return on&&phase==="tug";},TUG_AT:TUG_AT,TUG_MS:TUG_MS};
+  return{start:start,stop:stop,tick:tick,draw:draw,down:down,move:move,up:up,tap:tap,onTug:onTug,drives:drives,bang:bangPress,fd:fd,get on(){return on;},get tugOn(){return on&&phase==="tug";},TUG_AT:TUG_AT,TUG_MS:TUG_MS};
 })();
 
 
@@ -7335,7 +7366,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.82",SERVER_VERSION="";
+var PAGE_VERSION="1.81.83",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7913,7 +7944,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.82"></script>
+<script src="lab.js?v=1.81.83"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

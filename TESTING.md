@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.83 — Mosh pit: headbang
+
+1. In the mosh pit (and the circle pit), a little BANG track sits bottom right: a white dot races up and down (with a slight sway), hitting the red line on every beat.
+2. Press BANG right as it hits (Space or B on a keyboard, or tap the track). PERFECT is a tight window (40 ms by default, "Headbang perfect window" in the tuning lab), then GREAT and GOOD; too far off is a MISS and breaks your streak. One bang per beat, so mashing doesn't help.
+3. A good bang plays the Headbang dance for a couple of beats, and everyone sees it. Streaks add up to double points.
+
 ## v1.81.82 — Keepy uppy: locked in a shuffle
 
 1. Start Keepy uppy. Your dancer shuffles the whole game (running man), standing still or moving. Everyone else sees it too.
