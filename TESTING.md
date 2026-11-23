@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.72 — Ski on PC: big mouse guide, cleaner controls
+
+1. On a computer, once you're moving, a big pixel mouse sits above the trick buttons: the left button reads **HOP or TRICK**, the right reads **NEXT TRICK**. Nothing else around it.
+2. The trick buttons show just their names (no arrows), and there's no HOP button on the right. On phones, the HOP button and arrows are unchanged.
+
 ## v1.81.71 — Ski: no more CUT +25
 
 1. Hop and swing round to a new line: no "CUT +25" pop-up and no points. You still keep your speed through the turn.
