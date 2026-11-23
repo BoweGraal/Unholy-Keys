@@ -103,9 +103,9 @@ button.pe{background:#1f5f6e;box-shadow:inset -3px -3px 0 #0f3640,inset 3px 3px 
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.81.49"></script>
-<script src="art.js?v=1.81.49"></script>
-<script src="instruments.js?v=1.81.49"></script>
+<script src="gfx.js?v=1.81.50"></script>
+<script src="art.js?v=1.81.50"></script>
+<script src="instruments.js?v=1.81.50"></script>
 <script>
 (function(){
 /* pixel look: no emoji in any label (the lab writes a lot of its own text, so strip them as they appear) */
@@ -212,7 +212,7 @@ function groupPanel(grp){
     row.appendChild(c);body.appendChild(row);});
 }
 /* ---------- palettes: ready-made sets of colours that go together, plus your own ---------- */
-var PRESETS=[["Neon night",["#ff3da8","#7f77dd","#00e5ff","#f5c518","#39ff88","#1a1033"]],["Sunset",["#ffd166","#ff9f1c","#ff5d5d","#d354a0","#7f3b8f","#2b1740"]],
+var PRESETS=[["Colour keys (follow the player)",["#FF00FF","#FF80FF","#800080","#00FFFF","#80FFFF","#008080","#FFFF00","#808000","#FF8000","#FFC080","#804000"]],["Neon night",["#ff3da8","#7f77dd","#00e5ff","#f5c518","#39ff88","#1a1033"]],["Sunset",["#ffd166","#ff9f1c","#ff5d5d","#d354a0","#7f3b8f","#2b1740"]],
   ["Skin tones",["#f6d5b8","#e9b78f","#c98b5e","#a46a43","#7a4a2d","#4e2e1c"]],["Hair naturals",["#1a1412","#3b2a1e","#6b4226","#a8703a","#d8b068","#c9c9c9","#b5442f"]],
   ["Hair wild",["#ff3da8","#7f77dd","#00e5ff","#39ff88","#f5c518","#ffffff"]],["Denim",["#1b2a4a","#2e4a7d","#4f7bb8","#8fb3de","#d6e4f5"]],
   ["Leather & rock",["#0f0d14","#2a2433","#4a3f58","#8b2a3a","#c9a227","#cfcfd8"]],["Pastel",["#ffd6e0","#ffe9b8","#d5f5c8","#c8eaff","#e0d4ff","#ffffff"]],
@@ -272,13 +272,13 @@ var BB={};
 function pxVariants(p){if(p==="inst")return ART.INST.KINDS.map(function(k){return[k,k];});var o=ART.looks.OPTS[p];return o&&o.names?o.names.map(function(n,i){return[i,n];}):null;}
 /* the asset on its own: one part of a character, or an instrument without the performer */
 function pxDrawer(p,v){
-  if(CH[p]){var c=CH[p];return function(g2){var L=Object.assign({},AS.look);if(p==="hair"){L.hair=v;}if(p==="hat")L.hat=v;if(p==="face")L.face=v;if(p==="extra")L.extra=v;if(p==="top")L.top=v;if(p==="bottom")L.bottom=v;
+  if(CH[p]){var c=CH[p];return function(g2){var L=Object.assign({},AS.look,{held:0});   /* the part on its own: no instrument in hand */if(p==="hair"){L.hair=v;}if(p==="hat")L.hat=v;if(p==="face")L.face=v;if(p==="extra")L.extra=v;if(p==="top")L.top=v;if(p==="bottom")L.bottom=v;
     ART.isolate(p);try{ART.drawChar(g2,19-c.r[0],23-c.r[1],1,L,{armL:0,armR:0,legL:0,legR:0});}finally{ART.isolate(null);}};}
   if(p==="inst")return function(g2,ox,oy){ART.hideChars(true);try{ART.INST.draw(g2,ox,oy,1,AS.look,v,{midi:60,on:false,now:Date.now(),off:0,t0:0,n:8});}finally{ART.hideChars(false);}};
   if(p==="keyboard")return function(g2,ox,oy){ART.keyboard(g2,ox,oy,1,[-1],"#D354A0");};
   return function(g2,ox,oy){ART.micStand(g2,ox,oy,1);};
 }
-function pxLook(p,v){var L=Object.assign({},AS.look);if(p==="hair")L.hair=v;if(p==="hat")L.hat=v;if(p==="face")L.face=v;if(p==="extra")L.extra=v;if(p==="top")L.top=v;if(p==="bottom")L.bottom=v;return L;}
+function pxLook(p,v){var L=Object.assign({},AS.look,{held:0});if(p==="hair")L.hair=v;if(p==="hat")L.hat=v;if(p==="face")L.face=v;if(p==="extra")L.extra=v;if(p==="top")L.top=v;if(p==="bottom")L.bottom=v;return L;}
 function pxSelect(){
   var p=PX.part,vs=pxVariants(p),v=vs?(vs.some(function(x){return String(x[0])===String(PX.v);})?PX.v:vs[0][0]):0;if(p!=="inst")PX.v=v=+v;else PX.v=v;
   var key=p==="hair"||p==="hat"||p==="face"||p==="extra"||p==="top"||p==="bottom"?p+":"+v:p==="inst"?"inst:"+v:p;
@@ -328,7 +328,7 @@ function pxCell(e){var r=cv.getBoundingClientRect(),M=PX.mg||0;return[Math.floor
 function pxBrushCells(cx,cy){var s=PX.bsize,a=Math.floor(s/2),o=[];for(var dy=0;dy<s;dy++)for(var dx=0;dx<s;dx++){if(s>=4&&(dx===0||dx===s-1)&&(dy===0||dy===s-1))continue;o.push([cx-a+dx,cy-a+dy]);}return o;}
 function pxPut(cx,cy){if(PX.tool==="brush"){pxBrushCells(cx,cy).forEach(function(c){pxPutOne(c[0],c[1],"pen");});return;}pxPutOne(cx,cy,PX.tool);}
 function pxPutOne(cx,cy,tool){var sp=PX.spec;if(cx<0||cy<0||cx>=sp.w||cy>=sp.h)return;var xs=[cx];if(PX.mirror&&sp.sym){var mx=2*sp.ax-1-cx;if(mx>=0&&mx<sp.w&&mx!==cx)xs.push(mx);}
-  xs.forEach(function(x){var k=(x-sp.ax)+","+(cy-sp.ay);if(tool==="pen")PX.map[k]=PX.col;else if(tool==="erase"){if(!PX.map["!"]&&pxOrigA()[(cy*sp.w+x)*4+3]>0)PX.map[k]="0";else delete PX.map[k];}});}
+  xs.forEach(function(x){var k=(x-sp.ax)+","+(cy-sp.ay);if(tool==="pen")PX.map[k]=ART.paint.keyTok(PX.col)||PX.col;else if(tool==="erase"){if(!PX.map["!"]&&pxOrigA()[(cy*sp.w+x)*4+3]>0)PX.map[k]="0";else delete PX.map[k];}});}
 /* the untouched original's pixels (so Erase can rub out the original too, not just your paint) */
 function pxOrigA(){if(!PX.origA){var sp=PX.spec;PX.origA=pxGhost().getContext("2d").getImageData(0,0,sp.w,sp.h).data;}return PX.origA;}
 function pxLine(a,b){var dx=Math.abs(b[0]-a[0]),dy=Math.abs(b[1]-a[1]),sx=a[0]<b[0]?1:-1,sy=a[1]<b[1]?1:-1,err=dx-dy,x=a[0],y=a[1],n=0;while(n++<400){pxPut(x,y);if(x===b[0]&&y===b[1])break;var e2=2*err;if(e2>-dy){err-=dy;x+=sx;}if(e2<dx){err+=dx;y+=sy;}}}
@@ -381,7 +381,7 @@ function pxSwatches(){var els=document.querySelectorAll(".sw");if(!els.length||!
   var list=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).slice(0,16);PX.picCols=list.slice();
   Array.prototype.forEach.call(els,function(el){el.textContent="";list.forEach(function(h){var e=document.createElement("i");e.style.background=h;e.className=h===PX.col.toLowerCase()?"on":"";e.onclick=function(){pxColor(h);if(PX.tool!=="pen"&&PX.tool!=="fill"&&PX.tool!=="brush"){pxTool("pen");}};el.appendChild(e);});});}
 function pxToggle(k){PX[k]=!PX[k];pxStates();}
-window.ukPx=function(){return{PX:PX,pxSelect:pxSelect,pxVariants:pxVariants,pxRender:pxRender,CH:CH,AS:AS,importImg:pxImportImg};};   /* for tools and tests (the template generator) */
+window.ukPx=function(){return{PX:PX,pxSelect:pxSelect,pxVariants:pxVariants,pxRender:pxRender,CH:CH,AS:AS,importImg:pxImportImg,keyLook:keyLook};};   /* for tools and tests (the template generator) */
 /* ---- a reference picture from your device: faint behind the canvas, or side by side; and export the part as a PNG ---- */
 var PIC={img:null,mode:"behind",a:0.45};
 try{var pv=localStorage.getItem("uk_pxpic");if(pv){var im0=new Image();im0.onload=function(){PIC.img=im0;picSide();};im0.src=pv;}PIC.mode=localStorage.getItem("uk_pxpicm")||"behind";PIC.a=+(localStorage.getItem("uk_pxpica")||0.45);}catch(e){}
@@ -393,7 +393,10 @@ function picSide(){var v=$("view");if(!v)return;var el=$("pxPicSide");var on=!!P
   if(!el){el=document.createElement("img");el.id="pxPicSide";el.alt="Reference";v.appendChild(el);}
   el.style.display=on?"block":"none";if(on&&el.src!==PIC.img.src)el.src=PIC.img.src;v.classList.toggle("picside",on);PX.sig="";}
 function picClear(){PIC.img=null;try{localStorage.removeItem("uk_pxpic");}catch(e){}picSide();pxStates();}
-function pxPng(){pxRender();var sp=PX.spec,k=8,c=document.createElement("canvas");c.width=sp.w*k;c.height=sp.h*k;var cg=c.getContext("2d");cg.imageSmoothingEnabled=false;cg.drawImage(PX.base,0,0,c.width,c.height);
+/* in key colours: whatever follows the player's hair / top / bottoms / skin comes out as magenta / cyan / yellow / orange, ready to edit and import */
+function keyLook(fn){var sv={h:AS.look.hairHex,t:AS.look.topHex,b:AS.look.botHex,s:AS.look.skinHex},K=ART.paint.KEYCOL;AS.look.hairHex=K.h;AS.look.topHex=K.t;AS.look.botHex=K.b;AS.look.skinHex=K.s;
+  try{return fn();}finally{AS.look.hairHex=sv.h;AS.look.topHex=sv.t;AS.look.botHex=sv.b;AS.look.skinHex=sv.s;}}
+function pxPng(){keyLook(pxRender);var sp=PX.spec,k=8,c=document.createElement("canvas");c.width=sp.w*k;c.height=sp.h*k;var cg=c.getContext("2d");cg.imageSmoothingEnabled=false;cg.drawImage(PX.base,0,0,c.width,c.height);
   var a=document.createElement("a");a.download=String(sp.key||"part").replace(/[^a-z0-9]+/gi,"-")+"-x"+k+".png";a.href=c.toDataURL("image/png");document.body.appendChild(a);a.click();a.remove();}
 /* import a PNG drawn on the template (exact size, or any whole-number size up like the 8x template): it replaces this layer, and the original underneath is cleared */
 function pxImport(){var f=document.createElement("input");f.type="file";f.accept="image/png,image/*";f.onchange=function(){var file=f.files&&f.files[0];if(!file)return;var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){pxImportImg(im);};im.src=rd.result;};rd.readAsDataURL(file);};f.click();}
@@ -403,7 +406,7 @@ function pxImportImg(im){var sp=PX.spec,k=im.naturalWidth/sp.w;
   pxSnap();var m={};
   if(sp.hole){var o=pxGhost().getContext("2d").getImageData(0,0,sp.w,sp.h).data;for(var y=0;y<sp.h;y++)for(var x=0;x<sp.w;x++)if(o[(y*sp.w+x)*4+3]>0)m[(x-sp.ax)+","+(y-sp.ay)]="0";}else m["!"]="1";
   var n=0;for(var y2=0;y2<sp.h;y2++)for(var x2=0;x2<sp.w;x2++){var px=Math.floor((x2+0.5)*k),py=Math.floor((y2+0.5)*k),i=(py*c.width+px)*4;if(d[i+3]<128)continue;
-    m[(x2-sp.ax)+","+(y2-sp.ay)]="#"+[d[i],d[i+1],d[i+2]].map(function(v){return ("0"+v.toString(16)).slice(-2);}).join("");n++;}
+    var hx="#"+[d[i],d[i+1],d[i+2]].map(function(v){return ("0"+v.toString(16)).slice(-2);}).join("");m[(x2-sp.ax)+","+(y2-sp.ay)]=ART.paint.keyTok(hx)||hx;n++;}   /* key colours follow the player's colours */
   PX.map=m;PX.ghostOn=false;pxCommit();pxSwatches();try{share();}catch(e){}pxStates();return n;}
 function picControls(box){
   var pb=mk("button","","🖼 Reference picture");pb.title="Pick a picture from your device to draw from";pb.onclick=picPick;box.appendChild(pb);
