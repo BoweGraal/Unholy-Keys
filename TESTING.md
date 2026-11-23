@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.79 — Abs feather turns with the hat
+
+1. Put on Abs and keep pressing rotate. The feather goes round the head like it's really attached: front right, then behind the dome (just the tip peeking over) as you turn right, across the back, round the near side, and back to the front.
+2. Paint layers can now have a drawing for each of the 8 turns (hat:15|d0 to |d7), drawn exactly as it should look on screen.
+
 ## v1.81.78 — Painted hats keep their sides when you turn
 
 1. Put on the Abs hat and turn the character with the rotate buttons. The white feather stays on the same side through front, front-left and front-right, and through back, back-left and back-right. It no longer jumps across when you turn slightly.
