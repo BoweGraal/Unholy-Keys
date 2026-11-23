@@ -796,7 +796,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <div id="ctfUI"><div id="ctfBanner"></div><div id="ctfScore"></div><div id="ctfTeam"></div><div id="ctfHint"></div><button id="ctfSprint" aria-label="Sprint"><i></i><b>SPRINT</b><span>hold</span></button><button id="ctfItem" aria-label="Use item"><b>&middot;</b><span>item</span></button><button id="ctfDrift" aria-label="Jump and launch"><i></i><b>LAUNCH</b><span>hold &middot; aim &middot; let go</span></button></div>
   <div id="skiUI"><div id="skiBanner"></div><div id="skiScore">0</div><div id="skiCombo"></div><div id="skiSpeed"></div><div id="skiHint"></div>
     <button id="skiJump">HOP<small>Space</small></button>
-    <div id="skiTricks"><button data-t="1"><b>&#11013;</b>360</button><button data-t="2"><b>&#11014;</b>Backflip</button><button data-t="3"><b>&#10145;</b>Daffy</button></div>
+    <div id="skiTricks"><button data-t="1"><b>&#11013;</b>Swim</button><button data-t="2"><b>&#11014;</b>YMCA</button><button data-t="3"><b>&#10145;</b>Disco</button></div>
   </div>
   <div id="pipeUI"><div id="ppBanner"></div><div id="ppJudge"></div><div id="ppScore">0</div><div id="ppCombo"></div><div id="ppHint"></div>
     <div id="ppSuperBox" title="Land clean to fill it; when it's full your next pop is a SUPER MOVE"><b>SUPER</b><div id="ppSuperBar"><div id="ppSuper"></div></div></div>
@@ -4694,7 +4694,15 @@ var PIPE=(function(){
    ============================================================ */
 var SKI=(function(){
   var liftY=null,SK=ART.SKI,GO_BEAT=8,CH=SK.CH,GATE_DY=SK.GATE_DY,GATE_W=SK.GATE_W;   /* the mountain itself is shared with the performer's follow view (art.js) */
-  var TRK=[null,{name:"360",pts:300,dur:0.45,col:"#D04DFF"},{name:"Backflip",pts:350,dur:0.55,col:"#3DF2FF"},{name:"Daffy",pts:200,dur:0.35,col:"#F5C518"}];
+  var TRK=[null,{name:"Sinking Swim",pts:300,dur:0.45,col:"#3DF2FF"},{name:"YMCA",pts:350,dur:0.55,col:"#F5C518"},{name:"Disco Point",pts:200,dur:0.35,col:"#D04DFF"}];   /* 70s dance moves in the air */
+  /* the moves, by how far through they are (0-1): arms (0 down, ~1.6 out, ~3 up; the right arm is negative), shorter arms bend the hand in, lift sinks you */
+  function trickPose(k,p,sc,now){var sm=function(x){x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+    if(k===1){var sk=sm(p*1.4);   /* the sinking swim: pinch your nose, the other hand up waving, shimmy down under the water */
+      return{armR:-3.55,alR:5,armL:2.55+Math.sin(now/55)*0.4,legL:0.05+Math.sin(now/70)*0.12,legR:-0.05+Math.sin(now/70)*0.12,lift:sk*4*sc,dx:Math.sin(p*Math.PI*5)*1.2*sc,head:0.15,mouth:false};}
+    if(k===2){var L=Math.min(3,Math.floor(p*4)),Y=[[2.3,-2.3,9,9],[2.95,-2.95,4,4],[2.3,1.5,9,7],[2.72,-2.72,9,9]][L];   /* Y, M (hands on your head), C, A */
+      return{armL:Y[0],armR:Y[1],alL:Y[2],alR:Y[3],legL:L===3?0.25:0.12,legR:L===3?-0.25:-0.12,lift:-Math.abs(Math.sin(p*Math.PI*4))*(L===3?2.5:1.2)*sc};}   /* the A: arms up in a narrow V, legs apart, a little hop */
+    var up=p<0.5;   /* the disco point: up and out to the side, then down across, hand on your hip, the hip popping */
+    return{armR:up?-2.65:1.0,armL:0.45,alL:4,legL:up?0.28:0.05,legR:up?-0.05:-0.28,dx:(up?1:-1)*1.2*sc,head:up?-0.12:0.12};}
   var KEYTR={ArrowLeft:1,KeyA:1,ArrowUp:2,KeyW:2,ArrowRight:3,KeyD:3};
   var TOUCHY=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
   var hopAir=false,a0=0,cutGrace=0,zoneK="",hopPush=0,puffs=[],ghostUntil=0;
@@ -4845,9 +4853,10 @@ var SKI=(function(){
     camX+=(x-camX)*Math.min(1,dt*4);
     if(going&&air<=0&&!crashed&&v>10)trail.push([x,y]);if(trail.length>500)trail.shift();
     var e=enc();me.tx=me.x=e[0];me.ty=me.y=e[1];sendPos(e[0],e[1]);me.sk=wire();
-    GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:trick&&trick.k===3?[2.9,-0.4,0.9,-0.9]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
+    var tpo=trick&&!crashed?trickPose(trick.k,Math.min(1,(now-trick.t0)/1000/TRK[trick.k].dur),1,now):null;
+    GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:tpo?[tpo.armL,tpo.armR,tpo.legL,tpo.legR]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
     if(PRACTICE.on)botTick(dt,now,going);
-    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · left click: hop, in the air: the yellow trick · right click: next trick · land in a divot to swoop");
+    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Dance move! ⬅ Sinking Swim · ⬆ YMCA · ➡ Disco Point"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · left click: hop, in the air: the yellow trick · right click: next trick · land in a divot to swoop");
     /* on a computer: a little pixel mouse instead of the line of text (left = hop / trick in the air, right = next trick) */
     var pcM=!TOUCHY&&going&&!crashed&&(air>0?!hopAir:!(!course&&SK.zoneAt(y).k==="jump")),sm=skiMouse();
     if(hn)hn.style.display=pcM?"none":"";if(sm){sm.classList.toggle("on",pcM);sm.classList.toggle("air",air>0);}
@@ -4870,12 +4879,12 @@ var SKI=(function(){
     /* putting the skis on at the start: they lie either side, slide in under the boots and click on (a little sparkle) */
     var ik=intro(),on2=Math.max(0,Math.min(1,(ik-0.12)/0.45)),slide=(1-on2*on2*(3-2*on2))*16*z;
     /* the skis, pointing the way you're going */
-    var skA=crashed?0.9:ang+(tk===1?tp*6.283:0);skA=Math.atan2(Math.sin(skA),Math.cos(skA));if(Math.abs(skA)>Math.PI/2)skA=skA-Math.sign(skA)*Math.PI;   /* (a spin shows the skis turning through the frames) */
+    var skA=crashed?0.9:ang;skA=Math.atan2(Math.sin(skA),Math.cos(skA));if(Math.abs(skA)>Math.PI/2)skA=skA-Math.sign(skA)*Math.PI;   /* (a spin shows the skis turning through the frames) */
     ART.SKI.skis(g,sx,sy-lift,skA,z,isMe?"#F5C518":"#E8505B",slide);
     if(on2>=1&&ik<0.75){var sp=Math.max(0,1-(ik-0.57)/0.18);g.globalAlpha=sp;g.fillStyle="#fff";var kk=ART.SKI.px(z);for(var q=0;q<6;q++){var an=q*1.05,d=(6+(1-sp)*14)*z;g.fillRect(Math.round(sx+Math.cos(an)*d),Math.round(sy+Math.sin(an)*d*0.5),kk,kk);}g.globalAlpha=1;}
     var bend=ik<0.6?[2.5+Math.sin(performance.now()/160)*0.2,-2.5-Math.sin(performance.now()/160)*0.2,0.55,-0.55]:null;   /* bent down doing up the bindings */
     var saved=ctx;ctx=g;var sAV=AVO,sDir=AVDIR;
-    try{AVO={sk:{lift:-lift,rot:crashed?1.45:tk===2?tp*6.283:0,ns:true}};AVDIR=crashed?0:ART.SKI.dirFor(ang);
+    try{AVO={sk:{lift:-lift,rot:crashed?1.45:0,ns:true}};if(tk&&!crashed){AVO.r=trickPose(tk,tp,sc,performance.now());}AVDIR=crashed?0:tk?0:ART.SKI.dirFor(ang);   /* doing a move: facing the crowd */
       drawAvatar(sx,sy-14*sc+(bend?2*sc:0),vv.color,name,sc,false,false,null,4,vv.seed||0,isMe,bend||(isMe?GAME.pose:(vv.pose||[0.9,-0.9,0.15,-0.15])),9999,vv.look||lookOf(null,vv.color,vv.name),null);}
     finally{ctx=saved;AVO=sAV;AVDIR=sDir;}
   }
@@ -4903,7 +4912,7 @@ var SKI=(function(){
       if(it.o){SK.obj(g,it.o,z,V.sx,V.sy,!!passed[it.o.id]);return;}
       if(it.me){var mm=viewers[myId];if(mm){var tp=trick?Math.min(1,(now-trick.t0)/1000/TRK[trick.k].dur):0;skier(V.sx(x),V.sy(y),mm,true,a,air>0?Math.sin(Math.PI*(1-air/Math.max(0.01,airMax)))*(hopAir?1:hMul):0,now<crashUntil,trick?trick.k:0,tp,z,"");}return;}
       var s=it.sk,st=s.v.sk||{},t=st.t|0,ang=t<=6?(t-3)*Math.PI/6:0;
-      skier(V.sx(s.x),V.sy(it.y),s.v,false,ang,t===7||t===8?0.7:0,t===9||!!st.f,t===8?1:0,(now%450)/450,z,s.v.name);
+      skier(V.sx(s.x),V.sy(it.y),s.v,false,t===8?0:ang,t===7||t===8?0.7:0,t===9||!!st.f,0,0,z,s.v.name);   /* their move comes through in their pose */
     });}finally{SK.groundDone=false;}
     /* the first two divots at the top: a bouncing arrow into the groove, "HOP IN! +300", so everyone learns the swoop */
     if(!tipFlags)tipFlags=objsNear(-400,5000).filter(function(o){return o.k==="flag"&&o.pass;}).sort(function(p,q){return p.y-q.y;}).slice(0,2).map(function(o){return o.id;});
@@ -7417,7 +7426,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
   }
   /* a reaction (a jump, clapping, a wave) takes over the pose; floating in space or swimming blends in */
   if(AVO){var ro=AVO.r,eo=AVO.e;
-    if(ro){bob+=ro.lift||0;if(ro.armL!==undefined)armL=ro.armL;if(ro.armR!==undefined)armR=ro.armR;if(ro.legL!==undefined)legL=ro.legL;if(ro.legR!==undefined)legR=ro.legR;if(ro.mouth)mouth=true;}
+    if(ro){bob+=ro.lift||0;if(ro.armL!==undefined)armL=ro.armL;if(ro.armR!==undefined)armR=ro.armR;if(ro.legL!==undefined)legL=ro.legL;if(ro.legR!==undefined)legR=ro.legR;if(ro.mouth)mouth=true;if(ro.alL)alL=ro.alL;if(ro.alR)alR=ro.alR;if(ro.head!==undefined)hdA=ro.head;if(ro.dx)dxs+=ro.dx;}
     if(eo){var ek=eo.k;bob+=eo.lift;rot=rot*(1-ek)+eo.rot;if(!ro){armL=armL*(1-ek)+eo.armL*ek;armR=armR*(1-ek)+eo.armR*ek;}legL=legL*(1-ek)+eo.legL*ek;legR=legR*(1-ek)+eo.legR*ek;}}
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
   ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});

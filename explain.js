@@ -172,7 +172,7 @@ var EXPLAIN=(function(){
     var jp=Math.max(0,Math.sin(t*1.0-1.6));var air=jp>0.75?(jp-0.75)/0.25:0;
     var sx=128+Math.sin(t*1.7)*40,sy=92-air*22;R("rgba(0,0,0,.2)",sx-8,98,16,4);
     R("#c0392b",sx-7,sy+12,3,12);R("#c0392b",sx+4,sy+12,3,12);av(3,sx,sy-2,1.5,{dir:0,armL:2.2,armR:-2.2,legL:0.1,legR:-0.1});
-    if(air>0.2)pop(["BACKFLIP","360","DAFFY"][Math.floor(t/6)%3],sx,sy-30,0.15,COL.pink,1);
+    if(air>0.2)pop(["YMCA","SINKING SWIM","DISCO POINT"][Math.floor(t/6)%3],sx,sy-30,0.15,COL.pink,1);
     var zone=Math.floor(t/6)%2;badge(zone?"JUMP ZONE  x1.5":"FLAG ZONE",zone?COL.pink:COL.blu);R("#0006",150,134,92,6);TX("SPEED",120,134,1,"#555");R(COL.blu,152,135,30+((t*9)%50),4);}
   function d_ctf(t){R("#0e0b1a",0,0,W,H);for(var y=0;y<H;y+=12)for(var x=(y/12%2)*12;x<W;x+=24)R("#17122c",x,y,12,12);
     R("rgba(255,77,109,.12)",0,0,128,H);R("rgba(95,180,240,.12)",128,0,128,H);R("#fff3",127,0,2,H);
