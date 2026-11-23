@@ -1688,6 +1688,28 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.81 — Free dance looks the same on everyone's screen
+
+**Needs a server redeploy on Render** (the server now passes spins along).
+
+1. Two phones in free dance. On one, spin (the spin move, then keep swinging the right stick): the other phone sees them spin round too, through all the facings, for as long as they keep it going.
+2. Turn round or quarter-turn (90/180), or hold an arm out: the other phone now shows it. These were being dropped on arrival before.
+3. Wiggle the dots: on the other phone the moves glide smoothly instead of jumping about 10 times a second.
+
+## v1.81.80 — Keepy uppy on PC: calmer speed, 150% zoom
+
+1. Play Keepy uppy on a computer. It starts zoomed to 150% with the camera following you, and walking is about a third of the old speed on a wide screen, so it feels like the phone version.
+2. Phones are unchanged (100%). The zoom +/- in practice still works and remembers your choice.
+
+## v1.81.79 — Abs feather turns with the hat
+
+1. Put on Abs and keep pressing rotate. The feather goes round the head like it's really attached: front right, then behind the dome (just the tip peeking over) as you turn right, across the back, round the near side, and back to the front.
+2. Paint layers can now have a drawing for each of the 8 turns (hat:15|d0 to |d7), drawn exactly as it should look on screen.
+
+## v1.81.78 — Painted hats keep their sides when you turn
+
+1. Put on the Abs hat and turn the character with the rotate buttons. The white feather stays on the same side through front, front-left and front-right, and through back, back-left and back-right. It no longer jumps across when you turn slightly.
+
 ## v1.81.77 — Stage: 8-bit glow, lasers, banner and Go live
 
 1. Jam in Stage view and play a note: the pink glow behind you is now stepped pixel rings, not a smooth circle.

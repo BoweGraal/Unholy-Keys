@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.77"></script>
-<script src="gfx.js?v=1.81.77"></script>
-<script src="art.js?v=1.81.77"></script>
-<script src="voice.js?v=1.81.77"></script>
-<script src="instruments.js?v=1.81.77"></script>
-<script src="kart.js?v=1.81.77"></script>
-<script src="explain.js?v=1.81.77"></script>
+<script src="tune.js?v=1.81.81"></script>
+<script src="gfx.js?v=1.81.81"></script>
+<script src="art.js?v=1.81.81"></script>
+<script src="voice.js?v=1.81.81"></script>
+<script src="instruments.js?v=1.81.81"></script>
+<script src="kart.js?v=1.81.81"></script>
+<script src="explain.js?v=1.81.81"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1775,7 +1775,17 @@ var MENU=(function(){
 /* a look from the network: 8 letters, or nothing (then dress them in their colour) */
 /* a free dance from the network: {s: dance 1-8, m: move, c: [4 dots, -100..100]} or null */
 function safeFd(f){if(!f||typeof f!=="object")return null;var s=Math.floor(+f.s),m=Math.floor(+f.m);if(!(s>=1&&s<=15)||!(m>=0&&m<=7)||!Array.isArray(f.c)||f.c.length!==4)return null;
-  var c=f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v)):0;});return{s:s,m:m,c:c};}
+  var c=f.c.map(function(v){v=+v;return isFinite(v)?Math.max(-100,Math.min(100,v)):0;}),o={s:s,m:m,c:c,_t:Date.now()};
+  /* h: held hands (angle x100), b: turned (1 away, 2 right, 3 left), sp: spinning [angle x100, speed x10] (these were being dropped, so nobody saw your turns or spins) */
+  if(Array.isArray(f.h)&&f.h.length===2)o.h=f.h.map(function(v){return v===null||!isFinite(+v)?null:Math.max(-400,Math.min(400,+v));});
+  var b=Math.floor(+f.b);if(b>=1&&b<=3)o.b=b;
+  if(Array.isArray(f.sp)&&f.sp.length===2&&isFinite(+f.sp[0])&&isFinite(+f.sp[1]))o.sp=[+f.sp[0]%6284,Math.max(-140,Math.min(140,+f.sp[1]))];
+  return o;}
+/* someone else's free dance between updates: the two dots glide to where they were last sent (updates come ~10 a second), and a spin keeps turning */
+function fdSmooth(fd){if(!fd)return fd;var now=Date.now();if(!fd.cs){fd.cs=fd.c.slice();fd._lt=now;}var dt=Math.min(0.1,(now-fd._lt)/1000),k=Math.min(1,dt*14);fd._lt=now;
+  for(var i=0;i<4;i++)fd.cs[i]+=(fd.c[i]-fd.cs[i])*k;return fd;}
+function fdSpinDir(fd){if(!fd||!fd.sp)return -1;var age=(Date.now()-fd._t)/1000;if(age>0.45)return -1;var fb=[0,2,1,3][fd.b|0],ang=fd.sp[0]/100+fd.sp[1]/10*Math.min(0.3,age);
+  return ART.face8(Math.sin(ang+fb*Math.PI/2),Math.cos(ang+fb*Math.PI/2),-1);}
 function lookOf(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;name=String(name||"");for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return ART.looks.fromColor(color,h+1);}
 
 if(/[?&]practice\b/.test(location.search))setTimeout(function(){PRACTICE.enter();},0);
@@ -1888,13 +1898,14 @@ function resize(){
 /* ---------- playtest zoom: a − / + for each game, saved per game on this device, to try out zoom levels ----------
    The camera games (CTF, Kart flag, Ski, Mars Rally, Half pipe) scale their own camera; the others zoom the room. */
 var GZS={};try{GZS=JSON.parse(localStorage.getItem("uk_gz")||"{}")||{};}catch(e){GZS={};}
-window.ukGZ=function(k){var z=k&&+GZS[k];return z>0.2&&z<5?z:1;};
+function gzDef(k){return k==="keepy"&&typeof W!=="undefined"&&W>H&&W>700?1.5:1;}   /* keepy uppy on a computer starts at 150% */
+window.ukGZ=function(k){var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
 var GZNAME={ctf:"CTF",kflag:"Kart flag",ski:"Ski",kart:"Mars Rally",pipe:"Half pipe",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",walk:"Walk race",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Highway 4 keys",crowd:"Crowd vote"};
 function gzKey(){var m=typeof GAME!=="undefined"&&GAME.mode;if(!m)return null;if(m==="ctf")return document.body.classList.contains("ctf-kart")?"kflag":"ctf";if(m==="skate"&&typeof ICE!=="undefined"&&ICE)return "ice";return m;}
 function gzUI(){var k=gzKey(),show=!!k&&((typeof PRACTICE!=="undefined"&&PRACTICE.on)||/[?&]zoom\b/.test(location.search)||localStorage.getItem("uk_gzui")==="1"),b=document.getElementById("gzBox");
   if(!b){if(!show)return;b=document.createElement("div");b.id="gzBox";b.innerHTML='<button data-z="-1" aria-label="Zoom out">\u2212</button><span title="Tap to reset to 100%"></span><button data-z="1" aria-label="Zoom in">+</button>';document.body.appendChild(b);
     b.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();var t=e.target.closest("[data-z],span"),k2=gzKey();if(!t||!k2)return;
-      var z=window.ukGZ(k2);z=t.tagName==="SPAN"?1:Math.max(0.5,Math.min(2.5,Math.round((z+0.1*(+t.getAttribute("data-z")))*10)/10));if(Math.abs(z-1)<0.001)delete GZS[k2];else GZS[k2]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}gzUI();},true);}
+      var z=window.ukGZ(k2);z=t.tagName==="SPAN"?1:Math.max(0.5,Math.min(2.5,Math.round((z+0.1*(+t.getAttribute("data-z")))*10)/10));if(Math.abs(z-gzDef(k2))<0.001)delete GZS[k2];else GZS[k2]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}gzUI();},true);}
   b.classList.toggle("on",show);if(show)b.querySelector("span").textContent=(GZNAME[k]||k)+" "+Math.round(window.ukGZ(k)*100)+"%";}
 setInterval(gzUI,400);
 window.ukGzSet=function(k,z){if(z===1)delete GZS[k];else GZS[k]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}};   /* test hook */
@@ -2101,7 +2112,7 @@ function handleMsg(msg){
   else if(t==="bscore"){ROUND.bscore(msg);}
   else if(t==="pose"){
     var pv=viewers[msg.id],pp=safePose(msg.a);
-    if(pv&&pp&&msg.id!==myId){var nc=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));pv.fd=safeFd(msg.fd);if(!pv.fd||nc>(pv.combo||0))pv.hitT=Date.now();pv.pose=pp;pv.combo=nc;
+    if(pv&&pp&&msg.id!==myId){var nc=Math.max(0,Math.min(9999,Math.floor(+msg.c||0)));var ofd=pv.fd;pv.fd=safeFd(msg.fd);if(pv.fd&&ofd&&ofd.cs&&ofd.s===pv.fd.s){pv.fd.cs=ofd.cs;pv.fd._lt=ofd._lt;}if(!pv.fd||nc>(pv.combo||0))pv.hitT=Date.now();pv.pose=pp;pv.combo=nc;
       pv.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0,t:Math.max(0,Math.min(9,Math.floor(+msg.sk.t||0)))}:null;}
   }
   else if(t==="dance"){
@@ -3057,7 +3068,7 @@ var GAME=(function(){
     var now=Date.now(),fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():null,msg=pose.map(function(a){return Math.round(a*100);});
     if(fd){var rg=ART.dance(fd.s,fd.m,fd.c.map(function(v){return v/100;}),beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
     var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():mode==="walk"?WALK.wire():mode==="pipe"?PIPE.wire():mode==="ski"?SKI.wire():null;
-    var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(",")+(fd.h?"h"+fd.h.join("."):"")+(fd.b?"b"+fd.b:""):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
+    var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(",")+(fd.h?"h"+fd.h.join("."):"")+(fd.b?"b"+fd.b:"")+(fd.sp?"s"+fd.sp.join("."):""):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
     if(key===lastSent&&!force&&(!sk||now-lastSend<1000))return;   /* in a game, resend now and then: someone who just (re)joined needs it */
     if(now-lastSend<90&&!force){if(!sendTimer)sendTimer=setTimeout(function(){sendTimer=null;sendPose();},95-(now-lastSend));return;}
     lastSend=now;lastSent=key;
@@ -3070,7 +3081,7 @@ var GAME=(function(){
      A dance button picks the dance; its own move buttons add variety; the two dots steer it (each -1..1).
      Freestyle (0) is the grab-your-limbs dance below. */
   var fStyle=0,fSub=0,fCtl=[0,0,0,0],fHeld=[null,null],fdBuilt=false,fHand=[null,null],fHandP=[null,null],fBack=0;   /* fBack: quarter turns from facing front (0 front, 1 right, 2 away, 3 left): 90 and 180 turn you and you stay that way. Sent as fd.b: 1 = away, 2 = right, 3 = left (1 matches the old turned-round flag) */
-  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fSub,c:fCtl.map(function(v,i){return mySpin.on&&i>=2?0:Math.round(v*100);})};   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=[0,2,1,3][fBack];return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
+  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fSub,c:fCtl.map(function(v,i){return mySpin.on&&i>=2?0:Math.round(v*100);})};   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=[0,2,1,3][fBack];if(mySpin.on)o.sp=[Math.round((mySpin.ang%(2*Math.PI))*100),Math.round(mySpin.vel*10)];return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
   function beatPos(){var b=BEAT.get(),now=performance.now();return b.known&&b.period>0?(now-b.t0)/b.period:now/500;}
   /* Move queue: line up dances and moves ahead of time. When it's your turn in the middle, they play in order and
      split your turn evenly between them; the one on now is lit. Kept on this device. */
@@ -4098,7 +4109,7 @@ var KEEPY=(function(){
     var me=myId&&viewers[myId];if(!me)return;
     var t=songT();objs.forEach(function(o){ART.KEEPY.advance(o,t,B);});
     /* moving: a bit quicker than walking; jumping */
-    var inp=input(),spd=TUNE.v("kp.speed");vx=inp.x*spd;vy=inp.y*spd*(W/H)*0.6;
+    var inp=input(),spd=TUNE.v("kp.speed")*Math.max(0.5,Math.min(1,sc()*195/W));vx=inp.x*spd;vy=inp.y*spd*(W/H)*0.6;   /* the same pace for your character on a wide screen as on a phone (it was ~3x quicker on PC) */
     me.tx=Math.max(B.x0,Math.min(B.x1,me.tx+vx*dt));me.ty=Math.max(B.y0,Math.min(B.y1,me.ty+vy*dt));me.x=me.tx;me.y=me.ty;
     if(jumps||zp>0){vz-=TUNE.v("kp.gravity")*dt;zp+=vz*dt;if(zp<=0){zp=0;vz=0;jumps=0;dbl=false;}}
     sendPos(me.tx,me.ty);
@@ -7315,7 +7326,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.77",SERVER_VERSION="";
+var PAGE_VERSION="1.81.81",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7379,7 +7390,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     /* dance games: limbs where the dancer put them, a hop on every beat, a bigger one when a step lands */
     if(fd&&dance===4){
       /* a free dance style: worked out here from the dance, its move and the two dots (the same on every screen) */
-      var rg=ART.dance(fd.s,fd.m,[fd.c[0]/100,fd.c[1]/100,fd.c[2]/100,fd.c[3]/100],GAME.beatPos());
+      if(!isMe)fdSmooth(fd);var fc=!isMe&&fd.cs?fd.cs:fd.c,rg=ART.dance(fd.s,fd.m,[fc[0]/100,fc[1]/100,fc[2]/100,fc[3]/100],GAME.beatPos());
       if(rg.dir!==undefined)AVDIR=rg.dir;   /* a dance that turns (the shuffle spin) */
       armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;prA=rg.prop||"";if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
       /* the dance walk race: really walking forward while doing the style, so the legs stride (with a bit of the dance in them) and the body keeps the dance's arms and bounce */
@@ -7834,7 +7845,8 @@ function renderLoop(){
       if(skl)AVO=AVO?Object.assign(AVO,{sk:skl}):{sk:skl};
       AVDIR=PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.facing(v,ids[i]===myId):WALK.walkRound()&&v.dance===4?WALK.facing(v):ck?0:cdn===4?(RINK?(wk.face|0):GAME.mode==="free"?(fdTurn(wk,ids[i]===myId,vx,vy,pnow)?(wk.face|0):(cfd&&cfd.b?[0,2,1,3][cfd.b]:0)):(wk.k>0.3?(wk.face|0):0)):cdn?0:(wk.face|0);
       if(rpo&&rpo.dir!==undefined)AVDIR=cdn===4&&cfd&&cfd.b&&GAME.mode==="free"?rot8(rpo.dir,[0,2,1,3][cfd.b]):rpo.dir;   /* a spin or turn goes round through all the facings */
-      if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;   /* your own spin: the stick keeps it going */   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
+      if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;
+      else if(ids[i]!==myId&&cdn===4&&GAME.mode==="free"){var rsd=fdSpinDir(cfd);if(rsd>=0)AVDIR=rsd;}   /* their spin, as they see it */   /* your own spin: the stick keeps it going */   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
       drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,skl?null:walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
       if(VOICE.talking(ids[i]))voiceIcon(vx+9*sc2,dyy-23*sc2,sc2,now);   /* talking on voice */
       AVO=null;AVDIR=0;
@@ -7892,7 +7904,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.77"></script>
+<script src="lab.js?v=1.81.81"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
