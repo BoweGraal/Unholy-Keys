@@ -102,9 +102,9 @@ button.pe{background:#1f5f6e;box-shadow:inset -3px -3px 0 #0f3640,inset 3px 3px 
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.81.44"></script>
-<script src="art.js?v=1.81.44"></script>
-<script src="instruments.js?v=1.81.44"></script>
+<script src="gfx.js?v=1.81.45"></script>
+<script src="art.js?v=1.81.45"></script>
+<script src="instruments.js?v=1.81.45"></script>
 <script>
 (function(){
 /* pixel look: no emoji in any label (the lab writes a lot of its own text, so strip them as they appear) */
@@ -242,7 +242,7 @@ function palUI(box,compact){
 /* ---------- pixel editor ---------- */
 var PCPTR=!!(window.matchMedia&&matchMedia("(pointer:fine)").matches);
 var PX={shape:"rect",shapeFill:false,curve:null,preview:null,ds:null,bend:false,pal:"p0",palEdit:false,picCols:[],ref:false,refc:null,part:"hair",v:1,tool:"pen",col:"#ff3da8",mirror:false,bsize:3,grid:true,zoom:PCPTR?1.3:1,fs:false,undo:[],redo:[],map:{},spec:null,base:null,hover:null,cell:8,sig:"",down:false,last:null,pan:null};
-var PARTS=[["hair","Head · Hair style"],["hat","Head · Hat"],["face","Head · Face"],["extra","Head · Extras (shades…)"],["top","Body · Top"],["bottom","Body · Bottoms (hips)"],["armL","Limb · Left arm"],["armR","Limb · Right arm"],["legL","Limb · Left leg"],["legR","Limb · Right leg"],["inst","Instrument"],["keyboard","Prop · Keyboard"],["mic","Prop · Mic stand"]];
+var PARTS=[["hair","Head · Hair style","Body"],["hat","Head · Hat","Body"],["face","Head · Face","Body"],["extra","Head · Extras (shades…)","Body"],["top","Top","Body"],["bottom","Bottoms (hips)","Body"],["armL","Left arm","Body"],["armR","Right arm","Body"],["legL","Left leg","Body"],["legR","Right leg","Body"],["inst","Instrument","Props"],["keyboard","Keyboard","Props"],["mic","Mic stand","Props"]];   /* the character (head to feet) is one group, the props another */
 var TOOLS=[["pen","Pen","✏️"],["erase","Erase","🧽"],["brush","Brush","🖌️"],["fill","Fill","🪣"],["line","Line","📏"],["curve","Curve","〰️"],["shape","Shapes","⬠"]];
 /* shapes for the Shapes tool, drawn in a 0..1 box (MS Paint style: drag out the box) */
 function starPts(n,ri){var a=[],i;for(i=0;i<n*2;i++){var r=i%2?ri:0.5,an=-Math.PI/2+i*Math.PI/n;a.push([0.5+Math.cos(an)*r,0.5+Math.sin(an)*r]);}return a;}
@@ -536,7 +536,8 @@ function pxShapeRow(r){pxShiftRow(r);pxBrushRow(r);var w=mk("span","shp");w.styl
   var f=mk("button","","◻ Outline");f.dataset.fillt="1";f.onclick=function(){PX.shapeFill=!PX.shapeFill;pxStates();};w.appendChild(f);r.appendChild(w);
   var d=mk("span","cdn");d.style.cssText="display:none;gap:6px";var ok=mk("button","go","✓ Done");ok.onclick=pxCurveDone;var no=mk("button","","✕ Drop curve");no.onclick=function(){PX.curve=null;PX.preview=null;pxStates();};d.appendChild(ok);d.appendChild(no);r.appendChild(d);}
 function pixelRow(row){
-  function sel(label,opts,val,on){var l=mk("div","fld"),c=mk("div","ctl"),s=document.createElement("select");l.appendChild(mk("span","lb",label));opts.forEach(function(o){var e=document.createElement("option");e.value=o[0];e.textContent=o[1];s.appendChild(e);});s.value=val;s.onchange=function(){on(s.value);};c.appendChild(s);
+  function sel(label,opts,val,on){var l=mk("div","fld"),c=mk("div","ctl"),s=document.createElement("select");l.appendChild(mk("span","lb",label));var grp=null;opts.forEach(function(o){var e=document.createElement("option");e.value=o[0];e.textContent=o[1];
+      if(o[2]){if(!grp||grp.label!==o[2]){grp=document.createElement("optgroup");grp.label=o[2];s.appendChild(grp);}grp.appendChild(e);}else s.appendChild(e);});   /* grouped options: [value, label, group] */s.value=val;s.onchange=function(){on(s.value);};c.appendChild(s);
     var eb=mk("button","pe","Full screen");eb.title="Pixel edit this in full screen (beta)";eb.onclick=function(){pxFull(true);};c.appendChild(eb);l.appendChild(c);row.appendChild(l);}
   sel("Part",PARTS,PX.part,function(v){PX.part=v;PX.v=pxVariants(v)?pxVariants(v)[0][0]:0;pxSelect();assetPanel();});
   var vs=pxVariants(PX.part);if(vs)sel(PX.part==="inst"?"Instrument":"Which",vs,PX.v,function(v){PX.v=v;pxSelect();assetPanel();});

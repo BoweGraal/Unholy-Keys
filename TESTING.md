@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.45 — Graphics lab: Part list grouped
+
+- **Pixel editor → Part:** two groups. **Body** holds the whole character, head to feet: Head · Hair style, Hat, Face, Extras, then Top, Bottoms, Left/Right arm, Left/Right leg. **Props** holds Instrument, Keyboard and Mic stand.
+
 ## v1.81.44 — Feet sweep: shoes on every angle, feet on the floor in every dance
 
 - **Toes follow the leg:** the shoe sits square across the end of the leg at any angle, so lying, kicking and sideways legs (the worm, kicks, floor spin) get a proper foot, not a longer leg. Checked in all 8 facing directions.
