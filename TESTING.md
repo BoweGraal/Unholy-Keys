@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.76 — Abs hat at every angle
+
+1. Put on the Abs hat and turn the character all the way round in the maker. From the side the hat covers the head, brim included, with no hair poking through the top. From the back it's mirrored, with no front shine.
+2. Hats can now carry their own side and back drawings (hat:15|v1 and hat:15|v2 in the shipped pixels); other hats still work them out from the front.
+
 ## v1.81.75 — Abs hat cleanup
 
 1. Put on the Abs hat: no stray white pixel off to the left, and no dark band cutting down across the face and shoulder.
