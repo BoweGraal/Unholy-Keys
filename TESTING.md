@@ -1688,6 +1688,33 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.61 — Rhythm games: notes use the whole pad again
+
+Measured with a chart lab on two structured test songs (100 and 128 BPM, intro/verse/chorus/breakdown/chorus/outro), every game and every level, from audio and from the stored analysis YouTube songs use (both gave the same results).
+
+**What was wrong**
+- **"Leftmost lane wins":** whenever a double or a held lane was trimmed to one arrow, the leftmost was kept. Before: arrows on Easy 67% left; 4 keys on Easy 71% left.
+- **4 keys:** the lane came from the beat number (beats 1 and 3 on the left two keys, 2 and 4 on the right two), and the chart's own lanes were thrown away. Whenever beats 2 and 4 were thinned out (quiet parts on Normal, verses on Easy), every note landed on the left. This is the Dip problem.
+- **Note highway:** it walks up or down the keys from the chart's lane, so the left bias dragged it left: 70–82% on the left, and the far-right key got 0–5%.
+- **Long one-sided stretches:** up to 21 notes in a row on one side.
+- **Normal choruses** were no busier than the verses.
+
+**Now**
+- Trimming keeps a fair, varied lane. The 4-key highway uses the chart's flowing lanes, and Normal gets at most one chord a bar.
+- After 6 notes on one side, the next is mirrored to the other side (arrows and 4 keys). The Note highway heads back across after 6 on one half of the keyboard.
+- Normal gets one more off-beat note per bar in the loud parts.
+
+**After (100 / 128 BPM)**
+- Arrows and 4 keys: 44–55% left at every level, the longest one-sided run is 6–7 notes, and 5–24% repeat the lane before.
+- Note highway: keys used symmetrically around the middle, at every level.
+- Normal at 128 BPM: chorus 1.25 notes per beat vs verse 0.81.
+- Check: Dip on Normal, 4 keys and Note highway; the notes should move across the whole pad.
+
+## v1.81.60 — Skip timer works while the song is still loading
+
+- **Practice, Skip timer:** it now works from the moment the countdown card appears. Before, it did nothing until the song's steps had loaded, which for a YouTube song can take several seconds. If the steps are still loading it shows "Starting…" and starts the round as soon as they're ready.
+- Tested: pressing Skip straight after Start (steps still loading) → "Starting…" → the round started within 2.5 s.
+
 ## v1.81.59 — Ski: repeat penalty is 10%, floor 50%
 
 - The same trick again is worth **10%** less each time (was 25%): ×0.9, ×0.81, ×0.73…, never below **×0.5** (was ×0.2). Swapping tricks still lets the others recover.
