@@ -1688,6 +1688,38 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.68 — Ski: "HOP IN! +300" arrows on the first two divots
+
+1. Start a Ski round. The first two flag divots at the top each have a bouncing yellow arrow pointing into the start of the groove, with a **HOP IN! +300** label.
+2. Each arrow disappears once you've passed that flag (or while you're swooping). The divots after those have no arrow.
+
+## v1.81.67 — Ski: mouse guide on PC
+
+1. Play Ski on a computer. Once you're moving, the line of text above the trick buttons is replaced by a pixel mouse: **left = HOP (in the air: trick)**, **right = NEXT TRICK**, with "point to steer · land in a divot to swoop" under it.
+2. In the air the left label lights up yellow. On a phone you still get the old text hints.
+
+## v1.81.66 — Pixel icons in game banners
+
+1. Crash into a tree or rock in Ski: the banner shows a pixel-art burst next to TREE! / ROCK!, not the phone's 💥 emoji.
+2. Check the other game banners too (Kart flag, Capture the flag, Dance walk race, Keepy uppy, Mosh pit, Wall of death, Circle pit, Bail/Tripped, Finished): every icon should be pixel art.
+
+## v1.81.65 — Voice room: one mic opens voice for everyone
+
+**Needs a server redeploy on Render** (the server now tracks who has their mic on).
+
+1. Open the room on two or three phones/tabs. Nobody has voice yet.
+2. On one phone, tap the small 🎙 Voice button. Every other phone should show a big glowing **🎙 TAP TO TALK** button at the top and start hearing that person straight away, with no tap needed.
+3. Tap **TAP TO TALK** on a second phone: it turns green (**MIC ON · TAP TO MUTE**) and both talkers hear each other. Tap again to go back to listening; you keep hearing the others.
+4. Up to 8 people can have their mic on at once. A 9th sees **VOICE FULL · LISTENING** for a few seconds and keeps hearing everyone.
+5. Someone who joins the room after voice is open starts listening as soon as they arrive.
+6. During a song the big button reads **MIC OFF FOR THE SONG**, and it is hidden during games and in practice.
+
+## v1.81.64 — Performer listens to voice automatically; no mic = listen only
+
+- **Performer:** going live joins voice as a **listener**: you hear anyone who joins voice, and no mic is asked for. The button reads "🎧 Listening · tap for mic". Tap it to turn your mic on; tap again to go back to listening. Also after a reconnect.
+- **No mic, or mic permission refused** (anyone): you stay in voice and listen ("🎧 Listening (no mic)"), instead of being thrown out.
+- Tested: a listen-only player hears a player who joins with a mic.
+
 ## v1.81.63 — CTF: smaller video on the floor
 
 - **CTF and Kart flag:** the video on the arena floor is about half the size it was: about 4 tiles wide in CTF, 5.5 in Kart flag (was 9–12). The performer and platform stand just above it, clear of the picture.

@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.63"></script>
-<script src="gfx.js?v=1.81.63"></script>
-<script src="art.js?v=1.81.63"></script>
-<script src="voice.js?v=1.81.63"></script>
-<script src="instruments.js?v=1.81.63"></script>
-<script src="kart.js?v=1.81.63"></script>
-<script src="explain.js?v=1.81.63"></script>
+<script src="tune.js?v=1.81.68"></script>
+<script src="gfx.js?v=1.81.68"></script>
+<script src="art.js?v=1.81.68"></script>
+<script src="voice.js?v=1.81.68"></script>
+<script src="instruments.js?v=1.81.68"></script>
+<script src="kart.js?v=1.81.68"></script>
+<script src="explain.js?v=1.81.68"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -190,6 +190,10 @@ body.gaming-ctf #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #skiScore::before{content:"\26F7  ";font-size:20px}
 #skiCombo{position:absolute;right:14px;top:90px;font:900 15px 'Silkscreen',ui-monospace,monospace;color:#E8505B;text-shadow:0 1px 0 #fff}
 #skiSpeed{position:absolute;left:14px;top:56px;font:800 15px 'Silkscreen',ui-monospace,monospace;color:#2a3550;text-shadow:0 1px 0 #fff}
+#skiMouse{display:none;position:absolute;left:50%;bottom:calc(var(--chatH) + 118px);transform:translateX(-50%);pointer-events:none;align-items:center;gap:8px;font:700 12px/1.15 'Silkscreen',ui-monospace,monospace;color:#1d2740;text-align:center;white-space:nowrap}
+#skiMouse.on{display:flex}#skiMouse img{height:56px;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(3px 3px 0 rgba(0,0,0,.35))}
+#skiMouse .sm{background:rgba(255,255,255,.85);border:2px solid #1d2740;box-shadow:3px 3px 0 rgba(0,0,0,.3);padding:4px 7px}#skiMouse .sm b{display:block;font-size:13px}#skiMouse .sm small{font-size:10px;opacity:.75}
+#skiMouse .sl{border-color:#b8960a}#skiMouse .sr{border-color:#2aa7c9}#skiMouse.air .sl{background:#FFE14D}#skiMouse .smf{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:5px;font-size:10px;background:rgba(255,255,255,.75);padding:1px 6px}
 #skiHint{position:absolute;left:50%;bottom:calc(var(--chatH) + 130px);transform:translateX(-50%);font:800 13px 'Silkscreen',ui-monospace,monospace;color:#1d2740;background:rgba(255,255,255,.75);padding:3px 10px;border-radius:8px;white-space:nowrap}
 #skiJump{position:absolute;right:18px;bottom:calc(var(--chatH) + 16px);width:104px;height:104px;border-radius:50%;pointer-events:auto;touch-action:none;font:900 18px 'Silkscreen',ui-monospace,monospace;color:#fff;background:radial-gradient(circle at 40% 35%,#7fb0ff,#2b5fc0);border:3px solid rgba(255,255,255,.8);box-shadow:0 4px 18px rgba(59,123,232,.4)}
 #skiJump small{display:block;font:700 10px 'Silkscreen',ui-monospace,monospace;opacity:.85}
@@ -574,7 +578,11 @@ body.rd-paused::after{content:"\23F8  Paused";position:fixed;top:64px;left:50%;t
 #prYtQ .q.done i{color:#5DCB42;opacity:1}#prYtQ .q.err i{color:#ff8a8a;opacity:1}
 /* practice has no chat: the controls drop to the bottom of the screen */
 body.practice #chatPanel,body.practice #talkBtn,body.practice #voiceBtn,body.practice #hudTL{display:none}
-#voiceBtn.on{border-color:#4CC38A;color:#4CC38A}#voiceBtn.song{border-color:#8f88b8;color:#8f88b8}#voiceBtn.talk{background:#1f3a2c}
+#voiceBtn.on{border-color:#4CC38A;color:#4CC38A}
+#vTalk{display:none;position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 48px);transform:translateX(-50%);z-index:9100;padding:10px 16px;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#2a1f4a;border:3px solid #7F77DD;box-shadow:4px 4px 0 #000;cursor:pointer;white-space:nowrap}
+#vTalk.on{display:block}#vTalk.idle{animation:vtPulse 1.6s ease-in-out infinite}#vTalk.live{background:#145a3a;border-color:#4CC38A}#vTalk.live.talk{box-shadow:0 0 0 3px #4CC38A,4px 4px 0 #000}
+#vTalk.song,#vTalk.full{background:#2a2440;border-color:#6a6290;color:#c8c2e8}
+@keyframes vtPulse{0%,100%{box-shadow:4px 4px 0 #000}50%{box-shadow:0 0 0 4px rgba(127,119,221,.6),4px 4px 0 #000}}#voiceBtn.song{border-color:#8f88b8;color:#8f88b8}#voiceBtn.talk{background:#1f3a2c}
 body.practice #moveCtl{bottom:18px}
 body.practice #moveHint{bottom:190px}
 body.practice #hudBR{bottom:18px}
@@ -626,6 +634,7 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
 /* ---------- pixel art game text and buttons: the in-game callouts, scores and action pads use a pixel font,
    hard drop shadows and notched square corners instead of smooth glows and round corners ---------- */
 #partBanner,#skiBanner,#ppBanner,#ppJudge,#ppScore,#ppCombo,#skiScore,#skiCombo,#wkBanner,#kpBanner,#skBanner,#moshBanner,#kpScore,#skScore,#moshScore,#ppSuper,.rb-title{font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700!important;letter-spacing:1px}
+.pxe{height:.82em;width:auto;image-rendering:pixelated;image-rendering:crisp-edges;vertical-align:-.06em;margin:0 .18em;filter:drop-shadow(3px 3px 0 #000)}
 #partBanner,#skiBanner,#ppBanner,#wkBanner,#kpBanner,#skBanner,#moshBanner{text-shadow:4px 4px 0 #000,-2px -2px 0 rgba(0,0,0,.5)!important}
 #ppJudge,#ppScore,#ppCombo,#skiScore,#skiCombo,#kpScore,#skScore,#moshScore{text-shadow:3px 3px 0 #000!important}
 #skiJump,#kpJump,#skJump,#skiTricks button,.ktB{border-radius:0!important;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px);font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700!important;background-image:none!important;box-shadow:inset -5px -5px 0 rgba(0,0,0,.28),inset 5px 5px 0 rgba(255,255,255,.22)!important}
@@ -775,7 +784,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <button data-r="spin" title="Spin (T)" aria-label="Spin">&#127744;</button>
     <button data-r="twirl" title="Twirl: two fast turns (G)" aria-label="Twirl">&#128171;</button>
   </div>
-  <div id="moshUI"><div id="moshBanner">🤘 MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><div id="moshStick" aria-label="Punch and swing your arms"><small>PUNCH</small><b></b></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
+  <div id="moshUI"><div id="moshBanner">MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><div id="moshStick" aria-label="Punch and swing your arms"><small>PUNCH</small><b></b></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
   <div id="partBanner"></div>
   <canvas id="skiCv"></canvas>
   <canvas id="ctfCv"></canvas>
@@ -2036,7 +2045,7 @@ function handleMsg(msg){
     ROUND.setTotals(msg.totals);
     SHOWFX=msg.fx||null;primeFx(SHOWFX);
     if(msg.round)ROUND.onMsg(msg.round);else ROUND.reset();
-    if(msg.gvote)GVOTE.on(msg.gvote);if(msg.svote)GVOTE.on(msg.svote,true);
+    if(msg.gvote)GVOTE.on(msg.gvote);if(msg.svote)GVOTE.on(msg.svote,true);if(msg.voiceOpen)try{VOICE.listen();}catch(e){}   /* voice is already open: join in, listening */
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
     if(msg.perfPos)perfPos(msg.perfPos);
@@ -2193,6 +2202,33 @@ function renderChat(){
 }
 
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* banner emoji as little pixel icons (the phone's own emoji look out of place); anything without an icon is dropped */
+var PXEMO=(function(){
+  var PAL={K:"#111",W:"#fff",R:"#FF3D5A",O:"#FF8A1F",Y:"#FFE14D",G:"#9aa0b4",C:"#7FE6FF",M:"#FF5FD2",S:"#F2B48A",B:"#3D7BFF"};
+  var I={
+    "💥":["K...K...K",".KR.R.RK.","..RORYR..",".RROYYRR.","KROYWYORK",".RRYYORR.","..RYROR..",".KR.R.RK.","K...K...K"],
+    "🏁":["GKWKWKW","GWKWKWK","GKWKWKW","GWKWKWK","G......","G......","G......","G......"],
+    "🚩":["GRRRRR.","GRRRRRR","GRRRRR.","GRRRR..","G......","G......","G......","G......"],
+    "⛷":["....C....","..C.C.C..","...CCC...",".C..C..C.","CCCCCCCCC",".C..C..C.","...CCC...","..C.C.C..","....C...."],
+    "🏎":[".........","...RRR...","..RRCRR..",".RRRRRRR.","RRRRRRRRR",".KK...KK.",".KK...KK."],
+    "💃":["...MMMM","...M..M","...M..M","...M..M",".MMM.MM","MMMMMMM",".MM.MM."],
+    "🎈":["..RRR..",".RRWRR.",".RRRRR.",".RRRRR.","..RRR..","...R...","...W...","..W....","...W..."],
+    "☠":[".WWWWW.","WWWWWWW","WKKWKKW","WKKWKKW","WWWKWWW",".WWWWW.",".W.W.W."],
+    "🌀":[".CCCCC.","C.....C","C.CCC.C","C.C.C.C","C.C...C","C.CCCCC","C......"],
+    "🤘":["S....S","S....S","SSSSSS","SSSSSS","SSSSSS",".SSSS.",".SSSS."]
+  },cache={};
+  function url(k){if(cache[k])return cache[k];var g=I[k],h=g.length,w=0,i,j;for(i=0;i<h;i++)w=Math.max(w,g[i].length);
+    var c=document.createElement("canvas");c.width=w;c.height=h;var x=c.getContext("2d");
+    for(i=0;i<h;i++)for(j=0;j<g[i].length;j++){var p=PAL[g[i][j]];if(p){x.fillStyle=p;x.fillRect(j,i,1,1);}}
+    return cache[k]=c.toDataURL();}
+  var RX;try{RX=new RegExp("(\\p{Extended_Pictographic})\\uFE0F?","gu");}catch(e){RX=/([\uD800-\uDBFF][\uDC00-\uDFFF]|[☀-➿])️?/g;}
+  function html(t){var out="",last=0,m;t=String(t==null?"":t);RX.lastIndex=0;
+    while((m=RX.exec(t))){out+=esc(t.slice(last,m.index));if(I[m[1]])out+='<img class="pxe" alt="" src="'+url(m[1])+'">';last=RX.lastIndex;}
+    return (out+esc(t.slice(last))).replace(/^\s+|\s+$/g,"");}
+  return{html:html,set:function(el,t){if(el)el.innerHTML=html(t);},has:function(k){return !!I[k];}};
+})();
+try{window.ukPxEmo=PXEMO;}catch(e){}
 
 document.getElementById("chatSend").addEventListener("click",sendChat);
 document.getElementById("chatText").addEventListener("keydown",function(e){
@@ -2459,10 +2495,17 @@ document.getElementById("talkBtn").addEventListener("click",function(e){e.preven
 (function(){
   var vb=document.getElementById("voiceBtn");
   function songOn(){return !!(JT&&JT.video)||Date.now()-lastNoteTime<6000||(typeof ROUND!=="undefined"&&ROUND.active())||!!PART||(typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free");}
-  function show(st){var lb={off:"\uD83C\uDF99 Voice",on:"\uD83C\uDF99 Mic on",song:"\uD83D\uDD07 Song on",full:"Voice full (8)",denied:"No mic access"}[st]||"\uD83C\uDF99 Voice";vb.textContent=lb;vb.classList.toggle("on",st==="on");vb.classList.toggle("song",st==="song");}
+  function show(st){var lb={off:"\uD83C\uDF99 Voice",listen:VOICE.noMic?"\uD83C\uDFA7 Listening (no mic)":"\uD83C\uDFA7 Listening",on:"\uD83C\uDF99 Mic on",song:"\uD83D\uDD07 Song on",full:"Voice full (8)",denied:"No mic access"}[st]||"\uD83C\uDF99 Voice";vb.textContent=lb;vb.classList.toggle("on",st==="on");vb.classList.toggle("song",st==="song");vtUI();}
+  /* the big button: once voice is open (someone turned their mic on), everyone is listening; this turns your own mic on and off */
+  var vt=document.createElement("button");vt.id="vTalk";vt.type="button";document.body.appendChild(vt);
+  vt.addEventListener("click",function(e){e.preventDefault();vt.blur();if(!myId)return;VOICE.toggle();});
+  function vtUI(){if(!vt)return;var st=VOICE.state,g=document.body.getAttribute("data-game")||"",show=VOICE.open&&(!g||g==="free")&&!document.body.classList.contains("practice");
+    vt.classList.toggle("on",show);if(!show)return;
+    vt.className="on "+(st==="on"?"live":st==="song"?"song":st==="full"?"full":"idle");
+    vt.textContent=st==="on"?"\uD83C\uDF99 MIC ON \u00B7 TAP TO MUTE":st==="song"?"\uD83D\uDD07 MIC OFF FOR THE SONG":st==="full"?"VOICE FULL \u00B7 LISTENING":VOICE.noMic?"\uD83C\uDFA7 LISTENING (NO MIC FOUND)":"\uD83C\uDF99 TAP TO TALK";}
   VOICE.init({send:wsSend,myId:function(){return myId;},songOn:songOn,onChange:show});
   vb.addEventListener("click",function(e){e.preventDefault();vb.blur();if(!myId)return;VOICE.toggle();});
-  setInterval(function(){VOICE.tick();vb.classList.toggle("talk",VOICE.state==="on"&&VOICE.talking(myId));},200);
+  setInterval(function(){VOICE.tick();vb.classList.toggle("talk",VOICE.state==="on"&&VOICE.talking(myId));vtUI();vt.classList.toggle("talk",VOICE.state==="on"&&VOICE.talking(myId));},200);
 })();
 var chatInp=document.getElementById("chatText");
 chatInp.addEventListener("focus",function(){document.getElementById("talkBtn").classList.add("on");held={up:false,down:false,left:false,right:false};joyEnd();});
@@ -4031,7 +4074,7 @@ var KEEPY=(function(){
   function P(x,y,z){return[x*W,y*H-z*2];}
   function start(round){on=true;objs=ART.KEEPY.make(0,B);zp=0;vz=0;jumps=0;score=0;cool={};pops=[];botJ={};document.body.classList.add("gaming-keepy");$("keepyUI").classList.add("on");hud();banner("🎈 KEEPY UPPY");}
   function stop(){on=false;document.body.classList.remove("gaming-keepy");$("keepyUI").classList.remove("on");}
-  function banner(t){var b=$("kpBanner");if(!b)return;b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t){var b=$("kpBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("kpScore");if(h)h.textContent=score.toLocaleString();}
   function songT(){var p=ROUND.pos();return p>-1e8?Math.max(0,p):0;}
   function jump(){if(!on)return;if(jumps===0){vz=TUNE.v("kp.jump1");jumps=1;dbl=false;}else if(jumps===1){vz=TUNE.v("kp.jump2");jumps=2;dbl=true;}}
@@ -4162,7 +4205,7 @@ var WALK=(function(){
   function shuffle(n){var o=[0,1,2,3,4,5,6],s=(n*9301+49297)%233280;for(var i=o.length-1;i>0;i--){s=(s*9301+49297)%233280;var j=Math.floor(s/233280*(i+1)),t=o[i];o[i]=o[j];o[j]=t;}return o;}
   /* lanes: everyone in the room sorted the same way, so each screen puts each racer in the same lane */
   function laneFor(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(4,Math.min(8,ids.length));return Y0+((i%n)+0.5)/n*(Y1-Y0);}
-  function banner(t,col){var b=$("wkBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#D04DFF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t,col){var b=$("wkBanner");if(!b)return;PXEMO.set(b,t);b.style.textShadow="0 0 16px "+(col||"#D04DFF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function start(round){
     on=true;roundN=round?round.n:roundN+1;order=shuffle(roundN);x=X0;fin=-1;place=0;tripUntil=0;outT=0;score=0;sentFin=false;cur=null;speedF=0;finOrder=[];seen={};bots={};doneAsked=false;lastStyle=-1;lastCount=-1;
     laneY=laneFor(myId);y=laneY;var me=myId&&viewers[myId];if(me){me.tx=me.x=x;me.ty=me.y=y;}
@@ -4324,7 +4367,7 @@ var PIPE=(function(){
     camC+=(tg-camC)*Math.min(1,dt*(air?10:7));}
   function ids(){return Object.keys(viewers).filter(function(k){return viewers[k]!==PH;});}
   function myGroup(){return PP.group(ids(),myId);}
-  function banner(t,col){var b=$("ppBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t,col){var b=$("ppBanner");if(!b)return;PXEMO.set(b,t);b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function judge(t,col){var j=$("ppJudge");if(!j)return;j.textContent=t;j.style.color=col||"#fff";j.classList.remove("pop");void j.offsetWidth;j.classList.add("pop");}
   function hud(){var h=$("ppScore");if(h)h.textContent=score.toLocaleString();var c=$("ppCombo");if(c)c.textContent=combo>0?"COMBO ×"+(1+0.25*combo).toFixed(2):"";
     var sm=$("ppSuper");if(sm){sm.style.width=Math.round(superK*100)+"%";sm.classList.toggle("full",superK>=1);}var mo=$("ppMomentum");if(mo)mo.style.height=Math.round(Math.min(1,(A-0.25)/(AMAX-0.25))*100)+"%";}
@@ -4650,10 +4693,19 @@ var SKI=(function(){
   function enc(){return[+((x+800)/1600).toFixed(4),+((((y%1000)+1000)%1000)/1000).toFixed(4)];}
   function wire(){var t=performance.now()<crashUntil?9:air>0?(trick?8:7):Math.max(0,Math.min(6,Math.round(a/(Math.PI/6))+3));return{h:Math.max(0,Math.min(60,Math.floor(Math.max(0,y)/1000))),f:performance.now()<crashUntil?1:0,t:t};}
   function decode(v2,prevY){return SK.decode(+v2.x,+v2.y,v2.sk?v2.sk.h|0:0,prevY);}
-  function banner(t,col){var b=$("skiBanner");if(!b)return;b.textContent=t;b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  var skiMouseD=null;
+  function skiMouse(){if(skiMouseD)return skiMouseD;var ui=$("skiUI");if(!ui)return null;
+    var G=["...KKKKKKK...","..KLLLKRRRK..",".KLLLLKRRRRK.","KLLLLLKRRRRRK","KLLLLLKRRRRRK","KLLLLLKRRRRRK","KKKKKKKKKKKKK","KWWWWWWWWWWWK","KWWWWWWWWWWWK","KWWWWWWWWWWWK","KWWWWWWWWWWWK","KWWWWWWWWWWWK",".KWWWWWWWWWK.","..KKKKKKKKK.."];
+    var P={K:"#1d2740",L:"#FFE14D",R:"#7FE6FF",W:"#f4f6fb"},c=document.createElement("canvas");c.width=13;c.height=G.length;var x=c.getContext("2d");
+    G.forEach(function(r,i){for(var j=0;j<r.length;j++)if(P[r[j]]){x.fillStyle=P[r[j]];x.fillRect(j,i,1,1);}});
+    var d=document.createElement("div");d.id="skiMouse";
+    d.innerHTML='<div class="sm sl"><b>HOP</b><small>in the air: trick</small></div><img alt="" src="'+c.toDataURL()+'"><div class="sm sr"><b>NEXT TRICK</b><small>pick the yellow one</small></div><div class="smf">point to steer · land in a divot to swoop</div>';
+    ui.appendChild(d);return skiMouseD=d;}
+  function banner(t,col){var b=$("skiBanner");if(!b)return;PXEMO.set(b,t);b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("skiScore");if(h)h.textContent=score.toLocaleString();var c=$("skiCombo");if(c)c.textContent=combo>1?"COMBO ×"+(1+0.1*combo).toFixed(1):"";}
   function laneX(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(2,Math.min(8,ids.length));return -85+170*((i%n)+0.5)/n;}
-  function start(round){
+  var tipFlags=null;   /* the first two flags with a divot: they get a "HOP in here" arrow */
+  function start(round){tipFlags=null;
     on=true;tUse={};roundN=round?round.n:roundN+1;seed=SK.seedFor(roundN);
     course=SK.clean(round&&round.ski);if(!course&&PRACTICE.on){try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}}if(!course)course=SK.defaultCourse();   /* no course of their own: the house mountain */chunks={};passed={};trail=[];pops=[];others={};bots={};
     hopAir=false;cutGrace=0;hopPush=0;puffs=[];sweep=null;x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;fStreak=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
@@ -4769,6 +4821,9 @@ var SKI=(function(){
     GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:trick&&trick.k===3?[2.9,-0.4,0.9,-0.9]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
     if(PRACTICE.on)botTick(dt,now,going);
     var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · left click: hop, in the air: the yellow trick · right click: next trick · land in a divot to swoop");
+    /* on a computer: a little pixel mouse instead of the line of text (left = hop / trick in the air, right = next trick) */
+    var pcM=!TOUCHY&&going&&!crashed&&(air>0?!hopAir:!(!course&&SK.zoneAt(y).k==="jump")),sm=skiMouse();
+    if(hn)hn.style.display=pcM?"none":"";if(sm){sm.classList.toggle("on",pcM);sm.classList.toggle("air",air>0);}
   }
   /* practice: the practice skiers follow the slalom line at their own pace, now and then crashing */
   function botTick(dt,now,going){
@@ -4823,6 +4878,17 @@ var SKI=(function(){
       var s=it.sk,st=s.v.sk||{},t=st.t|0,ang=t<=6?(t-3)*Math.PI/6:0;
       skier(V.sx(s.x),V.sy(it.y),s.v,false,ang,t===7||t===8?0.7:0,t===9||!!st.f,t===8?1:0,(now%450)/450,z,s.v.name);
     });}finally{SK.groundDone=false;}
+    /* the first two divots at the top: a bouncing arrow into the groove, "HOP IN! +300", so everyone learns the swoop */
+    if(!tipFlags)tipFlags=objsNear(-400,5000).filter(function(o){return o.k==="flag"&&o.pass;}).sort(function(p,q){return p.y-q.y;}).slice(0,2).map(function(o){return o.id;});
+    if(!sweep)objsNear(y0,y1).forEach(function(o){if(o.k!=="flag"||passed[o.id]||tipFlags.indexOf(o.id)<0)return;
+      var e=SK.arc(o,0.1),kp=Math.round(SK.px(z)*1.5),bob=Math.round(Math.sin(now/170)*2)*kp,ex=Math.round(V.sx(e[0])/kp)*kp,ey=Math.round(V.sy(e[1])/kp)*kp-3*kp+bob;
+      /* the arrow, pointing down into the start of the groove */
+      var A=["..KKK..","..KYK..","..KYK..","..KYK..","KKKYKKK",".KYYYK.","..KYK..","...K..."];
+      for(var r=0;r<A.length;r++)for(var cc=0;cc<7;cc++){var ch=A[r][cc];if(ch==="."||!ch)continue;g.fillStyle=ch==="K"?"#1d2740":"#FFE14D";g.fillRect(ex+(cc-3)*kp,ey+(r-8)*kp,kp,kp);}
+      var fs=Math.max(16,Math.round(10*z)),lb="HOP IN! +300";g.font="900 "+fs+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.textBaseline="middle";
+      var tw=Math.ceil(g.measureText(lb).width/kp)*kp+4*kp,th=Math.ceil(fs*1.5/kp)*kp,bx=ex-Math.round(tw/2/kp)*kp,by=ey-8*kp-th-kp;
+      g.fillStyle="rgba(0,0,0,.35)";g.fillRect(bx+kp,by+kp,tw,th);g.fillStyle="#1d2740";g.fillRect(bx,by,tw,th);g.fillStyle="#FFE14D";g.fillRect(bx,by,tw,kp/2|0||1);
+      g.fillText(lb,ex,by+th/2+1);g.textBaseline="alphabetic";});
     /* the pop's puff of snow: pixel flecks bursting out where you took off */
     puffs=puffs.filter(function(pf){var age=(now-pf.t)/1000;if(age>0.5)return false;var kp=SK.px(V.z),cx=V.sx(pf.x),cy=V.sy(pf.y);g.globalAlpha=1-age/0.5;g.fillStyle="#ffffff";
       for(var q=0;q<10;q++){var an=q*0.63,d=(4+age*46)*V.z;g.fillRect(Math.round((cx+Math.cos(an)*d)/kp)*kp,Math.round((cy+Math.sin(an)*d*0.5)/kp)*kp,kp,kp);}g.globalAlpha=1;return true;});
@@ -4874,7 +4940,7 @@ var CTFG=(function(){
     var P=["left","top","width","height"];
     if(x===null){if(bs.classList.contains("ctfg")){bs.classList.remove("ctfg");P.forEach(function(k){bs.style.removeProperty(k);});}return;}
     bs.classList.add("ctfg");[x,y,w,h].forEach(function(n,i){bs.style.setProperty(P[i],Math.round(n)+"px","important");});}
-  function banner(t,col){var b=$("ctfBanner");if(!b)return;b.textContent=t;b.style.color=col||"#fff";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t,col){var b=$("ctfBanner");if(!b)return;PXEMO.set(b,t);b.style.color=col||"#fff";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   var hudSig="";
   function clock(){var ch=ROUND.chart&&ROUND.chart(),end=ch?(ch.gameMs||ch.dur||0):0,p=songPos();if(!end||p<-1e8)return "";var s=Math.max(0,Math.ceil((end-p)/1000));return Math.floor(s/60)+":"+("0"+s%60).slice(-2);}
   function hud(){var h=$("ctfScore");if(!h||!st)return;var ck=clock(),sig=st.caps.join(",")+"|"+ck+"|"+team;if(sig===hudSig)return;hudSig=sig;   /* team score, and the time left */
@@ -5084,7 +5150,7 @@ var SKATE=(function(){
     var me=myId&&viewers[myId];if(me){var G=geom(),a=Math.random()*6.283,r=0.62;me.tx=me.x=(G.cx+Math.cos(a)*(G.rx+G.ix)/2)/W;me.ty=me.y=(G.cy+Math.sin(a)*(G.ry+G.iy)/2)/H;sendPos(me.tx,me.ty);}
   }
   function stop(){on=false;document.body.classList.remove("gaming-skate");$("skateUI").classList.remove("on");}
-  function banner(t){var b=$("skBanner");if(!b)return;b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+  function banner(t){var b=$("skBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("skScore");if(h)h.textContent=score.toLocaleString();}
   function add(n,x,y,txt,col){if(!n)return;score+=n;GAME.moshPts(n);if(txt)pops.push({x:x,y:y,t:performance.now(),txt:txt+" +"+n,col:col||"#F5F23D"});hud();}
   function maxSp(G){return TUNE.v("sk.maxSpeed")*G.rx/560;}
@@ -5300,7 +5366,7 @@ var MOSH=(function(){
     if(ph==="split")assignTeams();
     if(ph==="tug"){document.body.classList.add("mosh-tug");}else document.body.classList.remove("mosh-tug");
     if(ph==="result")finishTug(me);
-    if(t&&b){b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
+    if(t&&b){PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
     if(ph==="pit"&&was&&was!==""){team=-1;teams={};}
   }
   function finishTug(me){
@@ -7242,7 +7308,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.63",SERVER_VERSION="";
+var PAGE_VERSION="1.81.68",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7819,7 +7885,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.63"></script>
+<script src="lab.js?v=1.81.68"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

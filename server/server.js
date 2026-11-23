@@ -502,9 +502,9 @@ var REACTS = ["jump", "hearts", "bigheart", "clap", "whistle", "spin", "twirl", 
 /* the mosh pit's tug of war starts this long after the drop and lasts this long (the same in venue.html) */
 var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
-var VOICE_MAX = 8;   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
+var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.81.63";
+var VERSION = "1.81.68";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -613,6 +613,7 @@ function onMessage(ws, raw, isBinary) {
       round: roundPublic(r),
       gvote: r.gvote && !r.gvote.done ? gvotePublic(r.gvote) : null,
       svote: r.svote && !r.svote.done ? svotePublic(r.svote) : null,
+      voiceOpen: r.voice && Object.keys(r.voice).some(function(k) { return r.voice[k].mic; }) ? 1 : 0,   /* someone's talking: join in, listening */
       totals: totalsList(r),
       fx: r.fx || null,
       perfPos: r.perfPos || null
@@ -634,23 +635,36 @@ function onMessage(ws, raw, isBinary) {
   if (ws.room && rooms[ws.room] && typeof msg.type === "string" && msg.type.indexOf("voice-") === 0) {
     var vr = rooms[ws.room], vid = ws.role === "performer" ? "performer" : ws.viewerId;
     if (!vid) return;
-    vr.voice = vr.voice || {};
-    if (msg.type === "voice-join") {
-      if (!allow(ws, "vjoin", 4, 0.2)) return;
-      var vids = Object.keys(vr.voice).filter(function(k) { return k !== vid; });
-      if (!vr.voice[vid] && vids.length >= VOICE_MAX) { try { ws.send(JSON.stringify({ type: "voice-full", max: VOICE_MAX })); } catch(e) {} return; }
-      vr.voice[vid] = 1;
-      try { ws.send(JSON.stringify({ type: "voice-peers", ids: vids })); } catch(e) {}
-      broadcast(ws.room, { type: "voice-on", id: vid }, ws);
+    vr.voice = vr.voice || {};   /* id -> { mic: 0/1 }: everyone in voice; only those with the mic on count towards VOICE_MAX */
+    var vSend = function(id, o) { var t = id === "performer" ? vr.performer : (vr.viewers.get(id) || {}).ws; if (t) try { t.send(JSON.stringify(o)); } catch(e) {} };
+    var vPeers = function() { return Object.keys(vr.voice).filter(function(k) { return k !== vid; }).map(function(k) { return { id: k, mic: vr.voice[k].mic ? 1 : 0 }; }); };
+    var vTalkers = function() { return Object.keys(vr.voice).filter(function(k) { return vr.voice[k].mic; }); };
+    if (msg.type === "voice-join") {   /* in, listening */
+      if (!allow(ws, "vjoin", 6, 0.3)) return;
+      if (!vr.voice[vid]) vr.voice[vid] = { mic: 0 };
+      vSend(vid, { type: "voice-peers", peers: vPeers() });
+      broadcast(ws.room, { type: "voice-on", id: vid, mic: vr.voice[vid].mic }, ws);
       return;
     }
     if (msg.type === "voice-leave") { if (vr.voice[vid]) { delete vr.voice[vid]; broadcast(ws.room, { type: "voice-off", id: vid }, ws); } return; }
     if (!vr.voice[vid]) return;
-    if (msg.type === "voice-talk") { if (!allow(ws, "vtalk", 12, 4)) return; broadcast(ws.room, { type: "voice-talk", id: vid, on: msg.on ? 1 : 0 }, ws); return; }
+    if (msg.type === "voice-mic") {   /* mic on (a talker slot, if one is free) or off */
+      if (!allow(ws, "vmic", 8, 1)) return;
+      if (msg.on) {
+        var tk = vTalkers().filter(function(k) { return k !== vid; });
+        if (tk.length >= VOICE_MAX) { vSend(vid, { type: "voice-full", max: VOICE_MAX }); return; }
+        var first = !tk.length && !vr.voice[vid].mic;
+        vr.voice[vid].mic = 1;
+        vSend(vid, { type: "voice-peers", peers: vPeers() });   /* so the new talker can call everyone it isn't connected to */
+        broadcast(ws.room, { type: "voice-mic", id: vid, on: 1 }, ws);
+        if (first) broadcast(ws.room, { type: "voice-open" });   /* the first talker: everyone in the room joins in, listening */
+      } else if (vr.voice[vid].mic) { vr.voice[vid].mic = 0; broadcast(ws.room, { type: "voice-mic", id: vid, on: 0 }, ws); }
+      return;
+    }
+    if (msg.type === "voice-talk") { if (!vr.voice[vid].mic || !allow(ws, "vtalk", 12, 4)) return; broadcast(ws.room, { type: "voice-talk", id: vid, on: msg.on ? 1 : 0 }, ws); return; }
     if (msg.type === "voice-sig") {
-      var to = String(msg.to || ""); if (!vr.voice[to] || !allow(ws, "vsig", 60, 20)) return;
-      var tws = to === "performer" ? vr.performer : (vr.viewers.get(to) || {}).ws;
-      if (tws) try { tws.send(JSON.stringify({ type: "voice-sig", from: vid, d: msg.d })); } catch(e) {}
+      var to = String(msg.to || ""); if (!vr.voice[to] || !allow(ws, "vsig", 80, 30)) return;
+      vSend(to, { type: "voice-sig", from: vid, d: msg.d });
       return;
     }
     return;
