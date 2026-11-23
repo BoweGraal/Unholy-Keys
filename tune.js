@@ -188,6 +188,8 @@ var TUNE=(function(){
     V("mp.tug","Tug-of-war approach",0.9,0.3,3,0.05,"Speed to your place in the push war.",""),
     V("mp.damp","Shove damping",0.04,0.005,0.5,0.005,"Fraction of a shove's speed left after one second. Lower stops sooner.",""),
     V("mp.lapPts","Lap points",150,0,500,10,"Points per lap of the circle pit.","pts"),
+    V("mp.swingPts","Swing points",10,0,100,1,"Points for a punch swing off the beat.","pts"),
+    V("mp.beatPts","On-beat swing points",60,0,200,5,"Points for a punch swing on the beat.","pts"),
     V("mp.tugMs","Push war length",10000,4000,30000,500,"How long the push war after the wall of death charge lasts.","ms")]}
   ];
   var DEF={},VALS={},BYK={},listeners=[];

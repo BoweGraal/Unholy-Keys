@@ -17,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.29"></script>
-<script src="gfx.js?v=1.81.29"></script>
-<script src="art.js?v=1.81.29"></script>
-<script src="instruments.js?v=1.81.29"></script>
-<script src="kart.js?v=1.81.29"></script>
-<script src="explain.js?v=1.81.29"></script>
+<script src="tune.js?v=1.81.30"></script>
+<script src="gfx.js?v=1.81.30"></script>
+<script src="art.js?v=1.81.30"></script>
+<script src="instruments.js?v=1.81.30"></script>
+<script src="kart.js?v=1.81.30"></script>
+<script src="explain.js?v=1.81.30"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5087,7 +5087,7 @@ KART.bind({
 window.ukKartSheet=function(z,turn){var c=document.createElement("canvas");c.width=1200;c.height=340;var old=ctx;ctx=c.getContext("2d");ctx.fillStyle="#161128";ctx.fillRect(0,0,1200,340);var me=viewers[myId]||{};var vv={name:"",color:"#E8963C",look:me.look,seed:1};try{for(var i=0;i<16;i++)KART.preview(ctx,70+(i%8)*145,110+Math.floor(i/8)*165,i*Math.PI/8,vv,z||2.6,turn||0);}finally{ctx=old;}return c.toDataURL();};
 window.ukKartTest=function(track,nbots,intro){if(intro!==undefined)window.__kartIntro=intro;var C=["#3CCB8A","#5FB4F0","#D354A0","#F5C518","#FF7A2B"];for(var i=0;i<(nbots||0);i++)viewers["bot"+i]={name:"Bot"+(i+1),color:C[i%5],x:0.5,y:0.5,tx:0.5,ty:0.5,dance:4,look:null};GAME.start("kart",{n:track|0});};
 var MOSH=(function(){
-  var TUG_AT=800,TUG_MS=10000;                           /* the same as the server */
+  var TUG_AT=0,TUG_MS=10000;                           /* the same as the server: the walls meet on the drop */
   var on=false,rnd=null,P=null,phase="",lastPh="",team=-1,score=0,vx=0,vy=0,lastT=0,lastMe=null;
   var swing=null,swAng=0,swAcc=0,swRate=[],idleT=0,pops=[],puffs=[],cool={},tug={s:[0,0],done:false,mine:0,send:0,sent:0,res:null},circ={phi:0,r:0.22,acc:0,lap:0,inside:false};
   var bots={},teams={},sv=[0,0],rs={id:null,x:0,y:0,m:0,a:null,lowT:0,nextP:0,swT:0},punchUntil=0,punchA=0,stKnob=null;
@@ -5200,7 +5200,7 @@ var MOSH=(function(){
   /* ---- swinging your arms: drag round in circles on the floor ---- */
   function swingAdd(d,now){var me=viewers[myId];if(!me)return;swAcc+=Math.abs(d);swAng+=d;
     if(swAcc>=Math.PI*2){swAcc-=Math.PI*2;swRate=swRate.filter(function(t){return now-t<1000;});
-      if(swRate.length<2){swRate.push(now);var on2=Math.abs(GAME.beatPos()%1-0.5)>0.35;add(on2?60:40,me.x*W,me.y*H-70,on2?"ON BEAT":"SWING",on2?"#D354A0":"#F5D03C");}}}
+      if(swRate.length<2){swRate.push(now);var on2=Math.abs(GAME.beatPos()%1-0.5)>0.35;add(on2?TUNE.v("mp.beatPts"):TUNE.v("mp.swingPts"),me.x*W,me.y*H-70,on2?"ON BEAT":"SWING",on2?"#D354A0":"#F5D03C");}}}
   /* the right stick: flick it out to punch that way (a fist that lands scores and knocks them back); circle it to windmill your arms */
   function punch(a){var me=viewers[myId];if(!on||!me)return;if(phase!=="pit"&&phase!=="circle"&&phase!=="charge")return;
     var now=performance.now();rs.nextP=now+320;punchUntil=now+260;punchA=a;
@@ -6095,7 +6095,7 @@ var CHART=(function(){
     }
     /* The drop: the beat where the song comes in hardest. Loudness and intensity over the next 4 beats against the
        8 before, kept away from the very start and end; the biggest jump wins. (The mosh pit's wall of death.) */
-    var drop=-1,dropRise=0,ds=Math.max(8,Math.round(nb*0.12)),de=nb-Math.max(12,Math.round(nb*0.06));
+    var drop=-1,dropRise=0,ds=Math.max(8,Math.round(nb*0.3)),de=nb-Math.max(12,Math.round(nb*0.06));   /* not in the first 30% of the song */
     for(i=ds;i<de;i++){var a0=0,a1=0,e0=0,e1=0,q;for(q=1;q<=8;q++){a0+=loud[i-q];e0+=E[i-q];}for(q=0;q<4;q++){a1+=loud[i+q];e1+=E[i+q];}
       var rise=(a1/4-a0/8)/6+(e1/4-e0/8)+(near(e,bt[i],3)/hit)*0.15;if(rise>dropRise){dropRise=rise;drop=i;}}
     return{ii:ii,steps:out,drop:drop>=0&&dropRise>0.15?Math.round(bt[drop]*10+LAG):0,peaks:ii.peaks.map(function(p){return [Math.round(bt[p[0]]*10+LAG),Math.round((p[1]+1<nb?bt[p[1]+1]:bt[p[1]]+50)*10+LAG)];})};
@@ -7117,7 +7117,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.29",SERVER_VERSION="";
+var PAGE_VERSION="1.81.30",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7696,7 +7696,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.29"></script>
+<script src="lab.js?v=1.81.30"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

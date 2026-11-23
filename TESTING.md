@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.30 — Mosh: swing points, wall of death on the drop
+
+- **Swing**: a punch swing off the beat is worth **10** points (was 40). On the beat it's still 60. Both are tunable in the lab (Mosh pit: Swing points, On-beat swing points).
+- **Wall of death**: the two walls now meet right on the drop. The charge starts 0.8 s before it, the 3-2-1 before that, and the push war begins at the drop.
+- **Not too early**: the song analyser doesn't look for the drop in the first 30% of the song. A drop in a game's first 30 s, or first 30% of its length, is moved later.
+- Server change: a live show needs the server redeployed so the server and its bots time the push war from the drop.
+
 ## v1.81.29 — Walk race pad dead centre
 
 - The dance pad is now centred on the floor in both portrait and landscape, and as big as it fits: up to 94% of the width, or 64% of the screen height, whichever is smaller. The racers run behind it, and the progress bar along the top shows the race.
