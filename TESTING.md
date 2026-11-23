@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.82 — Keepy uppy: locked in a shuffle
+
+1. Start Keepy uppy. Your dancer shuffles the whole game (running man), standing still or moving. Everyone else sees it too.
+2. Push the stick all the way out to the side (or hold left/right on a keyboard): they T-step sideways that way.
+3. New SPIN and TWIRL buttons above JUMP (Q and E on a keyboard) spin you round, and everyone sees it.
+4. The camera shows the whole dance floor again (no 150% zoom); the calmer move speed on PC stays.
+
 ## v1.81.81 — Free dance looks the same on everyone's screen
 
 **Needs a server redeploy on Render** (the server now passes spins along).

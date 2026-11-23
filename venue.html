@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.81"></script>
-<script src="gfx.js?v=1.81.81"></script>
-<script src="art.js?v=1.81.81"></script>
-<script src="voice.js?v=1.81.81"></script>
-<script src="instruments.js?v=1.81.81"></script>
-<script src="kart.js?v=1.81.81"></script>
-<script src="explain.js?v=1.81.81"></script>
+<script src="tune.js?v=1.81.82"></script>
+<script src="gfx.js?v=1.81.82"></script>
+<script src="art.js?v=1.81.82"></script>
+<script src="voice.js?v=1.81.82"></script>
+<script src="instruments.js?v=1.81.82"></script>
+<script src="kart.js?v=1.81.82"></script>
+<script src="explain.js?v=1.81.82"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -266,6 +266,11 @@ body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint,
 #kpJump{position:absolute;right:18px;bottom:150px;width:96px;height:96px;border-radius:50%;border:3px solid #FF4D6D;background:radial-gradient(circle,rgba(255,77,109,.5),rgba(20,8,30,.85));color:#fff;font:900 18px 'Silkscreen',ui-monospace,monospace;pointer-events:auto;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 #kpJump small{font:600 10px 'Silkscreen',ui-monospace,monospace;opacity:.75;margin-top:3px}
 #kpJump.dn{transform:scale(.94)}
+#keepyUI .kpX{position:absolute;right:122px;width:70px;height:46px;border:3px solid #7F77DD;background:#2a1f4a;color:#fff;font:700 12px 'Silkscreen',ui-monospace,monospace;pointer-events:auto;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:3px 3px 0 #000}
+#keepyUI .kpX small{font-size:9px;opacity:.7;margin-top:2px}#keepyUI .kpX.dn{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
+#kpSpin{bottom:202px}#kpTwirl{bottom:150px}
+@media (pointer:fine){#keepyUI .kpX{right:102px}#kpSpin{bottom:162px}#kpTwirl{bottom:118px}}
+@media (pointer:coarse){#keepyUI .kpX small{display:none}}
 @media (pointer:fine){#kpJump{width:76px;height:76px;font-size:14px;bottom:120px}}
 /* ── the roller rink (skate round) ── */
 #skateUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
@@ -800,7 +805,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <div id="ppGuide" title="How to flick each trick: follow the path, ending with a flick up. A harder flick goes higher"></div>
   </div>
   <div id="walkUI"><div id="wkBanner"></div><div id="wkHint"></div><canvas id="wkPad"></canvas></div>
-  <div id="keepyUI"><div id="kpBanner">🎈 KEEPY UPPY</div><div id="kpScore">0</div><div id="kpHint"></div><button id="kpJump" aria-label="Jump">JUMP<small>tap twice</small></button></div>
+  <div id="keepyUI"><div id="kpBanner">🎈 KEEPY UPPY</div><div id="kpScore">0</div><div id="kpHint"></div><button id="kpJump" aria-label="Jump">JUMP<small>tap twice</small></button><button id="kpSpin" class="kpX" data-r="spin" aria-label="Spin">SPIN<small>Q</small></button><button id="kpTwirl" class="kpX" data-r="twirl" aria-label="Twirl">TWIRL<small>E</small></button></div>
   <div id="skateUI"><div id="skBanner">🛼 ROLLER RINK</div><div id="skScore">0</div><div id="skSpeed"><i></i></div><div id="skTrick"></div><div id="skHint"></div><button id="skJump" aria-label="Jump">JUMP</button><div id="skWheel"><b data-t="1" style="left:50%;top:9%">SUPERMAN</b><b data-t="2" style="left:50%;top:91%">TUCK</b><b data-t="3" style="left:13%;top:50%">KICK</b><b data-t="4" style="left:87%;top:50%">SPLIT</b><i id="skKnob"></i></div></div>
   <div id="roundBox"></div>
   <button id="prQuit" type="button" title="End this practice round (Esc)">&#10005; Exit</button>
@@ -1898,7 +1903,7 @@ function resize(){
 /* ---------- playtest zoom: a − / + for each game, saved per game on this device, to try out zoom levels ----------
    The camera games (CTF, Kart flag, Ski, Mars Rally, Half pipe) scale their own camera; the others zoom the room. */
 var GZS={};try{GZS=JSON.parse(localStorage.getItem("uk_gz")||"{}")||{};}catch(e){GZS={};}
-function gzDef(k){return k==="keepy"&&typeof W!=="undefined"&&W>H&&W>700?1.5:1;}   /* keepy uppy on a computer starts at 150% */
+function gzDef(k){return 1;}
 window.ukGZ=function(k){var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
 var GZNAME={ctf:"CTF",kflag:"Kart flag",ski:"Ski",kart:"Mars Rally",pipe:"Half pipe",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",walk:"Walk race",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Highway 4 keys",crowd:"Crowd vote"};
 function gzKey(){var m=typeof GAME!=="undefined"&&GAME.mode;if(!m)return null;if(m==="ctf")return document.body.classList.contains("ctf-kart")?"kflag":"ctf";if(m==="skate"&&typeof ICE!=="undefined"&&ICE)return "ice";return m;}
@@ -2563,6 +2568,7 @@ document.addEventListener("keydown",function(e){
   if(GAME.mode==="pipe"&&(e.code==="Space"||/^Arrow|^Key[WASD]$/.test(e.code))){e.preventDefault();return;}
   if(GAME.mode==="ctf"&&e.code==="Space"){e.preventDefault();return;}
   if(GAME.mode==="keepy"&&e.code==="Space"){e.preventDefault();if(!e.repeat)KEEPY.jump();return;}
+  if(GAME.mode==="keepy"&&(e.code==="KeyQ"||e.code==="KeyE")){e.preventDefault();if(!e.repeat)react(e.code==="KeyQ"?"spin":"twirl");return;}
   if(GAME.mode==="skate"&&e.code==="Space"){e.preventDefault();if(!e.repeat)SKATE.jump();return;}
   if(GAME.mode==="mosh"&&MOSH.tugOn&&!/^(Arrow|Key[WASD]$)/.test(e.code)){e.preventDefault();if(!e.repeat)MOSH.tap();return;}   /* tug of war: any key taps */
   if(REACTKEY[e.code]&&GAME.mode!=="step"){e.preventDefault();if(!e.repeat)react(REACTKEY[e.code]);return;}
@@ -2586,6 +2592,7 @@ window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){
 document.getElementById("moshTap").addEventListener("pointerdown",function(e){e.preventDefault();MOSH.tap();});
 document.getElementById("skiJump").addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();SKI.jump();});
 Array.prototype.forEach.call(document.querySelectorAll("#skiTricks button"),function(b){b.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();SKI.trick(+b.getAttribute("data-t"));});});
+Array.prototype.forEach.call(document.querySelectorAll("#keepyUI .kpX"),function(b){b.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();react(b.getAttribute("data-r"));b.classList.add("dn");setTimeout(function(){b.classList.remove("dn");},150);});});
 document.getElementById("kpJump").addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();KEEPY.jump();this.classList.add("dn");var b=this;setTimeout(function(){b.classList.remove("dn");},150);});
 (function(){   /* JUMP opens the trick wheel round your thumb */
   var btn=document.getElementById("skJump"),wh=document.getElementById("skWheel"),kn=document.getElementById("skKnob"),ui=document.getElementById("skateUI"),pid=null,cx=0,cy=0,R=125;
@@ -3063,9 +3070,9 @@ var GAME=(function(){
   }
 
   function me(){return (myId&&viewers[myId])||null;}
-  function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;m.fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():null;if(hit)m.hitT=Date.now();}
+  function applyToMe(hit){var m=me();if(!m)return;m.pose=pose.slice();m.combo=combo;m.fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():mode==="keepy"?KEEPY.fd():null;if(hit)m.hitT=Date.now();}
   function sendPose(force){
-    var now=Date.now(),fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():null,msg=pose.map(function(a){return Math.round(a*100);});
+    var now=Date.now(),fd=mode==="free"?fdState():mode==="walk"?WALK.fd():mode==="pipe"?PIPE.fd():mode==="keepy"?KEEPY.fd():null,msg=pose.map(function(a){return Math.round(a*100);});
     if(fd){var rg=ART.dance(fd.s,fd.m,fd.c.map(function(v){return v/100;}),beatPos());msg=[rg.armL,rg.armR,rg.legL,rg.legR].map(function(a){return Math.round(a*100);});}   /* older pages see roughly the right pose */
     var sk=mode==="skate"?SKATE.wire():mode==="keepy"?KEEPY.wire():mode==="kart"?KART.wire():mode==="walk"?WALK.wire():mode==="pipe"?PIPE.wire():mode==="ski"?SKI.wire():null;
     var key=(fd?"fd"+fd.s+"."+fd.m+"."+fd.c.join(",")+(fd.h?"h"+fd.h.join("."):"")+(fd.b?"b"+fd.b:"")+(fd.sp?"s"+fd.sp.join("."):""):msg.join(","))+"|"+combo+(sk?"|"+sk.h+"."+sk.f+"."+sk.t:"");
@@ -3970,7 +3977,7 @@ var GAME=(function(){
     lastFit=0;DEVICE.fit();
     document.getElementById("gameTitle").textContent=m==="ctf"?"🚩 Capture the flag":m==="ski"?"⛷ Ski":m==="pipe"?"🛹 Half pipe":m==="walk"?"💃 Dance walk race":m==="kart"?"🏍 Mars Rally":m==="keepy"?"🎈 Keepy uppy":m==="skate"?(ICE?"⛸ Ice rink":"🛼 Roller rink"):m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
     if(m==="free")setTimeout(function(){if(fStyle<=0)fdPick(1);else fdRender();},0);   /* no blank freestyle: you start in the Two-step */
-    document.getElementById("moveHint").textContent=m==="ctf"?"Arrows / WASD or the stick to run · hold SPRINT (Space) · grab their flag, bring it home · tag their carrier · block them with your body":m==="ski"?"Point to steer, click to hop · down the mountain; flag zones then jump zones; Space pops you up so you can cut onto a new line":m==="pipe"?"Tap BEAT (Space) on the beat to build speed · swipe at the lip for a dance trick · A/D to lean and spin":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Move with the arrows / WASD or the stick · Space to jump, Space again in the air to double jump · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
+    document.getElementById("moveHint").textContent=m==="ctf"?"Arrows / WASD or the stick to run · hold SPRINT (Space) · grab their flag, bring it home · tag their carrier · block them with your body":m==="ski"?"Point to steer, click to hop · down the mountain; flag zones then jump zones; Space pops you up so you can cut onto a new line":m==="pipe"?"Tap BEAT (Space) on the beat to build speed · swipe at the lip for a dance trick · A/D to lean and spin":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Shuffle round with the arrows / WASD or the stick (push it right out sideways to T-step) · Space to jump, again in the air to double jump · Q spin · E twirl · head them up!":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
     var mm=me();if(mm)mm.dance=myDance;
@@ -4042,7 +4049,7 @@ var GAME=(function(){
       following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
       spin:mySpin.on?+mySpin.vel.toFixed(1):0,handles:mode==="free"?floorHandles():null,fd:mode==="free"?fdState():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{spinStart:spinStart,turnBy:turnBy,get back(){return fBack;},get spinDir(){return mySpin.on&&mode==="free"?ART.face8(Math.sin(mySpin.ang+fBack*Math.PI/2),Math.cos(mySpin.ang+fBack*Math.PI/2),-1):-1;},get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard","Expert"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},REST:REST};
+  return{spinStart:spinStart,turnBy:turnBy,get back(){return fBack;},get spinDir(){return mySpin.on&&mode==="free"?ART.face8(Math.sin(mySpin.ang+fBack*Math.PI/2),Math.cos(mySpin.ang+fBack*Math.PI/2),-1):-1;},get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard","Expert"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},poseNow:function(){applyToMe();sendPose();},REST:REST};
 })();
 /* ============================================================
    MOSH PIT ROUND
@@ -4112,7 +4119,7 @@ var KEEPY=(function(){
     var inp=input(),spd=TUNE.v("kp.speed")*Math.max(0.5,Math.min(1,sc()*195/W));vx=inp.x*spd;vy=inp.y*spd*(W/H)*0.6;   /* the same pace for your character on a wide screen as on a phone (it was ~3x quicker on PC) */
     me.tx=Math.max(B.x0,Math.min(B.x1,me.tx+vx*dt));me.ty=Math.max(B.y0,Math.min(B.y1,me.ty+vy*dt));me.x=me.tx;me.y=me.ty;
     if(jumps||zp>0){vz-=TUNE.v("kp.gravity")*dt;zp+=vz*dt;if(zp<=0){zp=0;vz=0;jumps=0;dbl=false;}}
-    sendPos(me.tx,me.ty);
+    sendPos(me.tx,me.ty);me.dance=4;me.fd=fd();if(GAME.poseNow)GAME.poseNow();
     /* hits: something within reach of your head and hands */
     objs.forEach(function(o){
       if(o.down||(cool[o.k]||0)>now)return;var s2=o.s,dx=(s2.x-me.x)*W/2,dy=(s2.y-me.y)*H/2;
@@ -4123,7 +4130,7 @@ var KEEPY=(function(){
       pops.push({x:me.x*W,y:me.y*H-zp*2-60,t:now,txt:(isDbl?"DOUBLE! ":"")+(o.type==="feather"?"🪶":o.type==="ball"?"⚽":"🎈")+(str>1?" ×"+str:"")+" +"+pts,col:T.col});
     });
     GAME.moshPose(zp>0?(dbl?[2.9,-2.9,0.7,-0.7]:[2.5,-2.5,0.35,-0.35]):[0.5+Math.sin(now/200)*0.15,-0.5-Math.sin(now/200)*0.15,Math.abs(inp.x)+Math.abs(inp.y)>0?Math.sin(now/110)*0.4:0,Math.abs(inp.x)+Math.abs(inp.y)>0?-Math.sin(now/110)*0.4:0]);
-    var h=$("kpHint");if(h)h.textContent=jumps===1?"Jump again for a double jump!":"Get under them · jump (Space), jump again in the air for more height";
+    var h=$("kpHint");if(h)h.textContent=jumps===1?"Jump again for a double jump!":(window.matchMedia&&matchMedia("(pointer:coarse)").matches?"Get under them · JUMP, again in the air for more height · SPIN / TWIRL for style":"Get under them · Space to jump (again in the air for more height) · Q spin · E twirl");
     if(PRACTICE.on)botTick(dt,now,t);
   }
   /* practice: the practice dancers chase things and head them up too */
@@ -4135,7 +4142,7 @@ var KEEPY=(function(){
       if(b.j){b.vz-=240*dt;b.z+=b.vz*dt;if(b.z<=0){b.z=0;b.vz=0;b.j=0;}}
       objs.forEach(function(o){if(o.down||(b.cool[o.k]||0)>now)return;if(Math.abs((o.s.x-v.x)*W/2)>9||Math.abs((o.s.y-v.y)*H/2)>7)return;if(o.s.z<b.z+8||o.s.z>b.z+30||o.s.vz>40)return;
         if(Math.random()<0.75){b.cool[o.k]=now+380;kick(o,v.x,v.y,0,0,b.j===2,t,"bot");}else b.cool[o.k]=now+600;});
-      v.dance=4;v.sk={h:Math.round(b.z),f:0,t:0};v.pose=b.z>0?[2.5,-2.5,0.35,-0.35]:[0.5,-0.5,0,0];
+      v.dance=4;v.sk={h:Math.round(b.z),f:0,t:0};v.pose=b.z>0?[2.5,-2.5,0.35,-0.35]:[0.5,-0.5,0,0];v.fd={s:9,m:0,c:[0,0,0,0]};
     });
   }
   function draw(g){
@@ -4146,10 +4153,12 @@ var KEEPY=(function(){
     g.globalAlpha=1;
   }
   function wire(){return{h:Math.round(zp),f:0,t:0};}
+  /* the whole game you're locked in a steady shuffle: running man on the spot or moving, and with the stick pushed right out sideways the T-step, travelling that way */
+  function fd(){var i=on?input():{x:0,y:0},side=Math.abs(i.x)>0.85;return{s:9,m:side?1:0,c:[Math.round((side?i.x:i.x*0.6)*100),0,0,0]};}
   function looks(v,isMe,scl){var h=isMe?zp:(v.sk&&v.sk.h)||0;return{lift:-h*scl,rot:0,ns:true};}
   window.ukKeepyAt=function(x,y){var me=myId&&viewers[myId];if(me){me.tx=me.x=x;me.ty=me.y=y;}};
   window.ukKeepy=function(){return{on:on,score:score,z:Math.round(zp),jumps:jumps,objs:objs.map(function(o){return{type:o.type,x:+o.s.x.toFixed(3),y:+o.s.y.toFixed(3),z:Math.round(o.s.z),down:!!o.down,streak:o.streak||0};})};};
-  return{start:start,stop:stop,tick:tick,jump:jump,onKick:onKick,draw:draw,wire:wire,looks:looks,get on(){return on;}};
+  return{start:start,stop:stop,tick:tick,jump:jump,onKick:onKick,draw:draw,wire:wire,looks:looks,fd:fd,get on(){return on;}};
 })();
 /* ============================================================
    DANCE WALK RACE (the walk round)
@@ -7326,7 +7335,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.81",SERVER_VERSION="";
+var PAGE_VERSION="1.81.82",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7904,7 +7913,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.81"></script>
+<script src="lab.js?v=1.81.82"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
