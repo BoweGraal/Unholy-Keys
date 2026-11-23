@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.37 — Holds and Expert
+
+- **Holds no longer run into the next step on the same arrow.** A hold now ends at least half a beat (and at least 0.26 s) before the next step on that arrow, so you can let go and hit it cleanly. If there isn't room for a hold of at least three quarters of a beat, it becomes a normal step.
+- **Expert feels like Expert again.** The phone-friendly thinning that every level goes through was capping everything at half beats, so Expert's quarter-beat bursts never got through. On Expert it now lets quarter beats through (never closer than 0.12 s). On a test chart Expert went from 4.9 to 5.6 steps a second; Hard stays at 3.9 and Normal at 2.1.
+
 ## v1.81.36 — Skip timer fixed; Kart flag / CTF count-in
 
 - **Skip timer** now sits inside the countdown card, under the number. When the how-to card is showing, it moves to the top of the screen, above the how-to card, which was covering it and swallowing the tap. It also responds to the finger lifting, not only to a click, and Free dance and Leave practice are hidden during the countdown (Exit stays top left).

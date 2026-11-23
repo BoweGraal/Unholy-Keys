@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.36"></script>
-<script src="gfx.js?v=1.81.36"></script>
-<script src="art.js?v=1.81.36"></script>
-<script src="voice.js?v=1.81.36"></script>
-<script src="instruments.js?v=1.81.36"></script>
-<script src="kart.js?v=1.81.36"></script>
-<script src="explain.js?v=1.81.36"></script>
+<script src="tune.js?v=1.81.37"></script>
+<script src="gfx.js?v=1.81.37"></script>
+<script src="art.js?v=1.81.37"></script>
+<script src="voice.js?v=1.81.37"></script>
+<script src="instruments.js?v=1.81.37"></script>
+<script src="kart.js?v=1.81.37"></script>
+<script src="explain.js?v=1.81.37"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2734,14 +2734,14 @@ var GAME=(function(){
      only single arrows), nothing faster than half beats, and steps that fall between the beats are dropped so
      the chart sits on the groove. Applied at every level, on top of the easing below. */
   function touchScreen(){return !!(window.matchMedia&&matchMedia("(pointer: coarse)").matches)||!!window.ukForceTouch;}
-  function thumbChart(chart){
-    if(!chart||!chart.steps)return chart;
+  function thumbChart(chart,diff){
+    if(!chart||!chart.steps)return chart;diff=diff|0;
     var per=60000/(chart.bpm||120),bt=chart.beats||[],out=[],last=-1e9,holds=[],bi=0;
     function offGrid(ms){if(bt.length<4)return 0;while(bi<bt.length-1&&bt[bi+1]<=ms)bi++;var b0=bt[bi],b1=bi+1<bt.length?bt[bi+1]:b0+per,g=b1-b0||per,f=(ms-b0)/g;
       var d=Math.min(Math.abs(f),Math.abs(f-0.25),Math.abs(f-0.5),Math.abs(f-0.75),Math.abs(f-1));return d*g;}   /* ms from the nearest beat, half beat or quarter beat (off-beat steps stay in) */
     for(var i=0;i<chart.steps.length;i++){
       var s=chart.steps[i],t=s[0],m=s[1],hold=s.length>2?+s[2]||0:0;
-      if(t-last<Math.max(per*0.45,190))continue;                      /* no faster than about half beats, and never under 190 ms (fast or double-time songs) */
+      if(t-last<(diff>=3?Math.max(per*0.22,120):Math.max(per*0.45,190)))continue;   /* no faster than about half beats (quarter beats on Expert), and never under 190 ms (120 on Expert) */
       if(offGrid(t)>Math.max(45,per*0.1))continue;                    /* well between the grid: leave it out */
       holds=holds.filter(function(e){return e>t+30;});                /* the arrows still held right now */
       var nh=holds.length;                                            /* each one is a thumb that's busy: never more than two presses at once */
@@ -2752,6 +2752,10 @@ var GAME=(function(){
       if(hold&&cnt>1)m=m&(-m);                                        /* a double that holds becomes one held arrow */
       out.push(hold?[t,m,hold]:[t,m]);last=t;if(hold)holds.push(t+hold);
     }
+    /* a hold ends well before the next step on the same arrow, so you can let go and hit it cleanly (or it becomes a tap) */
+    var gapH=Math.max(per*0.5,260);
+    for(var hi=0;hi<out.length;hi++){var ho=out[hi];if(ho.length<3)continue;
+      for(var hj=hi+1;hj<out.length;hj++)if(out[hj][1]&ho[1]){var room=out[hj][0]-gapH-ho[0];if(ho[2]>room){if(room>=per*0.75)ho[2]=Math.round(room);else out[hi]=[ho[0],ho[1]];}break;}}
     var c={};for(var k in chart)c[k]=chart[k];c.steps=out;return c;
   }
   /* The difficulty ladder. One chart goes in, and each level is built from the song's own rhythm:
@@ -2837,7 +2841,7 @@ var GAME=(function(){
   function easeChart(chart,diff){
     if(!chart)return chart;
     if(chart.hand&&(diff|0)>=3)return chart;   /* hand-made steps: Expert is exactly what was written */
-    chart=thumbChart(chart);   /* one chart for everyone, phone or computer, so every player has the same chances at points */
+    chart=thumbChart(chart,diff);   /* one chart for everyone, phone or computer, so every player has the same chances at points */
     return levelChart(chart,diff|0);
   }
   window.ukEase=easeChart;window.ukDiffOf=diffOf;window.ukThumb=thumbChart;
@@ -7153,7 +7157,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.36",SERVER_VERSION="";
+var PAGE_VERSION="1.81.37",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7735,7 +7739,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.36"></script>
+<script src="lab.js?v=1.81.37"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
