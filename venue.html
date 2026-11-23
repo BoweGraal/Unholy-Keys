@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.50"></script>
-<script src="gfx.js?v=1.81.50"></script>
-<script src="art.js?v=1.81.50"></script>
-<script src="voice.js?v=1.81.50"></script>
-<script src="instruments.js?v=1.81.50"></script>
-<script src="kart.js?v=1.81.50"></script>
-<script src="explain.js?v=1.81.50"></script>
+<script src="tune.js?v=1.81.52"></script>
+<script src="gfx.js?v=1.81.52"></script>
+<script src="art.js?v=1.81.52"></script>
+<script src="voice.js?v=1.81.52"></script>
+<script src="instruments.js?v=1.81.52"></script>
+<script src="kart.js?v=1.81.52"></script>
+<script src="explain.js?v=1.81.52"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -149,6 +149,8 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 /* ── capture the flag ── */
 #ctfCv{display:none;position:fixed;inset:0;width:100%;height:100%;z-index:19;touch-action:none;image-rendering:pixelated}
 #ctfCv.on{display:block}
+#gzBox{display:none;position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 40px);transform:translateX(-50%);z-index:9000;align-items:center;gap:4px;background:#120e22;border:2px solid #7F77DD;box-shadow:3px 3px 0 #000;padding:3px;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#fff;pointer-events:auto}
+#gzBox.on{display:flex}#gzBox button{width:30px;height:28px;font:700 16px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#2a2440;border:2px solid #4a4070;padding:0;cursor:pointer}#gzBox span{padding:0 8px;white-space:nowrap;cursor:pointer}
 #bigScreen.ctfg{position:fixed!important;z-index:18!important;border:0!important;box-shadow:none!important;aspect-ratio:auto!important;transform:none!important;visibility:visible!important;right:auto!important;bottom:auto!important}#bigScreen.ctfg::before,#bigScreen.ctfg::after{display:none}
 #ctfUI{display:none;position:fixed;inset:0;z-index:21;pointer-events:none}
 #ctfUI.on{display:block}
@@ -1873,6 +1875,19 @@ function resize(){
   var pf=document.getElementById("perfFront");if(pf){pf.width=W;pf.height=H;}
 }
 
+/* ---------- playtest zoom: a − / + for each game, saved per game on this device, to try out zoom levels ----------
+   The camera games (CTF, Kart flag, Ski, Mars Rally, Half pipe) scale their own camera; the others zoom the room. */
+var GZS={};try{GZS=JSON.parse(localStorage.getItem("uk_gz")||"{}")||{};}catch(e){GZS={};}
+window.ukGZ=function(k){var z=k&&+GZS[k];return z>0.2&&z<5?z:1;};
+var GZNAME={ctf:"CTF",kflag:"Kart flag",ski:"Ski",kart:"Mars Rally",pipe:"Half pipe",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",walk:"Walk race",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Highway 4 keys",crowd:"Crowd vote"};
+function gzKey(){var m=typeof GAME!=="undefined"&&GAME.mode;if(!m)return null;if(m==="ctf")return document.body.classList.contains("ctf-kart")?"kflag":"ctf";if(m==="skate"&&typeof ICE!=="undefined"&&ICE)return "ice";return m;}
+function gzUI(){var k=gzKey(),show=!!k&&((typeof PRACTICE!=="undefined"&&PRACTICE.on)||/[?&]zoom\b/.test(location.search)||localStorage.getItem("uk_gzui")==="1"),b=document.getElementById("gzBox");
+  if(!b){if(!show)return;b=document.createElement("div");b.id="gzBox";b.innerHTML='<button data-z="-1" aria-label="Zoom out">\u2212</button><span title="Tap to reset to 100%"></span><button data-z="1" aria-label="Zoom in">+</button>';document.body.appendChild(b);
+    b.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();var t=e.target.closest("[data-z],span"),k2=gzKey();if(!t||!k2)return;
+      var z=window.ukGZ(k2);z=t.tagName==="SPAN"?1:Math.max(0.5,Math.min(2.5,Math.round((z+0.1*(+t.getAttribute("data-z")))*10)/10));if(Math.abs(z-1)<0.001)delete GZS[k2];else GZS[k2]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}gzUI();},true);}
+  b.classList.toggle("on",show);if(show)b.querySelector("span").textContent=(GZNAME[k]||k)+" "+Math.round(window.ukGZ(k)*100)+"%";}
+setInterval(gzUI,400);
+window.ukGzSet=function(k,z){if(z===1)delete GZS[k];else GZS[k]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}};   /* test hook */
 /* scroll-wheel zoom on the venue floor (PC): wheel up zooms in, wheel down out, anchored low so the dancers grow upward; taps are mapped back through it */
 var VZ=1,VZ_AY=0.62;
 try{VZ=Math.max(1,Math.min(2.6,+localStorage.getItem("uk_vz")||1));}catch(e){}
@@ -1884,11 +1899,11 @@ function vzCalc(){
   var f=null;try{f=GAME.mode==="free"&&typeof ROUND!=="undefined"?ROUND.featured():null;}catch(e){}
   var want=f&&f.id===myId&&VZ_ME&&!(typeof PIPE!=="undefined"&&PIPE.on)?1:0;
   vzTz+=(want-vzTz)*Math.min(1,dt*3);if(vzTz<0.01)vzTz=0;
-  var base=vzActive(),Z0=base?VZ:1;
+  var base=vzActive(),gz=window.ukGZ(gzKey()),Z0=(base?VZ:1)*gz;if(Math.abs(gz-1)>0.001)base=true;
   document.body.classList.toggle("vz-turn",vzTz>0.3);
   if(!base&&!vzTz){VZS.on=false;return;}
   /* zoomed in: the camera follows you, kept inside the room so you never see past the edges */
-  var aY=H*VZ_AY,bx=W/2,by=aY;if(base&&VZ_ME){bx=Math.max(W/(2*Z0),Math.min(W-W/(2*Z0),VZ_ME[0]));by=Math.max(aY/Z0,Math.min(H-(H-aY)/Z0,VZ_ME[1]-VZ_H*0.3));}
+  var aY=H*VZ_AY,bx=W/2,by=aY;if(base&&VZ_ME&&Z0>1){bx=Math.max(W/(2*Z0),Math.min(W-W/(2*Z0),VZ_ME[0]));by=Math.max(aY/Z0,Math.min(H-(H-aY)/Z0,VZ_ME[1]-VZ_H*0.3));}
   VZ_B[0]+=(bx-VZ_B[0])*Math.min(1,dt*5);VZ_B[1]+=(by-VZ_B[1])*Math.min(1,dt*5);bx=VZ_B[0];by=VZ_B[1];
   var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-VZ_H*0.16:H*VZ_AY,Zt=Math.max(Z0,Math.min(6,Math.min(TUNE.v("fd.turnH")*H,Math.max(120,(W-192)*1.08))/VZ_H));   /* zoom so your whole body, arms out, fits in the gap between the two columns of buttons */
   VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=bx+(fx-bx)*tz;VZS.cy=by+(fy-by)*tz;VZS.ay=H*VZ_AY+(H*0.47-H*VZ_AY)*tz;VZS.on=true;
@@ -4283,7 +4298,7 @@ var PIPE=(function(){
   function wallPx(){return H*0.14*warp;}   /* lower walls than before: a wide, shallow pipe */
   function airPx(){return H*0.24;}
   /* on a phone the pipe is twice as wide as the screen and the camera follows you, so you only see the side you're on */
-  function zoomS(){return (W<640||H>W)?2.1:1;}
+  function zoomS(){return ((W<640||H>W)?2.1:1)*window.ukGZ("pipe");}
   function sx(x){return W/2+(x-camC)*zoomS()*W;}
   function camStep(){var now=performance.now(),dt=Math.min(0.1,(now-(camT||now))/1000);camT=now;var S=zoomS(),me=myId&&viewers[myId],tg=0.5;
     if(S>1){if(me&&grp&&grp.members.indexOf(myId)>=0)tg=me.x;if(!air&&!grind)tg=Math.max(XL+0.5/S,Math.min(XR-0.5/S,tg));}
@@ -4665,7 +4680,7 @@ var SKI=(function(){
   /* the start: zoomed right in on you at the top while everyone clicks their skis on, then a slow pull back to show the
      whole mountain by the time it's GO (beat 8). 0 = all the way in, 1 = normal */
   function intro(){var b=beatAt(songPos());if(!(b>-1e8))return 0;var k=Math.max(0,Math.min(1,b/GO_BEAT));return k*k*(3-2*k);}
-  function view(){var ik=intro(),z=Math.max(1.45,Math.min(2.9,Math.min(W/560,H/390)))*(1-0.14*Math.min(1,v/Math.max(1,T("maxSpeed"))))*(1+1.6*(1-ik));return{z:z,sx:function(wx){return W/2+(wx-camX)*z;},sy:function(wy){return H*(H>W*1.2?0.5:0.42)+(wy-y)*z;}};}   /* you sit a little above the middle, clear of the round banner */
+  function view(){var ik=intro(),z=Math.max(1.45,Math.min(2.9,Math.min(W/560,H/390)))*(1-0.14*Math.min(1,v/Math.max(1,T("maxSpeed"))))*(1+1.6*(1-ik))*window.ukGZ("ski");return{z:z,sx:function(wx){return W/2+(wx-camX)*z;},sy:function(wy){return H*(H>W*1.2?0.5:0.42)+(wy-y)*z;}};}   /* you sit a little above the middle, clear of the round banner */
   function tick(){
     if(!on)return;
     var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
@@ -4960,7 +4975,7 @@ var CTFG=(function(){
     var show=ctfRound()&&on,c=$("ctfCv");if(!c)return;c.classList.toggle("on",show);if(!show)return;
     var dpr=Math.min(2,window.devicePixelRatio||1),Wc=c.clientWidth,Hc=c.clientHeight;if(c.width!==Math.round(Wc*dpr)||c.height!==Math.round(Hc*dpr)){c.width=Math.round(Wc*dpr);c.height=Math.round(Hc*dpr);}
     g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;g.fillStyle="#07041a";g.fillRect(0,0,Wc,Hc);
-    var chatH=parseFloat(getComputedStyle(document.body).getPropertyValue("--chatH"))||0,TOP=36,BOT=chatH>0?chatH+4:0,V=C.cam(I,Wc,Hc,TOP,BOT,me,kart),now=performance.now();lastV=V;
+    var chatH=parseFloat(getComputedStyle(document.body).getPropertyValue("--chatH"))||0,TOP=36,BOT=chatH>0?chatH+4:0,V=C.cam(I,Wc,Hc,TOP,BOT,me,kart,window.ukGZ(kart?"kflag":"ctf")),now=performance.now();lastV=V;
     g.save();g.beginPath();g.rect(0,TOP,Wc,Hc-TOP-BOT);g.clip();   /* the arena stays in its window as the camera follows you */
     /* the centre stage: the song's video lies on the ground in the middle of the arena (it shows through a hole in this canvas, so everyone drives over it) */
     var CS=C.stage(I),vidOn=!!(JT&&JT.video)&&perfHere();V.hole=vidOn?CS.vid:null;
@@ -7187,7 +7202,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.50",SERVER_VERSION="";
+var PAGE_VERSION="1.81.52",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7764,7 +7779,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.50"></script>
+<script src="lab.js?v=1.81.52"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

@@ -1688,9 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
-## v1.81.46 — Graphics lab: see the body around the part
+## v1.81.52 — Ski designer: right click erases
 
-- **Pixel editor, with Show character on:** the canvas zooms out to show 8 pixels of the character around the part you're editing (the torso and other arm round an arm, the hips round a leg). The surrounding body is faint, and you still only paint inside the part's box. Turn Show character off to go back to the close-up.
+- **Ski designer:** a right click (without dragging) erases whatever's under the cursor, whichever tool is picked. Right-drag still scrolls the view.
+
+## v1.81.51 — Playtest zoom for every game
+
+- **A − / + zoom box at the top of the screen in every game** (dance practice; or add `?zoom` to a live link). It shows the game and the zoom, e.g. "CTF 60%". Steps are 10%, from 50% to 250%. Tap the label to reset to 100%. Each game remembers its own zoom on that device.
+- **Camera games** (CTF, Kart flag, Ski, Mars Rally, Half pipe): the game's own camera zooms.
+- **Floor games** (Free dance, Mosh pit, rinks, Keepy uppy, Walk race, Step, Target, the highways): the whole room zooms. Zoomed in follows you; zoomed out shows the room smaller.
+- To use: play each game on phone and PC, set the zoom that feels right, and send me the numbers (e.g. "CTF PC 80%, phone 110%"). I'll make those the defaults.
 
 ## v1.81.50 — Colour keys: painted and imported art follows the player's colours
 
@@ -1718,6 +1725,9 @@ Needs a Render redeploy (server.js changed).
 - **⬇ Export PNG:** saves the current part as a PNG at 8× size, with crisp pixels.
 - All of these are in both the side panel and the full-screen editor's toolbar.
 - Includes #218 (body around the part); merging this brings it too.
+## v1.81.46 — Graphics lab: see the body around the part
+
+- **Pixel editor, with Show character on:** the canvas zooms out to show 8 pixels of the character around the part you're editing (the torso and other arm round an arm, the hips round a leg). The surrounding body is faint, and you still only paint inside the part's box. Turn Show character off to go back to the close-up.
 
 ## v1.81.45 — Graphics lab: Part list grouped
 
