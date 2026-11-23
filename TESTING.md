@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.46 — Graphics lab: see the body around the part
+
+- **Pixel editor, with Show character on:** the canvas zooms out to show 8 pixels of the character around the part you're editing (the torso and other arm round an arm, the hips round a leg). The surrounding body is faint, and you still only paint inside the part's box. Turn Show character off to go back to the close-up.
+
 ## v1.81.45 — Graphics lab: Part list grouped
 
 - **Pixel editor → Part:** three groups:

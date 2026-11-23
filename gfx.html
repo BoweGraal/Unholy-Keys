@@ -102,9 +102,9 @@ button.pe{background:#1f5f6e;box-shadow:inset -3px -3px 0 #0f3640,inset 3px 3px 
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.81.45"></script>
-<script src="art.js?v=1.81.45"></script>
-<script src="instruments.js?v=1.81.45"></script>
+<script src="gfx.js?v=1.81.46"></script>
+<script src="art.js?v=1.81.46"></script>
+<script src="instruments.js?v=1.81.46"></script>
 <script>
 (function(){
 /* pixel look: no emoji in any label (the lab writes a lot of its own text, so strip them as they appear) */
@@ -292,15 +292,22 @@ function pxSelect(){
 }
 function pxFit(){
   var sp=PX.spec;if(!sp){pxSelect();sp=PX.spec;}var v=$("view"),w=Math.max(160,v.clientWidth-8),h=Math.max(120,v.clientHeight-8);
-  var cell=Math.max(3,Math.floor(Math.min(w/sp.w,h/sp.h)*PX.zoom));PX.cell=cell;
-  cv.width=sp.w*cell;cv.height=sp.h*cell;cv.style.width=cv.width+"px";cv.style.height=cv.height+"px";cv.style.maxWidth="none";cv.style.maxHeight="none";cv.style.touchAction="none";
+  var M=PX.mg=pxMargin(),tw=sp.w+2*M,th=sp.h+2*M;   /* with the character showing, a border of the body around the part */
+  var cell=Math.max(3,Math.floor(Math.min(w/tw,h/th)*PX.zoom));PX.cell=cell;
+  cv.width=tw*cell;cv.height=th*cell;cv.style.width=cv.width+"px";cv.style.height=cv.height+"px";cv.style.maxWidth="none";cv.style.maxHeight="none";cv.style.touchAction="none";
 }
+function pxMargin(){var sp=PX.spec;return PX.ref&&sp&&sp.hole&&sp.ref?8:0;}
 function pxRender(){var sp=PX.spec,b=PX.base.getContext("2d");b.clearRect(0,0,sp.w,sp.h);sp.draw(b);}
 function drawPixel(now){
-  var sp=PX.spec;if(!sp)return;var v=$("view"),sig=v.clientWidth+"x"+v.clientHeight+"|"+PX.zoom+"|"+sp.w+"x"+sp.h+"|"+PX.fs;
+  var sp=PX.spec;if(!sp)return;var v=$("view"),sig=v.clientWidth+"x"+v.clientHeight+"|"+PX.zoom+"|"+sp.w+"x"+sp.h+"|"+PX.fs+"|"+pxMargin();
   if(sig!==PX.sig){PX.sig=sig;pxFit();}
-  var c=PX.cell,W=cv.width,H=cv.height,x,y;pxRender();
-  g.clearRect(0,0,W,H);for(y=0;y<sp.h;y++)for(x=0;x<sp.w;x++){g.fillStyle=((x+y)&1)?"#e6e6ea":"#f4f4f6";g.fillRect(x*c,y*c,c,c);}
+  var c=PX.cell,M=PX.mg||0,x,y;pxRender();
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);
+  if(M){g.fillStyle="#cfd0d8";g.fillRect(0,0,cv.width,cv.height);g.imageSmoothingEnabled=false;   /* the body around the part, faint, outside the edit box */
+    var big=PX.refBig||(PX.refBig=document.createElement("canvas"));big.width=sp.w+2*M;big.height=sp.h+2*M;var bgc=big.getContext("2d");bgc.clearRect(0,0,big.width,big.height);bgc.translate(M,M);ART.paint.off(false);try{sp.ref(bgc);}finally{}
+    g.globalAlpha=0.5;g.drawImage(big,0,0,cv.width,cv.height);g.globalAlpha=1;}
+  g.translate(M*c,M*c);var W=sp.w*c,H=sp.h*c;
+  for(y=0;y<sp.h;y++)for(x=0;x<sp.w;x++){g.fillStyle=((x+y)&1)?"#e6e6ea":"#f4f4f6";g.fillRect(x*c,y*c,c,c);}
   g.imageSmoothingEnabled=false;
   if(PX.ghostOn){if(!PX.ghostC)PX.ghostC=pxGhost();g.globalAlpha=0.38;g.drawImage(PX.ghostC,0,0,W,H);g.globalAlpha=1;}   /* redraw: the original, faint, to draw over */
   if(PX.ref&&sp.ref){var rg=PX.refc.getContext("2d");rg.clearRect(0,0,sp.w,sp.h);ART.paint.off(true);try{sp.ref(rg);}finally{ART.paint.off(false);}g.globalAlpha=0.38;g.drawImage(PX.refc,0,0,W,H);g.globalAlpha=1;}
@@ -313,8 +320,9 @@ function drawPixel(now){
     hc.forEach(function(p){g.strokeRect(p[0]*c+1,p[1]*c+1,c-2,c-2);});
     if(PX.mirror&&sp.sym&&(PX.tool==="pen"||PX.tool==="erase"||PX.tool==="brush")){g.strokeStyle="rgba(245,197,24,.95)";hc.forEach(function(p){var mx=2*sp.ax-1-p[0];if(mx!==p[0])g.strokeRect(mx*c+1,p[1]*c+1,c-2,c-2);});}   /* Mirror is on: the yellow boxes are the copies */
   }
+  g.setTransform(1,0,0,1,0,0);
 }
-function pxCell(e){var r=cv.getBoundingClientRect();return[Math.floor((e.clientX-r.left)*cv.width/r.width/PX.cell),Math.floor((e.clientY-r.top)*cv.height/r.height/PX.cell)];}
+function pxCell(e){var r=cv.getBoundingClientRect(),M=PX.mg||0;return[Math.floor((e.clientX-r.left)*cv.width/r.width/PX.cell)-M,Math.floor((e.clientY-r.top)*cv.height/r.height/PX.cell)-M];}
 function pxBrushCells(cx,cy){var s=PX.bsize,a=Math.floor(s/2),o=[];for(var dy=0;dy<s;dy++)for(var dx=0;dx<s;dx++){if(s>=4&&(dx===0||dx===s-1)&&(dy===0||dy===s-1))continue;o.push([cx-a+dx,cy-a+dy]);}return o;}
 function pxPut(cx,cy){if(PX.tool==="brush"){pxBrushCells(cx,cy).forEach(function(c){pxPutOne(c[0],c[1],"pen");});return;}pxPutOne(cx,cy,PX.tool);}
 function pxPutOne(cx,cy,tool){var sp=PX.spec;if(cx<0||cy<0||cx>=sp.w||cy>=sp.h)return;var xs=[cx];if(PX.mirror&&sp.sym){var mx=2*sp.ax-1-cx;if(mx>=0&&mx<sp.w&&mx!==cx)xs.push(mx);}
