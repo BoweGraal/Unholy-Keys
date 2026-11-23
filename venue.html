@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.59"></script>
-<script src="gfx.js?v=1.81.59"></script>
-<script src="art.js?v=1.81.59"></script>
-<script src="voice.js?v=1.81.59"></script>
-<script src="instruments.js?v=1.81.59"></script>
-<script src="kart.js?v=1.81.59"></script>
-<script src="explain.js?v=1.81.59"></script>
+<script src="tune.js?v=1.81.60"></script>
+<script src="gfx.js?v=1.81.60"></script>
+<script src="art.js?v=1.81.60"></script>
+<script src="voice.js?v=1.81.60"></script>
+<script src="instruments.js?v=1.81.60"></script>
+<script src="kart.js?v=1.81.60"></script>
+<script src="explain.js?v=1.81.60"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -6649,16 +6649,17 @@ var PRACTICE=(function(){
       if(skipWant){skipWant=false;clearTimeout(startT);startT=null;playSong(my);}
     };
     ROUND.onMsg({type:"round",phase:"countdown",n:n,mode:mode,ice:ice,kflag:kflag,battle:battle,title:title,chart:null,ms:secs*1000+60000});
+    document.body.classList.add("pr-count");   /* Skip works from here: while the steps load it waits for them, then starts at once */
     /* a YouTube song: its steps come from the analysis saved when it was added */
     if(ytSel){var ys=ytSel;
       YTS.features(ys.yt).then(function(f){if(my!==job)return;go(CHART.fromFeatures(f,{level:level}));})
-        .catch(function(){document.body.classList.remove("pr-busy");ROUND.onMsg({type:"round",phase:"off",n:n});note("Couldn’t load the steps for that YouTube song. Try again in a moment.");});
+        .catch(function(){document.body.classList.remove("pr-busy","pr-count");skipWant=false;ROUND.onMsg({type:"round",phase:"off",n:n});note("Couldn’t load the steps for that YouTube song. Try again in a moment.");});
       return;}
     decode().then(function(b){
       if(my!==job)return;
       CHART.analyse(b,{level:level},function(c){handChart(songUrl,c).then(go);});        /* free dance too: the spotlight turns follow the bars */
     }).catch(function(e){
-      document.body.classList.remove("pr-busy");ROUND.onMsg({type:"round",phase:"off",n:n});
+      document.body.classList.remove("pr-busy","pr-count");skipWant=false;ROUND.onMsg({type:"round",phase:"off",n:n});
       note("Couldn’t open that file ("+(e&&e.message||"unknown format")+"). Try an MP3 or WAV.");
     });
   }
@@ -7223,7 +7224,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.59",SERVER_VERSION="";
+var PAGE_VERSION="1.81.60",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7800,7 +7801,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.59"></script>
+<script src="lab.js?v=1.81.60"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
