@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.67 — Ski: mouse guide on PC
+
+1. Play Ski on a computer. Once you're moving, the line of text above the trick buttons is replaced by a pixel mouse: **left = HOP (in the air: trick)**, **right = NEXT TRICK**, with "point to steer · land in a divot to swoop" under it.
+2. In the air the left label lights up yellow. On a phone you still get the old text hints.
+
 ## v1.81.66 — Pixel icons in game banners
 
 1. Crash into a tree or rock in Ski: the banner shows a pixel-art burst next to TREE! / ROCK!, not the phone's 💥 emoji.

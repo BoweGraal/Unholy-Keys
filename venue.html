@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.66"></script>
-<script src="gfx.js?v=1.81.66"></script>
-<script src="art.js?v=1.81.66"></script>
-<script src="voice.js?v=1.81.66"></script>
-<script src="instruments.js?v=1.81.66"></script>
-<script src="kart.js?v=1.81.66"></script>
-<script src="explain.js?v=1.81.66"></script>
+<script src="tune.js?v=1.81.67"></script>
+<script src="gfx.js?v=1.81.67"></script>
+<script src="art.js?v=1.81.67"></script>
+<script src="voice.js?v=1.81.67"></script>
+<script src="instruments.js?v=1.81.67"></script>
+<script src="kart.js?v=1.81.67"></script>
+<script src="explain.js?v=1.81.67"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -190,6 +190,10 @@ body.gaming-ctf #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #skiScore::before{content:"\26F7  ";font-size:20px}
 #skiCombo{position:absolute;right:14px;top:90px;font:900 15px 'Silkscreen',ui-monospace,monospace;color:#E8505B;text-shadow:0 1px 0 #fff}
 #skiSpeed{position:absolute;left:14px;top:56px;font:800 15px 'Silkscreen',ui-monospace,monospace;color:#2a3550;text-shadow:0 1px 0 #fff}
+#skiMouse{display:none;position:absolute;left:50%;bottom:calc(var(--chatH) + 118px);transform:translateX(-50%);pointer-events:none;align-items:center;gap:8px;font:700 12px/1.15 'Silkscreen',ui-monospace,monospace;color:#1d2740;text-align:center;white-space:nowrap}
+#skiMouse.on{display:flex}#skiMouse img{height:56px;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(3px 3px 0 rgba(0,0,0,.35))}
+#skiMouse .sm{background:rgba(255,255,255,.85);border:2px solid #1d2740;box-shadow:3px 3px 0 rgba(0,0,0,.3);padding:4px 7px}#skiMouse .sm b{display:block;font-size:13px}#skiMouse .sm small{font-size:10px;opacity:.75}
+#skiMouse .sl{border-color:#b8960a}#skiMouse .sr{border-color:#2aa7c9}#skiMouse.air .sl{background:#FFE14D}#skiMouse .smf{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:5px;font-size:10px;background:rgba(255,255,255,.75);padding:1px 6px}
 #skiHint{position:absolute;left:50%;bottom:calc(var(--chatH) + 130px);transform:translateX(-50%);font:800 13px 'Silkscreen',ui-monospace,monospace;color:#1d2740;background:rgba(255,255,255,.75);padding:3px 10px;border-radius:8px;white-space:nowrap}
 #skiJump{position:absolute;right:18px;bottom:calc(var(--chatH) + 16px);width:104px;height:104px;border-radius:50%;pointer-events:auto;touch-action:none;font:900 18px 'Silkscreen',ui-monospace,monospace;color:#fff;background:radial-gradient(circle at 40% 35%,#7fb0ff,#2b5fc0);border:3px solid rgba(255,255,255,.8);box-shadow:0 4px 18px rgba(59,123,232,.4)}
 #skiJump small{display:block;font:700 10px 'Silkscreen',ui-monospace,monospace;opacity:.85}
@@ -4689,6 +4693,14 @@ var SKI=(function(){
   function enc(){return[+((x+800)/1600).toFixed(4),+((((y%1000)+1000)%1000)/1000).toFixed(4)];}
   function wire(){var t=performance.now()<crashUntil?9:air>0?(trick?8:7):Math.max(0,Math.min(6,Math.round(a/(Math.PI/6))+3));return{h:Math.max(0,Math.min(60,Math.floor(Math.max(0,y)/1000))),f:performance.now()<crashUntil?1:0,t:t};}
   function decode(v2,prevY){return SK.decode(+v2.x,+v2.y,v2.sk?v2.sk.h|0:0,prevY);}
+  var skiMouseD=null;
+  function skiMouse(){if(skiMouseD)return skiMouseD;var ui=$("skiUI");if(!ui)return null;
+    var G=["...KKKKKKK...","..KLLLKRRRK..",".KLLLLKRRRRK.","KLLLLLKRRRRRK","KLLLLLKRRRRRK","KLLLLLKRRRRRK","KKKKKKKKKKKKK","KWWWWWWWWWWWK","KWWWWWWWWWWWK","KWWWWWWWWWWWK","KWWWWWWWWWWWK","KWWWWWWWWWWWK",".KWWWWWWWWWK.","..KKKKKKKKK.."];
+    var P={K:"#1d2740",L:"#FFE14D",R:"#7FE6FF",W:"#f4f6fb"},c=document.createElement("canvas");c.width=13;c.height=G.length;var x=c.getContext("2d");
+    G.forEach(function(r,i){for(var j=0;j<r.length;j++)if(P[r[j]]){x.fillStyle=P[r[j]];x.fillRect(j,i,1,1);}});
+    var d=document.createElement("div");d.id="skiMouse";
+    d.innerHTML='<div class="sm sl"><b>HOP</b><small>in the air: trick</small></div><img alt="" src="'+c.toDataURL()+'"><div class="sm sr"><b>NEXT TRICK</b><small>pick the yellow one</small></div><div class="smf">point to steer · land in a divot to swoop</div>';
+    ui.appendChild(d);return skiMouseD=d;}
   function banner(t,col){var b=$("skiBanner");if(!b)return;PXEMO.set(b,t);b.style.textShadow="0 0 16px "+(col||"#3DF2FF")+",0 3px 0 #000";b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("skiScore");if(h)h.textContent=score.toLocaleString();var c=$("skiCombo");if(c)c.textContent=combo>1?"COMBO ×"+(1+0.1*combo).toFixed(1):"";}
   function laneX(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(2,Math.min(8,ids.length));return -85+170*((i%n)+0.5)/n;}
@@ -4808,6 +4820,9 @@ var SKI=(function(){
     GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:trick&&trick.k===3?[2.9,-0.4,0.9,-0.9]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
     if(PRACTICE.on)botTick(dt,now,going);
     var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Trick! ⬅ 360 · ⬆ Backflip · ➡ Daffy"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · left click: hop, in the air: the yellow trick · right click: next trick · land in a divot to swoop");
+    /* on a computer: a little pixel mouse instead of the line of text (left = hop / trick in the air, right = next trick) */
+    var pcM=!TOUCHY&&going&&!crashed&&(air>0?!hopAir:!(!course&&SK.zoneAt(y).k==="jump")),sm=skiMouse();
+    if(hn)hn.style.display=pcM?"none":"";if(sm){sm.classList.toggle("on",pcM);sm.classList.toggle("air",air>0);}
   }
   /* practice: the practice skiers follow the slalom line at their own pace, now and then crashing */
   function botTick(dt,now,going){
@@ -7281,7 +7296,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.66",SERVER_VERSION="";
+var PAGE_VERSION="1.81.67",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7858,7 +7873,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.66"></script>
+<script src="lab.js?v=1.81.67"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
