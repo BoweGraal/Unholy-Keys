@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.59 — Ski: repeat penalty is 10%
+
+- The same trick again is worth **10%** less each time (was 25%): ×0.9, ×0.81, ×0.73… still not below ×0.2. Swapping tricks still lets the others recover.
+
 ## v1.81.58 — Ski: swoop tiers and the flag streak
 
 - **Hop into a divot (HOP SWOOP)** is worth more than **riding into one on the snow (SWOOP)**, which is worth more than passing the flag outside its divot. Each swoop also scores the flag.
