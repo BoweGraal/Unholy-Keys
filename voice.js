@@ -9,13 +9,14 @@
    VOICE.tick()            call a few times a second: opens / closes the mic as songs start and stop
    VOICE.reset()           the connection dropped: forget everything (you're out of voice)
    VOICE.talking(id)       is that player talking right now (for a little indicator over them)
-   VOICE.state             "off" | "on" | "song" (in voice, muted for the song) | "full" | "denied" */
+   VOICE.listen()          join just to hear (no mic asked for); the performer does this on going live, so anyone who joins is heard
+   VOICE.state             "off" | "listen" (in voice, hearing, mic off) | "on" | "song" (in voice, muted for the song) | "full" | "denied" */
 var VOICE=(function(){
   var cfg=null,state="off",peers={},mic=null,micOn=false,talk={},ac=null,an=null,anBuf=null,amTalking=false,lastTalkT=0,fullT=0;
   /* STUN finds a direct route; when two networks block that (mobile data, strict routers), the TURN relays carry the sound instead */
   var ICE=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},
     {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}];
-  var tries={},blocked=[];
+  var tries={},blocked=[],noMic=false;
   function setState(s){if(s===state)return;state=s;if(cfg&&cfg.onChange)try{cfg.onChange(s);}catch(e){}}
   function send(o){if(cfg)cfg.send(o);}
   /* one connection per other talker; the one who joins later makes the offers */
@@ -31,7 +32,7 @@ var VOICE=(function(){
       if(pr&&pr.catch)pr.catch(function(){if(blocked.indexOf(p.el)<0)blocked.push(p.el);});};   /* the browser wants a tap first: played on the next tap or key */
     pc.onconnectionstatechange=function(){if(pc.connectionState==="connected")tries[id]=0;
       if(pc.connectionState==="failed"){var was=p.offer;drop(id);tries[id]=(tries[id]||0)+1;   /* try again (a few times) rather than going quiet for good */
-        if(was&&tries[id]<=3&&(state==="on"||state==="song"))setTimeout(function(){if(!peers[id]&&(state==="on"||state==="song"))peer(id,true);},1500*tries[id]);}};
+        if(was&&tries[id]<=3&&inVoice())setTimeout(function(){if(!peers[id]&&inVoice())peer(id,true);},1500*tries[id]);}};
     if(offer)pc.createOffer().then(function(o){return pc.setLocalDescription(o);}).then(function(){send({type:"voice-sig",to:id,d:{sdp:pc.localDescription}});}).catch(function(){});
     return p;
   }
@@ -46,7 +47,7 @@ var VOICE=(function(){
       mic=st;micOn=true;var tr=st.getAudioTracks()[0];
       Object.keys(peers).forEach(function(k){if(peers[k].tx)try{peers[k].tx.sender.replaceTrack(tr);}catch(e){}});
       try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var src=ac.createMediaStreamSource(st);an=ac.createAnalyser();an.fftSize=512;anBuf=new Uint8Array(an.fftSize);src.connect(an);}catch(e){an=null;}
-    }).catch(function(){mic=null;setState("denied");send({type:"voice-leave"});dropAll();});
+    }).catch(function(){mic=null;setState("listen");noMic=true;});   /* no mic (or no permission): stay in, just listening */
   }
   function closeMic(){
     if(mic&&mic!=="pending")mic.getTracks().forEach(function(t){t.stop();});
@@ -54,7 +55,9 @@ var VOICE=(function(){
     Object.keys(peers).forEach(function(k){if(peers[k].tx)try{peers[k].tx.sender.replaceTrack(null);}catch(e){}});
     if(amTalking){amTalking=false;send({type:"voice-talk",on:0});}
   }
-  function join(){if(!window.RTCPeerConnection){setState("denied");return;}setState("on");send({type:"voice-join"});}
+  function inVoice(){return state==="on"||state==="song"||state==="listen";}
+  function join(){if(!window.RTCPeerConnection){setState("denied");return;}if(!inVoice())send({type:"voice-join"});setState("on");}
+  function listen(){if(!window.RTCPeerConnection||inVoice())return;setState("listen");send({type:"voice-join"});}
   function leave(){send({type:"voice-leave"});closeMic();dropAll();setState("off");}
   function unblock(){if(!blocked.length)return;var b=blocked;blocked=[];b.forEach(function(el){var pr=el.play();if(pr&&pr.catch)pr.catch(function(){blocked.push(el);});});}
   ["pointerdown","keydown","touchstart"].forEach(function(ev){window.addEventListener(ev,unblock,true);});
@@ -63,13 +66,16 @@ var VOICE=(function(){
     /* how the calls are going: [{id, state, hearing}] (for the voice button's tooltip, and tests) */
     links:function(){return Object.keys(peers).map(function(k){var p=peers[k];return{id:k,state:p.pc.connectionState||p.pc.iceConnectionState,hearing:!!(p.el&&p.el.srcObject&&!p.el.paused)};});},
     get state(){return state;},
-    toggle:function(){if(state==="on"||state==="song")leave();else join();},
+    /* the button: off → mic on; listening → mic on; mic on → back to listening if this page listens by default (the performer), else out */
+    toggle:function(){if(state==="on"||state==="song"){if(cfg&&cfg.listener){closeMic();setState("listen");}else leave();}else{noMic=false;join();}},
+    listen:listen,
+    get noMic(){return noMic;},
     reset:function(){closeMic();dropAll();if(state!=="off")setState("off");},
     talking:function(id){if(id===(cfg&&cfg.myId()))return amTalking;return !!talk[id];},
     onMsg:function(m){
       if(!cfg)return;
       if(m.type==="voice-full"){setState("full");fullT=performance.now();return;}
-      if(state==="off"||state==="full"||state==="denied")return;
+      if(!inVoice())return;
       if(m.type==="voice-peers"){(m.ids||[]).forEach(function(id){peer(String(id),true);});return;}
       if(m.type==="voice-on"){return;}   /* they'll send us an offer */
       if(m.type==="voice-off"){drop(String(m.id));return;}

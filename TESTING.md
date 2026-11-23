@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.64 — Performer listens to voice automatically; no mic = listen only
+
+- **Performer:** going live joins voice as a **listener**: you hear anyone who joins voice, and no mic is asked for. The button reads "🎧 Listening · tap for mic". Tap it to turn your mic on; tap again to go back to listening. Also after a reconnect.
+- **No mic, or mic permission refused** (anyone): you stay in voice and listen ("🎧 Listening (no mic)"), instead of being thrown out.
+- Tested: a listen-only player hears a player who joins with a mic.
+
 ## v1.81.63 — CTF: smaller video on the floor
 
 - **CTF and Kart flag:** the video on the arena floor is about half the size it was: about 4 tiles wide in CTF, 5.5 in Kart flag (was 9–12). The performer and platform stand just above it, clear of the picture.

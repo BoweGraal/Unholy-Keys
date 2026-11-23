@@ -14,11 +14,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.81.63"></script>
-<script src="art.js?v=1.81.63"></script>
-<script src="voice.js?v=1.81.63"></script>
-<script src="instruments.js?v=1.81.63"></script>
-<script src="kart.js?v=1.81.63"></script>
+<script src="gfx.js?v=1.81.64"></script>
+<script src="art.js?v=1.81.64"></script>
+<script src="voice.js?v=1.81.64"></script>
+<script src="instruments.js?v=1.81.64"></script>
+<script src="kart.js?v=1.81.64"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4774,8 +4774,8 @@ var LIVERC={room:null,key:null,until:0,n:0,t:0};   /* reconnecting after a blip 
 function liveSend(msg){if(msg&&msg.type==="note")pvNoteT=Date.now();if(msg&&msg.type==="video")pvVideo=msg.action!=="stop";if(msg&&msg.type==="song-part")pvPart=!!msg.k;if(liveOn&&liveWs&&liveWs.readyState===1)try{liveWs.send(JSON.stringify(msg));}catch(e){}}
 /* voice between songs for the performer too: muted while you play, a video plays or a song map runs */
 var pvNoteT=0,pvVideo=false,pvPart=false;
-function pvShow(st){var b=document.getElementById("liveVoice");if(!b)return;b.textContent={off:"\uD83C\uDF99 Voice",on:"\uD83C\uDF99 Mic on",song:"\uD83D\uDD07 Song on",full:"Voice full (8)",denied:"No mic access"}[st]||"\uD83C\uDF99 Voice";b.style.borderColor=st==="on"?"#4CC38A":"";b.style.color=st==="on"?"#4CC38A":"";}
-VOICE.init({send:function(o){liveSend(o);},myId:function(){return "performer";},songOn:function(){return Date.now()-pvNoteT<6000||pvVideo||pvPart;},onChange:pvShow});
+function pvShow(st){var b=document.getElementById("liveVoice");if(!b)return;b.textContent={off:"\uD83C\uDF99 Voice",listen:VOICE.noMic?"\uD83C\uDFA7 Listening (no mic)":"\uD83C\uDFA7 Listening \u00B7 tap for mic",on:"\uD83C\uDF99 Mic on",song:"\uD83D\uDD07 Song on",full:"Voice full (8)",denied:"No mic access"}[st]||"\uD83C\uDF99 Voice";b.style.borderColor=st==="on"?"#4CC38A":"";b.style.color=st==="on"?"#4CC38A":"";}
+VOICE.init({listener:true,send:function(o){liveSend(o);},myId:function(){return "performer";},songOn:function(){return Date.now()-pvNoteT<6000||pvVideo||pvPart;},onChange:pvShow});
 /* hover the Voice button: who you're connected to, and whether their sound is getting through */
 setInterval(function(){var b=document.getElementById("liveVoice");if(!b||!VOICE.links)return;var L=VOICE.links();
   if(!L.length){b.title=VOICE.state==="off"?"Voice chat with the audience between songs: your mic switches off while you play":"In voice: nobody else has joined yet";return;}
@@ -4822,11 +4822,13 @@ function goLive(){
       liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
       var vm2=videoMsg();if(vm2)liveSend(vm2);STAGEFX.resend();STREAM.announce();
       showJamToast("📡 Reconnected: the show carries on","#3CCB8A",2500);
+      try{VOICE.reset();VOICE.listen();}catch(e){}   /* the server forgot who was in voice: back in, listening */
       liveWs.onclose=function(){if(liveOn)liveReconnect();};
       return;}
     if(msg.type==="room-created"){LIVERC.room=msg.room;LIVERC.key=msg.key||null;LIVERC.until=0;LIVERC.n=0;}
     if(msg.type==="room-created"){SRV.reported(msg.host,msg.hostName);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();serverAgeWarn();}
       liveOn=true;
+      setTimeout(function(){try{VOICE.listen();}catch(e){}},500);   /* in voice as a listener from the start: anyone who joins is heard, no mic asked for */
       document.getElementById("livePnl").style.display="block";
       document.getElementById("liveCode").textContent=msg.room;setTimeout(paintAudienceLink,0);
       if(LIVE_URL!==WS_URL)setTimeout(function(){showJamToast("🔗 Live on your own server: copy the audience link (🔗) and send it out","#3CCB8A",4500);},400);
@@ -4882,7 +4884,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.81.63",SERVER_VERSION="";
+var PAGE_VERSION="1.81.64",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
