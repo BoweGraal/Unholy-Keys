@@ -1,29 +1,33 @@
 /* Unholy Keys: voice between songs.
-   Talk with your mic between songs; it switches itself off while a song plays.
-   WebRTC straight between players (everyone to everyone, so a room caps talkers at 8 on the server);
-   the relay server only passes the setup messages along (voice-join / voice-peers / voice-on / voice-off / voice-sig / voice-talk).
+   As soon as one person turns their mic on, voice opens for the whole room: everyone joins in listening, mics off, and each
+   player gets a big button to turn their own mic on. Up to 8 talkers at once (the server's limit); anyone can listen.
+   WebRTC straight between people, and only where someone on the line has their mic on (listeners don't call each other).
+   The relay server only passes the setup messages along (voice-join / voice-peers / voice-on / voice-off / voice-mic /
+   voice-open / voice-full / voice-sig / voice-talk).
 
-   VOICE.init({send:fn(obj), myId:fn()->id, songOn:fn()->bool, onChange:fn(state)})
-   VOICE.toggle()          join or leave voice (call from a tap: browsers need a gesture for the mic and for playback)
+   VOICE.init({send:fn(obj), myId:fn()->id, songOn:fn()->bool, onChange:fn(state), listener:bool})
+   VOICE.toggle()          mic on / off (call from a tap: browsers need a gesture for the mic and for playback)
+   VOICE.listen()          join just to hear (no mic asked for)
    VOICE.onMsg(msg)        feed it every message whose type starts with "voice-"
    VOICE.tick()            call a few times a second: opens / closes the mic as songs start and stop
    VOICE.reset()           the connection dropped: forget everything (you're out of voice)
    VOICE.talking(id)       is that player talking right now (for a little indicator over them)
-   VOICE.listen()          join just to hear (no mic asked for); the performer does this on going live, so anyone who joins is heard
-   VOICE.state             "off" | "listen" (in voice, hearing, mic off) | "on" | "song" (in voice, muted for the song) | "full" | "denied" */
+   VOICE.state             "off" | "listen" (in voice, hearing, mic off) | "on" | "song" (mic on, muted for the song) | "full" (no talker slot: listening) | "denied" */
 var VOICE=(function(){
-  var cfg=null,state="off",peers={},mic=null,micOn=false,talk={},ac=null,an=null,anBuf=null,amTalking=false,lastTalkT=0,fullT=0;
+  var cfg=null,state="off",peers={},mem={},mic=null,micOn=false,talk={},ac=null,an=null,anBuf=null,amTalking=false,lastTalkT=0,fullT=0,noMic=false,wantMic=false;
   /* STUN finds a direct route; when two networks block that (mobile data, strict routers), the TURN relays carry the sound instead */
   var ICE=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},
     {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}];
-  var tries={},blocked=[],noMic=false;
+  var tries={},blocked=[];
   function setState(s){if(s===state)return;state=s;if(cfg&&cfg.onChange)try{cfg.onChange(s);}catch(e){}}
   function send(o){if(cfg)cfg.send(o);}
-  /* one connection per other talker; the one who joins later makes the offers */
+  function me(){return String(cfg&&cfg.myId?cfg.myId():"");}
+  function inVoice(){return state==="on"||state==="song"||state==="listen"||state==="full";}
+  function talker(){return wantMic&&(state==="on"||state==="song");}
+  /* one connection per person, where at least one side talks; the one who calls adds the audio line */
   function peer(id,offer){
     if(peers[id])return peers[id];
     var pc=new RTCPeerConnection({iceServers:ICE}),p={pc:pc,id:id,tx:null,el:null,offer:!!offer};peers[id]=p;
-    /* the offerer adds the audio line; the answerer uses the one the offer brings (see voice-sig) */
     if(offer){p.tx=pc.addTransceiver("audio",{direction:"sendrecv"});if(mic&&micOn)try{p.tx.sender.replaceTrack(mic.getAudioTracks()[0]);}catch(e){}}
     pc.onicecandidate=function(e){if(e.candidate)send({type:"voice-sig",to:id,d:{c:e.candidate}});};
     pc.ontrack=function(e){
@@ -37,28 +41,31 @@ var VOICE=(function(){
     return p;
   }
   function drop(id){var p=peers[id];if(!p)return;try{p.pc.close();}catch(e){}if(p.el){p.el.srcObject=null;p.el.remove();}delete peers[id];delete talk[id];}
-  function dropAll(){Object.keys(peers).forEach(drop);talk={};}
+  function dropAll(){Object.keys(peers).forEach(drop);talk={};mem={};}
+  /* call everyone we should hear or be heard by and aren't connected to yet */
+  function callAll(){var I=talker();Object.keys(mem).forEach(function(id){if(!peers[id]&&(I||mem[id].mic))peer(id,true);});}
   /* the mic: asked for between songs, released completely while a song plays (so the phone's audio stays in music mode) */
   function openMic(){
-    if(mic||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
-    var want=true;mic="pending";
+    if(mic||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){if(!navigator.mediaDevices)micFail();return;}
+    mic="pending";
     navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(function(st){
-      if(state!=="on"||!want){st.getTracks().forEach(function(t){t.stop();});mic=null;return;}
+      if(state!=="on"){st.getTracks().forEach(function(t){t.stop();});mic=null;return;}
       mic=st;micOn=true;var tr=st.getAudioTracks()[0];
       Object.keys(peers).forEach(function(k){if(peers[k].tx)try{peers[k].tx.sender.replaceTrack(tr);}catch(e){}});
       try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var src=ac.createMediaStreamSource(st);an=ac.createAnalyser();an.fftSize=512;anBuf=new Uint8Array(an.fftSize);src.connect(an);}catch(e){an=null;}
-    }).catch(function(){mic=null;setState("listen");noMic=true;});   /* no mic (or no permission): stay in, just listening */
+    }).catch(micFail);
   }
+  function micFail(){mic=null;noMic=true;wantMic=false;send({type:"voice-mic",on:0});setState("listen");}   /* no mic (or no permission): stay in, listening */
   function closeMic(){
     if(mic&&mic!=="pending")mic.getTracks().forEach(function(t){t.stop();});
     mic=null;micOn=false;an=null;
     Object.keys(peers).forEach(function(k){if(peers[k].tx)try{peers[k].tx.sender.replaceTrack(null);}catch(e){}});
     if(amTalking){amTalking=false;send({type:"voice-talk",on:0});}
   }
-  function inVoice(){return state==="on"||state==="song"||state==="listen";}
-  function join(){if(!window.RTCPeerConnection){setState("denied");return;}if(!inVoice())send({type:"voice-join"});setState("on");}
-  function listen(){if(!window.RTCPeerConnection||inVoice())return;setState("listen");send({type:"voice-join"});}
-  function leave(){send({type:"voice-leave"});closeMic();dropAll();setState("off");}
+  function listen(){if(!window.RTCPeerConnection){setState("denied");return;}if(inVoice())return;setState("listen");send({type:"voice-join"});}
+  function micOnNow(){if(!window.RTCPeerConnection){setState("denied");return;}if(!inVoice())send({type:"voice-join"});noMic=false;wantMic=true;setState("on");send({type:"voice-mic",on:1});}
+  function micOffNow(){wantMic=false;closeMic();send({type:"voice-mic",on:0});setState("listen");}
+  function leave(){send({type:"voice-leave"});wantMic=false;closeMic();dropAll();setState("off");}
   function unblock(){if(!blocked.length)return;var b=blocked;blocked=[];b.forEach(function(el){var pr=el.play();if(pr&&pr.catch)pr.catch(function(){blocked.push(el);});});}
   ["pointerdown","keydown","touchstart"].forEach(function(ev){window.addEventListener(ev,unblock,true);});
   return{
@@ -66,27 +73,37 @@ var VOICE=(function(){
     /* how the calls are going: [{id, state, hearing}] (for the voice button's tooltip, and tests) */
     links:function(){return Object.keys(peers).map(function(k){var p=peers[k];return{id:k,state:p.pc.connectionState||p.pc.iceConnectionState,hearing:!!(p.el&&p.el.srcObject&&!p.el.paused)};});},
     get state(){return state;},
-    /* the button: off → mic on; listening → mic on; mic on → back to listening if this page listens by default (the performer), else out */
-    toggle:function(){if(state==="on"||state==="song"){if(cfg&&cfg.listener){closeMic();setState("listen");}else leave();}else{noMic=false;join();}},
-    listen:listen,
     get noMic(){return noMic;},
-    reset:function(){closeMic();dropAll();if(state!=="off")setState("off");},
-    talking:function(id){if(id===(cfg&&cfg.myId()))return amTalking;return !!talk[id];},
+    get open(){return inVoice();},
+    /* the button: mic on, or back to listening */
+    toggle:function(){if(state==="on"||state==="song")micOffNow();else micOnNow();},
+    listen:listen,
+    leave:leave,
+    reset:function(){wantMic=false;closeMic();dropAll();if(state!=="off")setState("off");},
+    talking:function(id){if(id===me())return amTalking;return !!talk[id];},
     onMsg:function(m){
       if(!cfg)return;
-      if(m.type==="voice-full"){setState("full");fullT=performance.now();return;}
+      if(m.type==="voice-open"){listen();return;}   /* someone's talking: everyone joins in, listening */
       if(!inVoice())return;
-      if(m.type==="voice-peers"){(m.ids||[]).forEach(function(id){peer(String(id),true);});return;}
-      if(m.type==="voice-on"){return;}   /* they'll send us an offer */
-      if(m.type==="voice-off"){drop(String(m.id));return;}
+      if(m.type==="voice-full"){wantMic=false;closeMic();setState("full");fullT=performance.now();return;}   /* no talker slot free: keep listening */
+      if(m.type==="voice-peers"){mem={};(m.peers||[]).forEach(function(q){mem[String(q.id)]={mic:q.mic?1:0};});callAll();return;}
+      if(m.type==="voice-on"){mem[String(m.id)]={mic:m.mic?1:0};return;}   /* the newcomer calls the talkers (it got the list) */
+      if(m.type==="voice-mic"){var q=mem[String(m.id)]||(mem[String(m.id)]={mic:0});q.mic=m.on?1:0;if(!m.on)delete talk[m.id];return;}   /* a new talker calls us */
+      if(m.type==="voice-off"){delete mem[String(m.id)];drop(String(m.id));return;}
       if(m.type==="voice-talk"){if(m.on)talk[m.id]=1;else delete talk[m.id];return;}
-      if(m.type==="voice-sig"){var id=String(m.from),d=m.d||{},p=peers[id]||peer(id,false),pc=p.pc;
-        if(d.sdp){pc.setRemoteDescription(d.sdp).then(function(){if(d.sdp.type==="offer"){if(!p.tx){p.tx=pc.getTransceivers()[0];if(p.tx){p.tx.direction="sendrecv";if(mic&&micOn&&mic!=="pending")try{p.tx.sender.replaceTrack(mic.getAudioTracks()[0]);}catch(e){}}}}if(d.sdp.type==="offer")return pc.createAnswer().then(function(a){return pc.setLocalDescription(a);}).then(function(){send({type:"voice-sig",to:id,d:{sdp:pc.localDescription}});});}).catch(function(){});}
+      if(m.type==="voice-sig"){var id=String(m.from),d=m.d||{},p=peers[id];
+        /* both called at once: the one with the lower id keeps its call, the other answers it */
+        if(d.sdp&&d.sdp.type==="offer"&&p&&p.offer&&p.pc.signalingState==="have-local-offer"){if(me()<id)return;drop(id);p=null;}
+        p=p||peer(id,false);var pc=p.pc;
+        if(d.sdp){pc.setRemoteDescription(d.sdp).then(function(){
+          if(d.sdp.type!=="offer")return;
+          if(!p.tx){p.tx=pc.getTransceivers()[0];if(p.tx){p.tx.direction="sendrecv";if(mic&&micOn&&mic!=="pending")try{p.tx.sender.replaceTrack(mic.getAudioTracks()[0]);}catch(e){}}}
+          return pc.createAnswer().then(function(a){return pc.setLocalDescription(a);}).then(function(){send({type:"voice-sig",to:id,d:{sdp:pc.localDescription}});});}).catch(function(){});}
         else if(d.c){pc.addIceCandidate(d.c).catch(function(){});}
       }
     },
     tick:function(){
-      if(state==="full"&&performance.now()-fullT>4000)setState("off");
+      if(state==="full"&&performance.now()-fullT>3500)setState("listen");
       if(state!=="on"&&state!=="song")return;
       var song=!!(cfg.songOn&&cfg.songOn());
       if(song&&state==="on"){setState("song");closeMic();}
