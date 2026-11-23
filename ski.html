@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Ski designer · Unholy Keys</title>
-<script src="art.js?v=1.81.51"></script>
+<script src="art.js?v=1.81.52"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#07041a;color:#e8e4f4;font-family:system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
@@ -62,7 +62,7 @@ button.go,.btn.go{background:linear-gradient(135deg,#D354A0,#7F77DD);border:0}
   function push(){hist.push(JSON.stringify(course));if(hist.length>80)hist.shift();}
   function status(){var n={gate:0,rflag:0,bflag:0,tree:0,rock:0,ramp:0,mogul:0};course.objs.forEach(function(o){n[o[0]]++;});
     $("len").textContent=Math.round(course.len/10)+" m";$("name").value=course.name;
-    $("status").textContent=course.name+": "+n.rflag+" red flags, "+n.bflag+" blue flags, "+n.gate+" gates, "+n.tree+" trees, "+n.rock+" rocks, "+n.ramp+" ramps, "+n.mogul+" moguls · "+Math.round(course.len/10)+" m, then it repeats · wheel scrolls, Ctrl+wheel zooms · saved on this device, and sent with your Ski rounds";}
+    $("status").textContent=course.name+": "+n.rflag+" red flags, "+n.bflag+" blue flags, "+n.gate+" gates, "+n.tree+" trees, "+n.rock+" rocks, "+n.ramp+" ramps, "+n.mogul+" moguls · "+Math.round(course.len/10)+" m, then it repeats · right click erases · wheel scrolls, Ctrl+wheel zooms · saved on this device, and sent with your Ski rounds";}
   function size(){dpr=Math.min(2,window.devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);draw();}
   function sx(x){return W/2+(x-cam.x)*cam.z;}function sy(y){return H/2+(y-cam.y)*cam.z;}
   function wx(px){return cam.x+(px-W/2)/cam.z;}function wy(py){return cam.y+(py-H/2)/cam.z;}
@@ -91,7 +91,10 @@ button.go,.btn.go{background:linear-gradient(135deg,#D354A0,#7F77DD);border:0}
     if(!drag)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>6)drag.moved=true;
     if(drag.pan&&drag.moved){cam.x=drag.cx-dx/cam.z;cam.y=drag.cy-dy/cam.z;draw();}});
   function up(e){delete pts[e.pointerId];if(pinch){if(Object.keys(pts).length<2)pinch=null;drag=null;return;}
-    if(drag&&!drag.moved&&(e.button===0||e.pointerType==="touch"))place(e.clientX-cv.getBoundingClientRect().left,e.clientY-cv.getBoundingClientRect().top);drag=null;}
+    var r=cv.getBoundingClientRect();
+    if(drag&&!drag.moved&&(e.button===0||e.pointerType==="touch"))place(e.clientX-r.left,e.clientY-r.top);
+    else if(drag&&!drag.moved&&e.button===2){var t0=tool;tool="erase";try{place(e.clientX-r.left,e.clientY-r.top);}finally{tool=t0;}}   /* right click erases (right-drag still pans) */
+    drag=null;}
   cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",function(e){delete pts[e.pointerId];drag=null;pinch=null;});
   cv.addEventListener("wheel",function(e){e.preventDefault();
     if(!e.ctrlKey&&!e.metaKey){cam.y=Math.max(-200,Math.min(course.len+400,cam.y+e.deltaY/cam.z));cam.x+=e.deltaX/cam.z;draw();return;}   /* the wheel scrolls down the mountain; Ctrl+wheel (or a pinch) zooms */

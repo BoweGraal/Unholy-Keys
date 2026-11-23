@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.52 — Ski designer: right click erases
+
+- **Ski designer:** a right click (without dragging) erases whatever's under the cursor, whichever tool is picked. Right-drag still scrolls the view.
+
 ## v1.81.51 — Playtest zoom for every game
 
 - **A − / + zoom box at the top of the screen in every game** (dance practice; or add `?zoom` to a live link). It shows the game and the zoom, e.g. "CTF 60%". Steps are 10%, from 50% to 250%. Tap the label to reset to 100%. Each game remembers its own zoom on that device.
