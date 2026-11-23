@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.29 — Walk race pad dead centre
+
+- The dance pad is now centred on the floor in both portrait and landscape, and as big as it fits: up to 94% of the width, or 64% of the screen height, whichever is smaller. The racers run behind it, and the progress bar along the top shows the race.
+- The hint line sits at the bottom, centred.
+- This replaces the v1.81.15 portrait band layout.
+
 ## v1.81.28 — Late hits are misses
 
 - In step dance, target dance and both note highways, a hit that comes **after** the note's PERFECT window counts as a **MISS**: the streak ends and hype drops. Early and on-time hits still count (PERFECT, GREAT or GOOD by how close they are).
