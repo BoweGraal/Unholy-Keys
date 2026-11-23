@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.70 — Ski: trick combo bonus
+
+1. Take a ramp, do a trick, right-click to switch, do a different trick, and land clean: **TRICK COMBO! +200** (on top of each trick's own points).
+2. Three different tricks in one jump: **TRIPLE COMBO! +400**. The same trick twice doesn't count, and if you're still mid-trick when you land it's a wipeout with no bonus.
+
 ## v1.81.69 — Ski: hop over trees, small boost out of a swoop
 
 1. Hop and pass over a tree while you're properly up in the air: no crash. Clipping a tree right at take-off or just as you land still crashes you.

@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.69"></script>
-<script src="gfx.js?v=1.81.69"></script>
-<script src="art.js?v=1.81.69"></script>
-<script src="voice.js?v=1.81.69"></script>
-<script src="instruments.js?v=1.81.69"></script>
-<script src="kart.js?v=1.81.69"></script>
-<script src="explain.js?v=1.81.69"></script>
+<script src="tune.js?v=1.81.70"></script>
+<script src="gfx.js?v=1.81.70"></script>
+<script src="art.js?v=1.81.70"></script>
+<script src="voice.js?v=1.81.70"></script>
+<script src="instruments.js?v=1.81.70"></script>
+<script src="kart.js?v=1.81.70"></script>
+<script src="explain.js?v=1.81.70"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4708,14 +4708,14 @@ var SKI=(function(){
   function start(round){tipFlags=null;
     on=true;tUse={};roundN=round?round.n:roundN+1;seed=SK.seedFor(roundN);
     course=SK.clean(round&&round.ski);if(!course&&PRACTICE.on){try{course=SK.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}}if(!course)course=SK.defaultCourse();   /* no course of their own: the house mountain */chunks={};passed={};trail=[];pops=[];others={};bots={};
-    hopAir=false;cutGrace=0;hopPush=0;puffs=[];sweep=null;boostUntil=0;x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;fStreak=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
+    hopAir=false;cutGrace=0;hopPush=0;puffs=[];sweep=null;boostUntil=0;airTricks=[];x=laneX(myId);y=-24;a=0;ta=0;v=0;air=0;crashUntil=0;trick=null;score=0;combo=0;fStreak=0;dist=0;lastCount=-1;goShown=false;camX=x;fadeK=0;
     cv=$("skiCv");g=cv.getContext("2d");document.body.classList.add("gaming-ski");$("skiUI").classList.add("on");hud();banner("⛷ SKI!");
   }
   function stop(){on=false;document.body.classList.remove("gaming-ski");var u=$("skiUI");if(u)u.classList.remove("on");var c=$("skiCv");if(c)c.classList.remove("on");}
   /* a hop: while you're up you can swing the skis round fast, so you land on a new line (a cut) and keep your speed */
   /* landing in a flag's divot swoops you out cleanly: pointed at the next flag's side, a burst of speed, points and the streak */
   /* landing in a divot: it takes over, sweeps you round the flag along the groove, then fires you out the end, fast */
-  var sweep=null,boostUntil=0;
+  var sweep=null,boostUntil=0,airTricks=[];
   function swoop(){
     var hit=null;objsNear(y-80,y+80).forEach(function(o){if(o.k!=="flag"||hit)return;var n=SK.arcNear(o,x,y);if(n.d<SK.DIV.w+6&&n.t<0.8)hit={o:o,t:n.t};});
     if(!hit)return false;sweep={o:hit.o,t:hit.t,v0:Math.max(v,120),hop:true};banner("HOP SWOOP!","#3DF2FF");return true;}
@@ -4753,7 +4753,7 @@ var SKI=(function(){
     if(code==="Space"){if(down)jump();return true;}
     return false;
   }
-  function crash(why){if(performance.now()<crashUntil)return;crashUntil=performance.now()+T("crash")*1000;v=0;air=0;trick=null;combo=0;fStreak=0;banner("💥 "+why,"#FF4D6D");hud();}
+  function crash(why){if(performance.now()<crashUntil)return;crashUntil=performance.now()+T("crash")*1000;v=0;air=0;trick=null;airTricks=[];combo=0;fStreak=0;banner("💥 "+why,"#FF4D6D");hud();}
   /* flags: each one passed on the right side adds ×0.1 to the streak bonus on flag and swoop points; a missed flag ends it */
   var fStreak=0;
   function flagPts(n,txt,col){var m=1+0.1*fStreak,got=Math.round(n*m);score+=got;GAME.moshPts(got);pops.push({x:x,y:y,t:performance.now(),txt:txt+(fStreak?" \u00D7"+m.toFixed(1):"")+" +"+got,col:col});hud();}
@@ -4786,10 +4786,13 @@ var SKI=(function(){
     else if(going&&!crashed){x+=Math.sin(qa)*v*dt;y+=Math.cos(qa)*v*dt;if(air>0&&hopAir)x+=hopPush*dt*(air/Math.max(0.01,airMax));}
     x=Math.max(-halfW(y)-260,Math.min(halfW(y)+260,x));
     /* air: a hop, or off a ramp; tricks in the air; land mid-trick and you crash */
-    if(air>0){air-=dt;if(trick&&(now-trick.t0)/1000>=TRK[trick.k].dur){var tk=trick.k,vm=trickMul(tk);addPts(TRK[tk].pts*(1+airMax)*(!course&&SK.zoneAt(y).k==="jump"?1.5:1)*vm,TRK[tk].name+(vm<0.99?" \u00D7"+vm.toFixed(2):""),TRK[tk].col);trickUsed(tk);combo++;trick=null;}
+    if(air>0){air-=dt;if(trick&&(now-trick.t0)/1000>=TRK[trick.k].dur){var tk=trick.k,vm=trickMul(tk);addPts(TRK[tk].pts*(1+airMax)*(!course&&SK.zoneAt(y).k==="jump"?1.5:1)*vm,TRK[tk].name+(vm<0.99?" \u00D7"+vm.toFixed(2):""),TRK[tk].col);trickUsed(tk);combo++;trick=null;airTricks.push(tk);}
       if(air<=0){air=0;if(trick)crash("WIPEOUT!");
-        else if(swoop()){}
-        else if(hopAir&&Math.abs(a-a0)>0.5){cutGrace=now+300;addPts(25,"CUT","#3DF2FF");}
+        else{var dk=airTricks.filter(function(k,i){return airTricks.indexOf(k)===i;}).length;   /* two (or three) different tricks in one jump, landed: a bonus */
+          if(dk>=2){addPts(200*(dk-1),dk>2?"TRIPLE COMBO":"TRICK COMBO","#FF5FD2");banner(dk>2?"TRIPLE COMBO!":"TRICK COMBO!","#FF5FD2");}
+          if(swoop()){}
+          else if(hopAir&&Math.abs(a-a0)>0.5){cutGrace=now+300;addPts(25,"CUT","#3DF2FF");}}
+        airTricks=[];
         hopAir=false;}}
     /* what you hit, what you passed */
     if(going&&!crashed){
@@ -7309,7 +7312,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.69",SERVER_VERSION="";
+var PAGE_VERSION="1.81.70",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7886,7 +7889,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.69"></script>
+<script src="lab.js?v=1.81.70"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
