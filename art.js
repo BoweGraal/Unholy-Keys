@@ -1586,7 +1586,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
   function maker(el,look,onChange,opts){
     opts=opts||{};
     if(!makerCss){makerCss=true;var st=document.createElement("style");st.textContent=
-      ".ukm{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}"+
+      ".ukm{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}.ukm-brow{display:flex;gap:8px;flex-wrap:wrap}.ukm-undo:disabled{opacity:.4}"+
       ".ukm-pw{position:sticky;top:0;z-index:5;align-self:flex-start;flex:0 0 auto;line-height:0}"+   /* the preview stays in view while you scroll the options */
       ".ukm-turn{position:absolute;bottom:8px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(42,36,64,.9);color:#fff;font:700 19px 'Silkscreen',ui-monospace,monospace;cursor:pointer;line-height:1;padding:0}.ukm-turn.l{left:8px}.ukm-turn.r{right:8px}"+
       ".ukm-prev{flex:0 0 auto;width:176px;height:220px;border-radius:10px;background:linear-gradient(#2a1f42,#161128);border:1px solid rgba(255,255,255,.12);image-rendering:pixelated;cursor:pointer}"+
@@ -1631,7 +1631,10 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       b.onclick=function(){GD=o[0];try{localStorage.setItem("uk_gender",GD);}catch(e){}gbs.forEach(function(x,j){x.classList.toggle("on",gbs[j]===b);x.setAttribute("aria-pressed",String(gbs[j]===b));});fitGender();changed();};
       b.classList.toggle("on",GD===o[0]);gsw.appendChild(b);return b;});
     rows.appendChild(grow);
-    function changed(){paint();if(onChange)onChange(JSON.parse(JSON.stringify(L)));}
+    /* undo: every change keeps the look before it (up to 60 steps) */
+    var hist=[],prevS=JSON.stringify(L),ub=null;
+    function changed(){var cur=JSON.stringify(L);if(cur!==prevS){hist.push(prevS);if(hist.length>60)hist.shift();prevS=cur;}if(ub)ub.disabled=!hist.length;paint();if(onChange)onChange(JSON.parse(cur));}
+    function undo(){if(!hist.length)return;prevS=hist.pop();L=JSON.parse(prevS);if(ub)ub.disabled=!hist.length;paint();if(onChange)onChange(JSON.parse(prevS));}
     function stepper(key,label,colKey){
       var row=document.createElement("div");row.className="ukm-row";
       var lb=document.createElement("div");lb.className="ukm-lbl";lb.textContent=label;row.appendChild(lb);
@@ -1681,7 +1684,8 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       document.body.appendChild(pop);sync();
     }
     var skr=stepper("skin","Skin");stepper("hair","Hair","hairCol");stepper("top","Top","topCol");stepper("bottom","Bottoms","botCol");stepper("shoes","Shoes");stepper("hat","Hat");stepper("face","Face");stepper("extra","Extra");stepper("held","Holding");
-    var rb=document.createElement("button");rb.type="button";rb.className="ukm-rand";rb.textContent="\uD83C\uDFB2 Surprise me";rb.onclick=function(){L=random();fitGender();changed();};rows.appendChild(rb);
+    var rb=document.createElement("button");rb.type="button";rb.className="ukm-rand";rb.textContent="\uD83C\uDFB2 Surprise me";rb.onclick=function(){L=random();fitGender();changed();};
+    var brow=document.createElement("div");brow.className="ukm-brow";ub=document.createElement("button");ub.type="button";ub.className="ukm-rand ukm-undo";ub.textContent="\u21B6 Undo";ub.disabled=true;ub.onclick=undo;brow.appendChild(rb);brow.appendChild(ub);rows.appendChild(brow);
     function paint(){
       KEYS.forEach(function(k){if(ctl[k])ctl[k].textContent=O[k].names[L[k]];if(ctl[k+"_btn"])ctl[k+"_btn"].style.background=colOf(L,PART[k][0]);});
     }
@@ -1704,7 +1708,9 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       raf=requestAnimationFrame(frame);
     }
     paint();frame();
-    return{get:function(){return JSON.parse(JSON.stringify(L));},set:function(nl){L=JSON.parse(JSON.stringify(nl));changed();}};
+    return{get:function(){return JSON.parse(JSON.stringify(L));},set:function(nl){L=JSON.parse(JSON.stringify(nl));changed();},undo:undo,
+      /* back to a look with no undo history (after saving, or to throw changes away) */
+      reset:function(nl){L=JSON.parse(JSON.stringify(nl));prevS=JSON.stringify(L);hist=[];if(ub)ub.disabled=true;paint();if(onChange)onChange(JSON.parse(prevS));}};
   }
 
   /* ---------------- free dance moves ----------------
@@ -2516,6 +2522,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.32",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.33",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

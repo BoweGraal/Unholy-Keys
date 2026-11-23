@@ -17,12 +17,12 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.32"></script>
-<script src="gfx.js?v=1.81.32"></script>
-<script src="art.js?v=1.81.32"></script>
-<script src="instruments.js?v=1.81.32"></script>
-<script src="kart.js?v=1.81.32"></script>
-<script src="explain.js?v=1.81.32"></script>
+<script src="tune.js?v=1.81.33"></script>
+<script src="gfx.js?v=1.81.33"></script>
+<script src="art.js?v=1.81.33"></script>
+<script src="instruments.js?v=1.81.33"></script>
+<script src="kart.js?v=1.81.33"></script>
+<script src="explain.js?v=1.81.33"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -68,6 +68,8 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 #joinScreen .join-logo{font:700 clamp(34px,10vw,52px)/1 'Silkscreen',ui-monospace,monospace;letter-spacing:1px;text-shadow:4px 4px 0 #000;text-align:center}
 #joinScreen .join-sub{font-family:'Silkscreen',ui-monospace,monospace;margin-bottom:6px}
 #joinScreen .join-box,#joinScreen .join-box input[type=text],#maker *{border-radius:0!important}
+#mkWarn{margin:12px 0;padding:12px;border:2px solid #F5C518;background:#2a2238;color:#F5C518;font:700 12px 'Silkscreen',ui-monospace,monospace;text-align:center}#mkWarn div{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}#mkWarn .mm-btn{flex:1 1 auto;min-width:0;padding:10px 8px;font-size:11px}
+#mkSave{opacity:.55}#mkSave.dirty{opacity:1}
 #joinScreen .join-box{box-shadow:4px 4px 0 rgba(0,0,0,.55)}
 .join-logo{font-size:42px;font-weight:700;letter-spacing:-1px;margin-bottom:4px}
 .join-logo b{color:var(--pk)}
@@ -710,7 +712,9 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <!-- your character -->
   <div class="jv jv-char join-box">
     <div id="maker"></div>
-    <button class="mm-btn mm-join" data-to="menu"><i class="pxi" data-pxi="check"></i> Done</button>
+    <div id="mkWarn" style="display:none"><b>You have unsaved changes</b><div><button id="mkWSave" class="mm-btn">Save</button><button id="mkWDrop" class="mm-btn">Discard</button><button id="mkWStay" class="mm-btn">Keep editing</button></div></div>
+    <button class="mm-btn mm-join" id="mkSave"><i class="pxi" data-pxi="check"></i> Save changes</button>
+    <button class="mm-back" id="mkBack"><i class="pxi" data-pxi="back" data-k="2"></i> Back</button>
   </div>
 </div>
 
@@ -1709,10 +1713,12 @@ var myLook=null;
 try{myLook=ART.looks.unpack(localStorage.getItem("uk_look"));}catch(e){}
 if(!myLook)myLook=ART.looks.random();
 myColor=ART.looks.topColor(myLook);
-var MAKER=ART.maker(document.getElementById("maker"),myLook,function(L){
-  myLook=L;myColor=ART.looks.topColor(L);try{setFist();}catch(e){}
-  try{localStorage.setItem("uk_look",ART.looks.pack(L));}catch(e){}
-});
+/* the character maker edits a draft: Save changes keeps it, leaving with unsaved changes asks first, Undo steps back */
+var savedLook=JSON.parse(JSON.stringify(myLook)),mkDirty=false;
+function mkSync(L){mkDirty=ART.looks.pack(L)!==ART.looks.pack(savedLook);var b=document.getElementById("mkSave");if(b)b.classList.toggle("dirty",mkDirty);}
+var MAKER=ART.maker(document.getElementById("maker"),myLook,function(L){mkSync(L);});
+function mkCommit(){var L=MAKER.get();savedLook=JSON.parse(JSON.stringify(L));myLook=L;myColor=ART.looks.topColor(L);try{setFist();}catch(e){}
+  try{localStorage.setItem("uk_look",ART.looks.pack(L));}catch(e){}MAKER.reset(L);mkSync(L);}
 /* the main menu: switch views, remember your name, and your character dancing on a little stage */
 var MENU=(function(){
   var js=document.getElementById("joinScreen"),cv=document.getElementById("menuChar"),g=cv.getContext("2d"),raf=0;
@@ -1736,6 +1742,13 @@ var MENU=(function(){
   cv.onclick=function(){view("char");};
   document.getElementById("mmPrac").onclick=function(){saveName();try{history.replaceState(null,"","?practice");}catch(e){}PRACTICE.enter();};
   Array.prototype.forEach.call(js.querySelectorAll("[data-to]"),function(b){b.onclick=function(){view(b.getAttribute("data-to"));};});
+  var mkW=document.getElementById("mkWarn");function mkLeave(){mkW.style.display="none";view("menu");}
+  document.getElementById("mkSave").onclick=function(){mkCommit();mkLeave();};
+  document.getElementById("mkBack").onclick=function(){if(mkDirty){mkW.style.display="block";mkW.scrollIntoView({block:"center"});}else mkLeave();};
+  document.getElementById("mkWSave").onclick=function(){mkCommit();mkLeave();};
+  document.getElementById("mkWDrop").onclick=function(){MAKER.reset(savedLook);mkSync(savedLook);mkLeave();};
+  document.getElementById("mkWStay").onclick=function(){mkW.style.display="none";};
+  window.addEventListener("beforeunload",function(e){if(mkDirty&&js.getAttribute("data-view")==="char"){e.preventDefault();e.returnValue="";}});
   /* a link with a room code goes straight to joining */
   try{if(/[?&]room=/.test(location.search))view("join");}catch(e){}
   loop();
@@ -7120,7 +7133,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.32",SERVER_VERSION="";
+var PAGE_VERSION="1.81.33",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7699,7 +7712,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.32"></script>
+<script src="lab.js?v=1.81.33"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

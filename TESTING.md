@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.33 — Character maker: Undo, Save changes, unsaved warning
+
+- **↶ Undo** (next to Surprise me) steps back through your last 60 changes, including Surprise me rolls.
+- **Save changes** keeps the new look (the button lights up when there's something to save). Nothing is kept until you save.
+- **Back with unsaved changes** asks first: Save, Discard (back to your saved look) or Keep editing. Closing or reloading the page while editing also warns you.
+
 ## v1.81.32 — Mosh points
 
 | | off the beat | on the beat |
