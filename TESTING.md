@@ -1688,6 +1688,26 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.59 — Ski: repeat penalty is 10%, floor 50%
+
+- The same trick again is worth **10%** less each time (was 25%): ×0.9, ×0.81, ×0.73…, never below **×0.5** (was ×0.2). Swapping tricks still lets the others recover.
+
+## v1.81.58 — Ski: swoop tiers and the flag streak
+
+- **Hop into a divot (HOP SWOOP)** is worth more than **riding into one on the snow (SWOOP)**, which is worth more than passing the flag outside its divot. Each swoop also scores the flag.
+  - Hop swoop: flag + 300
+  - Ski swoop: flag + 150. This is new: riding into the top of a divot without hopping now swoops you too.
+  - Outside the divot: the flag only
+- **Flag streak:** each flag passed on the right side adds ×0.1 to the bonus on flag and swoop points (FLAG +100, ×1.1 +110, ×1.2 +120…). A wrong-side flag or a crash ends the streak. The label shows the multiplier.
+- Measured with the auto-skier: FLAG +100 → ×1.1 +110 → ×1.2 +120 → SWOOP ×1.3 +195.
+
+## v1.81.57 — Ski: mix up your tricks
+
+- **The same trick again is worth less:** ×0.75 each time, not below ×0.2. The points label shows it, e.g. "Backflip ×0.56 +629".
+- **Doing a different trick lets the others recover** by half a step each, so swapping between 360, Backflip and Daffy keeps tricks near full points.
+- It resets each round.
+- Measured: repeating Backflip went ×0.75 → ×0.56 → ×0.42.
+
 ## v1.81.56 — Ski: flags side by side only judge the nearest one
 
 - **Paired slalom flags** (two flags at about the same height, within 60): only the flag you're nearest when you pass that line counts. Before, passing one flag of a pair scored "WRONG SIDE" on the other, because you were out of its range.
