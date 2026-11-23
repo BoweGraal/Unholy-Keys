@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.41 — Crowd picks the next song (videos)
+
+- **Start a song → Video → 🗳 Crowd picks:** while live, the room votes for 20 s between 4 random videos from your video folder (bots vote too). Viewers see "PICK THE NEXT SONG" with the song names, with the key part of the file name hidden.
+- **Performer:** a small yellow card bottom right shows the live counts. When the vote closes, the winner is picked in Start a song, the Key and Alt pickers fill from its file name, and you press Start.
+- The video list shows the key read from each file name ("F# Mixolydian") instead of "video".
+- **Needs a server redeploy** (new svote messages).
+- Check: go live with a video folder loaded, press Crowd picks, vote on a phone, see the winner selected with its key.
+
 ## v1.81.40 — 8-bit pop-ups out of the way, pixel names, key pickers, Kart flag fix
 
 - **Kart flag on the performer screen:** the map view now covers Kart flag (it showed nothing before, e.g. after a mosh pit).
