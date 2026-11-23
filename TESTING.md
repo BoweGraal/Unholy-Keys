@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.56 — Ski: flags side by side only judge the nearest one
+
+- **Paired slalom flags** (two flags at about the same height, within 60): only the flag you're nearest when you pass that line counts. Before, passing one flag of a pair scored "WRONG SIDE" on the other, because you were out of its range.
+- **Bot / auto line:** goes between a pair that faces each other. For a pair facing away, it goes round the flag nearer its line, and it passes every flag on its arrow side, not through the pole.
+- Measured on First run with the auto-skier: 0 wrong-side misses (was several), and about double the score over the same distance.
+
 ## v1.81.55 — Ski on PC: click tricks
 
 - **Left click:** hops on the snow; in the air it does the highlighted trick.
