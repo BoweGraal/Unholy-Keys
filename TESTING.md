@@ -1692,6 +1692,12 @@ Needs a Render redeploy (server.js changed).
 
 - **Pixel editor, with Show character on:** the canvas zooms out to show 8 pixels of the character around the part you're editing (the torso and other arm round an arm, the hips round a leg). The surrounding body is faint, and you still only paint inside the part's box. Turn Show character off to go back to the close-up.
 
+## v1.81.49 — Pixel editor: Import PNG (for the designer templates)
+
+- **⬆ Import PNG:** brings in a PNG drawn on the template, at the exact canvas size or any whole-number multiple (e.g. the 8× template, 160 × 176 for head parts). It replaces the current layer, and the original art underneath is cleared, the same as Redraw. A wrong-size picture gets a message with the size it needs.
+- Pixels less than half opaque are dropped; the rest become solid.
+- Tested round trip: a hat drawn on `hat-BLANK-8x.png`, imported over Beret, renders pixel for pixel.
+
 ## v1.81.48 — Pixel editor: reference picture, layers, PNG export
 
 - **🖼 Reference picture:** pick an image from your device.

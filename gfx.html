@@ -103,9 +103,9 @@ button.pe{background:#1f5f6e;box-shadow:inset -3px -3px 0 #0f3640,inset 3px 3px 
    <div class="r"><button class="go" id="bCopy">Copy changes</button><button id="bTxt">✎ Text</button><button id="bApply">Apply pasted</button><button id="bReset">Reset everything</button></div></div>
  </div>
 </div>
-<script src="gfx.js?v=1.81.48"></script>
-<script src="art.js?v=1.81.48"></script>
-<script src="instruments.js?v=1.81.48"></script>
+<script src="gfx.js?v=1.81.49"></script>
+<script src="art.js?v=1.81.49"></script>
+<script src="instruments.js?v=1.81.49"></script>
 <script>
 (function(){
 /* pixel look: no emoji in any label (the lab writes a lot of its own text, so strip them as they appear) */
@@ -381,6 +381,7 @@ function pxSwatches(){var els=document.querySelectorAll(".sw");if(!els.length||!
   var list=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).slice(0,16);PX.picCols=list.slice();
   Array.prototype.forEach.call(els,function(el){el.textContent="";list.forEach(function(h){var e=document.createElement("i");e.style.background=h;e.className=h===PX.col.toLowerCase()?"on":"";e.onclick=function(){pxColor(h);if(PX.tool!=="pen"&&PX.tool!=="fill"&&PX.tool!=="brush"){pxTool("pen");}};el.appendChild(e);});});}
 function pxToggle(k){PX[k]=!PX[k];pxStates();}
+window.ukPx=function(){return{PX:PX,pxSelect:pxSelect,pxVariants:pxVariants,pxRender:pxRender,CH:CH,AS:AS,importImg:pxImportImg};};   /* for tools and tests (the template generator) */
 /* ---- a reference picture from your device: faint behind the canvas, or side by side; and export the part as a PNG ---- */
 var PIC={img:null,mode:"behind",a:0.45};
 try{var pv=localStorage.getItem("uk_pxpic");if(pv){var im0=new Image();im0.onload=function(){PIC.img=im0;picSide();};im0.src=pv;}PIC.mode=localStorage.getItem("uk_pxpicm")||"behind";PIC.a=+(localStorage.getItem("uk_pxpica")||0.45);}catch(e){}
@@ -394,12 +395,23 @@ function picSide(){var v=$("view");if(!v)return;var el=$("pxPicSide");var on=!!P
 function picClear(){PIC.img=null;try{localStorage.removeItem("uk_pxpic");}catch(e){}picSide();pxStates();}
 function pxPng(){pxRender();var sp=PX.spec,k=8,c=document.createElement("canvas");c.width=sp.w*k;c.height=sp.h*k;var cg=c.getContext("2d");cg.imageSmoothingEnabled=false;cg.drawImage(PX.base,0,0,c.width,c.height);
   var a=document.createElement("a");a.download=String(sp.key||"part").replace(/[^a-z0-9]+/gi,"-")+"-x"+k+".png";a.href=c.toDataURL("image/png");document.body.appendChild(a);a.click();a.remove();}
+/* import a PNG drawn on the template (exact size, or any whole-number size up like the 8x template): it replaces this layer, and the original underneath is cleared */
+function pxImport(){var f=document.createElement("input");f.type="file";f.accept="image/png,image/*";f.onchange=function(){var file=f.files&&f.files[0];if(!file)return;var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){pxImportImg(im);};im.src=rd.result;};rd.readAsDataURL(file);};f.click();}
+function pxImportImg(im){var sp=PX.spec,k=im.naturalWidth/sp.w;
+  if(k<1||Math.abs(k-Math.round(k))>0.001||Math.abs(im.naturalHeight-sp.h*Math.round(k))>0){alert("That picture is "+im.naturalWidth+" × "+im.naturalHeight+". This part needs "+sp.w+" × "+sp.h+" (or the same times a whole number, like "+(sp.w*8)+" × "+(sp.h*8)+").");return false;}
+  k=Math.round(k);var c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;var cg=c.getContext("2d");cg.drawImage(im,0,0);var d=cg.getImageData(0,0,c.width,c.height).data;
+  pxSnap();var m={};
+  if(sp.hole){var o=pxGhost().getContext("2d").getImageData(0,0,sp.w,sp.h).data;for(var y=0;y<sp.h;y++)for(var x=0;x<sp.w;x++)if(o[(y*sp.w+x)*4+3]>0)m[(x-sp.ax)+","+(y-sp.ay)]="0";}else m["!"]="1";
+  var n=0;for(var y2=0;y2<sp.h;y2++)for(var x2=0;x2<sp.w;x2++){var px=Math.floor((x2+0.5)*k),py=Math.floor((y2+0.5)*k),i=(py*c.width+px)*4;if(d[i+3]<128)continue;
+    m[(x2-sp.ax)+","+(y2-sp.ay)]="#"+[d[i],d[i+1],d[i+2]].map(function(v){return ("0"+v.toString(16)).slice(-2);}).join("");n++;}
+  PX.map=m;PX.ghostOn=false;pxCommit();pxSwatches();try{share();}catch(e){}pxStates();return n;}
 function picControls(box){
   var pb=mk("button","","🖼 Reference picture");pb.title="Pick a picture from your device to draw from";pb.onclick=picPick;box.appendChild(pb);
   var ms=document.createElement("select");[["behind","Behind (see-through)"],["side","Side by side"],["off","Hidden"]].forEach(function(o){var e=document.createElement("option");e.value=o[0];e.textContent=o[1];ms.appendChild(e);});ms.value=PIC.mode;
   ms.onchange=function(){PIC.mode=ms.value;picSave();picSide();};box.appendChild(ms);
   var op=document.createElement("input");op.type="range";op.min=5;op.max=100;op.value=Math.round(PIC.a*100);op.title="How see-through the picture is (Behind)";op.style.width="90px";op.oninput=function(){PIC.a=+op.value/100;picSave();};box.appendChild(op);
   var xb=mk("button","","✕ Picture");xb.title="Remove the reference picture";xb.onclick=picClear;box.appendChild(xb);
+  var ib=mk("button","","⬆ Import PNG");ib.title="Bring in a PNG drawn on the template (replaces this layer)";ib.onclick=pxImport;box.appendChild(ib);
   var eb=mk("button","","⬇ Export PNG");eb.title="Save this part as a PNG (8× size, crisp pixels)";eb.onclick=pxPng;box.appendChild(eb);}
 function pxFull(on){PX.fs=!!on;$("app").classList.toggle("pxfs",PX.fs);if(PX.fs){pxBar();var de=document.documentElement;try{if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().catch(function(){});}catch(e){}}
   else{try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen();}catch(e){}}PX.sig="";}
