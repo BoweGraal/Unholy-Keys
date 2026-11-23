@@ -98,8 +98,10 @@ var ART=(function(){
   function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;if(MIRHAT)x=-x-w;if(HATCLIP!==null&&SEC==="hair"){if(y+h<=HATCLIP)return;if(y<HATCLIP){h-=HATCLIP-y;y=HATCLIP;}}var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
   /* a limb: a 3-pixel-wide strip from the joint along the angle, coloured in bands (cols = [[upTo, colour],...]) */
   /* the shoe: a little toe at the end of a leg, so feet aren't stick ends. dx: which way it points (-1/1), rows: how tall */
-  function toe(jx,jy,a,len,col,dx,rows){if(ISO&&SEC!==ISO)return;var ex=jx-Math.sin(a)*len,ey=jy+Math.cos(a)*len;sg.fillStyle=col;
-    sg.fillRect(Math.round(OX+ex-1.5+(dx<0?-1:0)),Math.round(OY+ey-rows),4,rows);}
+  function toe(jx,jy,a,len,col,dx,rows){if(ISO&&SEC!==ISO)return;
+    var lx=-Math.sin(a),ly=Math.cos(a),ex=jx+lx*len,ey=jy+ly*len,qx=ly*dx,qy=-lx*dx;   /* down the leg, and across it toward the toe: the foot sits square on the leg at any angle */
+    if(qy>0.5){qx=-qx;qy=-qy;}   /* never point the toe back up a leg kicked out sideways */
+    sg.fillStyle=col;for(var r=0;r<rows;r++)for(var c=-1;c<=2;c++)sg.fillRect(Math.round(OX+ex-lx*(r+0.5)+qx*c-0.5),Math.round(OY+ey-ly*(r+0.5)+qy*c-0.5),1,1);}
   function limb(jx,jy,a,len,cols,stripes){
     if(ISO&&SEC!==ISO)return;
     var s=Math.sin(a),c=Math.cos(a),step=0.5;
@@ -2118,8 +2120,21 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       }
       o.armL=clamp(o.armL,-3.3,3.3);o.armR=clamp(o.armR,-3.3,3.3);o.legL=clamp(o.legL,-1.2,1.2);o.legR=clamp(o.legR,-1.2,1.2);
     }
-    return o;
+    return plant(o);
   }
+  /* feet on the floor: the hips are 4 art pixels below the middle and a leg is 7 long, so the floor is at 11. A pose that drops the body
+     (a squat, a lean) bends the legs instead of pushing the feet through the floor; a wide stance that lifts the feet is set down,
+     but a hop (the body going up, bob below 0) still leaves the floor by that much. Not while lying or spinning on the floor. */
+  function plant(o){var r=o.rot||0;if(Math.abs(r)>0.3)return o;
+    var bob=o.bob||0,lift=Math.min(0,bob),aL=o.legL||0,aR=o.legR||0,nL=clamp(o.lgL||7,3,7),nR=clamp(o.lgR||7,3,7),sr=Math.sin(r),cr=Math.cos(r),tr=8*Math.abs(sr);
+    function foot(a,n,hx){var fx=hx-Math.sin(a)*n,fy=4+Math.cos(a)*n;return bob+tr+fx*sr+fy*cr;}   /* where the foot lands on screen, the lean included */
+    function fit(a,n,hx){while(n>4.5&&foot(a,n,hx)>11)n-=0.25;return n;}
+    if(Math.max(foot(aL,nL,-2.5),foot(aR,nR,2.5))>11.4){
+      if(Math.cos(aL)>0.2)nL=fit(aL,nL,-2.5);if(Math.cos(aR)>0.2)nR=fit(aR,nR,2.5);
+      var over=Math.max(foot(aL,nL,-2.5),foot(aR,nR,2.5))-11;if(over>0)bob-=over;   /* bent as far as they go: lift the body the rest */
+      if(nL<7)o.lgL=nL;if(nR<7)o.lgR=nR;}
+    var low=Math.max(foot(aL,nL,-2.5),foot(aR,nR,2.5)),want=11+lift;if(low<want-0.4)bob+=want-low;
+    o.bob=bob;return o;}
   var DTWEAK={
     all:function(){return JSON.parse(JSON.stringify(DT));},
     get:function(style,sub){return DT[style+"."+(sub|0)]||[];},
@@ -2561,6 +2576,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.43",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.44",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

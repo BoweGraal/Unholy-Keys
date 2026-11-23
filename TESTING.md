@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.44 — Feet sweep: shoes on every angle, feet on the floor in every dance
+
+- **Toes follow the leg:** the shoe sits square across the end of the leg at any angle, so lying, kicking and sideways legs (the worm, kicks, floor spin) get a proper foot, not a longer leg. Checked in all 8 facing directions.
+- **Feet planted in every dance:** I measured the lowest foot pixel against the floor for every move of every dance, 16 moments each.
+  - Before: squats and leans (Hands on knees, Drop it, Thriller, Strike a pose, Cyber goth, Headbang) pushed the feet 3–7 px through the floor, and some wide stances floated.
+  - Now: squats bend the legs (down to 4.5 of 7 long, then the body stays up), and the lean of the body is included. Feet land within 1–2 px of the floor (pixel rounding). Hops and beat bounces still leave the floor by their own height.
+- Applies on both screens (audience and performer) and in the dance walk race. The worm and floor spins are left as they are.
+- Check: free dance → Hands on knees (Low), Thriller, Cyber goth (Chop), Headbang: no feet through the floor.
+
 ## v1.81.43 — Kart flag: right click for IMPACT
 
 - **Kart flag on PC:** right click is IMPACT (no browser menu). Left click is still hold for drift and aim, let go to LAUNCH. Space still works too.
