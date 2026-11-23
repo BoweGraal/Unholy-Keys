@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.77 — Stage: 8-bit glow, lasers, banner and Go live
+
+1. Jam in Stage view and play a note: the pink glow behind you is now stepped pixel rings, not a smooth circle.
+2. Turn on Lasers (Show → Extras): the beams are runs of square pixels.
+3. Lower the Banner with the screen down: the fringe along the bottom is pixel teeth, and the banner hangs below the buttons in the top-left corner and clear of the key panel. The UNHOLY KEYS wall sign no longer peeks out cut off above the screen.
+4. The Go live button (top right in jam) is square and pixel-font, with a hard shadow and a pixel dot (blinking red while you're live) in place of the 🔴 emoji.
+
 ## v1.81.76 — Abs hat at every angle
 
 1. Put on the Abs hat and turn the character all the way round in the maker. From the side the hat covers the head, brim included, with no hair poking through the top. From the back it's mirrored, with no front shine.

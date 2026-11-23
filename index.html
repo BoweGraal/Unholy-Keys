@@ -14,11 +14,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.81.76"></script>
-<script src="art.js?v=1.81.76"></script>
-<script src="voice.js?v=1.81.76"></script>
-<script src="instruments.js?v=1.81.76"></script>
-<script src="kart.js?v=1.81.76"></script>
+<script src="gfx.js?v=1.81.77"></script>
+<script src="art.js?v=1.81.77"></script>
+<script src="voice.js?v=1.81.77"></script>
+<script src="instruments.js?v=1.81.77"></script>
+<script src="kart.js?v=1.81.77"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -262,6 +262,11 @@ a.nav-item{text-decoration:none}
 #lsBar #lsEnd{background:rgba(224,80,80,.25);border-color:rgba(224,80,80,.6)}
 #jLiveBtn{position:absolute;top:58px;right:395px;z-index:10;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#D354A0,#FF4444);border:none;border-radius:var(--r);color:#fff;box-shadow:0 2px 12px rgba(255,68,68,.35)}
 #jLiveBtn.on{background:rgba(255,68,68,.14);border:1px solid #FF4444;color:#ff8a8a;animation:jLivePulse 1.6s ease-in-out infinite}
+#jLiveBtn{font:700 12px/1 'Silkscreen',ui-monospace,monospace!important;letter-spacing:.5px;background:#E8505B!important;border:3px solid #1a0f2a!important;border-radius:0!important;box-shadow:4px 4px 0 #000!important;padding:8px 12px!important;color:#fff!important;display:inline-flex;align-items:center;gap:7px}
+#jLiveBtn:hover{background:#ff6470!important}#jLiveBtn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000!important}
+#jLiveBtn.on{background:#3a1420!important;border-color:#E8505B!important;color:#ffb0b6!important}
+#jLiveBtn .pxd{width:8px;height:8px;background:#fff;box-shadow:inset -2px -2px 0 rgba(0,0,0,.25)}#jLiveBtn.on .pxd{background:#ff3b4a;animation:pxBlink 1s steps(2) infinite}
+@keyframes pxBlink{50%{opacity:.25}}
 @keyframes jLivePulse{50%{box-shadow:0 0 16px rgba(255,68,68,.7)}}
 /* the jam toolbar: going live and fullscreen top right; everything else in one bar bottom left */
 #jTopBar{position:absolute;top:16px;right:20px;z-index:10;display:flex;gap:8px;align-items:center}
@@ -928,7 +933,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <div class="note" id="lsNote"></div>
       <button id="lsStart" disabled>&#9654; Start</button>
     </div></div>
-    <button id="jLiveBtn" title="Go live: open a room so your audience can join">&#128308; Go live</button>
+    <button id="jLiveBtn" title="Go live: open a room so your audience can join"><i class="pxd"></i>Go live</button>
     <button id="jHangBtn" title="Hang out between songs: walk the floor with the arrows or WASD (or click where to go), Enter to talk, Esc to go back on stage">&#128694; Hang out</button>
     <div id="jHangBar"><input id="jHangSay" maxlength="300" autocomplete="off" placeholder="Say something to the room… (Enter)"><button id="jHangSend">Say</button><span>Arrows / WASD or click to walk · Esc back to the stage</span></div>
     <button id="jFsBtn" title="Fullscreen (F11)">&#9974; Fullscreen</button><div id="jTopBar"></div><div id="jBotBar"></div>
@@ -2281,7 +2286,7 @@ function mbStartCanvas(){mbSt.fit="";mbFitCanvas();if(mbAnim)cancelAnimationFram
     var top=50,bot=22,availH=Math.max(60,h-top-bot),nsz=Math.max(1,Math.min(Math.round(availH/(36*P)),tall?Math.floor(availH/(44*P)):9,Math.floor(w/((PKIND.band?72:46)*P)))),p=nsz*P;
     var fy=Math.round(h*0.80/P)*P,cx=Math.round(w/2/P)*P,cy=Math.round((fy-12*p-1)/P)*P;
     var pk=perfKind(),pst={midi:PPLAY.midi,on:PPLAY.on,t0:PPLAY.t0,off:PPLAY.off,now:now,n:PPLAY.n};
-    if(pst.on){var gl=ART.PX.rg(g,cx,cy-6*p,3,cx,cy-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.5)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;ART.PX.disc(g,cx,cy-6*p,24*p);}
+    if(pst.on){pxGlow(g,cx,cy-6*p,24*p,p);}
     if(PKIND.band)ART.INST.drawBand(g,cx,cy,p,PKIND.band,pst,Math.min(cx,w-cx)-8);   /* a choir or a section plays along beside you */
     ART.INST.draw(g,cx,cy,p,mbLook(),pk,pst);
     /* a burst of little squares from the instrument on each new note */
@@ -4875,7 +4880,7 @@ document.getElementById("bLive").onclick=function(){goLive();};
 /* the same Live button in jam mode (the main one is hidden there); it mirrors the main button's state */
 (function(){var jb=document.getElementById("jLiveBtn"),mb=document.getElementById("bLive");
   function sync(){var t=mb.textContent.trim(),on=liveOn||t==="Reconnecting";jb.classList.toggle("on",on);
-    jb.innerHTML=t==="LIVE"?"&#128308; LIVE":t==="Live"?"&#128308; Go live":t==="Reconnecting"?"&#128225; Reconnecting…":t;
+    jb.innerHTML='<i class="pxd"></i>'+(t==="LIVE"?"LIVE":t==="Live"?"Go live":t==="Reconnecting"?"Reconnecting…":String(t).replace(/[<&]/g,""));
     jb.title=on?"You're live. Click to end the show":"Go live: open a room so your audience can join";}
   jb.onclick=function(){if(liveOn&&!confirm("End the live show for everyone?"))return;goLive();};
   new MutationObserver(sync).observe(mb,{childList:true,characterData:true,subtree:true});sync();})();
@@ -4884,7 +4889,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.81.76",SERVER_VERSION="";
+var PAGE_VERSION="1.81.77",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -4926,12 +4931,16 @@ var PFOLLOW=ART.follower();
 /* what you're playing, for your character with the instrument you've picked (instruments.js) */
 var PPLAY={midi:60,on:false,t0:0,off:0,n:0},PKIND={id:null,kind:"synth"};
 function perfKind(){var id=S.eng;if(PKIND.id!==id){var ins=findInst(id);PKIND.id=id;PKIND.kind=ART.INST.kindOf(id,ins&&ins.l);PKIND.band=ART.INST.section(id,ins&&ins.l);}return PKIND.kind;}
+/* the note glow, 8-bit: stepped rings of solid pixels on the same grid as the character, brighter in the middle */
+function pxGlow(g,cx,cy,R,p){var q=Math.max(2,p|0),rings=[[1,.16],[0.74,.16],[0.48,.2]];g.save();g.fillStyle="#D354A0";
+  rings.forEach(function(rg){var r=R*rg[0];g.globalAlpha=rg[1];for(var yy=-r;yy<=r;yy+=q){var hw=Math.sqrt(Math.max(0,r*r-yy*yy));hw=Math.round(hw/q)*q;if(hw<=0)continue;
+    g.fillRect(Math.round((cx-hw)/q)*q,Math.round((cy+yy)/q)*q,hw*2,q);}});g.restore();}
 /* you on stage holding your instrument: glows while a note sounds; the name under your feet.
    demo: in the Show tab preview, a made-up tune plays when you're not playing */
 function perfDraw(g,x,y,p,now,crowd,lay,H,named,demo){
   var st={midi:PPLAY.midi,on:PPLAY.on,t0:PPLAY.t0,off:PPLAY.off,now:now,n:PPLAY.n};
   if(demo&&!PPLAY.on&&now-PPLAY.off>1500){var beat=Math.floor(now/420),ph=now%420;st={midi:[60,64,67,72,67,64,62,65][beat%8],on:ph<330,t0:now-ph,off:now-ph+330,now:now,n:beat};}
-  if(st.on){var gl=ART.PX.rg(g,x,y-6*p,3,x,y-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.5)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;ART.PX.disc(g,x,y-6*p,24*p);}
+  if(st.on){pxGlow(g,x,y-6*p,24*p,p);}
   var _k=perfKind();if(PKIND.band)ART.INST.drawBand(g,x,y,p,PKIND.band,st,Math.min(x,(g.canvas.width/(window.devicePixelRatio>1?Math.min(2,window.devicePixelRatio):1))-x)-8);   /* a choir or a section plays along around you */
   ART.INST.draw(g,x,y,p,perfLook,_k,st);
   if(crowd){var cr=ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target);ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,2,cr.hands,crowd.target);}
@@ -5141,7 +5150,7 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
   /* a crowd surprise: float up; hand lasers point both arms at the stage */
   var cr=crowd&&crowd.kind?ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target):null;
   if(cr){y+=cr.lift;if(cr.armL!==undefined){armL=cr.armL;armR=cr.armR;fd=null;}}
-  if(glow){var gl=ART.PX.rg(g,x,y-6*p,3,x,y-6*p,24*p);gl.addColorStop(0,"rgba(211,84,160,.55)");gl.addColorStop(1,"rgba(211,84,160,0)");g.fillStyle=gl;ART.PX.disc(g,x,y-6*p,24*p);}
+  if(glow){pxGlow(g,x,y-6*p,24*p,p);}
   /* a reaction takes over the pose; floating in space or swimming blends in (AUDX, set just before the call) */
   var AX=AUDX,rpo=null,epo=null;AUDX=null;
   if(AX){rpo=atKeys?null:ART.reactPose(AX.reacts,now,p);epo=AX.lay?ART.envPose(AX.lay,AX.H,x,y,p,now,seed||0):null;
@@ -5233,7 +5242,7 @@ function drawVenueTo(g,W,H,opts){
   function Y(v){return v<=0.30?v/0.30*SB*H:(SB+(v-0.30)/0.48*(FB-SB))*H;}
   g.clearRect(0,0,W,H);
   var alay={stageBottom:SB,floorBottom:FB},ph=(now%600)/600,fol=sfx.follow?PFOLLOW.read():null;
-  ART.scene(g,W,H,alay,{now:now,phase:ph,level:activeVoice?0.7:0.3,playing:!!activeVoice,sign:stage?"UNHOLY KEYS":false,lights:sfx.lights,fog:sfx.fog,spotX:W/2,follow:fol});
+  ART.scene(g,W,H,alay,{now:now,phase:ph,level:activeVoice?0.7:0.3,playing:!!activeVoice,sign:stage&&!(opts&&opts.jt&&opts.jt.k>0.5)?"UNHOLY KEYS":false,lights:sfx.lights,fog:sfx.fog,spotX:W/2,follow:fol});
   var rcF=typeof ROUNDS!=="undefined"?ROUNDS.current:null,rinkF=!!(stage&&rcF&&(rcF.mode==="skate"||rcF.mode==="ice")&&(rcF.phase==="countdown"||rcF.phase==="play"));
   ART.setForce(rinkF?(rcF.mode==="ice"?{disco:1,weather:"snow"}:{disco:1}):null);   /* the rink brings its own mirror ball (and snow on the ice) */
   ART.fxBack(g,W,H,alay,sfx,{now:now,jumbo:!!(opts&&opts.jt&&opts.jt.k>0.5)});
