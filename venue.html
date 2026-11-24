@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.15"></script>
-<script src="gfx.js?v=1.82.15"></script>
-<script src="art.js?v=1.82.15"></script>
-<script src="voice.js?v=1.82.15"></script>
-<script src="instruments.js?v=1.82.15"></script>
-<script src="kart.js?v=1.82.15"></script>
-<script src="explain.js?v=1.82.15"></script>
+<script src="tune.js?v=1.82.16"></script>
+<script src="gfx.js?v=1.82.16"></script>
+<script src="art.js?v=1.82.16"></script>
+<script src="voice.js?v=1.82.16"></script>
+<script src="instruments.js?v=1.82.16"></script>
+<script src="kart.js?v=1.82.16"></script>
+<script src="explain.js?v=1.82.16"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3424,7 +3424,7 @@ var GAME=(function(){
     fdRec(nowS);
     for(var i=0;i<2;i++){var kx=0,ky=0,kn=0;for(var kc in fkHeld){var kv=FKEYS[kc];if(kv&&kv[0]===i){kx+=kv[1];ky+=kv[2];kn++;}}
       if(kn&&fHeld[i]===null){var km=Math.hypot(kx,ky)||1;kx/=km;ky/=km;if(!kx&&!ky){kx=0;ky=0;}
-        var held2=(performance.now()-(fkAt[i]||performance.now()))/1000,mag=0.22+0.73*Math.max(0,Math.min(1,(held2-0.2)/1.1)),ek=Math.min(1,FRAME_DT*7);
+        var held2=(performance.now()-(fkAt[i]||performance.now()))/1000,mag=0.32+0.63*Math.max(0,Math.min(1,(held2-0.05)/1.2)),ek=Math.min(1,FRAME_DT*8);   /* keys move you straight away, then ease out towards the edge over about 1.2 s */
         fCtl[i*2]+=(kx*mag-fCtl[i*2])*ek;fCtl[i*2+1]+=(ky*mag-fCtl[i*2+1])*ek;moved=true;}}   /* held keys ease the dot that way: a tap sways, holding pushes it out */
     for(var i=0;i<2;i++)if(fHeld[i]===null&&!Object.keys(fkHeld).some(function(kc){return FKEYS[kc][0]===i;})&&(fCtl[i*2]||fCtl[i*2+1])){fCtl[i*2]*=0.82;fCtl[i*2+1]*=0.82;if(Math.abs(fCtl[i*2])<0.02&&Math.abs(fCtl[i*2+1])<0.02){fCtl[i*2]=0;fCtl[i*2+1]=0;}moved=true;}
     if(window.__fdStick){fCtl[0]=window.__fdStick[0];fCtl[1]=window.__fdStick[1];moved=true;}   /* tests: hold the left stick somewhere */
@@ -3433,14 +3433,14 @@ var GAME=(function(){
     var fm=me(),fdt=Math.min(0.1,(nowS-(fdSpring.t||nowS))/1000);fdSpring.t=nowS;
     if(fm&&fStyle>0&&fdt>0){var lx=fCtl[0],ly=fCtl[1],lm=Math.hypot(lx,ly);
       if(fStyle===9){   /* the Shuffle: sideways is the T-step, travelling that way (slower the nearer the middle); back to the middle, back to the shuffle */
-        var wasT=shufT;shufT=!shufSpin&&Math.abs(lx)>0.35&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;
+        var wasT=shufT;shufT=!shufSpin&&Math.abs(lx)>0.2&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;   /* a small dead zone: a little push sideways starts the T-step */
         if(ly<-0.85&&shufArm&&!mySpin.on){shufArm=false;shufSpin=true;spinStart("spin");mySpin.vel=-Math.abs(mySpin.vel);mySpin.pa=Math.atan2(ly,lx);applyToMe();sendPose(true);}   /* up to the top edge: a T-step stomp on the spot that spins you round; circle the stick to keep it going */
         if(ly>-0.3&&!shufSpin)shufArm=true;   /* bring the stick back down (once the spin's done) before you can spin again */
         if(wasT!==shufT){applyToMe();sendPose(true);}
         var ffS=ROUND.featured(),isFS=ffS&&ffS.id===myId;
-        if(shufT&&!isFS){var spS=TUNE.v("walk.speed")*fdt*0.6*Math.min(1,(Math.abs(lx)-0.35)/0.6);fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+shufT*spS));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}
-        else if(!shufT&&!shufSpin&&!isFS&&Math.abs(ly)>0.25){   /* up / down still travel you up and down the floor while you shuffle */
-          var spV=TUNE.v("walk.speed")*fdt*0.5*Math.min(1,(Math.abs(ly)-0.25)/0.6);fm.ty=Math.max(FLOOR_TOP+0.04,Math.min(FLOOR_BOTTOM,fm.ty+(ly<0?-1:1)*spV));fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
+        if(shufT&&!isFS){var spS=TUNE.v("walk.speed")*fdt*0.6*Math.min(1,0.25+0.75*(Math.abs(lx)-0.2)/0.75);fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+shufT*spS));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}
+        else if(!shufT&&!shufSpin&&!isFS&&Math.abs(ly)>0.2){   /* up / down still travel you up and down the floor while you shuffle */
+          var spV=TUNE.v("walk.speed")*fdt*0.5*Math.min(1,0.25+0.75*(Math.abs(ly)-0.2)/0.75);fm.ty=Math.max(FLOOR_TOP+0.04,Math.min(FLOOR_BOTTOM,fm.ty+(ly<0?-1:1)*spV));fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
       else if(lm>0.18){var ff=ROUND.featured(),isF=ff&&ff.id===myId,k2=Math.min(1,(lm-0.18)/0.77),sp2=TUNE.v("walk.speed")*fdt*0.55*k2;
         if(!isF){fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+lx/lm*sp2));fm.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),fm.ty+ly/lm*sp2*(W/H)));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}}
   }
@@ -8248,7 +8248,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.15",SERVER_VERSION="";
+var PAGE_VERSION="1.82.16",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8832,7 +8832,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.15"></script>
+<script src="lab.js?v=1.82.16"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
