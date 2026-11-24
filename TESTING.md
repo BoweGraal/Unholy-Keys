@@ -1688,6 +1688,28 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.39 — "Your turn plays" only in a free dance round
+
+- The **Your turn plays: 1. … 2. … 3. …** bar is hidden when you're just dancing on the floor. It only shows during a free dance round (the mini game where your turn in the spotlight plays those dances), live or in practice.
+- Check: free dance from the floor: no turn bar. Start a free dance round: it's there.
+
+## v1.82.38 — Cyber goth: Stomp & reach
+
+- **Cyber goth → Stomp & reach** (it was Stomp & punch), from a new clip: a **wide, low stance**; on each beat **both arms reach up** in a V tilted to one side, then **pull down hard** with the fists to the chest as that foot **stomps** and the weight drops onto it, then the other side. The reach is quick and the pull is the hit. It's also the base of Mix it up. Right stick: arm size, and up for double time. Left stick moves you.
+- Check: free dance → Cyber goth: reach up to one side, pull down with a stomp, swap.
+
+## v1.82.37 — Shuffle's Running man side-on
+
+- **Shuffle → Running man** is now **side-on** like the Running man dance, from a new clip, but with the shuffle's sharp timing: on the "and" a knee **snaps up** in front and holds; on the beat it **stomps down** as the standing foot slides back, and the **other leg** takes the next one. Arms loose and low, bent, a hand pumping up with the knee.
+- T-step and Spin are unchanged (T-step still faces front). Mix it up's running-man bars are side-on too, and 90 / 180 turn it.
+- Check: free dance → Shuffle → Running man: side-on, knees alternating with a snap and a slide.
+
+## v1.82.36 — 90 / 180 / Spin / Twirl work again in turned dances; Skank kicks across the body
+
+- **Fixed:** the 90, 180, Spin and Twirl buttons did nothing in dances that set their own facing (Running man side-on, Shake it facing away, the moonwalk). The dance's facing is now turned by the buttons instead of replacing them: Running man faces right, 180 faces left, 90 faces the front, and spins go round.
+- **Skank → Classic**, from the new photo: on each beat a snap and a hold (the stop frame): **one arm swung out to the side**, the **other fist bent across the chest**, and **the leg on the other side kicking inward across the body** with the knee up. The first stop frame is the left arm out, then it swaps sides, with a short break between.
+- Check: free dance → Running man → tap 180 then 90: it turns. Skank: arm out + fist at the chest + knee across, swapping each beat.
+
 ## v1.82.35 — Running man side-on, legs taking turns
 
 - **Running man** (Classic and Fast) now starts **side-on, facing right**, from a new clip: on each beat one knee drives up in front while the standing foot slides back into a long stride, then that knee comes down in front and **the other leg** comes up on the next beat, so the legs alternate properly. The hands are bent up at the chest, pumping down as the knee rises. Arms pump swings the arms like running. Moonwalk is unchanged.

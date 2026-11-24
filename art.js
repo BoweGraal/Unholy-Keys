@@ -1870,7 +1870,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     {name:"Shuffle",icon:"\uD83D\uDC5F",subs:["Running man","T-step","Spin","Mix it up"],help:"Left stick: slide around as you step (flip it to slide back). Right stick: UP = step up on your toes, DOWN = low stomp, sideways = arms."},
     {name:"Thriller",icon:"\uD83E\uDDDF",subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left stick: lurch around the floor. Right stick: lean and reach your arms."},
     {name:"Street jam",icon:"\uD83D\uDCA5",subs:["High knees","Strike a pose","Hop step","Floor spin","Mix it up"],help:"Left stick: travel around the floor. Right stick: up for higher knees, sideways for the arms."},
-    {name:"Cyber goth",icon:"\uD83E\uDD16",subs:["Stomp & punch","Arm sweep","Hands up","Windmill","Arm roll","Chop","Mix it up"],help:"Left stick: stomp around the floor. Right stick: arm size and speed."},
+    {name:"Cyber goth",icon:"\uD83E\uDD16",subs:["Stomp & reach","Arm sweep","Hands up","Windmill","Arm roll","Chop","Mix it up"],help:"Left stick: stomp around the floor. Right stick: arm size and speed."},
     {name:"Headbang",icon:"\uD83E\uDD18",subs:["Headbang","Hair windmill","Air guitar","Rock on","Mix it up"],help:"Left stick: move around while you bang. Right stick: how hard and how fast."},
     {name:"Lighters up",icon:"\uD83D\uDD25",subs:["Lighter sway","Phone light","Wave it","Both hands","Glow sticks"],help:"Left stick: sway your way around the floor. Right stick: how high you hold it."},
     {name:"Techno march",icon:"\uD83E\uDD7E",subs:["March","Point","Arm swing","Flex","Mix it up"],help:"Left stick: march around the floor. Right stick: arm power."},
@@ -1943,15 +1943,16 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       if(sub===3){var pump=0.7+(bx+1)*0.35;o.armL=q*pump;o.armR=q*pump;o.alL=o.alR=6;}      /* arms swinging like running, opposite the legs */
       else{var hs=0.3+(bx+1)*0.2;o.armL=-(0.95-up*hs);o.armR=-(0.95-up*hs);o.alL=o.alR=6;}    /* hands bent up at the chest, pumping down as the knee rises */
       break;}
-    case 5:{ /* skank (from a clip): on each beat a snap: one arm pumps up, bent at the elbow, as the opposite foot kicks out, then
-                a short break back in a bouncy bent-knee stance before the other side: right arm + left foot, then left arm + right foot */
+    case 5:{ /* skank (from clips): on each beat a snap into the pose and a hold (the stop frame): one arm swung out to the side, the
+                other bent with the fist across the chest, and the leg on the other side kicking INWARD across the body with the knee up.
+                The stop frame on the first beat is the left arm out (right knee across), then it swaps sides; a short break between */
       var kh=0.7+Math.max(0,-ay)*0.6,bI=Math.floor(bp),phs=bp-bI,sdk=bI%2?-1:1,
-          a5=phs<0.16?(function(x){return x*x*(3-2*x);})(phs/0.16):phs<0.55?1:phs<0.8?1-(phs-0.55)/0.25:0,   /* snap in, hold, ease back, a short break */
-          qq=sdk*a5,pu=1.2+Math.max(0,-by)*0.8+(bx+1)*0.2;
-      o.legL=0.12;o.legR=-0.12;o.lgL=o.lgR=6.3;o.armL=0.6;o.armR=-0.6;o.alL=o.alR=6;   /* the break: knees bent, fists up by the chest */
-      if(sdk>0){o.armR=-0.6-a5*pu*1.35;o.legL=0.12+a5*1.15*kh;o.lgL=6.3-a5*0.6;}   /* right arm up, left foot out */
-      else{o.armL=0.6+a5*pu*1.35;o.legR=-0.12-a5*1.15*kh;o.lgR=6.3-a5*0.6;}         /* left arm up, right foot out */
-      o.bob=1.2+a5*1.6-(phs>0.8?Math.sin((phs-0.8)/0.2*Math.PI)*1.2:0);o.dx=ax*4*s1+qq*1.5;o.rot=qq*0.06;   /* sinks into the hit, a little bounce in the break */
+          a5=phs<0.16?(function(x){return x*x*(3-2*x);})(phs/0.16):phs<0.6?1:phs<0.82?1-(phs-0.6)/0.22:0,   /* snap in, hold (the stop frame), ease back, a short break */
+          qq=sdk*a5,pu=1+Math.max(0,-by)*0.5+(bx+1)*0.15;
+      o.legL=0.12;o.legR=-0.12;o.lgL=o.lgR=6.3;o.armL=0.5;o.armR=-0.5;o.alL=o.alR=6;   /* the break: knees bent, fists low */
+      if(sdk>0){o.armL=0.5+a5*0.85*pu;o.alL=7;o.armR=-0.5+a5*1.6;o.alR=5;o.legR=-0.12+a5*0.95*kh;o.lgR=6.3-a5*3;}   /* left arm out, right fist across the chest, right knee kicking in across */
+      else{o.armR=-0.5-a5*0.85*pu;o.alR=7;o.armL=0.5-a5*1.6;o.alL=5;o.legL=0.12-a5*0.95*kh;o.lgL=6.3-a5*3;}         /* and the other side */
+      o.bob=1.2+a5*1.4-(phs>0.82?Math.sin((phs-0.82)/0.18*Math.PI)*1.2:0);o.dx=ax*4*s1-qq*1.2;o.rot=-qq*0.05;
       if(sub===4){var kk=(Math.floor(bp)%2===0);if(ph>0.35&&ph<0.85){if(kk){o.legL=1.05;o.lgL=7;o.legR=-0.1;o.lgR=7;}else{o.legR=-1.05;o.lgR=7;o.legL=0.1;o.lgL=7;}o.bob=0.5;}}   /* kick out to the side */
       if(sub===1){o.armL=bp*Math.PI*2%(Math.PI*2);o.armR=-o.armL;}                               /* windmill */
       if(sub===2){o.bob=-hop*8;o.legL=0.1;o.legR=-0.1;o.armL=2.6;o.armR=-2.6;}                    /* pogo */
@@ -2031,11 +2032,16 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       /* the stomp under everything: step out wide on each beat, knee lifting on the off-beat */
       o.legL=st3<0?sw3+0.2*sp3:0.15;o.legR=st3>0?-sw3-0.2*sp3:-0.15;if(ph>0.5){if(st3<0)o.lgR=7-(ph-0.5)*4;else o.lgL=7-(ph-0.5)*4;}
       o.bob=lo3+sp3*1.5;o.dx=st3*2;
-      if(m3===0){   /* stomp & pump (the guy in the middle of the clip): knees bent, stomping in place, fists pumping up and down
-                       in front of the chest in turn with the elbows bent, shoulders dipping into each stomp */
-        var pn=Math.sin(bp*Math.PI*fast3),pk=Math.pow(Math.abs(pn),0.6)*(pn<0?-1:1);
-        o.armL=0.75+pk*0.55*sz;o.armR=-0.75+pk*0.55*sz;o.alL=5-Math.max(0,pk)*1.2;o.alR=5-Math.max(0,-pk)*1.2;
-        o.bob=lo3+2.2+sp3*1.8;o.rot=pk*0.07;o.legL=st3<0?sw3*0.7+0.15*sp3:0.2;o.legR=st3>0?-sw3*0.7-0.15*sp3:-0.2;o.lgL=o.lgL||6.3;o.lgR=o.lgR||6.3;o.dx=st3*1.2;
+      if(m3===0){   /* stomp & reach (from a clip of a cyber goth crew): a wide, low stance; on each beat both arms REACH up diagonally
+                       to one side, then PULL down hard, fists to the chest, as that foot stomps and the weight drops onto it; then the other
+                       side. Snappy: the reach is quick, the pull is the hit */
+        var b3=Math.floor(bp*fast3),p3=bp*fast3-b3,sd3=b3%2?-1:1,
+            rch=p3<0.35?(function(x){return x*x*(3-2*x);})(p3/0.35):p3<0.5?1:Math.max(0,1-(p3-0.5)/0.18),pull=1-rch,hit=p3>0.5&&p3<0.7?1-(p3-0.5)/0.2:0;
+        /* arms: up and out to the side (both pointing the same way), or pulled in bent with the fists at the chest */
+        var upL=sd3>0?2.15+0.35*sz:2.75,upR=sd3>0?-2.75:-2.15-0.35*sz;   /* both arms up, the V tilted toward that side */
+        o.armL=upL*rch+0.85*pull;o.armR=upR*rch-0.85*pull;o.alL=o.alR=Math.round(5+rch*2);
+        o.legL=0.42+(sd3>0?0.1*hit:0);o.legR=-0.42-(sd3<0?0.1*hit:0);o.lgL=sd3>0?6.6-pull*1.4:6.6;o.lgR=sd3<0?6.6-pull*1.4:6.6;   /* wide stance, the weight dropping onto the stomping side */
+        o.bob=lo3+0.6+pull*2.2+hit*0.8;o.dx=sd3*(1+pull*2);o.rot=-sd3*0.06*rch;
       }else if(m3===1){   /* arm sweep: both arms swing across the body together in a big arc, one side then the other */
         var as=Math.sin(bp*Math.PI*fast3);o.armL=0.4+as*1.4*sz;o.armR=-0.4+as*1.4*sz;o.rot=as*0.1;o.dx=as*3;
       }else if(m3===2){   /* hands up: both hands over the head, swaying, elbows bent */
@@ -2099,13 +2105,13 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       var bq=((bp%4)+4)%4,bar=Math.floor(bp/4);
       if(sub===3){var bm=((bar%4)+4)%4;mv=bm===0||bm===3?0:1;if(bm===2)trav=-trav;if(bm===3&&bq>=3)mv=2;}   /* running man, T-step one way, T-step back, running man into a spin */
       function L2(a,b,t){return a+(b-a)*t;}
-      if(mv===0){   /* running man: stomp (feet planted, one slid back) on the beat, snap a knee up on the "and" */
-        var P=function(k){var sd=(Math.floor(k/2)%2)?1:-1,kn=k%2===1;   /* which foot works this beat; odd eighths are the knee-up */
-          return kn?{lL:sd<0?-0.05:0.18,lR:sd<0?-0.18:0.05,gL:sd<0?1.8:7,gR:sd<0?7:1.8,bob:-2-toe,aL:sd<0?0.1:1.0*spd,aR:sd<0?-1.0*spd:-0.1}   /* knee snapped up high, the opposite arm swings up */
-                   :{lL:sd<0?0.22:-0.4,lR:sd<0?0.4:-0.22,gL:7,gR:7,bob:1.6+low,aL:0.3,aR:-0.3};};   /* stomp: planted, the other foot slid out and back, sinking into it */
-        var A=P(ei-1),B=P(ei);
-        o.legL=L2(A.lL,B.lL,snp);o.legR=L2(A.lR,B.lR,snp);o.lgL=L2(A.gL,B.gL,snp);o.lgR=L2(A.gR,B.gR,snp);o.bob=L2(A.bob,B.bob,snp)+low*0.5;
-        o.armL=L2(A.aL,B.aL,snp)*(0.8+arm);o.armR=L2(A.aR,B.aR,snp)*(0.8+arm);o.alL=o.alR=5;o.dx=0;
+      if(mv===0){   /* running man (from a clip), side-on like the Running man dance but sharp: on the "and" a knee SNAPS up in front and
+                       holds; on the beat it stomps down in front as the standing foot slides back, and the other leg takes the next one.
+                       Arms loose and low, bent, pumping up with the knee */
+        var b9=Math.floor(bp),p9=bp-b9,h9=p9<0.5?0:1,s9=h9?snp:snp,up9=h9===0?s9:1-s9,pr9=h9===0?s9*0.5:0.5+s9*0.5,
+            kA9=1.5+toe*0.2,kn9=3.4,lA9=0.45*(1-pr9)-0.3*pr9-up9*kA9,lL9=7-up9*kn9,sA9=-0.3*(1-pr9)+0.45*pr9,liftL9=b9%2===0;
+        o.dir=1;if(liftL9){o.legL=lA9;o.lgL=lL9;o.legR=sA9;o.lgR=7;}else{o.legR=lA9;o.lgR=lL9;o.legL=sA9;o.lgL=7;}
+        o.bob=1.2+low*0.5-up9*(1.4+toe*0.5);o.armL=-(0.35+up9*0.55*(0.8+arm));o.armR=-(0.35+up9*0.55*(0.8+arm))*0.6+0.3;o.alL=o.alR=5;o.dx=0;
       }else if(mv===1){   /* T-step: the working foot swivels heel-out then toe-out on each eighth. The body stays on the spot (just a little shift with the foot): any travelling comes from the stick */
         var k8=((ei%8)+8)%8,pos=k8<4?k8+snp:8-(k8+snp),heel=k8%2===0;
         var lw=heel?L2(0.1,0.5,snp):L2(0.5,0.1,snp);
@@ -2793,6 +2799,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
         window.ART.INST.draw(g,x+dx,yy,p,lk,KIND[k],{midi:q.midi,on:q.on,t0:q.t0,off:q.off,now:now,n:q.n});});}
     return{set:set,ev:ev,draw:draw,get members(){return mem.slice();},get pace(){return pace;}};
   })();
-  return{BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.35",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.39",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
