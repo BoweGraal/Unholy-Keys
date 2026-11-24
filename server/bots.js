@@ -394,7 +394,7 @@ module.exports = function(api) {
     /* free dance: each bot has a favourite style (the shuffle's popular) and switches move now and then */
     if (b.rd && b.rd.mode === "free") { if (!b.fds || Math.random() < 0.01) { b.fds = Math.random() < 0.35 ? 9 : 1 + Math.floor(Math.random() * 15); b.fdm = Math.floor(Math.random() * 4); } pm.fd = { s: b.fds, m: b.fdm, c: [0, 0, 0, 0] }; }
     if (b.rd && b.rd.mode === "kart") { pm.sk = { h: b.kh || 0, f: b.kf ? 1 : 0, t: 0 }; pm.a = [210, -210, 25, -25]; }
-    else if (b.rd && b.rd.mode === "fish" && b.fi) { pm.sk = { h: Math.min(60, b.fi.n), f: b.fi.s === 7 ? 1 : 0, t: b.fi.s }; pm.a = b.fi.s === 6 ? [290, -290, 20, -20] : [130, -110, 0, 0]; }
+    else if (b.rd && b.rd.mode === "fish" && b.fi) { pm.sk = { h: Math.min(60, b.fi.n), f: b.fi.s === 7 ? 1 : 0, t: b.fi.s }; pm.a = b.fi.s === 6 ? [290, -290, 20, -20] : [-55, 55, 0, 0]; }
     else if (b.rd && b.rd.mode === "boats" && b.bb) { pm.sk = { h: 0, f: 0, t: b.bb.out ? 9 : ((Math.round(b.bb.hd / (Math.PI / 4)) % 8) + 8) % 8 }; pm.a = b.bb.out ? [40, -40, 0, 0] : [110, -110, 10, -10]; }
     else if (b.rd && b.rd.mode === "ski" && b.sk2) { var cr = now < b.sk2.crash; pm.sk = { h: Math.max(0, Math.min(60, Math.floor(Math.max(0, b.sk2.y) / 1000))), f: cr ? 1 : 0, t: cr ? 9 : Math.max(0, Math.min(6, Math.round(b.sk2.a / (Math.PI / 6)) + 3)) }; pm.a = cr ? [260, -260, 120, -120] : [90, -90, 15, -15]; }
     else if (b.rd && b.rd.mode === "pipe" && b.pp) { var pa = b.pp.air; pm.sk = { h: 0, f: now < b.pp.bail ? 1 : 0, t: pa ? pa.k : 0 }; if (pa) pm.fd = { s: PPD[pa.k], m: 0, c: [0, 0, 0, 0] }; pm.a = now < b.pp.bail ? [260, -260, 120, -120] : pa ? [230, -230, 50, -50] : [120, -120, 35, -35]; }
