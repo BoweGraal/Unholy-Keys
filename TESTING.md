@@ -1692,8 +1692,10 @@ Needs a Render redeploy (server.js changed).
 
 - **Drop it** now matches the reference clip: you turn your back to the crowd, stand with your feet wide, and bend over with your hands on your thighs. The butt pops down and up every half beat, the hips tilt to one side then the other each beat, and on beat 4 you drop right down low with the knees out wide, then come back up.
 - Right stick: up = stand taller, down = squat lower, sideways = pop harder. It no longer triggers the named moves or throws the arms up in Drop it. Left stick: move around the floor.
+- The squat comes from **bending the knees**: the feet stay at hip width and the knees push out to the sides as you sink, instead of the legs spreading apart. Wiggle and Fast squat the same way.
+- **The butt shows from behind:** in Wiggle, Drop it and Fast you get two rounded cheeks in your trouser colour, wider than the hips, with a crease. They get bigger the lower you squat, and one cheek bounces up on each pop or shake. (Long dresses don't get it.)
 - Hands up is unchanged.
-- Check: free dance → Shake it → Drop it. You face away, pop on every half beat and drop low on the 4. Push the right stick down and you stay lower all the time.
+- Check: free dance → Shake it → Drop it. You face away, pop on every half beat and drop low on the 4 with the knees bending out. Push the right stick down and you stay lower all the time. The butt is clearly visible and bouncing. Watch another player do it on the performer screen too.
 
 ## v1.82.17 — Shake it: Wiggle / Fast turned round
 - Wiggle and Fast turn you round, bent forward with your hands on your knees, shaking your butt side to side on the beat. Right stick sets the butt level (up taller, down squat, sideways shake harder). Left stick moves you.

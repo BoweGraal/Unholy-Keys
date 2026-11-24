@@ -8303,7 +8303,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     var gl=ART.PX.rg(ctx,cx,cy-6*s,2,cx,cy-6*s,22*s);gl.addColorStop(0,hexA(color,0.9));gl.addColorStop(1,hexA(color,0));
     ctx.fillStyle=gl;ART.PX.disc(ctx,cx,cy-6*s,22*s);ctx.restore();
   }
-  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="";
+  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="",knee=0,butt=0,bj=0;
   /* walking: moving = the walk state from ART.walkStep (feet planted, stride by distance) */
   if(moving&&!dance){var wp=ART.walkPose(moving);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*s;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*6*s;armL=2.7+Math.sin(dT*2)*0.35;armR=-armL;legL=Math.sin(dT*2)*0.25;legR=-legL;}
@@ -8315,9 +8315,9 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       /* a free dance style: worked out here from the dance, its move and the two dots (the same on every screen) */
       if(!isMe)fdSmooth(fd);var fc=!isMe&&fd.cs?fd.cs:fd.c,rg=ART.dance(fd.s,fd.m,[fc[0]/100,fc[1]/100,fc[2]/100,fc[3]/100],GAME.beatPos());
       if(rg.dir!==undefined)AVDIR=rg.dir;   /* a dance that turns (the shuffle spin) */
-      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
+      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
       /* the dance walk race: really walking forward while doing the style, so the legs stride (with a bit of the dance in them) and the body keeps the dance's arms and bounce */
-      if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()&&!(fd&&fd.s===7)){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
+      if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()&&!(fd&&fd.s===7)){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;knee=0;butt=0;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
     }else{
     var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];
     bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
@@ -8334,7 +8334,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     if(ro){bob+=ro.lift||0;if(ro.armL!==undefined)armL=ro.armL;if(ro.armR!==undefined)armR=ro.armR;if(ro.legL!==undefined)legL=ro.legL;if(ro.legR!==undefined)legR=ro.legR;if(ro.mouth)mouth=true;if(ro.alL)alL=ro.alL;if(ro.alR)alR=ro.alR;if(ro.head!==undefined)hdA=ro.head;if(ro.dx)dxs+=ro.dx;if(ro.lgL)lgL=ro.lgL;if(ro.lgR)lgR=ro.lgR;if(ro.rot!==undefined)rot=ro.rot;}
     if(eo){var ek=eo.k;bob+=eo.lift;rot=rot*(1-ek)+eo.rot;if(!ro){armL=armL*(1-ek)+eo.armL*ek;armR=armR*(1-ek)+eo.armR*ek;}legL=legL*(1-ek)+eo.legL*ek;legR=legR*(1-ek)+eo.legR*ek;}}
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
   /* name under the feet (stays put while dancing); none under your own character: you know who you are */
   if(name&&!isMe){
     ART.nameTag(ctx,name,x,cy+12*s+3,s>=2.5?2:1,"#fff");   /* pixel lettering; bots get a pixel robot */

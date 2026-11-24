@@ -185,6 +185,17 @@ var ART=(function(){
     function legC(cols,n){return cols.map(function(c){return [c[0]*n/7,c[1]];});}
     function strC(n){return legStripes?legStripes.map(function(q){return [q[0],q[1]*n/7,q[2]*n/7,q[3]];}):null;}
     var gL=Math.max(3,Math.min(7,st.legLenL||7)),gR=Math.max(3,Math.min(7,st.legLenR||7));
+    /* a bent knee (st.knee, from behind): a shortened leg drawn as thigh + shin with the knee pushed out to the side,
+       the foot landing where the straight leg's would. out = which side the knee goes (+1 right on screen, -1 left) */
+    function legK(jx,jy,a,len,cols,str,out){
+      if(!st.knee||len>6.6){limb(jx,jy,a,len,cols,str);return;}
+      var full=legC(cols.map(function(c){return [c[0]*7/len,c[1]];}),7),hl=3.5,dx=-Math.sin(a),dy=Math.cos(a),
+          h=Math.sqrt(Math.max(0,hl*hl-len*len/4)),px0=Math.cos(a),py0=Math.sin(a);if(px0*out<0){px0=-px0;py0=-py0;}
+      var kx=jx+dx*len/2+px0*h,ky=jy+dy*len/2+py0*h,fx=jx+dx*len,fy=jy+dy*len,
+          aT=Math.atan2(-(kx-jx),ky-jy),aS=Math.atan2(-(fx-kx),fy-ky),
+          sh=function(q,o){return q.map(function(c){return [c[0]-o,c[1]];}).filter(function(c){return c[0]>0;});},
+          sS=str?str.map(function(q){return [q[0],q[1]*7/len-hl,q[2]*7/len-hl,q[3]];}):null,sT=str?str.map(function(q){return [q[0],q[1]*7/len,q[2]*7/len,q[3]];}):null;
+      limb(jx,jy,aT,hl,full,sT);limb(kx,ky,aS,hl,sh(full,hl),sS);}
     var D=st.dir|0;if(D===4)D=0;if(D===5)D=2;
     if(D===1||D===2){
     /* ======== turned round: the side view (facing right; facing left is this flipped) and the back view ========
@@ -360,7 +371,7 @@ var ART=(function(){
       PAINT.view("hair:"+HR,1,OX,OY+hy);if(HT===14){SEC="hat";sideHat();}PAINT.view("hat:"+HT,1,OX,OY+hy);PAINT.view("extra:"+EX,1,OX,OY+hy);
     }else{
       /* ---- back: the arms and legs swap sides, no face, the hair covers the back of the head ---- */
-      SEC="legL";limb(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL));if(!st.skates)toe(2.5,4,-lL,gL,shoe,1,1);SEC="legR";limb(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));if(!st.skates)toe(BT?-2:-2.5,4,-lR,gR,shoe,-1,1);
+      SEC="legL";legK(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL),1);if(!st.skates)toe(2.5,4,-lL,gL,shoe,1,1);SEC="legR";legK(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR),-1);if(!st.skates)toe(BT?-2:-2.5,4,-lR,gR,shoe,-1,1);
       if(st.skates){var ic2=st.skates==="ice";SEC="legL";skate(2.5,4,-lL,gL,ic2);SEC="legR";skate(-2.5,4,-lR,gR,ic2);}
       /* from behind, the arms are on the far side of the body: drawn first, so the back covers them where they cross it */
       SEC="armL";limb(6.5,-4.5,-aL,nL,armC(nL));SEC="armR";limb(BT?-5.5:-6.5,-4.5,-aR,nR,BT?dimF(armC(nR)):armC(nR));
@@ -390,6 +401,14 @@ var ART=(function(){
       else if(B===12){px(-6,4,12,2,bc);px(-6,5,12,1,bcD);}
       else px(-5,4,10,1,bcD);
       if(B===4){px(-4,-5,1,2,bc);px(3,-5,1,2,bc);px(-3,-3,1,1,bc);px(2,-3,1,1,bc);px(-2,-2,4,2,bc);px(-3,0,6,4,bc);}   /* overall straps crossing */
+      if(st.butt&&B!==5){   /* the butt stuck out (Shake it): two rounded cheeks in the trouser colour, wider than the hips, the bigger
+                               the further out; bj bounces one cheek up a pixel. Drawn over the shirt hem so it reads from behind */
+        var bw=6+(st.butt>0.95?1:0),bh=4+(st.butt>1.15?1:0),y0=2,bHi=shade(bc,0.22);
+        [-1,1].forEach(function(sd){var yo=y0-((st.bj||0)===sd?1:0),x0=sd<0?-bw:0;
+          px(x0+(sd<0?1:0),yo,bw-1,1,bc);px(x0,yo+1,bw,bh-2,bc);px(x0+(sd<0?1:0),yo+bh-1,bw-1,1,bcD);   /* rounded corners on the outside */
+          px(sd<0?x0+1:x0+bw-2,yo+1,1,1,bHi);px(sd<0?x0:x0+bw-1,yo+bh-2,1,1,bcD);});
+        px(0,y0+1,1,bh-1,bcD);px(-1,y0+2,1,bh-2,bcD);   /* the crease */
+        px(-5,1,10,1,shade(base,-0.25));}   /* the shirt hem sitting on top */
       SEC="head";
       px(-5,-14+hy,10,9,skin);px(-5,-14+hy,1,9,skD);px(-5,-6+hy,10,1,skD);
       px(-6,-11+hy,1,2,skin);px(5,-11+hy,1,2,skin);                                 /* ears */
@@ -582,7 +601,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     if(HIDECHAR)return;st=st||{};if(!L)L=random(7);
-    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,head:st.head||0,swing:st.swing,skates:st.skates==="ice"?"ice":!!st.skates};
+    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,knee:st.knee,butt:st.butt,bj:st.bj,head:st.head||0,swing:st.swing,skates:st.skates==="ice"?"ice":!!st.skates};
     /* which way they face: 0 front, 1 facing right, 2 back, 3 facing left (the right-facing side view, mirrored) */
     /* 0 front, 1 right, 2 back, 3 left, 4 front-right, 5 back-right, 6 back-left, 7 front-left; the left ones are the right ones mirrored */
     var DIR=(((st.dir|0)%8)+8)%8,SX=st.sx!==undefined?st.sx:1,MIR=DIR===3?1:DIR===6?5:DIR===7?4:0;
@@ -1880,16 +1899,19 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
                         down-up every half beat with the hips tilting side to side each beat, and a full drop low on beat 4 */
         var lv3=Math.max(-1,Math.min(1,by)),am3=1+Math.abs(bx)*1.2,e3=bp*2,ph3=e3-Math.floor(e3),
             pp=ph3<0.2?ph3/0.2:1-(ph3-0.2)/0.8,pop=pp*pp*(3-2*pp),br=((bp%4)+4)%4,drop=br>=3?Math.sin((br-3)*Math.PI):0,sd3=(Math.floor(bp)%2)?1:-1;
-        o.dir=2;o.legL=0.42+Math.max(0,lv3)*0.3+pop*0.08*am3+drop*0.6;o.legR=-o.legL;   /* wide stance, knees out further on the drop */
-        o.head=Math.max(0.15,0.6+lv3*0.3+drop*0.2);o.bob=Math.max(0,2+lv3*3)+pop*2*am3+drop*6-hop;
+        o.dir=2;o.knee=1;o.legL=0.3;o.legR=-0.3;   /* feet planted at hip width: the drop comes from bending the knees, not spreading */
+        o.lgL=o.lgR=Math.max(4.3,6.3-Math.max(0,lv3)*1.1-pop*0.6*am3-drop*1.8);o.bob=-hop;   /* plant() sinks the body onto the bent legs */
+        o.head=Math.max(0.15,0.6+lv3*0.3+drop*0.2);
         o.armL=0.5;o.armR=-0.5;o.alL=o.alR=6;   /* hands on the thighs */
+        o.butt=0.8+Math.max(0,lv3)*0.4+drop*0.4+pop*0.2;o.bj=pop>0.5?sd3:0;   /* sticking out, the cheek on the tilted-up side bouncing on each pop */
         o.rot=sd3*0.06*am3;o.dx=sd3*0.8;}
       if(sub===0||sub===3){   /* wiggle / fast: turned round, bent forward with hands on the knees, shaking the butt side to side to the beat (a snap each half beat) */
         var e2=bp*(sub===3?4:2),ph2=e2-Math.floor(e2),sn2=ph2<0.3?(function(x){return x*x*(3-2*x);})(ph2/0.3):1,sd2=(Math.floor(e2)%2)?1:-1,hip=sd2*(2*sn2-1)*-1;
         /* the right stick sets the butt level: down = squat lower and bend further, up = stand taller; out to the side = shake harder. The left stick just moves you */
         var lvl=Math.max(-1,Math.min(1,by)),amp2=1+Math.abs(bx)*1.3;
-        o.dir=2;o.head=Math.max(0.15,0.55+lvl*0.35);o.bob=Math.max(0,2.5+lvl*3)-hop;o.legL=0.22+Math.max(0,lvl)*0.5;o.legR=-o.legL;   /* knees out wider the lower they squat (the feet stay planted) */
+        o.dir=2;o.head=Math.max(0.15,0.55+lvl*0.35);o.knee=1;o.legL=0.24;o.legR=-0.24;o.lgL=o.lgR=Math.max(4.3,6.2-Math.max(0,lvl)*1.9+Math.max(0,-lvl)*0.8);o.bob=-hop;   /* the knees bend to squat lower (plant() sinks the body), the feet stay where they are */
         o.armL=0.35;o.armR=-0.35;o.alL=o.alR=6;   /* hands resting on the knees */
+        o.butt=0.8+Math.max(0,lvl)*0.5;o.bj=sn2<1?0:(hip>0?1:-1);
         o.dx=hip*1.6*amp2*0.7;o.rot=hip*0.09*amp2;}
       if(sub===2){o.armL=2.8+sh*0.2;o.armR=-2.8+sh*0.2;}                                         /* hands up */
       break;}
