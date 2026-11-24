@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.98 — Ski: lower top speed, less slowdown on slants
+
+1. **Top speed** pointing straight down is about 20% lower (185, was 230), so it stays controllable.
+2. **Slants:** skiing across the slope keeps much more speed. A 45° slant now cruises at about 85% of top speed (was about 70%), and a steep 60° slant at about 70% (was under half). The extra drag from carving is also lighter. Pointing fully sideways still brings you to a stop.
+
 ## v1.81.97 — Keepy uppy buttons in the bottom-right corner
 
 1. **Keepy uppy on a phone:** JUMP sits in the bottom-right corner, level with the stick on the left, with SPIN above TWIRL just to its left. They no longer float halfway up the right side over the dancers.
