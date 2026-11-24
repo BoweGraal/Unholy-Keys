@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.32"></script>
-<script src="gfx.js?v=1.82.32"></script>
-<script src="art.js?v=1.82.32"></script>
-<script src="voice.js?v=1.82.32"></script>
-<script src="instruments.js?v=1.82.32"></script>
-<script src="kart.js?v=1.82.32"></script>
-<script src="explain.js?v=1.82.32"></script>
+<script src="tune.js?v=1.82.35"></script>
+<script src="gfx.js?v=1.82.35"></script>
+<script src="art.js?v=1.82.35"></script>
+<script src="voice.js?v=1.82.35"></script>
+<script src="instruments.js?v=1.82.35"></script>
+<script src="kart.js?v=1.82.35"></script>
+<script src="explain.js?v=1.82.35"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2671,7 +2671,6 @@ document.addEventListener("keydown",function(e){
     if(e.code==="BracketRight"&&ART.DANCES.length>13&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(13);return;}
     if(e.code==="BracketLeft"&&ART.DANCES.length>14&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(14);return;}
     if(e.code==="Backslash"&&ART.DANCES.length>15&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(15);return;}
-    if(e.code==="Quote"&&ART.DANCES.length>16&&GAME.mode==="free"){e.preventDefault();GAME.fdPick(16);return;}
     var dn=/^(Digit|Numpad)([0-9])$/.exec(e.code);if(dn){e.preventDefault();var di=dn[2]==="0"?10:+dn[2];if(di<ART.DANCES.length&&GAME.mode==="free")GAME.fdPick(di);return;}
     var sk="KeyZ KeyX KeyC KeyV KeyB KeyN KeyM".split(" ").indexOf(e.code);if(sk>=0&&GAME.fStyle>0&&sk<ART.DANCES[GAME.fStyle].subs.length){e.preventDefault();GAME.fdSub(sk);return;}
     if(GAME.fdKey(e.code,true)){e.preventDefault();return;}                                    /* a dance picked: WASD and the arrows move the two dots */
@@ -3255,7 +3254,7 @@ var GAME=(function(){
   function beatPos(){var b=BEAT.get(),now=performance.now();return b.known&&b.period>0?(now-b.t0)/b.period:now/500;}
   /* Move queue: line up dances and moves ahead of time. When it's your turn in the middle, they play in order and
      split your turn evenly between them; the one on now is lit. Kept on this device. */
-  var fdQ=[],fdQNow=-1,fdManual=false;try{var qs=JSON.parse(localStorage.getItem("uk_fdq")||"[]");if(Array.isArray(qs))fdQ=qs.filter(function(e){return Array.isArray(e)&&e[0]>0&&e[0]<ART.DANCES.length;}).map(function(e){return[e[0]|0,Math.max(0,e[1]|0)];}).slice(0,3);}catch(e){}
+  var fdQ=[],fdQNow=-1,fdManual=false;try{var qs=JSON.parse(localStorage.getItem("uk_fdq")||"[]");if(Array.isArray(qs))fdQ=qs.filter(function(e){return Array.isArray(e)&&e[0]>0&&e[0]<ART.DANCES.length&&!ART.DANCES[e[0]].hidden;}).map(function(e){return[e[0]|0,Math.max(0,e[1]|0)];}).slice(0,3);}catch(e){}
   function fdqSave(){try{localStorage.setItem("uk_fdq",JSON.stringify(fdQ));}catch(e){}}
   function fdqIndex(into,left,n){var tot=into+left;if(n<1||tot<=0)return -1;return Math.max(0,Math.min(n-1,Math.floor(into/tot*n)));}
   function fdqName(e){var d=ART.DANCES[e[0]],sb=d.subs&&d.subs[e[1]];return d.icon+" "+d.name+(sb?" · "+sb:"");}
@@ -3271,7 +3270,7 @@ var GAME=(function(){
     P.querySelector(".pl-stop").onclick=function(e){e.stopPropagation();stop();};
     P.querySelector(".pl-watch").onclick=function(e){e.stopPropagation();plHidden=true;plSig="";};
     var po=document.getElementById("plOpen");if(po){po.onclick=function(e){e.stopPropagation();plHidden=false;plSig="";};po.addEventListener("pointerdown",function(e){e.stopPropagation();});}
-    ART.DANCES.forEach(function(d,i){if(!i)return;var b=document.createElement("button");b.setAttribute("data-s",i);b.textContent=d.name;b.onclick=function(e){e.stopPropagation();b.blur();if(plDragged){plDragged=false;return;}fdPick(i);plSig="";};plDrag(b,{style:i,label:d.name});D.appendChild(b);});
+    ART.DANCES.forEach(function(d,i){if(!i||d.hidden)return;var b=document.createElement("button");b.setAttribute("data-s",i);b.textContent=d.name;b.onclick=function(e){e.stopPropagation();b.blur();if(plDragged){plDragged=false;return;}fdPick(i);plSig="";};plDrag(b,{style:i,label:d.name});D.appendChild(b);});
     P.addEventListener("pointerdown",function(e){e.stopPropagation();});
   }
   /* drag and drop: a style chip into a slot plans it (an empty slot fills the next open spot, a filled one is replaced);
@@ -3336,7 +3335,7 @@ var GAME=(function(){
     if(nw-plT>200){plT=nw;plTick();}
     var f=ROUND.featured(),mine=!!(f&&f.id===myId&&mode==="free");
     if(mine&&!fdQ.length&&!fdAutoPick){   /* nothing picked: the game picks two different styles for you */
-      var pool=[];ART.DANCES.forEach(function(d,i){if(i)pool.push(i);});var a1=pool.splice(Math.floor(Math.random()*pool.length),1)[0],a2=pool[Math.floor(Math.random()*pool.length)];
+      var pool=[];ART.DANCES.forEach(function(d,i){if(i&&!d.hidden)pool.push(i);});var a1=pool.splice(Math.floor(Math.random()*pool.length),1)[0],a2=pool[Math.floor(Math.random()*pool.length)];
       fdQ=[[a1,0],[a2,0]];fdAutoPick=true;fdqRender();}
     if(!mine&&fdAutoPick){fdAutoPick=false;fdQ=[];fdqRender();}   /* those picks were just for that turn */
     fdStyleFilter(mine?fdQ.map(function(e){return e[0];}):null);
@@ -3415,7 +3414,7 @@ var GAME=(function(){
     var jb=ui.querySelector(".fd-jump");jb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();jb.blur();react("jump");jb.classList.add("pop");setTimeout(function(){jb.classList.remove("pop");},150);});
     if(!document.body.classList.contains("practice"))R.appendChild(act(pxi("talk",2)+"Talk",function(){var t=document.getElementById("talkBtn");if(t)t.click();},"Say something (Enter)"));   /* practice has no chat (only bots), so no Talk */
     ART.DANCES.forEach(function(d,i){
-      if(!i)return;
+      if(!i||d.hidden)return;   /* Puppet is retired */
       var b=document.createElement("button");b.setAttribute("data-s",i);b.title=d.name+"  ("+(i<10?i:"")+")";
       b.textContent=d.name;
       b.onclick=function(e){e.stopPropagation();b.blur();fdPick(i);};
@@ -3450,7 +3449,7 @@ var GAME=(function(){
   function fdKey(code,down){if(!FKEYS[code])return false;if(!down){var had=!!fkHeld[code];delete fkHeld[code];return had&&mode==="free";}if(mode!=="free"||fStyle===0)return false;if(!fkHeld[code]&&!Object.keys(fkHeld).some(function(kc){return FKEYS[kc][0]===FKEYS[code][0];}))fkAt[FKEYS[code][0]]=performance.now();fkHeld[code]=1;return true;}
   window.addEventListener("blur",function(){fkHeld={};fHand=[null,null];fHandP=[null,null];});   /* switched away: nothing stays held */
   function turnBy(q){setTimeout(function(){fBack=(fBack+q)&3;applyToMe();sendPose(true);},q===1?600:700);}
-  function fdPick(i){fdManual=true;fStyle=i;fSub=0;fCtl=[0,0,0,0];fHand=[null,null];fHandP=[null,null];fHeld=[null,null];fkHeld={};if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
+  function fdPick(i){if(ART.DANCES[i]&&ART.DANCES[i].hidden)return;fdManual=true;fStyle=i;fSub=0;fCtl=[0,0,0,0];fHand=[null,null];fHandP=[null,null];fHeld=[null,null];fkHeld={};if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
   function fdSub(k){fdManual=true;fSub=k;fdRender();applyToMe();sendPose(true);}
   function fdRender(){
     fdBuild();
@@ -8375,7 +8374,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.32",SERVER_VERSION="";
+var PAGE_VERSION="1.82.35",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8960,7 +8959,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.32"></script>
+<script src="lab.js?v=1.82.35"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

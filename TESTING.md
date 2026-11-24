@@ -1688,6 +1688,22 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.35 — Running man side-on, legs taking turns
+
+- **Running man** (Classic and Fast) now starts **side-on, facing right**, from a new clip: on each beat one knee drives up in front while the standing foot slides back into a long stride, then that knee comes down in front and **the other leg** comes up on the next beat, so the legs alternate properly. The hands are bent up at the chest, pumping down as the knee rises. Arms pump swings the arms like running. Moonwalk is unchanged.
+- Check: free dance → Running man: side-on, left knee then right knee, the feet sliding back each beat.
+
+## v1.82.34 — Puppet dance removed
+
+- **Puppet** is gone from free dance: it's no longer in the dance buttons, the "your turn plays" random picks, or on the ' key. (Someone on an older page still dancing it shows up fine.)
+- Check: free dance: the list ends at Techno march.
+
+## v1.82.33 — Skank (Classic) from a new clip
+
+- **Skank → Classic** now snaps on each beat: **one arm pumps up** (bent at the elbow) as **the opposite foot kicks out**, holds, eases back, then a **short break** in a bouncy bent-knee stance with the fists by the chest, before the other side: right arm + left foot, then left arm + right foot.
+- Sinks into each hit with a little bounce in the break. Left stick still moves you and up kicks higher; right stick up throws the arm higher. Windmill / Pogo / Elbows / Kicks are unchanged.
+- Check: free dance → Skank → Classic: arm up + opposite kick on every beat, with a clear pause between.
+
 ## v1.82.32 — Mosh pit: dedicated headbang moments; Shake it body moves with the butt
 
 - **Headbang is its own moment now.** Each song's mosh pit gets two **🤘 HEADBANG!** moments (16 beats each, in the middle of the two mosh pit stretches). Outside them there's no headbang meter, so the screen stays clear for moshing.
