@@ -1688,6 +1688,21 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.32 — Mosh pit: dedicated headbang moments; Shake it body moves with the butt
+
+- **Headbang is its own moment now.** Each song's mosh pit gets two **🤘 HEADBANG!** moments (16 beats each, in the middle of the two mosh pit stretches). Outside them there's no headbang meter, so the screen stays clear for moshing.
+  - When one starts, the banner says **HEADBANG! ON THE BEAT**, punching stops, and the aim stick is swapped for a **BANG panel** in the same bottom-right spot: a block drops onto the red line on every beat.
+  - **How to score:** tap the BANG panel (or anywhere on the floor) on a phone, or press **Space** on a computer, right as the block hits the line, once a beat. PERFECT +60, GREAT +35, GOOD +15, and a streak adds up to double. The panel says all this, and the result flashes over your head ("PERFECT BANG x5").
+  - Laid out for both portrait and landscape phones (a short, wide panel in landscape), clear of the movement pad.
+- **Shake it (Wiggle / Fast):** the body now rides up and down with the butt: it dips on each snap, sinks when you push the butt down with the right stick and rises when you lift it. Still no side-to-side sway.
+- Check: a mosh pit round: about a quarter of the way into the song the HEADBANG moment comes up; tap on the beat and watch the points. Rotate the phone: the panel still fits. Free dance → Shake it: the body bobs with the butt.
+
+## v1.82.31 — Mosh pit aim stick, 8-bit
+
+- The mosh pit's **AIM · SWING** stick on phones is now pixel art like the movement pad: a red ring with a red pixel knob, the ring turning yellow while you hold it (it was a smooth glowing ball).
+- The mosh score no longer sits on top of the stick: it's just above it.
+- Check: phone → mosh pit round: the right stick is chunky pixels, and the score is clear of it.
+
 ## v1.82.30 — Auto band: a computer band that plays along with the song
 
 **Needs a server redeploy** (the server passes the band on to the audience).
