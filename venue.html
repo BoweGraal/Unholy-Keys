@@ -12,18 +12,19 @@
 <script>/* iPhones can't make a web page fullscreen (and the Home Screen app already is), so the fullscreen buttons are hidden there */
 (function(){try{var d=document.documentElement,ios=/iPhone|iPod/.test(navigator.userAgent),api=!!(d.requestFullscreen||d.webkitRequestFullscreen),app=window.navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);if(ios||!api||app)d.classList.add("no-fs");}catch(e){}})();</script>
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}@media (orientation:landscape) and (max-height:520px){#skiHint{left:150px!important;right:380px;transform:none!important;bottom:calc(var(--chatH) + 14px)!important;max-width:none!important;font-size:11px!important}}   /* short landscape: the ski hint sits between the stick and the buttons */#fdUI .fd-subs button{border-color:#3DF2FF;color:#3DF2FF}#fdUI .fd-subs button.on{background:#3DF2FF;color:#0a1020;border-color:#fff}   /* sub-styles are cyan everywhere, styles are pink */
+#fdUI .fd-help{display:none!important}   /* no on-screen dance help: grab the sticks and see */
 body.vz-turn #fdUI .fd-help{display:none}   /* your turn: the camera is on your body, keep it clear */
 body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board */
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.18"></script>
-<script src="gfx.js?v=1.82.18"></script>
-<script src="art.js?v=1.82.18"></script>
-<script src="voice.js?v=1.82.18"></script>
-<script src="instruments.js?v=1.82.18"></script>
-<script src="kart.js?v=1.82.18"></script>
-<script src="explain.js?v=1.82.18"></script>
+<script src="tune.js?v=1.82.20"></script>
+<script src="gfx.js?v=1.82.20"></script>
+<script src="art.js?v=1.82.20"></script>
+<script src="voice.js?v=1.82.20"></script>
+<script src="instruments.js?v=1.82.20"></script>
+<script src="kart.js?v=1.82.20"></script>
+<script src="explain.js?v=1.82.20"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -139,6 +140,20 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 #dpad .joy-knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#D354A0 72%);box-shadow:0 0 14px rgba(211,84,160,.7);pointer-events:none;transition:transform .12s ease-out}
 #dpad.held .joy-knob{transition:none}
 #actBtns button{font:700 18px/1 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(20,18,32,.78);border:1px solid rgba(127,119,221,.45);border-radius:12px;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+/* the emote wheel: a button in the bottom-right corner opening a ring of emotes (E, then 1-0, or click) */
+#emoteW{position:fixed;right:14px;bottom:calc(var(--chatH) + 58px);z-index:23;user-select:none;-webkit-user-select:none}
+#emoteBtn{width:54px;height:54px;padding:0;display:flex;align-items:center;justify-content:center;background:#1b1530;border:3px solid #7F77DD;box-shadow:0 0 0 2px #0d0a18,inset -3px -3px 0 rgba(0,0,0,.35);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#emoteBtn canvas{width:28px;height:28px;image-rendering:pixelated}
+#emoteW.open #emoteBtn{border-color:#D354A0;background:#3a1838}
+#emoteRing{position:absolute;right:0;bottom:64px;width:260px;height:260px;border-radius:50%;display:none;background:radial-gradient(circle,rgba(13,10,24,.9) 0 30%,rgba(27,21,48,.94) 31% 69%,rgba(127,119,221,.6) 69.5% 70.5%,transparent 71%)}
+#emoteW.open #emoteRing{display:block}
+#emoteRing button{position:absolute;width:50px;height:50px;margin:-25px 0 0 -25px;padding:0;background:#241c40;border:2px solid #5a5296;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#emoteRing button canvas{width:36px;height:36px;image-rendering:pixelated}
+#emoteRing button:hover,#emoteRing button.hot{background:#3a1838;border-color:#D354A0;transform:scale(1.12)}
+#emoteRing button.cool{opacity:.35}
+#emoteRing button i{position:absolute;right:2px;bottom:0;font:700 9px 'Silkscreen',ui-monospace,monospace;color:#9a93d8;font-style:normal}
+#emoteName{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 11px 'Silkscreen',ui-monospace,monospace;color:#fff;text-align:center;white-space:nowrap;text-shadow:1px 1px 0 #000;pointer-events:none}
+@media (max-width:520px){#emoteW{right:8px}body.gaming-free #emoteW{bottom:calc(var(--chatH) + 12px)}}
 /* reactions: a row of quick buttons (a column on phones) */
 #reactBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 12px);z-index:22;display:flex;gap:6px;user-select:none;-webkit-user-select:none}
 #reactBar button{width:46px;height:46px;border-radius:50%;font-size:22px;line-height:1;color:#fff;background:rgba(20,18,32,.8);border:1px solid rgba(127,119,221,.45);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .08s}
@@ -176,7 +191,7 @@ body.ctf-kart #ctfDrift{display:block}body.ctf-kart #ctfSprint{width:80px;height
 #ctfScore{position:absolute;left:50%;top:6px;transform:translateX(-50%);font:700 17px/24px 'Silkscreen',ui-monospace,monospace;text-shadow:2px 2px 0 #000;white-space:nowrap;text-align:center}#ctfScore .ck{display:inline;font-size:14px;color:#fff;margin:0 0 0 14px}#ctfScore .me{border-bottom:3px solid currentColor;padding-bottom:1px}body[data-game=kart] #hudBR{display:none!important}
 #ctfTeam{display:none;position:absolute;right:14px;top:56px;font:700 14px 'Silkscreen',ui-monospace,monospace;text-shadow:2px 2px 0 #000}
 #ctfHint{position:absolute;left:50%;top:38px;transform:translateX(-50%);font:700 11px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(10,7,20,.8);padding:3px 10px;max-width:min(92vw,520px);white-space:normal;text-align:center;pointer-events:none}
-body.gaming-ctf #reactBar,body.gaming-ctf #moveHint,body.gaming-ctf #actBtns{display:none}
+body.gaming-ctf #reactBar,body.gaming-ctf #moveHint,body.gaming-ctf #actBtns,body.gaming-ctf #emoteW{display:none}
 body.gaming-ctf #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 @media (pointer:fine){body.gaming-ctf #moveCtl{display:none}}
 /* ── ski ── */
@@ -196,7 +211,7 @@ body.gaming-ctf #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #fiBtn{background-color:#1f6fa0!important}
 @media (pointer:fine){#fiBtn,#bbBoost{width:84px;height:84px;font-size:15px}}@media (pointer:coarse){#fiBtn small,#bbBoost small{display:none}}
 body.gaming-fish #moveCtl,body.gaming-boats #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
-body.gaming-fish #moveHint,body.gaming-boats #moveHint,body.gaming-fish #reactBar,body.gaming-boats #reactBar,body.gaming-fish #actBtns,body.gaming-boats #actBtns{display:none}
+body.gaming-fish #moveHint,body.gaming-boats #moveHint,body.gaming-fish #reactBar,body.gaming-boats #reactBar,body.gaming-fish #actBtns,body.gaming-boats #actBtns,body.gaming-fish #emoteW,body.gaming-boats #emoteW{display:none}
 @media (pointer:fine){body.gaming-fish #moveCtl,body.gaming-boats #moveCtl{display:none}}
 #skiCv{display:none;position:fixed;inset:0;width:100%;height:100%;z-index:19;touch-action:none;cursor:crosshair;image-rendering:pixelated}
 #skiCv.on{display:block}
@@ -221,7 +236,7 @@ body.gaming-fish #moveHint,body.gaming-boats #moveHint,body.gaming-fish #reactBa
 #skiTricks button b{display:block;font-size:18px}
 @media (pointer:fine){#skiJump{display:none!important}#skiTricks button b{display:none}#skiTricks button{height:40px}}   /* on a computer the mouse does it: no HOP button, no arrows */
 @media (pointer:fine){#skiTricks button.sel{border-color:#F5C518!important;background:rgba(120,90,10,.9)!important;box-shadow:0 0 0 2px #F5C518}}   /* the trick a left click in the air does (right click picks) */
-body.gaming-ski #reactBar,body.gaming-ski #moveHint,body.gaming-ski #actBtns{display:none}
+body.gaming-ski #reactBar,body.gaming-ski #moveHint,body.gaming-ski #actBtns,body.gaming-ski #emoteW{display:none}
 body.gaming-ski #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}   /* the left stick steers */
 @media (pointer:fine){body.gaming-ski #moveCtl{display:none}}   /* on a computer the mouse steers */
 body.gaming-ski #skiTricks{left:auto;right:16px;bottom:calc(var(--chatH) + 132px)}
@@ -260,7 +275,7 @@ body.gaming-ski #skiTricks{left:auto;right:16px;bottom:calc(var(--chatH) + 132px
 #ppGuide .pg{flex-direction:column;gap:2px;padding:3px 6px 4px}
 @media (max-width:640px){#ppHint{right:8px;left:8px;bottom:calc(var(--chatH) + 206px);white-space:normal;font-size:11px}#ppGuide{right:8px;bottom:calc(var(--chatH) + 150px)}#ppGuide canvas{width:26px;height:26px}#ppGuide b{font-size:8px}}
 #ppStances button{width:48px;height:44px;font:800 10px/1.1 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(20,16,36,.85);border:2px solid rgba(255,255,255,.3);border-radius:8px;touch-action:none}
-body.gaming-pipe #reactBar,body.gaming-pipe #moveHint,body.gaming-pipe #actBtns{display:none}
+body.gaming-pipe #reactBar,body.gaming-pipe #moveHint,body.gaming-pipe #actBtns,body.gaming-pipe #emoteW{display:none}
 body.gaming-pipe #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 @media (pointer:fine){body.gaming-pipe #moveCtl{display:none}}
 
@@ -272,7 +287,7 @@ body.gaming-pipe #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 /* the pad is dead centre on the floor and as big as it fits (the racers run behind it, the progress bar shows the race) */
 #wkPad{position:absolute;left:50%;top:calc(65vh + 10px);transform:translate(-50%,-50%);width:min(94vw,64vh);height:min(94vw,64vh);pointer-events:auto;touch-action:none;cursor:none}
 #wkHint{position:absolute;right:16px;bottom:calc(var(--chatH) + min(300px,44vw,46vh) + 18px);width:min(300px,44vw,46vh);text-align:center;font:700 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.75);text-shadow:0 1px 2px #000}
-body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint,body.gaming-skate #moveHint{display:none}
+body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint,body.gaming-skate #moveHint,body.gaming-walk #emoteW{display:none}
 /* portrait: the pad big and centred at the bottom, the racers in a band between the stage and the pad (WALK.sy) */
 #wkHint{left:0!important;right:0!important;width:auto!important;bottom:calc(var(--chatH) + 6px)!important;text-align:center}
 /* ── keepy uppy ── */
@@ -381,7 +396,7 @@ body.fig-pad #dpad,body.fig-pad #figUI .fgBtn,body.fig-pad #figUI .fgPrompt canv
 @keyframes moshHit{50%{transform:scale(.97);background:radial-gradient(circle,rgba(245,208,60,.55),rgba(30,10,20,.85))}}
 body.mosh-tug #moshTap{display:flex}
 @media (min-width:700px){#moshTap{left:50%;right:auto;width:min(560px,60vw);transform:translateX(-50%);height:18vh;bottom:10px}#moshTap.hit{animation:none;filter:brightness(1.35)}}
-body.mosh-tug #reactBar,body.mosh-tug #moveCtl{display:none}
+body.mosh-tug #reactBar,body.mosh-tug #moveCtl,body.mosh-tug #emoteW{display:none}
 body.gaming-mosh #moveHint{display:none}
 @media (max-width:520px){#moshScore{top:auto;bottom:150px;right:12px;font-size:22px;z-index:2}body.mosh-tug #moshScore{bottom:calc(38vh + 26px)}#moshHint{bottom:184px;left:auto;right:12px;transform:none;white-space:normal;max-width:60vw;text-align:right;font-size:11px}body.mosh-tug #moshHint{display:none}#moshBanner{top:30%}}
 #verTag{position:fixed;right:6px;bottom:3px;z-index:99999;font:700 11px/1.3 ui-monospace,monospace;color:rgba(255,255,255,.85);background:rgba(8,6,16,.7);padding:1px 6px;border-radius:5px;text-shadow:0 1px 2px #000;pointer-events:none;text-align:right}   /* always on top, so you can always see which version you're running */
@@ -390,8 +405,8 @@ body.gaming-mosh #moveHint{display:none}
 #moveCtl{pointer-events:none}#moveCtl>*{pointer-events:auto}   /* the wrapper can stretch across the screen in practice: never block the buttons under it */
 #reactBar,#moveCtl{transition:opacity .25s}#reactBar.dim,#moveCtl.dim{opacity:.3}
 body.gaming-free #reactBar{bottom:calc(var(--chatH) + 14px)}
-body.gaming:not(.gaming-free) #reactBar{display:none}
-body.practice #reactBar{display:none}
+body.gaming:not(.gaming-free) #reactBar,body.gaming:not(.gaming-free) #emoteW{display:none}
+body.practice #reactBar,body.practice #emoteW{display:none}
 #actBtns{display:flex;flex-direction:column;gap:6px}
 #actBtns button{font-size:14px;padding:11px 14px;min-width:104px;text-align:left}
 #danceBtn.on{background:linear-gradient(135deg,#D354A0,#7F77DD);border-color:transparent}
@@ -842,12 +857,9 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     </div>
   </div>
   <div id="verTag" title="The version of Unholy Keys this page is running"></div>
+  <div id="emoteW"><div id="emoteRing" aria-label="Emotes"><div id="emoteName"></div></div><button id="emoteBtn" title="Emotes (E)" aria-label="Emotes"><canvas width="28" height="28"></canvas></button></div>
   <div id="reactBar" aria-label="Reactions">
     <button data-r="jump" title="Jump (Q)" aria-label="Jump">&#128588;</button>
-    <button data-r="hearts" title="Hearts (E)" aria-label="Hearts">&#10084;&#65039;</button>
-    <button data-r="bigheart" title="Big heart (R)" aria-label="Big heart">&#128150;</button>
-    <button data-r="clap" title="Applause (Y)" aria-label="Applause">&#128079;</button>
-    <button data-r="whistle" title="Whistle (U)" aria-label="Whistle">&#128537;</button>
     <button data-r="spin" title="Spin (T)" aria-label="Spin">&#127744;</button>
     <button data-r="twirl" title="Twirl: two fast turns (G)" aria-label="Twirl">&#128171;</button>
   </div>
@@ -2625,6 +2637,7 @@ document.addEventListener("keydown",function(e){
   else if(GAME.mode==="keys"&&HWKEY[e.code]!==undefined){e.preventDefault();if(!e.repeat)GAME.pressKey(HWKEY[e.code]);return;}   /* A S D F G H J play the notes */
   if(GAME.mode==="step"&&d&&e.code.indexOf("Arrow")===0){e.preventDefault();if(!e.repeat)GAME.press(d);return;}   /* arrows are dance steps */
   if(GAME.mode==="step"&&d){e.preventDefault();if(!e.repeat)GAME.press(d);return;}
+  if(GAME.mode!=="step"&&GAME.mode!=="keepy"&&typeof EMOTEW!=="undefined"&&EMOTEW.key(e))return;
   if(GAME.mode==="free"){
     if(e.code==="Space"){e.preventDefault();if(!e.repeat)react("jump");return;}               /* Space jumps (Esc stops) */
     /* 1-9 pick a dance; Z X C V B its moves */
@@ -2671,7 +2684,7 @@ window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){
 
 /* ============================================================
    REACTIONS
-   Jump, hearts, a big heart, applause and a whistle: on the buttons (or Q E R Y U). Everyone sees them on
+   Jump, spin and twirl on the buttons (Q T G); emotes on the wheel in the bottom-right corner (E, then 1-0). Everyone sees them on
    your character, the performer too; applause and whistles make a soft sound here.
    ============================================================ */
 document.getElementById("moshTap").addEventListener("pointerdown",function(e){e.preventDefault();MOSH.tap();});
@@ -2704,7 +2717,7 @@ function react(k){
   if(ART.REACTS.indexOf(k)<0||!myId||!viewers[myId])return;
   var now=Date.now();REACT.last=REACT.last.filter(function(t){return now-t<2000;});
   if(REACT.last.length>=6)return;                                     /* no more than the server lets through */
-  if(k==="bigheart"){if(now-REACT.big<4000)return;REACT.big=now;var bb=document.querySelector('#reactBar [data-r="bigheart"]');if(bb){bb.classList.add("cool");setTimeout(function(){bb.classList.remove("cool");},4000);}}
+  if(k==="bigheart"){if(now-REACT.big<4000)return;REACT.big=now;EMOTEW.cool("bigheart",4000);}
   REACT.last.push(now);addReact(myId,k);
   if((k==="spin"||k==="twirl"||k==="spinmove")&&GAME.mode==="free")GAME.spinStart(k);
   if(k==="turn180"&&GAME.mode==="free")GAME.turnBy(2);
@@ -2713,7 +2726,34 @@ function react(k){
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on))wsSend({type:"react",k:k});
 }
 Array.prototype.forEach.call(document.querySelectorAll("#reactBar button"),function(b){b.addEventListener("click",function(e){e.preventDefault();b.blur();react(b.getAttribute("data-r"));});});
-var REACTKEY={KeyQ:"jump",KeyE:"hearts",KeyR:"bigheart",KeyY:"clap",KeyU:"whistle",KeyT:"spin",KeyG:"twirl",KeyZ:"turn180",KeyX:"turn90",KeyV:"spinmove"};
+var REACTKEY={KeyQ:"jump",KeyT:"spin",KeyG:"twirl",KeyZ:"turn180",KeyX:"turn90",KeyV:"spinmove"};   /* emotes are on the wheel now (E) */
+/* ---- the emote wheel ---- */
+var EMOTEW=(function(){
+  var W=document.getElementById("emoteW"),R=document.getElementById("emoteRing"),NM=document.getElementById("emoteName"),B=document.getElementById("emoteBtn"),
+      NAMES={hearts:"Hearts",bigheart:"Big heart",clap:"Clap",exclaim:"!",confused:"Confused",happy:"Happy",excited:"Excited",wow:"Wow",omg:"OMG",surprised:"Surprised"},K=ART.EMOTES,open=false;
+  function icon(cv,k,q){var g=cv.getContext("2d");g.imageSmoothingEnabled=false;g.clearRect(0,0,cv.width,cv.height);ART.emoteIcon(g,k,cv.width/2,cv.height/2,q);}
+  icon(B.querySelector("canvas"),"happy",2);
+  K.forEach(function(k,i){var a=-Math.PI/2+i/K.length*Math.PI*2,b=document.createElement("button");b.setAttribute("data-e",k);b.title=NAMES[k]+" ("+((i+1)%10)+")";b.setAttribute("aria-label",NAMES[k]);
+    b.style.left=(50+Math.cos(a)*39)+"%";b.style.top=(50+Math.sin(a)*39)+"%";var cv=document.createElement("canvas");cv.width=36;cv.height=36;b.appendChild(cv);
+    var n=document.createElement("i");n.textContent=(i+1)%10;b.appendChild(n);R.appendChild(b);
+    icon(cv,k,k==="wow"||k==="omg"?2:k==="hearts"?4:3);
+    b.addEventListener("pointerenter",function(){NM.textContent=NAMES[k];});
+    b.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();pick(k);});});
+  function set(v){open=v;W.classList.toggle("open",v);NM.textContent=v?"Emotes":"";}
+  function pick(k){react(k);var b=R.querySelector('[data-e="'+k+'"]');if(b){b.classList.add("hot");setTimeout(function(){b.classList.remove("hot");},160);}set(false);}
+  B.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();B.blur();set(!open);});
+  document.addEventListener("pointerdown",function(e){if(open&&!W.contains(e.target))set(false);},true);
+  function shown(){return W.offsetParent!==null||getComputedStyle(W).position==="fixed"&&getComputedStyle(W).display!=="none";}
+  function key(e){   /* E opens / closes it; 1-0 pick; Esc closes */
+    if(e.code==="KeyE"&&shown()){e.preventDefault();if(!e.repeat)set(!open);return true;}
+    if(!open)return false;
+    if(e.code==="Escape"){e.preventDefault();set(false);return true;}
+    var m=/^Digit(\d)$/.exec(e.code);if(m){e.preventDefault();var i=(+m[1]+9)%10;if(K[i]&&!e.repeat)pick(K[i]);return true;}
+    return false;}
+  return{key:key,set:set,get open(){return open;},cool:function(k,ms){var b=R.querySelector('[data-e="'+k+'"]');if(b){b.classList.add("cool");setTimeout(function(){b.classList.remove("cool");},ms);}}};
+})();
+window.ukEmote=function(k){if(k==="open"){EMOTEW.set(true);return EMOTEW.open;}EMOTEW.set(false);react(k);return(viewers[myId]&&viewers[myId].reacts||[]).map(function(r){return r.k;});};
+var EMOSND={exclaim:[988,1319],confused:[587,494],happy:[659,880],excited:[784,988,1319],wow:[440,659],omg:[880,622],surprised:[523,1047]};
 /* the sounds, made on the spot (quieter for other people's) */
 function reactSound(k,mine){
   if(!audioReady||!lim)return;
@@ -2731,6 +2771,9 @@ function reactSound(k,mine){
       o.frequency.setValueAtTime(1200,t);o.frequency.exponentialRampToValueAtTime(2500,t+0.22);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.35,t+0.03);g.gain.linearRampToValueAtTime(0,t+0.26);
       o.frequency.setValueAtTime(1000,t+0.36);o.frequency.exponentialRampToValueAtTime(2700,t+0.55);o.frequency.exponentialRampToValueAtTime(1100,t+0.95);
       g.gain.linearRampToValueAtTime(0.35,t+0.4);g.gain.setValueAtTime(0.35,t+0.85);g.gain.linearRampToValueAtTime(0,t+0.98);o.start(t);o.stop(t+1);
+    }else if(EMOSND[k]){   /* the emote wheel's faces: a little two- or three-note blip each */
+      EMOSND[k].forEach(function(f,j){var o3=ac.createOscillator(),g3=ac.createGain();o3.type=k==="exclaim"?"square":"triangle";o3.frequency.value=f;o3.connect(g3);g3.connect(out);var t1=t+j*0.07;
+        g3.gain.setValueAtTime(0,t1);g3.gain.linearRampToValueAtTime(k==="exclaim"?0.12:0.22,t1+0.01);g3.gain.exponentialRampToValueAtTime(0.001,t1+0.25);o3.start(t1);o3.stop(t1+0.3);});
     }else if(k==="hearts"||k==="bigheart"){
       var notes=k==="bigheart"?[784,988,1175,1568]:[880,1175];
       notes.forEach(function(f,j){var o2=ac.createOscillator(),g2=ac.createGain();o2.type="triangle";o2.frequency.value=f;o2.connect(g2);g2.connect(out);var t0=t+j*0.08;
@@ -3392,7 +3435,7 @@ var GAME=(function(){
     var sb=ui.querySelector(".fd-subs");sb.textContent="";
     d.subs.forEach(function(nm,k){var b=document.createElement("button");b.textContent=nm;b.setAttribute("data-sub",k);b.className=k===fSub?"on":"";b.title=nm+"  ("+"ZXCVB".charAt(k)+")";b.onclick=function(e){e.stopPropagation();b.blur();fdSub(k);};sb.appendChild(b);});
     fdqRender();
-    ui.querySelector(".fd-help").textContent=fStyle?d.help+(ART.danceMove(fStyle,[0,0,0,-1])?" Push the right stick out in any of 8 directions for a named move.":"")+(DEVICE.kind==="pc"?"  WASD is the left stick (walk), the arrow keys the right stick.":""):"Freestyle: drag your hands and feet, or tap the floor to walk. Pick a dance on the sides for more.";
+    ui.querySelector(".fd-help").textContent=fStyle?d.help+(ART.danceMove(fStyle,[0,0,0,-1])&&!(fStyle===3&&(fSub|0)!==2)?" Push the right stick out in any of 8 directions for a named move.":"")+(DEVICE.kind==="pc"?"  WASD is the left stick (walk), the arrow keys the right stick.":""):"Freestyle: drag your hands and feet, or tap the floor to walk. Pick a dance on the sides for more.";
     fdShow();
   }
   function fdShow(){
@@ -8248,7 +8291,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.18",SERVER_VERSION="";
+var PAGE_VERSION="1.82.20",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8303,7 +8346,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     var gl=ART.PX.rg(ctx,cx,cy-6*s,2,cx,cy-6*s,22*s);gl.addColorStop(0,hexA(color,0.9));gl.addColorStop(1,hexA(color,0));
     ctx.fillStyle=gl;ART.PX.disc(ctx,cx,cy-6*s,22*s);ctx.restore();
   }
-  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="",knee=0,butt=0,bj=0;
+  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="",knee=0,butt=0,bj=0,bsx=0,bsy=0;
   /* walking: moving = the walk state from ART.walkStep (feet planted, stride by distance) */
   if(moving&&!dance){var wp=ART.walkPose(moving);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*s;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*6*s;armL=2.7+Math.sin(dT*2)*0.35;armR=-armL;legL=Math.sin(dT*2)*0.25;legR=-legL;}
@@ -8315,7 +8358,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       /* a free dance style: worked out here from the dance, its move and the two dots (the same on every screen) */
       if(!isMe)fdSmooth(fd);var fc=!isMe&&fd.cs?fd.cs:fd.c,rg=ART.dance(fd.s,fd.m,[fc[0]/100,fc[1]/100,fc[2]/100,fc[3]/100],GAME.beatPos());
       if(rg.dir!==undefined)AVDIR=rg.dir;   /* a dance that turns (the shuffle spin) */
-      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
+      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;bsx=rg.bsx||0;bsy=rg.bsy||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
       /* the dance walk race: really walking forward while doing the style, so the legs stride (with a bit of the dance in them) and the body keeps the dance's arms and bounce */
       if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()&&!(fd&&fd.s===7)){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;knee=0;butt=0;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
     }else{
@@ -8334,7 +8377,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     if(ro){bob+=ro.lift||0;if(ro.armL!==undefined)armL=ro.armL;if(ro.armR!==undefined)armR=ro.armR;if(ro.legL!==undefined)legL=ro.legL;if(ro.legR!==undefined)legR=ro.legR;if(ro.mouth)mouth=true;if(ro.alL)alL=ro.alL;if(ro.alR)alR=ro.alR;if(ro.head!==undefined)hdA=ro.head;if(ro.dx)dxs+=ro.dx;if(ro.lgL)lgL=ro.lgL;if(ro.lgR)lgR=ro.lgR;if(ro.rot!==undefined)rot=ro.rot;}
     if(eo){var ek=eo.k;bob+=eo.lift;rot=rot*(1-ek)+eo.rot;if(!ro){armL=armL*(1-ek)+eo.armL*ek;armR=armR*(1-ek)+eo.armR*ek;}legL=legL*(1-ek)+eo.legL*ek;legR=legR*(1-ek)+eo.legR*ek;}}
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
   /* name under the feet (stays put while dancing); none under your own character: you know who you are */
   if(name&&!isMe){
     ART.nameTag(ctx,name,x,cy+12*s+3,s>=2.5?2:1,"#fff");   /* pixel lettering; bots get a pixel robot */
@@ -8832,7 +8875,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.18"></script>
+<script src="lab.js?v=1.82.20"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

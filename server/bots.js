@@ -19,7 +19,7 @@ var CHAT = {
   round: ["let's dance", "ok i'm ready", "go go go", "i got this", "my feet hurt lol", "gg"],
   vote: ["tough choice", "everyone killed it", "voted!", "gg all"]
 };
-var REACTS = ["jump", "hearts", "clap", "whistle", "hearts", "clap"];
+var REACTS = ["jump", "hearts", "clap", "hearts", "clap", "happy", "excited", "wow", "exclaim"];
 
 /* how many options each part of a character's look has (from art.js), so bots get proper random looks */
 var LOOK_COUNTS = [6, 8, 10, 5, 12, 3, 12, 5], ARTX = null;
