@@ -1688,6 +1688,41 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.30 — Auto band: a computer band that plays along with the song
+
+**Needs a server redeploy** (the server passes the band on to the audience).
+
+- **🥁 Auto band** (a new tickbox in Start a song, next to Auto key / Auto stage; it's remembered): when the song starts, its analysis now listens to the music itself too, and puts a computer band on stage with you. Everyone sees it on their stage.
+  - **Who's in the band** comes from the song: a **drummer** when there's a steady kick / snare on the beat, a **bassist** when there's weight in the low end, a **guitarist** (electric when it's bright and gritty, acoustic when it's not) and/or **keys** when the middle is full. An electronic track like Deep 808 Groove gets drums and bass. The other site songs get the full band.
+  - **The drummer hits with the song's real drum hits**: the analysis finds the kicks, snares and hats.
+  - **Slow and fast parts:** every couple of bars is marked slow, mid or fast from how loud and how busy it is. The band follows: in slow parts the bass plays every other beat, the guitar lets chords ring for a bar and the drummer just keeps time on the hat; in fast parts the bass drives short notes and the guitar strums eighths.
+  - Works for your own song files and site songs. For YouTube songs that went through practice, it uses the stored analysis (drums, bass and guitar).
+  - The band leaves the stage when the song ends or is paused.
+- Check: Start a song → tick Auto band → pick a site song → Start: the band appears round you, the drummer hitting with the drums, and they ease off in the quiet parts. Viewers see the same band.
+
+## v1.82.29 — Jump on stage: viewers play an instrument between songs
+
+**Needs a server redeploy** (the server keeps the stage list and passes the notes on).
+
+- **🎤 Jump on stage** (a new button with Talk / Voice / Dance on the venue page): up to **3 viewers** at a time get up on stage beside the performer, holding their instrument and playing it as they go. **Everyone in the room hears them**, the performer too, each on their own instrument.
+- **Your instrument:** on a phone, the play pad fills the bottom half of the screen (the same D / Space / E / 3 + circle pad as the phone instrument, with S+D). On a computer it's a panel at the bottom, and the **arrows and D / Space / E / 3** play it like the jam screen (click it first). Tap "Tap to start playing" to turn the sound on. You play in the performer's key, and it follows when they change it. Instruments, octave and the 1/2/3 banks are all there.
+- **A song starting sends everyone back to the floor** ("A song's starting: back to the floor!"), and the stage stays closed until the song ends. The button shows "Stage full (3/3)" or "Stage closed (song on)" when you can't get up.
+- Leave any time with **▼ Leave stage** (or the ✕ on the pad). Leaving the room takes you off stage too.
+- Not in practice (there's nobody to hear you there) or during games.
+- Check: two phones in a live room. One taps Jump on stage, then Tap to start playing, and plays: the other phone and the performer hear it and see them on stage. Start a song: they're sent back down.
+
+## v1.82.28 — Phone play screen: pixel-art lit slice, S+D button back
+
+- **The lit slice of the circle** (the part that lights up while you hold a note on the phone play screen) is pixel art now: a stepped wedge with a dithered fill and a bright edge, in the note's colour (it used to be a smooth see-through shape).
+- **S+D is back:** a small **S+D** button under the tall D button on the left plays the top level (Space and D together) with one thumb. Holding D and Space together still works too.
+- Check: phone → play: hold the circle, and the slice is chunky pixels. Tap S+D: the bottom bar says Zone 4 · Space+D and the notes move up.
+
+## v1.82.27 — Instrument / Fullscreen / Setup buttons 8-bit; Use this instrument in the top bar
+
+- The **instrument** button (top left), **Fullscreen** and **Setup** on the jam screen get the 8-bit look: Silkscreen type, square chunky borders, pixel shadows. The quick instrument menu that drops from the instrument button matches.
+- In the instrument browser, **Use this instrument** is now up in the top bar next to Back (top right, beside the ✕), so it's always in reach without scrolling.
+- Check: jam screen: the three buttons are pixel style. Instrument button → browse → open any instrument: "✓ Use this instrument" is top right.
+
 ## v1.82.26 — Start a song panel, 8-bit and cleaned up; a 3-button bar
 
 1. **Start a song** (performer jam screen) is restyled in the game's 8-bit look: Silkscreen type, square chunky borders, pixel shadows.

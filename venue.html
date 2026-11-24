@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.26"></script>
-<script src="gfx.js?v=1.82.26"></script>
-<script src="art.js?v=1.82.26"></script>
-<script src="voice.js?v=1.82.26"></script>
-<script src="instruments.js?v=1.82.26"></script>
-<script src="kart.js?v=1.82.26"></script>
-<script src="explain.js?v=1.82.26"></script>
+<script src="tune.js?v=1.82.30"></script>
+<script src="gfx.js?v=1.82.30"></script>
+<script src="art.js?v=1.82.30"></script>
+<script src="voice.js?v=1.82.30"></script>
+<script src="instruments.js?v=1.82.30"></script>
+<script src="kart.js?v=1.82.30"></script>
+<script src="explain.js?v=1.82.30"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -140,6 +140,16 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 #dpad .joy-knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#D354A0 72%);box-shadow:0 0 14px rgba(211,84,160,.7);pointer-events:none;transition:transform .12s ease-out}
 #dpad.held .joy-knob{transition:none}
 #actBtns button{font:700 18px/1 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(20,18,32,.78);border:1px solid rgba(127,119,221,.45);border-radius:12px;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+/* jump on stage: your instrument fills the bottom half of the screen (a panel on a computer) */
+#stageBtn.on{background:#c8407e!important;border-color:#ff8ac8!important}#stageBtn:disabled{opacity:.45;cursor:default}
+body.practice #stageBtn,body.gaming #stageBtn{display:none!important}
+#gStage{display:none;position:fixed;left:0;right:0;bottom:0;height:52vh;z-index:60;background:#0b0818;border-top:3px solid #ff8ac8;box-shadow:0 -4px 0 #07040f;flex-direction:column}
+#gStage.on{display:flex}
+#gStage .gs-hd{display:flex;align-items:center;gap:10px;padding:5px 10px;background:#140f26;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#fff}#gStage .gs-hd b{color:#F5C518}#gStage .gs-hd span{flex:1;color:#9a93d8;font-size:9px}
+#gStage .gs-hd button{font:700 10px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#241c40;border:2px solid #7F77DD;padding:4px 8px;cursor:pointer;box-shadow:2px 2px 0 #07040f}
+#gFrame{flex:1;width:100%;border:0;background:#0b0818}
+@media (min-width:900px){#gStage{left:50%;right:auto;width:min(860px,96vw);transform:translateX(-50%);height:46vh;border:3px solid #ff8ac8;border-bottom:0}}
+body.on-stage #emoteW,body.on-stage #reactBar,body.on-stage #moveCtl{display:none!important}
 /* the emote wheel: a button in the bottom-right corner opening a ring of emotes (E, then 1-0, or click) */
 #emoteW{position:fixed;right:14px;bottom:calc(var(--chatH) + 58px);z-index:23;user-select:none;-webkit-user-select:none}
 #emoteBtn{width:54px;height:54px;padding:0;display:flex;align-items:center;justify-content:center;background:#1b1530;border:3px solid #7F77DD;box-shadow:0 0 0 2px #0d0a18,inset -3px -3px 0 rgba(0,0,0,.35);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -844,6 +854,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <button id="talkBtn" title="Say something (Enter)">&#128172; Talk</button>
       <button id="voiceBtn" title="Voice chat between songs: your mic switches off while a song plays">&#127897; Voice</button>
       <button id="danceBtn" title="Dance (Space)">&#128131; Dance</button>
+      <button id="stageBtn" title="Jump on stage and play an instrument between songs (up to 3 at a time; a song starting sends you back to the floor)">&#127908; Jump on stage</button>
       <button id="prStart" title="Pick a mini game and a song">&#127918; Start game</button>
       <button id="prSkip" title="Skip the countdown">&#9193; Skip timer</button>
       <a id="prExit" href="?" title="Leave practice and go back to joining a show">&#10005; Leave practice</a>
@@ -857,6 +868,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     </div>
   </div>
   <div id="verTag" title="The version of Unholy Keys this page is running"></div>
+  <div id="gStage"><div class="gs-hd"><b>&#127908; ON STAGE</b><span>everyone hears you</span><button id="gsLeave">&#9660; Leave stage</button></div><iframe id="gFrame" title="Your instrument" allow="autoplay"></iframe></div>
   <div id="emoteW"><div id="emoteRing" aria-label="Emotes"><div id="emoteName"></div></div><button id="emoteBtn" title="Emotes (E)" aria-label="Emotes"><canvas width="28" height="28"></canvas></button></div>
   <div id="reactBar" aria-label="Reactions">
     <button data-r="jump" title="Jump (Q)" aria-label="Jump">&#128588;</button>
@@ -2136,7 +2148,7 @@ function handleMsg(msg){
     backToJoin(safeText(msg.msg,80)||"Could not join that room");
     return;
   }
-  if(t==="room-state"){SRV.reported(msg.host,msg.hostName);if(msg.round&&msg.round.tug)setTimeout(function(){MOSH.onTug({s:msg.round.tug});},0);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
+  if(t==="room-state"){if(msg.band)ART.BAND.set(msg.band.m,msg.band.p);if(msg.stage)setTimeout(function(){STAGEUP.onList(msg.stage);},0);SRV.reported(msg.host,msg.hostName);if(msg.round&&msg.round.tug)setTimeout(function(){MOSH.onTug({s:msg.round.tug});},0);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
     myId=msg.yourId||msg.myId;
     viewers={}; /* fresh list: after a reconnect the old one still held everyone, including a stale copy of you */
     if(Array.isArray(msg.viewers)){
@@ -2163,7 +2175,7 @@ function handleMsg(msg){
     if(msg.performerState){
       var ps=msg.performerState;
       if(ps.eng){activeInst=ps.eng;perfInst=ps.eng;var si=findInst(ps.eng);if(si&&si.t==="samp")loadSamp(ps.eng);}
-      if(ps.root!==undefined&&ps.root!==null)perfKey=keyName(ps.root);
+      if(ps.root!==undefined&&ps.root!==null){perfKey=keyName(ps.root);STAGEUP.root=+ps.root;}
       if(ps.scale)perfScale=ps.scale;
       if(ps.mode)perfMode=ps.mode;
     }
@@ -2222,6 +2234,7 @@ function handleMsg(msg){
   }
   else if(t==="tug"){MOSH.onTug(msg);}
   else if(t==="react"){if(msg.id!==myId&&viewers[msg.id])addReact(msg.id,String(msg.k));}
+  else if(t==="stage"){STAGEUP.onList(msg);}else if(t==="stage-no"){STAGEUP.no(msg.why);}else if(t==="gnote"){STAGEUP.note(msg);}else if(t==="band"){if(msg.m)ART.BAND.set(msg.m,msg.p);else if(msg.p)ART.BAND.set(ART.BAND.members,msg.p);if(msg.e)ART.BAND.ev(msg.e,msg.i,msg.ms);}
   else if(typeof t==="string"&&t.indexOf("voice-")===0){VOICE.onMsg(msg);}
   else if(t==="note"){
     if(msg.on){
@@ -2242,8 +2255,9 @@ function handleMsg(msg){
   }
   else if(t==="state"||t==="info"){
     if(msg.scale)perfScale=msg.scale;
-    if(msg.root!==undefined&&msg.root!==null)perfKey=keyName(msg.root);
+    if(msg.root!==undefined&&msg.root!==null){perfKey=keyName(msg.root);STAGEUP.root=+msg.root;}
     if(msg.key)perfKey=keyName(msg.key);
+    STAGEUP.key();
     if(msg.mode)perfMode=msg.mode;
     if(msg.eng){activeInst=msg.eng;perfInst=msg.eng;var si=findInst(msg.eng);if(si&&si.t==="samp")loadSamp(msg.eng);}
     if(msg.inst){activeInst=msg.inst;perfInst=msg.inst;}
@@ -8255,6 +8269,47 @@ var LIMB_LEN=ART.LIMB;
 /* A character (see ART.drawChar in art.js) with its body centre at (x,y), each art pixel `scale` screen
    pixels. Dances, walks and poses set the limb angles; the name goes under the feet. */
 /* the performer holding the instrument they picked, playing the notes as they come (instruments.js) */
+/* ============================================================
+   JUMP ON STAGE: up to 3 people at a time can get up on stage between songs and play an instrument; the whole room hears it.
+   Your instrument opens in the bottom half of the screen (the performer page's play pad, index.html?guest); on a computer the
+   arrows and D / Space / E / 3 play it like the jam screen. A song starting sends everyone back to the floor.
+   ============================================================ */
+var STAGEUP=(function(){
+  var list=[],song=false,me=false,root=0,V={},P={},el=function(id){return document.getElementById(id);};
+  function toast(msg){var d=el("gsToast");if(!d){d=document.createElement("div");d.id="gsToast";d.style.cssText="position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:9999;padding:8px 14px;font:700 12px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#140f26;border:3px solid #ff8ac8;box-shadow:3px 3px 0 #07040f;pointer-events:none;transition:opacity .4s";document.body.appendChild(d);}
+    d.textContent=msg;d.style.opacity="1";clearTimeout(d._t);d._t=setTimeout(function(){d.style.opacity="0";},2600);}
+  function onStage(id){for(var i=0;i<list.length;i++)if(list[i].id===id)return true;return false;}
+  function btn(){var b=el("stageBtn");if(!b)return;var full=list.length>=3&&!me;b.classList.toggle("on",me);b.disabled=!me&&(song||full);
+    b.innerHTML=me?"&#9660; Leave stage":song?"&#127908; Stage closed (song on)":full?"&#127908; Stage full (3/3)":"&#127908; Jump on stage"+(list.length?" ("+list.length+"/3)":"");}
+  function open(){var f=el("gFrame"),w=el("gStage");if(!f||w.classList.contains("on"))return;
+    f.src="index.html?guest&root="+root+"&scale="+encodeURIComponent(perfScale||"Major")+"&v="+encodeURIComponent(PAGE_VERSION);w.classList.add("on");document.body.classList.add("on-stage");}
+  function close(){var f=el("gFrame"),w=el("gStage");if(!w||!w.classList.contains("on"))return;try{f.contentWindow.postMessage({uk:"gend"},"*");}catch(e){}w.classList.remove("on");document.body.classList.remove("on-stage");setTimeout(function(){if(!w.classList.contains("on"))f.src="about:blank";},300);delete P[myId];}
+  function off(id){var v=V[id];if(v){delete V[id];try{v.rel();}catch(e){}setTimeout(function(){try{v.kill();}catch(e){}},500);}var p=P[id];if(p&&p.on){p.on=false;p.off=Date.now();}}
+  function vis(id,m){var p=P[id]||(P[id]={midi:60,on:false,t0:0,off:0,n:0,inst:""});if(m.inst)p.inst=m.inst;if(m.on){p.midi=+m.midi;p.on=true;p.t0=Date.now();p.n++;}else if(p.on){p.on=false;p.off=Date.now();}}
+  function play(m){off(m.id);vis(m.id,m);if(!m.on||!audioReady)return;var mi=+m.midi;if(!(mi>=0&&mi<=127))return;var ins=findInst(m.inst||"piano");if(!ins)return;if(ins.t==="samp"&&!samplers[ins.id]){loadSamp(ins.id);return;}
+    var v=mkVoice(Tone.Frequency(mi,"midi").toNote(),ins.id);if(!v)return;if(m.mode==="impact")v.ar("32n");else if(m.mode==="staccato")v.ar("16n");else v.atk();V[m.id]=v;}
+  window.addEventListener("message",function(e){var m=e.data,f=el("gFrame");if(!m||!m.uk||!f||e.source!==f.contentWindow)return;
+    if(m.uk==="gnote"){if(!me)return;vis(myId,m);wsSend({type:"gnote",on:m.on?1:0,midi:m.midi,inst:m.inst,mode:m.mode});}
+    if(m.uk==="gleave"){wsSend({type:"stage-leave"});close();}});
+  function wire(){var b=el("stageBtn");if(b)b.onclick=function(e){e.preventDefault();b.blur();if(me){wsSend({type:"stage-leave"});close();}else wsSend({type:"stage-join"});};
+    var lv=el("gsLeave");if(lv)lv.onclick=function(){wsSend({type:"stage-leave"});close();};btn();}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",wire);else setTimeout(wire,0);
+  /* drawn on stage beside the performer, holding what they play */
+  function draw(px,py){if(!list.length)return;var s=Math.max(2,PERF_S-1),now=Date.now(),slots=[-1,1,-2];
+    list.forEach(function(g,i){var v=viewers[g.id];if(!v)return;var x=px+slots[i%3]*Math.max(Math.min(W*0.15,150),Math.min(95,W*0.25)),p=P[g.id]||{midi:60,on:false,t0:0,off:0,n:0,inst:g.inst},ins=findInst(p.inst||g.inst||"piano");
+      x=Math.max(30,Math.min(W-30,x));var kind=ART.INST.kindOf(ins?ins.id:"piano",ins&&ins.l);
+      ART.INST.draw(ctx,x,py+s*4,s,v.look||lookOf(null,v.color,v.name),kind,{midi:p.midi,on:p.on,t0:p.t0,off:p.off,now:now,n:p.n});
+      ctx.font="bold 13px 'Silkscreen',ui-monospace,monospace";ctx.textAlign="center";ctx.textBaseline="top";var ny=py+s*4+12*s+3+6*s;ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.75)";ctx.strokeText(v.name,x,ny);ctx.fillStyle="#F5C518";ctx.fillText(v.name,x,ny);ctx.textBaseline="alphabetic";});}
+  return{onList:function(m){var was=me;list=(m&&m.list)||[];song=!!(m&&m.song);me=onStage(myId);
+      Object.keys(V).forEach(function(id){if(!onStage(id))off(id);});
+      if(me&&!was)open();if(!me&&was){close();if(m&&m.why==="song")toast("A song's starting: back to the floor!");}btn();},
+    no:function(why){toast(why==="full"?"The stage is full (3 at a time)":"Not while a song's playing");btn();},
+    note:function(m){if(m&&m.id&&onStage(m.id))play(m);},
+    key:function(){var f=el("gFrame");if(me&&f&&f.contentWindow)try{f.contentWindow.postMessage({uk:"gkey",root:root,scale:perfScale},"*");}catch(e){}},
+    set root(r){if(isFinite(r))root=r;},get root(){return root;},
+    on:onStage,draw:draw,get me(){return me;},get list(){return list;}};
+})();
+window.ukStage=function(){return{me:STAGEUP.me,list:STAGEUP.list,frame:(document.getElementById("gFrame")||{}).src||""};};
 var PERF={kind:"synth",id:null,off:0,n:0};
 function perfKind(){if(PERF.id!==activeInst){var ins=findInst(activeInst);PERF.id=activeInst;PERF.kind=ART.INST.kindOf(activeInst,ins&&ins.l);PERF.band=ART.INST.section(activeInst,ins&&ins.l);}return PERF.kind;}
 var PERF_S=3;
@@ -8266,6 +8321,7 @@ function drawPerformer(x,y){
   if(typeof PRACTICE!=="undefined"&&PRACTICE.on&&!isPerformerPlaying){var bp=typeof ROUND!=="undefined"&&ROUND.pos?ROUND.pos():-1e9,bb=bp>-1e8?ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),bp):now/500,bi=Math.floor(bb),fr=bb-bi,bms=500;
     _ps={midi:[60,64,67,72,67,64,62,65][((bi%8)+8)%8],on:fr<0.78,t0:now-fr*bms,off:now-fr*bms+0.78*bms,now:now,n:bi};}
   if(PERF.band)ART.INST.drawBand(ctx,x,y,s,PERF.band,_ps,Math.min(x,W-x)-8);   /* a choir or a section plays along around the performer */
+  ART.BAND.draw(ctx,x,y,s,now,Math.min(x,W-x)-8);   /* the performer's auto band */
   ART.INST.draw(ctx,x,y,s,performer.look||ART.looks.fromColor(performer.color,1),_pk,_ps);
   if(performer.name){ctx.font="bold 18px 'Silkscreen',ui-monospace,monospace";ctx.textAlign="center";ctx.textBaseline="top";var ny=y+12*s+3+6*s;ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,0.75)";ctx.strokeText(performer.name,x,ny);ctx.fillStyle="#fff";ctx.fillText(performer.name,x,ny);ctx.textBaseline="alphabetic";}
 }
@@ -8313,7 +8369,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.26",SERVER_VERSION="";
+var PAGE_VERSION="1.82.30",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8733,7 +8789,7 @@ function renderLoop(){
     var pfc=document.getElementById("perfFront"),mainCtx=ctx,useFront=pfc&&JT.k>0.02;
     if(pfc){var pfg=pfc.getContext("2d");pfg.clearRect(0,0,pfc.width,pfc.height);if(useFront){pfg.imageSmoothingEnabled=false;pfg.globalAlpha=ctx.globalAlpha;ctx=pfg;}}
     try{
-    drawPerformer(perfPx,perfPy);
+    drawPerformer(perfPx,perfPy);STAGEUP.draw(perfPx,perfPy);
     ART.envFx(ctx,LAYV,H,perfPx,perfPy,3,Date.now(),2);
     var pcAge=crowdAge();if(pcAge<ART.CROWD_MS&&CROWD.kind!=="lasers"&&CROWD.kind!=="float")ART.crowdFx(ctx,CROWD.kind,perfPx,perfPy,3,pcAge,3,null,null);
     }finally{if(ctx!==mainCtx){ctx.globalAlpha=1;ctx=mainCtx;}}
@@ -8784,6 +8840,7 @@ function renderLoop(){
   for(var i=0;i<ids.length;i++){
     if(KON&&KART.hide())continue;                          /* the kart game draws everyone itself once the floor has faded to space */
     if(PIPE.hide(ids[i]))continue;                         /* the half pipe: only your group is on your pipe */
+    if(ids[i]!=="__perf"&&STAGEUP.on(ids[i]))continue;   /* up on stage, not on the floor */
     var v=ids[i]==="__perf"?PH:viewers[ids[i]];
     /* Lerp */
     /* you go exactly where you're steering; everyone else closes the gap to their latest position at a steady
@@ -8897,7 +8954,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.26"></script>
+<script src="lab.js?v=1.82.30"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
