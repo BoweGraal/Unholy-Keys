@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.21"></script>
-<script src="gfx.js?v=1.82.21"></script>
-<script src="art.js?v=1.82.21"></script>
-<script src="voice.js?v=1.82.21"></script>
-<script src="instruments.js?v=1.82.21"></script>
-<script src="kart.js?v=1.82.21"></script>
-<script src="explain.js?v=1.82.21"></script>
+<script src="tune.js?v=1.82.26"></script>
+<script src="gfx.js?v=1.82.26"></script>
+<script src="art.js?v=1.82.26"></script>
+<script src="voice.js?v=1.82.26"></script>
+<script src="instruments.js?v=1.82.26"></script>
+<script src="kart.js?v=1.82.26"></script>
+<script src="explain.js?v=1.82.26"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4647,40 +4647,54 @@ var BOATS=(function(){
   /* the floor drops away: the void, the floating pool, the raft for those who are out */
   function under(g){
     if(!boatsOn())return;var now=performance.now();if(!dropAt)dropAt=now;var k=Math.min(1,(now-dropAt)/2000),e=1-Math.pow(1-k,3),s=sc();
-    var fy=FLOOR_TOP*H;g.save();var vg=ART.PX.lg(g,0,fy,0,H);vg.addColorStop(0,"#120a24");vg.addColorStop(1,"#05030c");g.fillStyle=vg;g.fillRect(0,fy,W,H-fy);
-    for(var i=0;i<60;i++){var sx=(i*97.3)%W,sy=fy+((i*53.1+now/(60+i%5*20))%(H-fy));g.fillStyle=i%7?"rgba(255,255,255,.25)":"rgba(61,242,255,.5)";g.fillRect(Math.round(sx),Math.round(sy),s/2+1,s/2+1);}
-    /* the pool rises up to float, with a rocky underside */
+    /* neon night: the floor's gone to a black void with a neon grid running off into the dark */
+    var fy=FLOOR_TOP*H;g.save();var vg=ART.PX.lg(g,0,fy,0,H);vg.addColorStop(0,"#0a0418");vg.addColorStop(1,"#020107");g.fillStyle=vg;g.fillRect(0,fy,W,H-fy);
+    var P1=ART.PX.unit(g),gl=Math.max(1,Math.round(s/2));
+    for(var hl=0;hl<12;hl++){var hk=((hl+(now/1800)%1)/12),hy=fy+(H-fy)*hk*hk;g.fillStyle="rgba(255,46,200,"+(0.08+hk*0.32).toFixed(2)+")";g.fillRect(0,Math.floor(hy/P1)*P1,W,gl);}
+    for(var vl=-10;vl<=10;vl++){var x0v=W/2+vl*W*0.03,x1v=W/2+vl*W*0.16;g.strokeStyle="rgba(61,242,255,.16)";PXD.line(g,x0v,fy,x1v,H,gl);}
+    for(var i=0;i<40;i++){var sx=(i*97.3)%W,sy=fy+((i*53.1+now/(60+i%5*20))%(H-fy));g.fillStyle=i%3?"rgba(255,46,200,.35)":"rgba(61,242,255,.55)";g.fillRect(Math.round(sx),Math.round(sy),s/2+1,s/2+1);}
+    /* the pool rises up to float: a dark underside traced in neon, a glowing rim, deep dark water */
     var R=boatsOn()&&on?rad():1,cx=CX*W,cy=CY*H+(1-e)*H*0.5,rx=RX*W*(R+BR*0.6),ry=RY*H*(R+BR*0.6),fl=Math.sin(now/900)*s;cy+=fl;
-    g.fillStyle="#2a1f3d";g.save();g.beginPath();g.rect(cx-rx-4,cy,rx*2+8,ry*3);g.clip();ART.PX.oval(g,cx,cy,rx*0.98,ry*2.6,0);g.restore();
-    g.fillStyle="#3b2d55";for(var r=0;r<10;r++){var rx2=cx-rx*0.8+r*rx*0.18,ry2=cy+ry*(0.6+((r*37)%10)/10*1.2);g.fillRect(Math.round(rx2),Math.round(ry2),s*4,s*3);}
-    g.fillStyle="#6c6390";ART.PX.oval(g,cx,cy+s*2,rx+s*5,ry+s*4,0);
-    var gr=ART.PX.rg(g,cx,cy-ry*0.3,2,cx,cy,rx);gr.addColorStop(0,"#3fc7e8");gr.addColorStop(0.75,"#1b76a8");gr.addColorStop(1,"#10426b");g.fillStyle=gr;ART.PX.oval(g,cx,cy,rx,ry,0);
-    g.strokeStyle="rgba(255,255,255,.15)";g.lineWidth=Math.max(1,s/2);for(var q=0;q<4;q++){var rk=((now/3000+q/4)%1);g.globalAlpha=1-rk;ART.PX.ringO(g,cx,cy,rx*rk,ry*rk,0);}g.globalAlpha=1;
+    g.fillStyle="#0c0820";g.save();g.beginPath();g.rect(cx-rx-4,cy,rx*2+8,ry*3);g.clip();ART.PX.oval(g,cx,cy,rx*0.98,ry*2.6,0);
+      g.shadowColor="#FF2EC8";g.shadowBlur=s*3;g.strokeStyle="#FF2EC8";ART.PX.ringO(g,cx,cy,rx*0.98,ry*2.6,0,Math.max(1,s));g.shadowBlur=0;g.restore();
+    g.fillStyle="rgba(255,46,200,.45)";for(var r=0;r<10;r++){var rx2=cx-rx*0.8+r*rx*0.18,ry2=cy+ry*(0.6+((r*37)%10)/10*1.2);g.fillRect(Math.round(rx2),Math.round(ry2),s*3,s);}
+    g.fillStyle="#140c2a";ART.PX.oval(g,cx,cy+s*2,rx+s*5,ry+s*4,0);
+    var gr=ART.PX.rg(g,cx,cy-ry*0.3,2,cx,cy,rx);gr.addColorStop(0,"#122a66");gr.addColorStop(0.7,"#0a1238");gr.addColorStop(1,"#050720");g.fillStyle=gr;ART.PX.oval(g,cx,cy,rx,ry,0);
+    var pul=0.75+0.25*Math.sin(now/300);
+    g.save();g.shadowColor="#3DF2FF";g.shadowBlur=s*6*pul;g.strokeStyle="#3DF2FF";ART.PX.ringO(g,cx,cy+s,rx+s*3,ry+s*2.5,0,Math.max(2,s*1.5));
+      g.shadowColor="#FF2EC8";g.shadowBlur=s*5;g.strokeStyle="#FF2EC8";ART.PX.ringO(g,cx,cy+s*3,rx+s*5,ry+s*4,0,Math.max(1,s));g.restore();
+    g.strokeStyle="rgba(61,242,255,.35)";g.lineWidth=Math.max(1,s/2);for(var q=0;q<4;q++){var rk=((now/3000+q/4)%1);g.globalAlpha=(1-rk)*0.8;ART.PX.ringO(g,cx,cy,rx*rk,ry*rk,0);}g.globalAlpha=1;
+    for(var cs=0;cs<18;cs++){var ca=cs*2.4+now/4000,cr=((cs*0.37)%1)*0.85,tw=0.5+0.5*Math.sin(now/220+cs);g.fillStyle="rgba(140,240,255,"+(0.15+tw*0.35).toFixed(2)+")";g.fillRect(Math.round(cx+Math.cos(ca)*rx*cr),Math.round(cy+Math.sin(ca)*ry*cr),s,s);}   /* glints on the dark water */
     /* a waterfall spilling off the edge */
     /* the water pours off the edge: streams of drips falling into the dark, thicker while the pool is big */
     var P2=ART.PX.unit(g),nS=14,dropL=Math.max(H-cy,ry*3);
     for(var wf=0;wf<nS;wf++){var wa=Math.PI*(0.06+wf*0.88/(nS-1)),wx=Math.floor((cx+Math.cos(wa)*(rx+s*4))/P2)*P2,wy=cy+Math.sin(wa)*(ry+s*3);
-      g.fillStyle="rgba(150,220,255,.55)";g.fillRect(wx,Math.round(wy),P2,P2*2);
-      for(var dq=0;dq<7;dq++){var off=((now*(0.09+(wf%3)*0.02)+dq*dropL/7+wf*37)%dropL),al=Math.max(0,0.75-off/dropL);if(al<=0)continue;g.fillStyle="rgba(150,220,255,"+al.toFixed(2)+")";g.fillRect(wx,Math.floor((wy+off)/P2)*P2,P2,P2*(1+(dq%2)));}}
+      g.fillStyle=wf%2?"rgba(255,46,200,.6)":"rgba(61,242,255,.6)";g.fillRect(wx,Math.round(wy),P2,P2*2);
+      for(var dq=0;dq<7;dq++){var off=((now*(0.09+(wf%3)*0.02)+dq*dropL/7+wf*37)%dropL),al=Math.max(0,0.75-off/dropL);if(al<=0)continue;g.fillStyle=(wf%2?"rgba(255,46,200,":"rgba(61,242,255,")+al.toFixed(2)+")";g.fillRect(wx,Math.floor((wy+off)/P2)*P2,P2,P2*(1+(dq%2)));}}
     /* the raft for the knocked out */
-    g.fillStyle="#6b4a2a";g.fillRect(W*0.08,H*0.95-s*2,W*0.84,s*5);g.fillStyle="#8a6238";for(var pl=0;pl<14;pl++)g.fillRect(Math.round(W*0.08+pl*W*0.06),H*0.95-s*2,W*0.05,s*2);
-    g.font="700 "+Math.max(9,s*3)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="left";g.fillStyle="rgba(255,255,255,.5)";g.fillText("OUT",W*0.08+s*2,H*0.95-s*4);
+    g.fillStyle="#120a22";g.fillRect(W*0.08,H*0.95-s*2,W*0.84,s*5);g.save();g.shadowColor="#FF2EC8";g.shadowBlur=s*4;g.fillStyle="#FF2EC8";g.fillRect(W*0.08,H*0.95-s*2,W*0.84,Math.max(1,s/2));g.fillStyle="rgba(255,46,200,.5)";for(var pl=0;pl<15;pl++)g.fillRect(Math.round(W*0.08+pl*W*0.06),H*0.95-s*2,Math.max(1,s/2),s*5);g.restore();
+    g.font="700 "+Math.max(9,s*3)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="left";g.save();g.shadowColor="#FF2EC8";g.shadowBlur=s*3;g.fillStyle="#FF8AE0";g.fillText("OUT",W*0.08+s*2,H*0.95-s*4);g.restore();
     /* the boats: the back half of each bumper ring goes under its rider */
     Object.keys(viewers).forEach(function(id){var w=viewers[id];if(!w||w===PH||w.dance!==4)return;var isMe=id===myId;if(isOut(w,isMe))return;if(isMe&&out)return;var bx=(isMe?w.x:w.x)*W,by=w.y*H;boat(g,id,bx,by,s,true,now);});
     g.restore();
   }
-  function boat(g,id,bx,by,s,back,now){var col=(viewers[id]&&viewers[id].color)||"#FF4D6D",rx=BR*RX*W,ry=BR*RY*H;
-    var lw=Math.max(5,ry*0.9);
-    if(back){g.fillStyle="rgba(0,0,0,.3)";ART.PX.oval(g,bx,by+s*3,rx*1.15,ry*1.15,0);g.fillStyle="#1d1a2e";ART.PX.oval(g,bx,by,rx*0.8,ry*0.72,0);
-      g.strokeStyle=col;PXD.half(g,bx,by,rx*0.9,ry*0.82,lw,false);}
-    else{g.strokeStyle="rgba(0,0,0,.35)";PXD.half(g,bx,by+lw*0.35,rx*0.9,ry*0.82,lw,true);
-      g.strokeStyle=col;PXD.half(g,bx,by,rx*0.9,ry*0.82,lw,true);
-      g.strokeStyle="rgba(255,255,255,.5)";PXD.arcDots(g,bx,by-lw*0.3,rx*0.9,0.5,Math.PI-0.5,1,ry*0.82);
-      var bo=viewers[id]&&(id===myId?now<boostAt+500:viewers[id].sk&&viewers[id].sk.f);if(bo){g.fillStyle="rgba(255,255,255,.6)";for(var i=0;i<4;i++)g.fillRect(Math.round(bx-rx+Math.random()*rx*2),Math.round(by+ry*0.6+Math.random()*s*3),s,s);}}}
+  /* neon bumper rings: a glowing tube in the rider's colour with a bright core, its glow lighting the water under it */
+  function neonCol(c){var m=/^#?([0-9a-f]{6})$/i.exec(c||"");if(!m)return"#FF4D6D";var n=parseInt(m[1],16),r=n>>16&255,gg=n>>8&255,b=n&255,mx=Math.max(r,gg,b)||1,k=255/mx;
+    r=Math.min(255,r*k);gg=Math.min(255,gg*k);b=Math.min(255,b*k);return"rgb("+Math.round(r)+","+Math.round(gg)+","+Math.round(b)+")";}   /* the same hue, as bright as it goes */
+  function coreCol(c){return c.replace(/rgb\((\d+),(\d+),(\d+)\)/,function(_,r,gg,b){return"rgb("+Math.round(+r+(255-r)*0.65)+","+Math.round(+gg+(255-gg)*0.65)+","+Math.round(+b+(255-b)*0.65)+")";});}
+  function boat(g,id,bx,by,s,back,now){var col=neonCol((viewers[id]&&viewers[id].color)||"#FF4D6D"),rx=BR*RX*W,ry=BR*RY*H;
+    var lw=Math.max(5,ry*0.9),bo=viewers[id]&&(id===myId?now<boostAt+500:viewers[id].sk&&viewers[id].sk.f),gl=s*(bo?9:5);
+    if(back){g.save();g.globalAlpha=0.22;g.fillStyle=col;ART.PX.oval(g,bx,by+s*3,rx*1.3,ry*1.25,0);g.restore();   /* its glow on the water */
+      g.fillStyle="#07050f";ART.PX.oval(g,bx,by,rx*0.8,ry*0.72,0);
+      g.save();g.shadowColor=col;g.shadowBlur=gl;g.globalAlpha=0.7;g.strokeStyle=col;PXD.half(g,bx,by,rx*0.9,ry*0.82,lw,false);g.restore();}
+    else{g.save();g.shadowColor=col;g.shadowBlur=gl;g.strokeStyle=col;PXD.half(g,bx,by,rx*0.9,ry*0.82,lw,true);g.restore();
+      g.strokeStyle=coreCol(col);PXD.half(g,bx,by,rx*0.9,ry*0.82,Math.max(2,lw*0.35),true);   /* the bright core of the tube */
+      g.strokeStyle="rgba(255,255,255,.85)";PXD.arcDots(g,bx,by-lw*0.3,rx*0.9,0.6,Math.PI-0.6,1,ry*0.82);
+      if(bo){g.fillStyle=col;for(var i=0;i<6;i++)g.fillRect(Math.round(bx-rx+Math.random()*rx*2),Math.round(by+ry*0.6+Math.random()*s*4),s,s);}}}
   function draw(g){
     if(!boatsOn())return;var now=performance.now(),s=sc();
     Object.keys(viewers).forEach(function(id){var w=viewers[id];if(!w||w===PH||w.dance!==4)return;var isMe=id===myId;if(isOut(w,isMe)||(isMe&&out))return;boat(g,id,w.x*W,w.y*H,s,false,now);});
-    splashes=splashes.filter(function(p){var a=(now-p.t)/900;if(a>1)return false;var q=toScr(p.u,p.v),x=q[0]*W,y=q[1]*H;g.fillStyle="rgba(180,230,255,"+(1-a)+")";for(var i=0;i<10;i++){var an=i/10*Math.PI*2;g.fillRect(Math.round(x+Math.cos(an)*a*s*16),Math.round(y-Math.abs(Math.sin(an))*a*s*20+a*a*s*20),s*2,s*2);}return true;});
+    splashes=splashes.filter(function(p){var a=(now-p.t)/900;if(a>1)return false;var q=toScr(p.u,p.v),x=q[0]*W,y=q[1]*H;g.fillStyle=(Math.floor(now/80)%2?"rgba(61,242,255,":"rgba(255,46,200,")+(1-a)+")";for(var i=0;i<10;i++){var an=i/10*Math.PI*2;g.fillRect(Math.round(x+Math.cos(an)*a*s*16),Math.round(y-Math.abs(Math.sin(an))*a*s*20+a*a*s*20),s*2,s*2);}return true;});
     if(on){var bc=Math.max(0,(boostAt+T("boostCd",4500)-now)/T("boostCd",4500)),bb=$("bbBoost");if(bb)bb.style.setProperty("--cd",bc.toFixed(2));}
     pops=pops.filter(function(p){var a3=(now-p.t)/1300;if(a3>1)return false;var me=viewers[myId];var px=me?me.x*W:W/2,py=me?me.y*H-s*34:H/2;g.globalAlpha=1-a3*a3;g.font="900 "+Math.max(14,s*6)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.75)";g.strokeText(p.txt,px,py-a3*30);g.fillStyle=p.col;g.fillText(p.txt,px,py-a3*30);return true;});
     g.globalAlpha=1;
@@ -8277,24 +8291,29 @@ var MENUMUSIC=(function(){
   var a=null,ac=null,gn=null,vol=0,started=false,t0=0,muted=false,BED=0.32,FADE=1200;   /* straight in at a normal background level (a quick fade, no slow swell) */
   try{muted=localStorage.getItem("uk_menumusic")==="0";}catch(e){}
   function menuOn(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&getComputedStyle(j).display!=="none";}
+  /* it also keeps playing in practice while you're just on the dance floor (no round or game running) */
+  function want(){var b=document.body;return menuOn()||(!!b&&b.classList.contains("practice")&&!b.classList.contains("pr-busy")&&!b.getAttribute("data-game"));}
+  var LIST=["After-hours Entry.mp3","Queue Lights.mp3"],cur=0;   /* After-hours Entry, then Queue Lights when it ends, and round again */
   function setVol(v){if(gn&&ac)gn.gain.setTargetAtTime(v,ac.currentTime,0.05);else if(a)a.volume=Math.max(0,Math.min(1,v));}
-  function ensure(){if(a)return;a=new Audio("songs/"+encodeURIComponent("After-hours Entry.mp3"));a.loop=true;a.preload="auto";
+  function ensure(){if(a)return;a=new Audio("songs/"+encodeURIComponent(LIST[0]));a.loop=false;a.preload="auto";
+    a.addEventListener("ended",function(){cur=(cur+1)%LIST.length;a.src="songs/"+encodeURIComponent(LIST[cur]);if(started&&want()){var pp=a.play();if(pp&&pp.catch)pp.catch(function(){});}});
     try{var AC=window.AudioContext||window.webkitAudioContext;ac=new AC();gn=ac.createGain();gn.gain.value=0;ac.createMediaElementSource(a).connect(gn);gn.connect(ac.destination);a.volume=1;}catch(e){ac=gn=null;a.volume=0;}}
-  function start(){if(started||muted||!menuOn())return;ensure();if(ac&&ac.state==="suspended")ac.resume().catch(function(){});
+  function start(){if(started||muted||!want())return;ensure();if(ac&&ac.state==="suspended")ac.resume().catch(function(){});
     var p=a.play();started=true;t0=performance.now();if(p&&p.then)p.then(function(){t0=performance.now();},function(){started=false;});}
   ["pointerdown","keydown","touchend"].forEach(function(ev){document.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
   setTimeout(start,300);   /* ...unless this page is already allowed to play */
-  setInterval(function(){if(!a)return;var on=menuOn()&&!muted&&started,target=0;
+  setInterval(function(){if(!a)return;var on=want()&&!muted&&started,target=0;
     if(on)target=BED*Math.min(1,(performance.now()-t0)/FADE);
-    vol=on?target:vol+(target-vol)*0.1;if(!on&&vol<0.003){vol=0;if(!a.paused)a.pause();if(!menuOn())started=false;}setVol(vol);
-    if(!started&&!muted&&menuOn()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
+    vol=on?target:vol+(target-vol)*0.1;if(!on&&vol<0.003){vol=0;if(!a.paused)a.pause();if(!want())started=false;}setVol(vol);
+    if(!started&&!muted&&want()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
   },100);
   function btn(){var b=document.getElementById("mmMusic");if(b){b.textContent=muted?"\u266B MUSIC OFF":"\u266B MUSIC ON";b.classList.toggle("off",muted);}}
   var b0=document.getElementById("mmMusic");if(b0){btn();b0.addEventListener("click",function(e){e.stopPropagation();muted=!muted;try{localStorage.setItem("uk_menumusic",muted?"0":"1");}catch(x){}btn();if(!muted)start();});}
-  window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),gain:!!gn};};
+  window.ukMenuMusicEnd=function(){if(a)a.dispatchEvent(new Event("ended"));return LIST[cur];};   /* test: as if the song finished */
+  window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.21",SERVER_VERSION="";
+var PAGE_VERSION="1.82.26",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8506,7 +8525,7 @@ function drawScene(){
     now:Date.now(),phase:BEAT.phase(performance.now()),level:BEAT.level(),playing:isPerformerPlaying||(typeof PRACTICE!=="undefined"&&PRACTICE.on),
     hue:(((lastNoteMidi%12)+12)%12)*30,hueA:isPerformerPlaying&&nAge<1500?0.1*(1-nAge/1500):0,
     lights:fx.lights,fog:fx.fog,spotX:performer.x*W+perfShift,follow:fx.follow?followState():null});
-  ART.setForce(rinkOn()?(ICE?{disco:1,weather:"snow"}:{disco:1}):null);   /* the rink brings its own mirror ball (and snow on the ice) */
+  ART.setForce(rinkOn()?(ICE?{disco:1,weather:"snow"}:{disco:1}):(typeof BOATS!=="undefined"&&BOATS.boatsOn())?{neon:1,neonPool:1,lasers:1}:null);   /* bumper boats is always neon night */   /* the rink brings its own mirror ball (and snow on the ice) */
   ART.fxBack(ctx,W,H,lay,SHOWFX,{now:Date.now(),jumbo:JT.k>0.5});
   /* the performer's key panel on the back wall, top left (not in practice: there's no performer) */
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){var kp=ART.keyPadSpot(W,H,lay,JT.k>0.3&&JT.rect?JT.rect:null,KPAD_AVOID());if(kp)ART.keyPad(ctx,kp.x,kp.y,kp.p,KPAD.st());}
@@ -8878,7 +8897,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.21"></script>
+<script src="lab.js?v=1.82.26"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

@@ -1688,6 +1688,40 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.26 — Start a song panel, 8-bit and cleaned up; a 3-button bar
+
+1. **Start a song** (performer jam screen) is restyled in the game's 8-bit look: Silkscreen type, square chunky borders, pixel shadows.
+   - **The song:** the site's own songs are in a dropdown at the top. **Music / Video / YouTube** open your own songs, videos or a YouTube search underneath; click the same one again to fold it away.
+   - **The games:** a clean row of categories: No game, Crowd vote, Rhythm, Dance, Ride & race, Team, Water. Click a category to see its games and pick up to 2. A category with a picked game shows a yellow count.
+   - **Only blocks the screen when you're live.** When you're not live it floats on the right with no dark cover, and the stage behind it still works.
+2. **The bottom bar** is down to three buttons: **Stage & FX**, **Start song**, **Hang out**. Stage & FX opens the stage effects with a **Visual FX on the Jumbotron** button at the top (that was the FX button). The ✨ / ⏭ / 🎲 / ▶ / ▶❚❚ buttons are gone, since the song panel runs the song now.
+3. **Setup** keeps the full classic master control panel as a backup, unchanged.
+- Check: jam screen → Start song: pick a site song from the dropdown, open Ride & race and pick two games, Start. Not live: you can still click the stage behind the panel. Stage & FX → Visual FX opens the visual picker. M still opens Setup.
+
+## v1.82.25 — Bumper boats is neon night
+
+- **Bumper boats always plays in neon night:** the room goes black with lasers, and everyone (and the performer) is drawn as glowing outlines.
+- **The boats are glowing neon rings** in each rider's colour, as bright as that colour goes, with a white-hot core, a glow lighting the water under them, and a bigger glow while boosting.
+- **The water and room:** the floor drops away to a black void with a neon grid running off into the dark and pink/cyan sparks. The pool is deep dark-blue water with glints, a pulsing cyan rim and a pink outer ring, and its underside is traced in pink. The waterfall drips are cyan and pink, splashes flash neon, and the OUT raft is a dark plank edged in neon pink.
+- The performer's own boats view gets the same dark water, glowing rims and neon rings.
+- Check: start a bumper boats round (practice or a show). Neon night switches on for the round and off after.
+
+## v1.82.24 — Chill music carries on into practice; Queue Lights after After-hours Entry
+
+- The front-page music keeps playing when you go into **Practice** and walk around the dance floor. It fades out when a practice round or game starts and comes back when it's over.
+- When **After-hours Entry** finishes, it moves on to **Queue Lights**, then back again (it used to loop the one song).
+- Check: click on the front page (music starts), go into Practice: it carries on. Start a round: it fades out. Finish: it comes back. Leave it running to the end of the song: Queue Lights comes on.
+
+## v1.82.23 — Faded SPACE / D / E / 3 keys gone from the jam screen
+
+- The row of faded SPACE, D, E, 3 key hints above the stage on the performer's PC jam screen is gone. The keys still work.
+- Check: open jam mode on a PC: no faded key row.
+
+## v1.82.22 — No Next Song popup at the end of a song
+
+- When a song or backing track finishes on the performer page, the **Next Song** picker no longer pops up over the screen. You just get the small "Song ended" notice. The picker still opens from its button whenever you want it.
+- Check: let a song play to the end on the performer page. No popup, just the notice.
+
 ## v1.82.21 — Refresh lands on the front page; menu music at a normal level
 
 - **Refreshing goes to the front page.** The Practice button used to put `?practice` in the address, so every refresh after that jumped straight onto the dance floor. It doesn't any more, and an address left with a bare `?practice` from before is cleaned up on load and stays on the front page. Links with extra flags (tuning lab, test drives, the host's embed) still go straight in.
