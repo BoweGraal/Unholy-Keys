@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.86 — Ice routine: circle to spin, and the objective always lit
+
+1. **Long spin:** the left stick glows with a flashing **SPIN ↻** tag next to it until you start circling it (or the arrow keys). The faster you go round, the faster you spin and the more each turn is worth (FAST SPIN pops past full speed). Still spinning at the end scores a bonus by your speed. Holding Space also spins on a keyboard.
+2. **The objective is always lit:** whatever scores right now glows with a tag beside it. The stick says SPIN ↻ / DANCE. The button says TAP, BIG MOVE!, FASTER!, JUMP! or POSE!, and brightens as the beat ring closes.
+3. On a computer the button shows as a **SPACE** key (still clickable); on a phone it's **TAP**.
+
 ## v1.81.85 — Ice rink: a figure skating routine
 
 The ice rink is now a routine planned from the song's analysis (the roller rink is unchanged). Everyone skates the same path round the rink in formation, in time with the music. A timeline across the top shows the parts, and a prompt at the bottom says what to do now. Space on a keyboard; the TAP button on a phone.
