@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.25 — Bumper boats is neon night
+
+- **Bumper boats always plays in neon night:** the room goes black with lasers, and everyone (and the performer) is drawn as glowing outlines.
+- **The boats are glowing neon rings** in each rider's colour, as bright as that colour goes, with a white-hot core, a glow lighting the water under them, and a bigger glow while boosting.
+- **The water and room:** the floor drops away to a black void with a neon grid running off into the dark and pink/cyan sparks. The pool is deep dark-blue water with glints, a pulsing cyan rim and a pink outer ring, and its underside is traced in pink. The waterfall drips are cyan and pink, splashes flash neon, and the OUT raft is a dark plank edged in neon pink.
+- The performer's own boats view gets the same dark water, glowing rims and neon rings.
+- Check: start a bumper boats round (practice or a show). Neon night switches on for the round and off after.
+
 ## v1.82.24 — Chill music carries on into practice; Queue Lights after After-hours Entry
 
 - The front-page music keeps playing when you go into **Practice** and walk around the dance floor. It fades out when a practice round or game starts and comes back when it's over.
