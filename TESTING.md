@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.31 — Mosh pit aim stick, 8-bit
+
+- The mosh pit's **AIM · SWING** stick on phones is now pixel art like the movement pad: a red ring with a red pixel knob, the ring turning yellow while you hold it (it was a smooth glowing ball).
+- The mosh score no longer sits on top of the stick: it's just above it.
+- Check: phone → mosh pit round: the right stick is chunky pixels, and the score is clear of it.
+
 ## v1.82.30 — Auto band: a computer band that plays along with the song
 
 **Needs a server redeploy** (the server passes the band on to the audience).
