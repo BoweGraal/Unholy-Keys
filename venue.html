@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.9"></script>
-<script src="gfx.js?v=1.82.9"></script>
-<script src="art.js?v=1.82.9"></script>
-<script src="voice.js?v=1.82.9"></script>
-<script src="instruments.js?v=1.82.9"></script>
-<script src="kart.js?v=1.82.9"></script>
-<script src="explain.js?v=1.82.9"></script>
+<script src="tune.js?v=1.82.10"></script>
+<script src="gfx.js?v=1.82.10"></script>
+<script src="art.js?v=1.82.10"></script>
+<script src="voice.js?v=1.82.10"></script>
+<script src="instruments.js?v=1.82.10"></script>
+<script src="kart.js?v=1.82.10"></script>
+<script src="explain.js?v=1.82.10"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3181,8 +3181,9 @@ var GAME=(function(){
      A dance button picks the dance; its own move buttons add variety; the two dots steer it (each -1..1).
      Freestyle (0) is the grab-your-limbs dance below. */
   var fStyle=0,fSub=0,fCtl=[0,0,0,0],fHeld=[null,null],fdBuilt=false,fHand=[null,null],fHandP=[null,null],fBack=0;   /* fBack: quarter turns from facing front (0 front, 1 right, 2 away, 3 left): 90 and 180 turn you and you stay that way. Sent as fd.b: 1 = away, 2 = right, 3 = left (1 matches the old turned-round flag) */
-  var shufT=0,shufArm=true;   /* Shuffle: stick out sideways = the T-step that way (facing front); stick to the top edge = a turnaround spin, once per push */
-  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fStyle===9&&shufT?1:fSub,c:fCtl.map(function(v,i){return mySpin.on&&i>=2?0:Math.round(v*100);})};   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=[0,2,1,3][fBack];if(mySpin.on)o.sp=[Math.round((mySpin.ang%(2*Math.PI))*100),Math.round(mySpin.vel*10)];return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
+  var shufT=0,shufArm=true,shufSpin=false;
+  window.ukFdStick=function(x,y){window.__fdStick=x===null?null:[x,y];};window.ukShuf=function(){return{spin:mySpin.on,shufSpin:shufSpin,vel:+mySpin.vel.toFixed(2),arm:shufArm};};   /* tests */   /* Shuffle: stick out sideways = the T-step that way (facing front); stick to the top edge = a turnaround spin, once per push */
+  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fStyle===9&&(shufT||shufSpin)?1:fSub,c:fCtl.map(function(v,i){return mySpin.on&&i>=2?0:Math.round(v*100);})};   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=[0,2,1,3][fBack];if(mySpin.on)o.sp=[Math.round((mySpin.ang%(2*Math.PI))*100),Math.round(mySpin.vel*10)];return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
   function beatPos(){var b=BEAT.get(),now=performance.now();return b.known&&b.period>0?(now-b.t0)/b.period:now/500;}
   /* Move queue: line up dances and moves ahead of time. When it's your turn in the middle, they play in order and
      split your turn evenly between them; the one on now is lit. Kept on this device. */
@@ -3408,11 +3409,12 @@ var GAME=(function(){
   function spinStart(k){var turns={spin:1,twirl:2,spinmove:1.5}[k]||1;mySpin.on=true;mySpin.ang=0;mySpin.vel=turns*6.2*1.25;mySpin.pa=null;mySpin.t=performance.now();}
   function spinStep(now){
     if(!mySpin.on)return;var dt=Math.min(0.1,(now-mySpin.t)/1000);mySpin.t=now;
-    var sx2=fCtl[2],sy2=fCtl[3],mg=Math.hypot(sx2,sy2),swing=false;
+    if(shufSpin&&fStyle!==9)shufSpin=false;
+    var sx2=shufSpin?fCtl[0]:fCtl[2],sy2=shufSpin?fCtl[1]:fCtl[3],mg=Math.hypot(sx2,sy2),swing=false;   /* the Shuffle's spin is steered with the left stick: circle it to spin faster */
     if(mg>0.5){var th=Math.atan2(sy2,sx2);if(mySpin.pa!==null){var d=th-mySpin.pa;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;mySpin.vel+=d*5.5;if(Math.abs(d)>0.02)swing=true;}mySpin.pa=th;}else mySpin.pa=null;
     mySpin.vel=Math.max(-14,Math.min(14,mySpin.vel));
     if(Math.abs(mySpin.vel)>1.4||swing){mySpin.ang+=mySpin.vel*dt;mySpin.vel*=Math.pow(swing?0.9:0.3,dt);}
-    else{var tg=Math.round(mySpin.ang/(2*Math.PI))*2*Math.PI;mySpin.ang+=(tg-mySpin.ang)*Math.min(1,dt*9);if(Math.abs(tg-mySpin.ang)<0.04){mySpin.on=false;mySpin.ang=0;mySpin.vel=0;}}
+    else{var tg=Math.round(mySpin.ang/(2*Math.PI))*2*Math.PI;mySpin.ang+=(tg-mySpin.ang)*Math.min(1,dt*9);if(Math.abs(tg-mySpin.ang)<0.04){mySpin.on=false;mySpin.ang=0;mySpin.vel=0;if(shufSpin){shufSpin=false;applyToMe();sendPose(true);}}}
   }
   function fdSpring(){
     spinStep(performance.now());
@@ -3425,14 +3427,15 @@ var GAME=(function(){
         var held2=(performance.now()-(fkAt[i]||performance.now()))/1000,mag=0.22+0.73*Math.max(0,Math.min(1,(held2-0.2)/1.1)),ek=Math.min(1,FRAME_DT*7);
         fCtl[i*2]+=(kx*mag-fCtl[i*2])*ek;fCtl[i*2+1]+=(ky*mag-fCtl[i*2+1])*ek;moved=true;}}   /* held keys ease the dot that way: a tap sways, holding pushes it out */
     for(var i=0;i<2;i++)if(fHeld[i]===null&&!Object.keys(fkHeld).some(function(kc){return FKEYS[kc][0]===i;})&&(fCtl[i*2]||fCtl[i*2+1])){fCtl[i*2]*=0.82;fCtl[i*2+1]*=0.82;if(Math.abs(fCtl[i*2])<0.02&&Math.abs(fCtl[i*2+1])<0.02){fCtl[i*2]=0;fCtl[i*2+1]=0;}moved=true;}
+    if(window.__fdStick){fCtl[0]=window.__fdStick[0];fCtl[1]=window.__fdStick[1];moved=true;}   /* tests: hold the left stick somewhere */
     if(moved){fdShow();applyToMe();sendPose();}
     /* the left stick walks you around the floor while the dance loop keeps going (the dance reads the same stick, so the footwork follows) */
     var fm=me(),fdt=Math.min(0.1,(nowS-(fdSpring.t||nowS))/1000);fdSpring.t=nowS;
     if(fm&&fStyle>0&&fdt>0){var lx=fCtl[0],ly=fCtl[1],lm=Math.hypot(lx,ly);
       if(fStyle===9){   /* the Shuffle: sideways is the T-step, travelling that way (slower the nearer the middle); back to the middle, back to the shuffle */
-        var wasT=shufT;shufT=Math.abs(lx)>0.35&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;
-        if(ly<-0.85&&shufArm&&!mySpin.on){shufArm=false;spinStart("spin");mySpin.vel=-Math.abs(mySpin.vel);applyToMe();sendPose(true);}   /* up to the top edge: the turnaround spin, feet still going */
-        if(ly>-0.3)shufArm=true;   /* bring the stick back down before you can spin again */
+        var wasT=shufT;shufT=!shufSpin&&Math.abs(lx)>0.35&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;
+        if(ly<-0.85&&shufArm&&!mySpin.on){shufArm=false;shufSpin=true;spinStart("spin");mySpin.vel=-Math.abs(mySpin.vel);mySpin.pa=Math.atan2(ly,lx);applyToMe();sendPose(true);}   /* up to the top edge: a T-step stomp on the spot that spins you round; circle the stick to keep it going */
+        if(ly>-0.3&&!shufSpin)shufArm=true;   /* bring the stick back down (once the spin's done) before you can spin again */
         if(wasT!==shufT){applyToMe();sendPose(true);}
         var ffS=ROUND.featured(),isFS=ffS&&ffS.id===myId;
         if(shufT&&!isFS){var spS=TUNE.v("walk.speed")*fdt*0.6*Math.min(1,(Math.abs(lx)-0.35)/0.6);fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+shufT*spS));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
@@ -8237,7 +8240,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.9",SERVER_VERSION="";
+var PAGE_VERSION="1.82.10",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8821,7 +8824,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.9"></script>
+<script src="lab.js?v=1.82.10"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
