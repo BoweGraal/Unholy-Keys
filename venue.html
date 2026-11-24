@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.20"></script>
-<script src="gfx.js?v=1.82.20"></script>
-<script src="art.js?v=1.82.20"></script>
-<script src="voice.js?v=1.82.20"></script>
-<script src="instruments.js?v=1.82.20"></script>
-<script src="kart.js?v=1.82.20"></script>
-<script src="explain.js?v=1.82.20"></script>
+<script src="tune.js?v=1.82.21"></script>
+<script src="gfx.js?v=1.82.21"></script>
+<script src="art.js?v=1.82.21"></script>
+<script src="voice.js?v=1.82.21"></script>
+<script src="instruments.js?v=1.82.21"></script>
+<script src="kart.js?v=1.82.21"></script>
+<script src="explain.js?v=1.82.21"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1841,7 +1841,7 @@ var MENU=(function(){
   document.getElementById("mmChar").onclick=function(){view("char");};
   document.getElementById("mmInst").onclick=function(){saveName();location.href="index.html?instrument";};
   cv.onclick=function(){view("char");};
-  document.getElementById("mmPrac").onclick=function(){saveName();try{history.replaceState(null,"","?practice");}catch(e){}PRACTICE.enter();};
+  document.getElementById("mmPrac").onclick=function(){saveName();PRACTICE.enter();};
   Array.prototype.forEach.call(js.querySelectorAll("[data-to]"),function(b){b.onclick=function(){view(b.getAttribute("data-to"));};});
   var mkW=document.getElementById("mkWarn");function mkLeave(){mkW.style.display="none";view("menu");}
   document.getElementById("mkSave").onclick=function(){mkCommit();mkLeave();};
@@ -1872,7 +1872,10 @@ function fdSpinDir(fd){if(!fd||!fd.sp)return -1;var age=(Date.now()-fd._t)/1000;
   return ART.face8(Math.sin(ang+fb*Math.PI/2),Math.cos(ang+fb*Math.PI/2),-1);}
 function lookOf(s,color,name){var L=ART.looks.unpack(s);if(L)return L;var h=0;name=String(name||"");for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return ART.looks.fromColor(color,h+1);}
 
-if(/[?&]practice\b/.test(location.search))setTimeout(function(){PRACTICE.enter();},0);
+/* ?practice links (the tuning lab, test drives, the host's embed) go straight into practice. A bare ?practice is left over from
+   an older version of the Practice button: clean it off the address and stay on the front page */
+if(location.search==="?practice"){try{history.replaceState(null,"",location.pathname+location.hash);}catch(e){}}
+else if(/[?&]practice\b/.test(location.search))setTimeout(function(){PRACTICE.enter();},0);
 /* the performer playing the round from the host page (index.html, Play round): join their own room automatically, muted */
 (function(){var q;try{q=new URLSearchParams(location.search);}catch(e){return;}
   if(q.has("mute")){document.body.classList.add("embed");setInterval(function(){try{Tone.getDestination().mute=true;}catch(e){}try{if(typeof vYT!=="undefined"&&vYT&&vYT.vid)vYT.cmd("mute");}catch(e){}},1200);}
@@ -8271,27 +8274,27 @@ window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerf
    swells slowly over about 10 s to a low background level, and fades away when you go into a room or practice. A gain node
    does the volume so it's quiet on iPhones too (they ignore an audio element's volume). The MUSIC button turns it off for good. ---- */
 var MENUMUSIC=(function(){
-  var a=null,ac=null,gn=null,vol=0,started=false,t0=0,muted=false,LOW=0.015,BED=0.1,SWELL=10000;
+  var a=null,ac=null,gn=null,vol=0,started=false,t0=0,muted=false,BED=0.32,FADE=1200;   /* straight in at a normal background level (a quick fade, no slow swell) */
   try{muted=localStorage.getItem("uk_menumusic")==="0";}catch(e){}
   function menuOn(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&getComputedStyle(j).display!=="none";}
   function setVol(v){if(gn&&ac)gn.gain.setTargetAtTime(v,ac.currentTime,0.05);else if(a)a.volume=Math.max(0,Math.min(1,v));}
   function ensure(){if(a)return;a=new Audio("songs/"+encodeURIComponent("After-hours Entry.mp3"));a.loop=true;a.preload="auto";
     try{var AC=window.AudioContext||window.webkitAudioContext;ac=new AC();gn=ac.createGain();gn.gain.value=0;ac.createMediaElementSource(a).connect(gn);gn.connect(ac.destination);a.volume=1;}catch(e){ac=gn=null;a.volume=0;}}
   function start(){if(started||muted||!menuOn())return;ensure();if(ac&&ac.state==="suspended")ac.resume().catch(function(){});
-    var p=a.play();started=true;if(!t0)t0=performance.now();if(p&&p.catch)p.catch(function(){started=false;});}
+    var p=a.play();started=true;t0=performance.now();if(p&&p.then)p.then(function(){t0=performance.now();},function(){started=false;});}
   ["pointerdown","keydown","touchend"].forEach(function(ev){document.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
   setTimeout(start,300);   /* ...unless this page is already allowed to play */
   setInterval(function(){if(!a)return;var on=menuOn()&&!muted&&started,target=0;
-    if(on){var k=Math.min(1,(performance.now()-t0)/SWELL);target=LOW+(BED-LOW)*k*k*(3-2*k);}
-    vol+=(target-vol)*(on?0.08:0.1);if(!on&&vol<0.003){vol=0;if(!a.paused)a.pause();if(!menuOn())started=false;}setVol(vol);
+    if(on)target=BED*Math.min(1,(performance.now()-t0)/FADE);
+    vol=on?target:vol+(target-vol)*0.1;if(!on&&vol<0.003){vol=0;if(!a.paused)a.pause();if(!menuOn())started=false;}setVol(vol);
     if(!started&&!muted&&menuOn()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
   },100);
   function btn(){var b=document.getElementById("mmMusic");if(b){b.textContent=muted?"\u266B MUSIC OFF":"\u266B MUSIC ON";b.classList.toggle("off",muted);}}
-  var b0=document.getElementById("mmMusic");if(b0){btn();b0.addEventListener("click",function(e){e.stopPropagation();muted=!muted;try{localStorage.setItem("uk_menumusic",muted?"0":"1");}catch(x){}btn();if(!muted){t0=performance.now()-SWELL*0.5;start();}});}
+  var b0=document.getElementById("mmMusic");if(b0){btn();b0.addEventListener("click",function(e){e.stopPropagation();muted=!muted;try{localStorage.setItem("uk_menumusic",muted?"0":"1");}catch(x){}btn();if(!muted)start();});}
   window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.20",SERVER_VERSION="";
+var PAGE_VERSION="1.82.21",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8875,7 +8878,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.20"></script>
+<script src="lab.js?v=1.82.21"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

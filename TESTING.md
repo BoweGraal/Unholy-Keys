@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.21 — Refresh lands on the front page; menu music at a normal level
+
+- **Refreshing goes to the front page.** The Practice button used to put `?practice` in the address, so every refresh after that jumped straight onto the dance floor. It doesn't any more, and an address left with a bare `?practice` from before is cleaned up on load and stays on the front page. Links with extra flags (tuning lab, test drives, the host's embed) still go straight in.
+- **Menu music:** no more very quiet start and slow 10-second swell. It comes in at a normal background level with a 1-second fade, and still fades out when you leave the menus.
+- Browsers don't allow sound until you've clicked, tapped or pressed a key on the page, so the music starts on your first click or tap on the front page.
+- Check: open the venue fresh (even an old `…?practice` address): you're on the front page. Click anywhere: the music is at a comfortable level within about a second. Go into Practice, then refresh: you're back on the front page.
+
 ## v1.82.20 — Emote wheel; Shake it butt on the right stick; no dance help text
 
 **Needs a server redeploy** (the server has to accept the new emotes).
