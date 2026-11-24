@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.99 — Mosh pit: aim and swing on the beat; practice bots move again
+
+1. **Twin-stick punching:** hold the right stick (phone) toward someone and you swing that way on every beat. A cone shows where you're aiming, and a ring closes in on each beat. Anyone inside the cone gets a PUNCH; dead centre is a SMASH (worth more). Swinging at nothing is a MISS and resets your streak, and landing swings in a row builds a multiplier. On a PC, hold the mouse button and point at someone, or aim with I J K L. Flicking and windmilling no longer score.
+2. **HEADBANG box** (the BANG meter) now says what it is ("HEADBANG · tap as it hits"). It sits above the punch stick on a tall phone screen and beside it on a wide one, so it no longer covers the stick.
+3. **Bots:** the practice dancers in the games menu now move and play again in the mosh pit, keepy uppy, walk race, half pipe, ski and the rink. Before, they only moved during a practice song, so they stood still.
+
 ## v1.81.98 — Ski: lower top speed, less slowdown on slants
 
 1. **Top speed** pointing straight down is about 20% lower (185, was 230), so it stays controllable.
