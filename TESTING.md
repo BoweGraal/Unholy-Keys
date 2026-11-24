@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.28 — Phone play screen: pixel-art lit slice, S+D button back
+
+- **The lit slice of the circle** (the part that lights up while you hold a note on the phone play screen) is pixel art now: a stepped wedge with a dithered fill and a bright edge, in the note's colour (it used to be a smooth see-through shape).
+- **S+D is back:** a small **S+D** button under the tall D button on the left plays the top level (Space and D together) with one thumb. Holding D and Space together still works too.
+- Check: phone → play: hold the circle, and the slice is chunky pixels. Tap S+D: the bottom bar says Zone 4 · Space+D and the notes move up.
+
 ## v1.82.27 — Instrument / Fullscreen / Setup buttons 8-bit; Use this instrument in the top bar
 
 - The **instrument** button (top left), **Fullscreen** and **Setup** on the jam screen get the 8-bit look: Silkscreen type, square chunky borders, pixel shadows. The quick instrument menu that drops from the instrument button matches.
