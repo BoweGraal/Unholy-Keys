@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.37 — Shuffle's Running man side-on
+
+- **Shuffle → Running man** is now **side-on** like the Running man dance, from a new clip, but with the shuffle's sharp timing: on the "and" a knee **snaps up** in front and holds; on the beat it **stomps down** as the standing foot slides back, and the **other leg** takes the next one. Arms loose and low, bent, a hand pumping up with the knee.
+- T-step and Spin are unchanged (T-step still faces front). Mix it up's running-man bars are side-on too, and 90 / 180 turn it.
+- Check: free dance → Shuffle → Running man: side-on, knees alternating with a snap and a slide.
+
 ## v1.82.36 — 90 / 180 / Spin / Twirl work again in turned dances; Skank kicks across the body
 
 - **Fixed:** the 90, 180, Spin and Twirl buttons did nothing in dances that set their own facing (Running man side-on, Shake it facing away, the moonwalk). The dance's facing is now turned by the buttons instead of replacing them: Running man faces right, 180 faces left, 90 faces the front, and spins go round.
