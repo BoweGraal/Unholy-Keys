@@ -925,7 +925,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <div class="opts" id="lsKeys"><label title="Your instrument's key for this song. Picked for you when the song's name has the key in it (e.g. &quot;Song - F# Mixolydian&quot;)">&#128273; Key <select id="lsKR"></select><select id="lsKS"></select></label>
         <label title="The backup key, swapped to with Shift">Alt <select id="lsAR"></select><select id="lsAS"></select></label><span class="tip" id="lsKTip"></span></div>
       <div class="st">2 · Pick up to 2 games <small style="opacity:.6;font-weight:600">they're spaced through the song, with free dance before, between and after</small></div>
-      <div class="games" id="lsGames"><button data-g="off" class="on">&#127911; No game<small>just listen &amp; hang out</small></button><button data-g="crowd">&#128499; Crowd vote<small>the room picks the game · tap twice for 2</small></button><button data-g="step">&#11014;&#65039; Step dance</button><button data-g="aim">&#127919; Target dance</button><button data-g="keys">&#127929; Note highway</button><button data-g="keys4">&#127929; Highway · 4 keys</button><button data-g="free">&#128131; Free dance<small>whole song · everyone dances twice</small></button><button data-g="mosh">&#129311; Mosh pit</button><button data-g="skate">&#128764; Roller rink<small>skate &amp; tricks</small></button><button data-g="ice">&#9976;&#65039; Ice rink<small>skating in the snow</small></button><button data-g="keepy">&#127880; Keepy uppy<small>keep them off the floor</small></button><button data-g="kart">&#127949; Mars Rally<small>top-down bike race</small></button><button data-g="walk">&#128131; Dance walk race<small>follow the circle to the finish</small></button><button data-g="pipe">&#128761; Half pipe<small>ride the beat, dance tricks, super move</small></button><button data-g="ski">&#9975; Ski<small>slalom and tricks down a mountain</small></button><button data-g="ctf">&#128681; Capture the flag<small>two teams, grab their flag, bring it home</small></button><button data-g="kflag">&#127950;&#65039; Kart flag<small>whole song · capture the flag in karts</small></button></div>
+      <div class="games" id="lsGames"><button data-g="off" class="on">&#127911; No game<small>just listen &amp; hang out</small></button><button data-g="crowd">&#128499; Crowd vote<small>the room picks the game · tap twice for 2</small></button><button data-g="step">&#11014;&#65039; Step dance</button><button data-g="aim">&#127919; Target dance</button><button data-g="keys">&#127929; Note highway</button><button data-g="keys4">&#127929; Highway · 4 keys</button><button data-g="free">&#128131; Free dance<small>whole song · everyone dances twice</small></button><button data-g="mosh">&#129311; Mosh pit</button><button data-g="skate">&#128764; Roller rink<small>skate &amp; tricks</small></button><button data-g="ice">&#9976;&#65039; Ice rink<small>skating in the snow</small></button><button data-g="keepy">&#127880; Keepy uppy<small>keep them off the floor</small></button><button data-g="kart">&#127949; Mars Rally<small>top-down bike race</small></button><button data-g="walk">&#128131; Dance walk race<small>follow the circle to the finish</small></button><button data-g="pipe">&#128761; Half pipe<small>ride the beat, dance tricks, super move</small></button><button data-g="ski">&#9975; Ski<small>slalom and tricks down a mountain</small></button><button data-g="ctf">&#128681; Capture the flag<small>two teams, grab their flag, bring it home</small></button><button data-g="kflag">&#127950;&#65039; Kart flag<small>whole song · capture the flag in karts</small></button><button data-g="fish">&#127907; Fishing<small>a pool opens in the floor · most points wins</small></button><button data-g="boats">&#128676; Bumper boats<small>knock everyone off the floating pool</small></button><button data-g="ice&gt;ski" class="linked">&#9976;&#65039;&#10140;&#9975; Ice rink &#10140; Ski<small>2-parter · the rink tilts into a mountain</small></button><button data-g="fish&gt;boats" class="linked">&#127907;&#10140;&#128676; Fishing &#10140; Bumper boats<small>2-parter · the floor drops away</small></button></div>
       <div class="opts"><label>Countdown <select id="lsSecs"><option value="0">none</option><option value="5">5 s</option><option value="10">10 s</option><option value="15">15 s</option><option value="20">20 s</option><option value="30">30 s</option></select></label><label class="g">Steps <select id="lsLevel"><option value="0.7">Easy</option><option value="1">Normal</option><option value="1.3">Hard</option></select></label><label class="g"><input type="checkbox" id="lsBattle"> &#9876; Battle (1 v 1s)</label><label class="g" title="For a whole show: once a game has been played it won't come up in the crowd vote again until every game has had a go"><input type="checkbox" id="lsFull"> &#127914; Full show <small id="lsPlayed" style="opacity:.7"></small></label><button type="button" id="lsShowReset" style="font:600 11px system-ui;background:none;border:1px solid rgba(255,255,255,.2);color:#ccc;border-radius:6px;padding:2px 8px;cursor:pointer">&#8634; New show</button></div>
       <div class="opts"><label class="g" title="Bots join so the room has this many people, and play the game with you. As real people arrive, bots leave to make room.">&#129302; Bots <select id="lsBots"></select></label>
         <label title="Sets your instrument's key from the song, and follows its key changes"><input type="checkbox" id="lsAutoKey"> &#127932; Auto key</label>
@@ -5474,13 +5474,13 @@ var LSET=(function(){
 
   /* ---- 2: the game ---- */
   /* up to two games per song: tap to add, tap again to take it off; a third replaces the first. No game clears them */
-  var WHOLE=["free","kflag"];
+  var WHOLE=["free","kflag"],LINKED={"ice>ski":["ice","ski"],"fish>boats":["fish","boats"]};   /* 2-parters: one game turns into the next mid-song */
   function setGame(g,init){
     if(!init){if(g==="off")games=[];
       else if(g==="crowd"){var nc=games.filter(function(x){return x==="crowd";}).length;   /* the crowd vote cycles: one vote, two votes, none */
         if(nc===0){games.push("crowd");if(games.length>2)games.shift();}else if(nc===1&&games.length===1)games.push("crowd");else games=games.filter(function(x){return x!=="crowd";});}
-      else if(WHOLE.indexOf(g)>=0)games=games.indexOf(g)>=0?[]:[g];   /* a whole-song game (free dance, Kart flag) is the only game */
-      else{games=games.filter(function(x){return WHOLE.indexOf(x)<0;});var ix=games.indexOf(g);if(ix>=0)games.splice(ix,1);else{games.push(g);if(games.length>2)games.shift();}}}
+      else if(WHOLE.indexOf(g)>=0||LINKED[g])games=games.indexOf(g)>=0?[]:[g];   /* a whole-song game (free dance, Kart flag), or a 2-parter, is the only pick */
+      else{games=games.filter(function(x){return WHOLE.indexOf(x)<0&&!LINKED[x];});var ix=games.indexOf(g);if(ix>=0)games.splice(ix,1);else{games.push(g);if(games.length>2)games.shift();}}}
     game=games[0]||"off";
     Array.prototype.forEach.call($("lsGames").children,function(b){var dg=b.getAttribute("data-g"),n=games.indexOf(dg),pos=[];games.forEach(function(x,k){if(x===dg)pos.push(k+1);});b.classList.toggle("on",dg==="off"?!games.length:n>=0);if(n>=0&&games.length>1)b.setAttribute("data-n",pos.join("+"));else b.removeAttribute("data-n");});
     var pl=$("lsPlayed");if(pl){var pp=ROUNDS.played();pl.textContent=pp.length?"("+pp.length+" played)":"";}
@@ -6511,7 +6511,7 @@ var BOTFILL=(function(){
 window.addEventListener("load",function(){BOTFILL.init();});
 var ROUNDS=(function(){
   var cfg={mode:"off",secs:18,level:1,battle:false},cur=null,job=0,cdT=null,syncT=null,uiT=null,hideT=null,totals=[],myVote="",votes=null,top=null;
-  var NAMES={kflag:"Kart flag",ctf:"Capture the flag",crowd:"Crowd vote",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",ski:"Ski",pipe:"Half pipe",walk:"Dance walk race",kart:"Mars Rally"},ORD=["1st","2nd","3rd"];
+  var NAMES={kflag:"Kart flag",ctf:"Capture the flag",crowd:"Crowd vote",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Note highway · 4 keys",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",ski:"Ski",pipe:"Half pipe",walk:"Dance walk race",kart:"Mars Rally",fish:"Fishing",boats:"Bumper boats","ice>ski":"Ice rink → Ski","fish>boats":"Fishing → Bumper boats"},ORD=["1st","2nd","3rd"];
   try{var sv=JSON.parse(localStorage.getItem("uk_rounds")||"{}");if(NAMES[sv.mode]||sv.mode==="off")cfg.mode=sv.mode;if(sv.secs>=5&&sv.secs<=30)cfg.secs=+sv.secs;if(sv.level>=0.5&&sv.level<=1.5)cfg.level=+sv.level;cfg.battle=!!sv.battle;}catch(e){}
   function ord(n){return ORD[n-1]||n+"th";}
   function $(id){return document.getElementById(id);}
@@ -6558,7 +6558,7 @@ var ROUNDS=(function(){
   }
   function send(chart,my,failed,why,cdMs){
     if(my!==job||!cur)return;
-    if(cur.setGames){var D=chart&&chart.dur>0?chart.dur:(cur.file&&backingAudio&&isFinite(backingAudio.duration)?backingAudio.duration*1000:0);if(D>0){startSet(chart,D,my);return;}cur.mode=cur.setGames.filter(function(x){return x!=="crowd";})[0]||ALLG[Math.floor(Math.random()*ALLG.length)];}
+    if(cur.setGames){var D=chart&&chart.dur>0?chart.dur:(cur.file&&backingAudio&&isFinite(backingAudio.duration)?backingAudio.duration*1000:0);if(D>0){startSet(chart,D,my);return;}cur.mode=(LINK2[cur.setGames[0]]||cur.setGames).filter(function(x){return x!=="crowd";})[0]||ALLG[Math.floor(Math.random()*ALLG.length)];}
     var cdS=cdMs||Math.max(18000,cfg.secs*1000);   /* at least 18 s: 15 for the how-to-play card, then 3-2-1 */
     /* a mosh pit that runs for part of the song: its wall of death and circle pits are fitted inside the game's time */
     if(cur.setQ&&cur.mode==="mosh"&&chart&&typeof ART!=="undefined"&&ART.MOSH)chart=ART.MOSH.window(chart,cur.setQ.start,cur.setQ.end);
@@ -6568,7 +6568,7 @@ var ROUNDS=(function(){
     var skCourse=null;if(cur.mode==="ski"){try{skCourse=JSON.parse(localStorage.getItem("uk_ski")||"null");}catch(e){}}
     var ctfMap=null;if(cur.mode==="ctf"){try{ctfMap=ART.CTF.upgrade(JSON.parse(localStorage.getItem("uk_ctf")||"null"));}catch(e){}}
     if(cur.mode==="kflag"){try{ctfMap=ART.CTF.upgrade(JSON.parse(localStorage.getItem("uk_kflag")||"null"));}catch(e){}if(!ctfMap)ctfMap=ART.CTF.kartDefault();}   /* Kart flag: its own arena, wide and open by default */
-    liveSend({type:"round-start",track:ktTrack,ski:skCourse,ctf:ctfMap,mode:cur.mode==="ice"?"skate":cur.mode==="kflag"?"ctf":cur.mode,ice:cur.mode==="ice"?1:0,kflag:cur.mode==="kflag"?1:0,battle:!!cur.battle,title:cur.title,countdown:cdS,chart:chart});
+    liveSend({type:"round-start",track:ktTrack,ski:skCourse,ctf:ctfMap,mode:cur.mode==="ice"?"skate":cur.mode==="kflag"?"ctf":cur.mode,ice:cur.mode==="ice"?1:0,kflag:cur.mode==="kflag"?1:0,battle:!!cur.battle,title:cur.title,countdown:cdS,chart:chart,link:cur.link||undefined,keep:cur.link?1:undefined});
     status(cur.battle?"Battle round: everyone dances, then the dancers are drawn into 1 v 1s on the stage"+(cur.mode==="free"?" (the room votes each match; your vote counts double)":"")+". Counting everyone in.":cur.mode==="free"?"Free dance round: everyone dances, then each dancer gets the spotlight twice before the song ends. Counting everyone in.":chart?"Found "+chart.bpm+" BPM and wrote "+chart.steps.length+" steps"+(chart.peaks&&chart.peaks.length?", with "+chart.peaks.length+" big moment"+(chart.peaks.length===1?"":"s")+" (harder steps, double points)":"")+". Counting everyone in.":(failed?"Couldn’t read that file"+(why?" ("+String(why).slice(0,60)+")":"")+", so there are no notes for the Note highway on this one. Try an mp3 or wav copy. ":"Steps will follow the beat live on each device. ")+"Counting everyone in.");
     clearTimeout(cdT);cdT=setTimeout(function(){if(my===job)play();},cdS);
     clearInterval(uiT);uiT=setInterval(draw,250);draw();buttons();
@@ -6578,7 +6578,7 @@ var ROUNDS=(function(){
      song: as long as fits, up to 90), starts after a free dance intro on a bar or part change, and the second one comes after a
      short break (the first one's results show then). What's left over is free dance between and at the end. */
   var set=null,fullShow=false,gv=null;
-  var GAME_MIN=60000,GAME_MAX=90000,VOTE_MS=15000,ALLG=["step","aim","keys","keys4","mosh","skate","ice","keepy","kart","walk","pipe","ski","ctf","kflag"];
+  var GAME_MIN=60000,GAME_MAX=90000,VOTE_MS=15000,ALLG=["step","aim","keys","keys4","mosh","skate","ice","keepy","kart","walk","pipe","ski","ctf","kflag","fish","boats"],LINK2={"ice>ski":["ice","ski"],"fish>boats":["fish","boats"]};
   /* the full show: games already played this show (kept on this computer until New show) */
   function played(){try{var a=JSON.parse(localStorage.getItem("uk_showplayed")||"[]");return Array.isArray(a)?a.filter(function(x){return ALLG.indexOf(x)>=0;}):[];}catch(e){return [];}}
   function markPlayed(m){if(!fullShow)return;var a=played();if(a.indexOf(m)<0)a.push(m);try{localStorage.setItem("uk_showplayed",JSON.stringify(a));}catch(e){}}
@@ -6600,6 +6600,13 @@ var ROUNDS=(function(){
   function cuts(chart){var c=[],bs=chart&&chart.beats||[],i;for(i=0;i<bs.length;i+=4)c.push(bs[i]);((chart&&chart.sections)||[]).forEach(function(s){c.push(s[0]);});return c;}
   function nearestCut(c,t,lo,hi){var b=null;c.forEach(function(x){if(x>=lo&&x<=hi&&(b===null||Math.abs(x-t)<Math.abs(b-t)))b=x;});return b===null?t:b;}
   function planSet(games,D,chart){
+    /* a 2-parter: two halves back to back, meeting at the drop (or a part change near the middle); the second takes over from the first with a transition */
+    var LK=LINK2[games[0]];
+    if(LK){var I1=Math.max(15000,Math.min(30000,D*0.1)),O1=12000,tot=Math.min(200000,D-I1-O1);
+      if(tot<80000)return planSet([LK[0]],D,chart);
+      var mid=I1+tot/2,S=mid;
+      if(chart){var dr=chart.drop||0;if(dr>mid-tot*0.2&&dr<mid+tot*0.2)S=dr;else S=nearestCut(cuts(chart),mid,mid-15000,mid+15000);}
+      return[{mode:LK[0],start:Math.round(I1),end:Math.round(S),cd:Math.max(10000,cfg.secs*1000)},{mode:LK[1],start:Math.round(S),end:Math.round(I1+tot),cd:3200,link:LK[0]}];}
     var n=games.length,cr=games.indexOf("crowd")>=0,I=Math.max(cr&&games[0]==="crowd"?36000:15000,Math.min(cr?45000:30000,D*0.1)),M0=games[1]==="crowd"?40000:20000,O0=12000,G,p=[];
     if(n===2){G=Math.min(GAME_MAX,(D-I-M0-O0)/2);if(G<GAME_MIN){n=1;games=games.slice(0,1);}}
     if(n===1){G=Math.min(GAME_MAX,D-I-O0);if(G<GAME_MIN){I=Math.max(8000,Math.min(I,D-O0-GAME_MIN));G=Math.max(20000,Math.min(GAME_MAX,D-I-O0));}}
@@ -6633,8 +6640,9 @@ var ROUNDS=(function(){
       if(q.voting&&q.voteId<0&&gv&&!gv.done&&gv.opts.join()===q.voteOpts.join())q.voteId=gv.id;
       if(q.mode==="crowd"&&pos>=q.start-q.cd){q.voting=false;var op2=q.voteOpts||voteOpts();q.mode=op2[Math.floor(Math.random()*op2.length)];}   /* the vote never came back: pick one */
       if(!q.sent&&q.mode!=="crowd"&&pos>=q.start-q.cd&&pos<q.end-5000){q.sent=1;markPlayed(q.mode);if(q.mode==="kart")q.end=Math.min(q.end,q.start+90000);   /* a kart race is about 90 s */
-        if(cur&&cur.phase!=="result")return;   /* something else is still on */
-        cur={n:0,battle:false,mode:q.mode,title:set.title,phase:"countdown",go:null,endAt:0,file:set.file,posFn:set.posFn,setQ:q};
+        if(q.link){set.plan.forEach(function(o){if(o!==q&&o.sent)o.ended=1;});clearTimeout(cdT);}   /* a 2-parter's second half takes over straight from the first: no results in between */
+        else if(cur&&cur.phase!=="result")return;   /* something else is still on */
+        cur={n:0,battle:false,mode:q.mode,title:set.title,phase:"countdown",go:null,endAt:0,file:set.file,posFn:set.posFn,setQ:q,link:q.link||null};
         send(set.chart,job,false,null,Math.max(3000,q.start-pos));}
       if(q.sent&&!q.ended&&pos>=q.end){q.ended=1;if(cur&&cur.setQ===q&&cur.phase==="play")finish(false);}
     });

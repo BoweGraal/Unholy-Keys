@@ -248,7 +248,7 @@ function battleNow(rd) { var b = rd.battle; if (!b) return -1; var p = Date.now(
 
 function roundPublic(r) {
   var rd = r.round; if (!rd || rd.phase === "result" || rd.phase === "off") return null;
-  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1; if (rd.track) o.track = rd.track; if (rd.ski) o.ski = rd.ski; if (rd.ctf) { o.ctf = ctfPublic(rd.ctf); if (rd.ctf.kart) o.kflag = 1; }
+  var o = { type: "round", phase: rd.phase, n: rd.n, mode: rd.mode, title: rd.title, chart: rd.chart, battle: !!rd.isBattle }; if (rd.ice) o.ice = 1; if (rd.link) o.link = rd.link; if (rd.track) o.track = rd.track; if (rd.ski) o.ski = rd.ski; if (rd.ctf) { o.ctf = ctfPublic(rd.ctf); if (rd.ctf.kart) o.kflag = 1; }
   if (rd.phase === "countdown") o.ms = Math.max(0, rd.startAt - Date.now());
   if (rd.phase === "play") { o.ts0 = rd.ts0; o.pos = rd.paused ? rd.pausePos : Date.now() - rd.playAt; if (rd.paused) o.paused = 1; if (rd.spot) { o.spot = rd.spot; o.ring = rd.ring; } if (rd.mode === "mosh") o.tug = rd.tug.s; if (rd.battle) o.b = battlePublic(rd); }
   if (rd.phase === "vote") { o.ms = Math.max(0, rd.voteEnd - Date.now()); o.dancers = rd.dancers; }
@@ -335,13 +335,15 @@ function roundFinish(code) {
 function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || msg.mode === "fish" || msg.mode === "boats" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, ski: mode === "ski" ? cleanSki(msg.ski) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, ski: mode === "ski" ? cleanSki(msg.ski) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski" && mode !== "fish" && mode !== "boats", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
-    r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
+    /* a linked second part (ice -> ski, fishing -> boats) carries on from the first: scores kept, and everyone's told where it came from (for the transition) */
+    if (!msg.keep) r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
+    var LINKS = ["skate", "ice", "fish", "ski", "boats"]; if (msg.link && LINKS.indexOf(msg.link) >= 0) rd.link = msg.link;
     if (mode === "ctf") { BOTS.ctfEven(code); var kf = !!msg.kflag, cm = CTF.clean(msg.ctf) || (kf ? CTF.kartDefault() : CTF.defaultMap()); if (kf) cm = CTF.kartMap(cm); var ci = CTF.info(cm); rd.ctf = { map: cm, I: ci, kart: kf, st: CTF.newState(ci, Array.from(r.viewers.keys()), kf) }; rd.isBattle = false; }
     broadcast(code, roundPublic(r));
     return;
@@ -405,7 +407,7 @@ function roundMessage(ws, msg) {
 /* ── The crowd picks the next game ──
    The performer opens a vote between a few games (gvote-open); everyone taps one (gvote-pick); when time is up the
    game with the most votes wins (ties drawn at random, nobody voting = a random pick). Bots vote too. */
-var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf", "kflag"];
+var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf", "kflag", "fish", "boats"];
 function gvotePublic(g) {
   var c = g.opts.map(function() { return 0; });
   g.picks.forEach(function(m) { var i = g.opts.indexOf(m); if (i >= 0) c[i]++; });
