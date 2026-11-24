@@ -79,7 +79,7 @@ function liveVideo(r) {
     v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
   return v;
 }
-var PERFORMER_TYPES = { note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1, "song-part": 1 };
+var PERFORMER_TYPES = { "song-on": 1, note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1, "song-part": 1 };
 
 /* ── Live sound/visual stream ──
    The performer sends binary packets: byte 0 is the kind (1 = audio, 2 = visuals), the rest is
@@ -335,6 +335,7 @@ function roundFinish(code) {
 function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
+    if (r && r.stage && Object.keys(r.stage).length) stageClear(ws.room, "song");
     var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || msg.mode === "fish" || msg.mode === "boats" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
@@ -506,7 +507,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.28";
+var VERSION = "1.82.29";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -538,6 +539,12 @@ function viewerList(room) {
 }
 
 /* Allow a short burst, then at most `perSec` messages a second. */
+/* JUMP ON STAGE: up to 3 viewers can play an instrument on stage between songs. Their notes go to the whole room.
+   Starting a song (or a game) sends everyone back to the floor, and nobody can jump up while a song is on. */
+var STAGE_MAX = 3;
+function stageList(r) { return Object.keys(r.stage || {}).map(function(k) { return { id: k, inst: r.stage[k].inst || "" }; }); }
+function stageSend(code, why) { var r = rooms[code]; if (!r) return; broadcast(code, { type: "stage", list: stageList(r), song: r.songOn ? 1 : 0, why: why || "" }); }
+function stageClear(code, why) { var r = rooms[code]; if (!r) return; var had = r.stage && Object.keys(r.stage).length; r.stage = {}; if (had || why) stageSend(code, why); }
 function allow(ws, key, burst, perSec) {
   var now = Date.now(), b = ws._rate || (ws._rate = {}), s = b[key] || (b[key] = { n: burst, t: now });
   s.n = Math.min(burst, s.n + (now - s.t) / 1000 * perSec); s.t = now;
@@ -618,7 +625,8 @@ function onMessage(ws, raw, isBinary) {
       voiceOpen: r.voice && Object.keys(r.voice).some(function(k) { return r.voice[k].mic; }) ? 1 : 0,   /* someone's talking: join in, listening */
       totals: totalsList(r),
       fx: r.fx || null,
-      perfPos: r.perfPos || null
+      perfPos: r.perfPos || null,
+      stage: { list: stageList(r), song: r.songOn ? 1 : 0 }
     });
 
     // Notify everyone else
@@ -682,6 +690,7 @@ function onMessage(ws, raw, isBinary) {
     if (msg.type === "gvote-close") { var gr = rooms[ws.room]; if (gr.gvote) gvoteClose(ws.room, gr.gvote); return; }
     if (msg.type === "gvote-cancel") { var gr2 = rooms[ws.room]; if (gr2.gvote && !gr2.gvote.done) { gvoteStop(gr2); broadcast(ws.room, { type: "gvote", cancel: 1 }); } return; }
     if (!PERFORMER_TYPES[msg.type]) return;
+    if (msg.type === "song-on") { var so = rooms[ws.room]; so.songOn = !!msg.on; if (so.songOn) stageClear(ws.room, "song"); else stageSend(ws.room, ""); return; }   /* a song starts: everyone off the stage */
     if (msg.type === "state") rooms[ws.room].state = msg;
     if (msg.type === "video") { if (msg.action === "stop") rooms[ws.room].video = null; else { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); } }
     if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
@@ -727,6 +736,22 @@ function onMessage(ws, raw, isBinary) {
 
   /* ── Viewer messages: chat, position, dancing, dance poses, round scores and votes only ── */
   if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
+    if (msg.type === "stage-join") {
+      var sr3 = rooms[ws.room]; if (!sr3.stage) sr3.stage = {};
+      if (!allow(ws, "stage", 4, 0.5)) return;
+      if (sr3.songOn || (sr3.round && (sr3.round.phase === "countdown" || sr3.round.phase === "play"))) { send(ws, { type: "stage-no", why: "song" }); return; }
+      if (!sr3.stage[ws.viewerId] && Object.keys(sr3.stage).length >= STAGE_MAX) { send(ws, { type: "stage-no", why: "full" }); return; }
+      sr3.stage[ws.viewerId] = { inst: str(msg.inst, 40) || "" }; stageSend(ws.room, ""); return;
+    }
+    if (msg.type === "stage-leave") { var sr4 = rooms[ws.room]; if (sr4.stage && sr4.stage[ws.viewerId]) { delete sr4.stage[ws.viewerId]; stageSend(ws.room, ""); } return; }
+    if (msg.type === "gnote") {   /* a note from someone on stage, for everyone (the performer too) */
+      var sr5 = rooms[ws.room]; if (!sr5.stage || !sr5.stage[ws.viewerId] || !allow(ws, "gnote", 40, 25)) return;
+      var gm = +msg.midi, gi = str(msg.inst, 40) || "";
+      if (msg.on && !(gm >= 0 && gm <= 127)) return;
+      if (gi) sr5.stage[ws.viewerId].inst = gi;
+      broadcast(ws.room, { type: "gnote", id: ws.viewerId, on: msg.on ? 1 : 0, midi: msg.on ? gm : 0, inst: gi, mode: str(msg.mode, 10) || "sustain" }, ws);
+      return;
+    }
     if (msg.type === "chat") {
       var text = str(msg.text, 300);
       if (!text || !allow(ws, "chat", 12, 3)) return;
@@ -896,6 +921,7 @@ function onClose(ws) {
   if (ws.role === "viewer" && rooms[ws.room]) {
     rooms[ws.room].viewers.delete(ws.viewerId);
     broadcast(ws.room, { type: "viewer-leave", id: ws.viewerId });
+    if (rooms[ws.room].stage && rooms[ws.room].stage[ws.viewerId]) { delete rooms[ws.room].stage[ws.viewerId]; stageSend(ws.room, ""); }
     var r = rooms[ws.room];
     if (r && r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
     if (r && r.botFill && !ws.bot) { var lc = ws.room; setImmediate(function() { BOTS.rebalance(lc); }); }   /* someone left: a bot can take their place */

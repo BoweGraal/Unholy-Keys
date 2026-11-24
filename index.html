@@ -14,11 +14,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.28"></script>
-<script src="art.js?v=1.82.28"></script>
-<script src="voice.js?v=1.82.28"></script>
-<script src="instruments.js?v=1.82.28"></script>
-<script src="kart.js?v=1.82.28"></script>
+<script src="gfx.js?v=1.82.29"></script>
+<script src="art.js?v=1.82.29"></script>
+<script src="voice.js?v=1.82.29"></script>
+<script src="instruments.js?v=1.82.29"></script>
+<script src="kart.js?v=1.82.29"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1902,7 +1902,22 @@ document.getElementById("bjam").onclick=function(){enterJam();};
 document.getElementById("jx").onclick=function(){exitJam();};
 /* Loop recorder UI removed - coming soon */
 document.getElementById("bMobile").onclick=function(){enterMobile();};
-document.getElementById("mb-exit").onclick=function(){exitMobile();if(MBLINK)location.href="venue.html";};
+document.getElementById("mb-exit").onclick=function(){exitMobile();if(GUEST){try{parent.postMessage({uk:"gleave"},"*");}catch(e){}return;}if(MBLINK)location.href="venue.html";};
+/* GUEST MODE (index.html?guest): a viewer who jumped on stage plays here, inside the venue page (the bottom half on a phone, a panel
+   on a PC: the arrows and D / Space / E / 3 work as on the jam screen). Just the play pad; each note goes up to the venue, which
+   sends it to the room. The key follows the performer's */
+var GUEST=/[?&]guest\b/.test(location.search);
+if(GUEST)(function(){var q=new URLSearchParams(location.search),rt=+q.get("root"),sc=q.get("scale"),ins=q.get("inst");
+  document.documentElement.classList.add("guest");
+  function key(r,s){if(isFinite(r)&&r>=0&&r<12)S.root=r;if(s&&SCALES[s])S.scale=s;try{rebuild();}catch(e){}if(typeof mbPaint==="function")mbPaint();}
+  window.addEventListener("message",function(e){var m=e.data;if(!m||!m.uk)return;if(m.uk==="gkey")key(+m.root,m.scale);if(m.uk==="gend")try{exitMobile();silenceNote();}catch(x){}});
+  var o=document.createElement("div");o.id="gStart";o.innerHTML='<button id="gStartBtn">&#127929; Tap to start playing</button>';
+  var st=document.createElement("style");st.textContent="#gStart{position:fixed;inset:0;z-index:99999;background:#0b0818;display:flex;align-items:center;justify-content:center}#gStartBtn{padding:18px 26px;border:0;color:#fff;background:#c8407e;font:700 18px Silkscreen,ui-monospace,monospace;cursor:pointer;box-shadow:inset -4px -4px 0 #8d2a58,inset 4px 4px 0 #e46aa1}"+
+    "html.guest #mb-note,html.guest #mb-fs,html.guest #mb-title{display:none!important}html.guest #mb-play{grid-template-rows:minmax(0,1fr)!important}html.guest #mb-zones,html.guest #mb-padWrap{grid-row:1!important}";
+  document.head.appendChild(st);
+  function go(){document.body.appendChild(o);document.getElementById("gStartBtn").onclick=function(){o.remove();GUEST_FS=false;if(ins&&findInst(ins))try{selInst(ins);}catch(e){}enterMobile();key(rt,sc);};}
+  if(document.body)go();else document.addEventListener("DOMContentLoaded",go);})();
+var GUEST_FS=true;
 /* opened from the venue's main menu (index.html?instrument): straight to the phone instrument. Sound and fullscreen need a tap
    first, so a big pixel START button covers the page until then; leaving goes back to the menu */
 var MBLINK=/[?&]instrument\b/.test(location.search);
@@ -2330,7 +2345,7 @@ function mbStartCanvas(){mbSt.fit="";mbFitCanvas();if(mbAnim)cancelAnimationFram
     for(var i=mbSt.parts.length-1;i>=0;i--){var q=mbSt.parts[i];q.x+=q.vx;q.y+=q.vy;q.vy+=.05;q.life-=q.dec;if(q.life<=0){mbSt.parts.splice(i,1);continue;}g.globalAlpha=Math.min(1,q.life*1.4);g.fillStyle=q.c;g.fillRect(Math.round(q.x/P)*P,Math.round(q.y/P)*P,q.sz,q.sz);}
     g.globalAlpha=1;}
   loop();}
-function enterMobile(){initAudio();mobileOn=true;mbSt.look=null;document.getElementById("mobileMode").classList.add("on");mbInstLabel();mbUpdMode();setTimeout(function(){mbSize();mbStartCanvas();mbPaint();},50);toggleFullscreen(document.documentElement);var tip=document.getElementById("fsTip");if(tip)tip.classList.remove("on");}
+function enterMobile(){initAudio();mobileOn=true;mbSt.look=null;document.getElementById("mobileMode").classList.add("on");mbInstLabel();mbUpdMode();setTimeout(function(){mbSize();mbStartCanvas();mbPaint();},50);if(!GUEST)toggleFullscreen(document.documentElement);var tip=document.getElementById("fsTip");if(tip)tip.classList.remove("on");}
 function exitMobile(){mobileOn=false;document.getElementById("mobileMode").classList.remove("on");mbFavs(false);if(mbAnim){cancelAnimationFrame(mbAnim);mbAnim=null;}arrowStack=[];mbZ.held=[];mbP.id=null;mbP.dir=null;mods.space=false;mods.d=false;mods.e=false;mods.three=false;silenceNote();updModInd();try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
 
 function syncJamVideo(){YT.toJam();}
@@ -4858,6 +4873,7 @@ function goLive(){
   function liveMsg(e){
     var msg;try{msg=JSON.parse(e.data);}catch(x){return;}
     if(typeof msg.type==="string"&&msg.type.indexOf("voice-")===0){VOICE.onMsg(msg);return;}
+    if(msg.type==="gnote"){GUESTS.note(msg);return;}if(msg.type==="stage"){GUESTS.list(msg.list||[]);return;}
     if(msg.type==="resume-failed"){LIVERC.until=0;endLive();showJamToast("Couldn't get back into the room: the show has ended","#E8505B",4000);return;}
     if(msg.type==="room-resumed"){LIVERC.until=0;LIVERC.n=0;if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();serverAgeWarn();}
       document.getElementById("bLive").textContent="LIVE";audReset();
@@ -4926,7 +4942,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.28",SERVER_VERSION="";
+var PAGE_VERSION="1.82.29",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -4988,18 +5004,29 @@ window.ukFx=function(){return{preset:activePerfPreset,trim:fxTrim?fxTrim.volume.
 window.ukPerfKind=function(){return{id:S.eng,kind:perfKind(),band:PKIND.band,playing:PPLAY.on,midi:PPLAY.midi};};
 window.ukInstKinds=function(){var by={},ids={};allInst.forEach(function(i){var k=ART.INST.kindOf(i.id,i.l);(by[k]=by[k]||[]).push(i.l);if(!ids[k])ids[k]=i.id;});return{n:allInst.length,by:by,ids:ids};};      /* for testing: which art each instrument gets */
 window.ukSelInst=function(id){selInst(id);return S.eng;};
+/* viewers who jumped on stage: you hear what they play (each has their own voice, on their own instrument) */
+var GUESTS=(function(){var V={},on={};
+  function off(id){var v=V[id];if(v){delete V[id];try{v.rel();}catch(e){}setTimeout(function(){try{v.kill();}catch(e){}},500);}}
+  function voice(nn,id){var ins=findInst(id);if(!ins)return null;if(ins.t==="samp"&&!samplers[id]){loadSamp(id);return null;}var sv=S.eng;S.eng=id;try{return mkVoice(nn);}catch(e){return null;}finally{S.eng=sv;}}
+  return{note:function(m){if(!audioReady||!m||!m.id)return;off(m.id);if(!m.on)return;var mi=+m.midi;if(!(mi>=0&&mi<=127))return;var v=voice(Tone.Frequency(mi,"midi").toNote(),m.inst||"piano");if(!v)return;
+      if(m.mode==="impact")v.ar("32n");else if(m.mode==="staccato")v.ar("16n");else v.atk();V[m.id]=v;},
+    list:function(L){var keep={};L.forEach(function(g){keep[g.id]=1;});Object.keys(V).forEach(function(id){if(!keep[id])off(id);});on=keep;},
+    get ids(){return Object.keys(on);}};})();
+window.ukGuests=function(){return GUESTS.ids;};
 /* Hook into playNote to broadcast */
 var _origPlayNote=playNote;
 playNote=function(nk,midi){
   _origPlayNote(nk,midi);
   PFOLLOW.note(midi,true);PPLAY.midi=midi;PPLAY.on=true;PPLAY.t0=Date.now();PPLAY.n++;jnrOn(nk,midi);
   liveSend({type:"note",midi:midi,on:true,inst:S.eng,mode:S.mode,nk:nk});
+  if(GUEST)try{parent.postMessage({uk:"gnote",on:1,midi:midi,inst:S.eng,mode:S.mode},"*");}catch(e){}
 };
 var _origSilence=silenceNote;
 silenceNote=function(){
   _origSilence();
   PFOLLOW.note(0,false);if(PPLAY.on){PPLAY.on=false;PPLAY.off=Date.now();}jnrOff();
   liveSend({type:"note",on:false});
+  if(GUEST)try{parent.postMessage({uk:"gnote",on:0},"*");}catch(e){}
 };
 /* Hook into selInst to broadcast instrument changes */
 var _origSelInst=selInst;
@@ -5583,7 +5610,7 @@ var LSET=(function(){
     var useGame=game!=="off"&&liveOn,secs=Math.max(5,SECS||5);
     var whole=games.filter(function(x){return WHOLE.indexOf(x)>=0;})[0];
     ROUNDS.setCfg({mode:useGame?(whole||game):"off",secs:secs,level:+$("lsLevel").value,battle:$("lsBattle").checked});   /* free dance never shares the song: if it is one of the picks it is the game, for the whole song */
-    close();
+    close();liveSend({type:"song-on",on:true});   /* anyone up on stage goes back to the floor */
     cur={o:o,kind:o.kind,title:clean(o.title),game:useGame?game:"off",paused:false,started:false,t0:0};
     /* the song's game plan: free dance first, then the game(s), each 2:30 at most, with free dance between and after.
        Free dance rounds and battles still take the whole song */
@@ -5651,6 +5678,7 @@ var LSET=(function(){
     if(jv&&!BVID.playing)jv.style.display="none";
   }
   function end(natural){
+    liveSend({type:"song-on",on:false});
     if(!cur)return;clearInterval(cdT);cdT=null;clearInterval(tick);tick=null;
     if(ROUNDS.current)ROUNDS.end();           /* counts the scores (or cancels if it hadn't started) */
     SONGMAP.stop();liveSend({type:"song-part",k:""});
