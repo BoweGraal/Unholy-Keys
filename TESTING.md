@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.27 — Instrument / Fullscreen / Setup buttons 8-bit; Use this instrument in the top bar
+
+- The **instrument** button (top left), **Fullscreen** and **Setup** on the jam screen get the 8-bit look: Silkscreen type, square chunky borders, pixel shadows. The quick instrument menu that drops from the instrument button matches.
+- In the instrument browser, **Use this instrument** is now up in the top bar next to Back (top right, beside the ✕), so it's always in reach without scrolling.
+- Check: jam screen: the three buttons are pixel style. Instrument button → browse → open any instrument: "✓ Use this instrument" is top right.
+
 ## v1.82.26 — Start a song panel, 8-bit and cleaned up; a 3-button bar
 
 1. **Start a song** (performer jam screen) is restyled in the game's 8-bit look: Silkscreen type, square chunky borders, pixel shadows.

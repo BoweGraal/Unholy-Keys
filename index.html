@@ -14,11 +14,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.26"></script>
-<script src="art.js?v=1.82.26"></script>
-<script src="voice.js?v=1.82.26"></script>
-<script src="instruments.js?v=1.82.26"></script>
-<script src="kart.js?v=1.82.26"></script>
+<script src="gfx.js?v=1.82.27"></script>
+<script src="art.js?v=1.82.27"></script>
+<script src="voice.js?v=1.82.27"></script>
+<script src="instruments.js?v=1.82.27"></script>
+<script src="kart.js?v=1.82.27"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -287,6 +287,13 @@ a.nav-item{text-decoration:none}
 #jTopBar>button,#jBotBar>button{position:static!important;top:auto!important;right:auto!important;left:auto!important;bottom:auto!important;margin:0!important;height:34px;box-sizing:border-box}
 #jm #lsBar,#jm #jHangBar{bottom:66px}
 /* Stage button: the show effects panel (from Setup → Show), popped up over the toolbar */
+/* the instrument, fullscreen and setup buttons, 8-bit like the rest */
+#jInstBtn,#jFsBtn,#jSetupBtn{font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700!important;letter-spacing:.5px;border-radius:0!important;border-width:2px!important;border-style:solid!important;box-shadow:inset -2px -2px 0 rgba(0,0,0,.35),2px 2px 0 #07040f,0 0 0 2px #07040f!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#jInstBtn{background:#b8402c!important;border-color:#ff8a6a!important;color:#fff!important}
+#jFsBtn,#jSetupBtn{background:#241c40!important;border-color:#7F77DD!important;color:#fff!important}
+#jInstBtn:hover,#jFsBtn:hover,#jSetupBtn:hover{filter:brightness(1.15)}
+#jSetupBtn .hk{border-radius:0!important;font-family:'Silkscreen',ui-monospace,monospace!important;background:#0d0a1c!important;border:1px solid #5a5296!important}
+#jInstPop{border-radius:0!important;border:3px solid #ff8a6a!important;background:#140f26!important;box-shadow:0 0 0 3px #07040f,6px 6px 0 #07040f!important}#jInstPop button,#jInstPop input{border-radius:0!important;font-family:'Silkscreen',ui-monospace,monospace!important}
 #jStagePop.on{border-radius:0!important;border:3px solid #7F77DD!important;background:#140f26!important;box-shadow:0 0 0 3px #07040f,6px 6px 0 #07040f!important;font-family:'Silkscreen',ui-monospace,monospace}#jStagePop button,#jStagePop input,#jStagePop select{border-radius:0!important;font-family:'Silkscreen',ui-monospace,monospace!important}   /* only inside the Stage pop: Setup keeps the classic look */
 #jStagePop .spHd{display:flex;gap:6px;margin-bottom:8px}#jStagePop .spHd button{flex:1;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#3a1838;border:2px solid #ff8ac8;border-radius:0;padding:8px;cursor:pointer;box-shadow:inset -2px -2px 0 rgba(0,0,0,.35),2px 2px 0 #07040f}
 #jStagePop{display:none;position:absolute;left:20px;bottom:66px;z-index:40;width:min(460px,calc(100vw - 40px));max-height:calc(100% - 150px);overflow-y:auto;padding:10px 12px;border-radius:12px;background:rgba(12,9,24,.96);border:1px solid rgba(255,255,255,.15);box-shadow:0 8px 40px rgba(0,0,0,.6)}
@@ -4371,7 +4378,9 @@ function pkRender(){
   back.onclick=pkBack;x.onclick=pkClose;
   var famO=PK.fam?PK_FAMS.filter(function(f){return f.id===PK.fam;})[0]:null;
   title.textContent=PK.view==="fam"?"Pick an instrument":PK.view==="fav"?"Favourites":PK.view==="list"?(PK.q?"Search":famO?famO.l:"All"):((findInst(PK.id)||{}).l||"");
-  if(PK.view!=="fam")top.appendChild(back);top.appendChild(title);top.appendChild(x);root.appendChild(top);
+  if(PK.view!=="fam")top.appendChild(back);top.appendChild(title);
+  if(PK.view==="inst"){var ub=pkEl("button","on","&#10003; Use this instrument");ub.id="pkUse";ub.onclick=pkClose;ub.style.marginLeft="auto";top.appendChild(ub);}   /* up in the top bar, always in reach */
+  top.appendChild(x);root.appendChild(top);
   if(PK.view==="fam"||PK.view==="list"){
     var sw=pkEl("div","pkSearch"),inp=document.createElement("input");inp.type="text";inp.id="pkSearch";inp.placeholder="Search all instruments";inp.value=PK.q;inp.setAttribute("autocomplete","off");
     inp.oninput=function(){var v=this.value;PK.q=v;if(v.trim()){if(PK.view!=="list"){PK.view="list";PK.from="fam";PK.fam=null;}}else if(PK.view==="list"&&PK.from==="fam"&&!PK.fam){PK.view="fam";}
@@ -4443,7 +4452,7 @@ function pkInstView(body){
     b.setAttribute("data-slot",k);
     b.onclick=function(){hkSlots[k]=ins.id;hkFx[k]=activePerfPreset>=0?activePerfPreset:null;hkSave();activeSlot=k;renderHkGrid();renderJamHkStrip();showJamToast("Saved to slot "+(k+1),"#EF9F27");pkRender();};sg.appendChild(b);})(k);
   body.appendChild(sg);
-  var use=pkEl("div","pkRow");use.style.marginTop="16px";var ub=pkEl("button","on","Use this instrument");ub.id="pkUse";ub.onclick=pkClose;use.appendChild(ub);body.appendChild(use);
+
 }
 function pkFavView(body){
   body.appendChild(pkEl("div","pkSub","Tap a slot to play it. The same slots work as hotkeys 1-9 (and on the phone)."));
@@ -4906,7 +4915,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.26",SERVER_VERSION="";
+var PAGE_VERSION="1.82.27",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
