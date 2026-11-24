@@ -2929,7 +2929,7 @@ var GAME=(function(){
   /* The difficulty ladder. One chart goes in, and each level is built from the song's own rhythm:
      Easy   - on the beat only, every other beat in the quiet parts, no doubles, holds kept (about 1 step a second)
      Normal - beats plus a few half beats in the louder parts, a double on a big bar start (about 2 a second)
-     Hard   - the groove's half beats, a stream of them in the loud parts, fills at the ends of phrases (about 2.5 a second)
+     Hard   - the groove's half beats, one or two a bar, fills in the loud parts, short streams only at the peaks (about 2 to 2.5 a second)
      Expert - streams through the loud parts, ta-ka pairs, quarter-beat bursts at phrase ends (3+ a second, in bursts)
      Quiet parts (intro, breakdown, the build before the drop) stay sparse at every level so the drop lands. */
   /* levelChart(chart,diff): the difficulty ladder. diff 0 easy, 1 medium, 2 hard, 3 expert. Works from the chart alone (beats, steps, sections, peaks, drop). */
@@ -2946,7 +2946,7 @@ var GAME=(function(){
       return{c:c,bar:Math.floor(bi/4),bi:bi};}
     var P=[{beat:1,offCap:[0,0,0],dbl:9,q:9,fill:9,gap:0.95},                       /* easy: on the beat; quiet parts every other beat */
            {beat:0,offCap:[0,1,2],dbl:0.75,q:9,fill:9,gap:0.45},                     /* medium: beats, a few half beats (more in the loud parts, so choruses drive), a double on a big bar start */
-           {beat:0,offCap:[0,3,4],dbl:0.5,q:9,fill:0.45,gap:0.45,tpl:0},             /* hard: the groove's half beats plus fills */
+           {beat:0,offCap:[0,2,2],dbl:0.65,q:9,fill:0.85,gap:0.45,tpl:0},            /* hard: the groove's half beats, fills only in the loud parts (it was creeping up on Expert) */
            {beat:0,offCap:[0,4,8],dbl:0.4,q:0.8,fill:0.3,gap:0.24,tpl:1}][diff]||{};  /* expert: streams, quarter-beat bursts, doubles */
     var st=chart.steps,out=[],held=0,heldEnd=-1,last=-1e9,offN={};
     function lowbit(m){return m&(-m);}
@@ -2972,7 +2972,7 @@ var GAME=(function(){
     if(diff>=2&&bt.length>8&&!chart.hand){   /* hand-made steps get no extra fills */
       var add=[],ln=0;
       var occ=function(t,tol){for(var q=0;q<out.length;q++){var s=out[q];if(Math.abs(s[0]-t)<tol)return 1;if(s.length>2&&t>s[0]-tol&&t<s[0]+s[2])return 1;}return 0;};
-      var T=[[[1,0,1,0,1,0,1,1],[1,0,1,1,1,0,1,0],[1,1,1,0,1,1,1,0],[1,0,1,0,1,1,1,1]],
+      var T=[[[1,0,1,0,1,0,1,0],[1,0,1,0,1,1,1,0],[1,0,1,1,1,0,1,0],[1,0,1,0,1,0,1,1]],   /* hard: mostly on the beat, one or two half beats a bar */
              [[1,1,1,0,1,1,1,1],[1,1,1,1,1,0,1,1],[1,1,1,1,1,1,1,0],[1,0,1,1,1,1,1,1]]][P.tpl];
       var FULL=[1,1,1,1,1,1,1,1],hz=function(a,b){return ((a*73856093)^(b*19349663))>>>0;};
       var nextRaw=function(t){for(var q=0;q<out.length;q++)if(out[q][0]>t+per*0.05)return out[q][0];return 1e9;};
@@ -2980,7 +2980,7 @@ var GAME=(function(){
         var t0=bt[b],t1=bt[b+1],gap=t1-t0,w2=I(t0);
         if(t0<2500||w2<P.fill)continue;
         var bar=Math.floor(b/4),tp=T[hz(bar,Math.floor(secW(t0)*10))%T.length],slot=(b%4)*2,dir=bar%2;
-        if(w2>=(diff===3?0.5:0.8)&&!(b%4===3&&bar%4===3))tp=FULL;   /* the loud parts are a stream of half beats (a breath at the end of every fourth bar) */
+        if(diff===3?(w2>=0.5&&!(b%4===3&&bar%4===3)):(w2>=1&&bar%2===0&&b%4!==3))tp=FULL;   /* Expert: the loud parts are a stream of half beats (a breath every fourth bar). Hard: short streams only at the very loudest, every other bar */
         for(var k2=0;k2<2;k2++){
           if(!tp[slot+k2])continue;var t=Math.round(t0+k2*gap/2);if(occ(t,per*0.2))continue;
           if(k2===1&&occ(t,per*0.45))continue;
