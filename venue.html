@@ -4515,10 +4515,10 @@ var BOATS=(function(){
    snowy slope and whites out; the dance floor breaks into tiles that fall away into the dark.
    ============================================================ */
 var TRANS=(function(){
-  var cv=null,t0=0,kind="",tiles=null,snap=null,raf=0,until=0;
+  var cv=null,t0=0,kind="",tiles=null,snap=null,raf=0,until=0,fadeAt=0;
   function play(k){
     var mc=document.getElementById("mainCanvas");if(!mc)return;cv=document.getElementById("transCv");if(!cv)return;
-    kind=k;t0=performance.now();until=t0+(k==="ski"?3400:3000);
+    kind=k;t0=performance.now();until=t0+(k==="ski"?7000:3000);fadeAt=0;
     cv.width=mc.width;cv.height=mc.height;snap=document.createElement("canvas");snap.width=mc.width;snap.height=mc.height;try{snap.getContext("2d").drawImage(mc,0,0);}catch(e){}
     tiles=null;if(k==="boats"){tiles=[];var n=12,m=8,tw=mc.width/n,th=mc.height/m,ft=(typeof FLOOR_TOP!=="undefined"?FLOOR_TOP:0.35)*mc.height;
       for(var j=0;j<m;j++)for(var i=0;i<n;i++){var y=j*th;tiles.push({sx:i*tw,sy:y,w:tw,h:th,fall:y+th>ft,d:(Math.hypot(i-n/2,j-m*0.7)/n)*900+Math.random()*250,vy:0,y:0,r:0,vr:(Math.random()-0.5)*0.004});}}
@@ -4529,7 +4529,8 @@ var TRANS=(function(){
       cv.style.transform="perspective(900px) rotateX("+(e*55).toFixed(1)+"deg) scale("+(1+e*0.25).toFixed(3)+")";
       var wk=Math.max(0,Math.min(1,(el-900)/1400));g.fillStyle="rgba(240,246,255,"+wk.toFixed(3)+")";g.fillRect(0,0,cv.width,cv.height);
       g.fillStyle="#fff";for(var i=0;i<140;i++){var x=(i*137.7+el*0.05*(1+i%3))%cv.width,y=(i*91.3+el*0.25*(1+i%4))%cv.height;g.fillRect(x,y,3+(i%3),3+(i%3));}
-      var fo=Math.max(0,(el-2700)/700);cv.style.opacity=(1-fo).toFixed(3);}
+      /* hold the white-out until the mountain's there, then clear it */
+      if(!fadeAt&&((typeof SKI!=="undefined"&&SKI.on)||el>6000))fadeAt=now;var fo=fadeAt?Math.min(1,(now-fadeAt)/600):0;cv.style.opacity=(1-fo).toFixed(3);if(fo>=1)until=0;}
     else{var ft=0;g.fillStyle="#05030c";tiles.forEach(function(t){if(!t.fall){g.drawImage(snap,t.sx,t.sy,t.w,t.h,t.sx,t.sy,t.w,t.h);return;}
         if(el>t.d){t.vy+=0.0009*16;t.y+=t.vy*16;t.r+=t.vr*16;}if(t.sy+t.y>cv.height+t.h)return;
         g.save();g.translate(t.sx+t.w/2,t.sy+t.y+t.h/2);g.rotate(t.r);g.drawImage(snap,t.sx,t.sy,t.w,t.h,-t.w/2,-t.h/2,t.w,t.h);g.restore();});
