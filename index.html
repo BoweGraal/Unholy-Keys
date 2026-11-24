@@ -14,11 +14,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.1"></script>
-<script src="art.js?v=1.82.1"></script>
-<script src="voice.js?v=1.82.1"></script>
-<script src="instruments.js?v=1.82.1"></script>
-<script src="kart.js?v=1.82.1"></script>
+<script src="gfx.js?v=1.82.2"></script>
+<script src="art.js?v=1.82.2"></script>
+<script src="voice.js?v=1.82.2"></script>
+<script src="instruments.js?v=1.82.2"></script>
+<script src="kart.js?v=1.82.2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4889,7 +4889,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.1",SERVER_VERSION="";
+var PAGE_VERSION="1.82.2",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5268,13 +5268,13 @@ function drawVenueTo(g,W,H,opts){
   if(FBM){var fcx=W*0.5,s2=Math.max(1,sc*0.8);
     if(FBM==="boats"){var fy0=Y(0.34);g.fillStyle="#0b0618";g.fillRect(0,fy0,W,H-fy0);for(var si=0;si<40;si++){g.fillStyle="rgba(255,255,255,.25)";g.fillRect((si*97.3)%W,fy0+((si*53.1+now/80)%(H-fy0)),2,2);}}
     var fcy=FBM==="fish"?Y(0.52):Y(0.6),frx=W*(FBM==="fish"?0.2:0.34*1.07),fry=Math.abs(Y(FBM==="fish"?0.63:0.814)-fcy);
-    if(FBM==="boats"){g.fillStyle="#2a1f3d";g.beginPath();g.moveTo(fcx-frx,fcy);g.quadraticCurveTo(fcx,fcy+fry*3.2,fcx+frx,fcy);g.fill();}
-    g.fillStyle="#5a5277";g.beginPath();g.ellipse(fcx,fcy,frx+4*s2,fry+3*s2,0,0,Math.PI*2);g.fill();
-    var fgr=g.createRadialGradient(fcx,fcy-fry*0.3,2,fcx,fcy,frx);fgr.addColorStop(0,"#2fb3d6");fgr.addColorStop(1,"#0f3f66");g.fillStyle=fgr;g.beginPath();g.ellipse(fcx,fcy,frx,fry,0,0,Math.PI*2);g.fill();
-    g.strokeStyle="rgba(255,255,255,.18)";for(var rq=0;rq<3;rq++){var rk=((now/2600+rq/3)%1);g.globalAlpha=1-rk;g.beginPath();g.ellipse(fcx,fcy,frx*rk,fry*rk,0,0,Math.PI*2);g.stroke();}g.globalAlpha=1;
+    if(FBM==="boats"){g.fillStyle="#2a1f3d";g.save();g.beginPath();g.rect(fcx-frx-4,fcy,frx*2+8,fry*3.5);g.clip();ART.PX.oval(g,fcx,fcy,frx*0.98,fry*2.6,0);g.restore();}
+    g.fillStyle="#5a5277";ART.PX.oval(g,fcx,fcy,frx+4*s2,fry+3*s2,0);
+    var fgr=ART.PX.rg(g,fcx,fcy-fry*0.3,2,fcx,fcy,frx);fgr.addColorStop(0,"#2fb3d6");fgr.addColorStop(1,"#0f3f66");g.fillStyle=fgr;ART.PX.oval(g,fcx,fcy,frx,fry,0);
+    g.strokeStyle="rgba(255,255,255,.18)";for(var rq=0;rq<3;rq++){var rk=((now/2600+rq/3)%1);g.globalAlpha=1-rk;ART.PX.ringO(g,fcx,fcy,frx*rk,fry*rk,0,1);}g.globalAlpha=1;
     Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p||p.hang||p.dance!==4)return;var px=(p.x||0.5)*W,pyy=Y(p.y||0.6),code=p.sk?p.sk.t|0:0;
-      if(FBM==="fish"){if(code<1||code>5)return;var bx=px+(fcx-px)*0.45,by=pyy+(fcy-pyy)*0.45;g.strokeStyle="rgba(255,255,255,.7)";g.lineWidth=1;g.beginPath();g.moveTo(px+(fcx>px?6:-6)*s2,pyy-20*s2);g.lineTo(bx,by);g.stroke();g.fillStyle=code===3?"#F5C518":"#ff3b5c";g.fillRect(bx-s2,by-s2,2*s2,2*s2);}
-      else if(code!==9){var col=p.color||"#FF4D6D",brx=0.12*0.34*W,bry=Math.abs(Y(0.6+0.12*0.2)-Y(0.6));g.strokeStyle=col;g.lineWidth=Math.max(3,bry*0.8);g.beginPath();g.ellipse(px,pyy,brx*0.9,bry*0.82,0,0,Math.PI*2);g.stroke();}});}
+      if(FBM==="fish"){if(code<1||code>5)return;var bx=px+(fcx-px)*0.45,by=pyy+(fcy-pyy)*0.45;var lx0=px+(fcx>px?6:-6)*s2,ly0=pyy-20*s2,ln=Math.ceil(Math.hypot(bx-lx0,by-ly0)/2);g.fillStyle="rgba(255,255,255,.7)";for(var li=0;li<=ln;li++)g.fillRect(Math.round(lx0+(bx-lx0)*li/ln),Math.round(ly0+(by-ly0)*li/ln),2,2);g.fillStyle=code===3?"#F5C518":"#ff3b5c";g.fillRect(bx-s2,by-s2,2*s2,2*s2);}
+      else if(code!==9){var col=p.color||"#FF4D6D",brx=0.12*0.34*W,bry=Math.abs(Y(0.6+0.12*0.2)-Y(0.6));g.strokeStyle=col;ART.PX.ringO(g,px,pyy,brx*0.9,bry*0.82,0,Math.max(3,bry*0.8));}});}
   else if(stage&&opts&&opts.video&&opts.jt&&opts.jt.k>0.5)px0=Math.min(W-16*pp,opts.jt.x+opts.jt.w+12*pp);   /* the video's down: stand beside the screen, not in front of the lyrics */
   /* the half pipe: the floor bends up into it (and back down after); the dance walk race: start and finish lines */
   var PPG=null,WKG=false,ppOn=!!(rc0&&rc0.mode==="pipe"&&(rc0.phase==="countdown"||rc0.phase==="play"));

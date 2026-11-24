@@ -199,7 +199,7 @@ module.exports = function(api) {
   /* bumper boats: drift round the floating pool, steer away from the edge, and now and then get knocked off (then sit on the raft) */
   function boats(b, now) {
     if (!b.bb || b.bb.n0 !== b.rd.n) { var a0 = Math.random() * 6.283; b.bb = { n0: b.rd.n, u: Math.cos(a0) * 0.6, v: Math.sin(a0) * 0.6, vu: 0, vv: 0, out: false, posAt: 0, t0: now, hd: 0 }; }
-    var o = b.bb, dt = 0.2, R = Math.max(0.55, 1 - (now - o.t0) / 80000 * 0.45);
+    var o = b.bb, dt = 0.2, gm = b.rd.chart && b.rd.chart.gameMs > 20000 ? b.rd.chart.gameMs : 90000, R = Math.max(0.4, 1 - 0.6 * (now - o.t0) / gm);
     if (!o.out) {
       var r = Math.hypot(o.u, o.v), tu = r > R * 0.6 ? -o.u : (Math.random() - 0.5), tv = r > R * 0.6 ? -o.v : (Math.random() - 0.5), tm = Math.hypot(tu, tv) || 1;
       o.vu += tu / tm * 0.9 * dt; o.vv += tv / tm * 0.9 * dt; var dr = Math.exp(-1.1 * dt); o.vu *= dr; o.vv *= dr; o.u += o.vu * dt; o.v += o.vv * dt; o.hd = Math.atan2(o.vv, o.vu);
