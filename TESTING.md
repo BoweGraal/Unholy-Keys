@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.87 — Ice routine: every part says what to do (and it's not all tapping)
+
+1. **Instruction cards:** about 3 beats before each part starts (and for its first couple of beats), a big card shows the part's name, one line on what to do, and an IN 3 / IN 2 / GO! countdown. A big move gets its own card 4 beats ahead.
+2. **Intro = copy the moves:** an arrow shows (↑ ARMS UP, ↓ CROSS, ← ARABESQUE, → PRESENT). Flick the stick / arrow keys that way on the beat, and your skater strikes the move. The wrong way is a miss.
+3. **Glide = nothing to press:** just skate together. The prompt says SKATE TOGETHER and how many beats until the next big move or part. The constant stroke-tapping is gone.
+4. **Big move = HOLD:** "BIG MOVE IN 3, 2, 1", then hold TAP / SPACE as the ring closes and keep holding for the spiral (a fill bar shows it). Points come from your timing and how long you held. Big moves are marked in yellow on the timeline.
+5. Spin (circle the stick), free dance (move the stick), build (press every beat), axel (JUMP IN 3, 2, 1) and finale (POSE IN 3, 2, 1) all count down too.
+6. The timeline label shows what's next ("next: LONG SPIN in 6").
+
 ## v1.81.86 — Ice routine: circle to spin, and the objective always lit
 
 1. **Long spin:** the left stick glows with a flashing **SPIN ↻** tag next to it until you start circling it (or the arrow keys). The faster you go round, the faster you spin and the more each turn is worth (FAST SPIN pops past full speed). Still spinning at the end scores a bonus by your speed. Holding Space also spins on a keyboard.
