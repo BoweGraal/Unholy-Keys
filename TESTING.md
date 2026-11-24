@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.93 — Ice free dance: doubles only
+
+1. The free dance pad now only has **doubles**: two targets joined by a line. Tap the first as its ring closes, then the second 2 beats later. No tracing the line. A new double comes every 4 beats.
+2. Your skater strikes the first move, flows towards the second while you wait, and strikes it when you hit the second target.
+3. Hit both halves of every double for FLAWLESS ROUTINE.
+
 ## v1.81.92 — Pump meter freezes when the flick ring comes up
 
 1. Mash to pump up speed before a big jump (or in the build before the axel). The moment the pull-back ring appears, the speed meter stops draining and holds where you got it, so you can take your time pulling back and flicking without losing height.
