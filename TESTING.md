@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.90 — Ice jumps: more time to pull and flick, slow jumps on the beat
+
+1. The flick ring now comes up **2.5 beats before** the jump moment and stays **2.5 beats after** (it was 1 before, 1.5 after), so there's time to pull back and let go. Timing is judged in beats: PERFECT within about a third of a beat, GREAT about two thirds, GOOD about a beat.
+2. Pumping runs for the 8 beats before the ring appears.
+3. The jump is much slower: you hang in the air for 3 to 4 beats (higher jumps stay up longer) and always land right on a beat. You go higher, the turns spread over the whole flight, and your arms flare out on every beat in the air. The practice skaters jump slow too.
+
 ## v1.81.89 — Ice free dance = a target routine; Target Dance Normal eased
 
 1. **Ice free dance:** your skater stops on the spot and a target pad opens (bottom of the screen). Each target is the next move of a little ice-dance routine (ARMS UP, REACH LEFT/RIGHT, SWAN, LUNGE LEFT/RIGHT, CROSS), sitting where that move points. Tap it as its ring closes and your skater strikes the move: PERFECT is crisp, GOOD wobbles, a miss stumbles. Every few moves there's a swoop: tap, keep your finger on the ball, and the skater flows into the next move. Hit every one for **FLAWLESS ROUTINE +300**. Everyone sees the moves.

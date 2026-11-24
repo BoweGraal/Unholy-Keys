@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.89"></script>
-<script src="gfx.js?v=1.81.89"></script>
-<script src="art.js?v=1.81.89"></script>
-<script src="voice.js?v=1.81.89"></script>
-<script src="instruments.js?v=1.81.89"></script>
-<script src="kart.js?v=1.81.89"></script>
-<script src="explain.js?v=1.81.89"></script>
+<script src="tune.js?v=1.81.90"></script>
+<script src="gfx.js?v=1.81.90"></script>
+<script src="art.js?v=1.81.90"></script>
+<script src="voice.js?v=1.81.90"></script>
+<script src="instruments.js?v=1.81.90"></script>
+<script src="kart.js?v=1.81.90"></script>
+<script src="explain.js?v=1.81.90"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5408,23 +5408,25 @@ var FIG=(function(){
     hit(n.t,grade(n.d));
   }
   /* ---- jumps (big moves and the axel): pump up speed by mashing the button, then pull the ring back and flick it ---- */
-  var PUMP_B=6;   /* how many beats before a big jump the pumping starts */
-  function nextJump(p){for(var i=Math.max(0,ti-2);i<tg.length;i++){var t=tg[i];if((t.k==="big"||t.k==="axel")&&!t.j&&t.t>p-per()*1.6)return t;}return null;}
-  function pumping(p){var sg=F.segAt(P,p),nj=nextJump(p);if(sg&&sg.k==="build")return true;return !!nj&&nj.t-p>per()*1.0&&nj.t-p<per()*PUMP_B;}
-  function flickOpen(p){var nj=nextJump(p);return nj&&p>=nj.t-per()*1.0&&p<=nj.t+per()*1.5?nj:null;}
+  var PUMP_B=8,OPEN_B=2.5,CLOSE_B=2.5;   /* pump for 8 beats; the flick ring is up from 2.5 beats before the moment to 2.5 after */   /* how many beats before a big jump the pumping starts */
+  function nextJump(p){for(var i=Math.max(0,ti-3);i<tg.length;i++){var t=tg[i];if((t.k==="big"||t.k==="axel")&&!t.j&&t.t>p-per()*CLOSE_B)return t;}return null;}
+  function pumping(p){var sg=F.segAt(P,p),nj=nextJump(p);if(sg&&sg.k==="build")return true;return !!nj&&nj.t-p>per()*OPEN_B&&nj.t-p<per()*(PUMP_B+OPEN_B);}
+  function flickOpen(p){var nj=nextJump(p);return nj&&p>=nj.t-per()*OPEN_B&&p<=nj.t+per()*CLOSE_B?nj:null;}
   /* the jump itself: height from your pumped speed, how far you pulled back, and your timing */
-  function launch(pull){var p=pos(),t=flickOpen(p);if(!t||fall>0)return;var err=Math.abs(p-t.t),g=err<=W_G*1.5?0:err<=W_O*2?1:err<=per()*0.8?2:3,J=GR[g];
+  function launch(pull){var p=pos(),t=flickOpen(p);if(!t||fall>0)return;var eb=Math.abs(p-t.t)/per(),g=eb<=0.35?0:eb<=0.7?1:eb<=1.25?2:3,J=GR[g];   /* judged in beats: a flick is a big move, not a tap */
     var h=Math.max(0,Math.min(1,(0.3+0.7*pump)*(0.35+0.65*Math.min(1,pull))*[1,0.85,0.65,0.45][g]));t.j=g+1;fl=null;kbPull=0;
     if(t.k==="axel"){var kind=h>=0.72?3:h>=0.45?2:h>=0.2?1:0;
       if(!kind){fall=performance.now()+1800;streak=0;banner("FALL!","#E8505B");flash("TOO SLOW","#E8505B");return;}
-      jump={t0:performance.now(),dur:per()*1.8,kind:kind,h:h};var nm=["","SINGLE AXEL","DOUBLE AXEL","TRIPLE AXEL"][kind];banner(nm+"!",["","#F5D03C","#4CC38A","#3DF2FF"][kind]);streak++;
+      jump=airFor(h,kind);var nm=["","SINGLE AXEL","DOUBLE AXEL","TRIPLE AXEL"][kind];banner(nm+"!",["","#F5D03C","#4CC38A","#3DF2FF"][kind]);streak++;
       add(Math.round([0,300,700,1500][kind]*(0.6+0.4*h)),nm,["","#F5D03C","#4CC38A","#3DF2FF"][kind]);}
-    else{jump={t0:performance.now(),dur:per()*1.5,kind:h>=0.6?1:0,h:h};streak++;add(Math.round(60+340*h),h>=0.75?"HUGE JUMP":h>=0.45?"BIG JUMP":"JUMP",h>=0.75?"#3DF2FF":"#4CC38A");}
+    else{jump=airFor(h,h>=0.6?1:0);streak++;add(Math.round(60+340*h),h>=0.75?"HUGE JUMP":h>=0.45?"BIG JUMP":"JUMP",h>=0.75?"#3DF2FF":"#4CC38A");}
     flash(Math.round(height_px(h))+" HIGH · "+J[0],J[1]);
     if(h>best){best=h;}
-    t.myH=height_px(h);setTimeout(function(){biggest(t);},per()*2.5);
+    t.myH=height_px(h);setTimeout(function(){biggest(t);},jump.dur+per());
     pump=Math.max(0,pump-0.5);}
-  function height_px(h){return 8+h*42;}
+  function height_px(h){return 12+h*46;}
+  /* a slow jump that dances to the beat: up for 3 to 4 beats (higher = longer), landing right on a beat */
+  function airFor(h,kind){var bp=GAME.beatPos(),beats=3+(h>0.55?1:0),land=Math.ceil(bp+0.25)+beats;return{t0:performance.now(),dur:Math.max(per()*2.5,(land-bp)*per()),kind:kind,h:h,b0:bp};}
   /* the highest jump on the ice at that moment wins the bonus */
   function biggest(t){if(!on||!t.myH)return;var top=0;ids().forEach(function(id){if(id===myId)return;var v=viewers[id];if(v&&v._figPk&&v._figPk.t===t.t)top=Math.max(top,v._figPk.h);});
     if(t.myH>=top){add(250,"BIGGEST JUMP!","#F5D03C");banner("BIGGEST JUMP!","#F5D03C");}}
@@ -5458,7 +5460,7 @@ var FIG=(function(){
     var njA=null;for(var qn=Math.max(0,ti-3);qn<Math.min(tg.length,ti+3);qn++)if((tg[qn].k==="big"||tg[qn].k==="axel")&&p>=tg[qn].t-per()&&p<tg[qn].t+per()*2.5)njA=tg[qn];
     if(njA)ids().forEach(function(id){if(id===myId)return;var v=viewers[id],h=v&&v.sk?v.sk.h|0:0;if(!v._figPk||v._figPk.t!==njA.t)v._figPk={t:njA.t,h:0};if(h>v._figPk.h)v._figPk.h=h;});
     /* targets that went by untouched */
-    while(ti<tg.length&&tg[ti].t<p-((tg[ti].k==="big"||tg[ti].k==="axel")?per()*1.6:W_O*1.6)){var t=tg[ti];if(t.j===-1&&t.k==="swp"&&dm.sw&&dm.sw.t===t){break;}if(!t.j){t.j=4;if(false){}else if(t.k==="axel"){fall=now+1800;streak=0;banner("FALL!","#E8505B");}else streak=0;if(t.k==="big")flash("MISSED THE JUMP","#E8505B");if(t.k==="tgt"||t.k==="swp"){dm.miss++;dm.last={m:t.m,g:3,t:now};flash("OOPS!","#E8505B");}}ti++;}
+    while(ti<tg.length&&tg[ti].t<p-((tg[ti].k==="big"||tg[ti].k==="axel")?per()*CLOSE_B:W_O*1.6)){var t=tg[ti];if(t.j===-1&&t.k==="swp"&&dm.sw&&dm.sw.t===t){break;}if(!t.j){t.j=4;if(false){}else if(t.k==="axel"){fall=now+1800;streak=0;banner("FALL!","#E8505B");}else streak=0;if(t.k==="big")flash("MISSED THE JUMP","#E8505B");if(t.k==="tgt"||t.k==="swp"){dm.miss++;dm.last={m:t.m,g:3,t:now};flash("OOPS!","#E8505B");}}ti++;}
     /* the stick: a flick copies an intro move; circling it spins */
     var si=stick(),sm2=Math.hypot(si.x,si.y),circ=false;
     if(k==="intro"&&sm2>0.6&&lastMag<0.45){flick(Math.abs(si.x)>Math.abs(si.y)?(si.x<0?"left":"right"):(si.y<0?"up":"down"));}lastMag=sm2;
@@ -5489,7 +5491,7 @@ var FIG=(function(){
   /* the pose for a moment of the routine (yours, or a practice skater's) */
   function pose(k,p,now,mine){var bp=GAME.beatPos(),s1=Math.sin(bp*Math.PI),sg=F.segAt(P,p);
     if(mine&&fall>0)return[2.6,-2.6,1.2,-1.2];
-    if(mine&&jump){var u=(now-jump.t0)/jump.dur;return u<0.85?[-0.35,0.35,0.12,-0.12]:[1.6,-1.6,0.05,-0.95];}   /* arms pulled in tight for the turns, then the landing */
+    if(mine&&jump){var u=(now-jump.t0)/jump.dur,fl2=Math.pow(1-(((bp%1)+1)%1),3);if(u>=0.88)return[1.6,-1.6,0.05,-0.95];return[-0.35+fl2*2.1,0.35-fl2*2.1,0.12+fl2*0.3,-0.12-fl2*0.3];}   /* tucked for the turns, arms flaring out on every beat */   /* arms pulled in tight for the turns, then the landing */
     if(mine&&fl&&fl.pull>0.05||mine&&kbPull>0.05)return[0.5,-0.5,0.55,-0.55];   /* crouched, winding up */
     if(mine&&pumping(p))return[0.9+s1*0.6,-0.9+s1*0.6,Math.max(0,s1)*0.6,-Math.max(0,-s1)*0.6];   /* pumping: arms and legs driving */
     if(k==="intro"){if(!mine){var i=Math.max(0,Math.floor((p-sg.t0)/(per()*2))-1);return MOVES[SEQ[((i%SEQ.length)+SEQ.length)%SEQ.length]].p;}if(lastMove&&now-lastMove.t<per()*1.8)return MOVES[lastMove.m].p;}   /* you strike the move when you copy it */
@@ -5503,7 +5505,7 @@ var FIG=(function(){
     return[1.35+s1*0.1,-1.35+s1*0.1,Math.max(0,s1)*0.5,-Math.max(0,-s1)*0.5];}   /* gliding: arms out, a push on each beat */
   /* what everyone else needs: the free dance (as a dance style), height in the air, a fall, and which way you face in a spin / jump */
   function fd(){return null;}   /* the free dance's moves go out as poses */
-  function facing(){if(jump&&jump.kind){var u=Math.min(1,(performance.now()-jump.t0)/(jump.dur*0.85)),turns=[0,1,2.5,3.5][jump.kind];return Math.floor(u*turns*8)%8;}
+  function facing(){if(jump&&jump.kind){var u=Math.min(1,(performance.now()-jump.t0)/(jump.dur*0.88)),turns=[0,1,2.5,3.5][jump.kind];return Math.floor(u*turns*8)%8;}
     if(spin.vel>0.4)return ART.face8(Math.sin(spin.ang),Math.cos(spin.ang),-1);return -1;}
   function height(){if(!jump)return 0;var u=Math.min(1,(performance.now()-jump.t0)/jump.dur);return Math.round(height_px(jump.h||0.5)*4*u*(1-u));}
   function wire(){var f=facing();return{h:height(),f:fall>0?1:0,t:f>=0?f+1:0};}
@@ -5519,10 +5521,10 @@ var FIG=(function(){
     ids().filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id,n){var v=viewers[id],b=bots[id]||(bots[id]={ang:0,jump:0,kind:1+(n%3)});
       var sp=F.spot(Gm,lap,slotOf(id),0);v.tx=v.x=sp.x/W;v.ty=v.y=sp.y/H;v.dance=4;
       if(k==="spin")b.ang+=0.22;var t=0,h=0;
-      if(k==="axel"&&!b.jump&&p>=sg.at)b.jump=now;var u=b.jump?(now-b.jump)/(per()*1.7):1;if(u>=1)b.jump=0;
-      if(b.jump){h=Math.round((14+b.kind*6)*4*u*(1-u));t=1+Math.floor(u*[0,1.5,2.5,3.5][b.kind]*8)%8;}else if(k==="spin")t=1+ART.face8(Math.sin(b.ang),Math.cos(b.ang),-1);
+      if(k==="axel"&&!b.jump&&p>=sg.at)b.jump=now;var u=b.jump?(now-b.jump)/(per()*4):1;if(u>=1)b.jump=0;
+      if(b.jump){h=Math.round((20+b.kind*10)*4*u*(1-u));t=1+Math.floor(u*[0,1.5,2.5,3.5][b.kind]*8)%8;}else if(k==="spin")t=1+ART.face8(Math.sin(b.ang),Math.cos(b.ang),-1);
       for(var bm=0;bm<P.moments.length;bm++){var m0=P.moments[bm];if(p>=m0&&p<m0+per()*1.5&&b.bj!==m0){b.bj=m0;b.bt=now;b.bh=0.3+Math.random()*0.6;}}
-      if(b.bt&&now-b.bt<per()*1.5&&!b.jump){var ub=(now-b.bt)/(per()*1.5);h=Math.round(height_px(b.bh)*4*ub*(1-ub));}
+      if(b.bt&&now-b.bt<per()*3.5&&!b.jump){var ub=(now-b.bt)/(per()*3.5);h=Math.round(height_px(b.bh)*4*ub*(1-ub));}
       v.sk={h:h,f:0,t:t};v.pose=b.jump||h>0?[-0.35,0.35,0.12,-0.12]:pose(k,p,now,false);v.fd=null;});}
   /* what's coming: the next part of the routine, or the next big move, and how many beats away */
   function upcoming(p){var sg=F.segAt(P,p),nxt=null;for(var i=0;i<P.segs.length;i++)if(P.segs[i].t0>p){nxt=P.segs[i];break;}
@@ -7699,7 +7701,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.89",SERVER_VERSION="";
+var PAGE_VERSION="1.81.90",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8278,7 +8280,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.89"></script>
+<script src="lab.js?v=1.81.90"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
