@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.91 — Big jumps: speed only, longer flick zone
+
+1. **Big jumps don't care about the beat:** height is just how fast you pumped × how far you pulled back. The prompt says PULL BACK & FLICK, any time.
+2. The ring is up much longer for a big jump: **4 beats before to 4 beats after** the moment.
+3. The ring's slot is taller: you pull further down for a full-strength jump.
+4. The axel on the drop still keeps its (gentle) beat timing.
+
 ## v1.81.90 — Ice jumps: more time to pull and flick, slow jumps on the beat
 
 1. The flick ring now comes up **2.5 beats before** the jump moment and stays **2.5 beats after** (it was 1 before, 1.5 after), so there's time to pull back and let go. Timing is judged in beats: PERFECT within about a third of a beat, GREAT about two thirds, GOOD about a beat.

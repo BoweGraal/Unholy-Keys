@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.90"></script>
-<script src="gfx.js?v=1.81.90"></script>
-<script src="art.js?v=1.81.90"></script>
-<script src="voice.js?v=1.81.90"></script>
-<script src="instruments.js?v=1.81.90"></script>
-<script src="kart.js?v=1.81.90"></script>
-<script src="explain.js?v=1.81.90"></script>
+<script src="tune.js?v=1.81.91"></script>
+<script src="gfx.js?v=1.81.91"></script>
+<script src="art.js?v=1.81.91"></script>
+<script src="voice.js?v=1.81.91"></script>
+<script src="instruments.js?v=1.81.91"></script>
+<script src="kart.js?v=1.81.91"></script>
+<script src="explain.js?v=1.81.91"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -340,7 +340,7 @@ body.gaming-fig #skJump,body.gaming-fig #skWheel,body.gaming-fig #skSpeed,body.g
 #figUI .fgCard.fg-big{border-color:#F5D03C}#figUI .fgCard.fg-spin{border-color:#3DF2FF}#figUI .fgCard.fg-free{border-color:#D354A0}#figUI .fgCard.fg-build,#figUI .fgCard.fg-finale{border-color:#F5C518}
 @media (max-aspect-ratio:1/1){#figUI .fgCard{top:16%}#figUI .fgPrompt{left:40%}}
 #figUI .fgFlick{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:120px;padding:6px 0 8px;background:rgba(26,20,48,.9);border:4px solid #F5D03C;text-align:center;pointer-events:auto;touch-action:none;z-index:7;cursor:grab}
-#figUI .fgFlick.on{display:block}#figUI .fgFlick canvas{width:120px;height:160px;image-rendering:pixelated}#figUI .fgFlick b{display:block;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#F5D03C}
+#figUI .fgFlick.on{display:block}#figUI .fgFlick canvas{width:120px;height:230px;image-rendering:pixelated}#figUI .fgFlick b{display:block;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#F5D03C}
 #figUI .fgPad{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 10px);width:min(560px,94vw);height:min(330px,42vh);background:rgba(18,13,30,.78);border:3px solid #7F77DD;box-shadow:5px 5px 0 #000;pointer-events:auto;touch-action:none;z-index:8}
 #figUI .fgPad.on{display:block}#figUI .fgPad canvas{width:100%;height:100%;display:block}
 body.fig-pad #dpad,body.fig-pad #figUI .fgBtn,body.fig-pad #figUI .fgPrompt canvas{visibility:hidden}body.fig-pad #figUI .fgPrompt{bottom:calc(var(--chatH) + min(330px,42vh) + 20px)}
@@ -5408,19 +5408,20 @@ var FIG=(function(){
     hit(n.t,grade(n.d));
   }
   /* ---- jumps (big moves and the axel): pump up speed by mashing the button, then pull the ring back and flick it ---- */
-  var PUMP_B=8,OPEN_B=2.5,CLOSE_B=2.5;   /* pump for 8 beats; the flick ring is up from 2.5 beats before the moment to 2.5 after */   /* how many beats before a big jump the pumping starts */
-  function nextJump(p){for(var i=Math.max(0,ti-3);i<tg.length;i++){var t=tg[i];if((t.k==="big"||t.k==="axel")&&!t.j&&t.t>p-per()*CLOSE_B)return t;}return null;}
-  function pumping(p){var sg=F.segAt(P,p),nj=nextJump(p);if(sg&&sg.k==="build")return true;return !!nj&&nj.t-p>per()*OPEN_B&&nj.t-p<per()*(PUMP_B+OPEN_B);}
-  function flickOpen(p){var nj=nextJump(p);return nj&&p>=nj.t-per()*OPEN_B&&p<=nj.t+per()*CLOSE_B?nj:null;}
+  var PUMP_B=8,OPEN_B=2.5,CLOSE_B=2.5;
+  function opB(t){return t&&t.k==="big"?4:OPEN_B;}function clB(t){return t&&t.k==="big"?4:CLOSE_B;}   /* a big jump's ring is up from 4 beats before to 4 after */   /* pump for 8 beats; the flick ring is up from 2.5 beats before the moment to 2.5 after */   /* how many beats before a big jump the pumping starts */
+  function nextJump(p){for(var i=Math.max(0,ti-3);i<tg.length;i++){var t=tg[i];if((t.k==="big"||t.k==="axel")&&!t.j&&t.t>p-per()*clB(t))return t;}return null;}
+  function pumping(p){var sg=F.segAt(P,p),nj=nextJump(p);if(sg&&sg.k==="build")return true;return !!nj&&nj.t-p>per()*opB(nj)&&nj.t-p<per()*(PUMP_B+opB(nj));}
+  function flickOpen(p){var nj=nextJump(p);return nj&&p>=nj.t-per()*opB(nj)&&p<=nj.t+per()*clB(nj)?nj:null;}
   /* the jump itself: height from your pumped speed, how far you pulled back, and your timing */
-  function launch(pull){var p=pos(),t=flickOpen(p);if(!t||fall>0)return;var eb=Math.abs(p-t.t)/per(),g=eb<=0.35?0:eb<=0.7?1:eb<=1.25?2:3,J=GR[g];   /* judged in beats: a flick is a big move, not a tap */
+  function launch(pull){var p=pos(),t=flickOpen(p);if(!t||fall>0)return;var eb=Math.abs(p-t.t)/per(),g=t.k==="big"?0:eb<=0.35?0:eb<=0.7?1:eb<=1.25?2:3,J=GR[g];   /* a big jump is all about speed: no timing */   /* judged in beats: a flick is a big move, not a tap */
     var h=Math.max(0,Math.min(1,(0.3+0.7*pump)*(0.35+0.65*Math.min(1,pull))*[1,0.85,0.65,0.45][g]));t.j=g+1;fl=null;kbPull=0;
     if(t.k==="axel"){var kind=h>=0.72?3:h>=0.45?2:h>=0.2?1:0;
       if(!kind){fall=performance.now()+1800;streak=0;banner("FALL!","#E8505B");flash("TOO SLOW","#E8505B");return;}
       jump=airFor(h,kind);var nm=["","SINGLE AXEL","DOUBLE AXEL","TRIPLE AXEL"][kind];banner(nm+"!",["","#F5D03C","#4CC38A","#3DF2FF"][kind]);streak++;
       add(Math.round([0,300,700,1500][kind]*(0.6+0.4*h)),nm,["","#F5D03C","#4CC38A","#3DF2FF"][kind]);}
     else{jump=airFor(h,h>=0.6?1:0);streak++;add(Math.round(60+340*h),h>=0.75?"HUGE JUMP":h>=0.45?"BIG JUMP":"JUMP",h>=0.75?"#3DF2FF":"#4CC38A");}
-    flash(Math.round(height_px(h))+" HIGH · "+J[0],J[1]);
+    flash(Math.round(height_px(h))+" HIGH"+(t.k==="big"?"":" · "+J[0]),t.k==="big"?(h>=0.75?"#3DF2FF":"#4CC38A"):J[1]);
     if(h>best){best=h;}
     t.myH=height_px(h);setTimeout(function(){biggest(t);},jump.dur+per());
     pump=Math.max(0,pump-0.5);}
@@ -5460,7 +5461,7 @@ var FIG=(function(){
     var njA=null;for(var qn=Math.max(0,ti-3);qn<Math.min(tg.length,ti+3);qn++)if((tg[qn].k==="big"||tg[qn].k==="axel")&&p>=tg[qn].t-per()&&p<tg[qn].t+per()*2.5)njA=tg[qn];
     if(njA)ids().forEach(function(id){if(id===myId)return;var v=viewers[id],h=v&&v.sk?v.sk.h|0:0;if(!v._figPk||v._figPk.t!==njA.t)v._figPk={t:njA.t,h:0};if(h>v._figPk.h)v._figPk.h=h;});
     /* targets that went by untouched */
-    while(ti<tg.length&&tg[ti].t<p-((tg[ti].k==="big"||tg[ti].k==="axel")?per()*CLOSE_B:W_O*1.6)){var t=tg[ti];if(t.j===-1&&t.k==="swp"&&dm.sw&&dm.sw.t===t){break;}if(!t.j){t.j=4;if(false){}else if(t.k==="axel"){fall=now+1800;streak=0;banner("FALL!","#E8505B");}else streak=0;if(t.k==="big")flash("MISSED THE JUMP","#E8505B");if(t.k==="tgt"||t.k==="swp"){dm.miss++;dm.last={m:t.m,g:3,t:now};flash("OOPS!","#E8505B");}}ti++;}
+    while(ti<tg.length&&tg[ti].t<p-((tg[ti].k==="big"||tg[ti].k==="axel")?per()*clB(tg[ti]):W_O*1.6)){var t=tg[ti];if(t.j===-1&&t.k==="swp"&&dm.sw&&dm.sw.t===t){break;}if(!t.j){t.j=4;if(false){}else if(t.k==="axel"){fall=now+1800;streak=0;banner("FALL!","#E8505B");}else streak=0;if(t.k==="big")flash("MISSED THE JUMP","#E8505B");if(t.k==="tgt"||t.k==="swp"){dm.miss++;dm.last={m:t.m,g:3,t:now};flash("OOPS!","#E8505B");}}ti++;}
     /* the stick: a flick copies an intro move; circling it spins */
     var si=stick(),sm2=Math.hypot(si.x,si.y),circ=false;
     if(k==="intro"&&sm2>0.6&&lastMag<0.45){flick(Math.abs(si.x)>Math.abs(si.y)?(si.x<0?"left":"right"):(si.y<0?"up":"down"));}lastMag=sm2;
@@ -5531,7 +5532,7 @@ var FIG=(function(){
     var bm=null;for(var j=0;j<P.moments.length;j++)if(P.moments[j]>p-per()*0.2){bm=P.moments[j];break;}
     return{seg:nxt,segIn:nxt?(nxt.t0-p)/per():1e9,big:bm,bigIn:bm!==null?(bm-p)/per():1e9};}
   /* the screen: the routine's timeline, a card saying what this part is and what to do, the prompt with its beat ring */
-  function ui(){var u=$("figUI");if(!u){u=document.createElement("div");u.id="figUI";u.innerHTML='<div class="fgTL"><i class="fgCur"></i></div><div class="fgNow"></div><div class="fgCard"><b></b><span></span><em></em></div><div class="fgPrompt"><canvas width="64" height="64"></canvas><b></b><small></small></div><div class="fgSpeed"><i></i><span>SPEED</span></div><div class="fgPad"><canvas></canvas></div><div class="fgFlick"><canvas width="120" height="160"></canvas><b>PULL BACK &amp; FLICK</b></div><button class="fgBtn" aria-label="Skate">'+BTN+'<small>'+(TOUCHF?"":"or click")+'</small></button>';
+  function ui(){var u=$("figUI");if(!u){u=document.createElement("div");u.id="figUI";u.innerHTML='<div class="fgTL"><i class="fgCur"></i></div><div class="fgNow"></div><div class="fgCard"><b></b><span></span><em></em></div><div class="fgPrompt"><canvas width="64" height="64"></canvas><b></b><small></small></div><div class="fgSpeed"><i></i><span>SPEED</span></div><div class="fgPad"><canvas></canvas></div><div class="fgFlick"><canvas width="120" height="230"></canvas><b>PULL BACK &amp; FLICK</b></div><button class="fgBtn" aria-label="Skate">'+BTN+'<small>'+(TOUCHF?"":"or click")+'</small></button>';
       $("skateUI").appendChild(u);
       /* the flick ring: drag down to pull back, let go (or flick up) to jump */
       var pd=u.querySelector(".fgPad");function pxy(e){var r=pd.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height];}
@@ -5540,7 +5541,7 @@ var FIG=(function(){
       ["pointerup","pointercancel"].forEach(function(ev){pd.addEventListener(ev,function(e){if(dm.ptr===e.pointerId)dm.ptr=null;});});
       var fk=u.querySelector(".fgFlick");
       fk.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();if(!flickOpen(pos()))return;fl={ptr:e.pointerId,sy:e.clientY,pull:0,lastY:e.clientY,lastT:performance.now()};try{fk.setPointerCapture(e.pointerId);}catch(x){}});
-      fk.addEventListener("pointermove",function(e){if(!fl||fl.ptr!==e.pointerId)return;var dy=e.clientY-fl.sy,nowp=performance.now();fl.pull=Math.max(0,Math.min(1,dy/90));if(fl.pull>0.25&&e.clientY<fl.lastY-6&&nowp-fl.lastT<120){launch(fl.pull);}fl&&(fl.lastY=e.clientY,fl.lastT=nowp);});
+      fk.addEventListener("pointermove",function(e){if(!fl||fl.ptr!==e.pointerId)return;var dy=e.clientY-fl.sy,nowp=performance.now();fl.pull=Math.max(0,Math.min(1,dy/150));if(fl.pull>0.25&&e.clientY<fl.lastY-6&&nowp-fl.lastT<120){launch(fl.pull);}fl&&(fl.lastY=e.clientY,fl.lastT=nowp);});
       ["pointerup","pointercancel"].forEach(function(ev){fk.addEventListener(ev,function(e){if(!fl||fl.ptr!==e.pointerId)return;var pl=fl.pull;fl=null;if(pl>0.1)launch(pl);});});
       var btn=u.querySelector(".fgBtn");btn.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();press(true);});["pointerup","pointercancel","pointerleave"].forEach(function(ev){btn.addEventListener(ev,function(){press(false);});});
       var tl=u.querySelector(".fgTL"),C={intro:"#9B7FE0",glide:"#4A9BE8",spin:"#3DF2FF",free:"#D354A0",build:"#F5D03C",axel:"#ffffff",finale:"#F5C518"};P.segs.forEach(function(sg){var s=document.createElement("span");s.style.left=(sg.t0/P.dur*100)+"%";s.style.width=((sg.t1-sg.t0)/P.dur*100)+"%";s.style.background=C[sg.k]||"#888";s.title=F.NAMES[sg.k];tl.appendChild(s);});
@@ -5563,7 +5564,8 @@ var FIG=(function(){
     var near=nx&&(nx.t-p)/pb<=(nx.k==="step"?2.2:nx.k==="build"?1.2:4.2)?nx:null,lab,sub,ring=-1;
     if(fx.t&&now-fx.t<450){lab=fx.txt;sub="";}
     var fo2=flickOpen(p),pm=pumping(p);
-    if(fo2){var dtj=fo2.t-p;lab=lab||(dtj>pb*0.3?"FLICK IN "+Math.ceil(dtj/pb):"FLICK NOW!");sub=TOUCHF?"pull the ring back, let go":"hold \u2193, let go (or drag the ring)";}
+    if(fo2&&fo2.k==="big"){lab=lab||"PULL BACK & FLICK!";sub="any time: more speed + more pull = higher";}
+    else if(fo2){var dtj=fo2.t-p;lab=lab||(dtj>pb*0.3?"FLICK IN "+Math.ceil(dtj/pb):"FLICK NOW!");sub=TOUCHF?"pull the ring back, let go":"hold \u2193, let go (or drag the ring)";}
     else if(pm){lab=lab||"PUMP! PUMP!";sub="mash "+BTN+" \u00B7 speed "+Math.round(pump*100)+"%";}
     else if(k==="spin"){var SPq=SPOS[Math.max(0,spinType(sg))];lab=lab||(spin.pos?SPq.n+"!":spin.vel>=8?"LEG OUT! "+SPq.tag.split(" ")[0]:"WIND UP!");sub=spin.pos?"hold it \u00B7 "+Math.floor(spin.ang/(Math.PI*2))+" turns":spin.vel>=8?"stop circling, hold "+SPq.tag.split(" ")[0]:"circle "+STK;}
     else if(k==="free"){lab=lab||(dm.sw?"FOLLOW IT!":"DANCE!");sub=dm.sw?"keep your finger on the ball":"tap each target as its ring closes";}
@@ -5593,9 +5595,9 @@ var FIG=(function(){
         q2.font="700 "+Math.max(9,Math.round(R0*0.42))+"px 'Silkscreen',ui-monospace,monospace";q2.textAlign="center";q2.fillStyle="#fff";q2.fillText(M.n,cx,cy+R0+Math.max(11,R0*0.5));}}
     /* the flick ring: the knob follows your pull, a ring closes on the moment */
     var fk2=u.querySelector(".fgFlick");fk2.classList.toggle("on",!!fo2);
-    if(fo2){var fc=fk2.querySelector("canvas").getContext("2d"),pl=fl?fl.pull:kbPull;fc.clearRect(0,0,120,160);fc.imageSmoothingEnabled=false;
-      fc.fillStyle="#1a1430";fc.fillRect(36,10,48,140);fc.fillStyle="#7F77DD";fc.fillRect(40,14,40,132);fc.fillStyle="#120d1e";fc.fillRect(44,18,32,124);   /* the slot */
-      var ky=Math.round(46+pl*80);fc.fillStyle=pl>0.7?"#3DF2FF":"#D354A0";fc.fillRect(34,ky-14,52,28);fc.fillStyle="#fff";fc.fillRect(40,ky-10,10,6);   /* the knob */
+    if(fo2){var fc=fk2.querySelector("canvas").getContext("2d"),pl=fl?fl.pull:kbPull;fc.clearRect(0,0,120,230);fc.imageSmoothingEnabled=false;
+      fc.fillStyle="#1a1430";fc.fillRect(36,10,48,210);fc.fillStyle="#7F77DD";fc.fillRect(40,14,40,202);fc.fillStyle="#120d1e";fc.fillRect(44,18,32,194);   /* the slot */
+      var ky=Math.round(46+pl*150);fc.fillStyle=pl>0.7?"#3DF2FF":"#D354A0";fc.fillRect(34,ky-14,52,28);fc.fillStyle="#fff";fc.fillRect(40,ky-10,10,6);   /* the knob */
       fc.fillStyle="#F5D03C";for(var ar=0;ar<3;ar++){var ay=ky-34-ar*10;if(ay>4)fc.fillRect(56-ar*0,ay,8,4);}   /* flick up */
       var dtr=Math.max(0,(fo2.t-p)/pb),rr=Math.min(1,dtr);fk2.style.boxShadow=rr<0.15?"0 0 0 4px #3DF2FF,6px 6px 0 #000":"6px 6px 0 #000";}
     /* the objective: whatever scores right now glows, with a tag */
@@ -7701,7 +7703,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.90",SERVER_VERSION="";
+var PAGE_VERSION="1.81.91",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8280,7 +8282,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.90"></script>
+<script src="lab.js?v=1.81.91"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
