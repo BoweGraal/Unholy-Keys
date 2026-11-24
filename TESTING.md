@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.39 — "Your turn plays" only in a free dance round
+
+- The **Your turn plays: 1. … 2. … 3. …** bar is hidden when you're just dancing on the floor. It only shows during a free dance round (the mini game where your turn in the spotlight plays those dances), live or in practice.
+- Check: free dance from the floor: no turn bar. Start a free dance round: it's there.
+
 ## v1.82.38 — Cyber goth: Stomp & reach
 
 - **Cyber goth → Stomp & reach** (it was Stomp & punch), from a new clip: a **wide, low stance**; on each beat **both arms reach up** in a V tilted to one side, then **pull down hard** with the fists to the chest as that foot **stomps** and the weight drops onto it, then the other side. The reach is quick and the pull is the hit. It's also the base of Mix it up. Right stick: arm size, and up for double time. Left stick moves you.
