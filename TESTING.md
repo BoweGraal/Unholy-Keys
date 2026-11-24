@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.19 — Moonwalk side-on; performer screen shows turned dances
+
+- **Moonwalk** starts side-on, facing right, and glides backwards to the left. After 4 beats it turns to face left and glides back to the right, so it's always moving backwards.
+- Fixed: a leaning body facing left was drawn facing right. That affected the moonwalk and any other dance that leans while facing left.
+- **Performer screen:** dances that turn you (Shake it facing away, the moonwalk side-on, the shuffle spin) now show the same way on the big screen. Before, everyone there faced front.
+- Check: free dance → Running man → Moonwalk. You face right and slide left for 4 beats, then face left and slide right. Watch it on the performer screen too, along with Shake it from behind.
+
 ## v1.82.18 — Shake it: Drop it turned round, popping and dropping low
 
 - **Drop it** now matches the reference clip: you turn your back to the crowd, stand with your feet wide, and bend over with your hands on your thighs. The butt pops down and up every half beat, the hips tilt to one side then the other each beat, and on beat 4 you drop right down low with the knees out wide, then come back up.

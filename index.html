@@ -14,11 +14,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.18"></script>
-<script src="art.js?v=1.82.18"></script>
-<script src="voice.js?v=1.82.18"></script>
-<script src="instruments.js?v=1.82.18"></script>
-<script src="kart.js?v=1.82.18"></script>
+<script src="gfx.js?v=1.82.19"></script>
+<script src="art.js?v=1.82.19"></script>
+<script src="voice.js?v=1.82.19"></script>
+<script src="instruments.js?v=1.82.19"></script>
+<script src="kart.js?v=1.82.19"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4889,7 +4889,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.18",SERVER_VERSION="";
+var PAGE_VERSION="1.82.19",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5133,7 +5133,7 @@ var KPS={objs:null,round:0,
 var AUDDIR=0;   /* which way the person being drawn faces (0 front, 1 right, 2 back, 3 left) */
 function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,hitAge,look,atKeys,fd,crowd){
   /* the venue's pixel character (art.js), small: name under the feet */
-  var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,lgL=7,lgR=7,knee=0,butt=0,bj=0,alL,alR,hdA=0,swg,prA="",p=Math.max(1,Math.round(sc));
+  var dT=now*0.009+seed,bob=0,armL=.15,armR=-.15,legL=0,legR=0,mouth=false,lgL=7,lgR=7,fdDir,knee=0,butt=0,bj=0,alL,alR,hdA=0,swg,prA="",p=Math.max(1,Math.round(sc));
   /* walking: legs and arms swing opposite each other, with a small step bob; walk = stride phase or null */
   if(walk&&!dance){var wp=ART.walkPose(walk);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*p;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*5*p;armL=2.7+Math.sin(dT*2)*.35;armR=-armL;legL=Math.sin(dT*2)*.25;legR=-legL;}
@@ -5146,7 +5146,7 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
   }
   if(atKeys){var pl=glow?Math.sin(now*0.02):0;armL=-.55+pl*.18;armR=.55+pl*.18;mouth=glow;}
   var dxs=0,rot=0;
-  if(fd){var rg=ART.dance(fd.s,fd.m,fd.c,now/500);armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*p;dxs=rg.dx*p;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;}
+  if(fd){var rg=ART.dance(fd.s,fd.m,fd.c,now/500);fdDir=rg.dir;armL=rg.armL;armR=rg.armR;legL=rg.legL;legR=rg.legR;bob=rg.bob*p;dxs=rg.dx*p;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;}
   /* a crowd surprise: float up; hand lasers point both arms at the stage */
   var cr=crowd&&crowd.kind?ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target):null;
   if(cr){y+=cr.lift;if(cr.armL!==undefined){armL=cr.armL;armR=cr.armR;fd=null;}}
@@ -5158,7 +5158,7 @@ function audPerson(g,x,y,color,name,sc,dance,seed,glow,now,nameColor,walk,pose,h
     if(epo&&!atKeys){var ek=epo.k;bob+=epo.lift;rot=rot*(1-ek)+epo.rot;if(!rpo){armL=armL*(1-ek)+epo.armL*ek;armR=armR*(1-ek)+epo.armR*ek;}legL=legL*(1-ek)+epo.legL*ek;legR=legR*(1-ek)+epo.legR*ek;}}
   if(!dance&&!crowd)ART.footShadow(g,x,y,p,0);
   if(AUDSK){bob-=AUDSK.px!==undefined?AUDSK.px:AUDSK.h*p;if(AUDSK.rot!==undefined)rot=AUDSK.rot;else if(AUDSK.f)rot=(seed%2?1.45:-1.45);}      /* skating: up in the air, or flat out */
-  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{head:hdA,swing:swg,prop:prA||(ART.neon?"glowstick":""),skates:!!AUDSK&&!AUDSK.ns?(AUDSK.ice?"ice":true):false,armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,dir:AUDDIR});
+  ART.drawChar(g,x,y,p,look||ART.looks.fromColor(color,1),{head:hdA,swing:swg,prop:prA||(ART.neon?"glowstick":""),skates:!!AUDSK&&!AUDSK.ns?(AUDSK.ice?"ice":true):false,armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,dir:fdDir!==undefined?fdDir:AUDDIR});   /* a dance that turns (Shake it, the moonwalk, the shuffle spin) */
   if(cr)ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,seed||0,cr.hands,crowd.target);
   if(AX){var ly=y+(rpo?rpo.lift:0)+(epo&&!atKeys?epo.lift:0);if(AX.reacts)ART.reactFx(g,AX.reacts,now,x,ly,p,seed||0);if(epo)ART.envFx(g,AX.lay,AX.H,x,ly,p,now,seed||0);}
   if(dance){g.fillStyle=color;g.font="bold "+Math.round(9*sc)+"px system-ui,sans-serif";g.textAlign="center";var ph=((now/1100)+seed*.37)%1;g.globalAlpha=Math.sin(ph*Math.PI)*.85;g.fillText(ph<.5?"♪":"♫",x+10*p,y-20*p-ph*14);g.globalAlpha=1;}
