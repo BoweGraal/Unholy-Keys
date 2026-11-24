@@ -1688,6 +1688,18 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.20 — Emote wheel; Shake it butt on the right stick; no dance help text
+
+**Needs a server redeploy** (the server has to accept the new emotes).
+
+1. **Emote wheel:** a button in the bottom-right corner (a smiley) opens a ring of 10 emotes: Hearts, Big heart, Clap, !, Confused, Happy, Excited, Wow, OMG, Surprised. Click one, or press **E** to open it and **1–0** to pick. Esc or a click outside closes it.
+   - Each new emote pops a pixel icon up over your head (a face, a red "!", or a WOW / OMG speech bubble), with its own pose: Happy bounces, Excited hops with fists up and sparkles, ! jumps startled, Confused scratches the head with a "?", Wow flings the arms up, OMG puts the hands on the cheeks, Surprised jolts back. Each has a little sound.
+   - The hearts / big heart / clap / whistle buttons and their keys (E R Y U) are gone from the bar; the wheel replaces them. Jump, spin and twirl stay as buttons (Q T G).
+   - The performer screen shows the new emotes on people, and the crowd bots use some of them.
+2. **Shake it (Wiggle / Fast):** the body stays steady (no sway, no bounce); only the butt shakes left and right to the beat. The **right stick moves the butt itself**: left, right, up, down. Let go and it shakes on its own again. Drop it no longer sways the body either, and its right stick moves the butt too.
+3. **Free dance help text** under the character is gone.
+- Check: press E, pick each emote and watch it on yourself and on the performer screen. Free dance → Shake it: the body holds still and the butt follows the right stick.
+
 ## v1.82.19 — Moonwalk side-on; performer screen shows turned dances
 
 - **Moonwalk** starts side-on, facing right, and glides backwards to the left. After 4 beats it turns to face left and glides back to the right, so it's always moving backwards.
