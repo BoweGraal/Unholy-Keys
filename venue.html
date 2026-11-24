@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.4"></script>
-<script src="gfx.js?v=1.82.4"></script>
-<script src="art.js?v=1.82.4"></script>
-<script src="voice.js?v=1.82.4"></script>
-<script src="instruments.js?v=1.82.4"></script>
-<script src="kart.js?v=1.82.4"></script>
-<script src="explain.js?v=1.82.4"></script>
+<script src="tune.js?v=1.82.6"></script>
+<script src="gfx.js?v=1.82.6"></script>
+<script src="art.js?v=1.82.6"></script>
+<script src="voice.js?v=1.82.6"></script>
+<script src="instruments.js?v=1.82.6"></script>
+<script src="kart.js?v=1.82.6"></script>
+<script src="explain.js?v=1.82.6"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -482,6 +482,7 @@ body.fd-plan #fdPlan{display:flex}
 #fdPlan .pl-watch{flex:none;margin-left:auto;padding:5px 10px;border:2px solid #3DF2FF;background:#123040;color:#fff;font:700 11px 'Silkscreen',ui-monospace,monospace;cursor:pointer}
 #plOpen{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 10px);z-index:23;padding:8px 14px;border:2px solid #F5C518;background:#1c1630;color:#F5C518;font:700 12px 'Silkscreen',ui-monospace,monospace;box-shadow:3px 3px 0 #000;cursor:pointer;white-space:nowrap}
 body.fd-plan-min #plOpen{display:block}
+body.fish-reel #moveCtl,body.fish-reel #fiBtn,body.fish-reel #fiScore,body.fish-reel #fiCount{display:none!important}   /* reeling on a phone: the pad at the bottom is the control */
 body.bb-out #bbBoost,body.bb-out.gaming-boats #moveCtl{display:none}   /* out: nothing to steer, you just watch from the raft */
 body.fd-plan #fdUI .fd-pads,body.fd-plan #fdUI .fd-col,body.fd-plan #fdUI .fd-subs,body.fd-plan #fdUI .fd-queue,body.fd-plan #fdUI .fd-help{display:none}
 #fdPlan .pl-top{position:sticky;top:-8px;z-index:2;background:rgba(14,10,28,.97);padding:4px 0;margin-top:-4px;display:flex;gap:8px;align-items:center;justify-content:space-between}
@@ -2929,7 +2930,7 @@ var GAME=(function(){
   /* The difficulty ladder. One chart goes in, and each level is built from the song's own rhythm:
      Easy   - on the beat only, every other beat in the quiet parts, no doubles, holds kept (about 1 step a second)
      Normal - beats plus a few half beats in the louder parts, a double on a big bar start (about 2 a second)
-     Hard   - the groove's half beats, a stream of them in the loud parts, fills at the ends of phrases (about 2.5 a second)
+     Hard   - the groove's half beats, one or two a bar, fills in the loud parts, short streams only at the peaks (about 2 to 2.5 a second)
      Expert - streams through the loud parts, ta-ka pairs, quarter-beat bursts at phrase ends (3+ a second, in bursts)
      Quiet parts (intro, breakdown, the build before the drop) stay sparse at every level so the drop lands. */
   /* levelChart(chart,diff): the difficulty ladder. diff 0 easy, 1 medium, 2 hard, 3 expert. Works from the chart alone (beats, steps, sections, peaks, drop). */
@@ -2946,7 +2947,7 @@ var GAME=(function(){
       return{c:c,bar:Math.floor(bi/4),bi:bi};}
     var P=[{beat:1,offCap:[0,0,0],dbl:9,q:9,fill:9,gap:0.95},                       /* easy: on the beat; quiet parts every other beat */
            {beat:0,offCap:[0,1,2],dbl:0.75,q:9,fill:9,gap:0.45},                     /* medium: beats, a few half beats (more in the loud parts, so choruses drive), a double on a big bar start */
-           {beat:0,offCap:[0,3,4],dbl:0.5,q:9,fill:0.45,gap:0.45,tpl:0},             /* hard: the groove's half beats plus fills */
+           {beat:0,offCap:[0,2,2],dbl:0.65,q:9,fill:0.85,gap:0.45,tpl:0},            /* hard: the groove's half beats, fills only in the loud parts (it was creeping up on Expert) */
            {beat:0,offCap:[0,4,8],dbl:0.4,q:0.8,fill:0.3,gap:0.24,tpl:1}][diff]||{};  /* expert: streams, quarter-beat bursts, doubles */
     var st=chart.steps,out=[],held=0,heldEnd=-1,last=-1e9,offN={};
     function lowbit(m){return m&(-m);}
@@ -2972,7 +2973,7 @@ var GAME=(function(){
     if(diff>=2&&bt.length>8&&!chart.hand){   /* hand-made steps get no extra fills */
       var add=[],ln=0;
       var occ=function(t,tol){for(var q=0;q<out.length;q++){var s=out[q];if(Math.abs(s[0]-t)<tol)return 1;if(s.length>2&&t>s[0]-tol&&t<s[0]+s[2])return 1;}return 0;};
-      var T=[[[1,0,1,0,1,0,1,1],[1,0,1,1,1,0,1,0],[1,1,1,0,1,1,1,0],[1,0,1,0,1,1,1,1]],
+      var T=[[[1,0,1,0,1,0,1,0],[1,0,1,0,1,1,1,0],[1,0,1,1,1,0,1,0],[1,0,1,0,1,0,1,1]],   /* hard: mostly on the beat, one or two half beats a bar */
              [[1,1,1,0,1,1,1,1],[1,1,1,1,1,0,1,1],[1,1,1,1,1,1,1,0],[1,0,1,1,1,1,1,1]]][P.tpl];
       var FULL=[1,1,1,1,1,1,1,1],hz=function(a,b){return ((a*73856093)^(b*19349663))>>>0;};
       var nextRaw=function(t){for(var q=0;q<out.length;q++)if(out[q][0]>t+per*0.05)return out[q][0];return 1e9;};
@@ -2980,7 +2981,7 @@ var GAME=(function(){
         var t0=bt[b],t1=bt[b+1],gap=t1-t0,w2=I(t0);
         if(t0<2500||w2<P.fill)continue;
         var bar=Math.floor(b/4),tp=T[hz(bar,Math.floor(secW(t0)*10))%T.length],slot=(b%4)*2,dir=bar%2;
-        if(w2>=(diff===3?0.5:0.8)&&!(b%4===3&&bar%4===3))tp=FULL;   /* the loud parts are a stream of half beats (a breath at the end of every fourth bar) */
+        if(diff===3?(w2>=0.5&&!(b%4===3&&bar%4===3)):(w2>=1&&bar%2===0&&b%4!==3))tp=FULL;   /* Expert: the loud parts are a stream of half beats (a breath every fourth bar). Hard: short streams only at the very loudest, every other bar */
         for(var k2=0;k2<2;k2++){
           if(!tp[slot+k2])continue;var t=Math.round(t0+k2*gap/2);if(occ(t,per*0.2))continue;
           if(k2===1&&occ(t,per*0.45))continue;
@@ -4288,7 +4289,7 @@ var FISH=(function(){
   var CX=0.5,CY=0.52,RX=0.2,RY=0.11,RIM_X=1.3,RIM_Y=1.55;
   var KINDS=[{n:"Minnow",pts:60,sp:0.7,jit:0.6,col:"#9fd8ff",len:5,pull:0},{n:"Perch",pts:120,sp:0.95,jit:0.8,col:"#F5C518",len:7,pull:0.04},{n:"Bass",pts:220,sp:1.25,jit:1.05,col:"#5bd17a",len:9,pull:0.08},{n:"Pike",pts:380,sp:1.6,jit:1.35,col:"#b9c79a",len:12,pull:0.13},{n:"Golden koi",pts:650,sp:1.9,jit:1.7,col:"#ffb02e",len:11,pull:0.17}];
   var CODE={idle:0,cast:1,wait:2,bite:3,reel:4,net:5,caught:6,snap:7,lost:8};
-  var LC=0.66,px=0.33,py=0.5,fy=0.5,drag=null;   /* the reel box: the fish swims up and down the left (REEL) column; your paddle (px, py: 0-1 across / down the water) follows your drag */
+  var LC=0.76,px=0.38,py=0.5,fy=0.5,drag=null,pvx=0,pvy=0,pxT=0.38,holdP=false,mouseX=null;   /* the reel box: the fish swims round the wide column; your paddle falls slowly, rises while you reel, bounces softly off the edges */   /* the reel box: the fish swims up and down the left (REEL) column; your paddle (px, py: 0-1 across / down the water) follows your drag */
   var on=false,st="idle",stAt=0,ang=Math.PI/2,score=0,count=0,kind=0,zx=0,reeling=false,prog=0,ten=0,fx=0,fv=0,ftg=0,ftgAt=0,net=null,pops=[],lastT=0,biteAt=0,openAt=0,shadows=[],botF={},best=0,heldUp=false;
   function $(id){return document.getElementById(id);}
   function fishOn(){return GAME.mode==="fish"||(typeof ROUND!=="undefined"&&ROUND.mode==="fish");}
@@ -4300,15 +4301,15 @@ var FISH=(function(){
     var sec=(c.sections||[]).filter(function(s){return s[0]<=t;}).pop();return !!(sec&&/chorus|drop|finale/i.test(String(sec[1])));}
   function rimPos(a){return[CX+Math.cos(a)*RX*RIM_X,CY+Math.sin(a)*RY*RIM_Y];}
   function slotAng(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]&&viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(1,ids.length);return Math.PI/2+(i/n)*Math.PI*2+0.35;}
-  function set(s){st=s;stAt=performance.now();btn();}
+  function set(s){st=s;stAt=performance.now();if(s!=="reel"){holdP=false;drag=null;}document.body.classList.toggle("fish-reel",on&&s==="reel");btn();}
   function start(round){on=true;score=0;count=0;best=0;pops=[];botF={};ang=slotAng(myId);set("idle");document.body.classList.add("gaming-fish");$("fishUI").classList.add("on");hud();banner("🎣 GONE FISHING");}
-  function stop(){on=false;document.body.classList.remove("gaming-fish");$("fishUI").classList.remove("on");if(typeof goalHL==="function")goalHL(null,"");}   /* clear the CAST / NET tag so it doesn't hang about after the game */
+  function stop(){on=false;document.body.classList.remove("gaming-fish","fish-reel");$("fishUI").classList.remove("on");if(typeof goalHL==="function")goalHL(null,"");}   /* clear the CAST / NET tag so it doesn't hang about after the game */
   function banner(t){var b=$("fiBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("fiScore");if(h)h.textContent=score.toLocaleString();var c=$("fiCount");if(c)c.textContent=count?"🐟 ×"+count:"";}
   function btn(){var b=$("fiBtn");if(!b)return;var t=st==="idle"?"CAST":st==="net"?"NET!":st==="reel"?"REEL":st==="cast"||st==="wait"?"…":st==="bite"?"BITE!":"";
     b.firstChild.textContent=t;b.classList.toggle("hot",st==="idle"||st==="net");b.classList.toggle("dim",!(st==="idle"||st==="net"));
     var h=$("fiHint"),touch=window.matchMedia&&matchMedia("(pointer:coarse)").matches;if(!h)return;
-    h.textContent=st==="idle"?(touch?"Tap CAST · walk round the edge with the stick":"Space to cast · ← → walk round the edge"):st==="wait"||st==="cast"?"Waiting for a bite…":st==="reel"?(touch?"Drag: keep the glow on the fish":"Hold the mouse and move to keep the glow on the fish · left column REELS, right column SWAYS · don't snap the line!"):st==="net"?(touch?"Tap NET when the net is over the fish":"Space when the net is over the fish"):"";
+    h.textContent=st==="idle"?(touch?"Tap CAST · walk round the edge with the stick":"Space to cast · ← → walk round the edge"):st==="wait"||st==="cast"?"Waiting for a bite…":st==="reel"?(touch?"Top bar reels · bottom bar lets go · slide to steer":"Hold the mouse to reel (the paddle rises), let go and it falls · move the mouse left/right · keep it on the fish!"):st==="net"?(touch?"Tap NET when the net is over the fish":"Space when the net is over the fish"):"";
     if(typeof goalHL==="function")goalHL(st==="idle"||st==="net"?b:null,st==="idle"?"CAST":st==="net"?"NET IT":"");}
   /* the button: cast, or swing the net */
   function press(){if(!on)return;var now=performance.now();
@@ -4317,16 +4318,41 @@ var FISH=(function(){
       if(d<0.13){net.done=true;var K=KINDS[kind],perf=d<0.045,pts=Math.round(K.pts*(perf?1.5:1)*(1+(1-ten)*0.2));score+=pts;count++;best=Math.max(best,kind);GAME.moshPts(pts);hud();
         pops.push({t:now,txt:(perf?"PERFECT NET! ":"")+K.n+" +"+pts,col:K.col});if(kind>=3)banner(kind===4?"✨ GOLDEN KOI!":"🐟 "+K.n.toUpperCase()+"!");set("caught");}
       else{net.tries--;if(net.tries<=0){pops.push({t:now,txt:"It slipped the net!",col:"#ff8a8a"});set("lost");}else{net.sp*=1.25;pops.push({t:now,txt:"Missed! One more go",col:"#fff"});}}}}
-  /* drag anywhere (finger, or hold the mouse button) and the paddle moves with you, one to one */
-  function pdown(e){if(!on||(st!=="reel"&&st!=="net"))return false;if(st==="net"){press();return true;}drag={id:e.pointerId,x:e.clientX,y:e.clientY};return true;}
-  function pmove(e){if(!drag||e.pointerId!==drag.id)return false;var GB=geo(),dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
-    px=Math.max(0,Math.min(1,px+dx/GB.ww));py=Math.max(0,Math.min(1,py+dy/GB.wh));return true;}
-  function pup(e){if(drag&&e.pointerId===drag.id)drag=null;}
+  /* PC: hold the mouse button to reel (the paddle rises), let go and it falls; moving the mouse steers it left and right.
+     Phone: the two bars at the bottom are your pad: finger in the top bar reels, the bottom bar doesn't, and where your finger is across them is where the paddle goes. */
+  function inPad(x,y){var Q=padGeo();return x>=Q.x-16&&x<=Q.x+Q.w+16&&y>=Q.y-16&&y<=Q.y+Q.h*2+Q.dv+16;}
+  function padAt(x,y){var Q=padGeo();pxT=Math.max(0,Math.min(1,(x-Q.x)/Q.w));holdP=y<Q.y+Q.h+Q.dv/2;}
+  function pdown(e){if(!on||(st!=="reel"&&st!=="net"))return false;if(st==="net"){press();return true;}
+    if(e.pointerType==="mouse"){holdP=true;drag={id:e.pointerId,mouse:true};mouseX=e.clientX;return true;}
+    if(!inPad(e.clientX,e.clientY))return true;drag={id:e.pointerId,mouse:false};padAt(e.clientX,e.clientY);return true;}
+  function pmove(e){if(!on||st!=="reel")return false;
+    if(e.pointerType==="mouse"){var GB=geo();if(mouseX!==null)pxT=Math.max(0,Math.min(1,pxT+(e.clientX-mouseX)/GB.ww));mouseX=e.clientX;return true;}
+    if(!drag||e.pointerId!==drag.id)return false;padAt(e.clientX,e.clientY);return true;}
+  function pup(e){if(drag&&e.pointerId===drag.id){drag=null;holdP=false;}}
+  /* the pad: two bars side by side across the bottom, joined, like the box's columns laid flat */
+  function padGeo(){var h=Math.round(Math.max(30,Math.min(56,H*0.085))),dv=4,w,x;
+    if(TOUCHF&&W>H){var bw=Math.round(Math.min(H-70,420)*0.52),right=W-bw-18-60;w=Math.round(Math.min(460,right-Math.max(20,W*0.06)));x=Math.round(right-w);}   /* on its side: left of the box */
+    else{w=Math.round(W<600?W-24:Math.min(W*0.46,460));x=Math.round(W/2-w/2);}
+    var y=Math.round(H-h*2-dv-(W<600?24:16));return{x:x,y:y,w:w,h:h,dv:dv};}
+  function padDraw(g,now){var Q=padGeo(),P=ART.PX.unit(g),F=6;g.save();
+    g.fillStyle="rgba(0,0,0,.35)";g.fillRect(Q.x-F+3,Q.y-F+3,Q.w+F*2,Q.h*2+Q.dv+F*2);
+    bamboo(g,Q.x-F,Q.y-F,Q.w+F*2,F,false);bamboo(g,Q.x-F,Q.y+Q.h*2+Q.dv,Q.w+F*2,F,false);bamboo(g,Q.x-F,Q.y,F,Q.h*2+Q.dv,true);bamboo(g,Q.x+Q.w,Q.y,F,Q.h*2+Q.dv,true);
+    g.fillStyle=reeling?"#2a4a7a":"#1c1830";g.fillRect(Q.x,Q.y,Q.w,Q.h);g.fillStyle=reeling?"#1c1830":"#3a2a5a";g.fillRect(Q.x,Q.y+Q.h+Q.dv,Q.w,Q.h);
+    g.fillStyle="#fbf6ea";g.fillRect(Q.x,Q.y+Q.h,Q.w,Q.dv);g.fillRect(Math.round(Q.x+Q.w/2-1),Q.y+Q.h,2,Q.dv);
+    g.font="700 10px 'Silkscreen',ui-monospace,monospace";g.textAlign="left";g.fillStyle=reeling?"#fff":"rgba(255,255,255,.55)";g.fillText("\u25B2 REEL",Q.x+6,Q.y+13);g.fillStyle=!reeling?"#fff":"rgba(255,255,255,.55)";g.fillText("\u25BC SWAY",Q.x+6,Q.y+Q.h+Q.dv+13);
+    var zw=Math.max(24,Q.w*0.16),zx2=Math.round(Q.x+px*Q.w-zw/2),zy=reeling?Q.y:Q.y+Q.h+Q.dv;g.fillStyle=zx===1?"rgba(214,255,70,.55)":"rgba(214,255,70,.3)";g.fillRect(zx2,zy+3,Math.round(zw),Q.h-6);
+    g.strokeStyle=zx===1?"#efff8a":"#c9e06a";g.lineWidth=2;g.strokeRect(zx2+1,zy+4,Math.round(zw)-2,Q.h-8);
+    g.restore();}
   /* the box: a tall bamboo frame on the right; REEL column, a white strip, SWAY column, and the catch meter */
-  function geo(){var Hb=Math.round(Math.min(H*0.72,400)),Wb=Math.round(Hb*0.44),F=Math.max(6,Math.round(Hb*0.03)),mw=Math.max(8,Math.round(Wb*0.12)),dv=Math.max(3,Math.round(F*0.5));
-    var bx=Math.round(W-Wb-(W>1000?160:128)),by=Math.round(Math.max(64,H*0.47-Hb/2));if(W<600)bx=Math.round(W-Wb-12);   /* out on the right, clear of the pool, just left of the button */
+  function geo(){var Hb=Math.round(Math.min(H*(W>W0()?0.62:0.72),400)),Wb=Math.round(Hb*0.52),F=Math.max(6,Math.round(Hb*0.03)),mw=Math.max(8,Math.round(Wb*0.12)),dv=Math.max(3,Math.round(F*0.5));
+    var bx=Math.round(W-Wb-(W>1000?160:128)),by=Math.round(Math.max(64,H*0.47-Hb/2));if(W<600)bx=Math.round(W-Wb-12);
+    if(TOUCHF){if(W>H){Hb=Math.round(Math.min(H-70,420));by=Math.round(Math.max(48,(H-Hb)/2+10));Wb=Math.round(Hb*0.52);bx=Math.round(W-Wb-18);}   /* a phone on its side: the box full height on the right, the pad beside it */
+      else{var Q=padGeo();Hb=Math.min(Hb,Q.y-by-26);by=Math.max(54,Math.min(by,Q.y-Hb-26));Wb=Math.round(Hb*0.52);bx=Math.round(W-Wb-12);}   /* upright: the box above the pad */
+      F=Math.max(6,Math.round(Hb*0.03));mw=Math.max(8,Math.round(Wb*0.12));dv=Math.max(3,Math.round(F*0.5));}   /* out on the right, clear of the pool, just left of the button */
     var wx=bx+F,wy=by+F,ww=Wb-F*3-mw,wh=Hb-F*2,lw=Math.round(ww*LC)-dv/2;
     return{bx:bx,by:by,Wb:Wb,Hb:Hb,F:F,mw:mw,dv:dv,wx:wx,wy:wy,ww:ww,wh:wh,lw:lw,mx:wx+ww+F,padR:Math.max(12,lw*0.36)};}
+  var TOUCHF=!!(window.matchMedia&&matchMedia("(pointer:coarse)").matches);function W0(){return 0;}
+  function FT(k,d){try{var v=TUNE.v("fi."+k);return isFinite(v)?v:d;}catch(e){return d;}}
   function pickKind(){var w=loud()?[1,2,3,3,1.6]:[5,4,2.6,1,0.25],t=w.reduce(function(a,b){return a+b;},0),r=Math.random()*t;for(var i=0;i<w.length;i++){r-=w[i];if(r<=0)return i;}return 0;}
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
@@ -4334,17 +4360,21 @@ var FISH=(function(){
     if(st==="idle"){if(Math.abs(inp.x)>0.2){var dir=Math.sin(ang)>0?-1:1;ang+=inp.x*dir*dt*0.9;}}
     else if(st==="cast"&&age>0.5)set("wait");
     else if(st==="wait"&&now>=biteAt){kind=pickKind();set("bite");}
-    else if(st==="bite"&&age>0.6){set("reel");prog=0.22;ten=0.15;fy=0.3+Math.random()*0.4;fv=0;ftg=fy;ftgAt=0;px=LC/2;py=fy;fx=LC/2;}
+    else if(st==="bite"&&age>0.6){set("reel");prog=0.35;ten=0.15;fy=0.3+Math.random()*0.4;fv=0;ftg=fy;ftgAt=0;px=pxT=LC/2;py=fy;pvx=pvy=0;fx=LC/2;holdP=false;}
     else if(st==="reel"){var K=KINDS[kind],GB=geo();
       /* the fish darts up and down the REEL column, wiggling side to side */
       if(now>ftgAt){ftg=Math.max(0.06,Math.min(0.94,ftg+(Math.random()-0.5)*0.9*K.jit));if(Math.random()<0.25)ftg=1-ftg;ftgAt=now+(380+Math.random()*900)/K.jit;}
       fv+=((ftg-fy)*K.sp*9-fv*4.5)*dt;fy=Math.max(0.04,Math.min(0.96,fy+fv*dt));
       fx=LC*0.5+Math.sin(now/(520/K.jit))*LC*0.2+Math.sin(now/(190/K.jit))*LC*0.06;
-      /* the stick / keys move the paddle too: up/down to follow, left = the REEL column, right = the SWAY column */
-      if(!drag){if(Math.abs(inp.y)>0.2)py=Math.max(0,Math.min(1,py+inp.y*dt*1.3));if(inp.x<-0.3)px+=(LC*0.5-px)*Math.min(1,dt*12);else if(inp.x>0.3)px+=((LC+1)/2-px)*Math.min(1,dt*12);}
-      reeling=px<LC;var over=Math.hypot((px-fx)*GB.ww,(py-fy)*GB.wh)<GB.padR;zx=over?1:0;
-      if(reeling){if(over){prog+=dt*0.34/(1+kind*0.12);ten+=dt*(0.1+K.pull);}else{prog-=dt*0.08;ten+=dt*(0.5+K.pull);}}
-      else{ten-=dt*0.45;prog-=dt*0.05;}
+      /* reeling = holding (the mouse button, your finger in the top bar, or ↑ / W); the keys' ← → steer too */
+      reeling=holdP||!!held.up;if(Math.abs(inp.x)>0.2&&!drag)pxT=Math.max(0,Math.min(1,pxT+inp.x*dt*0.9));
+      /* the paddle: falls slowly, rises while you reel; slides across after your finger / mouse; a soft bounce off every edge */
+      pvy+=(reeling?-FT("up",3.4):FT("fall",1.9))*dt;pvy*=Math.exp(-3.6*dt);py+=pvy*dt;   /* rises about 0.9 of the box a second, falls about 0.5; it answers quickly when you let go */
+      if(py<0){py=0;pvy=Math.abs(pvy)*0.45;}if(py>1){py=1;pvy=-Math.abs(pvy)*0.45;}
+      pvx+=((pxT-px)*40-pvx*9)*dt;px+=pvx*dt;if(px<0){px=0;pvx=Math.abs(pvx)*0.45;pxT=Math.max(pxT,0);}if(px>1){px=1;pvx=-Math.abs(pvx)*0.45;pxT=Math.min(pxT,1);}
+      var over=Math.hypot((px-fx)*GB.ww,(py-fy)*GB.wh)<GB.padR;zx=over?1:0;
+      if(reeling){if(over){prog+=dt*0.3/(1+kind*0.12);ten+=dt*(0.08+K.pull*0.8);}else{prog-=dt*0.018;ten+=dt*(0.3+K.pull*0.8);}}
+      else{ten-=dt*0.5;prog+=over?dt*0.06:-dt*0.012;}   /* off the fish the meter only drains slowly: from the start it takes about 20 s of missing before it gets away */   /* on the fish but not reeling still edges it in a little */
       ten=Math.max(0,ten);
       if(ten>=1){pops.push({t:now,txt:"SNAP! The line broke",col:"#ff6b6b"});set("snap");if(navigator.vibrate)try{navigator.vibrate(120);}catch(e){}}
       else if(prog<=0){pops.push({t:now,txt:"It got away…",col:"#ff8a8a"});set("lost");}
@@ -4402,7 +4432,7 @@ var FISH=(function(){
       if(code===3){g.font="900 "+(s*7)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="#F5C518";g.fillText("!",bx,by-s*6);g.strokeStyle="rgba(255,255,255,.6)";var rr=(now%500)/500;ART.PX.ringO(g,bx,by+s,s*3+rr*s*8,(s*3+rr*s*8)*0.45,0);}
       if(code>=4){g.strokeStyle="rgba(255,255,255,.35)";var r2=(now%700)/700;ART.PX.ringO(g,bx,by+s,s*2+r2*s*6,(s*2+r2*s*6)*0.45,0);}
     });
-    if(on&&(st==="reel"||st==="net"))panel(g,now,s);
+    if(on&&(st==="reel"||st==="net")){panel(g,now,s);if(TOUCHF&&st==="reel")padDraw(g,now);}
     pops=pops.filter(function(p){var a3=(now-p.t)/1400;if(a3>1)return false;var me=viewers[myId];var px=me?me.x*W:W/2,py=me?me.y*H-s*36:H/2;g.globalAlpha=1-a3*a3;g.font="900 "+Math.max(14,s*6)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.75)";g.strokeText(p.txt,px,py-a3*30);g.fillStyle=p.col;g.fillText(p.txt,px,py-a3*30);return true;});
     g.globalAlpha=1;
   }
@@ -4421,7 +4451,7 @@ var FISH=(function(){
     g.fillStyle=act?"rgba(255,255,255,.35)":"rgba(255,255,255,.15)";for(var k=0;k<6;k++){var wx=x+((k*71+now/40)%w),wy=y+2+((k*13)%Math.max(1,h-4));g.fillRect(Math.round(wx),Math.round(wy),5,1);}
     g.fillStyle="#3c7a3a";for(var q=0;q<4;q++){var ex=x+w*(0.12+q*0.27);g.fillRect(Math.round(ex),y+h-4,2,4);g.fillRect(Math.round(ex)+3,y+h-6,2,6);}}
   function panel(g,now,s){
-    var K=KINDS[kind],G=geo(),P=ART.PX.unit(g),fs=Math.max(2.2,G.lw/(K.len*0.9)),X=function(u){return G.wx+u*G.ww;},Y=function(v){return G.wy+v*G.wh;};
+    var K=KINDS[kind],G=geo(),P=ART.PX.unit(g),fs=Math.max(2,Math.min(G.lw/(K.len*1.5),G.padR*1.6/(K.len*0.7))),X=function(u){return G.wx+u*G.ww;},Y=function(v){return G.wy+v*G.wh;};
     g.save();
     /* the frame: bamboo poles and caps, a cream inner edge, a drop shadow */
     g.fillStyle="rgba(0,0,0,.35)";g.fillRect(G.bx+4,G.by+4,G.Wb,G.Hb);
@@ -4429,10 +4459,9 @@ var FISH=(function(){
     bamboo(g,G.bx,G.by,G.F,G.Hb,true);bamboo(g,G.bx+G.Wb-G.F,G.by,G.F,G.Hb,true);bamboo(g,G.wx+G.ww,G.by,G.F,G.Hb,true);
     bamboo(g,G.bx,G.by,G.Wb,G.F,false);bamboo(g,G.bx,G.by+G.Hb-G.F,G.Wb,G.F,false);
     /* the water: REEL column, the white strip, SWAY column */
-    var lit=st==="reel"?(reeling?0:1):-1;
-    waterV(g,G.wx,G.wy,G.lw,G.wh,lit!==1,now);waterV(g,G.wx+G.lw+G.dv,G.wy,G.ww-G.lw-G.dv,G.wh,lit!==0,now);
+    waterV(g,G.wx,G.wy,G.lw,G.wh,true,now);waterV(g,G.wx+G.lw+G.dv,G.wy,G.ww-G.lw-G.dv,G.wh,false,now);
     g.fillStyle="#fbf6ea";g.fillRect(G.wx+G.lw,G.wy,G.dv,G.wh);
-    g.font="700 9px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="rgba(255,255,255,.75)";g.fillText("REEL",G.wx+G.lw/2,G.wy+G.wh-6);g.fillText("SWAY",G.wx+G.lw+G.dv+(G.ww-G.lw-G.dv)/2,G.wy+G.wh-6);
+    g.font="700 9px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="rgba(255,255,255,.75)";g.fillText(reeling?"REELING \u25B2":"HOLD TO REEL",G.wx+G.lw/2,G.wy+G.wh-6);
     /* the catch meter: fills green from the bottom */
     var pr=st==="net"?1:Math.max(0,Math.min(1,prog));g.fillStyle="#3a2a18";g.fillRect(G.mx,G.wy,G.mw,G.wh);g.fillStyle=pr>0.8?"#9cff4a":"#5bd13a";var mh=Math.round(G.wh*pr/P)*P;g.fillRect(G.mx,G.wy+G.wh-mh,G.mw,mh);
     g.fillStyle="rgba(255,255,255,.3)";g.fillRect(G.mx,G.wy+G.wh-mh,Math.max(1,Math.round(G.mw/4)),mh);
@@ -4460,7 +4489,7 @@ var FISH=(function(){
   function waterV(g,x,y,w,h,act,now){var gr=ART.PX.lg(g,0,y,0,y+h);gr.addColorStop(0,act?"#6cc4ff":"#4a8fcf");gr.addColorStop(1,act?"#2f86e0":"#2b5f9c");g.fillStyle=gr;g.fillRect(x,y,w,h);
     g.fillStyle=act?"rgba(255,255,255,.3)":"rgba(255,255,255,.12)";for(var k=0;k<5;k++){var wy2=y+((k*57+now/30)%h);g.fillRect(Math.round(x+((k*29)%Math.max(1,w-8))+2),Math.round(wy2),5,1);}
     g.fillStyle="#3c7a3a";for(var q=0;q<2;q++){var ex=x+w*(0.25+q*0.45);g.fillRect(Math.round(ex),y+h-16,2,6);g.fillRect(Math.round(ex)+3,y+h-18,2,8);}}
-  window.ukFish=function(){var GB=geo();return{box:GB,pad:[+px.toFixed(3),+py.toFixed(3)],fish:[+fx.toFixed(3),+fy.toFixed(3)],reeling:reeling,over:zx===1,on:on,st:st,score:score,count:count,kind:kind,prog:+prog.toFixed(2),ten:+ten.toFixed(2),fx:+fx.toFixed(2),zx:+zx.toFixed(2),net:net&&{x:+net.x.toFixed(2),fx:net.fx,tries:net.tries}};};
+  window.ukFish=function(){var GB=geo();return{box:GB,padGeo:padGeo(),hold:reeling,vy:+pvy.toFixed(3),pad:[+px.toFixed(3),+py.toFixed(3)],fish:[+fx.toFixed(3),+fy.toFixed(3)],reeling:reeling,over:zx===1,on:on,st:st,score:score,count:count,kind:kind,prog:+prog.toFixed(2),ten:+ten.toFixed(2),fx:+fx.toFixed(2),zx:+zx.toFixed(2),net:net&&{x:+net.x.toFixed(2),fx:net.fx,tries:net.tries}};};
   window.ukFishForce=function(o){if(o.st)set(o.st);if(o.biteAt!==undefined)biteAt=performance.now()+o.biteAt;if(o.prog!==undefined)prog=o.prog;if(o.ten!==undefined)ten=o.ten;if(o.kind!==undefined)kind=o.kind;if(o.netAt!==undefined&&net)net.x=o.netAt;};
   return{pdown:pdown,pmove:pmove,pup:pup,start:start,stop:stop,tick:tick,press:press,under:under,draw:draw,wire:wire,looks:looks,facing:facing,fishOn:fishOn,reset:function(){openAt=0;shadows=[];},get on(){return on;},get st(){return st;},get score(){return score;}};
 })();
@@ -5542,7 +5571,7 @@ var CTFG=(function(){
       if(Math.hypot(inp.x,inp.y)>0.2)face=ART.face8(inp.x,inp.y,face);}
     sendPos(me.x/I.w,me.y/I.h);
     var mm=viewers[myId];if(mm){mm.tx=mm.x=me.x/I.w;mm.ty=mm.y=me.y/I.h;}
-    if(PRACTICE.on&&going){var ev=C.step(st,I,myId,me.x,me.y,Date.now());botTick(dt,now);events(ev);}
+    if((PRACTICE.on||LBOTS())&&going){var ev=C.step(st,I,myId,me.x,me.y,Date.now());botTick(dt,now);events(ev);}
   }
   /* practice: the practice dancers play, with the same brains as the server's bots */
   function botTick(dt,now){
@@ -5627,7 +5656,7 @@ var CTFG=(function(){
     var hn=$("ctfHint");if(hn){var cf2=C.carrying(st,myId),early=beat()<GO_BEAT+16;hn.style.display=early||now<hold?"":"none";   /* just at the start (and when tagged), so it never sits over the game */
       hn.textContent=now<hold?"Tagged! Back in a moment…":cf2>=0?"You've got the flag! Get it back to your base":kart?(matchMedia("(pointer:fine)").matches?"Point to drive · hold left click: drift & aim, let go: LAUNCH · right click: IMPACT":"Grab their flag · LAUNCH: hold, aim, let go · IMPACT knocks your flag home"):st.flags[team].at?"They've got your flag! Tag the carrier to send it home":"Grab the "+C.TNAME[1-team].toLowerCase()+" flag · "+(matchMedia("(pointer:fine)").matches?"point to run · hold click to sprint":"block them with your body · hold SPRINT (Space)");}
   }
-  window.ukCtf=function(){return{spr:{e:+spr.e.toFixed(2),on:spr.on},refill:st&&st.refill,on:on,me:{x:+me.x.toFixed(2),y:+me.y.toFixed(2)},team:team,caps:st&&st.caps,flags:st&&st.flags,score:st&&st.score,teams:st&&st.teams,beat:+beat().toFixed(2),pos:st&&st.pos};};
+  window.ukCtf=function(){return{spr:{e:+spr.e.toFixed(2),on:spr.on},refill:st&&st.refill,on:on,me:{x:+me.x.toFixed(2),y:+me.y.toFixed(2)},team:team,caps:st&&st.caps,flags:st&&st.flags,score:st&&st.score,teams:st&&st.teams,beat:+beat().toFixed(2),pos:st&&st.pos,bots:Object.keys(bots).reduce(function(o,k){o[k]=[bots[k].x,bots[k].y];return o;},{})};};
   window.ukCtfTp=function(x,y){if(!/[?&]practice/.test(location.search))return;me.x=x;me.y=y;};   /* test hook: move yourself (test runs only) */
   window.ukKflagTest=function(nb){window.__testKflag=1;window.__testMode="ctf";ukWalkTest(nb===undefined?5:nb);window.__testKflag=0;};
   window.ukCtfTest=function(nb){window.__testMode="ctf";ukWalkTest(nb===undefined?5:nb);};
@@ -8174,7 +8203,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.82.4",SERVER_VERSION="";
+var PAGE_VERSION="1.82.6",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8758,7 +8787,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.4"></script>
+<script src="lab.js?v=1.82.6"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
