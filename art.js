@@ -502,6 +502,9 @@ var ART=(function(){
     /* headbanging: bowed right down, the hair hangs over the face; flung back up, it flies */
     if(hd>0.55&&hair!==0&&hair!==4&&hair!==17){px(-5,-13+hy,10,6,hc);px(-6,-12+hy,1,6,hc);px(5,-12+hy,1,6,hc);px(-5,-7+hy,10,1,hcD);}
     if(hd<-0.3&&hair!==0){px(-5,-19,2,3,hc);px(-1,-20,2,4,hc);px(3,-19,2,3,hc);px(-7,-17,2,2,hc);px(5,-17,2,2,hc);}
+    /* the hair windmill: a long sweep of hair whipping round the head in a circle (with a fainter trail behind it) */
+    if(st.swing!==undefined&&st.swing!==null&&hair!==0&&D!==1){var sw0=st.swing,hcx=0,hcy=-12+hy;
+      for(var tr=2;tr>=0;tr--){var a5=sw0-tr*0.45,cl5=tr===0?hc:tr===1?hcD:shade(hc,-0.35);for(var r5=4;r5<=(tr===0?12:9);r5+=2){var w5=tr===0?3:2;px(Math.round(hcx+Math.cos(a5)*r5)-1,Math.round(hcy+Math.sin(a5)*r5)-1,w5,w5,cl5);}}}
     SEC="extra";
     /* extras */
     var ex=L.extra;
@@ -572,7 +575,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     if(HIDECHAR)return;st=st||{};if(!L)L=random(7);
-    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,head:st.head||0,skates:st.skates==="ice"?"ice":!!st.skates};
+    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,head:st.head||0,swing:st.swing,skates:st.skates==="ice"?"ice":!!st.skates};
     /* which way they face: 0 front, 1 facing right, 2 back, 3 facing left (the right-facing side view, mirrored) */
     /* 0 front, 1 right, 2 back, 3 left, 4 front-right, 5 back-right, 6 back-left, 7 front-left; the left ones are the right ones mirrored */
     var DIR=(((st.dir|0)%8)+8)%8,SX=st.sx!==undefined?st.sx:1,MIR=DIR===3?1:DIR===6?5:DIR===7?4:0;
@@ -1953,7 +1956,8 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       o.legL=wd4;o.legR=-wd4;o.lgL=o.lgR=7-lo4*0.3;o.bob=lo4+down*3*hard;
       o.armL=0.25+down*0.5;o.armR=-0.25-down*0.5;o.mouth=down>0.7;o.head=hp4>0.55&&hp4<0.8?-0.6:down;   /* head whips down, the hair flies on the way back */
       if(m4===1){   /* hair windmill: the head circling round, the body swinging with it */
-        var ca=bp*Math.PI*f4;o.dx=Math.cos(ca)*3*hard;o.rot=Math.sin(ca)*0.16*hard;o.bob=lo4+(Math.sin(ca)*0.5+0.5)*3*hard;o.head=Math.sin(ca)>0.3?Math.sin(ca):Math.sin(ca)<-0.5?-0.6:0;o.armL=0.3+Math.max(0,Math.sin(ca))*0.4;o.armR=-0.3-Math.max(0,-Math.sin(ca))*0.4;
+        var ca=bp*Math.PI*f4;o.dx=Math.cos(ca)*3*hard;o.rot=Math.cos(ca)*0.14*hard;o.bob=lo4+(Math.sin(ca)*0.5+0.5)*3*hard;o.head=Math.max(0,Math.sin(ca))*0.5;o.armL=0.3+Math.max(0,Math.sin(ca))*0.4;o.armR=-0.3-Math.max(0,-Math.sin(ca))*0.4;
+        o.swing=ca;   /* the hair whips right round in a circle, one turn every 2 beats */
       }else if(m4===2){   /* air guitar: left hand out on the neck, the right hand strumming hard on the eighths, still banging */
         o.armL=1.15;o.alL=8;o.armR=-0.55+Math.sin(bp*Math.PI*4)*0.35;o.alR=5;o.rot=-0.05;
       }else if(m4===3){   /* rock on (from a clip): one arm straight up throwing the horns, still banging, the other hand by the hip */
@@ -2666,6 +2670,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.95",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.81.96",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.96 — Triples, a circular hair windmill, T-step faces front
+
+1. **Ice free dance triples:** every third double (once the cascades start) gets a third dot in the middle of its line, a beat after the first tap. The pulse runs through it: tap, tap, tap. Your skater keeps flowing through the middle.
+2. **Hair windmill** (Headbang): the hair now whips right round the head in a full circle (right, down over the face, left, up) with a fainter trail behind, while the head and body circle with it. Also on the performer's view.
+3. **T-step** (Shuffle, and Keepy uppy's stick-out-sideways move) always faces the crowd while it travels; it no longer turns to walk sideways. Spins and deliberate 90 / 180 turns still work.
+
 ## v1.81.95 — Ice free dance: connected doubles that pulse and cascade
 
 1. Each double's line is drawn in its first move's colour. Once its first target's beat comes, a **pulse runs over the line** and lands on the second target right on its beat: tap the second one as the pulse arrives (no tracing).
