@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.97 — Keepy uppy buttons in the bottom-right corner
+
+1. **Keepy uppy on a phone:** JUMP sits in the bottom-right corner, level with the stick on the left, with SPIN above TWIRL just to its left. They no longer float halfway up the right side over the dancers.
+2. **On a PC** the same layout, slightly smaller (Space, Q and E still work).
+
 ## v1.81.96 — Triples, a circular hair windmill, T-step faces front
 
 1. **Ice free dance triples:** every third double (once the cascades start) gets a third dot in the middle of its line, a beat after the first tap. The pulse runs through it: tap, tap, tap. Your skater keeps flowing through the middle.
