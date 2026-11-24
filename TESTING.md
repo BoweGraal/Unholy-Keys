@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.1 — Fishing: bamboo reel bar
+
+1. **The reel panel** now looks like Stardew Valley's fishing bar turned on its side: a bamboo frame round two strips of water, a green catch box, and the fish glowing when it's in the box while you reel.
+2. **Bottom bar renamed:** the top bar is "▲ REEL" and the bottom bar is "▼ SWAY · NO REEL" (it was SLACK). Same controls: up reels, down sways without reeling. Hints and the help card say the same.
+3. **Catch meter and line tension:** the catch meter is a bamboo tube underneath that fills green. Line tension is the ring round the reel at its end; it flashes red with "SNAP!" when it's about to break, and the handle spins while you reel.
+4. **Fish** have a dark outline so pale ones (the minnow) stand out on the water.
+
 ## v1.82.0 — 2-parters (Ice rink → Ski, Fishing → Bumper boats), and two new games
 
 **Needs a server redeploy** (new modes, scores carry over between the two halves, server bots play the new games).
