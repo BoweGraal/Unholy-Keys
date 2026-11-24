@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.22 — No Next Song popup at the end of a song
+
+- When a song or backing track finishes on the performer page, the **Next Song** picker no longer pops up over the screen. You just get the small "Song ended" notice. The picker still opens from its button whenever you want it.
+- Check: let a song play to the end on the performer page. No popup, just the notice.
+
 ## v1.82.21 — Refresh lands on the front page; menu music at a normal level
 
 - **Refreshing goes to the front page.** The Practice button used to put `?practice` in the address, so every refresh after that jumped straight onto the dance floor. It doesn't any more, and an address left with a bare `?practice` from before is cleaned up on load and stays on the front page. Links with extra flags (tuning lab, test drives, the host's embed) still go straight in.
