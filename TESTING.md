@@ -1688,6 +1688,18 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.30 — Auto band: a computer band that plays along with the song
+
+**Needs a server redeploy** (the server passes the band on to the audience).
+
+- **🥁 Auto band** (a new tickbox in Start a song, next to Auto key / Auto stage; it's remembered): when the song starts, its analysis now listens to the music itself too, and puts a computer band on stage with you. Everyone sees it on their stage.
+  - **Who's in the band** comes from the song: a **drummer** when there's a steady kick / snare on the beat, a **bassist** when there's weight in the low end, a **guitarist** (electric when it's bright and gritty, acoustic when it's not) and/or **keys** when the middle is full. An electronic track like Deep 808 Groove gets drums and bass. The other site songs get the full band.
+  - **The drummer hits with the song's real drum hits**: the analysis finds the kicks, snares and hats.
+  - **Slow and fast parts:** every couple of bars is marked slow, mid or fast from how loud and how busy it is. The band follows: in slow parts the bass plays every other beat, the guitar lets chords ring for a bar and the drummer just keeps time on the hat; in fast parts the bass drives short notes and the guitar strums eighths.
+  - Works for your own song files and site songs. For YouTube songs that went through practice, it uses the stored analysis (drums, bass and guitar).
+  - The band leaves the stage when the song ends or is paused.
+- Check: Start a song → tick Auto band → pick a site song → Start: the band appears round you, the drummer hitting with the drums, and they ease off in the quiet parts. Viewers see the same band.
+
 ## v1.82.29 — Jump on stage: viewers play an instrument between songs
 
 **Needs a server redeploy** (the server keeps the stage list and passes the notes on).

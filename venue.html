@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.29"></script>
-<script src="gfx.js?v=1.82.29"></script>
-<script src="art.js?v=1.82.29"></script>
-<script src="voice.js?v=1.82.29"></script>
-<script src="instruments.js?v=1.82.29"></script>
-<script src="kart.js?v=1.82.29"></script>
-<script src="explain.js?v=1.82.29"></script>
+<script src="tune.js?v=1.82.30"></script>
+<script src="gfx.js?v=1.82.30"></script>
+<script src="art.js?v=1.82.30"></script>
+<script src="voice.js?v=1.82.30"></script>
+<script src="instruments.js?v=1.82.30"></script>
+<script src="kart.js?v=1.82.30"></script>
+<script src="explain.js?v=1.82.30"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2148,7 +2148,7 @@ function handleMsg(msg){
     backToJoin(safeText(msg.msg,80)||"Could not join that room");
     return;
   }
-  if(t==="room-state"){if(msg.stage)setTimeout(function(){STAGEUP.onList(msg.stage);},0);SRV.reported(msg.host,msg.hostName);if(msg.round&&msg.round.tug)setTimeout(function(){MOSH.onTug({s:msg.round.tug});},0);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
+  if(t==="room-state"){if(msg.band)ART.BAND.set(msg.band.m,msg.band.p);if(msg.stage)setTimeout(function(){STAGEUP.onList(msg.stage);},0);SRV.reported(msg.host,msg.hostName);if(msg.round&&msg.round.tug)setTimeout(function(){MOSH.onTug({s:msg.round.tug});},0);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
     myId=msg.yourId||msg.myId;
     viewers={}; /* fresh list: after a reconnect the old one still held everyone, including a stale copy of you */
     if(Array.isArray(msg.viewers)){
@@ -2234,7 +2234,7 @@ function handleMsg(msg){
   }
   else if(t==="tug"){MOSH.onTug(msg);}
   else if(t==="react"){if(msg.id!==myId&&viewers[msg.id])addReact(msg.id,String(msg.k));}
-  else if(t==="stage"){STAGEUP.onList(msg);}else if(t==="stage-no"){STAGEUP.no(msg.why);}else if(t==="gnote"){STAGEUP.note(msg);}
+  else if(t==="stage"){STAGEUP.onList(msg);}else if(t==="stage-no"){STAGEUP.no(msg.why);}else if(t==="gnote"){STAGEUP.note(msg);}else if(t==="band"){if(msg.m)ART.BAND.set(msg.m,msg.p);else if(msg.p)ART.BAND.set(ART.BAND.members,msg.p);if(msg.e)ART.BAND.ev(msg.e,msg.i,msg.ms);}
   else if(typeof t==="string"&&t.indexOf("voice-")===0){VOICE.onMsg(msg);}
   else if(t==="note"){
     if(msg.on){
@@ -8321,6 +8321,7 @@ function drawPerformer(x,y){
   if(typeof PRACTICE!=="undefined"&&PRACTICE.on&&!isPerformerPlaying){var bp=typeof ROUND!=="undefined"&&ROUND.pos?ROUND.pos():-1e9,bb=bp>-1e8?ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),bp):now/500,bi=Math.floor(bb),fr=bb-bi,bms=500;
     _ps={midi:[60,64,67,72,67,64,62,65][((bi%8)+8)%8],on:fr<0.78,t0:now-fr*bms,off:now-fr*bms+0.78*bms,now:now,n:bi};}
   if(PERF.band)ART.INST.drawBand(ctx,x,y,s,PERF.band,_ps,Math.min(x,W-x)-8);   /* a choir or a section plays along around the performer */
+  ART.BAND.draw(ctx,x,y,s,now,Math.min(x,W-x)-8);   /* the performer's auto band */
   ART.INST.draw(ctx,x,y,s,performer.look||ART.looks.fromColor(performer.color,1),_pk,_ps);
   if(performer.name){ctx.font="bold 18px 'Silkscreen',ui-monospace,monospace";ctx.textAlign="center";ctx.textBaseline="top";var ny=y+12*s+3+6*s;ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,0.75)";ctx.strokeText(performer.name,x,ny);ctx.fillStyle="#fff";ctx.fillText(performer.name,x,ny);ctx.textBaseline="alphabetic";}
 }
@@ -8368,7 +8369,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.29",SERVER_VERSION="";
+var PAGE_VERSION="1.82.30",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8953,7 +8954,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.29"></script>
+<script src="lab.js?v=1.82.30"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

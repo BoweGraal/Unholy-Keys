@@ -14,11 +14,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.29"></script>
-<script src="art.js?v=1.82.29"></script>
-<script src="voice.js?v=1.82.29"></script>
-<script src="instruments.js?v=1.82.29"></script>
-<script src="kart.js?v=1.82.29"></script>
+<script src="gfx.js?v=1.82.30"></script>
+<script src="art.js?v=1.82.30"></script>
+<script src="voice.js?v=1.82.30"></script>
+<script src="instruments.js?v=1.82.30"></script>
+<script src="kart.js?v=1.82.30"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -954,7 +954,8 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <div class="opts"><label>Countdown <select id="lsSecs"><option value="0">none</option><option value="5">5 s</option><option value="10">10 s</option><option value="15">15 s</option><option value="20">20 s</option><option value="30">30 s</option></select></label><label class="g">Steps <select id="lsLevel"><option value="0.7">Easy</option><option value="1">Normal</option><option value="1.3">Hard</option></select></label><label class="g"><input type="checkbox" id="lsBattle"> &#9876; Battle (1 v 1s)</label><label class="g" title="For a whole show: once a game has been played it won't come up in the crowd vote again until every game has had a go"><input type="checkbox" id="lsFull"> &#127914; Full show <small id="lsPlayed" style="opacity:.7"></small></label><button type="button" id="lsShowReset" style="font:600 11px system-ui;background:none;border:1px solid rgba(255,255,255,.2);color:#ccc;border-radius:6px;padding:2px 8px;cursor:pointer">&#8634; New show</button></div>
       <div class="opts"><label class="g" title="Bots join so the room has this many people, and play the game with you. As real people arrive, bots leave to make room.">&#129302; Bots <select id="lsBots"></select></label>
         <label title="Sets your instrument's key from the song, and follows its key changes"><input type="checkbox" id="lsAutoKey"> &#127932; Auto key</label>
-        <label title="Changes the stage for each part of the song: intro, verse, chorus, solo, bridge, breakdown, finale, outro. A show you recorded for the song plays instead."><input type="checkbox" id="lsAutoStage"> &#127775; Auto stage</label></div>
+        <label title="Changes the stage for each part of the song: intro, verse, chorus, solo, bridge, breakdown, finale, outro. A show you recorded for the song plays instead."><input type="checkbox" id="lsAutoStage"> &#127775; Auto stage</label>
+        <label title="Listens to the song and puts a computer band on stage with you: drums, bass, guitar or keys, whichever the song has, hitting with the drums and easing off in the slow parts"><input type="checkbox" id="lsAutoBand"> &#129345; Auto band</label></div>
       <div class="note" id="lsNote"></div>
       <button id="lsStart" disabled>&#9654; Start</button>
     </div></div>
@@ -4942,7 +4943,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.29",SERVER_VERSION="";
+var PAGE_VERSION="1.82.30",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -4995,6 +4996,7 @@ function perfDraw(g,x,y,p,now,crowd,lay,H,named,demo){
   if(demo&&!PPLAY.on&&now-PPLAY.off>1500){var beat=Math.floor(now/420),ph=now%420;st={midi:[60,64,67,72,67,64,62,65][beat%8],on:ph<330,t0:now-ph,off:now-ph+330,now:now,n:beat};}
   if(st.on){pxGlow(g,x,y-6*p,24*p,p);}
   var _k=perfKind();if(PKIND.band)ART.INST.drawBand(g,x,y,p,PKIND.band,st,Math.min(x,(g.canvas.width/(window.devicePixelRatio>1?Math.min(2,window.devicePixelRatio):1))-x)-8);   /* a choir or a section plays along around you */
+  ART.BAND.draw(g,x,y,p,now,Math.min(x,(g.canvas.width/(window.devicePixelRatio>1?Math.min(2,window.devicePixelRatio):1))-x)-8);   /* the auto band round you */
   ART.INST.draw(g,x,y,p,perfLook,_k,st);
   if(crowd){var cr=ART.crowdPose(crowd.kind,crowd.age,x,y,p,crowd.target);ART.crowdFx(g,crowd.kind,x,y,p,crowd.age,2,cr.hands,crowd.target);}
   if(lay)ART.envFx(g,lay,H,x,y,p,now,2);
@@ -5703,6 +5705,7 @@ var LSET=(function(){
     $("lsSaved").onclick=function(e){e.stopPropagation();this.blur();if(confirm("Delete the saved show for this song?")){SONGMAP.clearSaved();bar();}};
     var ak=$("lsAutoKey"),as=$("lsAutoStage");if(ak){ak.checked=SONGMAP.cfg.autoKey;ak.onchange=function(){SONGMAP.cfg.autoKey=ak.checked;SONGMAP.save();};}
     if(as){as.checked=SONGMAP.cfg.autoStage;as.onchange=function(){SONGMAP.cfg.autoStage=as.checked;SONGMAP.save();};}
+    var ab=$("lsAutoBand");if(ab){ab.checked=SONGMAP.cfg.autoBand;ab.onchange=function(){SONGMAP.cfg.autoBand=ab.checked;SONGMAP.save();if(!ab.checked)BANDRUN.stop();};}
     var lb=$("lsBots"),bf=$("botFill");if(lb&&bf){lb.innerHTML=bf.innerHTML;lb.value=bf.value;lb.onchange=function(){bf.value=lb.value;bf.onchange&&bf.onchange();upd();};}
     $("lsClose").onclick=close;$("lsStart").onclick=function(){start();};
     $("lsPause").onclick=function(e){e.stopPropagation();this.blur();pause();};$("lsEnd").onclick=function(e){e.stopPropagation();this.blur();end(false);};
@@ -6108,12 +6111,15 @@ var CHART=(function(){
      Done a slice at a time; onProgress(0..1) is called between slices so the page stays responsive. */
   function envelope(x,sr,onProgress,done){
     var hop=sr/FPS,N=Math.max(0,Math.floor((x.length-NFFT)/hop)),env=new Float32Array(N),rms=new Float32Array(N),bright=new Float32Array(N),chroma=new Float32Array(N*12);
+    /* for the auto band: new sound in the kick range (under 190 Hz), the snare's crack (1.5-4 kHz) and the hats (5-8 kHz), and how much of the sound sits low (bass) or in the middle (guitars, keys) */
+    var fK=new Float32Array(N),fS=new Float32Array(N),fH=new Float32Array(N),eL=new Float32Array(N),eM=new Float32Array(N);
     var win=new Float32Array(NFFT),re=new Float32Array(NFFT),im=new Float32Array(NFFT),prev=new Float32Array(NFFT/2),i=0,k;
     for(k=0;k<NFFT;k++)win[k]=0.5-0.5*Math.cos(2*Math.PI*k/(NFFT-1));
     var lowBins=Math.max(2,Math.round(190/(sr/NFFT))),topBin=Math.min(NFFT/2,Math.round(8000/(sr/NFFT)));
     /* brightness: share of energy above 2.5 kHz (cymbals, distortion, a band at full tilt);
        chroma: energy per note name, 80 Hz to 2 kHz, for spotting the parts of the song that repeat */
     var brightBin=Math.round(2500/(sr/NFFT)),pcOf=new Int8Array(NFFT/2).fill(-1);
+    var sB0=Math.round(1500/(sr/NFFT)),sB1=Math.round(4000/(sr/NFFT)),hB0=Math.round(5000/(sr/NFFT)),mB0=Math.round(250/(sr/NFFT)),mB1=Math.round(2500/(sr/NFFT));
     for(k=Math.max(1,Math.round(80/(sr/NFFT)));k<Math.min(NFFT/2,Math.round(2000/(sr/NFFT)));k++){var fz=k*sr/NFFT;pcOf[k]=((Math.round(12*Math.log(fz/261.63)/Math.LN2)%12)+12)%12;}
     /* key chroma: a long, fine-grained look (about 0.37 s of sound) every quarter second, 110 Hz to 2 kHz, each bin counted only
        when it sits close to a real note, so the song's key can be worked out (the short look above is too coarse) */
@@ -6135,16 +6141,16 @@ var CHART=(function(){
         for(k=0;k<NFFT;k++){var v=x[o+k];re[k]=v*win[k];im[k]=0;e+=v*v;}
         rms[i]=Math.sqrt(e/NFFT);
         fft(re,im);
-        var f=0,tot=0,hiE=0,cb=i*12;
+        var f=0,tot=0,hiE=0,cb=i*12,fk=0,fs=0,fh=0,el=0,em=0;
         for(k=1;k<topBin;k++){
-          var p2=re[k]*re[k]+im[k]*im[k],l=Math.log(1+1000*Math.sqrt(p2)/NFFT*4),d=l-prev[k];if(d>0)f+=d*(k<=lowBins?3:1);prev[k]=l;
+          var p2=re[k]*re[k]+im[k]*im[k],l=Math.log(1+1000*Math.sqrt(p2)/NFFT*4),d=l-prev[k];if(d>0){f+=d*(k<=lowBins?3:1);if(k<=lowBins)fk+=d;else if(k>=sB0&&k<sB1)fs+=d;else if(k>=hB0)fh+=d;}prev[k]=l;if(k<=lowBins)el+=p2;else if(k>=mB0&&k<mB1)em+=p2;
           tot+=p2;if(k>=brightBin)hiE+=p2;if(pcOf[k]>=0)chroma[cb+pcOf[k]]+=p2;
         }
-        env[i]=f;bright[i]=tot>0?hiE/tot:0;
+        env[i]=f;bright[i]=tot>0?hiE/tot:0;fK[i]=fk;fS[i]=fs;fH[i]=fh;eL[i]=tot>0?el/tot:0;eM[i]=tot>0?em/tot:0;
         if(i%KH===0)keySlice(i);
       }
       if(i<N){if(onProgress){onProgress(i/N);setTimeout(slice,0);}else slice();}
-      else done(env,rms,{bright:bright,chroma:chroma,kc:kc,kh:KH});
+      else done(env,rms,{bright:bright,chroma:chroma,kc:kc,kh:KH,fK:fK,fS:fS,fH:fH,eL:eL,eM:eM});
     }
     slice();
   }
@@ -6360,9 +6366,40 @@ var CHART=(function(){
         bt=beats(e,bpm);
       }
       var res=steps(e,rms,ft,bt,bpm,opts.level||1,opts.seed||(n%100000+Math.round(bpm*10))),st=res.steps;
-      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop,keys:(res.map=structure(res.ii,bt)).keys,sections:res.map.sections});
+      cb({bpm:Math.round(bpm*10)/10,dur:Math.round(n/sr*1000),beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop,keys:(res.map=structure(res.ii,bt)).keys,band:(function(){try{return band(ft,rms,bt,bpm);}catch(x){return null;}})(),sections:res.map.sections});
     });
   }
+  /* ---- the auto band: from the analysis, who's in the band (drums, bass, guitar, keys), the drum hits (kick, snare, hats)
+     and the pace of each part of the song (slow / mid / fast), loosely, so a computer band can play along with you ---- */
+  function band(ft,rms,bt,bpm){
+    var N=rms.length;if(!N||!bt.length)return null;var i,b;
+    function picks(a,key,gapF,kMul){var out=[],last=-1e9;
+      var med=pct(a,0.6)||1e-6,thr=med*kMul;
+      for(i=2;i<N-2;i++){var v=a[i];if(v>thr&&v>=a[i-1]&&v>=a[i+1]&&v>=a[i-2]&&v>=a[i+2]&&i-last>=gapF){out.push([i*10+LAG,key]);last=i;}}return out;}
+    var gap=Math.max(8,Math.round(60*FPS/bpm/4));   /* no closer than a sixteenth */
+    var K=picks(ft.fK,"k",gap,3.2),Sn=picks(ft.fS,"s",gap,3.4),Hh=picks(ft.fH,"h",gap,3);
+    /* how much of the beat grid has a kick or snare on it: a real drummer */
+    var onB=0;for(b=0;b<bt.length;b++){var f0=bt[b]*10+LAG,hit=false;for(i=0;i<K.length&&!hit;i++)if(Math.abs(K[i][0]-f0)<60)hit=true;for(i=0;i<Sn.length&&!hit;i++)if(Math.abs(Sn[i][0]-f0)<60)hit=true;if(hit)onB++;}
+    var drumsF=onB/bt.length,low=pct(ft.eL,0.5),mid=pct(ft.eM,0.5),br=pct(ft.bright,0.5);
+    var m=[];if(drumsF>0.25)m.push("drums");if(low>0.12)m.push("bass");if(mid>0.3)m.push(br>0.12?"electric":"acoustic");if(mid>0.3&&br<0.08)m.push("keys");
+    if(m.indexOf("drums")<0&&drumsF>0.12)m.unshift("drums");if(!m.length)m=["keys"];
+    var hits=K.concat(Sn).concat(Hh.filter(function(h,k){return k%2===0;})).sort(function(a,c){return a[0]-c[0];});
+    /* pace: every 8 beats, how busy and how loud */
+    var segs=[],dens=[],loud=[];for(b=0;b<bt.length;b+=8){var a0=bt[b]*10,a1=(bt[Math.min(bt.length-1,b+8)]||bt[bt.length-1])*10+1,n=0,l=0,c=0;
+      hits.forEach(function(h){if(h[0]>=a0&&h[0]<a1)n++;});for(i=Math.floor(a0/10);i<Math.min(N,a1/10);i++){l+=rms[i];c++;}
+      segs.push(a0+LAG);dens.push(n/8);loud.push(c?l/c:0);}
+    var lq=pct(loud,0.33),hq=pct(loud,0.7),dq=pct(dens,0.33),dh=pct(dens,0.7),pace=[],prevP="";
+    var cls=segs.map(function(_,i){return (loud[i]<=lq&&dens[i]<=dh)||dens[i]<dq*0.6?"slow":(loud[i]>=hq&&dens[i]>=dq)?"fast":"mid";});
+    /* smoothed: a part has to last a couple of bars before the band changes gear */
+    var sm=cls.map(function(c,i){var a=cls[i-1]||c,z=cls[i+1]||c;return a===z?a:c;});
+    for(i=0;i<segs.length;i++){var pp=sm[i];if(pp!==prevP){pace.push([Math.round(segs[i]),pp]);prevP=pp;}}
+    return{m:m,hits:hits.map(function(h){return[Math.round(h[0]),h[1]];}),pace:pace,beats:bt.map(function(x){return x*10+LAG;}),bpm:bpm};}
+  /* the same from a stored analysis (a YouTube song: only the onset curve and the loudness per beat are kept) */
+  function bandFrom(e,bt,bpm,loudB){var hits=[],i,b,N=e.length,med=pct(e,0.6)||1e-6;
+    for(b=0;b<bt.length;b++){var f0=Math.round(bt[b]),pk=0;for(i=Math.max(0,f0-4);i<Math.min(N,f0+5);i++)if(e[i]>pk)pk=e[i];if(pk>med*2.2)hits.push([f0*10+LAG,b%2?"s":"k"]);}
+    var pace=[],prev="",lq=pct(loudB||[],0.33),hq=pct(loudB||[],0.7);
+    for(b=0;b<bt.length;b+=8){var l=0,c=0;for(i=b;i<Math.min(bt.length,b+8);i++){l+=(loudB&&loudB[i])||0;c++;}l=c?l/c:0;var pp=l<=lq?"slow":l>=hq?"fast":"mid";if(pp!==prev){pace.push([Math.round(bt[b]*10+LAG),pp]);prev=pp;}}
+    return{m:["drums","bass","electric"],hits:hits,pace:pace,beats:bt.map(function(x){return x*10+LAG;}),bpm:bpm};}
   /* ---- a song's analysis, kept small enough to store and share (for YouTube songs, where only the analysis is
      kept, never the sound). features() is everything analyse() measures before the steps are placed; fromFeatures()
      places the steps from it at any level and gives the same chart analyse() would. ---- */
@@ -6398,7 +6435,7 @@ var CHART=(function(){
     for(i=0;i<q.length;i++)e[i]=q[i]/65535*f.e.s;
     var ii={E:Float32Array.from(f.ii.E),loud:Float32Array.from(f.ii.loud),chroma:f.ii.ch.map(function(a){return Float32Array.from(a);}),peaks:f.ii.peaks.map(function(p){return p.slice();}),kch:f.ii.kc?f.ii.kc.map(function(a){return Float32Array.from(a);}):null};
     var bt=f.bt.slice(),bpm=f.bpm,res=steps(e,null,null,bt,bpm,opts.level||1,opts.seed||f.seed,ii),st=res.steps;
-    return{bpm:Math.round(bpm*10)/10,dur:f.dur,beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop,keys:(res.map=structure(res.ii,bt)).keys,sections:res.map.sections};
+    return{bpm:Math.round(bpm*10)/10,dur:f.dur,beats:bt.map(function(b){return b*10+LAG;}),steps:st.map(function(q){return q.length>2?[q[0]+LAG,q[1],q[2]]:[q[0]+LAG,q[1]];}),peaks:res.peaks,drop:res.drop,keys:(res.map=structure(res.ii,bt)).keys,band:(function(){try{return bandFrom(e,bt,bpm,ii.loud);}catch(x){return null;}})(),sections:res.map.sections};
   }
   /* ---- the song's map: what key it's in (and where that changes) and its parts (intro, verse, chorus, solo,
      bridge, breakdown, finale, outro). From the harmony and intensity of each beat.
@@ -6532,7 +6569,7 @@ var STAGEFX=(function(){
    song with no game, from analysing it in the background. */
 var SONGMAP=(function(){
   var map=null,title="",lastSec="",lastKey="",lastPos=-1,rec=null,saved=null,ri=0,prevSnap=null,job=0;
-  var cfg={autoKey:false,autoStage:false};try{var sv=JSON.parse(localStorage.getItem("uk_songmap")||"{}");/* Auto key always starts off and has to be ticked each time */if(sv.autoStage!==undefined)cfg.autoStage=!!sv.autoStage;}catch(e){}
+  var cfg={autoKey:false,autoStage:false,autoBand:false};try{var sv=JSON.parse(localStorage.getItem("uk_songmap")||"{}");if(sv.autoBand!==undefined)cfg.autoBand=!!sv.autoBand;/* Auto key always starts off and has to be ticked each time */if(sv.autoStage!==undefined)cfg.autoStage=!!sv.autoStage;}catch(e){}
   var NAMES={intro:"🌅 Intro",verse:"🎤 Verse",chorus:"🔥 Chorus",solo:"🎸 Solo",bridge:"🌉 Bridge",breakdown:"🌑 Breakdown",finale:"🎆 Finale",outro:"🌙 Outro"};
   /* the stage for each part, when Auto stage is on (only these settings change; the rest stays as you set it) */
   var LOOK={intro:{lights:"cool",fog:0.4,dark:0.3,lasers:0,fireworks:0},verse:{lights:"auto",fog:0.15,dark:0.1,lasers:0,fireworks:0},
@@ -6556,15 +6593,15 @@ var SONGMAP=(function(){
     if(o.kind==="track"&&o.f){
       var src=o.f.file&&o.f.file.arrayBuffer?o.f.file.arrayBuffer():o.f.url?fetch(o.f.url).then(function(r){return r.arrayBuffer();}):null;if(!src)return;
       src.then(function(ab){var OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;return new OC(1,2,44100).decodeAudioData(ab);})
-        .then(function(buf){if(my!==job)return;CHART.analyse(buf,{},function(c){if(my===job)map={keys:c.keys||[],sections:c.sections||[]};});}).catch(function(){});
+        .then(function(buf){if(my!==job)return;CHART.analyse(buf,{},function(c){if(my===job)map={keys:c.keys||[],sections:c.sections||[],band:c.band||null};});}).catch(function(){});
     }else if(o.kind==="yt"&&o.ready){
       var base=String(LIVE_URL||"").replace(/^ws(s?):\/\//,"http$1://").replace(/\/+$/,"");
-      fetch(base+"/yt/"+o.vid+".json").then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(f){if(my!==job)return;var c=CHART.fromFeatures(f,{});map={keys:c.keys||[],sections:c.sections||[]};}).catch(function(){});
+      fetch(base+"/yt/"+o.vid+".json").then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(f){if(my!==job)return;var c=CHART.fromFeatures(f,{});map={keys:c.keys||[],sections:c.sections||[],band:c.band||null};}).catch(function(){});
     }
   }
   /* every quarter second while it plays: the key, the part, the stage */
   function tick(pos){
-    if(!map){var rc=ROUNDS.current;if(rc&&rc.chart&&rc.chart.keys)map={keys:rc.chart.keys,sections:rc.chart.sections||[]};}
+    if(!map){var rc=ROUNDS.current;if(rc&&rc.chart&&rc.chart.keys)map={keys:rc.chart.keys,sections:rc.chart.sections||[],band:rc.chart.band||null};}
     if(map){
       var k=at(map.keys,pos);if(k&&cfg.autoKey){var kid=k[1]+"/"+k[2];if(kid!==lastKey){lastKey=kid;setKey(k);}}
       var sc=at(map.sections,pos);if(sc&&sc[1]!==lastSec){lastSec=sc[1];liveSend({type:"song-part",k:sc[1]});
@@ -6591,10 +6628,30 @@ var SONGMAP=(function(){
   function part(){return lastSec?NAMES[lastSec]:"";}
   window.ukStageFx=function(){return STAGEFX.fx;};window.ukBacking=function(t){if(t!==undefined&&backingAudio)backingAudio.currentTime=t;return backingAudio?backingAudio.currentTime:null;};
   window.ukSongMap=function(){return{map:map,part:lastSec,key:lastKey,rec:rec?rec.ev.length:-1,saved:saved?saved.length:0,cfg:cfg};};
-  return{start:start,tick:tick,stop:stop,logFx:logFx,toggleRec:toggleRec,clearSaved:clearSaved,part:part,cfg:cfg,save:save,
+  return{band:function(){return map&&map.band||null;},start:start,tick:tick,stop:stop,logFx:logFx,toggleRec:toggleRec,clearSaved:clearSaved,part:part,cfg:cfg,save:save,
     get recording(){return !!rec;},get hasSaved(){return !!saved;},savedFor:function(t){return !!shows()[sk(t)];},keyNow:function(){if(!map)return "";var k=at(map.keys,lastPos);return k?keyName(k):"";}};
 })();
 window.addEventListener("load",function(){STAGEFX.init();});
+/* the auto band, while a song plays with Auto band on: steps through the song's drum hits and beats as it plays, plays the band
+   here (ART.BAND) and tells the room, so the band is on everyone's stage too */
+var BANDRUN=(function(){var on=false,hi=0,bi=0,lastPos=-1,memK="",paceK="",tm=null;
+  function stop(){if(on){on=false;ART.BAND.set([]);liveSend({type:"band",m:[]});}memK="";paceK="";}   /* the timer keeps running: it picks up the next song */
+  function step(){
+    if(!SONGMAP.cfg.autoBand||typeof LSET==="undefined"||!LSET.playing){if(on)stop();return;}
+    var b=SONGMAP.band();if(!b||!b.beats||!b.beats.length)return;var pos=LSET.pos();
+    if(!on){on=true;hi=0;bi=0;lastPos=-1;}
+    if(pos<lastPos-1500){hi=0;bi=0;}lastPos=pos;   /* went back */
+    var pc="mid";for(var i=0;i<b.pace.length;i++){if(b.pace[i][0]<=pos+100)pc=b.pace[i][1];else break;}
+    var mk=b.m.join(",");if(mk!==memK||pc!==paceK){memK=mk;paceK=pc;ART.BAND.set(b.m,pc);liveSend({type:"band",m:b.m,p:pc});}
+    while(hi<b.hits.length&&b.hits[hi][0]<pos-400)hi++;            /* skip what's long gone */
+    while(hi<b.hits.length&&b.hits[hi][0]<=pos){var h=b.hits[hi++];ART.BAND.ev(h[1]);if(h[1]!=="h")liveSend({type:"band",e:h[1]});}
+    while(bi<b.beats.length&&b.beats[bi]<pos-400)bi++;
+    while(bi<b.beats.length&&b.beats[bi]<=pos){var ms=bi+1<b.beats.length?b.beats[bi+1]-b.beats[bi]:500;ART.BAND.ev("b",bi,ms);liveSend({type:"band",e:"b",i:bi,ms:Math.round(ms)});bi++;}
+  }
+  tm=setInterval(step,25);
+  window.ukBandAnalyse=function(url){window.__band=null;fetch(url).then(function(r){return r.arrayBuffer();}).then(function(ab){var OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;return new OC(1,2,44100).decodeAudioData(ab);}).then(function(buf){CHART.analyse(buf,{},function(c){var b=c.band||{};window.__band={m:b.m,bpm:Math.round(c.bpm),hits:(b.hits||[]).length,kinds:(b.hits||[]).reduce(function(o,h){o[h[1]]=(o[h[1]]||0)+1;return o;},{}),pace:b.pace,dur:c.dur};});}).catch(function(e){window.__band={err:String(e)};});};   /* test: what the auto band hears in a song */
+  window.ukBand=function(){return{on:on,m:ART.BAND.members,pace:ART.BAND.pace,data:!!SONGMAP.band(),hits:SONGMAP.band()?SONGMAP.band().hits.length:0};};
+  return{stop:stop};})();
 
 /* ── Dance rounds (performer side) ──
    With a round type chosen in the Music tab and the show live, playing a backing track runs a round:

@@ -79,7 +79,7 @@ function liveVideo(r) {
     v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
   return v;
 }
-var PERFORMER_TYPES = { "song-on": 1, note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1, "song-part": 1 };
+var PERFORMER_TYPES = { band: 1, "song-on": 1, note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1, "song-part": 1 };
 
 /* ── Live sound/visual stream ──
    The performer sends binary packets: byte 0 is the kind (1 = audio, 2 = visuals), the rest is
@@ -507,7 +507,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.29";
+var VERSION = "1.82.30";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -626,7 +626,8 @@ function onMessage(ws, raw, isBinary) {
       totals: totalsList(r),
       fx: r.fx || null,
       perfPos: r.perfPos || null,
-      stage: { list: stageList(r), song: r.songOn ? 1 : 0 }
+      stage: { list: stageList(r), song: r.songOn ? 1 : 0 },
+      band: r.band && r.band.m && r.band.m.length ? r.band : null
     });
 
     // Notify everyone else
@@ -690,6 +691,14 @@ function onMessage(ws, raw, isBinary) {
     if (msg.type === "gvote-close") { var gr = rooms[ws.room]; if (gr.gvote) gvoteClose(ws.room, gr.gvote); return; }
     if (msg.type === "gvote-cancel") { var gr2 = rooms[ws.room]; if (gr2.gvote && !gr2.gvote.done) { gvoteStop(gr2); broadcast(ws.room, { type: "gvote", cancel: 1 }); } return; }
     if (!PERFORMER_TYPES[msg.type]) return;
+    if (msg.type === "band") {   /* the auto band: who's in it and the pace, or one hit / beat as the song plays */
+      if (!allow(ws, "band", 40, 20)) return;
+      var BM = ["drums", "bass", "electric", "acoustic", "keys"], bo = { type: "band" };
+      if (Array.isArray(msg.m)) { bo.m = msg.m.filter(function(k) { return BM.indexOf(k) >= 0; }).slice(0, 4); rooms[ws.room].band = { m: bo.m, p: "mid" }; }
+      if (msg.p === "slow" || msg.p === "mid" || msg.p === "fast") { bo.p = msg.p; if (rooms[ws.room].band) rooms[ws.room].band.p = msg.p; }
+      if (["k", "s", "h", "b"].indexOf(msg.e) >= 0) { bo.e = msg.e; bo.i = (msg.i | 0) % 100000; bo.ms = Math.max(150, Math.min(2000, msg.ms | 0)); }
+      broadcast(ws.room, bo, ws); return;
+    }
     if (msg.type === "song-on") { var so = rooms[ws.room]; so.songOn = !!msg.on; if (so.songOn) stageClear(ws.room, "song"); else stageSend(ws.room, ""); return; }   /* a song starts: everyone off the stage */
     if (msg.type === "state") rooms[ws.room].state = msg;
     if (msg.type === "video") { if (msg.action === "stop") rooms[ws.room].video = null; else { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); } }
