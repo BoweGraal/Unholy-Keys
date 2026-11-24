@@ -14,11 +14,11 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.2"></script>
-<script src="art.js?v=1.82.2"></script>
-<script src="voice.js?v=1.82.2"></script>
-<script src="instruments.js?v=1.82.2"></script>
-<script src="kart.js?v=1.82.2"></script>
+<script src="gfx.js?v=1.82.4"></script>
+<script src="art.js?v=1.82.4"></script>
+<script src="voice.js?v=1.82.4"></script>
+<script src="instruments.js?v=1.82.4"></script>
+<script src="kart.js?v=1.82.4"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4889,7 +4889,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.2",SERVER_VERSION="";
+var PAGE_VERSION="1.82.4",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5888,7 +5888,7 @@ var SKIVIEW=(function(){
   function collect(){var out=[];Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];if(!p||p.dance!==4||!p.sk)return;
     var s=sm[id]||(sm[id]={y:null,x:0}),d=ART.SKI.decode(+p.x,+p.y,p.sk.h|0,s.y);
     if(s.y===null||Math.abs(d[1]-s.y)>400){s.x=d[0];s.y=d[1];}else{s.x+=(d[0]-s.x)*0.2;s.y+=(d[1]-s.y)*0.2;}
-    out.push({id:id,name:p.name,color:p.color,look:p.look,x:s.x,y:s.y,t:p.sk.t|0,f:!!p.sk.f,pose:p.pose});});return out;}
+    out.push({id:id,name:p.name,color:p.color,look:p.look,x:s.x,y:s.y,t:p.sk.t|0,f:!!p.sk.f,pose:p.pose,pts:p._rs||0});});return out;}
   function skier(g,X,Y,r,z,place){
     var sc=Math.max(2,Math.round(z*1.1)),t=r.t,crashed=t===9||r.f,ang=t<=6?(t-3)*Math.PI/6:0,lift=(t===7||t===8)?18*z:0,m=place<=3?MEDAL[place-1]:null,now=performance.now();
     if(m){g.save();g.globalAlpha=0.35+0.2*Math.sin(now/180+place);g.fillStyle=m;ART.PX.oval(g,X,Y,16*z,6*z,0);g.globalAlpha=1;g.strokeStyle=m;g.lineWidth=2;g.stroke();g.restore();}
@@ -5906,8 +5906,8 @@ var SKIVIEW=(function(){
     if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
     var g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.imageSmoothingEnabled=false;
     var c=ROUNDS.current||{n:0};if(c.n!==seedN){seedN=c.n;seed=ART.SKI.seedFor(c.n);cache={};sm={};try{course=ART.SKI.clean(JSON.parse(localStorage.getItem("uk_ski")||"null"));}catch(e){course=null;}if(!course)course=ART.SKI.defaultCourse();}
-    var rs=typeof force==="function"?force():collect();rs.sort(function(p,q){return q.y-p.y;});
-    rs.forEach(function(r,k){r.place=k+1;});last=rs.map(function(r){return{name:r.name,place:r.place,m:Math.max(0,Math.round(r.y/10))};});
+    var rs=typeof force==="function"?force():collect();rs.sort(function(p,q){return (q.pts||0)-(p.pts||0)||q.y-p.y;});   /* places (and the camera) go by points, same as the round's scoreboard */
+    rs.forEach(function(r,k){r.place=k+1;});last=rs.map(function(r){return{name:r.name,place:r.place,m:Math.max(0,Math.round(r.y/10)),pts:r.pts||0};});
     /* follow the leader */
     var lead=rs[0],tx=lead?lead.x:0,ty=lead?lead.y:-24;camX+=(tx-camX)*0.08;camY+=(ty-camY)*0.12;
     /* the start: in close on the skiers at the top, pulling back slowly to the whole mountain by GO (beat 8) */
@@ -5921,8 +5921,8 @@ var SKIVIEW=(function(){
     ART.SKI.ground2(g,list.filter(function(it){return it.o;}).map(function(it){return it.o;}),z,sx,sy,null);
     try{list.forEach(function(it){if(it.o)ART.SKI.obj(g,it.o,z,sx,sy,false);else skier(g,sx(it.r.x),sy(it.r.y),it.r,z,it.r.place);});}finally{ART.SKI.groundDone=false;}
     /* anyone further back, off the top of the view */
-    var behind=rs.filter(function(r){return r.y<=y0;});
-    behind.slice(0,6).forEach(function(r,k){var bx=Math.max(70,Math.min(W-70,sx(r.x)))+(k%2?14:-14)*0,byy=96+k*0;g.fillStyle="rgba(29,39,64,.82)";g.font="800 12px system-ui";var tt="\u2191 "+r.name+" · "+Math.round((lead.y-r.y)/10)+" m back",tw=g.measureText(tt).width+16;
+    var behind=rs.filter(function(r){return r!==lead&&(r.y<=y0||r.y>=y1);});   /* off screen: further up the run, or further down it */
+    behind.slice(0,6).forEach(function(r,k){var bx=Math.max(70,Math.min(W-70,sx(r.x)))+(k%2?14:-14)*0,byy=96+k*0;g.fillStyle="rgba(29,39,64,.82)";g.font="800 12px system-ui";var up=r.y<=lead.y,tt=(up?"\u2191 ":"\u2193 ")+r.name+" · "+Math.round(Math.abs(lead.y-r.y)/10)+" m "+(up?"back":"ahead"),tw=g.measureText(tt).width+16;
       var bxx=Math.max(8,Math.min(W-tw-8,bx-tw/2)),byy2=92+k*22;g.beginPath();if(g.roundRect)g.roundRect(bxx,byy2,tw,19,9);else g.rect(bxx,byy2,tw,19);g.fill();g.fillStyle="#fff";g.textAlign="left";g.textBaseline="middle";g.fillText(tt,bxx+8,byy2+10);});
     /* you, riding the ski lift down the side of the run alongside the leader */
     var us=Math.max(1.6,Math.min(2.6,H/320)),ux=Math.round(Math.max(90,W*0.08)),udn=ux+7*us,ut=Math.max(170,Math.min(H-150,sy(camY)-10));
@@ -5931,13 +5931,13 @@ var SKIVIEW=(function(){
     var uy=Math.round(liftY);ART.SKI.liftChair(g,udn,uy+5*us,us,false);perfDraw(g,udn,uy,us,Date.now(),null,null,0,true);ART.SKI.liftChair(g,udn,uy+5*us,us,true);
     /* the song's video on a board at the top of the run, so you can follow the lyrics */
     if(JAMSTAGE.videoOn()){var bw=Math.round(Math.min(W*0.4,(H*0.34)*16/9,420)),bh=Math.round(bw*9/16);skiVid(Math.round(W/2-bw/2),56,bw,bh);}else skiVid(null);
-    /* standings by distance */
+    /* standings by points */
     var pr=Math.min(220,W*0.2),px=W-pr-14,py=100,n=Math.min(last.length,10);g.fillStyle="rgba(255,255,255,.88)";g.strokeStyle="rgba(59,123,232,.5)";g.lineWidth=1.5;
     g.beginPath();if(g.roundRect)g.roundRect(px,py,pr,40+Math.max(1,n)*24,10);else g.rect(px,py,pr,40+Math.max(1,n)*24);g.fill();g.stroke();
     g.textAlign="left";g.textBaseline="middle";g.font="900 12px system-ui";g.fillStyle="#3B7BE8";g.fillText("\u26F7 SKI · DOWN THE MOUNTAIN",px+12,py+20);
     if(!n){g.font="700 12px system-ui";g.fillStyle="#555";g.fillText("Skiers getting ready…",px+12,py+44);}
     for(var k2=0;k2<n;k2++){var r2=last[k2],yy=py+44+k2*24,m2=k2<3?MEDAL[k2]:null;if(m2){g.fillStyle=m2;ART.PX.disc(g,px+22,yy,9);}g.fillStyle=m2?"#1a1200":"#777";g.font="900 11px system-ui";g.textAlign="center";g.fillText(String(k2+1),px+22,yy+1);
-      g.textAlign="left";g.font=(k2<3?"800 13px":"600 12px")+" system-ui";g.fillStyle="#1d2740";var nm=String(r2.name||"?");while(nm.length>3&&g.measureText(nm).width>pr-100)nm=nm.slice(0,-1);g.fillText(nm,px+38,yy);g.textAlign="right";g.fillStyle="#3B7BE8";g.fillText(r2.m+" m",px+pr-12,yy);}
+      g.textAlign="left";g.font=(k2<3?"800 13px":"600 12px")+" system-ui";g.fillStyle="#1d2740";var nm=String(r2.name||"?");while(nm.length>3&&g.measureText(nm).width>pr-110)nm=nm.slice(0,-1);g.fillText(nm,px+38,yy);g.textAlign="right";g.fillStyle="#3B7BE8";g.fillText(r2.pts.toLocaleString(),px+pr-12,yy);}
     raf=requestAnimationFrame(frame);
   }
   window.ukSkiView=function(){return{on:act,standings:last,cam:[Math.round(camX),Math.round(camY)]};};
