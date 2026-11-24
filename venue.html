@@ -322,7 +322,8 @@ body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint,
 body.practice #moshStick{bottom:calc(var(--chatH) + 112px)}
 #moshBang{display:none;position:absolute;right:14px;bottom:calc(var(--chatH) + 150px);width:62px;padding:6px 0 5px;background:#2a1f4a;border:3px solid #E8505B;box-shadow:3px 3px 0 #000;flex-direction:column;align-items:center;gap:3px;pointer-events:auto;touch-action:manipulation;cursor:pointer;z-index:3}
 #moshBang.on{display:flex}#moshBang canvas{width:39px;height:90px;image-rendering:pixelated}#moshBang b{font:700 12px 'Silkscreen',ui-monospace,monospace;color:#fff}#moshBang small{font:9px 'Silkscreen',ui-monospace,monospace;color:#c8c2e8}
-@media (pointer:fine){#moshBang{bottom:calc(var(--chatH) + 20px)}}@media (pointer:coarse){#moshBang small{display:none}}
+@media (pointer:fine){#moshBang{bottom:calc(var(--chatH) + 20px)}}
+@media (pointer:coarse){#moshBang small{font-size:8px}}
 body.mosh-tug #moshBang{display:none!important}
 body.gaming-fig #skJump,body.gaming-fig #skWheel,body.gaming-fig #skSpeed,body.gaming-fig #skTrick{display:none!important}
 #figUI .fgTL{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 82px);width:min(560px,72vw);height:10px;background:#120d1e;border:2px solid #000;box-shadow:3px 3px 0 #000}
@@ -824,7 +825,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <button data-r="spin" title="Spin (T)" aria-label="Spin">&#127744;</button>
     <button data-r="twirl" title="Twirl: two fast turns (G)" aria-label="Twirl">&#128171;</button>
   </div>
-  <div id="moshUI"><div id="moshBanner">MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><div id="moshStick" aria-label="Punch and swing your arms"><small>PUNCH</small><b></b></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
+  <div id="moshUI"><div id="moshBanner">MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><div id="moshStick" aria-label="Punch and swing your arms"><small>AIM · SWING</small><b></b></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
   <div id="partBanner"></div>
   <canvas id="skiCv"></canvas>
   <canvas id="ctfCv"></canvas>
@@ -2608,6 +2609,7 @@ document.addEventListener("keydown",function(e){
   if(GAME.mode==="skate"&&e.code==="Space"){e.preventDefault();if(!e.repeat)SKATE.jump();return;}
   if(GAME.mode==="skate"&&FIG.on&&(e.code==="Enter"||e.code==="KeyJ")){e.preventDefault();if(!e.repeat)FIG.press(true);return;}
   if(GAME.mode==="mosh"&&MOSH.tugOn&&!/^(Arrow|Key[WASD]$)/.test(e.code)){e.preventDefault();if(!e.repeat)MOSH.tap();return;}   /* tug of war: any key taps */
+  if(GAME.mode==="mosh"&&MOSH.aimKey(e.code,true)){e.preventDefault();return;}   /* I J K L aim your swing */
   if(GAME.mode==="mosh"&&(e.code==="Space"||e.code==="KeyB")){e.preventDefault();if(!e.repeat)MOSH.bang();return;}   /* headbang */
   if(REACTKEY[e.code]&&GAME.mode!=="step"){e.preventDefault();if(!e.repeat)react(REACTKEY[e.code]);return;}
   if(d){e.preventDefault();setHeld(d,true);return;}
@@ -2618,7 +2620,7 @@ document.addEventListener("keydown",function(e){
 var LIMBKEY={KeyD:0,KeyK:1,KeyF:2,KeyJ:3};   /* left arm, right arm, left leg, right leg */
 var HWKEY={KeyA:0,KeyS:1,KeyD:2,KeyF:3,KeyG:4,KeyH:5,KeyJ:6};   /* note highway lanes */
 var HW4KEY={KeyD:0,KeyF:1,KeyJ:2,KeyK:3,ArrowLeft:0,ArrowDown:1,ArrowUp:2,ArrowRight:3};   /* the 4-key highway */
-document.addEventListener("keyup",function(e){if(GAME.mode==="skate"&&FIG.on&&(e.code==="Space"||e.code==="Enter"||e.code==="KeyJ")){FIG.press(false);return;}if(GAME.fdKey(e.code,false))return;if(GAME.mode==="ski"&&SKI.key(e.code,false))return;if(GAME.mode==="pipe"&&PIPE.key(e.code,false))return;if(GAME.mode==="kart"&&(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight"||e.code==="KeyB")){KART.drift(false);return;}if(GAME.mode==="keys"&&GAME.four&&HW4KEY[e.code]!==undefined){GAME.releaseKey(HW4KEY[e.code]);return;}if(GAME.mode==="keys"&&!GAME.four&&HWKEY[e.code]!==undefined){GAME.releaseKey(HWKEY[e.code]);return;}var d=KEYDIR[e.code];if(d){setHeld(d,false);if(GAME.mode==="step")GAME.release(d);}var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
+document.addEventListener("keyup",function(e){if(GAME.mode==="mosh"&&MOSH.aimKey(e.code,false))return;if(GAME.mode==="skate"&&FIG.on&&(e.code==="Space"||e.code==="Enter"||e.code==="KeyJ")){FIG.press(false);return;}if(GAME.fdKey(e.code,false))return;if(GAME.mode==="ski"&&SKI.key(e.code,false))return;if(GAME.mode==="pipe"&&PIPE.key(e.code,false))return;if(GAME.mode==="kart"&&(e.code==="Space"||e.code==="ShiftLeft"||e.code==="ShiftRight"||e.code==="KeyB")){KART.drift(false);return;}if(GAME.mode==="keys"&&GAME.four&&HW4KEY[e.code]!==undefined){GAME.releaseKey(HW4KEY[e.code]);return;}if(GAME.mode==="keys"&&!GAME.four&&HWKEY[e.code]!==undefined){GAME.releaseKey(HWKEY[e.code]);return;}var d=KEYDIR[e.code];if(d){setHeld(d,false);if(GAME.mode==="step")GAME.release(d);}var lk=LIMBKEY[e.code];if(lk!==undefined)GAME.limbKey(lk,false);});
 window.addEventListener("blur",function(){Object.keys(held).forEach(function(d){setHeld(d,false);});});
 
 
@@ -4175,7 +4177,7 @@ var KEEPY=(function(){
     });
     GAME.moshPose(zp>0?(dbl?[2.9,-2.9,0.7,-0.7]:[2.5,-2.5,0.35,-0.35]):[0.5+Math.sin(now/200)*0.15,-0.5-Math.sin(now/200)*0.15,Math.abs(inp.x)+Math.abs(inp.y)>0?Math.sin(now/110)*0.4:0,Math.abs(inp.x)+Math.abs(inp.y)>0?-Math.sin(now/110)*0.4:0]);
     var h=$("kpHint");if(h)h.textContent=jumps===1?"Jump again for a double jump!":(window.matchMedia&&matchMedia("(pointer:coarse)").matches?"Get under them · JUMP, again in the air for more height · SPIN / TWIRL for style":"Get under them · Space to jump (again in the air for more height) · Q spin · E twirl");
-    if(PRACTICE.on)botTick(dt,now,t);
+    if(LBOTS())botTick(dt,now,t);
   }
   /* practice: the practice dancers chase things and head them up too */
   function botTick(dt,now,t){
@@ -4315,7 +4317,7 @@ var WALK=(function(){
     me.tx=me.x=x;me.ty=me.y=laneY;sendPos(x,laneY);
     me.sk=wire();
     watchFinishers();
-    if(PRACTICE.on)botTick(dt,now,b,going);
+    if(LBOTS())botTick(dt,now,b,going);
     drawPad(now,b,c,r,d,f,tripped);
     var h=$("wkHint");if(h)h.textContent=!going?"Get your cursor in the circle: when it says GO, keep it there to dance-walk":fin>=0?"Finished! Dance it out while the others come in":tripped?"Tripped! Back on your feet in a moment…":outT>0.3?"Get back in the circle!":"Keep your cursor in the circle";
   }
@@ -4591,7 +4593,7 @@ var PIPE=(function(){
     var st=stance?STN[stance].p:null;
     var pk=now-boostT<300?Math.sin((now-boostT)/300*Math.PI):0,pl=1;   /* pumping: one knee bends then the other */
     GAME.moshPose(now<bailUntil?[2.6,-2.6,1.2,-1.2]:st?st:grind?[1.9+grind.th*0.6,-1.9+grind.th*0.6,0.45,-0.45]:air?[2.3,-2.3,0.5,-0.5]:tuck?TUCK_POSE:pushPose(now,au0));
-    if(PRACTICE.on)botTick(now,dt);
+    if(LBOTS())botTick(now,dt);
     var hn=$("ppHint");if(hn)hn.textContent=grind?"Grinding! Left stick to balance · flick the right stick for a move · let go to hop off":air?"Line the board up with the wall to land":tuck&&!win?"Crouched: keep steering with the left stick, then flick the right stick at the lip · harder flick = higher":win?"Draw your trick on the right stick, ending with a flick up · harder = higher":"Left stick: steer · press the right stick at the yellow line to crouch, then flick it at the lip · harder flick = higher";
     hud();
   }
@@ -4899,7 +4901,7 @@ var SKI=(function(){
     var e=enc();me.tx=me.x=e[0];me.ty=me.y=e[1];sendPos(e[0],e[1]);me.sk=wire();
     var tpo=trick&&!crashed?trickPose(trick.k,Math.min(1,(now-trick.t0)/1000/TRK[trick.k].dur),1,now):null;
     GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:tpo?[tpo.armL,tpo.armR,tpo.legL,tpo.legR]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
-    if(PRACTICE.on)botTick(dt,now,going);
+    if(LBOTS())botTick(dt,now,going);
     var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":air>0?(hopAir?"Swing round now to cut onto a new line":"Dance move! ⬅ Sinking Swim · ⬆ YMCA · ➡ Disco Point"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · left click: hop, in the air: the yellow trick · right click: next trick · land in a divot to swoop");
     /* on a computer: a little pixel mouse instead of the line of text (left = hop / trick in the air, right = next trick) */
     var pcM=!TOUCHY&&going&&!crashed&&(air>0?!hopAir:!(!course&&SK.zoneAt(y).k==="jump")),sm=skiMouse();
@@ -4946,7 +4948,7 @@ var SKI=(function(){
     /* everything on the slope and everyone on it, back to front */
     var list=objsNear(y0,y1).map(function(o){return{y:o.y,o:o};});
     Object.keys(viewers).forEach(function(id){var vv=viewers[id];if(!vv||vv===PH||id===myId||vv.dance!==4)return;
-      var oth=others[id]||(others[id]={y:null,x:0,dy:0});var p=PRACTICE.on&&bots[id]?[bots[id].x,bots[id].y]:decode(vv,oth.y);
+      var oth=others[id]||(others[id]={y:null,x:0,dy:0});var p=bots[id]&&id.indexOf("bot")===0?[bots[id].x,bots[id].y]:decode(vv,oth.y);
       if(oth.y===null||Math.abs(p[1]-oth.y)>400){oth.x=p[0];oth.y=p[1];}else{oth.x+=(p[0]-oth.x)*0.25;oth.y+=(p[1]-oth.y)*0.25;}
       if(oth.y>y0&&oth.y<y1)list.push({y:oth.y,sk:{id:id,v:vv,x:oth.x}});});
     list.push({y:y,me:true});
@@ -5280,7 +5282,7 @@ var SKATE=(function(){
     var sb=$("skSpeed");if(sb&&sb.firstChild)sb.firstChild.style.width=Math.round(Math.min(1,sp/MS)*100)+"%";
     hint(sp/MS);
     if(!air&&now-(banked||0)>1400){var ttl2=$("skTrick");if(ttl2&&ttl2.innerHTML)ttl2.innerHTML="";}
-    if(PRACTICE.on)botTick(dt,now,G);
+    if(LBOTS())botTick(dt,now,G);
   }
   function land(me){
     var inp=input(),px=me.x*W,py=me.y*H;
@@ -5683,7 +5685,7 @@ var MOSH=(function(){
   var bang={streak:0,lastB:-1e9,until:0,fx:0,txt:"",col:"#fff",el:null,cv:null};
   function bangOn(){return on&&(phase==="pit"||phase==="circle");}
   function bangPer(){var b=BEAT.get();return b.known&&b.period>0?b.period:500;}
-  function bangUI(){if(bang.el)return;var d=document.createElement("div");d.id="moshBang";d.innerHTML='<canvas width="26" height="60"></canvas><b>BANG</b><small>Space</small>';
+  function bangUI(){if(bang.el)return;var d=document.createElement("div");d.id="moshBang";d.innerHTML='<small>HEADBANG</small><canvas width="26" height="60"></canvas><b>BANG</b><small>'+(window.matchMedia&&matchMedia("(pointer:coarse)").matches?"tap as it hits":"Space")+'</small>';
     $("moshUI").appendChild(d);bang.el=d;bang.cv=d.querySelector("canvas");
     d.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();bangPress();});}
   function bangPress(){if(!bangOn())return;var me=viewers[myId];if(!me)return;
@@ -5695,6 +5697,10 @@ var MOSH=(function(){
     if(g<3){bang.streak++;bang.until=now+bangPer()*2.2;add(Math.round(J[1]*(1+Math.min(1,bang.streak*0.1))),me.x*W,me.y*H-70,J[0]+" BANG"+(bang.streak>2?" x"+bang.streak:""),J[2]);}
     else bang.streak=0;}
   function bangDraw(){if(!bang.el)return;var show=bangOn();bang.el.classList.toggle("on",show);if(!show)return;
+    /* keep it clear of the punch stick: above it on a tall screen, beside it on a wide one */
+    var st=$("moshStick"),sr=st&&st.offsetParent?st.getBoundingClientRect():null;if(sr&&sr.width){var bw=bang.el.offsetWidth||62,bh=bang.el.offsetHeight||130,land=innerWidth>innerHeight;
+      bang.el.style.right=Math.round(land?innerWidth-sr.left+14:innerWidth-sr.right+(sr.width-bw)/2)+"px";bang.el.style.bottom=Math.round(land?innerHeight-sr.bottom:innerHeight-sr.top+22)+"px";}
+    else{bang.el.style.right="";bang.el.style.bottom="";}
     var g=bang.cv.getContext("2d"),Wc=26,Hc=60,bp=GAME.beatPos(),u=bp-Math.floor(bp),y=1-2*Math.abs(u-0.5),now=performance.now();   /* 0 on the beat (the bottom line), 1 halfway between */
     g.clearRect(0,0,Wc,Hc);g.fillStyle="#120d1e";g.fillRect(0,0,Wc,Hc);
     var ty=Hc-8,fl=Math.max(0,1-(now-bang.fx)/220);
@@ -5726,7 +5732,7 @@ var MOSH=(function(){
     var pos=ROUND.pos();phase=phaseAt(pos);
     if(phase!==lastPh)enter(phase,lastPh,me);lastPh=phase;
     if(team<0&&(phase==="split"||phase==="count"||phase==="charge"||phase==="tug"))team=teamOf(myId);   /* joined mid-wall */
-    bangDraw();
+    bangDraw();beatSwing();
     var f=fl(),w=P&&P.wall,inp=input();
     /* where you go this part */
     if(phase==="split"||phase==="count"){var sx=team?0.84:0.16;toward(me,sx+(me.tx-sx)*0.0,Math.max(f.top,Math.min(f.bot,me.ty)),TUNE.v("mp.split"),dt);me.tx=team?Math.max(0.56,me.tx):Math.min(0.44,me.tx);}
@@ -5776,7 +5782,7 @@ var MOSH=(function(){
     else GAME.moshPose([2.3+Math.sin(bph*Math.PI*2)*0.5,-2.3-Math.sin(bph*Math.PI*2)*0.5,0.15,-0.15]);
     /* the push war: send your taps a few times a second */
     if(phase==="tug"&&tug.mine>tug.sent&&now-tug.send>200){var k=Math.min(6,tug.mine-tug.sent);tug.sent+=k;tug.send=now;if(PRACTICE.on)tug.s[team]+=k;else wsSend({type:"tug",side:team,k:k});}
-    if(PRACTICE.on)botTick(dt,pos,now);
+    if(LBOTS())botTick(dt,pos,now);
     hint();
   }
   function enter(ph,was,me){
@@ -5796,28 +5802,46 @@ var MOSH=(function(){
     if(PRACTICE.on&&tug.res.win>=0)PRACTICE.moshBonus(Object.keys(bots).filter(function(id){return bots[id].team===tug.res.win;}),800);
   }
   function hint(){var h=$("moshHint");if(!h)return;
-    h.textContent=phase==="tug"?"Tap as fast as you can to push them back!":phase==="split"||phase==="count"?"Pick a side… wait for the drop":phase==="charge"?"Charge!":phase==="circle"?"Push forward to sprint · in/out to change lanes · shove people · right stick punches · BANG on the beat":"Run into people · right stick: flick to punch, circle to swing your arms · BANG (Space) as the dot hits the line to headbang";}
+    h.textContent=phase==="tug"?"Tap as fast as you can to push them back!":phase==="split"||phase==="count"?"Pick a side… wait for the drop":phase==="charge"?"Charge!":phase==="circle"?(TOUCHM?"Left stick runs · hold the RIGHT stick at someone: you swing on every beat":"Move with WASD · hold the mouse (or I J K L) at someone: you swing on every beat"):(TOUCHM?"Hold the RIGHT stick at someone: you swing that way on every beat · dead centre = SMASH":"Hold the mouse on someone (or aim with I J K L): you swing on every beat · dead centre = SMASH · Space = headbang");}
+  var TOUCHM=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
   /* ---- swinging your arms: drag round in circles on the floor ---- */
   function swingAdd(d,now){var me=viewers[myId];if(!me)return;swAcc+=Math.abs(d);swAng+=d;
     if(swAcc>=Math.PI*2){swAcc-=Math.PI*2;swRate=swRate.filter(function(t){return now-t<1000;});
       if(swRate.length<2){swRate.push(now);var on2=onBeat();add(on2?TUNE.v("mp.swingBeatPts"):TUNE.v("mp.swingPts"),me.x*W,me.y*H-70,on2?"SWING ON BEAT":"SWING",on2?"#D354A0":"#F5D03C");}}}
-  /* points: a swing (windmill, or a punch that misses) 10, on the beat 20; a punch that lands 40, on the beat 60 */
   function onBeat(){return Math.abs(GAME.beatPos()%1-0.5)>0.35;}
-  /* the right stick: flick it out to punch that way (a fist that lands scores and knocks them back); circle it to windmill your arms */
-  function punch(a){var me=viewers[myId];if(!on||!me)return;if(phase!=="pit"&&phase!=="circle"&&phase!=="charge")return;
-    var now=performance.now();rs.nextP=now+320;punchUntil=now+260;punchA=a;
-    var reach=Math.max(70,W*0.12),dx0=Math.cos(a),dy0=Math.sin(a),best=null,bd=1e9;
-    Object.keys(viewers).forEach(function(id){if(id===myId)return;var o=viewers[id];if(!o)return;var dx=(o.x-me.x)*W,dy=(o.y-me.y)*H,d=Math.hypot(dx,dy);if(d>reach||d<1)return;if((dx*dx0+dy*dy0)/d<0.5)return;if(d<bd){bd=d;best=id;}});
-    puff(me.x*W+dx0*34,me.y*H-16+dy0*34);
-    var ob=onBeat();if(!(best&&now>(cool["p"+best]||0))){add(ob?TUNE.v("mp.swingBeatPts"):TUNE.v("mp.swingPts"),me.x*W,me.y*H-70,ob?"SWING ON BEAT":"SWING",ob?"#D354A0":"#F5D03C");return;}
-    if(best){cool["p"+best]=now+450;var o=viewers[best];add(ob?TUNE.v("mp.punchBeatPts"):TUNE.v("mp.punchPts"),o.x*W,o.y*H-50,ob?"PUNCH ON BEAT":"PUNCH","#E8505B");puff(o.x*W,o.y*H-12);
-      if(bots[best]){bots[best].vx+=dx0*0.6;bots[best].vy+=dy0*0.6*(W/H);}}}
+  /* aiming: the right stick, the mouse held down (aims at the pointer), or I J K L */
+  var aimK={KeyI:0,KeyJ:0,KeyK:0,KeyL:0},lastSwB=-1e9,swStreak=0,lastSwAt=0,lastSwHit=false;
+  function aimAng(){var now=performance.now();if(rs.id!==null&&rs.a!==null)return rs.a;if(swing&&swing.a!==null)return swing.a;
+    var kx=(aimK.KeyL?1:0)-(aimK.KeyJ?1:0),ky=(aimK.KeyK?1:0)-(aimK.KeyI?1:0);if(kx||ky)return Math.atan2(ky,kx);return null;}
+  function aimKey(code,dn){if(!(code in aimK))return false;aimK[code]=dn?1:0;return true;}
+  /* who's in your sights: the closest person inside the cone, and how far off-centre they are */
+  function sights(a){var me=viewers[myId];if(!me||a===null)return null;var reach=Math.max(80,W*0.14),dx0=Math.cos(a),dy0=Math.sin(a),best=null,bd=1e9,off=0;
+    Object.keys(viewers).forEach(function(id){if(id===myId)return;var o=viewers[id];if(!o||o===PH)return;var dx=(o.x-me.x)*W,dy=(o.y-me.y)*H,d=Math.hypot(dx,dy);if(d>reach||d<1)return;
+      var ang=Math.abs(Math.atan2(dx*dy0-dy*dx0,dx*dx0+dy*dy0));if(ang>0.44)return;if(d<bd){bd=d;best=id;off=ang;}});return best?{id:best,off:off,reach:reach}:{id:null,reach:reach};}
+  /* on every beat, if you're aiming, you swing that way: dead-centre SMASH, inside the cone PUNCH, nothing there MISS (and your streak resets) */
+  function beatSwing(){var me=viewers[myId];if(!on||!me||(phase!=="pit"&&phase!=="circle"&&phase!=="charge"))return;
+    var bp=GAME.beatPos(),nb=Math.round(bp);if(nb===lastSwB||Math.abs(bp-nb)>0.12)return;var a=aimAng();if(a===null)return;lastSwB=nb;
+    var now=performance.now(),sg=sights(a);punchUntil=now+260;punchA=a;lastSwAt=now;puff(me.x*W+Math.cos(a)*34,me.y*H-16+Math.sin(a)*34);
+    if(!sg||!sg.id||now<(cool["p"+sg.id]||0)){swStreak=0;lastSwHit=false;pops.push({x:me.x*W+Math.cos(a)*40,y:me.y*H-40+Math.sin(a)*30,t:now,txt:"MISS",col:"#8a84b0"});return;}
+    var o=viewers[sg.id],smash=sg.off<0.14;swStreak++;lastSwHit=true;cool["p"+sg.id]=now+300;
+    var pts=Math.round((smash?TUNE.v("mp.punchBeatPts")*1.4:TUNE.v("mp.punchBeatPts"))*(1+Math.min(1,(swStreak-1)*0.1)));
+    add(pts,o.x*W,o.y*H-50,(smash?"SMASH!":"PUNCH")+(swStreak>2?" x"+swStreak:""),smash?"#F5C518":"#E8505B");puff(o.x*W,o.y*H-12);
+    if(bots[sg.id]){var k=smash?0.9:0.6;bots[sg.id].vx+=Math.cos(a)*k;bots[sg.id].vy+=Math.sin(a)*k*(W/H);}}
+  function aimDraw(g){var me=viewers[myId];if(!on||!me||(phase!=="pit"&&phase!=="circle"&&phase!=="charge"))return;var a=aimAng();if(a===null)return;
+    var now=performance.now(),sg=sights(a),bp=GAME.beatPos(),u=bp-Math.floor(bp),pulse=Math.max(0,1-u*3),cx=me.x*W,cy=me.y*H-10,R=sg?sg.reach:90;
+    g.save();g.globalAlpha=0.16+0.22*pulse;g.fillStyle=sg&&sg.id?(sg.off<0.14?"#F5C518":"#E8505B"):"#ffffff";g.beginPath();g.moveTo(cx,cy);g.arc(cx,cy,R,a-0.44,a+0.44);g.closePath();g.fill();
+    g.globalAlpha=0.55;g.strokeStyle="#fff";g.lineWidth=1;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);g.stroke();
+    /* the beat ring closes in on the swing */
+    g.globalAlpha=0.5+0.5*(1-u);g.strokeStyle="#fff";g.lineWidth=2;var rr=R*(0.35+0.65*(1-u));g.beginPath();g.arc(cx,cy,rr,a-0.44,a+0.44);g.stroke();
+    if(sg&&sg.id){var o=viewers[sg.id];g.globalAlpha=0.9;g.strokeStyle=sg.off<0.14?"#F5C518":"#E8505B";g.lineWidth=2;var ox=o.x*W,oy=o.y*H-14,rs2=14+4*pulse;g.strokeRect(ox-rs2,oy-rs2*1.4,rs2*2,rs2*2.4);}
+    g.restore();}
+  function punch(a){}   /* (the old flick punch; swings now land on the beat) */
+  /* the right stick: hold it the way you want to swing; you swing that way on every beat */
   function stickAt(e){var el=$("moshStick");if(!el)return;var r=el.getBoundingClientRect(),rad=r.width*0.4,x=(e.clientX-(r.left+r.width/2))/rad,y=(e.clientY-(r.top+r.height/2))/rad,m=Math.hypot(x,y),now=performance.now();
     if(m>1){x/=m;y/=m;m=1;}
     if(stKnob)stKnob.style.transform="translate("+Math.round(x*r.width*0.3)+"px,"+Math.round(y*r.width*0.3)+"px)";
     if(m<0.45)rs.lowT=now;
-    if(m>0.4){var a=Math.atan2(y,x);if(rs.a!==null&&phase!=="tug")swingAdd(Math.atan2(Math.sin(a-rs.a),Math.cos(a-rs.a)),now);rs.a=a;rs.swT=now;}else rs.a=null;
-    if(m>0.75&&rs.m<=0.75&&now-rs.lowT<260&&now>rs.nextP)punch(Math.atan2(y,x));
+    if(m>0.4){rs.a=Math.atan2(y,x);rs.swT=now;}else rs.a=null;
     rs.m=m;rs.x=x;rs.y=y;}
   (function(){var el=$("moshStick");if(!el)return;stKnob=el.querySelector("b");
     el.addEventListener("pointerdown",function(e){e.preventDefault();rs.id=e.pointerId;rs.m=0;rs.a=null;rs.lowT=performance.now();el.classList.add("held");try{el.setPointerCapture(e.pointerId);}catch(x){}stickAt(e);});
@@ -5827,7 +5851,6 @@ var MOSH=(function(){
   function move(e,p){
     if(!swing||e.pointerId!==swing.id)return false;var me=viewers[myId];if(!me)return false;
     var a=Math.atan2(p[1]-(me.y*H-14),p[0]-me.x*W),now=performance.now();
-    if(swing.a!==null)swingAdd(Math.atan2(Math.sin(a-swing.a),Math.cos(a-swing.a)),now);
     swing.a=a;swing.t=now;
     return true;
   }
@@ -5885,11 +5908,11 @@ var MOSH=(function(){
     puffs=puffs.filter(function(p){var a2=(now-p.t)/450;if(a2>1)return false;g.globalAlpha=(1-a2)*0.7;g.fillStyle="#d8d0e8";for(var k=0;k<6;k++){var an=k*1.05,rr=6+a2*20;ART.PX.disc(g,p.x+Math.cos(an)*rr,p.y+Math.sin(an)*rr*0.6,4*(1-a2)+1);}return true;});
     g.globalAlpha=1;
     pops=pops.filter(function(p){var a3=(now-p.t)/900;if(a3>1)return false;g.globalAlpha=1-a3;g.font="900 16px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(p.txt,p.x,p.y-a3*30);g.fillStyle=p.col;g.fillText(p.txt,p.x,p.y-a3*30);return true;});
-    g.restore();
+    g.restore();aimDraw(g);
   }
   window.ukMosh=function(){return{teams:JSON.parse(JSON.stringify(teams)),swing:swing?{a:swing.a}:null,swAcc:Math.round(swAcc*100)/100,on:on,phase:phase,team:team,score:score,tug:tug.s.slice(),mine:tug.mine,res:tug.res,plan:P,circle:{lap:circ.lap,r:Math.round(circ.r*100)/100},me:viewers[myId]?{x:viewers[myId].tx,y:viewers[myId].ty}:null,others:Object.keys(viewers).filter(function(id){return id!==myId;}).map(function(id){return{id:id,x:viewers[id].x,y:viewers[id].y};})};};
   window.ukMoshPlan=plan;window.ukMoshWorld=function(){return{viewers:viewers,myId:myId};};
-  return{start:start,stop:stop,tick:tick,draw:draw,down:down,move:move,up:up,tap:tap,onTug:onTug,drives:drives,bang:bangPress,fd:fd,get on(){return on;},get tugOn(){return on&&phase==="tug";},TUG_AT:TUG_AT,TUG_MS:TUG_MS};
+  return{start:start,stop:stop,tick:tick,draw:draw,down:down,move:move,up:up,tap:tap,onTug:onTug,drives:drives,bang:bangPress,aimKey:aimKey,fd:fd,get on(){return on;},get tugOn(){return on&&phase==="tug";},TUG_AT:TUG_AT,TUG_MS:TUG_MS};
 })();
 
 
@@ -7727,7 +7750,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.98",SERVER_VERSION="";
+var PAGE_VERSION="1.81.99",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7769,6 +7792,7 @@ var PART="";var PART_NAMES={intro:"🌅 INTRO",verse:"🎤 VERSE",chorus:"🔥 C
 function voiceIcon(x,y,s,now){var p=Math.max(2,Math.round(s));x=Math.round(x);y=Math.round(y);ctx.fillStyle="#120d1e";ctx.fillRect(x-p,y-p*3,p*4,p*6);ctx.fillStyle="#4CC38A";ctx.fillRect(x,y-p,p,p*2);ctx.fillRect(x+p,y-p*2,p,p*4);var w=Math.floor(now/180)%3;for(var k=0;k<=w;k++){ctx.fillRect(x+p*(3+k*2),y-p*(1+k),p,p*(2+k*2));}}
 function songPart(k){k=PART_NAMES[k]?k:"";if(k===PART)return;PART=k;if(!k)return;var b=document.getElementById("partBanner");if(!b)return;b.textContent=PART_NAMES[k];b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
 window.ukPart=function(){return PART;};
+function LBOTS(){for(var k in viewers)if(k.indexOf("bot")===0)return true;return false;}   /* this screen's own practice dancers (the server's bots have normal ids) */
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
 function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge,look,fd){
   var s=scale||1,cx=x,cy=y;
