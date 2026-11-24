@@ -93,9 +93,15 @@ var ART=(function(){
   var SEC="",ISO=null,HIDECHAR=false;   /* ISO: draw only one part of a character (the pixel editor); SEC: the part being drawn */
   var TOFF=null;   /* three-quarter views: some parts (face, hair, hat) slide a pixel toward the way they're turned */
   var SHF=null;   /* per-part shifts made with Shift all in the pixel editor: {hair:[dx,dy],...} */
-  var MIRHAT=false;   /* the witch hat's curl keeps its side when a turned-left view is the turned-right one mirrored */
+  var MIRHAT=false,TAILDX=0,FTD=0,TAILHIDE=false;   /* TAILDX: a tail's sideways shift in a three-quarter view; FTD: that view's real facing (+45 turned right, -45 turned left) */
+  /* where a tail tied at the back of the head shows in a three-quarter view: it sits at angle phi round the head (0 = the face,
+     +135 = the back on the character's left), the head turns by FTD, and its offset from the middle follows the turn */
+  function tailDX(c,phi){if(!FTD)return 0;var R=Math.abs(c)/Math.abs(Math.sin(phi*Math.PI/180)||1),c2=R*Math.sin((FTD+phi)*Math.PI/180);return Math.round(c2-c);}   /* the witch hat's curl keeps its side when a turned-left view is the turned-right one mirrored */
   var HATCLIP=null;   /* a hat on: hair above its brim line is under the hat, so it isn't drawn (y is head-relative, like px) */
-  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;if(MIRHAT)x=-x-w;if(HATCLIP!==null&&SEC==="hair"){if(y+h<=HATCLIP)return;if(y<HATCLIP){h-=HATCLIP-y;y=HATCLIP;}}var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
+  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;x+=TAILDX;
+    if(TAILHIDE&&y<-5){var a0=Math.max(x,-5),a1=Math.min(x+w,5);if(a1>a0){if(x<-5&&x+w>5){pxT(x,y,-5-x,h,c);pxT(5,y,x+w-5,h,c);return;}if(x>=-5&&x+w<=5)return;if(x<-5)w=-5-x;else{w=x+w-5;x=5;}}}   /* a tail gone round behind the head: hidden where the head is */
+    pxT(x,y,w,h,c);}
+  function pxT(x,y,w,h,c){if(MIRHAT)x=-x-w;if(HATCLIP!==null&&SEC==="hair"){if(y+h<=HATCLIP)return;if(y<HATCLIP){h-=HATCLIP-y;y=HATCLIP;}}var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
   /* a limb: a 3-pixel-wide strip from the joint along the angle, coloured in bands (cols = [[upTo, colour],...]) */
   /* the shoe: a little toe at the end of a leg, so feet aren't stick ends. dx: which way it points (-1/1), rows: how tall */
   function toe(jx,jy,a,len,col,dx,rows){if(ISO&&SEC!==ISO)return;
@@ -133,14 +139,14 @@ var ART=(function(){
        The left-hand ones are these mirrored (drawChar does that). FT / BT: drawing a front / back three-quarter view */
     SHF=null;if(!POFF)["hair","hat","face","extra","top","bottom"].forEach(function(p){var m0=PT[p+":"+(L[p]|0)];if(m0&&m0["@"]){var q0=m0["@"].split(","),d0=st.dir|0;if(!SHF)SHF={};SHF[p]=[(d0===0||d0===4)?+q0[0]||0:0,+q0[1]||0];}});
     PMIR=!!(st.mir&&((st.dir|0)===4||(st.dir|0)===5));PDMIR=!!st.mir;PDIR=st.mir?({1:3,5:6,4:7}[st.dir|0]||(st.dir|0)):(st.dir|0);   /* the real way they face (0-7), for paint drawn per turn (key|d0..d7) */   /* a three-quarter view drawn mirrored: painted hats keep their sides (a feather stays put) */
-    var FT=(st.dir|0)===4?1:0,BT=(st.dir|0)===5?1:0;TOFF=FT?{head:1,face:2,extra:(L.extra===1||L.extra===5)?2:1,hair:1,hat:1}:BT?{head:1}:null;   /* shades and the mask sit on the face (2); the cap, headphones and bandana sit on the head (1) */
+    var FT=(st.dir|0)===4?1:0,BT=(st.dir|0)===5?1:0;FTD=FT?(st.mir?-45:45):0;TAILDX=0;MIRHAT=false;TOFF=FT?{head:1,face:2,extra:(L.extra===1||L.extra===5)?2:1,hair:1,hat:1}:BT?{head:1}:null;   /* shades and the mask sit on the face (2); the cap, headphones and bandana sit on the head (1) */
     function dimF(cols){return cols.map(function(c){return [c[0],shade(c[1],-0.25)];});}
     sg.clearRect(0,0,CWD,CHT);if(MUSED){pmg.clearRect(0,0,CWD,CHT);hmg.clearRect(0,0,CWD,CHT);MUSED=false;}
     var skin=colOf(L,"skin"),hc=colOf(L,"hair"),tc=colOf(L,"top"),bc=colOf(L,"bot");
     var tcD=shade(tc,-0.25),tcL=shade(tc,0.25),bcD=shade(bc,-0.25),skD=shade(skin,-0.18),hcD=shade(hc,-0.3),shoe="#2A2238";
     var aL=st.armL,aR=st.armR,lL=st.legL,lR=st.legR,hd=st.head||0,hy=Math.round(Math.max(0,hd)*3);   /* head: bowed forward (1) or flung back (-1) */
     var HTc=L.hat|0;HATCLIP=HTc&&HTc!==8&&HTc!==13?-14+hy:null;   /* every hat but the crown and goggles (they sit on top of the hair) */
-    SEC="hair";
+    SEC="hair";MIRHAT=!!(st.mir&&FT);   /* turned left: hair isn't mirrored with the body, so a side parting or tail stays on its own side */
     /* behind the head: afro, long hair, the hood */
     if(L.hair===5){px(-7,-19,14,9,hc);px(-6,-20,12,1,hc);px(-8,-17,1,6,hc);px(7,-17,1,6,hc);}
     if(L.hair===3){px(-6,-14,2,11,hc);px(4,-14,2,11,hc);}
@@ -151,11 +157,12 @@ var ART=(function(){
     if(H===14){px(-7,-13+hb,2,11,hc);px(-7,-3+hb,2,1,hcD);}                                                       /* side swoop: long on one side */
     if(H===15){for(var wv=0;wv<14;wv++){var wo=(wv>>1)%2;px(-7+wo,-13+wv+hb,2,1,hc);px(5-wo,-13+wv+hb,2,1,hc);}px(-6,-13+hb,1,12,hcD);px(5,-13+hb,1,12,hcD);}   /* long waves */
     if(H===21){px(-7,-12+hb,2,9,hc);px(5,-12+hb,2,9,hc);px(-7,-4+hb,2,1,hcD);px(5,-4+hb,2,1,hcD);}              /* shoulder length */
-    if(H===22){px(1,-19+hb,3,2,hc);px(3,-18+hb,3,3,hc);px(5,-16+hb,2,6,hc);px(5,-10+hb,2,3,hcD);px(6,-8+hb,1,2,hc);}   /* high ponytail, swinging out behind */
+    if(H===22){TAILDX=tailDX(4,135);px(1,-19+hb,3,2,hc);px(3,-18+hb,3,3,hc);px(5,-16+hb,2,6,hc);px(5,-10+hb,2,3,hcD);px(6,-8+hb,1,2,hc);TAILDX=0;}   /* high ponytail, swinging out behind */
     if(H===25){px(-7,-13+hb,2,14,hc);px(5,-13+hb,2,14,hc);px(-7,1+hb,2,1,hcD);px(5,1+hb,2,1,hcD);}   /* long locks: long behind */
     if(H===28){px(-7,-14+hb,14,6,hc);}
     if(H===30){px(-7,-15+hb,14,7,hc);px(-6,-8+hb,12,1,hcD);}   /* swept mop: rounded volume behind the head */   /* fluffy mop: volume behind the head */
     if(H===11){px(-9,-13+hb,3,7,hc);px(6,-13+hb,3,7,hc);px(-9,-6+hb,2,2,hcD);px(7,-6+hb,2,2,hcD);}             /* pigtails */
+    MIRHAT=false;
     if(L.top===2){px(-6,-14,12,2,tcD);px(-7,-12,2,7,tcD);px(5,-12,2,7,tcD);}
     /* legs */
     /* shoes: the colour, and how far up the leg they come (boots higher) */
@@ -386,7 +393,7 @@ var ART=(function(){
       SEC="head";
       px(-5,-14+hy,10,9,skin);px(-5,-14+hy,1,9,skD);px(-5,-6+hy,10,1,skD);
       px(-6,-11+hy,1,2,skin);px(5,-11+hy,1,2,skin);                                 /* ears */
-      SEC="hair";if(!PAINT.replaced("hair:"+HR))backHair();if(BT){SEC="head";px(3,-12+hy,1,5,skin);px(4,-11+hy,1,3,skD);SEC="top";px(-5,-5,2,10,tcD);}
+      SEC="hair";MIRHAT=!!(st.mir&&BT);if(!PAINT.replaced("hair:"+HR))backHair();MIRHAT=false;   /* back three-quarter turned left: the hair keeps its own sides (a side tail stays on its side) */if(BT){SEC="head";px(3,-12+hy,1,5,skin);px(4,-11+hy,1,3,skD);SEC="top";px(-5,-5,2,10,tcD);}
       SEC="extra";
       if(EX===1){px(-6,-11+hy,1,1,"#111018");px(5,-11+hy,1,1,"#111018");}
       if(EX===2){px(-6,-16+hy,12,1,"#2A2238");px(-7,-12+hy,2,4,"#2A2238");px(5,-12+hy,2,4,"#2A2238");}
@@ -450,14 +457,14 @@ var ART=(function(){
     px(-3+FT,-11+hy,1,2,"#15121F");px(2+FT,-11+hy,1,2,"#15121F");
     if(st.mouth)px(-1+FT,-8+hy,2,2,"#5A2A2A");else px(-1+FT,-8+hy,2,1,skD);
 
-    SEC="hair";
+    SEC="hair";MIRHAT=!!(st.mir&&FT);
     /* hair */
     var hair=L.hair;
     if(hair===1||hair===2||hair===3||hair===6){px(-5,-15+hy,10,3,hc);px(-5,-12+hy,1,2,hc);px(4,-12+hy,1,2,hc);px(-5,-15+hy,10,1,hcD);}
     if(hair===2){for(var sx=-5;sx<5;sx+=2)px(sx,-17+hy,1,2,hc);px(-4,-16+hy,8,1,hc);}
     if(hair===4){px(-1,-19+hy,2,5,hc);px(-1,-19+hy,1,5,hcD);}
     if(hair===5){px(-6,-16+hy,12,3,hc);}
-    if(hair===6){px(5,-13+hy,2,6,hc);px(5,-7+hy,2,1,hcD);}
+    if(hair===6){TAILDX=tailDX(6,135);TAILHIDE=FT;px(5,-13+hy,2,6,hc);px(5,-7+hy,2,1,hcD);TAILDX=0;TAILHIDE=false;}   /* the ponytail: it goes round behind the head as they turn */
     if(hair===7){px(-6,-17+hy,12,4,hc);px(-6,-14+hy,12,1,shade(hc,0.35));px(-5,-18+hy,10,1,hc);px(-1,-19+hy,2,1,shade(hc,0.35));}
     /* the newer styles: the top of the head (and anything over the face) */
     function cap(){px(-5,-15+hy,10,3,hc);px(-5,-12+hy,1,2,hc);px(4,-12+hy,1,2,hc);px(-5,-15+hy,10,1,hcD);}
@@ -476,7 +483,7 @@ var ART=(function(){
     if(hair===19){cap();px(-4,-17+hy,7,2,hc);px(-2,-18+hy,5,1,hc);px(2,-17+hy,3,1,hcL);px(-1,-18+hy,2,1,hcL);}   /* quiff, swept up and back */
     if(hair===20){cap();px(-5,-17+hy,1,2,hc);px(-3,-18+hy,2,3,hc);px(0,-17+hy,2,2,hc);px(3,-18+hy,1,3,hc);px(-4,-13+hy,1,2,hc);px(-1,-13+hy,2,2,hc);px(2,-13+hy,1,1,hc);px(-6,-13+hy,1,4,hc);px(5,-13+hy,1,4,hc);}   /* messy */
     if(hair===21){cap();px(-1,-15+hy,1,2,shade(hc,-0.45));px(-6,-13+hy,2,8,hc);px(4,-13+hy,2,8,hc);}   /* shoulder length, centre part */
-    if(hair===22){px(-5,-15+hy,10,2,hc);px(-5,-15+hy,10,1,hcD);px(-5,-13+hy,1,1,hc);px(4,-13+hy,1,1,hc);px(1,-17+hy,2,2,hc);px(1,-17+hy,2,1,RIB);}   /* high ponytail: pulled back, tied at the crown */
+    if(hair===22){px(-5,-15+hy,10,2,hc);px(-5,-15+hy,10,1,hcD);px(-5,-13+hy,1,1,hc);px(4,-13+hy,1,1,hc);TAILDX=tailDX(2,135);px(1,-17+hy,2,2,hc);px(1,-17+hy,2,1,RIB);TAILDX=0;}   /* high ponytail: pulled back, tied at the crown */
     if(hair===23){   /* flame spikes: swept straight up in a tall flame, a sharp widow's peak */
       px(-5,-15+hy,10,2,hc);px(-5,-13+hy,1,2,hc);px(4,-13+hy,1,2,hc);px(-1,-13+hy,2,1,hc);px(-6,-18+hy,2,4,hc);px(-4,-21+hy,2,7,hc);px(-2,-23+hy,2,9,hc);px(0,-23+hy,2,9,hc);px(2,-21+hy,2,7,hc);px(4,-18+hy,2,4,hc);
       px(-7,-17+hy,1,2,hc);px(6,-17+hy,1,2,hc);px(-3,-20+hy,1,5,hcD);px(1,-22+hy,1,7,hcD);px(3,-19+hy,1,4,hcD);px(-1,-22+hy,1,3,hcL);px(-5,-15+hy,10,1,hcD);}
@@ -486,7 +493,7 @@ var ART=(function(){
     if(hair===25){   /* long locks: a full fringe, locks down each side of the face, long behind */
       cap();px(-5,-13+hy,10,2,hc);px(-3,-12+hy,1,1,skin);px(1,-12+hy,1,1,skin);px(-6,-13+hy,1,11,hc);px(5,-13+hy,1,11,hc);px(-6,-3+hy,1,1,hcD);px(5,-3+hy,1,1,hcD);px(-2,-15+hy,3,1,hcL);}
     if(hair===26){px(-4,-17+hy,8,1,hc);px(-5,-16+hy,10,3,hc);px(-6,-15+hy,2,9,hc);px(4,-15+hy,2,9,hc);px(-5,-13+hy,10,1,hc);px(-6,-7+hy,2,1,hcD);px(4,-7+hy,2,1,hcD);px(-5,-15+hy,10,1,"#E8505B");px(-6,-14+hy,1,1,"#E8505B");px(5,-14+hy,1,1,"#E8505B");}   /* bob with a headband */
-    if(hair===27){cap();px(-4,-17+hy,2,2,hc);px(0,-17+hy,2,2,hc);px(3,-16+hy,2,1,hc);px(-4,-13+hy,3,1,hc);px(1,-13+hy,2,1,hc);px(-9,-15+hy,4,4,hc);px(-10,-12+hy,2,5,hc);px(-9,-8+hy,1,2,hcD);px(-6,-14+hy,1,1,"#E8505B");}   /* messy side tail */
+    if(hair===27){cap();px(-4,-17+hy,2,2,hc);px(0,-17+hy,2,2,hc);px(3,-16+hy,2,1,hc);px(-4,-13+hy,3,1,hc);px(1,-13+hy,2,1,hc);TAILDX=tailDX(-8,-110);TAILHIDE=FT;px(-9,-15+hy,4,4,hc);px(-10,-12+hy,2,5,hc);px(-9,-8+hy,1,2,hcD);px(-6,-14+hy,1,1,"#E8505B");TAILDX=0;TAILHIDE=false;}   /* messy side tail */
     if(hair===28){   /* fluffy mop: big messy volume, strands falling over the eyes */
       px(-7,-18+hy,14,5,hc);px(-6,-19+hy,4,1,hc);px(1,-19+hy,4,1,hc);px(-8,-17+hy,1,3,hc);px(7,-16+hy,1,3,hc);px(-9,-15+hy,1,1,hc);px(8,-14+hy,1,1,hc);
       px(-7,-13+hy,2,5,hc);px(5,-13+hy,2,5,hc);px(-4,-13+hy,2,2,hc);px(-4,-11+hy,1,1,hc);px(-1,-13+hy,2,2,hc);px(2,-13+hy,2,1,hc);px(3,-12+hy,1,2,hc);
@@ -505,7 +512,7 @@ var ART=(function(){
     /* the hair windmill: a long sweep of hair whipping round the head in a circle (with a fainter trail behind it) */
     if(st.swing!==undefined&&st.swing!==null&&hair!==0&&D!==1){var sw0=st.swing,hcx=0,hcy=-12+hy;
       for(var tr=2;tr>=0;tr--){var a5=sw0-tr*0.45,cl5=tr===0?hc:tr===1?hcD:shade(hc,-0.35);for(var r5=4;r5<=(tr===0?12:9);r5+=2){var w5=tr===0?3:2;px(Math.round(hcx+Math.cos(a5)*r5)-1,Math.round(hcy+Math.sin(a5)*r5)-1,w5,w5,cl5);}}}
-    SEC="extra";
+    MIRHAT=false;TAILDX=0;SEC="extra";
     /* extras */
     var ex=L.extra;
     if(ex===1){px(-4,-11+hy,8,2,"#111018");}
@@ -2138,7 +2145,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       var r=fn(o);o.globalCompositeOperation="destination-out";o.drawImage(e.h,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.h.width*p,e.h.height*p);o.globalCompositeOperation="source-over";
       g.save();g.setTransform(1,0,0,1,0,0);var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(oc,0,0);g.imageSmoothingEnabled=was;g.restore();return r;},
     at:function(g,key,x,y,p){var e=ptGet(key);if(!e||!e.c)return;var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(e.c,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.c.width*p,e.c.height*p);g.imageSmoothingEnabled=was;}};
-  function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var dk=key+"|d"+PDIR,hasD=!!PT[dk],e=ptGet(hasD?dk:key);if(!e)return;var fl=hasD?PDMIR:PMIR&&key.indexOf("hat:")===0;   /* a drawing for this exact turn is authored as it should look on screen */sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(fl)sg.scale(-1,1);if(rot)sg.rotate(rot);if(HATCLIP!==null&&key.indexOf("hair:")===0){sg.beginPath();sg.rect(-200,-14,400,400);sg.clip();}
+  function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var dk=key+"|d"+PDIR,hasD=!!PT[dk],e=ptGet(hasD?dk:key);if(!e)return;var fl=hasD?PDMIR:PMIR&&(key.indexOf("hat:")===0||key.indexOf("hair:")===0);   /* painted hats and hair keep their own sides in a turned-left view */   /* a drawing for this exact turn is authored as it should look on screen */sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(fl)sg.scale(-1,1);if(rot)sg.rotate(rot);if(HATCLIP!==null&&key.indexOf("hair:")===0){sg.beginPath();sg.rect(-200,-14,400,400);sg.clip();}
     if(e.h){sg.globalCompositeOperation="destination-out";sg.drawImage(e.h,e.x0,e.y0);sg.globalCompositeOperation="source-over";}
     if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();
     masks();MUSED=true;[[pmg,e.c],[hmg,e.h]].forEach(function(m){if(!m[1])return;m[0].save();m[0].imageSmoothingEnabled=false;m[0].translate(tx,ty);if(fl)m[0].scale(-1,1);if(rot)m[0].rotate(rot);m[0].drawImage(m[1],e.x0,e.y0);m[0].restore();});
@@ -2150,7 +2157,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
   function paintView(key,D,tx,ty){if(POFF||(ISO&&ISO!==key.split(":")[0]))return;var md=PT[key+"|d"+PDIR],mv=md||(D?PT[key+"|v"+D]:null),m=mv||PT[key];if(!m)return;var part=key.split(":")[0];   /* key|v1 (side) / key|v2 (back): its own drawing for that angle, used as is */
     if(part!=="hair"&&part!=="hat"&&part!=="extra")return;
     var tokd=Object.keys(m).some(function(q2){return typeof m[q2]==="string"&&m[q2].charAt(0)==="@";}),vc=tokd?lookCols(PLOOK):null;   /* key colours (magenta = hair) follow the player's colours from the side and back too */
-    var fl=md?PDMIR:PMIR&&part==="hat",ck=(fl?"m":"")+(md?"d"+PDIR:"v"+D)+"|"+key+(vc?"|"+vc.h+vc.t+vc.b+vc.s:"");if(!(ck in PC)){var o={},k,q,x,y,nx;
+    var fl=md?PDMIR:PMIR&&(part==="hat"||part==="hair"),ck=(fl?"m":"")+(md?"d"+PDIR:"v"+D)+"|"+key+(vc?"|"+vc.h+vc.t+vc.b+vc.s:"");if(!(ck in PC)){var o={},k,q,x,y,nx;
       for(k in m){if(!/^-?\d+,-?\d+$/.test(k))continue;q=k.split(",");x=+q[0];y=+q[1];
         if(mv)nx=x;
         else if(part==="extra"){if(D===2)continue;if(x<0)continue;nx=Math.round(x*0.5);}
