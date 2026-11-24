@@ -342,7 +342,7 @@ function roundMessage(ws, msg) {
     rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, ski: mode === "ski" ? cleanSki(msg.ski) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski" && mode !== "fish" && mode !== "boats", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     /* a linked second part (ice -> ski, fishing -> boats) carries on from the first: scores kept, and everyone's told where it came from (for the transition) */
-    if (!msg.keep) r.viewers.forEach(function(v) { v.roundScore = 0; v.danced = false; });
+    r.viewers.forEach(function(v) { if (msg.keep) v.roundBase = v.roundScore || 0; else { v.roundScore = 0; v.roundBase = 0; v.danced = false; } });
     var LINKS = ["skate", "ice", "fish", "ski", "boats"]; if (msg.link && LINKS.indexOf(msg.link) >= 0) rd.link = msg.link;
     if (mode === "ctf") { BOTS.ctfEven(code); var kf = !!msg.kflag, cm = CTF.clean(msg.ctf) || (kf ? CTF.kartDefault() : CTF.defaultMap()); if (kf) cm = CTF.kartMap(cm); var ci = CTF.info(cm); rd.ctf = { map: cm, I: ci, kart: kf, st: CTF.newState(ci, Array.from(r.viewers.keys()), kf) }; rd.isBattle = false; }
     broadcast(code, roundPublic(r));
@@ -825,7 +825,7 @@ function onMessage(ws, raw, isBinary) {
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
       if (!srd || !sv || srd.mode === "free" || srd.mode === "ctf" || (srd.phase !== "play" && srd.phase !== "tally") || (!msg.fin && !allow(ws, "score", 6, 2))) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
-      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0);   // no higher than a perfect run
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" || srd.mode === "fish" || srd.mode === "boats" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0) + (srd.link ? sv.roundBase || 0 : 0);   // no higher than a perfect run; a 2-parter's second half adds onto the first
       /* dance walk race: the server keeps the finish order so every screen agrees on the places;
          over the line = 1000 + 3000 / place, still racing = distance (up to 1000). When everyone's in, the round ends. */
       if (srd.mode === "walk") {
