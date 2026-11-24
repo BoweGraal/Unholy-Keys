@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.34 — Puppet dance removed
+
+- **Puppet** is gone from free dance: it's no longer in the dance buttons, the "your turn plays" random picks, or on the ' key. (Someone on an older page still dancing it shows up fine.)
+- Check: free dance: the list ends at Techno march.
+
 ## v1.82.33 — Skank (Classic) from a new clip
 
 - **Skank → Classic** now snaps on each beat: **one arm pumps up** (bent at the elbow) as **the opposite foot kicks out**, holds, eases back, then a **short break** in a bouncy bent-knee stance with the fists by the chest, before the other side: right arm + left foot, then left arm + right foot.
