@@ -1688,6 +1688,47 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.0 — 2-parters (Ice rink → Ski, Fishing → Bumper boats), and two new games
+
+**Needs a server redeploy** (new modes, scores carry over between the two halves, server bots play the new games).
+
+1. **2-parters in the game picker** (performer, Start a song): *Ice rink ➜ Ski* and *Fishing ➜ Bumper boats*. Each takes the whole song: part 1, then part 2 takes over around the middle (on the drop if there is one near the middle, otherwise on a bar or a part change). There's no results screen in between, and points carry on into part 2. Results come at the end.
+2. **Transitions** (every player's screen): Ice ➜ Ski freezes the rink, tilts it up into a slope, snows it into a white-out, and clears when the mountain is ready. Fishing ➜ Boats breaks the dance floor into tiles that fall away into the dark, and the pool rises up floating. A small card says "Part 2 · your points carry on" with the countdown.
+3. **Fishing** (also on its own in the picker, and in Practice):
+   - A pool opens in the middle of the floor and everyone stands round the edge.
+   - CAST (Space / tap), then wait for the bite.
+   - **Reel:** the two joined bars are your stick. UP (top bar) reels in, DOWN (bottom bar) gives slack, and left/right sway the box to stay on the fish. Reeling on the fish fills the green catch meter. Reeling off the fish, or a big fish fighting, pulls the LINE meter up, and full = SNAP. Slack lets the line relax but the fish starts getting away.
+   - **Net:** fill the meter and a net swings left and right over the fish. Tap NET when it's on it (two tries, the second faster; dead centre = PERFECT NET ×1.5).
+   - Fish: Minnow 60, Perch 120, Bass 220, Pike 380, Golden koi 650. The big ones bite in the drop / chorus / finale.
+   - You can walk round the edge with the stick while you're not fishing.
+4. **Bumper boats** (also on its own, and in Practice):
+   - The floor is gone and the pool floats.
+   - Steer with the stick / WASD, and BOOST (Space / tap; it refills) to ram.
+   - Bumps bounce both boats. Near the edge the water pushes you back, so it takes a real hit (or a boost) to go over.
+   - Over the edge = out till the end of the round, sat on the raft at the bottom.
+   - Points: staying afloat (8 a second), hard bumps / rams, **knocking someone off** (+300 if you hit them in the 3 s before they fell), and **LAST BOAT FLOATING** (+500).
+   - The pool slowly shrinks (to just over half size by 80 s) so it always ends.
+5. **Performer screen:** shows the pool with everyone's fishing lines, and for boats the void, the floating pool and a coloured bumper ring round each player.
+6. **Bots:** the room-fill bots stand round the pool and fish, or drift round in boats and sometimes get knocked off. Practice dancers do the same.
+
+To test the hand-over without a whole song: in Practice pick Fishing, then Bumper boats, to see each half. The 2-parter itself runs from the performer's game picker.
+
+## v1.81.99 — Mosh pit: aim and swing on the beat; practice bots move again
+
+1. **Twin-stick punching:** hold the right stick (phone) toward someone and you swing that way on every beat. A cone shows where you're aiming, and a ring closes in on each beat. Anyone inside the cone gets a PUNCH; dead centre is a SMASH (worth more). Swinging at nothing is a MISS and resets your streak, and landing swings in a row builds a multiplier. On a PC, hold the mouse button and point at someone, or aim with I J K L. Flicking and windmilling no longer score.
+2. **HEADBANG box** (the BANG meter) now says what it is ("HEADBANG · tap as it hits"). It sits above the punch stick on a tall phone screen and beside it on a wide one, so it no longer covers the stick.
+3. **Bots:** the practice dancers in the games menu now move and play again in the mosh pit, keepy uppy, walk race, half pipe, ski and the rink. Before, they only moved during a practice song, so they stood still.
+
+## v1.81.98 — Ski: lower top speed, less slowdown on slants
+
+1. **Top speed** pointing straight down is about 20% lower (185, was 230), so it stays controllable.
+2. **Slants:** skiing across the slope keeps much more speed. A 45° slant now cruises at about 85% of top speed (was about 70%), and a steep 60° slant at about 70% (was under half). The extra drag from carving is also lighter. Pointing fully sideways still brings you to a stop.
+
+## v1.81.97 — Keepy uppy buttons in the bottom-right corner
+
+1. **Keepy uppy on a phone:** JUMP sits in the bottom-right corner, level with the stick on the left, with SPIN above TWIRL just to its left. They no longer float halfway up the right side over the dancers.
+2. **On a PC** the same layout, slightly smaller (Space, Q and E still work).
+
 ## v1.81.96 — Triples, a circular hair windmill, T-step faces front
 
 1. **Ice free dance triples:** every third double (once the cascades start) gets a third dot in the middle of its line, a beat after the first tap. The pulse runs through it: tap, tap, tap. Your skater keeps flowing through the middle.

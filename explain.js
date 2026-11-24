@@ -41,6 +41,12 @@ var EXPLAIN=(function(){
     keepy:{n:"Keepy uppy",i:"🎈",goal:"Keep the balloon, the ball and the feather off the floor.",
       how:[["Move with the stick. Tap JUMP to head them up, tap again in the air to double jump","Move with the arrows or WASD. Space to jump, Space again in the air to double jump"],"Get under them and head them back up","Don't let anything touch the floor"],
       rules:["Every hit scores; hits in a row build a multiplier","The feather and double-jump hits score the most","Highest score wins the round"]},
+    fish:{n:"Fishing",i:"🎣",goal:"Catch the most fish before the song moves on. Bigger fish score more.",
+      how:[["Tap CAST, wait for a bite","Space to cast, wait for a bite"],["Stick UP reels in, DOWN gives slack; left/right keep the box on the fish","↑ reels in, ↓ gives slack; ← → keep the box on the fish"],["When the net comes out, tap NET as it swings over the fish","When the net comes out, press Space as it swings over the fish"]],
+      rules:["Reeling off the fish pulls the line tight: too tight and it snaps","The big fish bite in the loud parts of the song","Most points wins the round"]},
+    boats:{n:"Bumper boats",i:"🚤",goal:"Knock everyone off the floating pool. Last boat floating wins big.",
+      how:[["Steer with the stick","Steer with the arrows or WASD"],["Tap BOOST to ram","Space to BOOST and ram"],"Hit them hard near the edge to push them over"],
+      rules:["Go over the edge and you're out till the end of the round","Points for staying afloat, hard bumps, and knocking people off","The pool slowly shrinks"]},
     kart:{n:"Mars Rally",i:"🚀",goal:"Race round the track. The stick is your speed and direction.",
       how:[["Push the stick the way you want to go. Further is faster, pull back to reverse","Push the stick (or WASD) the way you want to go. Further is faster, pull back to reverse"],"Push when the 2 lights up for a rocket start","Tap DRIFT to hop, swing into the turn and hold it for a boost"],
       rules:["Distance, laps, boosts and overtakes all score","Highest score wins the round"]},
@@ -137,6 +143,15 @@ var EXPLAIN=(function(){
       if(ph<0.08){ring("#fff",x,100,10+ph*120,1);pop("+"+[100,60,200][i],x,88,ph,COL.yel,1);}});
     var jmp=Math.abs(Math.sin(t*3));av(0,ax,104-jmp*8,1.5,{armL:2.3,armR:-2.3,legL:jmp,legR:-jmp,dir:0});
     R("#0006",0,128,W,16);TX("COMBO ×"+(2+Math.floor(t)%5),8,134,1,COL.yel);score(Math.floor(t*50));}
+  function d_fish(t){floor("#161233","#1c1840");g.fillStyle="#5a5277";g.beginPath();g.ellipse(128,62,70,26,0,0,6.283);g.fill();g.fillStyle="#1a6f9e";g.beginPath();g.ellipse(128,62,64,22,0,0,6.283);g.fill();
+    var ph=t%4,ax=40;av(0,ax,92,1.5,{armL:1.3,armR:-1.1,dir:1});R("#7a4a22",ax+4,64,2,1);g.strokeStyle="#fff";g.beginPath();g.moveTo(ax+10,62);g.lineTo(100,60+(ph>1?Math.sin(t*20):0));g.stroke();R(ph>1?"#F5C518":"#ff3b5c",99,58,3,3);
+    if(ph>1.2){R("#1c1830",70,108,116,10);R("#2a4a7a",70,96,116,10);var fx=128+Math.sin(t*2.3)*40,zx=128+Math.sin(t*2.3-0.3)*40;R("#3DF2FF66",zx-14,96,28,10);R("#F5C518",fx-4,99,8,4);R("#5bd17a",70,120,(ph-1.2)/2.8*116,3);TX("REEL",72,98,1,"#fff");}
+    if(ph>3.6)pop("BASS +220",128,40,ph-3.6,COL.yel,1);score(Math.floor(t*40));}
+  function d_boats(t){R("#0b0618",0,0,W,H);for(var i=0;i<30;i++)R("#fff4",(i*53)%W,(i*37+t*8)%H,1,1);g.fillStyle="#2a1f3d";g.beginPath();g.moveTo(40,70);g.quadraticCurveTo(128,150,216,70);g.fill();
+    g.fillStyle="#6c6390";g.beginPath();g.ellipse(128,70,90,32,0,0,6.283);g.fill();g.fillStyle="#1b76a8";g.beginPath();g.ellipse(128,70,86,29,0,0,6.283);g.fill();
+    var k=(t%3)/3,ax=70+k*60,bx=150+(k>0.6?(k-0.6)*120:0),by=70-(k>0.6?(k-0.6)*30:0);
+    [[ax,74,"#FF4D6D",0],[bx,by,"#3DF2FF",1]].forEach(function(b){g.strokeStyle=b[2];g.lineWidth=4;g.beginPath();g.ellipse(b[0],b[1],14,6,0,0,6.283);g.stroke();av(b[3],b[0],b[1]+2,1.2,{armL:1.1,armR:-1.1,dir:0});});
+    if(k>0.55&&k<0.75)pop("RAM! +90",bx,50,(k-0.55)*4,COL.yel,1);score(Math.floor(t*30));}
   function d_kart(t){R("#0b0820",0,0,W,H);for(var i=0;i<40;i++)R("#fff4",(i*53)%W,(i*37)%H,1,1);
     var cx=128,cy=84,rx=88,ry=44;g.strokeStyle="#3a3070";g.lineWidth=22;g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,6.283);g.stroke();g.strokeStyle="#6a5ad0";g.lineWidth=1;g.setLineDash([4,4]);g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,6.283);g.stroke();g.setLineDash([]);
     var a=t*1.1,kx=cx+Math.cos(a)*rx,ky=cy+Math.sin(a)*ry,dr=Math.sin(a*2)>0.6;
@@ -207,7 +222,7 @@ var EXPLAIN=(function(){
     R("rgba(255,255,255,.08)",120,110,16,16);var hue=(t*80)%360;g.fillStyle="hsl("+hue+",90%,60%)";g.fillRect(122,112,12,12);TX("?",128,113,1,"#fff","center");
     if(u<0.25)pop("LAUNCH: hold, aim…",150,40,0.2,"#3DF2FF",1);else if(u<0.45)pop("…let go!",120,40,0.2,COL.yel,1);else if(u>=0.6&&u<0.75)pop("IMPACT! FLAG HOME",110,30,(u-0.6)/0.15*0.6,COL.red,1);
     TX("RED",90,6,2,COL.red,"center");TX("0",128,6,2,"#fff","center");TX("BLUE",166,6,2,COL.blu,"center");}
-  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:function(t){d_skate(t,true);},keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf,kflag:d_kflag};
+  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:function(t){d_skate(t,true);},keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf,kflag:d_kflag,fish:d_fish,boats:d_boats};
 
   /* ---------- the card ---------- */
   var CSS="#explain{display:none;position:fixed;left:0;right:0;bottom:0;top:0;z-index:60;background:none;pointer-events:none;align-items:flex-start;justify-content:center;padding:4px 10px 10px;box-sizing:border-box;-webkit-tap-highlight-color:transparent}"+

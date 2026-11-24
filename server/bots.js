@@ -117,6 +117,8 @@ module.exports = function(api) {
     if (playing && rd.mode === "walk") { walk(b, now, rd); }
     if (playing && rd.mode === "pipe") { pipe(b, now, rd); }
     if (playing && rd.mode === "ski") { ski(b, now, rd); }
+    if (playing && rd.mode === "fish") { fish(b, now); }
+    if (playing && rd.mode === "boats") { boats(b, now); }
     if (playing && rd.mode === "mosh") { mosh(b, now, rd); }
     if (playing && rd.mode === "ctf") { ctf(b, now, rd); }
     if (playing && rd.mode === "keepy") { if (!b.hopAt && Math.random() < 0.05) b.hopAt = now; var hu = b.hopAt ? (now - b.hopAt) / 900 : 0; if (hu >= 1) { b.hopAt = 0; hu = 0; } b.skH = b.hopAt ? Math.round(24 * 4 * hu * (1 - hu)) : 0; }
@@ -152,7 +154,7 @@ module.exports = function(api) {
   /* in a round: dance along, report a score (bots are decent, rarely great), vote in battles, push in the mosh */
   function round(b, now) {
     var rd = b.rd, pos = now - rd.playAt, ch = rd.chart, bpm = ch && ch.bpm || 120;
-    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.mode === "ski" || rd.mode === "ctf" || rd.battle ? 4 : 5;
+    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.mode === "ski" || rd.mode === "ctf" || rd.mode === "fish" || rd.mode === "boats" || rd.battle ? 4 : 5;
     if (!b.dancing || b.style !== style) { b.dancing = true; b.style = style; b.act({ type: "dance", style: style }); }
     pose(b, now, bpm);
     var slot = -1, bs = rd.b && rd.b.slots, be = rd.b && rd.b.entrants;
@@ -165,7 +167,7 @@ module.exports = function(api) {
       /* a score that grows through the song at this bot's skill */
       if (b.rs0n !== rd.n) { b.rs0n = rd.n; b.rs0 = pos; b.score = 0; }   /* a game can start part way into the song (two games per song) */
       var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, (pos - b.rs0) / Math.max(60000, Math.min(150000, dur - b.rs0))));
-      var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : arrows * 100 * (1 + arrows / 100) * 0.55;
+      var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : rd.mode === "fish" ? 4000 : rd.mode === "boats" ? 1500 : arrows * 100 * (1 + arrows / 100) * 0.55;
       b.score = Math.max(b.score || 0, Math.round(full * frac * b.skill * rnd(0.9, 1.1)));
       var sm = { type: "score", s: b.score }; if (slot >= 0) sm.m = slot;
       b.act(sm); b.scoreAt = now + 2000;
@@ -185,6 +187,26 @@ module.exports = function(api) {
     if (!s.air && Math.random() < 0.02) s.air = now;
     var u = s.air ? (now - s.air) / 1300 : 0; if (u >= 1) { s.air = 0; u = 0; }
     b.skH = s.air ? Math.round(26 * 4 * u * (1 - u)) : 0; b.skT = s.air ? 1 + (Math.floor(s.a * 3) % 4 + 4) % 4 : 0;
+  }
+  /* fishing: stand at the pool's edge and go through cast, wait, reel, net (the same spots and states the players' screens use) */
+  function fish(b, now) {
+    if (!b.fi || b.fi.n0 !== b.rd.n) b.fi = { n0: b.rd.n, a: Math.random() * 6.283, s: 0, at: now + rnd(500, 3000), n: 0, posAt: 0 };
+    var f = b.fi;
+    if (now > f.at) { f.s = f.s === 0 ? 2 : f.s === 2 ? 3 : f.s === 3 ? 4 : f.s === 4 ? (Math.random() < 0.75 ? 5 : 7) : f.s === 5 ? (Math.random() < 0.8 ? 6 : 8) : 0; if (f.s === 6) f.n++;
+      f.at = now + (f.s === 2 ? rnd(1500, 4000) : f.s === 3 ? 600 : f.s === 4 ? rnd(2500, 6000) : f.s === 5 ? rnd(800, 1800) : 1300); }
+    if (now - f.posAt > 1000) { f.posAt = now; b.x = +(0.5 + Math.cos(f.a) * 0.2 * 1.3).toFixed(3); b.y = +(0.52 + Math.sin(f.a) * 0.11 * 1.55).toFixed(3); b.act({ type: "pos", x: b.x, y: b.y }); }
+  }
+  /* bumper boats: drift round the floating pool, steer away from the edge, and now and then get knocked off (then sit on the raft) */
+  function boats(b, now) {
+    if (!b.bb || b.bb.n0 !== b.rd.n) { var a0 = Math.random() * 6.283; b.bb = { n0: b.rd.n, u: Math.cos(a0) * 0.6, v: Math.sin(a0) * 0.6, vu: 0, vv: 0, out: false, posAt: 0, t0: now, hd: 0 }; }
+    var o = b.bb, dt = 0.2, R = Math.max(0.55, 1 - (now - o.t0) / 80000 * 0.45);
+    if (!o.out) {
+      var r = Math.hypot(o.u, o.v), tu = r > R * 0.6 ? -o.u : (Math.random() - 0.5), tv = r > R * 0.6 ? -o.v : (Math.random() - 0.5), tm = Math.hypot(tu, tv) || 1;
+      o.vu += tu / tm * 0.9 * dt; o.vv += tv / tm * 0.9 * dt; var dr = Math.exp(-1.1 * dt); o.vu *= dr; o.vv *= dr; o.u += o.vu * dt; o.v += o.vv * dt; o.hd = Math.atan2(o.vv, o.vu);
+      if (Math.random() < 0.0025 * (1.4 - b.skill) * (1 + (now - o.t0) / 40000)) o.out = true;   /* knocked off */
+      if (Math.hypot(o.u, o.v) > R * 1.03) o.out = true;
+    }
+    if (now - o.posAt > 150) { o.posAt = now; if (o.out) { b.x = +(0.12 + 0.76 * Math.random()).toFixed(3); b.y = 0.95; o.posAt = now + 1e9; } else { b.x = +(0.5 + o.u * 0.34).toFixed(4); b.y = +(0.6 + o.v * 0.2).toFixed(4); } b.act({ type: "pos", x: b.x, y: b.y }); }
   }
   /* Mars Rally: wait on the dance floor through the intro, then ride the same track the players see, at this bot's own pace */
   var KG = null; try { KG = require("../kart.js").geo; } catch (e) {}
@@ -372,6 +394,8 @@ module.exports = function(api) {
     /* free dance: each bot has a favourite style (the shuffle's popular) and switches move now and then */
     if (b.rd && b.rd.mode === "free") { if (!b.fds || Math.random() < 0.01) { b.fds = Math.random() < 0.35 ? 9 : 1 + Math.floor(Math.random() * 15); b.fdm = Math.floor(Math.random() * 4); } pm.fd = { s: b.fds, m: b.fdm, c: [0, 0, 0, 0] }; }
     if (b.rd && b.rd.mode === "kart") { pm.sk = { h: b.kh || 0, f: b.kf ? 1 : 0, t: 0 }; pm.a = [210, -210, 25, -25]; }
+    else if (b.rd && b.rd.mode === "fish" && b.fi) { pm.sk = { h: Math.min(60, b.fi.n), f: b.fi.s === 7 ? 1 : 0, t: b.fi.s }; pm.a = b.fi.s === 6 ? [290, -290, 20, -20] : [130, -110, 0, 0]; }
+    else if (b.rd && b.rd.mode === "boats" && b.bb) { pm.sk = { h: 0, f: 0, t: b.bb.out ? 9 : ((Math.round(b.bb.hd / (Math.PI / 4)) % 8) + 8) % 8 }; pm.a = b.bb.out ? [40, -40, 0, 0] : [110, -110, 10, -10]; }
     else if (b.rd && b.rd.mode === "ski" && b.sk2) { var cr = now < b.sk2.crash; pm.sk = { h: Math.max(0, Math.min(60, Math.floor(Math.max(0, b.sk2.y) / 1000))), f: cr ? 1 : 0, t: cr ? 9 : Math.max(0, Math.min(6, Math.round(b.sk2.a / (Math.PI / 6)) + 3)) }; pm.a = cr ? [260, -260, 120, -120] : [90, -90, 15, -15]; }
     else if (b.rd && b.rd.mode === "pipe" && b.pp) { var pa = b.pp.air; pm.sk = { h: 0, f: now < b.pp.bail ? 1 : 0, t: pa ? pa.k : 0 }; if (pa) pm.fd = { s: PPD[pa.k], m: 0, c: [0, 0, 0, 0] }; pm.a = now < b.pp.bail ? [260, -260, 120, -120] : pa ? [230, -230, 50, -50] : [120, -120, 35, -35]; }
     else if (b.rd && b.rd.mode === "walk" && b.wk) { pm.sk = { h: b.wk.fin ? 1 : 0, f: b.wk.trip ? 1 : 0, t: b.wk.si }; pm.fd = { s: b.wk.fin ? 14 : WK.D[b.wk.si], m: 0, c: [0, 0, 0, 0] }; }
