@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.2"></script>
-<script src="gfx.js?v=1.82.2"></script>
-<script src="art.js?v=1.82.2"></script>
-<script src="voice.js?v=1.82.2"></script>
-<script src="instruments.js?v=1.82.2"></script>
-<script src="kart.js?v=1.82.2"></script>
-<script src="explain.js?v=1.82.2"></script>
+<script src="tune.js?v=1.82.4"></script>
+<script src="gfx.js?v=1.82.4"></script>
+<script src="art.js?v=1.82.4"></script>
+<script src="voice.js?v=1.82.4"></script>
+<script src="instruments.js?v=1.82.4"></script>
+<script src="kart.js?v=1.82.4"></script>
+<script src="explain.js?v=1.82.4"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3244,7 +3244,8 @@ var GAME=(function(){
   var fdqPlaceT=0;
   function fdqPlace(){var box=document.getElementById("fdQueue"),rb=document.getElementById("roundBox");if(!box)return;
     var top=58;if(rb&&rb.classList.contains("on")){var r=rb.getBoundingClientRect();if(r.bottom>0)top=Math.max(top,Math.round(r.bottom+8));}box.style.top=top+"px";box.style.bottom="auto";}
-  function fdSet(st,m){fStyle=st;fSub=m;fkHeld={};fdRender();applyToMe();sendPose(true);}
+  function fdSet(st,m){if(fStyle===0){fCtl=[0,0,0,0];fHand=[null,null];fHandP=[null,null];fHeld=[null,null];}   /* starting to dance: nothing carried over (a hand or stick left where it was) */
+    fStyle=st;fSub=m;fkHeld={};fdRender();applyToMe();sendPose(true);}
   var fdLbl=false;
   /* the hand rings: when you're not holding one, its dot rides where that hand of the dance is, so you can see it and grab just that hand while the rest of the dance carries on */
   function handSync(){
@@ -3372,9 +3373,11 @@ var GAME=(function(){
   }
   /* on a computer: WASD moves the left dot, the arrow keys the right one (the mouse can still drag either) */
   var FKEYS={KeyW:[0,0,-1],KeyS:[0,0,1],KeyA:[0,-1,0],KeyD:[0,1,0],ArrowUp:[1,0,-1],ArrowDown:[1,0,1],ArrowLeft:[1,-1,0],ArrowRight:[1,1,0]},fkHeld={};
-  function fdKey(code,down){if(mode!=="free"||fStyle===0||!FKEYS[code])return false;if(down)fkHeld[code]=1;else delete fkHeld[code];return true;}
+  var fkAt=[0,0];
+  function fdKey(code,down){if(!FKEYS[code])return false;if(!down){var had=!!fkHeld[code];delete fkHeld[code];return had&&mode==="free";}if(mode!=="free"||fStyle===0)return false;if(!fkHeld[code]&&!Object.keys(fkHeld).some(function(kc){return FKEYS[kc][0]===FKEYS[code][0];}))fkAt[FKEYS[code][0]]=performance.now();fkHeld[code]=1;return true;}
+  window.addEventListener("blur",function(){fkHeld={};fHand=[null,null];fHandP=[null,null];});   /* switched away: nothing stays held */
   function turnBy(q){setTimeout(function(){fBack=(fBack+q)&3;applyToMe();sendPose(true);},q===1?600:700);}
-  function fdPick(i){fdManual=true;fStyle=i;fSub=0;fCtl=[0,0,0,0];fHand=[null,null];fkHeld={};if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
+  function fdPick(i){fdManual=true;fStyle=i;fSub=0;fCtl=[0,0,0,0];fHand=[null,null];fHandP=[null,null];fHeld=[null,null];fkHeld={};if(i===0)setPose(REST);fdRender();applyToMe();sendPose(true);}
   function fdSub(k){fdManual=true;fSub=k;fdRender();applyToMe();sendPose(true);}
   function fdRender(){
     fdBuild();
@@ -3414,7 +3417,9 @@ var GAME=(function(){
     if(fdAuto(nowS)){fdShow();applyToMe();sendPose();return;}
     fdRec(nowS);
     for(var i=0;i<2;i++){var kx=0,ky=0,kn=0;for(var kc in fkHeld){var kv=FKEYS[kc];if(kv&&kv[0]===i){kx+=kv[1];ky+=kv[2];kn++;}}
-      if(kn&&fHeld[i]===null){var km=Math.hypot(kx,ky)||1;kx/=km;ky/=km;if(!kx&&!ky){kx=0;ky=0;}fCtl[i*2]+=(kx*0.95-fCtl[i*2])*0.35;fCtl[i*2+1]+=(ky*0.95-fCtl[i*2+1])*0.35;moved=true;}}   /* held keys push the dot that way */
+      if(kn&&fHeld[i]===null){var km=Math.hypot(kx,ky)||1;kx/=km;ky/=km;if(!kx&&!ky){kx=0;ky=0;}
+        var held2=(performance.now()-(fkAt[i]||performance.now()))/1000,mag=0.22+0.73*Math.max(0,Math.min(1,(held2-0.2)/1.1)),ek=Math.min(1,FRAME_DT*7);
+        fCtl[i*2]+=(kx*mag-fCtl[i*2])*ek;fCtl[i*2+1]+=(ky*mag-fCtl[i*2+1])*ek;moved=true;}}   /* held keys ease the dot that way: a tap sways, holding pushes it out */
     for(var i=0;i<2;i++)if(fHeld[i]===null&&!Object.keys(fkHeld).some(function(kc){return FKEYS[kc][0]===i;})&&(fCtl[i*2]||fCtl[i*2+1])){fCtl[i*2]*=0.82;fCtl[i*2+1]*=0.82;if(Math.abs(fCtl[i*2])<0.02&&Math.abs(fCtl[i*2+1])<0.02){fCtl[i*2]=0;fCtl[i*2+1]=0;}moved=true;}
     if(moved){fdShow();applyToMe();sendPose();}
     /* the left stick walks you around the floor while the dance loop keeps going (the dance reads the same stick, so the footwork follows) */
@@ -8169,7 +8174,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.82.2",SERVER_VERSION="";
+var PAGE_VERSION="1.82.4",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8753,7 +8758,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.2"></script>
+<script src="lab.js?v=1.82.4"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
