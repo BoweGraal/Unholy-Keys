@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.23 — Faded SPACE / D / E / 3 keys gone from the jam screen
+
+- The row of faded SPACE, D, E, 3 key hints above the stage on the performer's PC jam screen is gone. The keys still work.
+- Check: open jam mode on a PC: no faded key row.
+
 ## v1.82.22 — No Next Song popup at the end of a song
 
 - When a song or backing track finishes on the performer page, the **Next Song** picker no longer pops up over the screen. You just get the small "Song ended" notice. The picker still opens from its button whenever you want it.
