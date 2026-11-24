@@ -477,6 +477,10 @@ body.gaming-free #moveHint{display:none}
 #fdUI.free .fd-hand{display:none}
 #fdPlan{display:none;position:fixed;left:0;right:0;bottom:0;height:50vh;height:50dvh;z-index:23;box-sizing:border-box;padding:8px 10px;background:linear-gradient(rgba(14,10,28,.93),rgba(10,8,22,.98));border-top:2px solid #F5C518;flex-direction:column;gap:6px;overflow-y:auto;color:#fff;font:600 12px 'Silkscreen',ui-monospace,monospace;user-select:none;-webkit-user-select:none}
 body.fd-plan #fdPlan{display:flex}
+@media (pointer:fine){#fdPlan{height:auto;max-height:50vh;max-height:50dvh}}   /* a computer: only as tall as it needs, so you can see the dancing above it */
+#fdPlan .pl-watch{flex:none;margin-left:auto;padding:5px 10px;border:2px solid #3DF2FF;background:#123040;color:#fff;font:700 11px 'Silkscreen',ui-monospace,monospace;cursor:pointer}
+#plOpen{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 10px);z-index:23;padding:8px 14px;border:2px solid #F5C518;background:#1c1630;color:#F5C518;font:700 12px 'Silkscreen',ui-monospace,monospace;box-shadow:3px 3px 0 #000;cursor:pointer;white-space:nowrap}
+body.fd-plan-min #plOpen{display:block}
 body.fd-plan #fdUI .fd-pads,body.fd-plan #fdUI .fd-col,body.fd-plan #fdUI .fd-subs,body.fd-plan #fdUI .fd-queue,body.fd-plan #fdUI .fd-help{display:none}
 #fdPlan .pl-top{position:sticky;top:-8px;z-index:2;background:rgba(14,10,28,.97);padding:4px 0;margin-top:-4px;display:flex;gap:8px;align-items:center;justify-content:space-between}
 #fdPlan .pl-head{font:800 15px 'Silkscreen',ui-monospace,monospace;color:#F5C518;line-height:1.2}#fdPlan .pl-head.first{color:#fff;background:linear-gradient(135deg,#D354A0,#F5C518);color:#15131f;padding:5px 10px;border-radius:10px;animation:plPulse 1s ease-in-out infinite}
@@ -805,7 +809,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <div id="perfLeft">Performer has left the stage</div>
   <div id="moveHint">Arrows or WASD to walk &middot; Enter to talk &middot; Space to dance</div>
   <!-- free dance, waiting for your turn in the circle: the bottom half of the screen is for planning it -->
-  <div id="fdPlan" aria-label="Plan your turn"><div class="pl-top"><div class="pl-head"></div><button class="pl-stop" title="Stop dancing (Esc)">&#10005; Stop</button></div><div class="pl-sub"></div><div class="pl-slots"></div><div class="pl-lbl pl-lbl-st">Styles: tap to try one · drag it into a slot to plan it</div><div class="pl-dances"></div><div class="pl-subs"></div></div>
+  <button id="plOpen" aria-label="Plan your moves">&#9650; PLAN MOVES</button><div id="fdPlan" aria-label="Plan your turn"><div class="pl-top"><div class="pl-head"></div><button class="pl-watch" title="Hide this and watch the dancing">&#9660; Watch</button><button class="pl-stop" title="Stop dancing (Esc)">&#10005; Stop</button></div><div class="pl-sub"></div><div class="pl-slots"></div><div class="pl-lbl pl-lbl-st">Styles: tap to try one · drag it into a slot to plan it</div><div class="pl-dances"></div><div class="pl-subs"></div></div>
   <!-- free dance: dance buttons down both edges, the dance's own moves along the bottom, two control dots in the middle -->
   <div id="fdUI" aria-label="Free dance controls">
     <div class="fd-col fd-l"></div><div class="fd-col fd-r"></div>
@@ -1961,7 +1965,8 @@ function resize(){
 /* ---------- playtest zoom: a − / + for each game, saved per game on this device, to try out zoom levels ----------
    The camera games (CTF, Kart flag, Ski, Mars Rally, Half pipe) scale their own camera; the others zoom the room. */
 var GZS={};try{GZS=JSON.parse(localStorage.getItem("uk_gz")||"{}")||{};}catch(e){GZS={};}
-function gzDef(k){return 1;}
+var GZ_PC=!!(window.matchMedia&&matchMedia("(pointer:fine)").matches);
+function gzDef(k){return k==="free"&&GZ_PC?1.5:1;}   /* a computer: free dance starts at 150% */
 window.ukGZ=function(k){var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
 var GZNAME={ctf:"CTF",kflag:"Kart flag",ski:"Ski",kart:"Mars Rally",pipe:"Half pipe",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",walk:"Walk race",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Highway 4 keys",crowd:"Crowd vote",fish:"Fishing",boats:"Bumper boats"};
 function gzKey(){var m=typeof GAME!=="undefined"&&GAME.mode;if(!m)return null;if(m==="ctf")return document.body.classList.contains("ctf-kart")?"kflag":"ctf";if(m==="skate"&&typeof ICE!=="undefined"&&ICE)return "ice";return m;}
@@ -1974,14 +1979,16 @@ setInterval(gzUI,400);
 window.ukGzSet=function(k,z){if(z===1)delete GZS[k];else GZS[k]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}};   /* test hook */
 /* scroll-wheel zoom on the venue floor (PC): wheel up zooms in, wheel down out, anchored low so the dancers grow upward; taps are mapped back through it */
 var VZ=1,VZ_AY=0.62;
-try{VZ=Math.max(1,Math.min(2.6,+localStorage.getItem("uk_vz")||1));}catch(e){}
+try{var vzs=localStorage.getItem("uk_vz");VZ=Math.max(1,Math.min(2.6,vzs?+vzs||1:(window.matchMedia&&matchMedia("(pointer:fine)").matches?1.5:1)));}catch(e){}   /* a computer starts a little zoomed in (150%) on the dance floor */
 function vzActive(){return VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
 /* the camera: the wheel zoom, plus an automatic push in on you while it's your turn in the spotlight, so you can see (and steer) the whole body */
-var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null,VZ_H=60,VZ_B=[0,0];
+var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null,VZ_H=60,VZ_B=[0,0],RING_C=null,VZ_VB=0;
 function vzCalc(){
   var now=performance.now(),dt=Math.min(0.1,(now-(vzT||now))/1000);vzT=now;
   var f=null;try{f=GAME.mode==="free"&&typeof ROUND!=="undefined"?ROUND.featured():null;}catch(e){}
-  var want=f&&f.id===myId&&VZ_ME&&!(typeof PIPE!=="undefined"&&PIPE.on)?1:0;
+  var noPipe=!(typeof PIPE!=="undefined"&&PIPE.on),ring=GAME.mode==="free"&&RING_C&&noPipe;
+  var pl=document.body.classList.contains("fd-plan")?document.getElementById("fdPlan"):null;VZ_VB=pl?Math.max(H*0.3,Math.min(H,pl.getBoundingClientRect().top)):H;   /* how much of the screen the planner leaves */
+  var want=(f&&f.id===myId&&VZ_ME&&noPipe)||ring?1:0;
   vzTz+=(want-vzTz)*Math.min(1,dt*3);if(vzTz<0.01)vzTz=0;
   var base=vzActive(),gz=window.ukGZ(gzKey()),Z0=(base?VZ:1)*gz;if(Math.abs(gz-1)>0.001)base=true;
   document.body.classList.toggle("vz-turn",vzTz>0.3);
@@ -1990,7 +1997,10 @@ function vzCalc(){
   var aY=H*VZ_AY,bx=W/2,by=aY;if(base&&VZ_ME&&Z0>1){bx=Math.max(W/(2*Z0),Math.min(W-W/(2*Z0),VZ_ME[0]));by=Math.max(aY/Z0,Math.min(H-(H-aY)/Z0,VZ_ME[1]-VZ_H*0.3));}
   VZ_B[0]+=(bx-VZ_B[0])*Math.min(1,dt*5);VZ_B[1]+=(by-VZ_B[1])*Math.min(1,dt*5);bx=VZ_B[0];by=VZ_B[1];
   var tz=vzTz,fx=VZ_ME?VZ_ME[0]:W/2,fy=VZ_ME?VZ_ME[1]-VZ_H*0.16:H*VZ_AY,Zt=Math.max(Z0,Math.min(6,Math.min(TUNE.v("fd.turnH")*H,Math.max(120,(W-192)*1.08))/VZ_H));   /* zoom so your whole body, arms out, fits in the gap between the two columns of buttons */
-  VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=bx+(fx-bx)*tz;VZS.cy=by+(fy-by)*tz;VZS.ay=H*VZ_AY+(H*0.47-H*VZ_AY)*tz;VZS.on=true;
+  var ayT=H*0.47;
+  /* the circle: whoever's in the middle (you or anyone) is shown as big as your own turn, in the part of the screen the planner leaves free */
+  if(ring){var mine=f&&f.id===myId;fx=RING_C[0];fy=RING_C[1]-VZ_H*0.16;var avail=Math.min(TUNE.v("fd.turnH")*H,VZ_VB*(mine?0.62:VZ_VB<H*0.9?0.62:0.5));   /* watching: a touch smaller and higher, clear of your own dance controls */Zt=Math.max(Z0,Math.min(6,Math.min(avail,Math.max(120,(W-192)*1.08))/VZ_H));ayT=VZ_VB*(VZ_VB<H*0.9?0.52:mine?0.47:0.4);}
+  VZS.Z=Z0+(Zt-Z0)*tz;VZS.cx=bx+(fx-bx)*tz;VZS.cy=by+(fy-by)*tz;VZS.ay=H*VZ_AY+(ayT-H*VZ_AY)*tz;VZS.on=true;
 }
 function floorPt(e){var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(VZS.on){x=VZS.cx+(x-W/2)/VZS.Z;y=VZS.cy+(y-VZS.ay)/VZS.Z;}return [x,y];}
 window.addEventListener("wheel",function(e){
@@ -2500,6 +2510,7 @@ function floorMaxY(){
 /* the joystick: drag anywhere in the ring; how far you pull sets how fast you walk */
 var joy={x:0,y:0,id:null,step:null};
 function joyOn(){return joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15;}
+var kbHoldAt=0;
 function anyHeld(){return held.up||held.down||held.left||held.right||joyOn();}
 function moveTick(){
   var now=performance.now(),dt=Math.min(0.05,(now-(lastMoveT||now))/1000);lastMoveT=now;
@@ -2523,12 +2534,15 @@ function moveTick(){
     mw.x+=(mw.tx-mw.x)*TUNE.v("walk.ease");mw.y+=(mw.ty-mw.y)*TUNE.v("walk.ease");
     sendPos(mw.tx,mw.ty);
   }
+  if(!anyHeld())kbHoldAt=0;
   if(anyHeld()&&myId&&viewers[myId]){
     var me=viewers[myId],dx=(held.right?1:0)-(held.left?1:0),dy=(held.down?1:0)-(held.up?1:0);
     if(dx&&dy){dx*=0.7071;dy*=0.7071;}
     if(joyOn()){var jm=Math.min(1,(Math.hypot(joy.x,joy.y)-0.15)/0.7),ja=Math.atan2(joy.y,joy.x);dx=Math.cos(ja)*jm;dy=Math.sin(ja)*jm;}
     /* about 3 seconds to cross the room; vertical speed matched in pixels */
     var sp=TUNE.v("walk.speed")*dt*(GAME.mode==="mosh"?TUNE.v("walk.moshBoost"):1);
+    /* free dance on the keys: a tap just sways you a touch; hold it and you slowly start to travel (up to half walking pace) */
+    if(GAME.mode==="free"&&!joyOn()){var kn=performance.now();if(!kbHoldAt)kbHoldAt=kn;var ht=(kn-kbHoldAt)/1000;sp*=ht<0.45?0.12:0.12+0.38*Math.min(1,(ht-0.45)/1.1);}
     me.tx=Math.max(0.03,Math.min(0.97,me.tx+dx*sp));
     me.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),me.ty+dy*sp*(W/H)));
     /* keep the avatar close behind the target so walking feels direct */
@@ -3179,6 +3193,8 @@ var GAME=(function(){
   function plBuild(){
     if(plBuilt)return;plBuilt=true;var P=document.getElementById("fdPlan"),D=P.querySelector(".pl-dances");
     P.querySelector(".pl-stop").onclick=function(e){e.stopPropagation();stop();};
+    P.querySelector(".pl-watch").onclick=function(e){e.stopPropagation();plHidden=true;plSig="";};
+    var po=document.getElementById("plOpen");if(po){po.onclick=function(e){e.stopPropagation();plHidden=false;plSig="";};po.addEventListener("pointerdown",function(e){e.stopPropagation();});}
     ART.DANCES.forEach(function(d,i){if(!i)return;var b=document.createElement("button");b.setAttribute("data-s",i);b.textContent=d.name;b.onclick=function(e){e.stopPropagation();b.blur();if(plDragged){plDragged=false;return;}fdPick(i);plSig="";};plDrag(b,{style:i,label:d.name});D.appendChild(b);});
     P.addEventListener("pointerdown",function(e){e.stopPropagation();});
   }
@@ -3198,9 +3214,13 @@ var GAME=(function(){
       else{var f=what.from;if(f>=fdQ.length)return;if(k<0)fdQ.splice(f,1);else if(k!==f){var j=Math.min(k,fdQ.length-1),t=fdQ[f];fdQ[f]=fdQ[j];fdQ[j]=t;}}
       fdqSave();fdqRender();plSig="";}
     el.addEventListener("pointerup",function(e){end(e,false);});el.addEventListener("pointercancel",function(e){end(e,true);});}
+  var plHidden=false;
   function plTick(){
     var ps=mode==="free"?ROUND.planState():null,on=!!(ps&&ps.show);
-    document.body.classList.toggle("fd-plan",on);if(!on)return;
+    if(!on)plHidden=false;   /* your turn (or the circle's over): next time it opens again */
+    document.body.classList.toggle("fd-plan",on&&!plHidden);document.body.classList.toggle("fd-plan-min",on&&plHidden);
+    if(on&&plHidden){var po=document.getElementById("plOpen"),sc3=Math.ceil(ps.inMs/1000);if(po)po.textContent="\u25B2 PLAN MOVES"+(ps.done||ps.none?"":" \u00b7 your turn in "+Math.floor(sc3/60)+":"+("0"+sc3%60).slice(-2));return;}
+    if(!on)return;
     plBuild();var P=document.getElementById("fdPlan"),secs=Math.ceil(ps.inMs/1000),head=P.querySelector(".pl-head");
     var tm=Math.floor(secs/60)+":"+("0"+secs%60).slice(-2);
     var first=ps.first&&secs<=16;
@@ -4265,7 +4285,7 @@ var FISH=(function(){
   function slotAng(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]&&viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(1,ids.length);return Math.PI/2+(i/n)*Math.PI*2+0.35;}
   function set(s){st=s;stAt=performance.now();btn();}
   function start(round){on=true;score=0;count=0;best=0;pops=[];botF={};ang=slotAng(myId);set("idle");document.body.classList.add("gaming-fish");$("fishUI").classList.add("on");hud();banner("🎣 GONE FISHING");}
-  function stop(){on=false;document.body.classList.remove("gaming-fish");$("fishUI").classList.remove("on");}
+  function stop(){on=false;document.body.classList.remove("gaming-fish");$("fishUI").classList.remove("on");if(typeof goalHL==="function")goalHL(null,"");}   /* clear the CAST / NET tag so it doesn't hang about after the game */
   function banner(t){var b=$("fiBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("fiScore");if(h)h.textContent=score.toLocaleString();var c=$("fiCount");if(c)c.textContent=count?"🐟 ×"+count:"";}
   function btn(){var b=$("fiBtn");if(!b)return;var t=st==="idle"?"CAST":st==="net"?"NET!":st==="reel"?"REEL":st==="cast"||st==="wait"?"…":st==="bite"?"BITE!":"";
@@ -6609,7 +6629,7 @@ var ROUND=(function(){
     var rot=0,walk=null;
     for(var j=0;j<sp.length;j++){rot+=sm01((p-(sp[j].b+1500))/1500);
       if(p>=sp[j].a-1500&&p<sp[j].b+1500)walk={id:sp[j].id,t:p<sp[j].a?sm01((p-(sp[j].a-1500))/1500):p<sp[j].b?1:1-sm01((p-sp[j].b)/1500)};}
-    return{ring:ringIds(),k:k,rot:rot,walk:walk};
+    return{ring:ringIds(),k:k,rot:rot,walk:walk,drift:Math.max(0,p-(sp[0].a-7000))/9000};   /* drift: everyone round the edge slowly shuffles round */
   }
   /* my planning panel: shown from when the turns are fixed until my last turn is over, except while I am in the middle */
   function planState(){
@@ -8503,7 +8523,7 @@ function renderLoop(){
   if(document.body.classList.contains("gaming")&&meEl&&meEl.offsetWidth&&getComputedStyle(meEl).display!=="none"){
     var mr=meEl.getBoundingClientRect();side=Math.min(W*0.5-70,Math.max(0,(mr.right-mr.left)/2+70));
   }
-  var feat=ROUND.featured(),spotK=ROUND.spotOn(),bp=ROUND.pair(),RS=ROUND.ringState(),RP=null;
+  var feat=ROUND.featured(),spotK=ROUND.spotOn(),bp=ROUND.pair(),RS=ROUND.ringState(),RP=null;if(!RS)RING_C=null;
   if(spotK>0||RS)side=Math.max(side,Math.min(W*0.28,170));              /* the spotlight needs the middle of the stage */
   if(PIPE.pipeRound())side=Math.max(side,Math.min(W*0.3,300));              /* half pipe: the trick callouts and SUPER meter fill the middle of the top */
   if(bp)side=Math.min(side,-Math.min(W*0.45,440));                  /* a battle match: the performer steps right aside */
@@ -8519,11 +8539,12 @@ function renderLoop(){
   if(KON||KOUT){window.__kartStage=[perfPx,perfPy];var KP=KART.perf(perfPx,perfPy);if(KP){perfPx=KP[0];perfPy=KP[1];perfShift=0;}}      /* the performer stays in the top-left corner */
   PERF_AT=[perfPx,perfPy];
   if(RS){   /* the circle: an oval on the floor, everyone round it, whoever is due north walks into the middle */
-    var rxx=Math.min(W*0.4,300),ryy=Math.max(28,Math.min(rxx*0.38,(H*0.5-215)/2)),cyy=H*0.5-58-ryy,Nn=Math.max(1,RS.ring.length);
+    var Zr=VZS.on?VZS.Z:1,vb=VZ_VB||H,sxr=Zr>1.4?W*0.5:Math.min(W*0.43,560),syr=Zr>1.4?vb*0.42:Math.min(sxr*0.36,vb*0.3),rxx=sxr/Zr,ryy=Math.max(10,syr/Zr),fT=(typeof FLOOR_TOP!=="undefined"?FLOOR_TOP:0.4)*H,cyy=fT+(H-fT)*0.42,Nn=Math.max(1,RS.ring.length);
     RP={cx:W/2,cy:cyy,rx:rxx,ry:ryy,k:RS.k,pos:{}};
-    RS.ring.forEach(function(id,k2){var ang=-Math.PI/2+2*Math.PI*(k2-RS.rot)/Nn,x=RP.cx+Math.cos(ang)*rxx,y=RP.cy+Math.sin(ang)*ryy;
+    RING_C=[RP.cx,RP.cy];
+    RS.ring.forEach(function(id,k2){var ang=-Math.PI/2+2*Math.PI*(k2-RS.rot-RS.drift)/Nn,x=RP.cx+Math.cos(ang)*rxx,y=RP.cy+Math.sin(ang)*ryy;
       if(RS.walk&&RS.walk.id===id){x+=(RP.cx-x)*RS.walk.t;y+=(RP.cy-y)*RS.walk.t;}RP.pos[id]=[x,y];});
-    ctx.save();ctx.globalAlpha=0.7*RS.k;ctx.strokeStyle="#F5C518";ctx.lineWidth=3;ctx.setLineDash([10,7]);ctx.beginPath();ctx.ellipse(RP.cx,RP.cy+26,rxx+18,ryy+8,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    ctx.save();ctx.globalAlpha=0.7*RS.k*Math.max(0,Math.min(1,2-Zr));ctx.strokeStyle="#F5C518";ctx.lineWidth=3;ctx.setLineDash([10,7]);ctx.beginPath();ctx.ellipse(RP.cx,RP.cy+26,rxx+18,ryy+8,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle="#F5C518";ctx.beginPath();var ny=RP.cy-ryy-46+Math.sin(Date.now()/250)*4;ctx.moveTo(RP.cx-9,ny);ctx.lineTo(RP.cx+9,ny);ctx.lineTo(RP.cx,ny+11);ctx.closePath();ctx.fill();
     ctx.font="700 11px 'Silkscreen',ui-monospace,monospace";ctx.textAlign="center";ctx.fillText("NEXT IN",RP.cx,ny-6);ctx.restore();
   }
