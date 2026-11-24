@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.26 — Start a song panel, 8-bit and cleaned up; a 3-button bar
+
+1. **Start a song** (performer jam screen) is restyled in the game's 8-bit look: Silkscreen type, square chunky borders, pixel shadows.
+   - **The song:** the site's own songs are in a dropdown at the top. **Music / Video / YouTube** open your own songs, videos or a YouTube search underneath; click the same one again to fold it away.
+   - **The games:** a clean row of categories: No game, Crowd vote, Rhythm, Dance, Ride & race, Team, Water. Click a category to see its games and pick up to 2. A category with a picked game shows a yellow count.
+   - **Only blocks the screen when you're live.** When you're not live it floats on the right with no dark cover, and the stage behind it still works.
+2. **The bottom bar** is down to three buttons: **Stage & FX**, **Start song**, **Hang out**. Stage & FX opens the stage effects with a **Visual FX on the Jumbotron** button at the top (that was the FX button). The ✨ / ⏭ / 🎲 / ▶ / ▶❚❚ buttons are gone, since the song panel runs the song now.
+3. **Setup** keeps the full classic master control panel as a backup, unchanged.
+- Check: jam screen → Start song: pick a site song from the dropdown, open Ride & race and pick two games, Start. Not live: you can still click the stage behind the panel. Stage & FX → Visual FX opens the visual picker. M still opens Setup.
+
 ## v1.82.25 — Bumper boats is neon night
 
 - **Bumper boats always plays in neon night:** the room goes black with lasers, and everyone (and the performer) is drawn as glowing outlines.
