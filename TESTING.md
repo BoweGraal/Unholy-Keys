@@ -1688,6 +1688,22 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.2 — Free dance: watch the middle dancer big; 8-bit fishing & boats; boats rebalanced
+
+**Needs a server redeploy** (the server bots follow the new bumper boats pool size).
+
+1. **Free dance spotlight, watching:** whoever's in the middle is now shown as big as on your own turn, and the camera frames them in the space above the planner. Everyone else is right out at the edges and behind, slowly shuffling round the circle.
+2. **Planner:** a new **▼ WATCH** button hides it so you can just watch. A small **▲ PLAN MOVES · your turn in 0:42** tab at the bottom brings it back. It opens again by itself after your turn. On a PC the planner is only as tall as it needs to be.
+3. **PC zoom:** free dance starts at 150% on a computer, and so does the dance floor when you first load. Your own zoom choice is still remembered.
+4. **WASD in free dance:** a tap just sways you a touch. Hold it and you slowly start to travel, up to half walking pace. The stick still works the old way.
+5. **The leftover "CAST" tag** (from fishing) no longer hangs about after the game.
+6. **8-bit pass on fishing and bumper boats:** every oval, ring, line, glow, gradient, fish, net, reel and boat is now drawn in whole pixels, on the venue and the performer screen. The CAST / NET and BOOST buttons are chunky pixel buttons, and BOOST refills from the bottom in pixel bands.
+7. **Bumper boats:**
+   - BOOST is gentler (about two-thirds the kick) and takes 4.5 s to refill (was 2.2 s).
+   - The pool drains over the whole game: water pours off the rim in streams of drips, and it shrinks to 40% by the end (it used to stop shrinking after 80 s).
+   - The last boat floating wins ("🏆 YOU WIN!") and can't go over any more, so a round can't end with everyone out.
+   - Once you're out, the stick and BOOST button hide while you watch from the raft.
+
 ## v1.82.1 — Fishing: bamboo reel bar
 
 1. **The reel panel** now looks like Stardew Valley's fishing bar turned on its side: a bamboo frame round two strips of water, a green catch box, and the fish glowing when it's in the box while you reel.
