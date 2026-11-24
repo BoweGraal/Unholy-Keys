@@ -46,7 +46,7 @@ var TUNE=(function(){
   {id:"ski",name:"Ski",icon:"⛷",mode:"ski",cat:"Ride & race",
    about:"Ski down an endless mountain. Point where you want to go: straight down is fastest, sideways slows you, uphill stops you. Go between the slalom flags for points (in a row for a combo), hit ramps for air and press a trick key; trees and rocks knock you down (hop over rocks).",
    vars:[
-    V("ski.maxSpeed","Top speed",230,60,300,5,"Fastest you can go, pointing straight down the slope.","u/s"),
+    V("ski.maxSpeed","Top speed",185,60,300,5,"Fastest you can go, pointing straight down the slope.","u/s"),
     V("ski.accel","Acceleration",320,60,500,10,"How quickly you pick up speed.",""),
     V("ski.turn","Turn speed",4.2,1,8,0.1,"How fast your skis swing round to where you're pointing.","rad/s"),
     V("ski.hop","Hop air time",0.28,0.2,1,0.05,"How long a hop (Space) keeps you in the air. While you're up you can swing round fast to cut onto a new line.","s"),
