@@ -93,9 +93,15 @@ var ART=(function(){
   var SEC="",ISO=null,HIDECHAR=false;   /* ISO: draw only one part of a character (the pixel editor); SEC: the part being drawn */
   var TOFF=null;   /* three-quarter views: some parts (face, hair, hat) slide a pixel toward the way they're turned */
   var SHF=null;   /* per-part shifts made with Shift all in the pixel editor: {hair:[dx,dy],...} */
-  var MIRHAT=false;   /* the witch hat's curl keeps its side when a turned-left view is the turned-right one mirrored */
+  var MIRHAT=false,TAILDX=0,FTD=0,TAILHIDE=false;   /* TAILDX: a tail's sideways shift in a three-quarter view; FTD: that view's real facing (+45 turned right, -45 turned left) */
+  /* where a tail tied at the back of the head shows in a three-quarter view: it sits at angle phi round the head (0 = the face,
+     +135 = the back on the character's left), the head turns by FTD, and its offset from the middle follows the turn */
+  function tailDX(c,phi){if(!FTD)return 0;var R=Math.abs(c)/Math.abs(Math.sin(phi*Math.PI/180)||1),c2=R*Math.sin((FTD+phi)*Math.PI/180);return Math.round(c2-c);}   /* the witch hat's curl keeps its side when a turned-left view is the turned-right one mirrored */
   var HATCLIP=null;   /* a hat on: hair above its brim line is under the hat, so it isn't drawn (y is head-relative, like px) */
-  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;if(MIRHAT)x=-x-w;if(HATCLIP!==null&&SEC==="hair"){if(y+h<=HATCLIP)return;if(y<HATCLIP){h-=HATCLIP-y;y=HATCLIP;}}var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
+  function px(x,y,w,h,c){if(ISO&&SEC!==ISO)return;x+=TAILDX;
+    if(TAILHIDE&&y<-5){var a0=Math.max(x,-5),a1=Math.min(x+w,5);if(a1>a0){if(x<-5&&x+w>5){pxT(x,y,-5-x,h,c);pxT(5,y,x+w-5,h,c);return;}if(x>=-5&&x+w<=5)return;if(x<-5)w=-5-x;else{w=x+w-5;x=5;}}}   /* a tail gone round behind the head: hidden where the head is */
+    pxT(x,y,w,h,c);}
+  function pxT(x,y,w,h,c){if(MIRHAT)x=-x-w;if(HATCLIP!==null&&SEC==="hair"){if(y+h<=HATCLIP)return;if(y<HATCLIP){h-=HATCLIP-y;y=HATCLIP;}}var sh=SHF&&SHF[SEC];sg.fillStyle=c;sg.fillRect(OX+x+(TOFF&&TOFF[SEC]||0)+(sh?sh[0]:0),OY+y+(sh?sh[1]:0),w,h);}
   /* a limb: a 3-pixel-wide strip from the joint along the angle, coloured in bands (cols = [[upTo, colour],...]) */
   /* the shoe: a little toe at the end of a leg, so feet aren't stick ends. dx: which way it points (-1/1), rows: how tall */
   function toe(jx,jy,a,len,col,dx,rows){if(ISO&&SEC!==ISO)return;
@@ -133,14 +139,14 @@ var ART=(function(){
        The left-hand ones are these mirrored (drawChar does that). FT / BT: drawing a front / back three-quarter view */
     SHF=null;if(!POFF)["hair","hat","face","extra","top","bottom"].forEach(function(p){var m0=PT[p+":"+(L[p]|0)];if(m0&&m0["@"]){var q0=m0["@"].split(","),d0=st.dir|0;if(!SHF)SHF={};SHF[p]=[(d0===0||d0===4)?+q0[0]||0:0,+q0[1]||0];}});
     PMIR=!!(st.mir&&((st.dir|0)===4||(st.dir|0)===5));PDMIR=!!st.mir;PDIR=st.mir?({1:3,5:6,4:7}[st.dir|0]||(st.dir|0)):(st.dir|0);   /* the real way they face (0-7), for paint drawn per turn (key|d0..d7) */   /* a three-quarter view drawn mirrored: painted hats keep their sides (a feather stays put) */
-    var FT=(st.dir|0)===4?1:0,BT=(st.dir|0)===5?1:0;TOFF=FT?{head:1,face:2,extra:(L.extra===1||L.extra===5)?2:1,hair:1,hat:1}:BT?{head:1}:null;   /* shades and the mask sit on the face (2); the cap, headphones and bandana sit on the head (1) */
+    var FT=(st.dir|0)===4?1:0,BT=(st.dir|0)===5?1:0;FTD=FT?(st.mir?-45:45):0;TAILDX=0;MIRHAT=false;TOFF=FT?{head:1,face:2,extra:(L.extra===1||L.extra===5)?2:1,hair:1,hat:1}:BT?{head:1}:null;   /* shades and the mask sit on the face (2); the cap, headphones and bandana sit on the head (1) */
     function dimF(cols){return cols.map(function(c){return [c[0],shade(c[1],-0.25)];});}
     sg.clearRect(0,0,CWD,CHT);if(MUSED){pmg.clearRect(0,0,CWD,CHT);hmg.clearRect(0,0,CWD,CHT);MUSED=false;}
     var skin=colOf(L,"skin"),hc=colOf(L,"hair"),tc=colOf(L,"top"),bc=colOf(L,"bot");
     var tcD=shade(tc,-0.25),tcL=shade(tc,0.25),bcD=shade(bc,-0.25),skD=shade(skin,-0.18),hcD=shade(hc,-0.3),shoe="#2A2238";
     var aL=st.armL,aR=st.armR,lL=st.legL,lR=st.legR,hd=st.head||0,hy=Math.round(Math.max(0,hd)*3);   /* head: bowed forward (1) or flung back (-1) */
     var HTc=L.hat|0;HATCLIP=HTc&&HTc!==8&&HTc!==13?-14+hy:null;   /* every hat but the crown and goggles (they sit on top of the hair) */
-    SEC="hair";
+    SEC="hair";MIRHAT=!!(st.mir&&FT);   /* turned left: hair isn't mirrored with the body, so a side parting or tail stays on its own side */
     /* behind the head: afro, long hair, the hood */
     if(L.hair===5){px(-7,-19,14,9,hc);px(-6,-20,12,1,hc);px(-8,-17,1,6,hc);px(7,-17,1,6,hc);}
     if(L.hair===3){px(-6,-14,2,11,hc);px(4,-14,2,11,hc);}
@@ -151,11 +157,12 @@ var ART=(function(){
     if(H===14){px(-7,-13+hb,2,11,hc);px(-7,-3+hb,2,1,hcD);}                                                       /* side swoop: long on one side */
     if(H===15){for(var wv=0;wv<14;wv++){var wo=(wv>>1)%2;px(-7+wo,-13+wv+hb,2,1,hc);px(5-wo,-13+wv+hb,2,1,hc);}px(-6,-13+hb,1,12,hcD);px(5,-13+hb,1,12,hcD);}   /* long waves */
     if(H===21){px(-7,-12+hb,2,9,hc);px(5,-12+hb,2,9,hc);px(-7,-4+hb,2,1,hcD);px(5,-4+hb,2,1,hcD);}              /* shoulder length */
-    if(H===22){px(1,-19+hb,3,2,hc);px(3,-18+hb,3,3,hc);px(5,-16+hb,2,6,hc);px(5,-10+hb,2,3,hcD);px(6,-8+hb,1,2,hc);}   /* high ponytail, swinging out behind */
+    if(H===22){TAILDX=tailDX(4,135);px(1,-19+hb,3,2,hc);px(3,-18+hb,3,3,hc);px(5,-16+hb,2,6,hc);px(5,-10+hb,2,3,hcD);px(6,-8+hb,1,2,hc);TAILDX=0;}   /* high ponytail, swinging out behind */
     if(H===25){px(-7,-13+hb,2,14,hc);px(5,-13+hb,2,14,hc);px(-7,1+hb,2,1,hcD);px(5,1+hb,2,1,hcD);}   /* long locks: long behind */
     if(H===28){px(-7,-14+hb,14,6,hc);}
     if(H===30){px(-7,-15+hb,14,7,hc);px(-6,-8+hb,12,1,hcD);}   /* swept mop: rounded volume behind the head */   /* fluffy mop: volume behind the head */
     if(H===11){px(-9,-13+hb,3,7,hc);px(6,-13+hb,3,7,hc);px(-9,-6+hb,2,2,hcD);px(7,-6+hb,2,2,hcD);}             /* pigtails */
+    MIRHAT=false;
     if(L.top===2){px(-6,-14,12,2,tcD);px(-7,-12,2,7,tcD);px(5,-12,2,7,tcD);}
     /* legs */
     /* shoes: the colour, and how far up the leg they come (boots higher) */
@@ -178,6 +185,17 @@ var ART=(function(){
     function legC(cols,n){return cols.map(function(c){return [c[0]*n/7,c[1]];});}
     function strC(n){return legStripes?legStripes.map(function(q){return [q[0],q[1]*n/7,q[2]*n/7,q[3]];}):null;}
     var gL=Math.max(3,Math.min(7,st.legLenL||7)),gR=Math.max(3,Math.min(7,st.legLenR||7));
+    /* a bent knee (st.knee, from behind): a shortened leg drawn as thigh + shin with the knee pushed out to the side,
+       the foot landing where the straight leg's would. out = which side the knee goes (+1 right on screen, -1 left) */
+    function legK(jx,jy,a,len,cols,str,out){
+      if(!st.knee||len>6.6){limb(jx,jy,a,len,cols,str);return;}
+      var full=legC(cols.map(function(c){return [c[0]*7/len,c[1]];}),7),hl=3.5,dx=-Math.sin(a),dy=Math.cos(a),
+          h=Math.sqrt(Math.max(0,hl*hl-len*len/4)),px0=Math.cos(a),py0=Math.sin(a);if(px0*out<0){px0=-px0;py0=-py0;}
+      var kx=jx+dx*len/2+px0*h,ky=jy+dy*len/2+py0*h,fx=jx+dx*len,fy=jy+dy*len,
+          aT=Math.atan2(-(kx-jx),ky-jy),aS=Math.atan2(-(fx-kx),fy-ky),
+          sh=function(q,o){return q.map(function(c){return [c[0]-o,c[1]];}).filter(function(c){return c[0]>0;});},
+          sS=str?str.map(function(q){return [q[0],q[1]*7/len-hl,q[2]*7/len-hl,q[3]];}):null,sT=str?str.map(function(q){return [q[0],q[1]*7/len,q[2]*7/len,q[3]];}):null;
+      limb(jx,jy,aT,hl,full,sT);limb(kx,ky,aS,hl,sh(full,hl),sS);}
     var D=st.dir|0;if(D===4)D=0;if(D===5)D=2;
     if(D===1||D===2){
     /* ======== turned round: the side view (facing right; facing left is this flipped) and the back view ========
@@ -353,7 +371,7 @@ var ART=(function(){
       PAINT.view("hair:"+HR,1,OX,OY+hy);if(HT===14){SEC="hat";sideHat();}PAINT.view("hat:"+HT,1,OX,OY+hy);PAINT.view("extra:"+EX,1,OX,OY+hy);
     }else{
       /* ---- back: the arms and legs swap sides, no face, the hair covers the back of the head ---- */
-      SEC="legL";limb(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL));if(!st.skates)toe(2.5,4,-lL,gL,shoe,1,1);SEC="legR";limb(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));if(!st.skates)toe(BT?-2:-2.5,4,-lR,gR,shoe,-1,1);
+      SEC="legL";legK(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL),1);if(!st.skates)toe(2.5,4,-lL,gL,shoe,1,1);SEC="legR";legK(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR),-1);if(!st.skates)toe(BT?-2:-2.5,4,-lR,gR,shoe,-1,1);
       if(st.skates){var ic2=st.skates==="ice";SEC="legL";skate(2.5,4,-lL,gL,ic2);SEC="legR";skate(-2.5,4,-lR,gR,ic2);}
       /* from behind, the arms are on the far side of the body: drawn first, so the back covers them where they cross it */
       SEC="armL";limb(6.5,-4.5,-aL,nL,armC(nL));SEC="armR";limb(BT?-5.5:-6.5,-4.5,-aR,nR,BT?dimF(armC(nR)):armC(nR));
@@ -383,10 +401,18 @@ var ART=(function(){
       else if(B===12){px(-6,4,12,2,bc);px(-6,5,12,1,bcD);}
       else px(-5,4,10,1,bcD);
       if(B===4){px(-4,-5,1,2,bc);px(3,-5,1,2,bc);px(-3,-3,1,1,bc);px(2,-3,1,1,bc);px(-2,-2,4,2,bc);px(-3,0,6,4,bc);}   /* overall straps crossing */
+      if(st.butt&&B!==5){   /* the butt stuck out (Shake it): two rounded cheeks in the trouser colour, wider than the hips, the bigger
+                               the further out; bj bounces one cheek up a pixel. Drawn over the shirt hem so it reads from behind */
+        var bw=6+(st.butt>0.95?1:0),bh=4+(st.butt>1.15?1:0),y0=2,bHi=shade(bc,0.22);
+        [-1,1].forEach(function(sd){var yo=y0-((st.bj||0)===sd?1:0),x0=sd<0?-bw:0;
+          px(x0+(sd<0?1:0),yo,bw-1,1,bc);px(x0,yo+1,bw,bh-2,bc);px(x0+(sd<0?1:0),yo+bh-1,bw-1,1,bcD);   /* rounded corners on the outside */
+          px(sd<0?x0+1:x0+bw-2,yo+1,1,1,bHi);px(sd<0?x0:x0+bw-1,yo+bh-2,1,1,bcD);});
+        px(0,y0+1,1,bh-1,bcD);px(-1,y0+2,1,bh-2,bcD);   /* the crease */
+        px(-5,1,10,1,shade(base,-0.25));}   /* the shirt hem sitting on top */
       SEC="head";
       px(-5,-14+hy,10,9,skin);px(-5,-14+hy,1,9,skD);px(-5,-6+hy,10,1,skD);
       px(-6,-11+hy,1,2,skin);px(5,-11+hy,1,2,skin);                                 /* ears */
-      SEC="hair";if(!PAINT.replaced("hair:"+HR))backHair();if(BT){SEC="head";px(3,-12+hy,1,5,skin);px(4,-11+hy,1,3,skD);SEC="top";px(-5,-5,2,10,tcD);}
+      SEC="hair";MIRHAT=!!(st.mir&&BT);if(!PAINT.replaced("hair:"+HR))backHair();MIRHAT=false;   /* back three-quarter turned left: the hair keeps its own sides (a side tail stays on its side) */if(BT){SEC="head";px(3,-12+hy,1,5,skin);px(4,-11+hy,1,3,skD);SEC="top";px(-5,-5,2,10,tcD);}
       SEC="extra";
       if(EX===1){px(-6,-11+hy,1,1,"#111018");px(5,-11+hy,1,1,"#111018");}
       if(EX===2){px(-6,-16+hy,12,1,"#2A2238");px(-7,-12+hy,2,4,"#2A2238");px(5,-12+hy,2,4,"#2A2238");}
@@ -450,14 +476,14 @@ var ART=(function(){
     px(-3+FT,-11+hy,1,2,"#15121F");px(2+FT,-11+hy,1,2,"#15121F");
     if(st.mouth)px(-1+FT,-8+hy,2,2,"#5A2A2A");else px(-1+FT,-8+hy,2,1,skD);
 
-    SEC="hair";
+    SEC="hair";MIRHAT=!!(st.mir&&FT);
     /* hair */
     var hair=L.hair;
     if(hair===1||hair===2||hair===3||hair===6){px(-5,-15+hy,10,3,hc);px(-5,-12+hy,1,2,hc);px(4,-12+hy,1,2,hc);px(-5,-15+hy,10,1,hcD);}
     if(hair===2){for(var sx=-5;sx<5;sx+=2)px(sx,-17+hy,1,2,hc);px(-4,-16+hy,8,1,hc);}
     if(hair===4){px(-1,-19+hy,2,5,hc);px(-1,-19+hy,1,5,hcD);}
     if(hair===5){px(-6,-16+hy,12,3,hc);}
-    if(hair===6){px(5,-13+hy,2,6,hc);px(5,-7+hy,2,1,hcD);}
+    if(hair===6){TAILDX=tailDX(6,135);TAILHIDE=FT;px(5,-13+hy,2,6,hc);px(5,-7+hy,2,1,hcD);TAILDX=0;TAILHIDE=false;}   /* the ponytail: it goes round behind the head as they turn */
     if(hair===7){px(-6,-17+hy,12,4,hc);px(-6,-14+hy,12,1,shade(hc,0.35));px(-5,-18+hy,10,1,hc);px(-1,-19+hy,2,1,shade(hc,0.35));}
     /* the newer styles: the top of the head (and anything over the face) */
     function cap(){px(-5,-15+hy,10,3,hc);px(-5,-12+hy,1,2,hc);px(4,-12+hy,1,2,hc);px(-5,-15+hy,10,1,hcD);}
@@ -476,7 +502,7 @@ var ART=(function(){
     if(hair===19){cap();px(-4,-17+hy,7,2,hc);px(-2,-18+hy,5,1,hc);px(2,-17+hy,3,1,hcL);px(-1,-18+hy,2,1,hcL);}   /* quiff, swept up and back */
     if(hair===20){cap();px(-5,-17+hy,1,2,hc);px(-3,-18+hy,2,3,hc);px(0,-17+hy,2,2,hc);px(3,-18+hy,1,3,hc);px(-4,-13+hy,1,2,hc);px(-1,-13+hy,2,2,hc);px(2,-13+hy,1,1,hc);px(-6,-13+hy,1,4,hc);px(5,-13+hy,1,4,hc);}   /* messy */
     if(hair===21){cap();px(-1,-15+hy,1,2,shade(hc,-0.45));px(-6,-13+hy,2,8,hc);px(4,-13+hy,2,8,hc);}   /* shoulder length, centre part */
-    if(hair===22){px(-5,-15+hy,10,2,hc);px(-5,-15+hy,10,1,hcD);px(-5,-13+hy,1,1,hc);px(4,-13+hy,1,1,hc);px(1,-17+hy,2,2,hc);px(1,-17+hy,2,1,RIB);}   /* high ponytail: pulled back, tied at the crown */
+    if(hair===22){px(-5,-15+hy,10,2,hc);px(-5,-15+hy,10,1,hcD);px(-5,-13+hy,1,1,hc);px(4,-13+hy,1,1,hc);TAILDX=tailDX(2,135);px(1,-17+hy,2,2,hc);px(1,-17+hy,2,1,RIB);TAILDX=0;}   /* high ponytail: pulled back, tied at the crown */
     if(hair===23){   /* flame spikes: swept straight up in a tall flame, a sharp widow's peak */
       px(-5,-15+hy,10,2,hc);px(-5,-13+hy,1,2,hc);px(4,-13+hy,1,2,hc);px(-1,-13+hy,2,1,hc);px(-6,-18+hy,2,4,hc);px(-4,-21+hy,2,7,hc);px(-2,-23+hy,2,9,hc);px(0,-23+hy,2,9,hc);px(2,-21+hy,2,7,hc);px(4,-18+hy,2,4,hc);
       px(-7,-17+hy,1,2,hc);px(6,-17+hy,1,2,hc);px(-3,-20+hy,1,5,hcD);px(1,-22+hy,1,7,hcD);px(3,-19+hy,1,4,hcD);px(-1,-22+hy,1,3,hcL);px(-5,-15+hy,10,1,hcD);}
@@ -486,7 +512,7 @@ var ART=(function(){
     if(hair===25){   /* long locks: a full fringe, locks down each side of the face, long behind */
       cap();px(-5,-13+hy,10,2,hc);px(-3,-12+hy,1,1,skin);px(1,-12+hy,1,1,skin);px(-6,-13+hy,1,11,hc);px(5,-13+hy,1,11,hc);px(-6,-3+hy,1,1,hcD);px(5,-3+hy,1,1,hcD);px(-2,-15+hy,3,1,hcL);}
     if(hair===26){px(-4,-17+hy,8,1,hc);px(-5,-16+hy,10,3,hc);px(-6,-15+hy,2,9,hc);px(4,-15+hy,2,9,hc);px(-5,-13+hy,10,1,hc);px(-6,-7+hy,2,1,hcD);px(4,-7+hy,2,1,hcD);px(-5,-15+hy,10,1,"#E8505B");px(-6,-14+hy,1,1,"#E8505B");px(5,-14+hy,1,1,"#E8505B");}   /* bob with a headband */
-    if(hair===27){cap();px(-4,-17+hy,2,2,hc);px(0,-17+hy,2,2,hc);px(3,-16+hy,2,1,hc);px(-4,-13+hy,3,1,hc);px(1,-13+hy,2,1,hc);px(-9,-15+hy,4,4,hc);px(-10,-12+hy,2,5,hc);px(-9,-8+hy,1,2,hcD);px(-6,-14+hy,1,1,"#E8505B");}   /* messy side tail */
+    if(hair===27){cap();px(-4,-17+hy,2,2,hc);px(0,-17+hy,2,2,hc);px(3,-16+hy,2,1,hc);px(-4,-13+hy,3,1,hc);px(1,-13+hy,2,1,hc);TAILDX=tailDX(-8,-110);TAILHIDE=FT;px(-9,-15+hy,4,4,hc);px(-10,-12+hy,2,5,hc);px(-9,-8+hy,1,2,hcD);px(-6,-14+hy,1,1,"#E8505B");TAILDX=0;TAILHIDE=false;}   /* messy side tail */
     if(hair===28){   /* fluffy mop: big messy volume, strands falling over the eyes */
       px(-7,-18+hy,14,5,hc);px(-6,-19+hy,4,1,hc);px(1,-19+hy,4,1,hc);px(-8,-17+hy,1,3,hc);px(7,-16+hy,1,3,hc);px(-9,-15+hy,1,1,hc);px(8,-14+hy,1,1,hc);
       px(-7,-13+hy,2,5,hc);px(5,-13+hy,2,5,hc);px(-4,-13+hy,2,2,hc);px(-4,-11+hy,1,1,hc);px(-1,-13+hy,2,2,hc);px(2,-13+hy,2,1,hc);px(3,-12+hy,1,2,hc);
@@ -505,7 +531,7 @@ var ART=(function(){
     /* the hair windmill: a long sweep of hair whipping round the head in a circle (with a fainter trail behind it) */
     if(st.swing!==undefined&&st.swing!==null&&hair!==0&&D!==1){var sw0=st.swing,hcx=0,hcy=-12+hy;
       for(var tr=2;tr>=0;tr--){var a5=sw0-tr*0.45,cl5=tr===0?hc:tr===1?hcD:shade(hc,-0.35);for(var r5=4;r5<=(tr===0?12:9);r5+=2){var w5=tr===0?3:2;px(Math.round(hcx+Math.cos(a5)*r5)-1,Math.round(hcy+Math.sin(a5)*r5)-1,w5,w5,cl5);}}}
-    SEC="extra";
+    MIRHAT=false;TAILDX=0;SEC="extra";
     /* extras */
     var ex=L.extra;
     if(ex===1){px(-4,-11+hy,8,2,"#111018");}
@@ -575,7 +601,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     if(HIDECHAR)return;st=st||{};if(!L)L=random(7);
-    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,head:st.head||0,swing:st.swing,skates:st.skates==="ice"?"ice":!!st.skates};
+    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,knee:st.knee,butt:st.butt,bj:st.bj,head:st.head||0,swing:st.swing,skates:st.skates==="ice"?"ice":!!st.skates};
     /* which way they face: 0 front, 1 facing right, 2 back, 3 facing left (the right-facing side view, mirrored) */
     /* 0 front, 1 right, 2 back, 3 left, 4 front-right, 5 back-right, 6 back-left, 7 front-left; the left ones are the right ones mirrored */
     var DIR=(((st.dir|0)%8)+8)%8,SX=st.sx!==undefined?st.sx:1,MIR=DIR===3?1:DIR===6?5:DIR===7?4:0;
@@ -1829,7 +1855,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     {name:"Freestyle",icon:"\uD83D\uDD7A",subs:[]},
     {name:"Two-step",icon:"\uD83D\uDC63",subs:["Basic","Clap","Point","Shimmy"],help:"Left stick: walk around, wider steps the further you push. Right stick: up raises your arms, left and right swing them."},
     {name:"Hands on knees",icon:"\uD83E\uDDB5",subs:["Knock knees","Bounce","Low","Lean back"],help:"Left stick: shuffle around in the squat, down sinks lower. Right stick: left and right lean."},
-    {name:"Shake it",icon:"\uD83C\uDF51",subs:["Wiggle","Drop it","Hands up","Fast"],help:"Left stick: sway your way around the floor. Right stick: lean and throw your arms."},
+    {name:"Shake it",icon:"\uD83C\uDF51",subs:["Wiggle","Drop it","Hands up","Fast"],help:"Wiggle / Fast: turned round, shaking your butt to the beat. Drop it: wide stance, butt popping on the beat and dropping low every 4th beat. Right stick: UP = stand taller, DOWN = squat lower, sideways = shake harder. Left stick: move around the floor."},
     {name:"Running man",icon:"\uD83C\uDFC3",subs:["Classic","Fast","Moonwalk","Arms pump"],help:"Left stick: run around the floor. Right stick: up lifts the knees higher, left and right pump the arms."},
     {name:"Skank",icon:"\uD83C\uDFBA",subs:["Classic","Windmill","Pogo","Elbows","Kicks"],help:"Left stick: skank around the floor, up kicks the knees higher. Right stick: up throws bigger punches."},
     {name:"Robot",icon:"\uD83E\uDD16",subs:["Arms","Wave","Pop","Freeze"],help:"Left stick: walk like a robot, and your left arm points the way you go. Right stick: point your right arm."},
@@ -1869,9 +1895,25 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       var amp=1+(ax+1)*1.2,sp=sub===3?4:2,sh=Math.sin(bp*Math.PI*sp);
       o.dx=sh*amp;o.rot=bx*0.15+sh*0.06;o.bob=Math.max(0,ay)*4-hop;
       o.armL=2.4;o.armR=-2.4;o.legL=0.15+sh*0.1;o.legR=-0.15+sh*0.1;
-      if(sub===1){o.bob=5+Math.abs(sh)*2;o.legL=0.8;o.legR=-0.8;}                                /* drop it */
+      if(sub===1){   /* drop it (from a clip): turned round, wide stance, bent over with hands on the thighs, the butt popping
+                        down-up every half beat with the hips tilting side to side each beat, and a full drop low on beat 4 */
+        var lv3=Math.max(-1,Math.min(1,by)),am3=1+Math.abs(bx)*1.2,e3=bp*2,ph3=e3-Math.floor(e3),
+            pp=ph3<0.2?ph3/0.2:1-(ph3-0.2)/0.8,pop=pp*pp*(3-2*pp),br=((bp%4)+4)%4,drop=br>=3?Math.sin((br-3)*Math.PI):0,sd3=(Math.floor(bp)%2)?1:-1;
+        o.dir=2;o.knee=1;o.legL=0.3;o.legR=-0.3;   /* feet planted at hip width: the drop comes from bending the knees, not spreading */
+        o.lgL=o.lgR=Math.max(4.3,6.3-Math.max(0,lv3)*1.1-pop*0.6*am3-drop*1.8);o.bob=-hop;   /* plant() sinks the body onto the bent legs */
+        o.head=Math.max(0.15,0.6+lv3*0.3+drop*0.2);
+        o.armL=0.5;o.armR=-0.5;o.alL=o.alR=6;   /* hands on the thighs */
+        o.butt=0.8+Math.max(0,lv3)*0.4+drop*0.4+pop*0.2;o.bj=pop>0.5?sd3:0;   /* sticking out, the cheek on the tilted-up side bouncing on each pop */
+        o.rot=sd3*0.06*am3;o.dx=sd3*0.8;}
+      if(sub===0||sub===3){   /* wiggle / fast: turned round, bent forward with hands on the knees, shaking the butt side to side to the beat (a snap each half beat) */
+        var e2=bp*(sub===3?4:2),ph2=e2-Math.floor(e2),sn2=ph2<0.3?(function(x){return x*x*(3-2*x);})(ph2/0.3):1,sd2=(Math.floor(e2)%2)?1:-1,hip=sd2*(2*sn2-1)*-1;
+        /* the right stick sets the butt level: down = squat lower and bend further, up = stand taller; out to the side = shake harder. The left stick just moves you */
+        var lvl=Math.max(-1,Math.min(1,by)),amp2=1+Math.abs(bx)*1.3;
+        o.dir=2;o.head=Math.max(0.15,0.55+lvl*0.35);o.knee=1;o.legL=0.24;o.legR=-0.24;o.lgL=o.lgR=Math.max(4.3,6.2-Math.max(0,lvl)*1.9+Math.max(0,-lvl)*0.8);o.bob=-hop;   /* the knees bend to squat lower (plant() sinks the body), the feet stay where they are */
+        o.armL=0.35;o.armR=-0.35;o.alL=o.alR=6;   /* hands resting on the knees */
+        o.butt=0.8+Math.max(0,lvl)*0.5;o.bj=sn2<1?0:(hip>0?1:-1);
+        o.dx=hip*1.6*amp2*0.7;o.rot=hip*0.09*amp2;}
       if(sub===2){o.armL=2.8+sh*0.2;o.armR=-2.8+sh*0.2;}                                         /* hands up */
-      if(by<-0.4&&sub!==2){o.armL=2.7;o.armR=-2.7;}
       break;}
     case 4:{ /* running man: one leg forward, the other sliding back, swapping each beat; the left dot moves you */
       /* (from a clip:) the knee comes right up on each beat while the standing foot slides back, hands together at the chest
@@ -2138,7 +2180,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       var r=fn(o);o.globalCompositeOperation="destination-out";o.drawImage(e.h,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.h.width*p,e.h.height*p);o.globalCompositeOperation="source-over";
       g.save();g.setTransform(1,0,0,1,0,0);var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(oc,0,0);g.imageSmoothingEnabled=was;g.restore();return r;},
     at:function(g,key,x,y,p){var e=ptGet(key);if(!e||!e.c)return;var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(e.c,Math.round(x+e.x0*p),Math.round(y+e.y0*p),e.c.width*p,e.c.height*p);g.imageSmoothingEnabled=was;}};
-  function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var dk=key+"|d"+PDIR,hasD=!!PT[dk],e=ptGet(hasD?dk:key);if(!e)return;var fl=hasD?PDMIR:PMIR&&key.indexOf("hat:")===0;   /* a drawing for this exact turn is authored as it should look on screen */sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(fl)sg.scale(-1,1);if(rot)sg.rotate(rot);if(HATCLIP!==null&&key.indexOf("hair:")===0){sg.beginPath();sg.rect(-200,-14,400,400);sg.clip();}
+  function paintLayer(key,tx,ty,rot){if(ISO&&ISO!==key.split(":")[0])return;var dk=key+"|d"+PDIR,hasD=!!PT[dk],e=ptGet(hasD?dk:key);if(!e)return;var fl=hasD?PDMIR:PMIR&&(key.indexOf("hat:")===0||key.indexOf("hair:")===0);   /* painted hats and hair keep their own sides in a turned-left view */   /* a drawing for this exact turn is authored as it should look on screen */sg.save();sg.imageSmoothingEnabled=false;sg.translate(tx,ty);if(fl)sg.scale(-1,1);if(rot)sg.rotate(rot);if(HATCLIP!==null&&key.indexOf("hair:")===0){sg.beginPath();sg.rect(-200,-14,400,400);sg.clip();}
     if(e.h){sg.globalCompositeOperation="destination-out";sg.drawImage(e.h,e.x0,e.y0);sg.globalCompositeOperation="source-over";}
     if(e.c)sg.drawImage(e.c,e.x0,e.y0);sg.restore();
     masks();MUSED=true;[[pmg,e.c],[hmg,e.h]].forEach(function(m){if(!m[1])return;m[0].save();m[0].imageSmoothingEnabled=false;m[0].translate(tx,ty);if(fl)m[0].scale(-1,1);if(rot)m[0].rotate(rot);m[0].drawImage(m[1],e.x0,e.y0);m[0].restore();});
@@ -2150,7 +2192,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
   function paintView(key,D,tx,ty){if(POFF||(ISO&&ISO!==key.split(":")[0]))return;var md=PT[key+"|d"+PDIR],mv=md||(D?PT[key+"|v"+D]:null),m=mv||PT[key];if(!m)return;var part=key.split(":")[0];   /* key|v1 (side) / key|v2 (back): its own drawing for that angle, used as is */
     if(part!=="hair"&&part!=="hat"&&part!=="extra")return;
     var tokd=Object.keys(m).some(function(q2){return typeof m[q2]==="string"&&m[q2].charAt(0)==="@";}),vc=tokd?lookCols(PLOOK):null;   /* key colours (magenta = hair) follow the player's colours from the side and back too */
-    var fl=md?PDMIR:PMIR&&part==="hat",ck=(fl?"m":"")+(md?"d"+PDIR:"v"+D)+"|"+key+(vc?"|"+vc.h+vc.t+vc.b+vc.s:"");if(!(ck in PC)){var o={},k,q,x,y,nx;
+    var fl=md?PDMIR:PMIR&&(part==="hat"||part==="hair"),ck=(fl?"m":"")+(md?"d"+PDIR:"v"+D)+"|"+key+(vc?"|"+vc.h+vc.t+vc.b+vc.s:"");if(!(ck in PC)){var o={},k,q,x,y,nx;
       for(k in m){if(!/^-?\d+,-?\d+$/.test(k))continue;q=k.split(",");x=+q[0];y=+q[1];
         if(mv)nx=x;
         else if(part==="extra"){if(D===2)continue;if(x<0)continue;nx=Math.round(x*0.5);}
@@ -2208,7 +2250,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     o.bob+=bob*m;o.dx+=dx*mir*m;o.rot+=rot*mir*m;
   }
   function dance(style,sub,c,bp){
-    var oc=DIRNAMES[style]?octant(c):null,o=danceBase(style,sub,oc?[c[0],c[1],0,0]:c,bp),kf=DT[style+"."+(sub|0)];
+    var oc=DIRNAMES[style]&&!(style===3&&(sub|0)!==2)?octant(c):null,   /* Shake it's Wiggle / Drop it / Fast: the right stick is the butt level, not the named moves */o=danceBase(style,sub,oc?[c[0],c[1],0,0]:c,bp),kf=DT[style+"."+(sub|0)];
     if(oc)dirApply(o,style,oc,bp);
     if(kf&&kf.length){
       var q=((bp%4)+4)%4,k,f,d,w,wt;
@@ -2677,6 +2719,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     function iconSize(name){var r=ICONS[name]||ICONS.play;return [Math.max(r[0].length,r.length)+1,Math.max(r[0].length,r.length)+1];}
     return{stick:stick,knob:knob,fist:fist,icon:icon,iconSize:iconSize};
   })();
-  return{UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.11",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.18",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

@@ -1688,6 +1688,60 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.18 — Shake it: Drop it turned round, popping and dropping low
+
+- **Drop it** now matches the reference clip: you turn your back to the crowd, stand with your feet wide, and bend over with your hands on your thighs. The butt pops down and up every half beat, the hips tilt to one side then the other each beat, and on beat 4 you drop right down low with the knees out wide, then come back up.
+- Right stick: up = stand taller, down = squat lower, sideways = pop harder. It no longer triggers the named moves or throws the arms up in Drop it. Left stick: move around the floor.
+- The squat comes from **bending the knees**: the feet stay at hip width and the knees push out to the sides as you sink, instead of the legs spreading apart. Wiggle and Fast squat the same way.
+- **The butt shows from behind:** in Wiggle, Drop it and Fast you get two rounded cheeks in your trouser colour, wider than the hips, with a crease. They get bigger the lower you squat, and one cheek bounces up on each pop or shake. (Long dresses don't get it.)
+- Hands up is unchanged.
+- Check: free dance → Shake it → Drop it. You face away, pop on every half beat and drop low on the 4 with the knees bending out. Push the right stick down and you stay lower all the time. The butt is clearly visible and bouncing. Watch another player do it on the performer screen too.
+
+## v1.82.17 — Shake it: Wiggle / Fast turned round
+- Wiggle and Fast turn you round, bent forward with your hands on your knees, shaking your butt side to side on the beat. Right stick sets the butt level (up taller, down squat, sideways shake harder). Left stick moves you.
+
+## v1.82.16 — Free dance keys
+- WASD moves you straight away on a tap and eases out to the edge the longer you hold. Smaller Shuffle dead zone.
+
+## v1.82.15 — Fishing / boats tuning sliders
+- New Fishing and Bumper boats sections in the tuning panel (paddle rise, fall, drag, bounce, size, catch speed, drain, fish speed, and more). No line tension any more: the reel just spins. The catch fills quicker and you lose the fish in about 5 s if it's out of the paddle. In Shuffle, holding up or down walks you up or down.
+
+## v1.82.14 — Hair keeps its sides through turns; rod held in both hands
+- Ponytails, side tails and braids go round behind the head as you turn, instead of flipping sides. Anglers hold the rod in both hands.
+
+## v1.82.13 — Brighter Jumbotron visuals
+- The visualizer on the Jumbotron gets a brightness boost and a glow pass, so it reads from across the room.
+
+## v1.82.12 — Performer jam screen tidied
+- The faded keypad and the visualizer name are gone from the performer's jam screen.
+
+## v1.82.11 — Fishing: mouse lined up with the box
+- On PC the paddle sits exactly under your mouse inside the box. The glow goes green on any touch of the fish. The net strip sits under the box.
+
+## v1.82.10 — Shuffle spin
+- The spin is a T-step stomp in place, steered by circling the left stick. The T-step no longer slides on its own.
+
+## v1.82.9 — Shuffle on the stick
+- Stick left or right: face front and T-step that way, slower near the middle. Push to the top edge for the turnaround spin; bring the stick down again to re-arm it.
+
+## v1.82.8 — Menu music
+- "After-hours Entry" plays on the menus, starting very low, swelling to a low background level, and fading out when you leave. Toggle on the menu.
+
+## v1.82.7 — Test hairs
+- Test hairs 1-3 from Assets/Hair, recoloured to the player's hair colour.
+
+## v1.82.6 — Fishing paddle physics; CPU karts and boost pads
+- The paddle falls on its own, rises while you reel (click and hold), and bounces softly off the box sides. Phone: two-bar pad (top half reels, bottom half lets go, left/right moves the paddle). More time to catch. CPU karts route round boost pads that would push them backwards.
+
+## v1.82.5 — Step dance Hard eased
+- Hard sits between Normal and Expert again.
+
+## v1.82.4 — Fishing reel box
+- Fish swim inside the box and you keep the paddle on them. Free dance keys ease out; no stuck limbs after leaving a dance.
+
+## v1.82.3 — Ski follow view by points
+- The ski camera ranks and follows skiers by points, showing how far ahead or back they are.
+
 ## v1.82.2 — Free dance: watch the middle dancer big; 8-bit fishing & boats; boats rebalanced
 
 **Needs a server redeploy** (the server bots follow the new bumper boats pool size).

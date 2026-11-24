@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.11"></script>
-<script src="gfx.js?v=1.82.11"></script>
-<script src="art.js?v=1.82.11"></script>
-<script src="voice.js?v=1.82.11"></script>
-<script src="instruments.js?v=1.82.11"></script>
-<script src="kart.js?v=1.82.11"></script>
-<script src="explain.js?v=1.82.11"></script>
+<script src="tune.js?v=1.82.18"></script>
+<script src="gfx.js?v=1.82.18"></script>
+<script src="art.js?v=1.82.18"></script>
+<script src="voice.js?v=1.82.18"></script>
+<script src="instruments.js?v=1.82.18"></script>
+<script src="kart.js?v=1.82.18"></script>
+<script src="explain.js?v=1.82.18"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3424,7 +3424,7 @@ var GAME=(function(){
     fdRec(nowS);
     for(var i=0;i<2;i++){var kx=0,ky=0,kn=0;for(var kc in fkHeld){var kv=FKEYS[kc];if(kv&&kv[0]===i){kx+=kv[1];ky+=kv[2];kn++;}}
       if(kn&&fHeld[i]===null){var km=Math.hypot(kx,ky)||1;kx/=km;ky/=km;if(!kx&&!ky){kx=0;ky=0;}
-        var held2=(performance.now()-(fkAt[i]||performance.now()))/1000,mag=0.22+0.73*Math.max(0,Math.min(1,(held2-0.2)/1.1)),ek=Math.min(1,FRAME_DT*7);
+        var held2=(performance.now()-(fkAt[i]||performance.now()))/1000,mag=0.32+0.63*Math.max(0,Math.min(1,(held2-0.05)/1.2)),ek=Math.min(1,FRAME_DT*8);   /* keys move you straight away, then ease out towards the edge over about 1.2 s */
         fCtl[i*2]+=(kx*mag-fCtl[i*2])*ek;fCtl[i*2+1]+=(ky*mag-fCtl[i*2+1])*ek;moved=true;}}   /* held keys ease the dot that way: a tap sways, holding pushes it out */
     for(var i=0;i<2;i++)if(fHeld[i]===null&&!Object.keys(fkHeld).some(function(kc){return FKEYS[kc][0]===i;})&&(fCtl[i*2]||fCtl[i*2+1])){fCtl[i*2]*=0.82;fCtl[i*2+1]*=0.82;if(Math.abs(fCtl[i*2])<0.02&&Math.abs(fCtl[i*2+1])<0.02){fCtl[i*2]=0;fCtl[i*2+1]=0;}moved=true;}
     if(window.__fdStick){fCtl[0]=window.__fdStick[0];fCtl[1]=window.__fdStick[1];moved=true;}   /* tests: hold the left stick somewhere */
@@ -3433,12 +3433,14 @@ var GAME=(function(){
     var fm=me(),fdt=Math.min(0.1,(nowS-(fdSpring.t||nowS))/1000);fdSpring.t=nowS;
     if(fm&&fStyle>0&&fdt>0){var lx=fCtl[0],ly=fCtl[1],lm=Math.hypot(lx,ly);
       if(fStyle===9){   /* the Shuffle: sideways is the T-step, travelling that way (slower the nearer the middle); back to the middle, back to the shuffle */
-        var wasT=shufT;shufT=!shufSpin&&Math.abs(lx)>0.35&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;
+        var wasT=shufT;shufT=!shufSpin&&Math.abs(lx)>0.2&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;   /* a small dead zone: a little push sideways starts the T-step */
         if(ly<-0.85&&shufArm&&!mySpin.on){shufArm=false;shufSpin=true;spinStart("spin");mySpin.vel=-Math.abs(mySpin.vel);mySpin.pa=Math.atan2(ly,lx);applyToMe();sendPose(true);}   /* up to the top edge: a T-step stomp on the spot that spins you round; circle the stick to keep it going */
         if(ly>-0.3&&!shufSpin)shufArm=true;   /* bring the stick back down (once the spin's done) before you can spin again */
         if(wasT!==shufT){applyToMe();sendPose(true);}
         var ffS=ROUND.featured(),isFS=ffS&&ffS.id===myId;
-        if(shufT&&!isFS){var spS=TUNE.v("walk.speed")*fdt*0.6*Math.min(1,(Math.abs(lx)-0.35)/0.6);fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+shufT*spS));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
+        if(shufT&&!isFS){var spS=TUNE.v("walk.speed")*fdt*0.6*Math.min(1,0.25+0.75*(Math.abs(lx)-0.2)/0.75);fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+shufT*spS));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}
+        else if(!shufT&&!shufSpin&&!isFS&&Math.abs(ly)>0.2){   /* up / down still travel you up and down the floor while you shuffle */
+          var spV=TUNE.v("walk.speed")*fdt*0.5*Math.min(1,0.25+0.75*(Math.abs(ly)-0.2)/0.75);fm.ty=Math.max(FLOOR_TOP+0.04,Math.min(FLOOR_BOTTOM,fm.ty+(ly<0?-1:1)*spV));fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
       else if(lm>0.18){var ff=ROUND.featured(),isF=ff&&ff.id===myId,k2=Math.min(1,(lm-0.18)/0.77),sp2=TUNE.v("walk.speed")*fdt*0.55*k2;
         if(!isF){fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+lx/lm*sp2));fm.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),fm.ty+ly/lm*sp2*(W/H)));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}}
   }
@@ -4363,7 +4365,7 @@ var FISH=(function(){
       else{var Q=padGeo();Hb=Math.min(Hb,Q.y-by-26);by=Math.max(54,Math.min(by,Q.y-Hb-26));Wb=Math.round(Hb*0.52);bx=Math.round(W-Wb-12);}   /* upright: the box above the pad */
       F=Math.max(6,Math.round(Hb*0.03));mw=Math.max(8,Math.round(Wb*0.12));dv=Math.max(3,Math.round(F*0.5));}   /* out on the right, clear of the pool, just left of the button */
     var wx=bx+F,wy=by+F,ww=Wb-F*3-mw,wh=Hb-F*2,lw=Math.round(ww*LC)-dv/2;
-    return{bx:bx,by:by,Wb:Wb,Hb:Hb,F:F,mw:mw,dv:dv,wx:wx,wy:wy,ww:ww,wh:wh,lw:lw,mx:wx+ww+F,padR:Math.max(12,lw*0.36)};}
+    return{bx:bx,by:by,Wb:Wb,Hb:Hb,F:F,mw:mw,dv:dv,wx:wx,wy:wy,ww:ww,wh:wh,lw:lw,mx:wx+ww+F,padR:Math.max(10,lw*FT("size",0.36))};}
   var TOUCHF=!!(window.matchMedia&&matchMedia("(pointer:coarse)").matches);function W0(){return 0;}
   function FT(k,d){try{var v=TUNE.v("fi."+k);return isFinite(v)?v:d;}catch(e){return d;}}
   function pickKind(){var w=loud()?[1,2,3,3,1.6]:[5,4,2.6,1,0.25],t=w.reduce(function(a,b){return a+b;},0),r=Math.random()*t;for(var i=0;i<w.length;i++){r-=w[i];if(r<=0)return i;}return 0;}
@@ -4373,30 +4375,30 @@ var FISH=(function(){
     if(st==="idle"){if(Math.abs(inp.x)>0.2){var dir=Math.sin(ang)>0?-1:1;ang+=inp.x*dir*dt*0.9;}}
     else if(st==="cast"&&age>0.5)set("wait");
     else if(st==="wait"&&now>=biteAt){kind=pickKind();set("bite");}
-    else if(st==="bite"&&age>0.6){set("reel");prog=0.35;ten=0.15;fy=0.3+Math.random()*0.4;fv=0;ftg=fy;ftgAt=0;px=pxT=LC/2;py=fy;pvx=pvy=0;fx=LC/2;holdP=false;}
+    else if(st==="bite"&&age>0.6){set("reel");prog=FT("start",0.3);ten=0;fy=0.3+Math.random()*0.4;fv=0;ftg=fy;ftgAt=0;px=pxT=LC/2;py=fy;pvx=pvy=0;fx=LC/2;holdP=false;}
     else if(st==="reel"){var K=KINDS[kind],GB=geo();
       /* the fish darts up and down the REEL column, wiggling side to side */
-      if(now>ftgAt){ftg=Math.max(0.06,Math.min(0.94,ftg+(Math.random()-0.5)*0.9*K.jit));if(Math.random()<0.25)ftg=1-ftg;ftgAt=now+(380+Math.random()*900)/K.jit;}
-      fv+=((ftg-fy)*K.sp*9-fv*4.5)*dt;fy=Math.max(0.04,Math.min(0.96,fy+fv*dt));
-      fx=LC*0.5+Math.sin(now/(520/K.jit))*LC*0.2+Math.sin(now/(190/K.jit))*LC*0.06;
+      var fJ=K.jit*FT("fishDart",1),fS=K.sp*FT("fishSpeed",1),fW=FT("fishWiggle",1);
+      if(now>ftgAt){ftg=Math.max(0.06,Math.min(0.94,ftg+(Math.random()-0.5)*0.9*fJ));if(Math.random()<0.25)ftg=1-ftg;ftgAt=now+(380+Math.random()*900)/Math.max(0.2,fJ);}
+      fv+=((ftg-fy)*fS*9-fv*4.5)*dt;fy=Math.max(0.04,Math.min(0.96,fy+fv*dt));
+      fx=LC*0.5+(Math.sin(now/(520/fJ))*LC*0.2+Math.sin(now/(190/fJ))*LC*0.06)*fW;
       /* reeling = holding (the mouse button, your finger in the top bar, or ↑ / W); the keys' ← → steer too */
       reeling=holdP||!!held.up;if(Math.abs(inp.x)>0.2&&!drag)pxT=Math.max(0,Math.min(1,pxT+inp.x*dt*0.9));
       /* the paddle: falls slowly, rises while you reel; slides across after your finger / mouse; a soft bounce off every edge */
-      pvy+=(reeling?-FT("up",3.4):FT("fall",1.9))*dt;pvy*=Math.exp(-3.6*dt);py+=pvy*dt;   /* rises about 0.9 of the box a second, falls about 0.5; it answers quickly when you let go */
-      if(py<0){py=0;pvy=Math.abs(pvy)*0.45;}if(py>1){py=1;pvy=-Math.abs(pvy)*0.45;}
+      pvy+=(reeling?-FT("up",3.4):FT("fall",1.9))*dt;pvy*=Math.exp(-FT("drag",3.6)*dt);py+=pvy*dt;   /* rises about 0.9 of the box a second, falls about 0.5; it answers quickly when you let go */
+      var BNC=FT("bounce",0.45);if(py<0){py=0;pvy=Math.abs(pvy)*BNC;}if(py>1){py=1;pvy=-Math.abs(pvy)*BNC;}
       pvx+=((pxT-px)*40-pvx*9)*dt;px+=pvx*dt;if(px<0){px=0;pvx=Math.abs(pvx)*0.45;pxT=Math.max(pxT,0);}if(px>1){px=1;pvx=-Math.abs(pvx)*0.45;pxT=Math.min(pxT,1);}
       var fsz=Math.max(2,Math.min(GB.lw/(K.len*1.5),GB.padR*1.6/(K.len*0.7))),fhl=K.len*fsz*0.35,fhh=Math.max(fsz*2,K.len*fsz*0.28)/2;   /* the fish's half length / half height on screen */
       var ddx=Math.max(0,Math.abs((px-fx)*GB.ww)-fhl*0.8),ddy=Math.max(0,Math.abs((py-fy)*GB.wh)-fhh),over=Math.hypot(ddx,ddy)<GB.padR;zx=over?1:0;   /* on the fish = the glow touches its body */
-      if(reeling){if(over){prog+=dt*0.3/(1+kind*0.12);ten+=dt*(0.08+K.pull*0.8);}else{prog-=dt*0.018;ten+=dt*(0.3+K.pull*0.8);}}
-      else{ten-=dt*0.5;prog+=over?dt*0.06:-dt*0.012;}   /* off the fish the meter only drains slowly: from the start it takes about 20 s of missing before it gets away */   /* on the fish but not reeling still edges it in a little */
-      ten=Math.max(0,ten);
-      if(ten>=1){pops.push({t:now,txt:"SNAP! The line broke",col:"#ff6b6b"});set("snap");if(navigator.vibrate)try{navigator.vibrate(120);}catch(e){}}
-      else if(prog<=0){pops.push({t:now,txt:"It got away…",col:"#ff8a8a"});set("lost");}
+      /* the catch meter: on the fish it fills (faster while you reel), off the fish it drains; empty and it's away (no line tension any more) */
+      if(over)prog+=dt*(reeling?FT("gain",0.5):FT("gainIdle",0.12))/(1+kind*FT("bigSlow",0.12));else prog-=dt*FT("drain",0.07);ten=0;
+      if(prog<=0){pops.push({t:now,txt:"It got away…",col:"#ff8a8a"});set("lost");}
       else if(prog>=1){net={x:-1,dir:1,sp:1.05+kind*0.22,fx:Math.max(-0.7,Math.min(0.7,fx)),tries:2,done:false};set("net");}}
     else if(st==="net"&&net&&!net.done){net.x+=net.dir*net.sp*dt*1.6;if(net.x>1){net.x=1;net.dir=-1;}if(net.x<-1){net.x=-1;net.dir=1;}}
     else if((st==="caught"||st==="snap"||st==="lost")&&age>(st==="caught"?1.4:1.1))set("idle");
     var p=rimPos(ang);me.tx=me.x=p[0];me.ty=me.y=p[1];sendPos(p[0],p[1]);me.dance=4;
-    var w=Math.sin(now/90)*0.25;GAME.moshPose(st==="caught"?[2.9,-2.9,0.2,-0.2]:st==="reel"?[1.5+(reeling?w:0),-1.2-(reeling?w:0),0,0]:st==="cast"?[2.8-age*4,-1.2,0,0]:[1.3,-1.1,0,0]);
+    /* both hands together in front, gripping the rod (they wind a little while you reel); thrown up overhead for the cast; the fish held up high */
+    var w=Math.sin(now/90)*0.12;GAME.moshPose(st==="caught"?[2.9,-2.9,0.2,-0.2]:st==="cast"?[-0.55+Math.max(0,1-age*3)*-2.2,0.55+Math.max(0,1-age*3)*2.2,0,0]:[-0.55+(reeling?w:0),0.55+(reeling?w:0),0,0]);
     if(GAME.poseNow)GAME.poseNow();
     if(LBOTS())botTick(dt,now);
   }
@@ -4404,7 +4406,7 @@ var FISH=(function(){
     Object.keys(viewers).filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id){
       var v=viewers[id],b=botF[id]||(botF[id]={a:slotAng(id),s:0,at:now+Math.random()*3000,n:0});
       if(now>b.at){b.s=b.s===0?2:b.s===2?4:b.s===4?(Math.random()<0.7?6:7):0;b.at=now+(b.s===2?1500+Math.random()*3000:b.s===4?2500+Math.random()*3000:1200);if(b.s===6){b.n++;var pts=[60,120,220][Math.floor(Math.random()*3)];GAME.botPts&&GAME.botPts(id,pts);}}
-      var p=rimPos(b.a);v.tx=v.x=p[0];v.ty=v.y=p[1];v.dance=4;v.sk={h:Math.min(60,b.n),f:0,t:b.s};v.pose=b.s===6?[2.9,-2.9,0.2,-0.2]:[1.3,-1.1,0,0];v.fd=null;});
+      var p=rimPos(b.a);v.tx=v.x=p[0];v.ty=v.y=p[1];v.dance=4;v.sk={h:Math.min(60,b.n),f:0,t:b.s};v.pose=b.s===6?[2.9,-2.9,0.2,-0.2]:[-0.55,0.55,0,0];v.fd=null;});
   }
   function wire(){return{h:Math.min(60,count),f:st==="snap"?1:0,t:CODE[st]||0};}
   /* facing the water */
@@ -4436,8 +4438,9 @@ var FISH=(function(){
     if(!fishOn())return;var now=performance.now(),s=sc();
     Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4)return;var isMe=id===myId;var code=isMe?CODE[st]:(v.sk?v.sk.t:0);
       var vx=(isMe?v.x:(v.dx!==undefined?v.dx:v.x))*W,vy=(isMe?v.y:(v.dy!==undefined?v.dy:v.y))*H;if(!isFinite(vx))return;
-      var dx=CX*W-vx,dy=CY*H-vy,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,tipX=vx+ux*s*9+(ux>0?s*3:-s*3),tipY=vy-s*22;
-      g.strokeStyle="#7a4a22";PXD.line(g,vx+ux*s*3,vy-s*11,tipX,tipY,Math.max(2,s*0.8));   /* the rod */
+      var dx=CX*W-vx,dy=CY*H-vy,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,AP=2,hx=vx+(Math.abs(ux)>0.35?(ux>0?1:-1)*AP*2:0),hy=vy+AP*2,   /* the hands: together in front of the belly (the avatar's drawn 2 to a pixel) */
+          tipX=hx+ux*AP*14,tipY=hy+uy*AP*10-AP*11;   /* out over the water and tilted up, whichever side of the pool they're on */
+      g.strokeStyle="#7a4a22";PXD.line(g,hx,hy,tipX,tipY,Math.max(2,AP));g.fillStyle="#3a2414";g.fillRect(Math.round(hx-AP),Math.round(hy-AP),AP*2,AP*2);   /* the rod, and its grip in the hands */
       if(code===0||code===6||code===7||code===8){if(code===6&&(isMe||true)){var K=KINDS[isMe?kind:Math.min(4,Math.floor((v.sk.h||0)%3))];fishIcon(g,vx,vy-s*30-Math.abs(Math.sin(now/120))*s*2,s,K,1);}return;}
       var bx=vx+ux*d*0.55,by=vy+uy*d*0.55,bob=code===3?Math.sin(now/40)*s*1.5+s:code===4||code===5?Math.sin(now/60)*s:Math.sin(now/400)*s*0.6;
       if(code===1){var ck=Math.min(1,(now-(isMe?stAt:now-500))/500);bx=tipX+(bx-tipX)*ck;by=tipY+(by-tipY)*ck-Math.sin(ck*Math.PI)*s*14;}
@@ -4497,9 +4500,9 @@ var FISH=(function(){
     g.font="700 11px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.8)";var tip=st==="net"?"NET IT!":reeling?"REELING":"SWAYING";
     g.strokeText(K.n.toUpperCase(),G.bx+G.Wb/2,G.by-18);g.fillStyle=K.col;g.fillText(K.n.toUpperCase(),G.bx+G.Wb/2,G.by-18);g.strokeText(tip,G.bx+G.Wb/2,G.by-5);g.fillStyle="#fff";g.fillText(tip,G.bx+G.Wb/2,G.by-5);
     var RR=Math.max(12,Math.round(G.Wb*0.17)),rcx=G.bx-RR-6,rcy=G.by+G.Hb-RR-4,tt=st==="reel"?Math.min(1,ten):0,tc=tt>0.75?(Math.floor(now/90)%2?"#ff3b5c":"#ffb02e"):tt>0.5?"#ffb02e":"#3DF2FF";
-    g.fillStyle="#3a3a44";ART.PX.disc(g,rcx,rcy,RR);g.strokeStyle="#1b1b22";ART.PX.ring(g,rcx,rcy,RR*0.78,Math.max(3,RR*0.3));if(tt>0){g.strokeStyle=tc;PXD.arcDots(g,rcx,rcy,RR*0.78,-Math.PI/2,-Math.PI/2+tt*Math.PI*2,Math.max(3,RR*0.3));}
-    var ra=reeling&&st==="reel"?now/90:now/900;g.fillStyle="#c9c9d6";ART.PX.disc(g,rcx,rcy,RR*0.38);g.strokeStyle="#c9c9d6";PXD.line(g,rcx,rcy,rcx+Math.cos(ra)*RR*0.9,rcy+Math.sin(ra)*RR*0.9,Math.max(2,RR*0.18));
-    g.font="700 8px 'Silkscreen',ui-monospace,monospace";g.fillStyle=tt>0.75?"#ff6b6b":"#ddd";g.textAlign="center";g.fillText(tt>0.75?"SNAP!":"LINE",rcx,rcy+RR+9);
+    g.fillStyle="#3a3a44";ART.PX.disc(g,rcx,rcy,RR);g.strokeStyle="#1b1b22";ART.PX.ring(g,rcx,rcy,RR*0.78,Math.max(3,RR*0.3));   /* the reel: it spins while you reel */
+    var ra=reeling&&st==="reel"?now/70:now/2000;g.fillStyle="#c9c9d6";ART.PX.disc(g,rcx,rcy,RR*0.38);g.strokeStyle="#c9c9d6";PXD.line(g,rcx,rcy,rcx+Math.cos(ra)*RR*0.9,rcy+Math.sin(ra)*RR*0.9,Math.max(2,RR*0.18));
+    g.font="700 8px 'Silkscreen',ui-monospace,monospace";g.fillStyle="#ddd";g.textAlign="center";g.fillText(reeling&&st==="reel"?"REELING":"REEL",rcx,rcy+RR+9);
     g.restore();
   }
   function netGeo(G){var F=G.F,h=Math.max(40,Math.round(G.Wb*0.34)),w=Math.round(Math.max(G.Wb*1.4,200)),x=Math.round(Math.max(12,G.bx+G.Wb-w)),y=G.by+G.Hb+F+10;
@@ -8245,7 +8248,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.11",SERVER_VERSION="";
+var PAGE_VERSION="1.82.18",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8300,7 +8303,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     var gl=ART.PX.rg(ctx,cx,cy-6*s,2,cx,cy-6*s,22*s);gl.addColorStop(0,hexA(color,0.9));gl.addColorStop(1,hexA(color,0));
     ctx.fillStyle=gl;ART.PX.disc(ctx,cx,cy-6*s,22*s);ctx.restore();
   }
-  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="";
+  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="",knee=0,butt=0,bj=0;
   /* walking: moving = the walk state from ART.walkStep (feet planted, stride by distance) */
   if(moving&&!dance){var wp=ART.walkPose(moving);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*s;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*6*s;armL=2.7+Math.sin(dT*2)*0.35;armR=-armL;legL=Math.sin(dT*2)*0.25;legR=-legL;}
@@ -8312,9 +8315,9 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       /* a free dance style: worked out here from the dance, its move and the two dots (the same on every screen) */
       if(!isMe)fdSmooth(fd);var fc=!isMe&&fd.cs?fd.cs:fd.c,rg=ART.dance(fd.s,fd.m,[fc[0]/100,fc[1]/100,fc[2]/100,fc[3]/100],GAME.beatPos());
       if(rg.dir!==undefined)AVDIR=rg.dir;   /* a dance that turns (the shuffle spin) */
-      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
+      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
       /* the dance walk race: really walking forward while doing the style, so the legs stride (with a bit of the dance in them) and the body keeps the dance's arms and bounce */
-      if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()&&!(fd&&fd.s===7)){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
+      if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()&&!(fd&&fd.s===7)){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;knee=0;butt=0;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
     }else{
     var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];
     bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
@@ -8331,7 +8334,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     if(ro){bob+=ro.lift||0;if(ro.armL!==undefined)armL=ro.armL;if(ro.armR!==undefined)armR=ro.armR;if(ro.legL!==undefined)legL=ro.legL;if(ro.legR!==undefined)legR=ro.legR;if(ro.mouth)mouth=true;if(ro.alL)alL=ro.alL;if(ro.alR)alR=ro.alR;if(ro.head!==undefined)hdA=ro.head;if(ro.dx)dxs+=ro.dx;if(ro.lgL)lgL=ro.lgL;if(ro.lgR)lgR=ro.lgR;if(ro.rot!==undefined)rot=ro.rot;}
     if(eo){var ek=eo.k;bob+=eo.lift;rot=rot*(1-ek)+eo.rot;if(!ro){armL=armL*(1-ek)+eo.armL*ek;armR=armR*(1-ek)+eo.armR*ek;}legL=legL*(1-ek)+eo.legL*ek;legR=legR*(1-ek)+eo.legR*ek;}}
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
   /* name under the feet (stays put while dancing); none under your own character: you know who you are */
   if(name&&!isMe){
     ART.nameTag(ctx,name,x,cy+12*s+3,s>=2.5?2:1,"#fff");   /* pixel lettering; bots get a pixel robot */
@@ -8829,7 +8832,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.11"></script>
+<script src="lab.js?v=1.82.18"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
