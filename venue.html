@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.93"></script>
-<script src="gfx.js?v=1.81.93"></script>
-<script src="art.js?v=1.81.93"></script>
-<script src="voice.js?v=1.81.93"></script>
-<script src="instruments.js?v=1.81.93"></script>
-<script src="kart.js?v=1.81.93"></script>
-<script src="explain.js?v=1.81.93"></script>
+<script src="tune.js?v=1.81.94"></script>
+<script src="gfx.js?v=1.81.94"></script>
+<script src="art.js?v=1.81.94"></script>
+<script src="voice.js?v=1.81.94"></script>
+<script src="instruments.js?v=1.81.94"></script>
+<script src="kart.js?v=1.81.94"></script>
+<script src="explain.js?v=1.81.94"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5359,8 +5359,8 @@ var FIG=(function(){
     spin:["LONG SPIN","Circle "+STK+" to wind up, then STOP and hold it out to stick your leg out"],
     freePad:1,spin0:["LOW SPIN","Circle "+STK+" to wind up, then hold \u2193 to drop low and stick your leg out in front"],
     spin1:["CAMEL SPIN","Circle "+STK+" to wind up, then hold \u2190 or \u2192 to stretch your leg out behind"],free:["FREE DANCE","You stop and dance a routine of doubles: tap the first target, then the second as its ring closes (no need to trace the line). Hit them all for a flawless routine"],
-    build:["BUILD SPEED","MASH "+BTN+" as fast as you can to pump up speed, then PULL BACK & FLICK the ring on the drop: higher = more turns"],axel:["AXEL","PULL BACK & FLICK the ring!"],finale:["FINAL POSE","Press "+BTN+" on the very last beat"],
-    big:["BIG JUMP","MASH "+BTN+" to pump up speed, then PULL BACK & FLICK the ring to jump. Highest jump wins a bonus"]};
+    build:["BUILD SPEED","MASH "+BTN+" as fast as you can to pump up speed, then crouch ("+STK+" back) and jump (forward) on the drop: higher = more turns"],axel:["AXEL","Crouch and JUMP!"],finale:["FINAL POSE","Press "+BTN+" on the very last beat"],
+    big:["BIG JUMP","MASH "+BTN+" to pump up speed, then pull "+STK+" back to crouch and shoot it forward to jump. Highest jump wins a bonus"]};
   function $(id){return document.getElementById(id);}
   function pos(){return ROUND.pos();}
   function ids(){return Object.keys(viewers).filter(function(id){var v=viewers[id];return v&&v!==PH;}).sort();}
@@ -5456,8 +5456,11 @@ var FIG=(function(){
     if(window.__figAuto){for(var qa=ti;qa<tg.length&&tg[qa].t<p+20;qa++)if(!tg[qa].j&&Math.abs(tg[qa].t-p)<20){var ta=tg[qa];if(ta.k==="step")flick(MOVES[ta.m].d);else if(ta.k==="big"||ta.k==="axel"){launch(1);}else if(ta.k==="tgt"){ta.j=1;danceHit(ta,0);}else if(ta.k==="swp"){ta.j=-1;dm.sw={t:ta,g:0,inn:1,out:0,auto:1};}else hit(ta,0);}if(k==="spin"){var stA=spinType(sg);if((p-sg.t0)<per()*3)spin.vel=Math.min(22,spin.vel+0.6);else{held.down=stA===0;held.right=stA===1;}}if(pumping(p))pump=Math.min(1,pump+0.05);}   /* tests: a perfect skater */
     if(!flickOpen(p))pump=Math.max(0,pump-dt*(pumping(p)?0.32:0.6));   /* stop pumping and you slow down; once the flick ring is up your speed holds where it got to */
     /* the flick from a keyboard or the pad: hold down (pull back), let go or push up (flick) */
-    var fo=flickOpen(p),pk=held.down||(joy.id!==null&&joy.y>0.5);
-    if(fo&&!(fl&&fl.ptr)){if(pk)kbPull=Math.min(1,kbPull+dt*2.2);else if(kbPull>0.15){launch(kbPull);}else kbPull=0;}else if(!fo)kbPull=0;
+    /* the jump: pull the stick back and you crouch (deeper the further you pull), shoot it forward to jump (keyboard: hold down, then up) */
+    var fo=flickOpen(p),jy=joy.id!==null?joy.y:0,fwd=held.up||upLatch||jy<-0.35;upLatch=false;
+    if(fo){if(jy>0.1)kbPull=Math.max(kbPull,Math.min(1,jy));else if(held.down)kbPull=Math.min(1,kbPull+dt*2.2);
+      if(fwd&&kbPull>0.15)launch(kbPull);else if(!held.down&&!(jy>0.1))kbPull=Math.max(0,kbPull-dt*1.5);}   /* let go without jumping: you stand back up */
+    else kbPull=0;
     /* everyone else's jumps: the peak each reached at a jump moment (for the biggest jump bonus) */
     var njA=null;for(var qn=Math.max(0,ti-3);qn<Math.min(tg.length,ti+3);qn++)if((tg[qn].k==="big"||tg[qn].k==="axel")&&p>=tg[qn].t-per()&&p<tg[qn].t+per()*2.5)njA=tg[qn];
     if(njA)ids().forEach(function(id){if(id===myId)return;var v=viewers[id],h=v&&v.sk?v.sk.h|0:0;if(!v._figPk||v._figPk.t!==njA.t)v._figPk={t:njA.t,h:0};if(h>v._figPk.h)v._figPk.h=h;});
@@ -5488,6 +5491,7 @@ var FIG=(function(){
     GAME.moshPose(pose(k,p,now,true));
     botTick(p,now);ui();
   }
+  var upLatch=false;window.addEventListener("keydown",function(e){if(on&&(e.code==="ArrowUp"||e.code==="KeyW"))upLatch=true;},true);   /* a quick tap of up still counts (it can come and go between frames) */
   function enter(k,was){if(k==="build")pump=0;if(k==="axel"&&(jump||fall>0))return;banner(F.NAMES[k]||k.toUpperCase(),{spin:"#3DF2FF",free:"#D354A0",build:"#F5D03C",axel:"#3DF2FF",finale:"#F5D03C"}[k]);}
   function stick(){var x=(held.right?1:0)-(held.left?1:0),y=(held.down?1:0)-(held.up?1:0);if(typeof joy!=="undefined"&&joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){x=joy.x;y=joy.y;}var m=Math.hypot(x,y);if(m>1){x/=m;y/=m;}return{x:x,y:y};}
   /* the pose for a moment of the routine (yours, or a practice skater's) */
@@ -5508,14 +5512,18 @@ var FIG=(function(){
     return[1.35+s1*0.1,-1.35+s1*0.1,Math.max(0,s1)*0.5,-Math.max(0,-s1)*0.5];}   /* gliding: arms out, a push on each beat */
   /* what everyone else needs: the free dance (as a dance style), height in the air, a fall, and which way you face in a spin / jump */
   function fd(){return null;}   /* the free dance's moves go out as poses */
-  function facing(){if(jump&&jump.kind){var u=Math.min(1,(performance.now()-jump.t0)/(jump.dur*0.88)),turns=[0,1,2.5,3.5][jump.kind];return Math.floor(u*turns*8)%8;}
-    if(spin.vel>0.4)return ART.face8(Math.sin(spin.ang),Math.cos(spin.ang),-1);return -1;}
+  /* turning round in a spin or a jump: front, the three-quarter views and the back only (the side-on drawings can't show a leg out or the arms) */
+  var TURN6=[0,4,5,2,6,7];
+  function turnDir(rev){var i=Math.floor((((rev%1)+1)%1)*6);return TURN6[i];}
+  function facing(){if(jump&&jump.kind){var u=Math.min(1,(performance.now()-jump.t0)/(jump.dur*0.88)),turns=[0,1,2.5,3.5][jump.kind];return turnDir(u*turns);}
+    if(spin.vel>0.4)return turnDir(spin.ang/(Math.PI*2));return -1;}
   function height(){if(!jump)return 0;var u=Math.min(1,(performance.now()-jump.t0)/jump.dur);return Math.round(height_px(jump.h||0.5)*4*u*(1-u));}
   function wire(){var f=facing();return{h:height(),f:fall>0?1:0,t:f>=0?f+1:0};}
   function looks(v,isMe,sc){var sk=isMe?wire():v.sk;if(!sk)return{lift:0,rot:0,ns:false};return{lift:-(sk.h||0)*sc,rot:sk.f?((v.seed||1)%2?1.45:-1.45):0};}
   function faceOf(v,isMe){var sk=isMe?wire():v.sk;return sk&&sk.t>0?((sk.t-1)%8):-1;}
   /* the spin positions drawn properly (anyone's, read from their pose): the sit spin sinks low on a bent leg with the other straight out; the camel leans over with the leg out behind */
-  function spinLook(v,isMe,sc){var sk=isMe?wire():v.sk;if(!sk||!(sk.t>0)||sk.h>0)return null;var q=isMe?GAME.pose:v.pose;if(!q)return null;
+  function spinLook(v,isMe,sc){if(isMe&&kbPull>0.05&&!jump){var c=kbPull;return{lift:c*7*sc,lgL:7-c*3,lgR:7-c*3,legL:0.35+c*0.35,legR:-0.35-c*0.35,armL:0.3+c*0.3,armR:-0.3-c*0.3};}   /* crouching for the jump */
+    var sk=isMe?wire():v.sk;if(!sk||!(sk.t>0)||sk.h>0)return null;var q=isMe?GAME.pose:v.pose;if(!q)return null;
     if(q[2]>1.2)return{lift:4*sc,legL:1.55,legR:-0.15,lgL:7,lgR:3.6,armL:1.25,armR:-1.25};
     if(q[3]<-1.2)return{legL:0.02,legR:-1.62,lgL:7,lgR:7,armL:1.7,armR:-1.7,rot:-0.32};
     return null;}
@@ -5525,13 +5533,13 @@ var FIG=(function(){
       var sp=F.spot(Gm,lap,slotOf(id),0);v.tx=v.x=sp.x/W;v.ty=v.y=sp.y/H;v.dance=4;
       if(k==="spin")b.ang+=0.22;var t=0,h=0;
       if(k==="axel"&&!b.jump&&p>=sg.at)b.jump=now;var u=b.jump?(now-b.jump)/(per()*4):1;if(u>=1)b.jump=0;
-      if(b.jump){h=Math.round((20+b.kind*10)*4*u*(1-u));t=1+Math.floor(u*[0,1.5,2.5,3.5][b.kind]*8)%8;}else if(k==="spin")t=1+ART.face8(Math.sin(b.ang),Math.cos(b.ang),-1);
+      if(b.jump){h=Math.round((20+b.kind*10)*4*u*(1-u));t=1+turnDir(u*[0,1.5,2.5,3.5][b.kind]);}else if(k==="spin")t=1+turnDir(b.ang/(Math.PI*2));
       for(var bm=0;bm<P.moments.length;bm++){var m0=P.moments[bm];if(p>=m0&&p<m0+per()*1.5&&b.bj!==m0){b.bj=m0;b.bt=now;b.bh=0.3+Math.random()*0.6;}}
       if(b.bt&&now-b.bt<per()*3.5&&!b.jump){var ub=(now-b.bt)/(per()*3.5);h=Math.round(height_px(b.bh)*4*ub*(1-ub));}
       v.sk={h:h,f:0,t:t};v.pose=b.jump||h>0?[-0.35,0.35,0.12,-0.12]:pose(k,p,now,false);v.fd=null;});}
   /* what's coming: the next part of the routine, or the next big move, and how many beats away */
   function upcoming(p){var sg=F.segAt(P,p),nxt=null;for(var i=0;i<P.segs.length;i++)if(P.segs[i].t0>p){nxt=P.segs[i];break;}
-    var bm=null;for(var j=0;j<P.moments.length;j++)if(P.moments[j]>p-per()*0.2){bm=P.moments[j];break;}
+    var bm=null;for(var j=0;j<P.moments.length;j++)if(P.moments[j]>p-per()*0.2&&!tg.some(function(t){return t.k==="big"&&t.t===P.moments[j]&&t.j;})){bm=P.moments[j];break;}   /* (a jump you've already done early doesn't count down again) */
     return{seg:nxt,segIn:nxt?(nxt.t0-p)/per():1e9,big:bm,bigIn:bm!==null?(bm-p)/per():1e9};}
   /* the screen: the routine's timeline, a card saying what this part is and what to do, the prompt with its beat ring */
   function ui(){var u=$("figUI");if(!u){u=document.createElement("div");u.id="figUI";u.innerHTML='<div class="fgTL"><i class="fgCur"></i></div><div class="fgNow"></div><div class="fgCard"><b></b><span></span><em></em></div><div class="fgPrompt"><canvas width="64" height="64"></canvas><b></b><small></small></div><div class="fgSpeed"><i></i><span>SPEED</span></div><div class="fgPad"><canvas></canvas></div><div class="fgFlick"><canvas width="120" height="230"></canvas><b>PULL BACK &amp; FLICK</b></div><button class="fgBtn" aria-label="Skate">'+BTN+'<small>'+(TOUCHF?"":"or click")+'</small></button>';
@@ -5566,8 +5574,8 @@ var FIG=(function(){
     var near=nx&&(nx.t-p)/pb<=(nx.k==="step"?2.2:nx.k==="build"?1.2:4.2)?nx:null,lab,sub,ring=-1;
     if(fx.t&&now-fx.t<450){lab=fx.txt;sub="";}
     var fo2=flickOpen(p),pm=pumping(p);
-    if(fo2&&fo2.k==="big"){lab=lab||"PULL BACK & FLICK!";sub="any time: more speed + more pull = higher";}
-    else if(fo2){var dtj=fo2.t-p;lab=lab||(dtj>pb*0.3?"FLICK IN "+Math.ceil(dtj/pb):"FLICK NOW!");sub=TOUCHF?"pull the ring back, let go":"hold \u2193, let go (or drag the ring)";}
+    if(fo2&&fo2.k==="big"){lab=lab||(kbPull>0.15?"NOW SHOOT IT FORWARD!":"CROUCH & JUMP!");sub=TOUCHF?"pull the stick back, then shoot it forward":"hold \u2193 to crouch, then \u2191 to jump";}
+    else if(fo2){var dtj=fo2.t-p;lab=lab||(dtj>pb*0.3?"JUMP IN "+Math.ceil(dtj/pb):"JUMP NOW!");sub=TOUCHF?"pull the stick back, then shoot it forward":"hold \u2193 to crouch, then \u2191 to jump";}
     else if(pm){lab=lab||"PUMP! PUMP!";sub="mash "+BTN+" \u00B7 speed "+Math.round(pump*100)+"%";}
     else if(k==="spin"){var SPq=SPOS[Math.max(0,spinType(sg))];lab=lab||(spin.pos?SPq.n+"!":spin.vel>=8?"LEG OUT! "+SPq.tag.split(" ")[0]:"WIND UP!");sub=spin.pos?"hold it \u00B7 "+Math.floor(spin.ang/(Math.PI*2))+" turns":spin.vel>=8?"stop circling, hold "+SPq.tag.split(" ")[0]:"circle "+STK;}
     else if(k==="free"){lab=lab||(dm.sw?"FOLLOW IT!":"DANCE!");sub=dm.sw?"keep your finger on the ball":dm.flow?"now the second target":"tap the first target, then the second";}
@@ -5599,8 +5607,8 @@ var FIG=(function(){
         disc(cx,cy,R0,M.c);disc(cx,cy,R0*0.45,"#120d1e");if(dtb>0)ringP(cx,cy,R0*(1+dtb*1.4),dtb<0.15?"#3DF2FF":"#ffffff");
         q2.font="700 "+Math.max(9,Math.round(R0*0.42))+"px 'Silkscreen',ui-monospace,monospace";q2.textAlign="center";q2.fillStyle="#fff";q2.fillText(M.n,cx,cy+R0+Math.max(11,R0*0.5));}}
     /* the flick ring: the knob follows your pull, a ring closes on the moment */
-    var fk2=u.querySelector(".fgFlick");fk2.classList.toggle("on",!!fo2);
-    if(fo2){var fc=fk2.querySelector("canvas").getContext("2d"),pl=fl?fl.pull:kbPull;fc.clearRect(0,0,120,230);fc.imageSmoothingEnabled=false;
+    var fk2=u.querySelector(".fgFlick");fk2.classList.remove("on");   /* (no slider any more: the stick does the jump) */
+    if(false){var fc=fk2.querySelector("canvas").getContext("2d"),pl=fl?fl.pull:kbPull;fc.clearRect(0,0,120,230);fc.imageSmoothingEnabled=false;
       fc.fillStyle="#1a1430";fc.fillRect(36,10,48,210);fc.fillStyle="#7F77DD";fc.fillRect(40,14,40,202);fc.fillStyle="#120d1e";fc.fillRect(44,18,32,194);   /* the slot */
       var ky=Math.round(46+pl*150);fc.fillStyle=pl>0.7?"#3DF2FF":"#D354A0";fc.fillRect(34,ky-14,52,28);fc.fillStyle="#fff";fc.fillRect(40,ky-10,10,6);   /* the knob */
       fc.fillStyle="#F5D03C";for(var ar=0;ar<3;ar++){var ay=ky-34-ar*10;if(ay>4)fc.fillRect(56-ar*0,ay,8,4);}   /* flick up */
@@ -5609,11 +5617,11 @@ var FIG=(function(){
     var dp=document.getElementById("dpad"),bt=u.querySelector(".fgBtn"),gl=null,gt="";
     if(k==="spin"){var SPh=SPOS[Math.max(0,spinType(sg))];gl=dp;gt=spin.pos?"HOLD IT!":spin.vel>=8?SPh.tag:"CIRCLE \u21BB";}
     else if(k==="free"){gl=u.querySelector(".fgPad");gt=dm.sw?"FOLLOW!":dm.flow?"NOW THE 2ND":"TAP 1ST, THEN 2ND";}
-    else if(fo2){gl=fk2;gt="FLICK \u2191";}
+    else if(fo2){gl=dp;gt=kbPull>0.15?"\u2191 JUMP!":"\u2193 CROUCH";}
     else if(pm){gl=bt;gt="MASH!";}
     else if(near){if(near.k==="step"){gl=dp;gt=MOVES[near.m].a+" "+MOVES[near.m].n;}else if(near.k==="final"){gl=bt;gt="POSE!";}}
     if(gl)gl.classList.toggle("goalNow",ring>=0&&ring<0.18);goalHL(gl,gt);
-    var hn=$("skHint");if(hn)hn.textContent=fo2?"Pull the ring back and let go to jump: more pump + more pull = higher":pm?"Mash "+BTN+" as fast as you can: faster = higher jump":CARD[k]?CARD[k][1]:"";}
+    var hn=$("skHint");if(hn)hn.textContent=fo2?"Pull the stick back to crouch, shoot it forward to jump: more pump + a deeper crouch = higher":pm?"Mash "+BTN+" as fast as you can: faster = higher jump":CARD[k]?CARD[k][1]:"";}
   function draw(g){if(!on)return;var now=performance.now();g.save();
     pops=pops.filter(function(p){var a3=(now-p.t)/900;if(a3>1)return false;g.globalAlpha=1-a3;g.font="900 16px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(p.txt,p.x,p.y-a3*30);g.fillStyle=p.col;g.fillText(p.txt,p.x,p.y-a3*30);return true;});
     g.restore();}
@@ -7708,7 +7716,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.93",SERVER_VERSION="";
+var PAGE_VERSION="1.81.94",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8287,7 +8295,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.93"></script>
+<script src="lab.js?v=1.81.94"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.94 — Ice jumps: crouch & jump with the stick; spins fixed
+
+1. **No more slider.** At a big jump (or the axel), pull the stick back and your skater crouches (deeper the further you pull), then shoot it forward to jump. Keyboard: hold ↓ to crouch, tap ↑ to jump. Let go without pushing forward and you stand back up. Height = pumped speed × how deep you crouched.
+2. The stick glows **↓ CROUCH**, then **↑ JUMP!**, and the prompt says NOW SHOOT IT FORWARD!
+3. A jump you did early no longer shows "BIG JUMP IN 1" again afterwards.
+4. **Spins and jumps** turn through the front, three-quarter and back views only. The side-on frames dropped the arms and the leg, which broke the low (sit) spin; now the leg-out position shows all the way round.
+
 ## v1.81.93 — Ice free dance: doubles only
 
 1. The free dance pad now only has **doubles**: two targets joined by a line. Tap the first as its ring closes, then the second 2 beats later. No tracing the line. A new double comes every 4 beats.
