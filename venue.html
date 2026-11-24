@@ -17,13 +17,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.81.94"></script>
-<script src="gfx.js?v=1.81.94"></script>
-<script src="art.js?v=1.81.94"></script>
-<script src="voice.js?v=1.81.94"></script>
-<script src="instruments.js?v=1.81.94"></script>
-<script src="kart.js?v=1.81.94"></script>
-<script src="explain.js?v=1.81.94"></script>
+<script src="tune.js?v=1.81.95"></script>
+<script src="gfx.js?v=1.81.95"></script>
+<script src="art.js?v=1.81.95"></script>
+<script src="voice.js?v=1.81.95"></script>
+<script src="instruments.js?v=1.81.95"></script>
+<script src="kart.js?v=1.81.95"></script>
+<script src="explain.js?v=1.81.95"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5379,8 +5379,11 @@ var FIG=(function(){
       if(sg.k==="intro")for(t=sg.t0+p*2,i=0;t<sg.t1-p*0.5;t+=p*2,i++)out.push({t:t,k:"step",m:SEQ[i%SEQ.length]});   /* the first one 2 beats in: time to read the card */
       if(sg.k==="axel")out.push({t:sg.at,k:"axel"});
       if(sg.k==="finale")out.push({t:Math.max(sg.t0,sg.t1-p*1.2),k:"final"});
-      if(sg.k==="free"){var n=0;for(t=sg.t0+p*2;t+p*2<sg.t1-p*0.5;t+=p*4,n++){var mv=RSEQ[(n*2)%RSEQ.length],nx2=RSEQ[(n*2+1)%RSEQ.length];if(nx2===mv)nx2=(mv+3)%RMOV.length;
-        var A0={t:t,k:"tgt",m:mv,m2:nx2,role:"a",len:p*2,seg:sg},B0={t:t+p*2,k:"tgt",m:nx2,role:"b",seg:sg,a:A0};A0.b=B0;out.push(A0,B0);}}});   /* doubles: tap the start, then the end 2 beats later */
+      if(sg.k==="free"){var bb=P.per<400?p*2:p,n=0,dbl=function(t1,nn){var mv=RSEQ[(nn*2)%RSEQ.length],nx2=RSEQ[(nn*2+1)%RSEQ.length];if(nx2===mv)nx2=(mv+3)%RMOV.length;
+          var A0={t:t1,k:"tgt",m:mv,m2:nx2,role:"a",len:bb*2,seg:sg},B0={t:t1+bb*2,k:"tgt",m:nx2,role:"b",seg:sg,a:A0};A0.b=B0;out.push(A0,B0);};
+        for(t=sg.t0+p*2;t+bb*2<sg.t1-p*0.5;n++){
+          if(n<2){dbl(t,n);t+=bb*4;continue;}   /* the first two on their own */
+          if(t+bb*3<sg.t1-p*0.5){dbl(t,n*2);dbl(t+bb,n*2+1);t+=bb*5;}else{dbl(t,n*2);t+=bb*4;}}}});   /* then cascades: two in flight at once */   /* doubles: tap the start, then the end 2 beats later */
     P.moments.forEach(function(m){out.push({t:m,k:"big"});});
     out.sort(function(a,b){return a.t-b.t;});return out;}
   function start(round){
@@ -5599,9 +5602,11 @@ var FIG=(function(){
       function ringP(cx,cy,r,col){q2.fillStyle=col;var nn=Math.max(16,Math.round(r/2));for(var a4=0;a4<nn;a4++){var an4=a4/nn*Math.PI*2;q2.fillRect(Math.round((cx+Math.cos(an4)*r)/blk)*blk,Math.round((cy+Math.sin(an4)*r)/blk)*blk,blk,blk);}}
       for(var it=tg.length-1;it>=Math.max(0,ti-3);it--){var T=tg[it];if(T.k!=="tgt"&&T.k!=="swp")continue;var dtb=(T.t-p)/pb;if(dtb>2.2)continue;if(T.j&&T.j!==-1)continue;
         var M=RMOV[T.m],cx=M.x*pw,cy=M.y*ph;
-        if(T.role==="a"){var MB=RMOV[T.m2];q2.globalAlpha=0.4;for(var su2=0;su2<=1;su2+=0.05){disc(cx+(MB.x*pw-cx)*su2,cy+(MB.y*ph-cy)*su2-Math.sin(su2*Math.PI)*0.12*ph,R0*0.32,"#9fc7ff");}q2.globalAlpha=1;
+        if(T.role==="a"){var MB=RMOV[T.m2];q2.globalAlpha=0.45;for(var su2=0;su2<=1;su2+=0.05){disc(cx+(MB.x*pw-cx)*su2,cy+(MB.y*ph-cy)*su2-Math.sin(su2*Math.PI)*0.12*ph,R0*0.32,M.c);}q2.globalAlpha=1;
           if((T.b.t-p)/pb>2.2){q2.globalAlpha=0.45;disc(MB.x*pw,MB.y*ph,R0,MB.c);disc(MB.x*pw,MB.y*ph,R0*0.45,"#120d1e");q2.globalAlpha=1;}}   /* the line to the second half, and its target waiting */
-        if(T.role==="b"&&T.a&&T.a.j>=1&&T.a.j<=3&&!T.j){var MA=RMOV[T.a.m];q2.globalAlpha=0.4;for(var su3=0;su3<=1;su3+=0.05){disc(MA.x*pw+(cx-MA.x*pw)*su3,MA.y*ph+(cy-MA.y*ph)*su3-Math.sin(su3*Math.PI)*0.12*ph,R0*0.32,"#9fc7ff");}q2.globalAlpha=1;}
+        if(T.role==="b"&&T.a&&!T.j){var MA=RMOV[T.a.m],ax=MA.x*pw,ay=MA.y*ph,okA=T.a.j>=1&&T.a.j<=3;q2.globalAlpha=okA?0.45:0.2;
+          for(var su3=0;su3<=1;su3+=0.05){disc(ax+(cx-ax)*su3,ay+(cy-ay)*su3-Math.sin(su3*Math.PI)*0.12*ph,R0*0.32,MA.c);}q2.globalAlpha=1;
+          var up2=(p-T.a.t)/(T.t-T.a.t);if(up2>=0&&up2<=1){var qx=ax+(cx-ax)*up2,qy=ay+(cy-ay)*up2-Math.sin(up2*Math.PI)*0.12*ph;disc(qx,qy,R0*0.62,"#ffffff");disc(qx,qy,R0*0.36,MA.c);}}   /* the pulse runs over the line and lands on the second target on its beat */
         if(T.k==="swp"){var M2=RMOV[T.m2];q2.globalAlpha=0.45;for(var su=0;su<=1;su+=0.04){disc(cx+(M2.x*pw-cx)*su,cy+(M2.y*ph-cy)*su-Math.sin(su*Math.PI)*0.18*ph,R0*0.55,"#9fc7ff");}q2.globalAlpha=1;
           if(dm.sw&&dm.sw.t===T){var uu2=Math.max(0,Math.min(1,(p-T.t)/T.len));disc(cx+(M2.x*pw-cx)*uu2,cy+(M2.y*ph-cy)*uu2-Math.sin(uu2*Math.PI)*0.18*ph,R0*0.9,"#ffffff");disc(cx+(M2.x*pw-cx)*uu2,cy+(M2.y*ph-cy)*uu2-Math.sin(uu2*Math.PI)*0.18*ph,R0*0.5,M2.c);continue;}}
         disc(cx,cy,R0,M.c);disc(cx,cy,R0*0.45,"#120d1e");if(dtb>0)ringP(cx,cy,R0*(1+dtb*1.4),dtb<0.15?"#3DF2FF":"#ffffff");
@@ -7716,7 +7721,7 @@ function perfInset(g2,x,y){
 function setFist(){try{document.documentElement.style.setProperty("--uiFist","url("+ART.UI.fist(ART.looks.colOf(myLook,"skin"))+")");}catch(e){}}setFist();
 window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerformerPlaying,midi:lastNoteMidi};};
 /* the version label (bottom right): this page, a warning if a cached script is older, and the server's version */
-var PAGE_VERSION="1.81.94",SERVER_VERSION="";
+var PAGE_VERSION="1.81.95",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8295,7 +8300,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.81.94"></script>
+<script src="lab.js?v=1.81.95"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

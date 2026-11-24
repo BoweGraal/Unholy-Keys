@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.95 — Ice free dance: connected doubles that pulse and cascade
+
+1. Each double's line is drawn in its first move's colour. Once its first target's beat comes, a **pulse runs over the line** and lands on the second target right on its beat: tap the second one as the pulse arrives (no tracing).
+2. The first two doubles come on their own. After that they **cascade**: a second double starts a beat after the first, so two are in flight at once. Then there's a short breather before the next pair.
+
 ## v1.81.94 — Ice jumps: crouch & jump with the stick; spins fixed
 
 1. **No more slider.** At a big jump (or the axel), pull the stick back and your skater crouches (deeper the further you pull), then shoot it forward to jump. Keyboard: hold ↓ to crouch, tap ↑ to jump. Let go without pushing forward and you stand back up. Height = pumped speed × how deep you crouched.
