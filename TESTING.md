@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.38 — Cyber goth: Stomp & reach
+
+- **Cyber goth → Stomp & reach** (it was Stomp & punch), from a new clip: a **wide, low stance**; on each beat **both arms reach up** in a V tilted to one side, then **pull down hard** with the fists to the chest as that foot **stomps** and the weight drops onto it, then the other side. The reach is quick and the pull is the hit. It's also the base of Mix it up. Right stick: arm size, and up for double time. Left stick moves you.
+- Check: free dance → Cyber goth: reach up to one side, pull down with a stomp, swap.
+
 ## v1.82.37 — Shuffle's Running man side-on
 
 - **Shuffle → Running man** is now **side-on** like the Running man dance, from a new clip, but with the shuffle's sharp timing: on the "and" a knee **snaps up** in front and holds; on the beat it **stomps down** as the standing foot slides back, and the **other leg** takes the next one. Arms loose and low, bent, a hand pumping up with the knee.
