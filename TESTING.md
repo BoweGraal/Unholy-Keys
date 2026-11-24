@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.88 — Ice routine: pump & flick jumps, sit spin and camel spin
+
+1. **Jumps (big moves and the axel):** in the run-up (the 6 beats before a big jump, or the whole BUILD SPEED part before the axel), **MASH** TAP / SPACE. Your click speed fills the speed meter, which drains when you stop. Then a ring appears in the middle of the screen: **pull it back and let go (flick)** to jump. On PC, hold ↓ and let go, or drag the ring with the mouse. Height = pumped speed × how far you pulled × timing. The axel becomes SINGLE / DOUBLE / TRIPLE by height (too low = fall).
+2. **Biggest jump:** whoever jumps highest at that moment gets **BIGGEST JUMP +250**.
+3. **Long spins:** circle the stick to wind up. Once it says **LEG OUT**, stop circling and hold the stick:
+   - 1st long spin = **SIT SPIN**: hold ↓. You sink low on a bent leg with the other leg straight out.
+   - 2nd long spin = **CAMEL SPIN**: hold ← or →. You lean over with your leg stretched out behind.
+   Holding the position keeps you spinning and doubles the points per turn; holding it to the end scores a bonus. Everyone sees the position.
+
 ## v1.81.87 — Ice routine: every part says what to do (and it's not all tapping)
 
 1. **Instruction cards:** about 3 beats before each part starts (and for its first couple of beats), a big card shows the part's name, one line on what to do, and an IN 3 / IN 2 / GO! countdown. A big move gets its own card 4 beats ahead.
