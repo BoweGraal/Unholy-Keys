@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.24 — Chill music carries on into practice; Queue Lights after After-hours Entry
+
+- The front-page music keeps playing when you go into **Practice** and walk around the dance floor. It fades out when a practice round or game starts and comes back when it's over.
+- When **After-hours Entry** finishes, it moves on to **Queue Lights**, then back again (it used to loop the one song).
+- Check: click on the front page (music starts), go into Practice: it carries on. Start a round: it fades out. Finish: it comes back. Leave it running to the end of the song: Queue Lights comes on.
+
 ## v1.82.23 — Faded SPACE / D / E / 3 keys gone from the jam screen
 
 - The row of faded SPACE, D, E, 3 key hints above the stage on the performer's PC jam screen is gone. The keys still work.

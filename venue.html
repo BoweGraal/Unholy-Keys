@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.23"></script>
-<script src="gfx.js?v=1.82.23"></script>
-<script src="art.js?v=1.82.23"></script>
-<script src="voice.js?v=1.82.23"></script>
-<script src="instruments.js?v=1.82.23"></script>
-<script src="kart.js?v=1.82.23"></script>
-<script src="explain.js?v=1.82.23"></script>
+<script src="tune.js?v=1.82.24"></script>
+<script src="gfx.js?v=1.82.24"></script>
+<script src="art.js?v=1.82.24"></script>
+<script src="voice.js?v=1.82.24"></script>
+<script src="instruments.js?v=1.82.24"></script>
+<script src="kart.js?v=1.82.24"></script>
+<script src="explain.js?v=1.82.24"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -8277,24 +8277,29 @@ var MENUMUSIC=(function(){
   var a=null,ac=null,gn=null,vol=0,started=false,t0=0,muted=false,BED=0.32,FADE=1200;   /* straight in at a normal background level (a quick fade, no slow swell) */
   try{muted=localStorage.getItem("uk_menumusic")==="0";}catch(e){}
   function menuOn(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&getComputedStyle(j).display!=="none";}
+  /* it also keeps playing in practice while you're just on the dance floor (no round or game running) */
+  function want(){var b=document.body;return menuOn()||(!!b&&b.classList.contains("practice")&&!b.classList.contains("pr-busy")&&!b.getAttribute("data-game"));}
+  var LIST=["After-hours Entry.mp3","Queue Lights.mp3"],cur=0;   /* After-hours Entry, then Queue Lights when it ends, and round again */
   function setVol(v){if(gn&&ac)gn.gain.setTargetAtTime(v,ac.currentTime,0.05);else if(a)a.volume=Math.max(0,Math.min(1,v));}
-  function ensure(){if(a)return;a=new Audio("songs/"+encodeURIComponent("After-hours Entry.mp3"));a.loop=true;a.preload="auto";
+  function ensure(){if(a)return;a=new Audio("songs/"+encodeURIComponent(LIST[0]));a.loop=false;a.preload="auto";
+    a.addEventListener("ended",function(){cur=(cur+1)%LIST.length;a.src="songs/"+encodeURIComponent(LIST[cur]);if(started&&want()){var pp=a.play();if(pp&&pp.catch)pp.catch(function(){});}});
     try{var AC=window.AudioContext||window.webkitAudioContext;ac=new AC();gn=ac.createGain();gn.gain.value=0;ac.createMediaElementSource(a).connect(gn);gn.connect(ac.destination);a.volume=1;}catch(e){ac=gn=null;a.volume=0;}}
-  function start(){if(started||muted||!menuOn())return;ensure();if(ac&&ac.state==="suspended")ac.resume().catch(function(){});
+  function start(){if(started||muted||!want())return;ensure();if(ac&&ac.state==="suspended")ac.resume().catch(function(){});
     var p=a.play();started=true;t0=performance.now();if(p&&p.then)p.then(function(){t0=performance.now();},function(){started=false;});}
   ["pointerdown","keydown","touchend"].forEach(function(ev){document.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
   setTimeout(start,300);   /* ...unless this page is already allowed to play */
-  setInterval(function(){if(!a)return;var on=menuOn()&&!muted&&started,target=0;
+  setInterval(function(){if(!a)return;var on=want()&&!muted&&started,target=0;
     if(on)target=BED*Math.min(1,(performance.now()-t0)/FADE);
-    vol=on?target:vol+(target-vol)*0.1;if(!on&&vol<0.003){vol=0;if(!a.paused)a.pause();if(!menuOn())started=false;}setVol(vol);
-    if(!started&&!muted&&menuOn()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
+    vol=on?target:vol+(target-vol)*0.1;if(!on&&vol<0.003){vol=0;if(!a.paused)a.pause();if(!want())started=false;}setVol(vol);
+    if(!started&&!muted&&want()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
   },100);
   function btn(){var b=document.getElementById("mmMusic");if(b){b.textContent=muted?"\u266B MUSIC OFF":"\u266B MUSIC ON";b.classList.toggle("off",muted);}}
   var b0=document.getElementById("mmMusic");if(b0){btn();b0.addEventListener("click",function(e){e.stopPropagation();muted=!muted;try{localStorage.setItem("uk_menumusic",muted?"0":"1");}catch(x){}btn();if(!muted)start();});}
-  window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),gain:!!gn};};
+  window.ukMenuMusicEnd=function(){if(a)a.dispatchEvent(new Event("ended"));return LIST[cur];};   /* test: as if the song finished */
+  window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.23",SERVER_VERSION="";
+var PAGE_VERSION="1.82.24",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8878,7 +8883,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.23"></script>
+<script src="lab.js?v=1.82.24"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
