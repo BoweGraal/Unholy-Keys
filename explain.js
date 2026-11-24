@@ -42,7 +42,7 @@ var EXPLAIN=(function(){
       how:[["Move with the stick. Tap JUMP to head them up, tap again in the air to double jump","Move with the arrows or WASD. Space to jump, Space again in the air to double jump"],"Get under them and head them back up","Don't let anything touch the floor"],
       rules:["Every hit scores; hits in a row build a multiplier","The feather and double-jump hits score the most","Highest score wins the round"]},
     fish:{n:"Fishing",i:"🎣",goal:"Catch the most fish before the song moves on. Bigger fish score more.",
-      how:[["Tap CAST, wait for a bite","Space to cast, wait for a bite"],["Stick UP reels in, DOWN gives slack; left/right keep the box on the fish","↑ reels in, ↓ gives slack; ← → keep the box on the fish"],["When the net comes out, tap NET as it swings over the fish","When the net comes out, press Space as it swings over the fish"]],
+      how:[["Tap CAST, wait for a bite","Space to cast, wait for a bite"],["Top bar (stick UP) reels in; bottom bar (DOWN) sways without reeling; left/right keep the box on the fish","↑ (top bar) reels in; ↓ (bottom bar) sways without reeling; ← → keep the box on the fish"],["When the net comes out, tap NET as it swings over the fish","When the net comes out, press Space as it swings over the fish"]],
       rules:["Reeling off the fish pulls the line tight: too tight and it snaps","The big fish bite in the loud parts of the song","Most points wins the round"]},
     boats:{n:"Bumper boats",i:"🚤",goal:"Knock everyone off the floating pool. Last boat floating wins big.",
       how:[["Steer with the stick","Steer with the arrows or WASD"],["Tap BOOST to ram","Space to BOOST and ram"],"Hit them hard near the edge to push them over"],
