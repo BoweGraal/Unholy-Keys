@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.81.92 — Pump meter freezes when the flick ring comes up
+
+1. Mash to pump up speed before a big jump (or in the build before the axel). The moment the pull-back ring appears, the speed meter stops draining and holds where you got it, so you can take your time pulling back and flicking without losing height.
+
 ## v1.81.91 — Big jumps: speed only, longer flick zone
 
 1. **Big jumps don't care about the beat:** height is just how fast you pumped × how far you pulled back. The prompt says PULL BACK & FLICK, any time.
