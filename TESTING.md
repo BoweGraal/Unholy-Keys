@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.70 — Fishing: aim and swoop, a real reel, the marlin
+
+1. **Camera:** at the edge you're always in the middle of the screen, zoomed to 135%, with the edge low so it's mostly water.
+2. **Aim:** tap or click the water to aim left or right; the swoop swings round to point there.
+3. **Swoop:** press on the ring at your hands and drag out through the swoop lane (the two dotted edges); there's no ball to follow. Stay inside the lane: leaving it shows "Off the swoop!" and the cast stops where you got to. Letting go does the same. The further round you get, the further out it goes. The lane is marked with BASS / PIKE / KOI, the biggest fish you can reach from that point. A tiny swoop just tangles.
+4. **Reel (phone and computer):** it looks like a fishing reel. Grab the handle and wind it round; the spool spins, and it spins backwards when the fish pulls line out. Each pass of the notch at the top on the beat is a full-speed wind.
+5. **Rod:** on a computer, A / D swing the rod left and right (the left stick on a phone). It now comes up from behind the shoulders, over the head.
+6. **Marlin:** every half minute or so, "MARLIN SPOTTED!" appears and a marlin races across the very far water, leaping. MARLIN shows on the swoop lane while he's there. A full swoop aimed where he'll be hooks him. He fights harder and takes longer to reel in, and he's worth 1,500 base points (about 4× a pike); a full-power catch is 2,250. Everyone in the room sees him at the same time.
+
 ## v1.82.69 — Fishing minigame: swoop cast, beat reel, tension
 
 1. Once everyone's at the edge, the camera eases in a little (about 135%; the − / + box in practice still changes it).
