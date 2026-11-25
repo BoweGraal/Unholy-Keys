@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.66 — Fishing: out to sea on the back of a boat
+
+1. Start a game with Fishing (or practice → Fishing). As it opens, the stage wall should fly up and off the top of the screen, showing a night ocean behind it (moon, stars, rolling waves).
+2. The dance floor should turn into the wooden back deck of a boat, with a rail along its edge. The rail slides down a little as everyone walks to it: all players and bots end up in a row along the rail, facing the water.
+3. The performer's piano should move down onto the deck, behind the anglers.
+4. You can't cast until everyone's at the rail (about 2.5s). Then Tap CAST / Space: the line should go well out into the ocean, not land at the rail. The stick or ← → walks you along the rail.
+5. Bites, reeling and the net work as before (the minigame itself is next).
+
 ## v1.82.65 — Skip timer works on every practice countdown
 
 What was wrong: Skip only worked on the countdown before the song, when you start a round from the practice menu. Other countdowns showed the button, but tapping did nothing. When the game explainer was showing, the floating Skip button only appeared for that first countdown too.
