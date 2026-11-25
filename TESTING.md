@@ -1688,6 +1688,23 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.42 — YouTube videos always play on the Jumbotron
+
+YouTube's embed rules say the player must be visible, at least 200 px tall, never covered, never hidden, and never played muted out of sight. YouTube songs now follow those rules everywhere.
+
+**On the laptop (performer):**
+1. Start a YouTube song in jam. The screen switches to the stage view and the video plays on the Jumbotron, about 480 x 270, with nothing drawn over it (you stand beside it, not in front).
+2. Press **T**: it says "YouTube videos stay on the Jumbotron" and the video doesn't hide.
+3. In **Stage & FX**, raise the Jumbotron: it stays down while the YouTube video plays.
+4. Start a YouTube song from **Start song**: there's no "getting the video ready" wait any more. If an ad plays, it shows on the Jumbotron and the game waits at the start of the song until the ad is over.
+5. Song search without a YouTube API key now asks for a key (Search → Add key). Pasting a link still works without one. Playlists need the key.
+
+**On a phone:**
+6. While the performer plays a YouTube video, the Jumbotron comes down even if the performer raised it, sits below the fullscreen button, and the video is at least 356 x 200.
+7. You can tap the video now (YouTube's controls work). If you pause your copy, it catches back up with the performer within a few seconds.
+
+Your own music files and the site songs don't change: they still play however the show is set up.
+
 ## v1.82.41 — Main menu music starts on the first tap
 
 The opening song wasn't starting on phones. The first touch on a phone doesn't count as permission to play sound, so the song was blocked and then never tried again. Now every tap or key retries until it's actually playing.

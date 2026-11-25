@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.41"></script>
-<script src="gfx.js?v=1.82.41"></script>
-<script src="art.js?v=1.82.41"></script>
-<script src="voice.js?v=1.82.41"></script>
-<script src="instruments.js?v=1.82.41"></script>
-<script src="kart.js?v=1.82.41"></script>
-<script src="explain.js?v=1.82.41"></script>
+<script src="tune.js?v=1.82.42"></script>
+<script src="gfx.js?v=1.82.42"></script>
+<script src="art.js?v=1.82.42"></script>
+<script src="voice.js?v=1.82.42"></script>
+<script src="instruments.js?v=1.82.42"></script>
+<script src="kart.js?v=1.82.42"></script>
+<script src="explain.js?v=1.82.42"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -111,6 +111,7 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
   box-shadow:0 0 0 2px #2a2440,0 0 36px rgba(211,84,160,.28);
   transform:translateY(calc(-100% - 60px));visibility:hidden;
   transition:transform 1.8s cubic-bezier(.3,1.25,.5,1),visibility 0s linear 1.8s}
+#bigScreen.yt{z-index:7}
 #bigScreen.on{transform:none;visibility:visible;transition:transform 1.8s cubic-bezier(.3,1.25,.5,1),visibility 0s}
 #bigScreen::before,#bigScreen::after{content:"";position:absolute;bottom:calc(100% + 6px);width:3px;height:600px;
   background:repeating-linear-gradient(#5a5078 0 4px,#3a3058 4px 8px)}
@@ -8016,7 +8017,7 @@ var vYT=null;
 function handleVideo(msg){
   var screen=document.getElementById("bigScreen");
   var frame=document.getElementById("ytFrame");
-  if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};frame.style.pointerEvents="none";}   /* the video is not for clicking: nobody can pause it, seek it or click through to YouTube */
+  if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};}   /* the player stays clickable (YouTube's rules): if someone pauses or seeks their copy, the sync puts it back with the performer */
   if(+msg.dur>0)vYT.exp=+msg.dur;   /* the real length, from the performer: a different length means an ad is on */
   if(msg.action==="stop"){JT.video=false;vYT.clear();updTapHint();return;}
   var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
@@ -8411,7 +8412,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.41",SERVER_VERSION="";
+var PAGE_VERSION="1.82.42",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8580,13 +8581,15 @@ setInterval(function(){
 },66);
 function jumboTick(){
   var el=document.getElementById("bigScreen");if(!el)return;
-  var fx=SHOWFX||{},want=fx.jumbo==="down"||(fx.jumbo!=="up"&&(JT.video||JT.visuals));
+  /* a YouTube video always plays on the Jumbotron, in view (YouTube's embed rules: the player can't be hidden or covered) */
+  var fx=SHOWFX||{},want=JT.video||fx.jumbo==="down"||(fx.jumbo!=="up"&&JT.visuals);
   if(want!==el.classList.contains("on"))el.classList.toggle("on",want);
   document.getElementById("jtLogo").style.display=want&&!JT.video&&!JT.visuals?"flex":"none";
   document.body.classList.toggle("jt-top",want||!!fx.banner);
-  var st=STAGE_TOP*H,sh=(STAGE_BOTTOM-STAGE_TOP)*H,hh=sh*0.7,ww=Math.min(hh*16/9,W*0.62);hh=ww*9/16;
-  var rc={x:Math.round(W/2-ww/2),y:Math.round(st+Math.min(30,sh*0.08)),w:Math.round(ww),h:Math.round(hh)},key=rc.x+","+rc.y+","+rc.w+","+rc.h;
+  var st=STAGE_TOP*H,sh=(STAGE_BOTTOM-STAGE_TOP)*H,hh=sh*0.7,ww=Math.min(hh*16/9,W*0.62);hh=ww*9/16;if(JT.video&&ww-12<356){ww=Math.min(W-4,368);hh=(ww-12)*9/16+20;}   /* YouTube's smallest player is 200 px tall: the screen inside the 6 px frame (14 px at the bottom) is kept at 356 x 200 or more */
+  var rc={x:Math.round(W/2-ww/2),y:Math.round(Math.max(st+Math.min(30,sh*0.08),JT.video?46:0)),w:Math.round(ww),h:Math.round(hh)},key=rc.x+","+rc.y+","+rc.w+","+rc.h;
   if(key!==JT.key){JT.key=key;el.style.left=rc.x+"px";el.style.top=rc.y+"px";el.style.width=rc.w+"px";el.style.height=rc.h+"px";document.getElementById("jtLogo").style.fontSize=Math.max(9,Math.round(rc.w/10))+"px";}
+  el.classList.toggle("yt",!!JT.video);   /* over everything drawn on the stage, the performer included, while a YouTube video plays */
   JT.rect=rc;JT.k+=((want?1:0)-JT.k)*0.04;
 }
 /* ---------- lights following the performer's playing ----------
@@ -8998,7 +9001,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.41"></script>
+<script src="lab.js?v=1.82.42"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
