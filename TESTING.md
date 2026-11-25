@@ -1688,6 +1688,24 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.47 — Bumper boats: tipping at the edge, knockout saves, rounds with a shrinking pool
+
+**Tipping at the edge**
+1. Check the version reads **v1.82.47**. Start **Bumper boats** (practice with a few dancers is fine).
+2. Drift slowly over the edge. Your boat slides out and tips, your character leans over, a flashing **!** appears over you, and the hint says **STEER BACK IN!**
+3. Steer back toward the middle: the boat comes back level and you stay in.
+4. Do it again but don't steer: you tip further and go over.
+5. Drive (or BOOST) straight at the edge flat out: you go straight over with **TOO FAST!**
+
+**Knockout saves**
+6. Bump someone so they go over within 3 seconds: you get **KNOCKED OFF** points plus **🛟 +1 SAVE**, and the hint shows 🛟×1. You can hold up to 2.
+7. Next time you'd go over (tipping too far or too fast), a ring bursts out, it says **🛟 SAVED!**, you're pulled back in, and the save is used up.
+
+**Rounds**
+8. The score shows the round above it (R1/3; R1/2 for short songs). The pool visibly shrinks during each round, down to under half size.
+9. When the next round starts, everyone who was out is back in a boat, the pool fills back up, and the banner says **ROUND 2 OF 3**. The last round says **FINAL!**
+10. The last boat floating each round gets the bonus. Points carry across all the rounds.
+
 ## v1.82.46 — Free dance Shuffle matches the game version
 
 The Shuffle in free dance now works the same way as in the games (Keepy uppy).
