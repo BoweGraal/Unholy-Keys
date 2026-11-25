@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.45 — Floss reworked
+
+1. Check the version reads **v1.82.45**. In free dance, pick **Silly**, then **Floss**.
+2. On each beat both arms swing together to one side, low and nearly straight. The far arm goes out to the side, and the other crosses the body at hip height.
+3. The body leans toward the arms while the hips and feet swing the other way, then everything swaps on the next beat.
+4. Left stick left and right changes how wide the swing is. Up and down changes the speed.
+
 ## v1.82.44 — Skank: the kick is on the opposite side to the arm
 
 1. Check the version reads **v1.82.44**. In free dance, pick **Skank** (Classic).
