@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.59 — Coin dive: left stick swims, right stick flicks the dash
+
+1. Check the version reads **v1.82.59**. On a phone in **Coin dive** there are two sticks: the **left** one swims, and the **right** one (labelled FLICK) dashes.
+2. Flick the right stick quickly from the middle out to the edge: you dash that way, turning sharply into it. A slow push on it does nothing.
+3. The right stick glows gold on the beat. Dash then for **PERFECT**.
+4. The left stick never dashes now, however fast you move it.
+5. On a computer nothing changes: click to dash, Space to dash the way you're steering.
+
 ## v1.82.58 — Coin dive: flick or click to dash · no swimmers on a dry floor · Ski: just JUMP, wide curvy swoops
 
 **Coin dive dash**
