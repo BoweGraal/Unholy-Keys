@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.39"></script>
-<script src="gfx.js?v=1.82.39"></script>
-<script src="art.js?v=1.82.39"></script>
-<script src="voice.js?v=1.82.39"></script>
-<script src="instruments.js?v=1.82.39"></script>
-<script src="kart.js?v=1.82.39"></script>
-<script src="explain.js?v=1.82.39"></script>
+<script src="tune.js?v=1.82.41"></script>
+<script src="gfx.js?v=1.82.41"></script>
+<script src="art.js?v=1.82.41"></script>
+<script src="voice.js?v=1.82.41"></script>
+<script src="instruments.js?v=1.82.41"></script>
+<script src="kart.js?v=1.82.41"></script>
+<script src="explain.js?v=1.82.41"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -150,6 +150,12 @@ body.practice #stageBtn,body.gaming #stageBtn{display:none!important}
 #gFrame{flex:1;width:100%;border:0;background:#0b0818}
 @media (min-width:900px){#gStage{left:50%;right:auto;width:min(860px,96vw);transform:translateX(-50%);height:46vh;border:3px solid #ff8ac8;border-bottom:0}}
 body.on-stage #emoteW,body.on-stage #reactBar,body.on-stage #moveCtl{display:none!important}
+/* the sync check (TV mode) */
+#calUI{display:none;position:fixed;inset:0;z-index:9000;background:rgba(7,4,15,.9);align-items:center;justify-content:center}#calUI.on{display:flex}
+#calUI .cal-in{display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px;max-width:92vw;text-align:center;font-family:'Silkscreen',ui-monospace,monospace;color:#fff}
+#calUI b{font-size:20px;color:#F5D03C;text-shadow:2px 2px 0 #000}#calUI span{font-size:12px;color:#cfc9ff}#calUI small{font-size:11px;color:#9a93d8}
+#calUI button{width:min(220px,60vw);height:min(220px,60vw);border:4px solid #ff8ac8;background:#c8407e;color:#fff;font:700 28px 'Silkscreen',ui-monospace,monospace;box-shadow:inset -6px -6px 0 rgba(0,0,0,.3),5px 5px 0 #000;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+#calUI button.hit{background:#F5D03C;color:#1a1200}
 /* the emote wheel: a button in the bottom-right corner opening a ring of emotes (E, then 1-0, or click) */
 #emoteW{position:fixed;right:14px;bottom:calc(var(--chatH) + 58px);z-index:23;user-select:none;-webkit-user-select:none}
 #emoteBtn{width:54px;height:54px;padding:0;display:flex;align-items:center;justify-content:center;background:#1b1530;border:3px solid #7F77DD;box-shadow:0 0 0 2px #0d0a18,inset -3px -3px 0 rgba(0,0,0,.35);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -2080,6 +2086,30 @@ function onFloorDown(e){
 /* ============================================================
    WEBSOCKET
    ============================================================ */
+/* ============================================================
+   TV MODE SYNC: when the show runs from a laptop on a TV, the TV's sound is the beat everyone plays to, but phones hear about
+   the song over the network (each a little late, by a different amount) and the TV itself adds a delay to the sound.
+   CLOCK: this phone's clock vs the server's (measured with pings, keeping the quickest round trip), so "now" is the same
+   everywhere. TVSYNC: the laptop says which point of the song is being heard at which server time; the phone works out the
+   song position from that, less the TV's sound delay (av), which the sync check measures.
+   ============================================================ */
+var CLOCK=(function(){var off=0,best=1e9,n=0,ok=false,tm=null;
+  function ping(){if(ws&&ws.readyState===1)try{ws.send(JSON.stringify({type:"time",c:Date.now()}));}catch(e){}}
+  function start(){n=0;best=1e9;clearInterval(tm);var k=0;tm=setInterval(function(){ping();if(++k>=6){clearInterval(tm);tm=setInterval(ping,15000);}},400);}
+  function got(m){var now=Date.now(),rtt=now-(+m.c||now);if(!(rtt>=0&&rtt<3000))return;n++;
+    if(rtt<=best*1.2||n<3){if(rtt<best)best=rtt;var o=(+m.s)+rtt/2-now;off=ok?off*0.6+o*0.4:o;ok=true;}}
+  return{start:start,got:got,now:function(){return Date.now()+off;},get ok(){return ok;},get rtt(){return best;},get off(){return off;}};})();
+var TVSYNC=(function(){var tp=null,av=0;
+  function live(){return !!tp&&tp.on&&CLOCK.ok&&Date.now()-tp.rx<6000;}
+  return{set:function(m){if(!m)return;tp={p:+m.p,s:+m.s,on:!!m.on,rx:Date.now()};},av:function(ms){av=+ms||0;},
+    live:live,pos:function(){return tp.p+(CLOCK.now()-tp.s)-av;},get delay(){return av;}};})();
+window.ukTv=function(){return{clock:CLOCK.ok,off:Math.round(CLOCK.off),rtt:CLOCK.rtt,live:TVSYNC.live(),av:TVSYNC.delay,pos:TVSYNC.live()?Math.round(TVSYNC.pos()):null};};
+/* the sync check: the TV beeps on a steady beat and flashes; everyone taps along on their phone; the TV works out its delay */
+var CALUI=(function(){var el=null,n=0;
+  function show(on){if(!el){el=document.createElement("div");el.id="calUI";el.innerHTML='<div class="cal-in"><b>&#127919; SYNC CHECK</b><span>Tap the button on every beep you hear from the TV</span><button id="calTap">TAP</button><small id="calN">0 taps</small></div>';document.body.appendChild(el);
+      var b=el.querySelector("#calTap");b.addEventListener("pointerdown",function(e){e.preventDefault();wsSend({type:"cal-tap",s:Math.round(CLOCK.now())});n++;el.querySelector("#calN").textContent=n+" taps";b.classList.add("hit");setTimeout(function(){b.classList.remove("hit");},90);});}
+    if(on){n=0;el.querySelector("#calN").textContent="0 taps";}el.classList.toggle("on",!!on);}
+  return{show:show};})();
 var lastPosSend=0,RECON={n:0};
 function connectWS(){
   try{
@@ -2088,7 +2118,7 @@ function connectWS(){
     console.log("WS connect error",e);
     return;
   }
-  ws.onopen=function(){RECON.n=0;
+  ws.onopen=function(){RECON.n=0;setTimeout(function(){CLOCK.start();},200);
     wsReady=true;
     ws.send(JSON.stringify({type:"join-room",room:roomCode,name:myName,color:myColor,look:ART.looks.pack(myLook)}));
   };
@@ -2157,7 +2187,7 @@ function handleMsg(msg){
     backToJoin(safeText(msg.msg,80)||"Could not join that room");
     return;
   }
-  if(t==="room-state"){if(msg.band)ART.BAND.set(msg.band.m,msg.band.p);if(msg.stage)setTimeout(function(){STAGEUP.onList(msg.stage);},0);SRV.reported(msg.host,msg.hostName);if(msg.round&&msg.round.tug)setTimeout(function(){MOSH.onTug({s:msg.round.tug});},0);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
+  if(t==="room-state"){if(msg.av!==undefined)TVSYNC.av(msg.av);if(msg.tvp)TVSYNC.set(msg.tvp);if(msg.band)ART.BAND.set(msg.band.m,msg.band.p);if(msg.stage)setTimeout(function(){STAGEUP.onList(msg.stage);},0);SRV.reported(msg.host,msg.hostName);if(msg.round&&msg.round.tug)setTimeout(function(){MOSH.onTug({s:msg.round.tug});},0);if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();}
     myId=msg.yourId||msg.myId;
     viewers={}; /* fresh list: after a reconnect the old one still held everyone, including a stale copy of you */
     if(Array.isArray(msg.viewers)){
@@ -2243,7 +2273,7 @@ function handleMsg(msg){
   }
   else if(t==="tug"){MOSH.onTug(msg);}
   else if(t==="react"){if(msg.id!==myId&&viewers[msg.id])addReact(msg.id,String(msg.k));}
-  else if(t==="stage"){STAGEUP.onList(msg);}else if(t==="stage-no"){STAGEUP.no(msg.why);}else if(t==="gnote"){STAGEUP.note(msg);}else if(t==="band"){if(msg.m)ART.BAND.set(msg.m,msg.p);else if(msg.p)ART.BAND.set(ART.BAND.members,msg.p);if(msg.e)ART.BAND.ev(msg.e,msg.i,msg.ms);}
+  else if(t==="stage"){STAGEUP.onList(msg);}else if(t==="stage-no"){STAGEUP.no(msg.why);}else if(t==="gnote"){STAGEUP.note(msg);}else if(t==="time"){CLOCK.got(msg);}else if(t==="tvpos"){TVSYNC.set(msg);}else if(t==="av"){TVSYNC.av(msg.ms);}else if(t==="cal"){CALUI.show(msg.on);}else if(t==="band"){if(msg.m)ART.BAND.set(msg.m,msg.p);else if(msg.p)ART.BAND.set(ART.BAND.members,msg.p);if(msg.e)ART.BAND.ev(msg.e,msg.i,msg.ms);}
   else if(typeof t==="string"&&t.indexOf("voice-")===0){VOICE.onMsg(msg);}
   else if(t==="note"){
     if(msg.on){
@@ -6643,6 +6673,7 @@ var ROUND=(function(){
   function pos(){
     if(!rd)return -1e9;
     if(rd.paused)return rd.pausePos+corr;                 /* the performer paused the song: hold still */
+    if(TVSYNC.live())return TVSYNC.pos()+(window.ukPosShift||0);   /* TV mode: the TV's sound is the beat (no per-phone trimming) */
     var p=(rd.ts0!==null&&rd.ts0!==undefined)?SP.songPos(rd.ts0):null,now=performance.now();
     if(p!==null){rd.liveP=p;rd.liveT=now;}
     /* the live sound dropped out for a moment: carry on from where it was, rather than jump to another clock */
@@ -6654,6 +6685,7 @@ var ROUND=(function(){
   }
   /* trim the timing so the chart's beats sit on the beats this device is actually hearing */
   function align(){
+    if(TVSYNC.live())return;
     if(!active()||!rd.chart||!rd.chart.beats||rd.chart.beats.length<8)return;
     var g=BEAT.get();if(!g.known||!g.live)return;
     var b=rd.chart.beats,now=performance.now(),p=pos(),i=bi,d;
@@ -8361,9 +8393,12 @@ var MENUMUSIC=(function(){
   function ensure(){if(a)return;a=new Audio("songs/"+encodeURIComponent(LIST[0]));a.loop=false;a.preload="auto";
     a.addEventListener("ended",function(){cur=(cur+1)%LIST.length;a.src="songs/"+encodeURIComponent(LIST[cur]);if(started&&want()){var pp=a.play();if(pp&&pp.catch)pp.catch(function(){});}});
     try{var AC=window.AudioContext||window.webkitAudioContext;ac=new AC();gn=ac.createGain();gn.gain.value=0;ac.createMediaElementSource(a).connect(gn);gn.connect(ac.destination);a.volume=1;}catch(e){ac=gn=null;a.volume=0;}}
-  function start(){if(started||muted||!want())return;ensure();if(ac&&ac.state==="suspended")ac.resume().catch(function(){});
+  /* every tap or key tries again until the song is really playing: phones don't count pointerdown as permission to play
+     (only the touchend / click after it), and the volume node needs waking inside a tap too, or the song plays silently */
+  function start(){if(muted||!want())return;ensure();if(ac&&ac.state!=="running")ac.resume().catch(function(){});
+    if(started&&!a.paused)return;
     var p=a.play();started=true;t0=performance.now();if(p&&p.then)p.then(function(){t0=performance.now();},function(){started=false;});}
-  ["pointerdown","keydown","touchend"].forEach(function(ev){document.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
+  ["pointerdown","pointerup","touchend","click","keydown"].forEach(function(ev){document.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
   setTimeout(start,300);   /* ...unless this page is already allowed to play */
   setInterval(function(){if(!a)return;var on=want()&&!muted&&started,target=0;
     if(on)target=BED*Math.min(1,(performance.now()-t0)/FADE);
@@ -8373,10 +8408,10 @@ var MENUMUSIC=(function(){
   function btn(){var b=document.getElementById("mmMusic");if(b){b.textContent=muted?"\u266B MUSIC OFF":"\u266B MUSIC ON";b.classList.toggle("off",muted);}}
   var b0=document.getElementById("mmMusic");if(b0){btn();b0.addEventListener("click",function(e){e.stopPropagation();muted=!muted;try{localStorage.setItem("uk_menumusic",muted?"0":"1");}catch(x){}btn();if(!muted)start();});}
   window.ukMenuMusicEnd=function(){if(a)a.dispatchEvent(new Event("ended"));return LIST[cur];};   /* test: as if the song finished */
-  window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
+  window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.39",SERVER_VERSION="";
+var PAGE_VERSION="1.82.41",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8963,7 +8998,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.39"></script>
+<script src="lab.js?v=1.82.41"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

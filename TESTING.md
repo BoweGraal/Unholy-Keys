@@ -1688,6 +1688,31 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.41 — Main menu music starts on the first tap
+
+The opening song wasn't starting on phones. The first touch on a phone doesn't count as permission to play sound, so the song was blocked and then never tried again. Now every tap or key retries until it's actually playing.
+
+1. On your phone, open the site fresh (close the tab first). Check the version reads **v1.82.41**.
+2. Tap anywhere on the main menu once. **After-hours Entry** should start within a second at a normal background level.
+3. Try it on a laptop too: one click on the menu should start it.
+4. Tap **MUSIC OFF** and then **MUSIC ON**: it should stop and come back.
+5. If it's still silent on iPhone, check the ringer switch on the side isn't set to silent.
+
+## v1.82.40 — TV mode: a laptop on the TV, everyone on their phones
+
+**Needs a server redeploy** (clock sync, the TV's song position, the sync check).
+
+**Set up (beta test):**
+1. Plug the laptop into the TV (HDMI) and open the performer page. Tap **📺 TV mode** on the bottom bar (or open `index.html?tv`). It goes fullscreen and remembers the setting.
+2. **GO LIVE.** A **join card** appears: a QR code, the room code in big letters and the web address. Between songs it sits big in the middle of the screen so the room can scan it from the couch; during a song it moves to the corner. The mouse pointer and buttons hide after 3 seconds of no movement.
+3. Everyone scans the QR code (or types the code) on their phone and joins as usual. **Phones can stay quiet**: the sound comes from the TV.
+4. Once people have joined, tap **🎯 Sync check** on the join card. The TV beeps 16 times and flashes; everyone taps the big button on their phone on each beep. The TV works out how late its own sound is (TVs add a delay, especially over HDMI), saves it, and shows "Synced! The TV's sound is N ms late". Do it once per TV; it's remembered on the laptop.
+
+**How the timing works now:** every phone measures the difference between its clock and the server's (quick pings, keeping the fastest). While a song plays in TV mode, the laptop tells the room every second which point of the song is being *heard* right now, at what server time, allowing for the laptop's own audio delay. Each phone works out the song position from that, less the TV's sound delay, so **every phone plays to the TV's sound, whatever its own network lag**, and nobody is behind because of a slow connection. (Tested with a local server: phones were within 2 ms of the TV's position, and the delay was taken off exactly.)
+
+- Check: TV mode → go live → scan the QR code with a phone → sync check (tap along) → start a step dance round: the arrows should land on the beat you hear from the TV. If they feel early or late, run the sync check again.
+- To leave TV mode: ✕ on the join card, or the TV mode button.
+
 ## v1.82.39 — "Your turn plays" only in a free dance round
 
 - The **Your turn plays: 1. … 2. … 3. …** bar is hidden when you're just dancing on the floor. It only shows during a free dance round (the mini game where your turn in the spotlight plays those dances), live or in practice.
