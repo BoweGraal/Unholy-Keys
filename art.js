@@ -2803,6 +2803,40 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
         window.ART.INST.draw(g,x+dx,yy,p,lk,KIND[k],{midi:q.midi,on:q.on,t0:q.t0,off:q.off,now:now,n:q.n});});}
     return{set:set,ev:ev,draw:draw,get members(){return mem.slice();},get pace(){return pace;}};
   })();
-  return{BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.52",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  /* ---- COIN DIVE: the coins, made from the song's analysis. Built the same on every screen (phones and the stage view) from
+     the chart and the round number, in a fixed part of the venue (fractions of the screen), so a coin is in the same place for
+     everyone. The notes make trails that sweep from one waypoint to the next across each bar (the note's lane nudges it to
+     one side), loud parts are gold, the drop bursts a ring of 12. ---- */
+  var SWIMX=(function(){
+    var A={x0:0.07,x1:0.93,y0:0.12,y1:0.74},cache=null,cKey=null;
+    function rng(seed){var s=seed>>>0||1;return function(){s=(s+0x6D2B79F5)>>>0;var t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+    function lane(m){m=m|0;return m&1?0:m&2?1:m&4?2:3;}
+    function build(c,rn){
+      if(!c)return[];rn=rn||1;var st=c.steps||[],key=(c.bpm||0)+":"+st.length+":"+(st.length?st[st.length-1][0]:0)+":"+rn;if(key===cKey&&cache)return cache;cKey=key;
+      var P=c.bpm?60000/c.bpm:500,R=rng(rn*7919+st.length*31+Math.round(c.bpm||120)),bs=c.beats||[],pk=c.peaks||[];
+      function beatOf(t){if(bs.length<2)return t/P;var lo=0,hi=bs.length-1;if(t<=bs[0])return(t-bs[0])/P;if(t>=bs[hi])return hi+(t-bs[hi])/P;while(hi-lo>1){var md=(lo+hi)>>1;if(bs[md]<=t)lo=md;else hi=md;}return lo+(t-bs[lo])/Math.max(1,bs[lo+1]-bs[lo]);}
+      function inPeak(t){for(var i=0;i<pk.length;i++)if(t>=pk[i][0]&&t<=pk[i][1])return true;return false;}
+      var wps=[];function wp(b){while(wps.length<=b){var pv=wps.length?wps[wps.length-1]:[0.5,(A.y0+A.y1)/2],nx,ny,tries=0,d;
+          do{nx=A.x0+0.06+(A.x1-A.x0-0.12)*R();ny=A.y0+0.04+(A.y1-A.y0-0.08)*R();d=Math.hypot(nx-pv[0],(ny-pv[1])*1.6);tries++;}while(tries<12&&(d<0.22||d>0.55));
+          wps.push([nx,ny]);}return wps[b];}
+      var src=st.length>8?st.map(function(q){return[q[0],lane(q[1])];}):bs.map(function(b,i){return[b,i%4];}),out=[],last=-1e9;
+      src.forEach(function(q){var t=q[0];if(t-last<P*0.5)return;last=t;
+        var bi=beatOf(t),bar=Math.max(0,Math.floor(bi/4)),f=(bi-bar*4)/4;f=f*f*(3-2*f);var a=wp(bar),b=wp(bar+1),x=a[0]+(b[0]-a[0])*f,y=a[1]+(b[1]-a[1])*f;
+        var dx=b[0]-a[0],dy=b[1]-a[1],dl=Math.hypot(dx,dy)||1,off=(q[1]-1.5)*0.03;x+=-dy/dl*off;y+=dx/dl*off*1.4;
+        var g=inPeak(t);out.push({t:t,x:Math.max(A.x0,Math.min(A.x1,x)),y:Math.max(A.y0,Math.min(A.y1,y)),v:g?25:10,k:g?"g":"c"});});
+      if(c.drop>0){var cx=0.5,cy=(A.y0+A.y1)/2;for(var i=0;i<12;i++){var an=i/12*Math.PI*2;out.push({t:c.drop,x:cx+Math.cos(an)*0.2,y:cy+Math.sin(an)*0.15,v:30,k:"d"});}}
+      out.sort(function(p,q){return p.t-q.t;});out.forEach(function(o,i){o.i=i;});return cache=out;}
+    /* a spinning pixel coin with a glow round it, r its radius in screen pixels */
+    function coin(g,x,y,r,spin,k,al,glowK){var P=Math.max(1,Math.round(r/4)),w=Math.max(P,Math.round(r*spin)),hh=Math.round(r);x=Math.round(x);y=Math.round(y);g.save();
+      if(glowK){g.globalAlpha=al*glowK;g.fillStyle=k==="d"?"#FF8AE0":"#FFE680";ART.PX.disc(g,x,y,r*1.9);}
+      g.globalAlpha=al;var face=k==="d"?"#FF8AE0":k==="g"?"#FFD24D":"#F5C518",edge=k==="d"?"#8a2a6a":"#8a5a00";
+      g.fillStyle=edge;g.fillRect(x-w-P,y-hh,(w+P)*2,hh*2);g.fillRect(x-w,y-hh-P,w*2,hh*2+P*2);
+      g.fillStyle=face;g.fillRect(x-w,y-hh,w*2,hh*2);
+      if(w>P*2){g.fillStyle="rgba(255,255,255,.75)";g.fillRect(x-w+P,y-hh+P,P,hh);g.fillStyle=edge;g.fillRect(x-P/2,y-hh/2,P,hh);}
+      if(k==="g"){var tw=Math.floor(Date.now()/150)%4;g.fillStyle="#fff";g.fillRect(x+w+P*(tw%2?2:1),y-hh-P*2,P,P);}
+      g.restore();}
+    return{A:A,build:build,coin:coin};
+  })();
+  return{SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.56",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

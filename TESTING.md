@@ -1688,6 +1688,38 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.56 — Coin dive on the laptop · streak effects in pixel art
+
+**Coin dive on the stage view**
+1. Check the version reads **v1.82.56**. Go live, then start **Coin dive** with a song.
+2. On the laptop's stage view you now see the coins. They're the same coins in the same places as on everyone's phones, popping in on the beat (gold in the loud parts, a ring at the drop).
+3. When someone grabs a coin on their phone, it disappears from the laptop too.
+4. Two phones side by side show the coins in exactly the same spots, even if one has the chat bar open.
+
+**Streak effects**
+5. In a dance game, get a streak going (10+). The flame or glow behind a dancer is now made of blocky pixel cells, and the lightning at 100+ is a pixel zigzag.
+6. The **"25 STREAK!"** pop-ups and the **x12** combo counters over heads are in the pixel font, with no smooth text.
+
+## v1.82.55 — Harmony and strum start off · a two-key song ticks Alt for you
+
+1. Check the version reads **v1.82.55**. Turn on **Harmony layer** and **Strum**, then reload the page: both are **Off** again. Your harmony interval and strum speed are kept.
+2. In **Start song**, pick a song whose name has two keys (e.g. "Song - D Major - B Minor"). The key and alt key fill in, **Alt is ticked for you**, and the tip says it changes key.
+3. Then pick a song with one key in its name, or none: Alt unticks again (only if it was ticked for you).
+
+## v1.82.54 — Alt key off until you tick it · chord mode starts off
+
+1. Check the version reads **v1.82.54**. Reload the laptop page.
+2. **Start song** panel: the **Alt** key row has a checkbox, unticked, and its two dropdowns are greyed out. The same goes for **Setup → Play**: the Alt root, scale, octave and the Swap button are greyed out until you tick **Alt**.
+3. Press **Shift** with Alt off: nothing swaps, and a small note says "Alt key is off: tick Alt to use it".
+4. Tick **Alt** and pick a key: Shift swaps between your key and the alt key as before.
+5. Untick Alt while you're on the alt key: you go back to your main key.
+6. **Chord mode** is off every time the page loads, even if it was on last time. Turn it on when you want it. Picking a preset that has a chord still turns it on.
+
+## v1.82.53 — Sound effects in pixel art
+
+1. Check the version reads **v1.82.53**. Play a guitar, banjo, horn or anything that sends out sound waves.
+2. The little sound-wave arcs coming off the instrument are now stepped pixel arcs, not smooth lines. The same goes for the puffs off wind instruments and the band drummer's sticks.
+
 ## v1.82.52 — New mini game: Coin dive (swim to the beat, grab the coins)
 
 **Needs the Render server redeployed** (the server now relays coin grabs).
