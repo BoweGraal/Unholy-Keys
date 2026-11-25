@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.69"></script>
-<script src="gfx.js?v=1.82.69"></script>
-<script src="art.js?v=1.82.69"></script>
-<script src="voice.js?v=1.82.69"></script>
-<script src="instruments.js?v=1.82.69"></script>
-<script src="kart.js?v=1.82.69"></script>
-<script src="explain.js?v=1.82.69"></script>
+<script src="tune.js?v=1.82.70"></script>
+<script src="gfx.js?v=1.82.70"></script>
+<script src="art.js?v=1.82.70"></script>
+<script src="voice.js?v=1.82.70"></script>
+<script src="instruments.js?v=1.82.70"></script>
+<script src="kart.js?v=1.82.70"></script>
+<script src="explain.js?v=1.82.70"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4542,6 +4542,8 @@ var FISH=(function(){
     el.addEventListener("pointermove",function(e){if(e.pointerId!==pid)return;e.preventDefault();at(e);});
     ["pointerup","pointercancel","lostpointercapture"].forEach(function(n){el.addEventListener(n,function(e){if(e.pointerId!==pid)return;pid=null;prev=null;el.classList.remove("held");});});
     window.ukFishStick=function(){var r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2,w:r.width};};})();
+  var TOUCHF=!!(window.matchMedia&&matchMedia("(pointer:coarse)").matches);
+  function FT(k,d){try{var v=TUNE.v("fi."+k);return isFinite(v)?v:d;}catch(e){return d;}}
   /* ---- the marlin: shows up now and then at the very far water and races across. Only a big cast (to the far line) that lands
      near him can hook him. When he comes is worked out from the song clock, so everyone sees him at the same time. ---- */
   function hh(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
@@ -4559,7 +4561,7 @@ var FISH=(function(){
       set("wait");if(marlinHook)biteAt=now+250;}
     else if(st==="wait"&&now>=biteAt){kind=marlinHook?5:pickKind();marlinHook=false;if(kind===5)banner("MARLIN ON!");set("bite");}
     else if(st==="bite"&&age>0.6){set("reel");T=0.2;overT=0;slackT=0;reelR=0;winds={};rodA=0;fishX=0;burst=0.6;runDir=Math.random()<0.5?-1:1;burstAt=now+900;}
-    else if(st==="reel"){var K=KINDS[kind],str=FT("fishStr",1)*(0.35+kind*0.16);
+    else if(st==="reel"){var K=KINDS[kind],str=FT("fishStr",1)*(kind===5?FT("marlinStr",0.9):0.35+kind*0.16);
       /* the fish: runs left or right in bursts, rests in between */
       if(now>burstAt){var big=Math.random()<0.62;burst=big?0.5+Math.random()*0.5:0.08;if(big)runDir=Math.random()<0.5?-1:1;burstAt=now+(big?700+Math.random()*1300:600+Math.random()*900)/(0.8+kind*0.12);}
       fishX=Math.max(-1,Math.min(1,fishX+(runDir*0.85-fishX)*dt*burst*1.6));
@@ -4658,8 +4660,9 @@ var FISH=(function(){
       var ry=railY()*H,G=swGeo(vx,vy),AP=2,hx=vx,hy=vy+AP*2,rA=isMe?rodA:((v.sk&&v.sk.a)||0)/9,dd=isMe?(code===4||code===5?D:castD):(((v.sk&&v.sk.d)||7)/9),fX=isMe?fishX:0,RL=AP*17;
       var rang=rA*1.1;if(isMe&&st==="aim"&&sw){var bb=sw.f;rang=Math.atan2(bb[0]-hx,hy-bb[1]);}
       if(code===4&&isMe)rang+=Math.sin(now/45)*0.04*burst;   /* the rod shakes as the fish pulls */
-      var tipX=hx+Math.sin(rang)*RL,tipY=hy-Math.cos(rang)*RL*0.85-AP*4;
-      g.strokeStyle="#7a4a22";PXD.line(g,hx,hy,tipX,tipY,Math.max(2,AP));g.fillStyle="#3a2414";g.fillRect(Math.round(hx-AP),Math.round(hy-AP),AP*2,AP*2);
+      /* they face the water, so the grip's in front of them, out of sight: the rod comes up from behind the shoulders, over the head */
+      var rbx=hx+Math.sin(rang)*AP*3,rby=vy-AP*12,tipX=rbx+Math.sin(rang)*RL,tipY=rby-Math.cos(rang)*RL*0.85;
+      g.strokeStyle="#7a4a22";PXD.line(g,rbx,rby,tipX,tipY,Math.max(2,AP));
       if(code===0||code===6||code===7||code===8){if(code===6){var K=KINDS[isMe?kind:Math.min(4,Math.floor((v.sk.h||0)%3))];fishIcon(g,vx,vy-s*30-Math.abs(Math.sin(now/120))*s*2,s,K,1);}return;}
       if(isMe&&st==="aim")return;
       /* the bobber: out where the line is (the cast distance, then pulled in as you reel), across with the fish */
@@ -8812,7 +8815,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.69",SERVER_VERSION="";
+var PAGE_VERSION="1.82.70",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9412,7 +9415,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.69"></script>
+<script src="lab.js?v=1.82.70"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
