@@ -1688,6 +1688,22 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.58 — Coin dive: flick or click to dash · no swimmers on a dry floor · Ski: just JUMP, wide curvy swoops
+
+**Coin dive dash**
+1. Check the version reads **v1.82.58**. The DASH button is gone.
+2. **Phone:** flick the stick quickly from the middle to the edge. You dash that way, turning sharply into it. A slow push just swims as normal.
+3. **Computer:** click anywhere on the water and you dash toward the click. **Space** still dashes the way you're steering.
+4. A ring round your swimmer pulses on the beat and turns **gold** while a dash would be **PERFECT**.
+5. Tuning lab → Coin dive → **DASH: flick speed** sets how fast a flick has to be.
+
+**After the game**
+6. When Coin dive ends, the water drains in under a second and everyone stands back up. Nobody's left lying in a swimming pose on the dry floor (on phones or the laptop).
+
+**Ski**
+7. The Swim / YMCA / Disco trick buttons are gone. On a computer, the little mouse shows just **JUMP** on the left button at the start, and hides after your first jump (or 12 s after GO) for the rest of the game. Left click jumps, and right click does nothing.
+8. Dance jump swoops are now **wide, flowing S-curves** across the screen. Jumps 2 and the Super have a **loop** in them. The line you can stay on is wider and more forgiving (a wobbly drag still counts), and it still narrows toward the end.
+
 ## v1.82.57 — Coin dive: coins spread across the whole water
 
 1. Check the version reads **v1.82.57**. Play **Coin dive** with a few people (or practice swimmers).
