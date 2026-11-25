@@ -1688,6 +1688,27 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.50 — Ski: one dance jump per ramp (1, 2, Super across jumps), slower, speed sliders · plucked strings start in Impact
+
+**Dance jumps across ramps**
+1. Check the version reads **v1.82.50**. Each ramp jump now gets **one** swoop, never several in a row.
+2. Ramp 1 is jump 1. Flick it hard enough and a pop-up says **LAND IT: NEXT RAMP = JUMP 2**. Land cleanly and the next ramp gives swoop 2. A soft flick says **FLICK HARDER FOR JUMP 2** and the next ramp is jump 1 again.
+3. Complete swoop 2 and land: **NEXT RAMP = SUPER!** The Super on the following ramp needs a really hard flick. After it, you're back to jump 1.
+4. Crashing, going off the line, letting go early, or landing before you finish all send you back to jump 1.
+5. When a song ends, the swoop disappears instead of staying over the results.
+
+**Slower, and sliders for it** (Setup → Tuning lab → Ski; saved on that device)
+6. Ski is a bit slower by default. The new and changed sliders:
+   - **Game speed:** everything on the slope, 0.85 by default; 1 was the old speed.
+   - **Top speed** and **Acceleration** (defaults lowered a little).
+   - **Dance jump: slow motion:** how much time slows while a swoop is up.
+   - **Dance jump: flick power for jump 2** and **for the Super**.
+   - **Dance jump: extra air.**
+
+**Plucked strings start in Impact**
+7. Pick any guitar, banjo or shamisen: the mode switches to **Impact** by itself. Basses aren't included.
+8. Then pick a violin, piano or anything else: it goes back to the mode you had before (e.g. Sustain). If you changed the mode yourself while on the guitar, it keeps your choice.
+
 ## v1.82.49 — Ski: clean swoops after the first, tapering from wide to skinny
 
 1. Check the version reads **v1.82.49**. HOP off a ramp: the first swoop still has the dimmed slope, the title and the **FLICK!** label, so you learn it.

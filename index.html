@@ -14,12 +14,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.49"></script>
-<script src="art.js?v=1.82.49"></script>
-<script src="qr.js?v=1.82.49"></script>
-<script src="voice.js?v=1.82.49"></script>
-<script src="instruments.js?v=1.82.49"></script>
-<script src="kart.js?v=1.82.49"></script>
+<script src="gfx.js?v=1.82.50"></script>
+<script src="art.js?v=1.82.50"></script>
+<script src="qr.js?v=1.82.50"></script>
+<script src="voice.js?v=1.82.50"></script>
+<script src="instruments.js?v=1.82.50"></script>
+<script src="kart.js?v=1.82.50"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2000,7 +2000,11 @@ function applyNatOct(id){
   rebuild();if(jamOn&&typeof showOctFlash==="function")showOctFlash();
   return true;
 }
+/* plucked strings (guitars, banjo, shamisen) start in Impact mode; going back to another instrument puts back the mode you had */
+var autoImpactPrev=null;
+function isPlucked(ins){var t=(ins.id+" "+ins.l+" "+(ins.sbase||"")).toLowerCase();return /guitar|banjo|shamisen/.test(t)&&!/bass/.test(t);}
 function selInst(id){var ins=findInst(id);if(!ins)return;if(ins.t==="samp"&&!samplers[id]){initAudio();loadSamp(id);}S.eng=id;applyNatOct(id);
+  if(isPlucked(ins)){if(S.mode!=="impact"){autoImpactPrev=S.mode;S.mode="impact";renderModes();mbUpdMode();}}else if(autoImpactPrev&&S.mode==="impact"){S.mode=autoImpactPrev;autoImpactPrev=null;renderModes();mbUpdMode();}else autoImpactPrev=null;
   var matched=false;for(var _i=0;_i<9;_i++){if(hkSlots[_i]===id){activeSlot=_i;matched=true;break;}}if(!matched)activeSlot=-1;
   renderInst();updBdg();updJInfo();renderHkGrid();if(typeof pkCard==="function")pkCard();
   if(jamOn){renderJamHkStrip();var jSel=document.getElementById("jInstSel");if(jSel)jSel.value=id;showJamToast(ins.l,"#EF9F27");}mbInstLabel();saveSession();}
@@ -4958,7 +4962,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.49",SERVER_VERSION="";
+var PAGE_VERSION="1.82.50",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
