@@ -871,7 +871,7 @@ function onMessage(ws, raw, isBinary) {
       if (pv) { pv.pose = a; pv.combo = combo; pv.fd = fd; var prd = rooms[ws.room].round; if (prd && prd.phase === "play") pv.danced = true; }
       var pm = { type: "pose", id: ws.viewerId, a: a, c: combo }; if (fd) pm.fd = fd;
       /* on the roller rink: height in the air (0-60), a wipe-out, the trick (0-4) */
-      if (msg.sk && typeof msg.sk === "object") pm.sk = { h: intIn(msg.sk.h, 0, 60, 0), f: msg.sk.f ? 1 : 0, t: intIn(msg.sk.t, 0, 9, 0) };
+      if (msg.sk && typeof msg.sk === "object") pm.sk = { h: intIn(msg.sk.h, 0, 60, 0), f: msg.sk.f ? 1 : 0, t: intIn(msg.sk.t, 0, 9, 0), a: intIn(msg.sk.a, -9, 9, 0), d: intIn(msg.sk.d, 0, 11, 7) };
       broadcast(ws.room, pm, ws);
       return;
     }
