@@ -80,6 +80,7 @@ var TUNE=(function(){
     V("sw.drag","Water drag",1.5,0.3,4,0.1,"How quickly you slow down when you stop pushing. Lower is floatier.",""),
     V("sw.max","Top speed",0.8,0.2,2,0.05,"Fastest you can swim (screens per second).",""),
     V("sw.perfect","DASH: on-beat window",0.13,0.04,0.3,0.01,"How close to the beat a DASH must be for PERFECT (fraction of a beat either side).",""),
+    V("sw.flick","DASH: flick speed",200,80,500,10,"How quickly the stick has to go from the middle to the edge to count as a flick (dash). Bigger is easier.","ms"),
     V("sw.life","Coin time",6,2,12,0.5,"How many beats a coin stays before it goes.","beats"),
     V("sw.coinSize","Coin size",1,0.5,2,0.05,"How big the coins are drawn.","×"),
     V("sw.reach","Grab reach",1,0.5,2,0.05,"How close you need to be to grab a coin.","×")]},

@@ -2499,9 +2499,9 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
 
   /* ---------------- scenes: space and water ----------------
      env.space / env.water go 0..1 as they're switched on (water fills over ~9 s and drains over ~6 s). */
-  var env={space:0,water:0},envT=0;
+  var env={space:0,water:0},envT=0,wFast=false;
   function easeEnv(fx,now){var dt=Math.min(100,Math.max(0,now-(envT||now)));envT=now;
-    env.space+=Math.max(-dt/2000,Math.min(dt/2500,(fx&&fx.space?1:0)-env.space));env.water+=Math.max(-dt/(fx&&fx.waterFast?800:6000),Math.min(dt/(fx&&fx.waterFast?1500:9000),(fx&&fx.water?1:0)-env.water));}   /* a game flooding the venue (coin dive) fills in 1.5 s */
+    env.space+=Math.max(-dt/2000,Math.min(dt/2500,(fx&&fx.space?1:0)-env.space));if(fx&&fx.water)wFast=!!fx.waterFast;env.water+=Math.max(-dt/(wFast?700:6000),Math.min(dt/(wFast?1500:9000),(fx&&fx.water?1:0)-env.water));}   /* water a game brought in (coin dive) drains as quickly as it came: nobody's left swimming on a dry floor */   /* a game flooding the venue (coin dive) fills in 1.5 s */
   function smooth(k){return k*k*(3-2*k);}
   /* where the water's surface is (canvas y), or null when there's no water */
   function waterY(lay,H){if(env.water<=0.002)return null;var sb=lay.stageBottom*H,fb=lay.floorBottom*H,top=sb*0.18;return fb-(fb-top)*smooth(env.water);}
@@ -2816,15 +2816,18 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       var P=c.bpm?60000/c.bpm:500,R=rng(rn*7919+st.length*31+Math.round(c.bpm||120)),bs=c.beats||[],pk=c.peaks||[];
       function beatOf(t){if(bs.length<2)return t/P;var lo=0,hi=bs.length-1;if(t<=bs[0])return(t-bs[0])/P;if(t>=bs[hi])return hi+(t-bs[hi])/P;while(hi-lo>1){var md=(lo+hi)>>1;if(bs[md]<=t)lo=md;else hi=md;}return lo+(t-bs[lo])/Math.max(1,bs[lo+1]-bs[lo]);}
       function inPeak(t){for(var i=0;i<pk.length;i++)if(t>=pk[i][0]&&t<=pk[i][1])return true;return false;}
-      var wps=[];function wp(b){while(wps.length<=b){var pv=wps.length?wps[wps.length-1]:[0.5,(A.y0+A.y1)/2],nx,ny,tries=0,d;
-          do{nx=A.x0+0.06+(A.x1-A.x0-0.12)*R();ny=A.y0+0.04+(A.y1-A.y0-0.08)*R();d=Math.hypot(nx-pv[0],(ny-pv[1])*1.6);tries++;}while(tries<12&&(d<0.22||d>0.55));
-          wps.push([nx,ny]);}return wps[b];}
-      var src=st.length>8?st.map(function(q){return[q[0],lane(q[1])];}):bs.map(function(b,i){return[b,i%4];}),out=[],last=-1e9;
-      src.forEach(function(q){var t=q[0];if(t-last<P*0.5)return;last=t;
-        var bi=beatOf(t),bar=Math.max(0,Math.floor(bi/4)),f=(bi-bar*4)/4;f=f*f*(3-2*f);var a=wp(bar),b=wp(bar+1),x=a[0]+(b[0]-a[0])*f,y=a[1]+(b[1]-a[1])*f;
-        var dx=b[0]-a[0],dy=b[1]-a[1],dl=Math.hypot(dx,dy)||1,off=(q[1]-1.5)*0.03;x+=-dy/dl*off;y+=dx/dl*off*1.4;
-        var g=inPeak(t);out.push({t:t,x:Math.max(A.x0,Math.min(A.x1,x)),y:Math.max(A.y0,Math.min(A.y1,y)),v:g?25:10,k:g?"g":"c"});});
-      if(c.drop>0){var cx=0.5,cy=(A.y0+A.y1)/2;for(var i=0;i<12;i++){var an=i/12*Math.PI*2;out.push({t:c.drop,x:cx+Math.cos(an)*0.2,y:cy+Math.sin(an)*0.15,v:30,k:"d"});}}
+      /* three trails at once, one in each third of the water (wandering a little into the next), so players spread out instead
+         of all chasing one line. Each note goes to a trail by its lane */
+      var NT=3,W3=(A.x1-A.x0)/NT,wps=[[],[],[]];
+      function wp(k,b){var L=wps[k];while(L.length<=b){var rx0=A.x0+k*W3-0.04,rx1=A.x0+(k+1)*W3+0.04,pv=L.length?L[L.length-1]:[(rx0+rx1)/2,A.y0+(A.y1-A.y0)*(0.3+0.2*k)],nx,ny,tries=0,d;
+          do{nx=Math.max(A.x0,rx0)+(Math.min(A.x1,rx1)-Math.max(A.x0,rx0))*R();ny=A.y0+0.03+(A.y1-A.y0-0.06)*R();d=Math.hypot(nx-pv[0],(ny-pv[1])*1.6);tries++;}while(tries<12&&(d<0.12||d>0.42));
+          L.push([nx,ny]);}return L[b];}
+      var TR=[0,1,2,0];
+      var src=st.length>8?st.map(function(q){return[q[0],lane(q[1])];}):bs.map(function(b,i){return[b,i%4];}),out=[],last=[-1e9,-1e9,-1e9];
+      src.forEach(function(q){var t=q[0],k=TR[q[1]]!==undefined?TR[q[1]]:0;if(t-last[k]<P*0.5)return;last[k]=t;
+        var bi=beatOf(t),bar=Math.max(0,Math.floor(bi/4)),f=(bi-bar*4)/4;f=f*f*(3-2*f);var a=wp(k,bar),b=wp(k,bar+1),x=a[0]+(b[0]-a[0])*f,y=a[1]+(b[1]-a[1])*f;
+        var g=inPeak(t);out.push({t:t,x:Math.max(A.x0,Math.min(A.x1,x)),y:Math.max(A.y0,Math.min(A.y1,y)),v:g?25:10,k:g?"g":"c",tr:k});});
+      if(c.drop>0){var cx=0.5,cy=(A.y0+A.y1)/2;for(var i=0;i<16;i++){var an=i/16*Math.PI*2;out.push({t:c.drop,x:cx+Math.cos(an)*0.36,y:cy+Math.sin(an)*0.26,v:30,k:"d",tr:i%3});}}   /* the drop: a big ring right across the water */
       out.sort(function(p,q){return p.t-q.t;});out.forEach(function(o,i){o.i=i;});return cache=out;}
     /* a spinning pixel coin with a glow round it, r its radius in screen pixels */
     function coin(g,x,y,r,spin,k,al,glowK){var P=Math.max(1,Math.round(r/4)),w=Math.max(P,Math.round(r*spin)),hh=Math.round(r);x=Math.round(x);y=Math.round(y);g.save();
@@ -2837,6 +2840,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       g.restore();}
     return{A:A,build:build,coin:coin};
   })();
-  return{SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.56",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.58",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
