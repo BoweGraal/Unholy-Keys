@@ -1688,6 +1688,50 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.64 — Shuffle: a stomp and spin
+
+1. Check the version reads **v1.82.64**. In free dance pick **Shuffle → Spin**.
+2. One leg stays straight the whole time as the pivot, its heel tweaking out and back on the eighths.
+3. The other knee snaps up on the "and" and stomps down on the beat (with a little dip), in the shuffle's stop-and-go timing.
+4. You turn round smoothly through all 8 facings, a full 360 every bar, the facing turning on every stomp and lift, then round again.
+
+## v1.82.63 — Thriller opens with the claw walk
+
+1. Check the version reads **v1.82.63**. In free dance tap **Thriller**: it starts on **Claw walk** (that button is lit), not Zombie arms.
+2. Pick **Mix it up**: it opens with the claw walk, then zombie arms, then the shoulder pop, round again.
+
+## v1.82.62 — Phone light faces the right way
+
+1. Check the version reads **v1.82.62**. In free dance pick **Lighters up → Phone light**.
+2. Facing the crowd (front): you see the phone's bright screen and its glow.
+3. Turn round to face the stage (180): you see the **back** of the phone (dark) with the torch glinting over the top, and the glow is fainter and higher, shining away toward the stage.
+4. The glow is stepped pixel rings now, not a smooth blur.
+
+## v1.82.61 — Skank: a real knee lift
+
+1. Check the version reads **v1.82.61**. In free dance pick **Skank** (Classic).
+2. On each beat one arm swings out, and on the other side the **knee comes right up**: the thigh rises, the knee bends, and the foot tucks in across the body. The standing leg stays straight.
+3. It swaps sides each beat, with a short break between.
+
+## v1.82.60 — No more drifting off on your own · Running man from every angle
+
+**Drifting**
+1. Check the version reads **v1.82.60**. Play a game where you use the movement stick (Coin dive, Bumper boats, Ski), and keep your thumb on the stick as the game ends.
+2. Go into free dance (or just stand on the floor) without touching anything. Your character stays put and doesn't walk off toward a corner.
+
+**Running man**
+3. In free dance pick **Running man**. Facing the side, the knee comes up in front of you.
+4. Press **180**: facing the other way, the knee still comes up in front (it used to come up behind).
+5. Press **90** (front or back view): the legs stay under the hips and the knees lift toward you, instead of the feet kicking out sideways.
+
+## v1.82.59 — Coin dive: left stick swims, right stick flicks the dash
+
+1. Check the version reads **v1.82.59**. On a phone in **Coin dive** there are two sticks: the **left** one swims, and the **right** one (labelled FLICK) dashes.
+2. Flick the right stick quickly from the middle out to the edge: you dash that way, turning sharply into it. A slow push on it does nothing.
+3. The right stick glows gold on the beat. Dash then for **PERFECT**.
+4. The left stick never dashes now, however fast you move it.
+5. On a computer nothing changes: click to dash, Space to dash the way you're steering.
+
 ## v1.82.58 — Coin dive: flick or click to dash · no swimmers on a dry floor · Ski: just JUMP, wide curvy swoops
 
 **Coin dive dash**
