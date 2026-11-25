@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.60 — No more drifting off on your own · Running man from every angle
+
+**Drifting**
+1. Check the version reads **v1.82.60**. Play a game where you use the movement stick (Coin dive, Bumper boats, Ski), and keep your thumb on the stick as the game ends.
+2. Go into free dance (or just stand on the floor) without touching anything. Your character stays put and doesn't walk off toward a corner.
+
+**Running man**
+3. In free dance pick **Running man**. Facing the side, the knee comes up in front of you.
+4. Press **180**: facing the other way, the knee still comes up in front (it used to come up behind).
+5. Press **90** (front or back view): the legs stay under the hips and the knees lift toward you, instead of the feet kicking out sideways.
+
 ## v1.82.59 — Coin dive: left stick swims, right stick flicks the dash
 
 1. Check the version reads **v1.82.59**. On a phone in **Coin dive** there are two sticks: the **left** one swims, and the **right** one (labelled FLICK) dashes.

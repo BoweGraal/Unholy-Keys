@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.59"></script>
-<script src="gfx.js?v=1.82.59"></script>
-<script src="art.js?v=1.82.59"></script>
-<script src="voice.js?v=1.82.59"></script>
-<script src="instruments.js?v=1.82.59"></script>
-<script src="kart.js?v=1.82.59"></script>
-<script src="explain.js?v=1.82.59"></script>
+<script src="tune.js?v=1.82.60"></script>
+<script src="gfx.js?v=1.82.60"></script>
+<script src="art.js?v=1.82.60"></script>
+<script src="voice.js?v=1.82.60"></script>
+<script src="instruments.js?v=1.82.60"></script>
+<script src="kart.js?v=1.82.60"></script>
+<script src="explain.js?v=1.82.60"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2662,6 +2662,10 @@ function joyEnd(){if(joy.step){GAME.release(joy.step);joy.step=null;}joy.id=null
 joyEl.addEventListener("pointerdown",function(e){e.preventDefault();joy.id=e.pointerId;try{joyEl.setPointerCapture(e.pointerId);}catch(x){}joyAt(e);});
 joyEl.addEventListener("pointermove",function(e){if(e.pointerId===joy.id)joyAt(e);});
 ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){joyEl.addEventListener(ev,function(e){if(e.pointerId===joy.id)joyEnd();});});
+/* never leave the stick held: a finger lifted anywhere lets go of it, and so does the stick disappearing (a game ending while you
+   hold it: iPhones don't always send the lift to a hidden element, which left you walking off on your own) */
+["pointerup","pointercancel"].forEach(function(ev){document.addEventListener(ev,function(e){if(joy.id!==null&&e.pointerId===joy.id)joyEnd();},true);});
+setInterval(function(){if(joy.id!==null&&!joyEl.offsetParent)joyEnd();},250);
 joyEl.addEventListener("contextmenu",function(e){e.preventDefault();});
 window.ukJoy=function(){return{x:Math.round(joy.x*100)/100,y:Math.round(joy.y*100)/100,on:joyOn(),step:joy.step};};
 function openTalk(){var inp=document.getElementById("chatText");inp.focus();}
@@ -4217,11 +4221,11 @@ var GAME=(function(){
     var mm=me();if(mm)mm.dance=myDance;
     wsSend({type:"dance",style:myDance});
     applyToMe();sendPose(true);
-    Object.keys(held).forEach(function(d){setHeld(d,false);});
+    Object.keys(held).forEach(function(d){setHeld(d,false);});if(typeof joyEnd==="function")joyEnd();
     if(!raf)raf=requestAnimationFrame(tick);
   }
   function stop(quiet){document.body.classList.remove("fd-plan");
-    if(!mode)return;
+    if(!mode)return;if(typeof joyEnd==="function")joyEnd();
     report(true);rnd=null;
     if(mode==="mosh")MOSH.stop();
     if(mode==="skate")SKATE.stop();
@@ -8691,7 +8695,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.59",SERVER_VERSION="";
+var PAGE_VERSION="1.82.60",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8761,6 +8765,16 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
          the 90 / 180 buttons or a spin have done, instead of replacing it */
       if(rg.dir!==undefined){var qq8=-1;for(var q8=0;q8<4;q8+=0.5)if(rot8(0,q8)===AVDIR){qq8=q8;break;}AVDIR=qq8>0?rot8(rg.dir,qq8):rg.dir;}
       armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;bsx=rg.bsx||0;bsy=rg.bsy||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
+      /* a side-on dance (Running man, the shuffle) turned to face front or back: its legs swing forward and back, which from the
+         front or back is a knee coming up toward you, not a leg kicking out sideways. So the swing becomes a shorter (lifted) leg
+         that stays under the hip; half way for the three-quarter views */
+      /* turned round to face the other way: the dance was made facing one side, so its forward and back swings flip with you
+         (otherwise the knee comes up behind you) */
+      if(rg.dir===1||rg.dir===3){var lft=AVDIR===3||AVDIR===6||AVDIR===7,rgt=AVDIR===1||AVDIR===4||AVDIR===5;
+        if(rg.dir===1?lft:rgt){legL=-legL;legR=-legR;armL=-armL;armR=-armR;}}
+      if((rg.dir===1||rg.dir===3)&&AVDIR!==1&&AVDIR!==3){var fb=AVDIR===0||AVDIR===2?1:0.5;
+        lgL=Math.max(3.2,lgL-Math.abs(legL)*4*fb);lgR=Math.max(3.2,lgR-Math.abs(legR)*4*fb);legL=legL*(1-fb)+0.1*fb;legR=legR*(1-fb)-0.1*fb;
+        armL=armL*(1-fb)+(0.35+Math.max(0,-armL)*0.6)*fb;armR=armR*(1-fb)+(-0.35-Math.max(0,armR)*0.6)*fb;}
       /* the dance walk race: really walking forward while doing the style, so the legs stride (with a bit of the dance in them) and the body keeps the dance's arms and bounce */
       if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()&&!(fd&&fd.s===7)){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;knee=0;butt=0;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
     }else{
@@ -9280,7 +9294,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.59"></script>
+<script src="lab.js?v=1.82.60"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
