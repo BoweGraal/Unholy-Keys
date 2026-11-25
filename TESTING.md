@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.53 — Sound effects in pixel art
+
+1. Check the version reads **v1.82.53**. Play a guitar, banjo, horn or anything that sends out sound waves.
+2. The little sound-wave arcs coming off the instrument are now stepped pixel arcs, not smooth lines. The same goes for the puffs off wind instruments and the band drummer's sticks.
+
 ## v1.82.52 — New mini game: Coin dive (swim to the beat, grab the coins)
 
 **Needs the Render server redeployed** (the server now relays coin grabs).
