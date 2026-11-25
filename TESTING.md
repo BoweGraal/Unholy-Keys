@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.46 — Free dance Shuffle matches the game version
+
+The Shuffle in free dance now works the same way as in the games (Keepy uppy).
+
+1. Check the version reads **v1.82.46**. In free dance, pick **Shuffle**.
+2. Move the left stick a little, or partway, in any direction. You keep doing the running man while you move around the floor, the same as in Keepy uppy.
+3. Push the stick right out to the side. That's the T-step, travelling that way.
+4. Let go and you're back to the running man on the spot. Pushing the stick to the top edge still does the spin.
+
 ## v1.82.45 — Floss reworked
 
 1. Check the version reads **v1.82.45**. In free dance, pick **Silly**, then **Floss**.
