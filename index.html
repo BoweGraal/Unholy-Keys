@@ -14,12 +14,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.54"></script>
-<script src="art.js?v=1.82.54"></script>
-<script src="qr.js?v=1.82.54"></script>
-<script src="voice.js?v=1.82.54"></script>
-<script src="instruments.js?v=1.82.54"></script>
-<script src="kart.js?v=1.82.54"></script>
+<script src="gfx.js?v=1.82.55"></script>
+<script src="art.js?v=1.82.55"></script>
+<script src="qr.js?v=1.82.55"></script>
+<script src="voice.js?v=1.82.55"></script>
+<script src="instruments.js?v=1.82.55"></script>
+<script src="kart.js?v=1.82.55"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1706,7 +1706,7 @@ CATS.forEach(function(cat){cat.items.forEach(function(ins){ins.cat=cat.id;ins.ca
 function findInst(id){for(var i=0;i<allInst.length;i++)if(allInst[i].id===id)return allInst[i];return null;}
 
 var S={root:0,scale:"Major",oct:4,map:"linear",vol:.5,tempo:600,mode:"sustain",eng:"violin",fxR:0,fxC:0,fxDi:0,pdWah:0,pdDly:0,pdTre:0,pdCrush:0,power:0.6};
-var altRoot=0,altScale="Natural minor",altOct=4,onAlt=false,altOn=false;   /* altOn: the alt key is off until you tick "Alt"; then Shift swaps to it */
+var altRoot=0,altScale="Natural minor",altOct=4,onAlt=false,altOn=false,altAuto=false;   /* altAuto: Alt was ticked for you by a two-key song name (untick again for the next song that has one key) */   /* altOn: the alt key is off until you tick "Alt"; then Shift swaps to it */
 function setAltOn(v){v=!!v;if(!v&&onAlt){altOn=true;swapScale();}altOn=v;
   ["altOn","lsAltOn"].forEach(function(id){var e=document.getElementById(id);if(e)e.checked=v;});
   ["sR2","sS2","sO2","lsAR","lsAS","swapBtn"].forEach(function(id){var e=document.getElementById(id);if(e){e.disabled=!v;e.style.opacity=v?"":"0.4";}});}
@@ -1757,7 +1757,7 @@ function fxsFromLegacySession(){
   fxsMerge({rv:pick("rev",_fxPreset.rev),ch:pick("cho",_fxPreset.cho),dt:pick("dist",_fxPreset.dist),wah:pick("pwah",_pdPreset.pdWah),dly:pick("pdly",_pdPreset.pdDly),tre:pick("ptre",_pdPreset.pdTre),crush:pick("pcrush",_pdPreset.pdCrush)});
 }
 function saveSession(){try{localStorage.setItem("uk_session",JSON.stringify({S:{root:S.root,scale:S.scale,oct:S.oct,map:S.map,vol:S.vol,mode:S.mode,eng:S.eng,fxR:S.fxR,fxC:S.fxC,fxDi:S.fxDi,pdWah:S.pdWah,pdDly:S.pdDly,pdTre:S.pdTre,pdCrush:S.pdCrush,power:S.power},pdSaved:{wah:_pdSaved.wah,dly:_pdSaved.dly,tre:_pdSaved.tre,crush:_pdSaved.crush},pdPreset:{pdWah:_pdPreset.pdWah,pdDly:_pdPreset.pdDly,pdTre:_pdPreset.pdTre,pdCrush:_pdPreset.pdCrush},fxPreset:{rev:_fxPreset.rev,cho:_fxPreset.cho,dist:_fxPreset.dist},fxs:FXS,perfPreset:(activePerfPreset>=0?activePerfPreset:-1),altRoot:altRoot,altScale:altScale,altOct:altOct,chordShape:chordShape,chordOn:mods.c,harmOn:harmOn,harmInterval:harmInterval,strumOn:strumOn,strumSpeed:strumSpeed,vizMode:(typeof VIZFX!=="undefined"?VIZFX.getCur():0)}));}catch(e){}}
-function loadSession(){try{var raw=localStorage.getItem("uk_session");if(!raw)return;var sn=JSON.parse(raw);var ss=sn.S||{};if(ss.root!==undefined)S.root=ss.root;if(ss.scale)S.scale=ss.scale;if(ss.oct!==undefined)S.oct=ss.oct;if(ss.map)S.map=ss.map;if(ss.vol!==undefined)S.vol=ss.vol;/* every session starts in Sustain (the articulation is only changed from the menu) */if(ss.eng)S.eng=ss.eng;if(ss.fxR!==undefined)S.fxR=ss.fxR;if(ss.fxC!==undefined)S.fxC=ss.fxC;if(ss.fxDi!==undefined)S.fxDi=ss.fxDi;if(ss.pdWah!==undefined)S.pdWah=ss.pdWah;if(ss.pdDly!==undefined)S.pdDly=ss.pdDly;if(ss.pdTre!==undefined)S.pdTre=ss.pdTre;if(ss.pdCrush!==undefined)S.pdCrush=ss.pdCrush;if(ss.power!==undefined)S.power=ss.power;if(sn.pdSaved){_pdSaved.wah=sn.pdSaved.wah||.7;_pdSaved.dly=sn.pdSaved.dly||.4;_pdSaved.tre=sn.pdSaved.tre||.65;_pdSaved.crush=sn.pdSaved.crush||.5;}if(sn.pdPreset){_pdPreset.pdWah=sn.pdPreset.pdWah||0;_pdPreset.pdDly=sn.pdPreset.pdDly||0;_pdPreset.pdTre=sn.pdPreset.pdTre||0;_pdPreset.pdCrush=sn.pdPreset.pdCrush||0;}if(sn.fxPreset){_fxPreset.rev=sn.fxPreset.rev||0;_fxPreset.cho=sn.fxPreset.cho||0;_fxPreset.dist=sn.fxPreset.dist||0;}if(sn.fxs){fxsMerge(sn.fxs);_savedPerfPreset=(typeof sn.perfPreset==="number"&&PERF_PRESETS[sn.perfPreset])?sn.perfPreset:-1;}else{fxsFromLegacySession();}if(sn.altRoot!==undefined)altRoot=sn.altRoot;if(sn.altScale)altScale=sn.altScale;if(sn.altOct!==undefined)altOct=sn.altOct;if(sn.chordShape)chordShape=sn.chordShape;/* chord mode always starts off: turn it on when you want it */if(sn.harmOn!==undefined)harmOn=sn.harmOn;if(sn.harmInterval)harmInterval=sn.harmInterval;if(sn.strumOn!==undefined)strumOn=sn.strumOn;if(sn.strumSpeed!==undefined)strumSpeed=sn.strumSpeed;if(sn.vizMode!==undefined&&typeof VIZFX!=="undefined")VIZFX.set(sn.vizMode);var _e;_e=document.getElementById("sR");if(_e)_e.value=S.root;_e=document.getElementById("sS");if(_e)_e.value=S.scale;_e=document.getElementById("sO");if(_e)_e.value=S.oct;_e=document.getElementById("sR2");if(_e)_e.value=altRoot;_e=document.getElementById("sS2");if(_e)_e.value=altScale;_e=document.getElementById("sO2");if(_e)_e.value=altOct;_e=document.getElementById("sV");if(_e)_e.value=S.vol;_e=document.getElementById("mixKeys");if(_e)_e.value=S.vol;_e=document.getElementById("mixKeysLbl");if(_e)_e.textContent=Math.round(S.vol*100)+"%";rebuild();renderModes();renderInst();renderFx();renderPerfPresets(_savedPerfPreset);updBdg();updPowerUI();updChordInd();updHarmBtn();updJamVol();}catch(e){console.warn("loadSession:",e);}}
+function loadSession(){try{var raw=localStorage.getItem("uk_session");if(!raw)return;var sn=JSON.parse(raw);var ss=sn.S||{};if(ss.root!==undefined)S.root=ss.root;if(ss.scale)S.scale=ss.scale;if(ss.oct!==undefined)S.oct=ss.oct;if(ss.map)S.map=ss.map;if(ss.vol!==undefined)S.vol=ss.vol;/* every session starts in Sustain (the articulation is only changed from the menu) */if(ss.eng)S.eng=ss.eng;if(ss.fxR!==undefined)S.fxR=ss.fxR;if(ss.fxC!==undefined)S.fxC=ss.fxC;if(ss.fxDi!==undefined)S.fxDi=ss.fxDi;if(ss.pdWah!==undefined)S.pdWah=ss.pdWah;if(ss.pdDly!==undefined)S.pdDly=ss.pdDly;if(ss.pdTre!==undefined)S.pdTre=ss.pdTre;if(ss.pdCrush!==undefined)S.pdCrush=ss.pdCrush;if(ss.power!==undefined)S.power=ss.power;if(sn.pdSaved){_pdSaved.wah=sn.pdSaved.wah||.7;_pdSaved.dly=sn.pdSaved.dly||.4;_pdSaved.tre=sn.pdSaved.tre||.65;_pdSaved.crush=sn.pdSaved.crush||.5;}if(sn.pdPreset){_pdPreset.pdWah=sn.pdPreset.pdWah||0;_pdPreset.pdDly=sn.pdPreset.pdDly||0;_pdPreset.pdTre=sn.pdPreset.pdTre||0;_pdPreset.pdCrush=sn.pdPreset.pdCrush||0;}if(sn.fxPreset){_fxPreset.rev=sn.fxPreset.rev||0;_fxPreset.cho=sn.fxPreset.cho||0;_fxPreset.dist=sn.fxPreset.dist||0;}if(sn.fxs){fxsMerge(sn.fxs);_savedPerfPreset=(typeof sn.perfPreset==="number"&&PERF_PRESETS[sn.perfPreset])?sn.perfPreset:-1;}else{fxsFromLegacySession();}if(sn.altRoot!==undefined)altRoot=sn.altRoot;if(sn.altScale)altScale=sn.altScale;if(sn.altOct!==undefined)altOct=sn.altOct;if(sn.chordShape)chordShape=sn.chordShape;/* chord mode always starts off: turn it on when you want it *//* harmony and strum always start off (the interval and strum speed you picked are kept) */if(sn.harmInterval)harmInterval=sn.harmInterval;if(sn.strumSpeed!==undefined)strumSpeed=sn.strumSpeed;if(sn.vizMode!==undefined&&typeof VIZFX!=="undefined")VIZFX.set(sn.vizMode);var _e;_e=document.getElementById("sR");if(_e)_e.value=S.root;_e=document.getElementById("sS");if(_e)_e.value=S.scale;_e=document.getElementById("sO");if(_e)_e.value=S.oct;_e=document.getElementById("sR2");if(_e)_e.value=altRoot;_e=document.getElementById("sS2");if(_e)_e.value=altScale;_e=document.getElementById("sO2");if(_e)_e.value=altOct;_e=document.getElementById("sV");if(_e)_e.value=S.vol;_e=document.getElementById("mixKeys");if(_e)_e.value=S.vol;_e=document.getElementById("mixKeysLbl");if(_e)_e.textContent=Math.round(S.vol*100)+"%";rebuild();renderModes();renderInst();renderFx();renderPerfPresets(_savedPerfPreset);updBdg();updPowerUI();updChordInd();updHarmBtn();updJamVol();}catch(e){console.warn("loadSession:",e);}}
 var samplers={},loading={};
 var hist=[];
 var jamOn=false,jCanvas=null,jCtx=null,jW=0,jH=0,jParts=[],jRoll=[],jGlow=0,jAnim=null;
@@ -4967,7 +4967,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.54",SERVER_VERSION="";
+var PAGE_VERSION="1.82.55",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5557,9 +5557,10 @@ var LSET=(function(){
     return out;}
   function keySel(){var fill=function(id,arr){var e=$(id);if(e.options.length)return;arr.forEach(function(x,i){var o=document.createElement("option");o.value=typeof x==="string"&&id.slice(-1)==="S"?x:i;o.textContent=x;e.appendChild(o);});};
     fill("lsKR",ROOTS_D);fill("lsAR",ROOTS_D);fill("lsKS",Object.keys(SCALES));fill("lsAS",Object.keys(SCALES));var ao=$("lsAltOn");if(ao&&!ao._w){ao._w=1;ao.onchange=function(){setAltOn(ao.checked);};}setAltOn(altOn);}
+  window.ukKeysFromTitle=function(t){keysFromTitle(t);return altOn;};
   function keysFromTitle(t){keySel();var k=parseKeys(t),tip=$("lsKTip");
-    if(k.length){$("lsKR").value=k[0].root;$("lsKS").value=k[0].scale;if(k[1]){$("lsAR").value=k[1].root;$("lsAS").value=k[1].scale;}tip.textContent="from the song's name";}
-    else tip.textContent="";}
+    if(k.length){$("lsKR").value=k[0].root;$("lsKS").value=k[0].scale;if(k[1]){$("lsAR").value=k[1].root;$("lsAS").value=k[1].scale;setAltOn(true);altAuto=true;}else if(altAuto){setAltOn(false);altAuto=false;}tip.textContent=k[1]?"from the song's name · it changes key, so Alt is on":"from the song's name";}
+    else{tip.textContent="";if(altAuto){setAltOn(false);altAuto=false;}}}
   function keysNow(){keySel();$("lsKR").value=S.root;$("lsKS").value=S.scale;$("lsAR").value=altRoot;$("lsAS").value=altScale;$("lsKTip").textContent="";}
   function applyKeys(){var r=+$("lsKR").value,sc=$("lsKS").value,ar=+$("lsAR").value,as=$("lsAS").value;if(!SCALES[sc]||!SCALES[as])return;
     if(onAlt){altRoot=r;altScale=sc;S.root=ar;S.scale=as;}else{S.root=r;S.scale=sc;altRoot=ar;altScale=as;}
@@ -7291,7 +7292,7 @@ rebuild=function(){
 };
 
 var _pkO=document.getElementById("pkOpenBtn");if(_pkO)_pkO.onclick=function(){pkOpen();};var _pkF=document.getElementById("pkFavBtn");if(_pkF)_pkF.onclick=function(){pkOpen({fav:true});};pkCard();
-initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updModInd();initPowerSlider();initMobileSlider();document.getElementById("fsBtn").onclick=function(){toggleFullscreen(document.documentElement);};document.getElementById("jFsBtn").onclick=function(){toggleFullscreen(document.documentElement);};document.getElementById("fsTip").onclick=function(){this.classList.remove("on");};initChordUI();renderHkGrid();renderRelKeys();setTimeout(initHist,100);YT.renderFavs();PRESETS.renderSel();SETLIST.renderListSel();LOCAL.initSel();BACKING.initSel();VIZFX.init();SHOW.init();loadSession();setAltOn(false);(function(){var a=document.getElementById("altOn");if(a)a.onchange=function(){setAltOn(a.checked);};})();window.ukAlt=function(){return{altOn:altOn,onAlt:onAlt,root:S.root,scale:S.scale,dis:document.getElementById("sR2").disabled,chord:mods.c};};
+initSelects();renderModes();renderInst();renderGrid();renderFx();updBdg();updModInd();initPowerSlider();initMobileSlider();document.getElementById("fsBtn").onclick=function(){toggleFullscreen(document.documentElement);};document.getElementById("jFsBtn").onclick=function(){toggleFullscreen(document.documentElement);};document.getElementById("fsTip").onclick=function(){this.classList.remove("on");};initChordUI();renderHkGrid();renderRelKeys();setTimeout(initHist,100);YT.renderFavs();PRESETS.renderSel();SETLIST.renderListSel();LOCAL.initSel();BACKING.initSel();VIZFX.init();SHOW.init();loadSession();setAltOn(false);(function(){var a=document.getElementById("altOn");if(a)a.onchange=function(){setAltOn(a.checked);};})();window.ukAlt=function(){return{altOn:altOn,onAlt:onAlt,root:S.root,scale:S.scale,dis:document.getElementById("sR2").disabled,chord:mods.c,harm:harmOn,strum:strumOn};};
 /* ── Show Builder + Drawer wiring ── */
 (function(){
   var _showSel=document.getElementById("showSel");
