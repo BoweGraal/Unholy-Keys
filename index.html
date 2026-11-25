@@ -14,11 +14,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.39"></script>
-<script src="art.js?v=1.82.39"></script>
-<script src="voice.js?v=1.82.39"></script>
-<script src="instruments.js?v=1.82.39"></script>
-<script src="kart.js?v=1.82.39"></script>
+<script src="gfx.js?v=1.82.40"></script>
+<script src="art.js?v=1.82.40"></script>
+<script src="qr.js?v=1.82.40"></script>
+<script src="voice.js?v=1.82.40"></script>
+<script src="instruments.js?v=1.82.40"></script>
+<script src="kart.js?v=1.82.40"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -287,6 +288,22 @@ a.nav-item{text-decoration:none}
 #jTopBar>button,#jBotBar>button{position:static!important;top:auto!important;right:auto!important;left:auto!important;bottom:auto!important;margin:0!important;height:34px;box-sizing:border-box}
 #jm #lsBar,#jm #jHangBar{bottom:66px}
 /* Stage button: the show effects panel (from Setup → Show), popped up over the toolbar */
+/* TV mode (a laptop on a TV, phones join): the join card, the sync check, and the screen kept clean */
+#jTvBtn.on{background:#3a1838!important;border-color:#ff8ac8!important}
+#tvJoin{display:none;position:fixed;right:18px;top:64px;z-index:100000;background:#140f26;border:3px solid #7F77DD;box-shadow:0 0 0 3px #07040f,6px 6px 0 #07040f;padding:10px 12px;flex-direction:column;align-items:center;gap:6px;font-family:'Silkscreen',ui-monospace,monospace;color:#fff;width:190px}
+body.tvmode #tvJoin{display:flex}
+#tvJoin .tvj-hd{font-size:10px;color:#F5D03C;letter-spacing:.5px}#tvJoin canvas{width:150px;height:150px;image-rendering:pixelated;border:3px solid #fff}
+#tvJoin .tvj-code{font-size:30px;letter-spacing:6px;color:#fff;text-shadow:3px 3px 0 #c8407e}#tvJoin .tvj-url{font-size:8px;color:#9a93d8;text-align:center;word-break:break-all}
+#tvJoin .tvj-wait{display:none;font-size:11px;color:#cfc9ff;text-align:center}#tvJoin.wait canvas,#tvJoin.wait .tvj-code,#tvJoin.wait .tvj-url{display:none}#tvJoin.wait .tvj-wait{display:block}
+#tvJoin .tvj-row{display:flex;gap:6px}#tvJoin .tvj-row button{font:700 10px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#241c40;border:2px solid #7F77DD;padding:5px 8px;cursor:pointer;box-shadow:2px 2px 0 #07040f}
+#tvJoin .tvj-av{font-size:8px;color:#4CC38A}
+/* between songs the join card goes big in the middle so the room can scan it from the couch */
+#tvJoin.big{right:50%;top:50%;transform:translate(50%,-50%) scale(1.9);transform-origin:center}
+body.tvidle,body.tvidle *{cursor:none!important}
+body.tvmode.tvidle #jBotBar,body.tvmode.tvidle #jSetupBtn,body.tvmode.tvidle #jFsBtn,body.tvmode.tvidle #jInstBtn,body.tvmode.tvidle .tvj-row{opacity:0;transition:opacity .4s}
+#tvCal{display:none;position:fixed;inset:0;z-index:100001;background:rgba(7,4,15,.92);flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:'Silkscreen',ui-monospace,monospace;color:#fff;text-align:center}
+#tvCal.on{display:flex}#tvCal b{font-size:34px;color:#F5D03C;text-shadow:3px 3px 0 #000}#tvCalMsg{font-size:16px;color:#cfc9ff;max-width:80vw}#tvCalN{font-size:22px;color:#9a93d8}
+#tvCalFlash{width:180px;height:180px;background:#241c40;border:5px solid #7F77DD;box-shadow:6px 6px 0 #000}#tvCalFlash.hit{background:#F5D03C;border-color:#fff}
 /* the instrument, fullscreen and setup buttons, 8-bit like the rest */
 #jInstBtn,#jFsBtn,#jSetupBtn{font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700!important;letter-spacing:.5px;border-radius:0!important;border-width:2px!important;border-style:solid!important;box-shadow:inset -2px -2px 0 rgba(0,0,0,.35),2px 2px 0 #07040f,0 0 0 2px #07040f!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 #jInstBtn{background:#b8402c!important;border-color:#ff8a6a!important;color:#fff!important}
@@ -4874,6 +4891,7 @@ function goLive(){
   function liveMsg(e){
     var msg;try{msg=JSON.parse(e.data);}catch(x){return;}
     if(typeof msg.type==="string"&&msg.type.indexOf("voice-")===0){VOICE.onMsg(msg);return;}
+    if(msg.type==="time"){PCLOCK.got(msg);return;}if(msg.type==="cal-tap"){TVMODE.tap(msg);return;}
     if(msg.type==="gnote"){GUESTS.note(msg);return;}if(msg.type==="stage"){GUESTS.list(msg.list||[]);return;}
     if(msg.type==="resume-failed"){LIVERC.until=0;endLive();showJamToast("Couldn't get back into the room: the show has ended","#E8505B",4000);return;}
     if(msg.type==="room-resumed"){LIVERC.until=0;LIVERC.n=0;if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();serverAgeWarn();}
@@ -4913,6 +4931,7 @@ function goLive(){
     if(msg.type==="tug"){PMOSH.tug=[+msg.s[0]||0,+msg.s[1]||0];PMOSH.done=!!msg.done;return;}
     if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
     if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();}
+    if(msg.type==="room-created"||msg.type==="room-resumed"){PCLOCK.start();TVMODE.joined();}
     if(msg.type==="bots-info")BOTFILL.info(msg);
   }
   liveWs.onmessage=liveMsg;
@@ -4943,7 +4962,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.39",SERVER_VERSION="";
+var PAGE_VERSION="1.82.40",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -6062,6 +6081,7 @@ window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.i
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ip.classList.contains("on")){ip.classList.remove("on");e.stopPropagation();}},true);
   setInterval(iName,1000);iName();
   ["jStageBtn","jSongBtn","jHangBtn"].forEach(function(id){var e=document.getElementById(id);if(e)bb.appendChild(e);});
+  (function(){var tb=document.createElement("button");tb.id="jTvBtn";tb.title="TV mode: the show on a TV, everyone joins on their phones";tb.innerHTML="&#128250; TV mode";bb.appendChild(tb);})();
   /* the old visualizer buttons (FX, alt, next, random, picker, play/stop) are gone from the bar: the song panel runs the song, and the visual FX live in the Stage menu */
   ["jVizFxBtn","jVizAltBtn","jVizCycBtn","jVizRandBtn","jPickBtn","jPlayStop"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.setProperty("display","none","important");});
   (function(){var sb2=document.getElementById("jStageBtn"),sp2=document.getElementById("jStagePop");if(!sb2||!sp2)return;sb2.innerHTML="&#127967; Stage &amp; FX";
@@ -6632,6 +6652,63 @@ var SONGMAP=(function(){
     get recording(){return !!rec;},get hasSaved(){return !!saved;},savedFor:function(t){return !!shows()[sk(t)];},keyNow:function(){if(!map)return "";var k=at(map.keys,lastPos);return k?keyName(k):"";}};
 })();
 window.addEventListener("load",function(){STAGEFX.init();});
+/* ============================================================
+   TV MODE: run the show from a laptop plugged into a TV, with everyone joining on their phones (like a Jackbox game).
+   The TV shows the stage big, with a join card (QR code + room code) in the corner. Its sound is the beat: while a song plays
+   it tells the room which point of the song is being heard at which server time (PCLOCK = this laptop's clock vs the
+   server's), so every phone plays to the TV, whatever its own network delay. The sync check measures the TV's own sound
+   delay (TVs add some, especially over HDMI): the TV beeps, everyone taps along, and the phones allow for the difference.
+   ============================================================ */
+var PCLOCK=(function(){var off=0,best=1e9,n=0,ok=false,tm=null;
+  function ping(){if(liveWs&&liveWs.readyState===1)try{liveWs.send(JSON.stringify({type:"time",c:Date.now()}));}catch(e){}}
+  function start(){n=0;best=1e9;clearInterval(tm);var k=0;tm=setInterval(function(){ping();if(++k>=6){clearInterval(tm);tm=setInterval(ping,15000);}},400);}
+  function got(m){var now=Date.now(),rtt=now-(+m.c||now);if(!(rtt>=0&&rtt<3000))return;n++;if(rtt<=best*1.2||n<3){if(rtt<best)best=rtt;var o=(+m.s)+rtt/2-now;off=ok?off*0.6+o*0.4:o;ok=true;}}
+  return{start:start,got:got,now:function(){return Date.now()+off;},get ok(){return ok;}};})();
+var TVMODE=(function(){
+  var on=false,av=0,wasPlay=false,cal=null,idleT=null,el=function(id){return document.getElementById(id);};
+  try{av=+localStorage.getItem("uk_tvav")||0;}catch(e){}
+  function outLat(){try{var c=Tone.context.rawContext||Tone.context;return ((c.outputLatency||0)+(c.baseLatency||0))*1000;}catch(e){return 0;}}
+  function joinUrl(code){var base=location.href.split("#")[0].split("?")[0].replace(/[^\/]*$/,"");var u=base+"venue.html?room="+encodeURIComponent(code);
+    if(typeof LIVE_URL==="string"&&typeof WS_URL==="string"&&LIVE_URL!==WS_URL)u+="&ws="+encodeURIComponent(LIVE_URL);return u;}
+  function card(){var c=el("tvJoin");if(!c)return;var code=liveOn&&typeof LIVERC!=="undefined"&&LIVERC.room;
+    c.classList.toggle("wait",!code);c.classList.toggle("big",!!code&&!(typeof LSET!=="undefined"&&LSET.playing));
+    if(code){if(c.getAttribute("data-code")!==code){c.setAttribute("data-code",code);var u=joinUrl(code);try{UKQR.draw(el("tvQr"),u,6);}catch(e){}
+        el("tvCode").textContent=code;el("tvUrl").textContent=u.replace(/^https?:\/\//,"").replace(/\?.*$/,"");}}
+    else{c.removeAttribute("data-code");el("tvCode").textContent="";}
+    el("tvAv").textContent=av?"TV sound delay "+av+" ms":"Not synced yet";}
+  function set(v){on=!!v;document.body.classList.toggle("tvmode",on);try{localStorage.setItem("uk_tv",on?"1":"0");}catch(e){}
+    var b=el("jTvBtn");if(b)b.classList.toggle("on",on);card();
+    if(on){try{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(function(){});}catch(e){}}}
+  /* the beat the phones follow: every second while a song plays */
+  setInterval(function(){if(!on||!liveOn)return;var pl=typeof LSET!=="undefined"&&LSET.playing;
+    if(pl&&PCLOCK.ok){liveSend({type:"tvpos",p:Math.round(LSET.pos()-outLat()),s:Math.round(PCLOCK.now()),on:1});wasPlay=true;}
+    else if(wasPlay){liveSend({type:"tvpos",p:0,s:Math.round(PCLOCK.now()),on:0});wasPlay=false;}
+    card();},1000);
+  /* the sync check */
+  function check(){if(!liveOn){alert("Go live first, so the phones can join the sync check.");return;}if(cal)return;
+    try{initAudio();}catch(e){}Promise.resolve(Tone.context.resume&&Tone.context.resume()).catch(function(){}).then(function(){var c=Tone.context.rawContext||Tone.context,N=16,per=700,t0=c.currentTime+2.2,beeps=[],taps=[],ov=el("tvCal");
+      cal={beeps:beeps,taps:taps};ov.classList.add("on");el("tvCalMsg").textContent="Tap along on your phones: one tap on every beep";liveSend({type:"cal",on:1});
+      var lat=outLat();
+      for(var i=0;i<N;i++){var tb=t0+i*per/1000;var o=c.createOscillator(),g=c.createGain();o.type="square";o.frequency.value=i%4?880:1320;o.connect(g);g.connect(c.destination);
+        g.gain.setValueAtTime(0,tb);g.gain.linearRampToValueAtTime(0.25,tb+0.003);g.gain.exponentialRampToValueAtTime(0.001,tb+0.09);o.start(tb);o.stop(tb+0.1);
+        var srv=PCLOCK.now()+(tb-c.currentTime)*1000+lat;beeps.push(srv);
+        (function(k,ms){setTimeout(function(){var f=el("tvCalFlash");f.classList.add("hit");el("tvCalN").textContent=(N-k)+"";setTimeout(function(){f.classList.remove("hit");},90);},ms);})(i,(tb-c.currentTime)*1000+lat);}
+      setTimeout(finish,(t0-c.currentTime)*1000+N*per+900);});}
+  function finish(){var C=cal;cal=null;liveSend({type:"cal",on:0});var d=[];
+    C.taps.forEach(function(s){var best=1e9;C.beeps.forEach(function(b){if(Math.abs(s-b)<Math.abs(best))best=s-b;});if(Math.abs(best)<350)d.push(best);});
+    var msg;if(d.length<5)msg="Not enough taps on the beat ("+d.length+"). Try again: tap right on each beep.";
+    else{d.sort(function(a,b){return a-b;});var lo=Math.floor(d.length*0.2),hi=Math.ceil(d.length*0.8),mid=d.slice(lo,Math.max(lo+1,hi)),m=Math.round(mid.reduce(function(a,b){return a+b;},0)/mid.length);
+      av=m;try{localStorage.setItem("uk_tvav",String(av));}catch(e){}liveSend({type:"av",ms:av});msg="Synced! The TV's sound is "+av+" ms "+(av>=0?"late":"early")+" ("+d.length+" taps). Phones now play to it.";}
+    el("tvCalMsg").textContent=msg;el("tvCalN").textContent="";setTimeout(function(){el("tvCal").classList.remove("on");},4500);card();}
+  function wire(){var b=el("jTvBtn");if(b)b.onclick=function(e){e.stopPropagation();set(!on);};var s=el("tvSync");if(s)s.onclick=function(e){e.stopPropagation();check();};
+    var x=el("tvExit");if(x)x.onclick=function(e){e.stopPropagation();set(false);};
+    document.addEventListener("mousemove",function(){document.body.classList.remove("tvidle");clearTimeout(idleT);idleT=setTimeout(function(){if(on)document.body.classList.add("tvidle");},3000);});
+    if(/[?&]tv\b/.test(location.search)||localStorage.getItem("uk_tv")==="1")set(true);}
+  window.addEventListener("load",function(){setTimeout(wire,50);});
+  window.ukTvMode=function(){return{on:on,av:av,clock:PCLOCK.ok,playing:typeof LSET!=="undefined"&&LSET.playing};};
+  return{set:set,check:check,tap:function(m){if(cal&&isFinite(+m.s))cal.taps.push(+m.s);},joined:function(){if(av)liveSend({type:"av",ms:av});card();},get on(){return on;}};
+})();
+
 /* the auto band, while a song plays with Auto band on: steps through the song's drum hits and beats as it plays, plays the band
    here (ART.BAND) and tells the room, so the band is on everyone's stage too */
 var BANDRUN=(function(){var on=false,hi=0,bi=0,lastPos=-1,memK="",paceK="",tm=null;
@@ -7462,5 +7539,7 @@ window.togglePedalBoard=togglePedalBoard;window.exportLocalStorage=exportLocalSt
 })();
 </script>
 <div id="ukPick" role="dialog" aria-label="Pick an instrument"></div>
+<div id="tvJoin"><div class="tvj-hd">&#128241; JOIN ON YOUR PHONE</div><canvas id="tvQr" width="200" height="200"></canvas><div class="tvj-code" id="tvCode"></div><div class="tvj-url" id="tvUrl"></div><div class="tvj-wait">Go live to open the room</div><div class="tvj-row"><button id="tvSync">&#127919; Sync check</button><button id="tvExit">&#10005;</button></div><div class="tvj-av" id="tvAv"></div></div>
+<div id="tvCal"><div id="tvCalFlash"></div><b>&#127919; SYNC CHECK</b><div id="tvCalMsg"></div><div id="tvCalN"></div></div>
 </body>
 </html>

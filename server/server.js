@@ -79,7 +79,7 @@ function liveVideo(r) {
     v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
   return v;
 }
-var PERFORMER_TYPES = { band: 1, "song-on": 1, note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1, "song-part": 1 };
+var PERFORMER_TYPES = { tvpos: 1, av: 1, cal: 1, band: 1, "song-on": 1, note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1, "song-part": 1 };
 
 /* ── Live sound/visual stream ──
    The performer sends binary packets: byte 0 is the kind (1 = audio, 2 = visuals), the rest is
@@ -507,7 +507,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.39";
+var VERSION = "1.82.40";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -562,6 +562,8 @@ function onMessage(ws, raw, isBinary) {
   var msg;
   try { msg = JSON.parse(raw); } catch(e) { return; }
   if (!msg || typeof msg !== "object" || typeof msg.type !== "string") return;
+  /* clock sync (TV mode): everyone measures the gap between their clock and the server's, so phones and the TV agree on "now" */
+  if (msg.type === "time") { if (!allow(ws, "time", 20, 6)) return; send(ws, { type: "time", c: +msg.c || 0, s: Date.now() }); return; }
 
   /* ── Performer creates room ── */
   if (msg.type === "create-room") {
@@ -627,7 +629,9 @@ function onMessage(ws, raw, isBinary) {
       fx: r.fx || null,
       perfPos: r.perfPos || null,
       stage: { list: stageList(r), song: r.songOn ? 1 : 0 },
-      band: r.band && r.band.m && r.band.m.length ? r.band : null
+      band: r.band && r.band.m && r.band.m.length ? r.band : null,
+      av: r.av || 0,
+      tvp: r.tvp && Date.now() - r.tvp.at < 8000 ? { p: r.tvp.p, s: r.tvp.s, on: r.tvp.on } : null
     });
 
     // Notify everyone else
@@ -691,6 +695,11 @@ function onMessage(ws, raw, isBinary) {
     if (msg.type === "gvote-close") { var gr = rooms[ws.room]; if (gr.gvote) gvoteClose(ws.room, gr.gvote); return; }
     if (msg.type === "gvote-cancel") { var gr2 = rooms[ws.room]; if (gr2.gvote && !gr2.gvote.done) { gvoteStop(gr2); broadcast(ws.room, { type: "gvote", cancel: 1 }); } return; }
     if (!PERFORMER_TYPES[msg.type]) return;
+    /* TV MODE: the laptop on the TV is the clock the phones play to. tvpos = the song position being heard right now, at server time s */
+    if (msg.type === "tvpos") { if (!allow(ws, "tvpos", 10, 4)) return; var tp = +msg.p, ts = +msg.s; if (!isFinite(tp) || !isFinite(ts)) return;
+      var tvr = rooms[ws.room]; tvr.tvp = { p: Math.round(tp), s: Math.round(ts), at: Date.now(), on: msg.on ? 1 : 0 }; broadcast(ws.room, { type: "tvpos", p: tvr.tvp.p, s: tvr.tvp.s, on: tvr.tvp.on }, ws); return; }
+    if (msg.type === "av") { var avr = rooms[ws.room], am = Math.round(+msg.ms); if (!isFinite(am)) return; avr.av = Math.max(-300, Math.min(800, am)); broadcast(ws.room, { type: "av", ms: avr.av }, ws); return; }   /* how late the TV's sound is */
+    if (msg.type === "cal") { if (!allow(ws, "cal", 6, 1)) return; broadcast(ws.room, { type: "cal", on: msg.on ? 1 : 0 }, ws); return; }   /* the sync check: phones show a tap button */
     if (msg.type === "band") {   /* the auto band: who's in it and the pace, or one hit / beat as the song plays */
       if (!allow(ws, "band", 40, 20)) return;
       var BM = ["drums", "bass", "electric", "acoustic", "keys"], bo = { type: "band" };
@@ -745,6 +754,7 @@ function onMessage(ws, raw, isBinary) {
 
   /* ── Viewer messages: chat, position, dancing, dance poses, round scores and votes only ── */
   if (ws.role === "viewer" && ws.room && rooms[ws.room]) {
+    if (msg.type === "cal-tap") { var cr = rooms[ws.room]; if (!allow(ws, "caltap", 30, 6)) return; var cs = +msg.s; if (cr.performer && isFinite(cs)) send(cr.performer, { type: "cal-tap", id: ws.viewerId, s: Math.round(cs) }); return; }
     if (msg.type === "stage-join") {
       var sr3 = rooms[ws.room]; if (!sr3.stage) sr3.stage = {};
       if (!allow(ws, "stage", 4, 0.5)) return;
