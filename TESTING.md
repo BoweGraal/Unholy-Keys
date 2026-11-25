@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.62 — Phone light faces the right way
+
+1. Check the version reads **v1.82.62**. In free dance pick **Lighters up → Phone light**.
+2. Facing the crowd (front): you see the phone's bright screen and its glow.
+3. Turn round to face the stage (180): you see the **back** of the phone (dark) with the torch glinting over the top, and the glow is fainter and higher, shining away toward the stage.
+4. The glow is stepped pixel rings now, not a smooth blur.
+
 ## v1.82.61 — Skank: a real knee lift
 
 1. Check the version reads **v1.82.61**. In free dance pick **Skank** (Classic).
