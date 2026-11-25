@@ -190,7 +190,7 @@ var ART=(function(){
     function legK(jx,jy,a,len,cols,str,out){
       if(!st.knee||len>6.6){limb(jx,jy,a,len,cols,str);return;}
       var full=legC(cols.map(function(c){return [c[0]*7/len,c[1]];}),7),hl=3.5,dx=-Math.sin(a),dy=Math.cos(a),
-          h=Math.sqrt(Math.max(0,hl*hl-len*len/4)),px0=Math.cos(a),py0=Math.sin(a);if(px0*out<0){px0=-px0;py0=-py0;}
+          h=Math.sqrt(Math.max(0,hl*hl-len*len/4)),px0=Math.cos(a),py0=Math.sin(a);if(st.knee<0)out=-out;if(px0*out<0){px0=-px0;py0=-py0;}   /* knee < 0: the knee comes in across the body */
       var kx=jx+dx*len/2+px0*h,ky=jy+dy*len/2+py0*h,fx=jx+dx*len,fy=jy+dy*len,
           aT=Math.atan2(-(kx-jx),ky-jy),aS=Math.atan2(-(fx-kx),fy-ky),
           sh=function(q,o){return q.map(function(c){return [c[0]-o,c[1]];}).filter(function(c){return c[0]>0;});},
@@ -424,7 +424,7 @@ var ART=(function(){
       PAINT.view("hair:"+HR,2,OX,OY+hy);if(HT===14){SEC="hat";backHat();}PAINT.view("hat:"+HT,2,OX,OY+hy);
     }
     }else{
-    SEC="legL";limb(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL));if(!st.skates)toe(-2.5,4,lL,gL,shoe,-1,1);SEC="legR";limb(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR));if(!st.skates)toe(FT?2:2.5,4,lR,gR,shoe,1,1);
+    SEC="legL";legK(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL),-1);if(!st.skates)toe(-2.5,4,lL,gL,shoe,-1,1);SEC="legR";legK(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR),1);if(!st.skates)toe(FT?2:2.5,4,lR,gR,shoe,1,1);
     if(st.skates){var ic=st.skates==="ice";SEC="legL";skate(-2.5,4,lL,gL,ic);SEC="legR";skate(2.5,4,lR,gR,ic);}
     SEC="top";
     /* torso */
@@ -1949,9 +1949,9 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       var kh=0.7+Math.max(0,-ay)*0.6,bI=Math.floor(bp),phs=bp-bI,sdk=bI%2?-1:1,
           a5=phs<0.16?(function(x){return x*x*(3-2*x);})(phs/0.16):phs<0.6?1:phs<0.82?1-(phs-0.6)/0.22:0,   /* snap in, hold (the stop frame), ease back, a short break */
           qq=sdk*a5,pu=1+Math.max(0,-by)*0.5+(bx+1)*0.15;
-      o.legL=0.12;o.legR=-0.12;o.lgL=o.lgR=6.3;o.armL=0.5;o.armR=-0.5;o.alL=o.alR=6;   /* the break: knees bent, fists low */
-      if(sdk>0){o.armL=0.5+a5*0.85*pu;o.alL=7;o.armR=-0.5+a5*1.6;o.alR=5;o.legR=-0.12+a5*0.3*kh;o.lgR=6.3-a5*3.4;}   /* left arm out, right fist across the chest, the RIGHT knee up (opposite the arm), turned in a little but staying on its own side */
-      else{o.armR=-0.5-a5*0.85*pu;o.alR=7;o.armL=0.5-a5*1.6;o.alL=5;o.legL=0.12-a5*0.3*kh;o.lgL=6.3-a5*3.4;}         /* and the other side */
+      o.legL=0.12;o.legR=-0.12;o.lgL=o.lgR=6.7;o.armL=0.5;o.armR=-0.5;o.alL=o.alR=6;o.knee=-1;   /* the break: standing tall, fists low; the kick is a knee lift coming in across the body */
+      if(sdk>0){o.armL=0.5+a5*0.85*pu;o.alL=7;o.armR=-0.5+a5*1.6;o.alR=5;o.legR=-0.12+a5*0.3*kh;o.lgR=6.7-a5*3.7;}   /* left arm out, right fist across the chest, the RIGHT knee up (opposite the arm), turned in a little but staying on its own side */
+      else{o.armR=-0.5-a5*0.85*pu;o.alR=7;o.armL=0.5-a5*1.6;o.alL=5;o.legL=0.12-a5*0.3*kh;o.lgL=6.7-a5*3.7;}         /* and the other side */
       o.bob=1.2+a5*1.4-(phs>0.82?Math.sin((phs-0.82)/0.18*Math.PI)*1.2:0);o.dx=ax*4*s1-qq*1.2;o.rot=-qq*0.05;
       if(sub===4){var kk=(Math.floor(bp)%2===0);if(ph>0.35&&ph<0.85){if(kk){o.legL=1.05;o.lgL=7;o.legR=-0.1;o.lgR=7;}else{o.legR=-1.05;o.lgR=7;o.legL=0.1;o.lgL=7;}o.bob=0.5;}}   /* kick out to the side */
       if(sub===1){o.armL=bp*Math.PI*2%(Math.PI*2);o.armR=-o.armL;}                               /* windmill */
@@ -2840,6 +2840,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       g.restore();}
     return{A:A,build:build,coin:coin};
   })();
-  return{SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.60",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.61",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

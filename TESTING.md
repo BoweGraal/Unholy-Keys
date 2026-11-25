@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.61 — Skank: a real knee lift
+
+1. Check the version reads **v1.82.61**. In free dance pick **Skank** (Classic).
+2. On each beat one arm swings out, and on the other side the **knee comes right up**: the thigh rises, the knee bends, and the foot tucks in across the body. The standing leg stays straight.
+3. It swaps sides each beat, with a short break between.
+
 ## v1.82.60 — No more drifting off on your own · Running man from every angle
 
 **Drifting**
