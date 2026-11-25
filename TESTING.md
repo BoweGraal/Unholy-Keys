@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.67 — Menu music: fail-safes so it always starts
+
+1. iPhone with the ring/silent switch ON: open the site and tap anywhere. The menu music should play (before this, the silent switch could mute it).
+2. Any phone: open the site, tap once. Music within a second or so.
+3. If it ever isn't playing after you've tapped, the MUSIC button (top right) turns yellow, pulses and says TAP FOR MUSIC. Tapping it should start the music.
+4. Lock the phone and unlock it, or switch apps and come back, while on the menu: the music comes back.
+5. MUSIC OFF still turns it off and stays off after a reload. Going into a room or a game round still fades it out.
+
 ## v1.82.66 — Fishing: out to sea on the back of a boat
 
 1. Start a game with Fishing (or practice → Fishing). As it opens, the stage wall should fly up and off the top of the screen, showing a night ocean behind it (moon, stars, rolling waves).

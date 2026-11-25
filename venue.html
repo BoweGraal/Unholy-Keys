@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.66"></script>
-<script src="gfx.js?v=1.82.66"></script>
-<script src="art.js?v=1.82.66"></script>
-<script src="voice.js?v=1.82.66"></script>
-<script src="instruments.js?v=1.82.66"></script>
-<script src="kart.js?v=1.82.66"></script>
-<script src="explain.js?v=1.82.66"></script>
+<script src="tune.js?v=1.82.67"></script>
+<script src="gfx.js?v=1.82.67"></script>
+<script src="art.js?v=1.82.67"></script>
+<script src="voice.js?v=1.82.67"></script>
+<script src="instruments.js?v=1.82.67"></script>
+<script src="kart.js?v=1.82.67"></script>
+<script src="explain.js?v=1.82.67"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -49,7 +49,7 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 #vFsTip{display:none;position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9500;width:min(420px,90vw);background:#1c1830;border:1px solid #D354A0;color:#fff;font:13px/1.45 'Silkscreen',ui-monospace,monospace;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 #vFsTip.on{display:block}
 #joinScreen.hidden{display:none}
-#mmMusic{position:fixed;right:10px;top:10px;z-index:70;padding:6px 10px;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#cfc8f0;background:rgba(20,18,32,.85);border:2px solid #4a4070;cursor:pointer}#mmMusic.off{color:#777;border-color:#333}
+#mmMusic{position:fixed;right:10px;top:10px;z-index:70;padding:6px 10px;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#cfc8f0;background:rgba(20,18,32,.85);border:2px solid #4a4070;cursor:pointer}#mmMusic.off{color:#777;border-color:#333}#mmMusic.tapme{color:#1a1030;background:#F5C518;border-color:#000;animation:mmPulse 1s ease-in-out infinite}@keyframes mmPulse{50%{transform:scale(1.08)}}
 #joinScreen.hidden #mmMusic{display:none}
 /* main menu views: menu (character + three buttons), join (room code), char (the character maker) */
 #joinScreen .jv{display:none}
@@ -8702,35 +8702,76 @@ window.ukPerfKind=function(){return{id:activeInst,kind:perfKind(),playing:isPerf
    swells slowly over about 10 s to a low background level, and fades away when you go into a room or practice. A gain node
    does the volume so it's quiet on iPhones too (they ignore an audio element's volume). The MUSIC button turns it off for good. ---- */
 var MENUMUSIC=(function(){
-  var a=null,ac=null,gn=null,vol=0,started=false,t0=0,muted=false,BED=0.32,FADE=1200;   /* straight in at a normal background level (a quick fade, no slow swell) */
+  /* Fail-safes, because phones are fussy about sound:
+     1. iPhone: the page asks for "playback" audio straight away, so the ring/silent switch doesn't mute the menu music.
+     2. The volume node (Web Audio) is only built inside a real tap, and woken with a silent blip, or iOS keeps it asleep.
+     3. Every tap/key tries again until the song is really playing; only the newest try counts (an old failed try can't stop it).
+     4. A watchdog checks every second that the song is moving. Stuck: play again, then reload it, then rebuild the player,
+        and as a last resort play it without the volume node.
+     5. A song that won't load skips to the other one (and retries with a fresh address).
+     6. Coming back to the app (unlocking, switching back) starts it again.
+     7. If it still isn't playing after you've tapped, the MUSIC button says "TAP FOR MUSIC". */
+  var a=null,ac=null,gn=null,vol=0,started=false,t0=0,muted=false,BED=0.32,FADE=1200,tries=0,plain=false,fails=0,lastT=-1,stuck=0,heal=0,bust=0,acBad=0;
   try{muted=localStorage.getItem("uk_menumusic")==="0";}catch(e){}
+  try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
   function menuOn(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&getComputedStyle(j).display!=="none";}
   /* it also keeps playing in practice while you're just on the dance floor or free dancing (no round or other game running) */
   function want(){var b=document.body,g=b&&b.getAttribute("data-game");return menuOn()||(!!b&&b.classList.contains("practice")&&!b.classList.contains("pr-busy")&&(!g||g==="free"));}
   var LIST=["After-hours Entry.mp3","Queue Lights.mp3"],cur=0;   /* After-hours Entry, then Queue Lights when it ends, and round again */
-  function setVol(v){if(gn&&ac)gn.gain.setTargetAtTime(v,ac.currentTime,0.05);else if(a)a.volume=Math.max(0,Math.min(1,v));}
-  function ensure(){if(a)return;a=new Audio("songs/"+encodeURIComponent(LIST[0]));a.loop=false;a.preload="auto";
-    a.addEventListener("ended",function(){cur=(cur+1)%LIST.length;a.src="songs/"+encodeURIComponent(LIST[cur]);if(started&&want()){var pp=a.play();if(pp&&pp.catch)pp.catch(function(){});}});
-    try{var AC=window.AudioContext||window.webkitAudioContext;ac=new AC();gn=ac.createGain();gn.gain.value=0;ac.createMediaElementSource(a).connect(gn);gn.connect(ac.destination);a.volume=1;}catch(e){ac=gn=null;a.volume=0;}}
-  /* every tap or key tries again until the song is really playing: phones don't count pointerdown as permission to play
-     (only the touchend / click after it), and the volume node needs waking inside a tap too, or the song plays silently */
-  function start(){if(muted||!want())return;ensure();if(ac&&ac.state!=="running")ac.resume().catch(function(){});
-    if(started&&!a.paused)return;
-    var p=a.play();started=true;t0=performance.now();if(p&&p.then)p.then(function(){t0=performance.now();},function(){started=false;});}
-  ["pointerdown","pointerup","touchend","click","keydown"].forEach(function(ev){document.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
-  setTimeout(start,300);   /* ...unless this page is already allowed to play */
+  function url(i){return "songs/"+encodeURIComponent(LIST[i])+(bust?"?r="+bust:"");}
+  function setVol(v){if(gn&&ac&&!plain)gn.gain.setTargetAtTime(v,ac.currentTime,0.05);else if(a)a.volume=Math.max(0,Math.min(1,v));}
+  function tryPlay(){if(!a)return;var my=++tries,p;try{p=a.play();}catch(e){p=null;}started=true;t0=performance.now();
+    if(p&&p.then)p.then(function(){if(my===tries){t0=performance.now();fails=0;}},function(){if(my===tries&&a.paused){started=false;fails++;}});}
+  function build(gesture){
+    a=new Audio();a.preload="auto";a.loop=false;a.setAttribute("playsinline","");a.src=url(cur);
+    a.addEventListener("ended",function(){cur=(cur+1)%LIST.length;a.src=url(cur);if(started&&want())tryPlay();});
+    a.addEventListener("error",function(){cur=(cur+1)%LIST.length;bust=Date.now();setTimeout(function(){if(!a)return;a.src=url(cur);if(started&&want())tryPlay();},400);});   /* won't load: the other song, fresh */
+    if(!plain&&gesture){try{var AC=window.AudioContext||window.webkitAudioContext;ac=new AC();gn=ac.createGain();gn.gain.value=0;ac.createMediaElementSource(a).connect(gn);gn.connect(ac.destination);a.volume=1;}catch(e){ac=gn=null;plain=true;}}
+    if(!ac){ac=gn=null;a.volume=0;}}
+  function wake(){if(!ac)return;try{if(ac.state!=="running")ac.resume().catch(function(){});var bf=ac.createBuffer(1,1,22050),sn=ac.createBufferSource();sn.buffer=bf;sn.connect(ac.destination);sn.start(0);}catch(e){}}   /* the silent blip that unlocks iOS */
+  /* throw the player away and make a fresh one (inside the next tap) */
+  function rebuild(goPlain){try{if(a){a.pause();a.removeAttribute("src");a.load();}}catch(e){}try{if(ac)ac.close();}catch(e){}a=null;ac=gn=null;if(goPlain)plain=true;started=false;lastT=-1;stuck=0;}
+  function start(e){if(muted||!want())return;var gesture=!!(e&&e.type&&e.isTrusted!==false);
+    if(a&&!ac&&!plain&&gesture){var keep=a.currentTime;rebuild(false);build(true);try{a.currentTime=keep;}catch(x){}}   /* the tap-less first try had no volume node: rebuild it properly inside this tap */
+    if(!a){if(!gesture&&!(navigator.userActivation&&navigator.userActivation.isActive))return;build(gesture);}
+    wake();if(started&&!a.paused&&(plain||!ac||ac.state==="running"))return;tryPlay();}
+  ["pointerdown","pointerup","touchstart","touchend","mousedown","click","keydown"].forEach(function(ev){window.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
+  setTimeout(function(){if(muted||!want())return;build(false);tryPlay();},300);   /* ...unless this page is already allowed to play (no volume node yet: the first tap rebuilds it properly) */
+  document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&a&&want()&&!muted){wake();tryPlay();}});
+  window.addEventListener("pageshow",function(){if(a&&want()&&!muted){wake();tryPlay();}});
+  /* the volume, and the fade out when you leave the menu */
   setInterval(function(){if(!a)return;var on=want()&&!muted&&started,target=0;
     if(on)target=BED*Math.min(1,(performance.now()-t0)/FADE);
     vol=on?target:vol+(target-vol)*0.1;if(!on&&vol<0.003){vol=0;if(!a.paused)a.pause();if(!want())started=false;}setVol(vol);
     if(!started&&!muted&&want()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
   },100);
-  function btn(){var b=document.getElementById("mmMusic");if(b){b.textContent=muted?"\u266B MUSIC OFF":"\u266B MUSIC ON";b.classList.toggle("off",muted);}}
-  var b0=document.getElementById("mmMusic");if(b0){btn();b0.addEventListener("click",function(e){e.stopPropagation();muted=!muted;try{localStorage.setItem("uk_menumusic",muted?"0":"1");}catch(x){}btn();if(!muted)start();});}
+  /* the watchdog */
+  setInterval(function(){var bt=document.getElementById("mmMusic");
+    if(!a||muted||!want()){stuck=0;lastT=-1;if(bt)bt.classList.remove("tapme");btn();return;}
+    /* the first, tap-less try had no volume node: once there's been a tap, rebuild it the proper way */
+    var ct=a.currentTime,moving=!a.paused&&ct!==lastT&&a.readyState>=2;lastT=ct;
+    if(ac&&ac.state!=="running"&&!a.paused)acBad++;else acBad=0;
+    if(started&&(moving&&acBad<4)){stuck=0;heal=0;}else if(started||fails)stuck++;
+    if(acBad>=6&&heal<3){heal=3;rebuild(true);start({type:"tap"});return;}   /* the volume node won't wake: no node */
+    if(stuck>=2){stuck=0;heal++;
+      if(heal===1){wake();tryPlay();}                             /* nudge it */
+      else if(heal===2){bust=Date.now();a.src=url(cur);a.load();tryPlay();}   /* reload the song */
+      else if(heal===3){rebuild(false);start({type:"tap"});}      /* a fresh player */
+      else if(heal===4){rebuild(true);start({type:"tap"});}       /* last resort: plain, no volume node */
+      else heal=4;}
+    var dead=(!started||a.paused)&&navigator.userActivation&&navigator.userActivation.hasBeenActive;
+    if(bt){bt.classList.toggle("tapme",!!dead);if(dead)bt.textContent="♫ TAP FOR MUSIC";else btn();}
+  },1000);
+  function btn(){var b=document.getElementById("mmMusic");if(b&&!b.classList.contains("tapme")){b.textContent=muted?"♫ MUSIC OFF":"♫ MUSIC ON";b.classList.toggle("off",muted);}}
+  var b0=document.getElementById("mmMusic");if(b0){btn();b0.addEventListener("click",function(e){e.stopPropagation();
+    if(b0.classList.contains("tapme")&&!muted){b0.classList.remove("tapme");if(heal>=3)rebuild(true);start(e);btn();return;}   /* "tap for music": that tap starts it */
+    muted=!muted;try{localStorage.setItem("uk_menumusic",muted?"0":"1");}catch(x){}btn();if(!muted)start(e);});}
   window.ukMenuMusicEnd=function(){if(a)a.dispatchEvent(new Event("ended"));return LIST[cur];};   /* test: as if the song finished */
-  window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
+  window.ukMenuMusicBreak=function(how){if(!a)return;if(how==="pause")a.pause();else if(how==="ctx"&&ac)ac.suspend();else if(how==="src"){a.src="songs/nope.mp3";}};   /* test: break it on purpose */
+  window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.66",SERVER_VERSION="";
+var PAGE_VERSION="1.82.67",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9330,7 +9371,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.66"></script>
+<script src="lab.js?v=1.82.67"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
