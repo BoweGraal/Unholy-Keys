@@ -336,11 +336,11 @@ function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
     if (r && r.stage && Object.keys(r.stage).length) stageClear(ws.room, "song");
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || msg.mode === "fish" || msg.mode === "boats" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || msg.mode === "fish" || msg.mode === "boats" || msg.mode === "swim" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
-    rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, ski: mode === "ski" ? cleanSki(msg.ski) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski" && mode !== "fish" && mode !== "boats", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
+    rd = r.round = { track: mode === "kart" ? KARTGEO.clean(msg.track) : null, ski: mode === "ski" ? cleanSki(msg.ski) : null, n: r.roundN, mode: mode, ice: mode === "skate" && !!msg.ice, isBattle: !!msg.battle && mode !== "mosh" && mode !== "skate" && mode !== "keepy" && mode !== "kart" && mode !== "walk" && mode !== "pipe" && mode !== "ski" && mode !== "fish" && mode !== "boats" && mode !== "swim", tug: { s: [0, 0], done: false }, title: str(msg.title, 80) || "Round " + r.roundN, phase: "countdown", chart: cleanChart(msg.chart),
       startAt: Date.now() + ms, ts0: null, playAt: 0, votes: new Map(), dancers: [], tick: null, timer: null };
     /* a linked second part (ice -> ski, fishing -> boats) carries on from the first: scores kept, and everyone's told where it came from (for the transition) */
     r.viewers.forEach(function(v) { if (msg.keep) v.roundBase = v.roundScore || 0; else { v.roundScore = 0; v.roundBase = 0; v.danced = false; } });
@@ -408,7 +408,7 @@ function roundMessage(ws, msg) {
 /* ── The crowd picks the next game ──
    The performer opens a vote between a few games (gvote-open); everyone taps one (gvote-pick); when time is up the
    game with the most votes wins (ties drawn at random, nobody voting = a random pick). Bots vote too. */
-var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf", "kflag", "fish", "boats"];
+var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf", "kflag", "fish", "boats", "swim"];
 function gvotePublic(g) {
   var c = g.opts.map(function() { return 0; });
   g.picks.forEach(function(m) { var i = g.opts.indexOf(m); if (i >= 0) c[i]++; });
@@ -507,7 +507,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.48";
+var VERSION = "1.82.52";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -784,6 +784,17 @@ function onMessage(ws, raw, isBinary) {
       broadcast(ws.room, { type: "react", id: ws.viewerId, k: msg.k }, ws);
       return;
     }
+    if (msg.type === "swimc") {
+      /* coin dive: someone grabbed a coin; the first to claim it gets it, and everyone else's copy disappears */
+      var srd2 = rooms[ws.room].round;
+      if (!srd2 || srd2.mode !== "swim" || srd2.phase !== "play" || !allow(ws, "swimc", 12, 8)) return;
+      var ci = intIn(msg.i, 0, 20000, -1); if (ci < 0) return;
+      if (!srd2.swimTaken) srd2.swimTaken = {};
+      if (srd2.swimTaken[ci]) return;
+      srd2.swimTaken[ci] = ws.viewerId;
+      broadcast(ws.room, { type: "swimc", id: ws.viewerId, i: ci }, ws);
+      return;
+    }
     if (msg.type === "kick") {
       /* keepy uppy: someone hit the balloon, ball or feather; pass its new flight on to everyone (numbers clamped) */
       var krd = rooms[ws.room].round;
@@ -869,7 +880,7 @@ function onMessage(ws, raw, isBinary) {
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
       if (!srd || !sv || srd.mode === "free" || srd.mode === "ctf" || (srd.phase !== "play" && srd.phase !== "tally") || (!msg.fin && !allow(ws, "score", 6, 2))) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
-      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" || srd.mode === "fish" || srd.mode === "boats" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0) + (srd.link ? sv.roundBase || 0 : 0);   // no higher than a perfect run; a 2-parter's second half adds onto the first
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" || srd.mode === "fish" || srd.mode === "boats" || srd.mode === "swim" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0) + (srd.link ? sv.roundBase || 0 : 0);   // no higher than a perfect run; a 2-parter's second half adds onto the first
       /* dance walk race: the server keeps the finish order so every screen agrees on the places;
          over the line = 1000 + 3000 / place, still racing = distance (up to 1000). When everyone's in, the round ends. */
       if (srd.mode === "walk") {

@@ -154,7 +154,7 @@ module.exports = function(api) {
   /* in a round: dance along, report a score (bots are decent, rarely great), vote in battles, push in the mosh */
   function round(b, now) {
     var rd = b.rd, pos = now - rd.playAt, ch = rd.chart, bpm = ch && ch.bpm || 120;
-    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.mode === "ski" || rd.mode === "ctf" || rd.mode === "fish" || rd.mode === "boats" || rd.battle ? 4 : 5;
+    var style = rd.mode === "free" || rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "keepy" || rd.mode === "kart" || rd.mode === "walk" || rd.mode === "pipe" || rd.mode === "ski" || rd.mode === "ctf" || rd.mode === "fish" || rd.mode === "boats" || rd.mode === "swim" || rd.battle ? 4 : 5;
     if (!b.dancing || b.style !== style) { b.dancing = true; b.style = style; b.act({ type: "dance", style: style }); }
     pose(b, now, bpm);
     var slot = -1, bs = rd.b && rd.b.slots, be = rd.b && rd.b.entrants;
@@ -167,7 +167,7 @@ module.exports = function(api) {
       /* a score that grows through the song at this bot's skill */
       if (b.rs0n !== rd.n) { b.rs0n = rd.n; b.rs0 = pos; b.score = 0; }   /* a game can start part way into the song (two games per song) */
       var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, (pos - b.rs0) / Math.max(60000, Math.min(150000, dur - b.rs0))));
-      var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : rd.mode === "fish" ? 4000 : rd.mode === "boats" ? 1500 : arrows * 100 * (1 + arrows / 100) * 0.55;
+      var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : rd.mode === "fish" ? 4000 : rd.mode === "boats" ? 1500 : rd.mode === "swim" ? 2500 : arrows * 100 * (1 + arrows / 100) * 0.55;
       b.score = Math.max(b.score || 0, Math.round(full * frac * b.skill * rnd(0.9, 1.1)));
       var sm = { type: "score", s: b.score }; if (slot >= 0) sm.m = slot;
       b.act(sm); b.scoreAt = now + 2000;
