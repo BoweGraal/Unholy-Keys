@@ -409,7 +409,11 @@ body.gaming-fig #skJump,body.gaming-fig #skWheel,body.gaming-fig #skSpeed,body.g
 #figUI .fgFlick.on{display:block}#figUI .fgFlick canvas{width:120px;height:230px;image-rendering:pixelated}#figUI .fgFlick b{display:block;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#F5D03C}
 #figUI .fgPad{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 10px);width:min(560px,94vw);height:min(330px,42vh);background:rgba(18,13,30,.78);border:3px solid #7F77DD;box-shadow:5px 5px 0 #000;pointer-events:auto;touch-action:none;z-index:8}
 #figUI .fgPad.on{display:block}#figUI .fgPad canvas{width:100%;height:100%;display:block}
-body.fig-pad #dpad,body.fig-pad #figUI .fgBtn,body.fig-pad #figUI .fgPrompt canvas{visibility:hidden}body.fig-pad #figUI .fgPrompt{bottom:calc(var(--chatH) + min(330px,42vh) + 20px)}
+body.fig-pad #dpad,body.fig-pad #figUI .fgBtn,body.fig-pad #fgRing{visibility:hidden}
+body.gaming-fig #fdUI{display:none!important}   /* the free-dance buttons don't belong in the ice routine */
+#fgRing{display:none;position:fixed;width:min(56vw,240px);height:min(56vw,240px);transform:translate(-50%,-50%);image-rendering:pixelated;pointer-events:none;z-index:21}body.gaming-fig #fgRing{display:block}
+body.gaming-fig.fig-stick-off #dpad,body.gaming-fig.fig-btn-off #figUI .fgBtn{visibility:hidden}   /* only the control this moment needs */
+@media (pointer:coarse){body.gaming-fig #moveCtl{left:50%!important;transform:translateX(-50%);bottom:calc(var(--chatH) + 106px)!important}body.gaming-fig #dpad{transform:scale(1.3);transform-origin:50% 50%}}   /* the stick: in the middle, bigger, level with the button */body.fig-pad #figUI .fgPrompt{bottom:calc(var(--chatH) + min(330px,42vh) + 20px)}
 #figUI .fgMo{position:absolute;top:-4px;width:4px;height:18px;margin-left:-2px;background:#F5D03C;border:1px solid #000}@media (pointer:fine){#figUI .fgBtn{width:84px;height:56px;font-size:14px;bottom:calc(var(--chatH) + 30px)}}
 .goal{animation:goalGlow .5s steps(2) infinite;position:relative;z-index:30}
 .goal.goalNow{filter:brightness(1.6)}
@@ -418,7 +422,7 @@ body.fig-pad #dpad,body.fig-pad #figUI .fgBtn,body.fig-pad #figUI .fgPrompt canv
 @keyframes goalGlow{50%{box-shadow:0 0 0 2px #fff,0 0 10px 2px rgba(255,255,255,.5)}}
 #goalTag{display:none;position:fixed;z-index:9200;pointer-events:none;padding:5px 9px;background:#F5D03C;color:#1a0f2a;font:700 13px 'Silkscreen',ui-monospace,monospace;border:3px solid #1a0f2a;box-shadow:3px 3px 0 #000;white-space:nowrap;animation:goalTagF .5s steps(2) infinite}
 @keyframes goalTagF{50%{background:#fff}}
-@media (pointer:coarse){body.gaming-fig #skHint{display:none!important}#figUI .fgPrompt{bottom:calc(var(--chatH) + 150px)}}
+@media (pointer:coarse){body.gaming-fig #skHint{display:none!important}#figUI .fgPrompt{bottom:calc(var(--chatH) + 290px)}}
 #moshTap{display:none;position:absolute;left:12px;right:12px;bottom:12px;height:38vh;border-radius:24px;border:3px solid #E8505B;background:radial-gradient(circle,rgba(232,80,91,.45),rgba(30,10,20,.85));color:#fff;pointer-events:auto;touch-action:manipulation;flex-direction:column;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;user-select:none}
 #moshTap b{font:900 clamp(36px,9vw,72px)/1 'Silkscreen',ui-monospace,monospace;letter-spacing:2px}#moshTap span{font:700 18px 'Silkscreen',ui-monospace,monospace;color:#F5D03C}
 #moshTap.hit{animation:moshHit .12s}
@@ -6573,7 +6577,14 @@ var FIG=(function(){
       sub={step:"flick "+STK+" "+MV.d+" on the beat",big:"get ready to pump",axel:"get ready",final:"press "+BTN+" on the last beat"}[near.k];}
     else{lab=lab||"SKATE TOGETHER";sub=U.big!==null&&U.bigIn<16?"big move in "+Math.ceil(U.bigIn):U.seg?"next: "+(F.NAMES[U.seg.k]||"")+" in "+Math.ceil(U.segIn):"";}
     var pr=u.querySelector(".fgPrompt");pr.querySelector("b").textContent=lab||"";pr.querySelector("b").style.color=fx.t&&now-fx.t<450?fx.col:"";pr.querySelector("small").textContent=sub||"";
-    var c=pr.querySelector("canvas"),g=c.getContext("2d");g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
+    /* only the control this moment needs: the stick for steps, spins and jumps; the button to pump and to pose; nothing while you just skate */
+    var needStick=!!((near&&(near.k==="step"||near.k==="axel"))||k==="spin"||fo2),needBtn=!!((pm||(near&&(near.k==="final"||near.k==="big")))&&!(fo2&&TOUCHF));if(needBtn&&!pm&&near&&near.k!=="final"&&needStick)needStick=false;
+    document.body.classList.toggle("fig-stick-off",!needStick);document.body.classList.toggle("fig-btn-off",!needBtn);
+    /* the prompt ring sits on the performer, big, pulsing in to him on every beat */
+    var c=pr.querySelector("canvas");if(c){c.id="fgRing";document.body.appendChild(c);}c=$("fgRing");
+    var pa=window.__perfAt;if(c&&pa){var PS=typeof PERF_S!=="undefined"?PERF_S:3,wx=pa[0],wy=pa[1]+6*PS,sxp=VZS.on?(wx-VZS.cx)*VZS.Z+W/2:wx,syp=VZS.on?(wy-VZS.cy)*VZS.Z+VZS.ay:wy,mc=document.getElementById("mainCanvas"),cr=mc?mc.getBoundingClientRect():{left:0,top:0,width:W,height:H};c.style.left=Math.round(cr.left+sxp*cr.width/W)+"px";c.style.top=Math.round(cr.top+syp*cr.height/H)+"px";var rh=c.getBoundingClientRect();if(rh.height>0){pr.style.bottom="auto";pr.style.top=Math.max(60,Math.round(rh.top-pr.offsetHeight-4))+"px";}}   /* the words just above the ring */
+    var g=c.getContext("2d");g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
+    var bph=((p/pb)%1+1)%1;for(var pr2=0;pr2<2;pr2++){var kk=(bph+pr2*0.5)%1,RR=30-kk*24;g.globalAlpha=(1-kk)*0.55;g.fillStyle="#3DF2FF";for(var a3=0;a3<24;a3++){var an3=a3/24*Math.PI*2;g.fillRect(Math.round(32+Math.cos(an3)*RR)-1,Math.round(32+Math.sin(an3)*RR)-1,2,2);}}g.globalAlpha=1;   /* rings closing in on the beat */
     if(near&&near.k==="step"){g.fillStyle="#F5D03C";var dd2=MOVES[near.m].d,rot={up:0,right:1,down:2,left:3}[dd2];g.save();g.translate(32,32);g.rotate(rot*Math.PI/2);[[-4,-22,8,26],[-12,-14,24,4],[-8,-18,16,4]].forEach(function(r){g.fillRect(r[0],r[1],r[2],r[3]);});g.restore();}   /* the arrow to copy */
     else{g.fillStyle="#7F77DD";[[28,4,8,4],[28,56,8,4],[4,28,4,8],[56,28,4,8]].forEach(function(r){g.fillRect(r[0],r[1],r[2],r[3]);});}
     if(ring>=0){var R=8+ring*24,q=4;g.fillStyle=ring<0.12?"#3DF2FF":"#fff";for(var a=0;a<32;a++){var an=a/32*Math.PI*2;g.fillRect(Math.round((32+Math.cos(an)*R)/q)*q-2,Math.round((32+Math.sin(an)*R)/q)*q-2,4,4);}}
@@ -8959,6 +8970,10 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     if(eo){var ek=eo.k;bob+=eo.lift;rot=rot*(1-ek)+eo.rot;if(!ro){armL=armL*(1-ek)+eo.armL*ek;armR=armR*(1-ek)+eo.armR*ek;}legL=legL*(1-ek)+eo.legL*ek;legR=legR*(1-ek)+eo.legR*ek;}}
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
   ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  /* in a game: a gold star over your own head, so you can always pick yourself out */
+  if(isMe&&!isPerf&&typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free"){var su=Math.max(1,Math.round(s*0.8)),SP=["...#...","..###..","#######",".#####.","..###..",".##.##.","##...##"],sx0=Math.round(x-3.5*su),sy0=Math.round(cy-27*s+Math.sin(Date.now()/250)*s);
+    ctx.save();ctx.fillStyle="#120D1E";SP.forEach(function(r,j){for(var i=0;i<7;i++)if(r[i]==="#")ctx.fillRect(sx0+i*su-su,sy0+j*su-su,su*3,su*3);});
+    ctx.shadowColor="#F5C518";ctx.shadowBlur=8*su;ctx.fillStyle="#F5C518";SP.forEach(function(r,j){for(var i=0;i<7;i++)if(r[i]==="#")ctx.fillRect(sx0+i*su,sy0+j*su,su,su);});ctx.shadowBlur=0;ctx.fillStyle="#FFF6C8";ctx.fillRect(sx0+3*su,sy0+2*su,su,su);ctx.restore();}
   /* name under the feet (stays put while dancing); none under your own character: you know who you are */
   if(name&&!isMe){
     ART.nameTag(ctx,name,x,cy+12*s+3,s>=2.5?2:1,"#fff");   /* pixel lettering; bots get a pixel robot */
@@ -9295,7 +9310,7 @@ function renderLoop(){
     var pfc=document.getElementById("perfFront"),mainCtx=ctx,useFront=pfc&&JT.k>0.02;
     if(pfc){var pfg=pfc.getContext("2d");pfg.clearRect(0,0,pfc.width,pfc.height);if(useFront){pfg.imageSmoothingEnabled=false;pfg.globalAlpha=ctx.globalAlpha;ctx=pfg;}}
     try{
-    drawPerformer(perfPx,perfPy);STAGEUP.draw(perfPx,perfPy);
+    window.__perfAt=[perfPx,perfPy];drawPerformer(perfPx,perfPy);STAGEUP.draw(perfPx,perfPy);
     ART.envFx(ctx,LAYV,H,perfPx,perfPy,3,Date.now(),2);
     var pcAge=crowdAge();if(pcAge<ART.CROWD_MS&&CROWD.kind!=="lasers"&&CROWD.kind!=="float")ART.crowdFx(ctx,CROWD.kind,perfPx,perfPy,3,pcAge,3,null,null);
     }finally{if(ctx!==mainCtx){ctx.globalAlpha=1;ctx=mainCtx;}}
