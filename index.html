@@ -14,12 +14,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.55"></script>
-<script src="art.js?v=1.82.55"></script>
-<script src="qr.js?v=1.82.55"></script>
-<script src="voice.js?v=1.82.55"></script>
-<script src="instruments.js?v=1.82.55"></script>
-<script src="kart.js?v=1.82.55"></script>
+<script src="gfx.js?v=1.82.56"></script>
+<script src="art.js?v=1.82.56"></script>
+<script src="qr.js?v=1.82.56"></script>
+<script src="voice.js?v=1.82.56"></script>
+<script src="instruments.js?v=1.82.56"></script>
+<script src="kart.js?v=1.82.56"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4926,7 +4926,7 @@ function goLive(){
       document.getElementById("liveViewers").textContent=msg.count+" viewer"+(msg.count!==1?"s":"");
       AUD.count=msg.count;
     }
-    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose"||msg.type==="react"||msg.type==="kick")audEvent(msg);
+    if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose"||msg.type==="react"||msg.type==="kick"||msg.type==="swimc")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
     if(msg.type==="gvote"){ROUNDS.onGvote(msg);return;}
     if(msg.type==="svote"){LSET.onSvote(msg);return;}
@@ -4967,7 +4967,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.55",SERVER_VERSION="";
+var PAGE_VERSION="1.82.56",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5103,6 +5103,7 @@ function audEvent(msg){
     pp.sk=msg.sk&&typeof msg.sk==="object"?{h:Math.max(0,Math.min(60,+msg.sk.h||0)),f:msg.sk.f?1:0,t:Math.max(0,Math.min(9,+msg.sk.t||0))}:null;   /* on the roller rink */
   }
   else if(msg.type==="kick"){KPS.kick(msg);}
+  else if(msg.type==="swimc"){PSWIM.take(msg.i);}
   else if(msg.type==="chat"&&id&&AUD.people[id]){var q=AUD.people[id];q.said=Date.now();q.text=String(msg.text||"").slice(0,300);if(msg.color)q.color=audColor(msg.color,q.color);}
 }
 /* word-wrap into at most `max` lines of width w */
@@ -5144,26 +5145,14 @@ var STREAK=(function(){
   function draw(g,x,y,s,combo,t,seed){
     var L=level(combo);if(!L)return;
     seed=seed||0;
-    var cx=x,cy=y-3*s,rw=13*s,rh=17*s*L.h,i,a,pts=40,grow=Math.min(1,(combo-L.at)/20)*0.15+1,sharp=L.at>=25;
+    var cx=x,cy=y-3*s,rw=13*s,rh=17*s*L.h,i,a,grow=Math.min(1,(combo-L.at)/20)*0.15+1,sharp=L.at>=25,u=Math.max(2,Math.round(s*1.1));
+    /* the flame, in pixel cells: each cell inside the flickering outline is lit, brighter toward the middle */
     g.save();g.globalCompositeOperation="lighter";
-    for(var layer=0;layer<2;layer++){
-      var k=layer?0.72:1,al=layer?0.55:0.3;
-      g.beginPath();
-      for(i=0;i<=pts;i++){
-        a=i/pts*Math.PI*2;
-        var up=Math.max(0,-Math.sin(a)),spike=(i%2?1:0.55),low=a>0&&a<Math.PI?0.55:1;
-        /* flames lick upward; from 25 the spikes are taller and sharper */
-        var r=(1+wob(a*3+seed,t)*0.18+up*(sharp?0.9:0.45)*spike*(0.75+0.25*Math.sin(t*0.02+i)))*grow*k;
-        var px=cx+Math.cos(a)*rw*r,py=cy+Math.sin(a)*rh*low*r;
-        if(i===0)g.moveTo(px,py);
-        else if(sharp&&i%2)g.lineTo(px,py);
-        else g.quadraticCurveTo(cx+Math.cos(a-0.08)*rw*r*1.05,cy+Math.sin(a-0.08)*rh*r*low,px,py);
-      }
-      g.closePath();
-      var gr=ART.PX.rg(g,cx,cy,2*s,cx,cy-rh*0.2,rh*1.3);
-      gr.addColorStop(0,L.c2+al+")");gr.addColorStop(0.55,L.c1+al+")");gr.addColorStop(1,L.c1+"0)");
-      g.fillStyle=gr;g.fill();
-    }
+    var rAt=function(an){var up=Math.max(0,-Math.sin(an)),sp=(Math.floor((an+Math.PI)/(Math.PI*2)*20)%2?1:0.55);return(1+wob(an*3+seed,t)*0.18+up*(sharp?0.9:0.45)*sp*(0.75+0.25*Math.sin(t*0.02+an*6)))*grow;};
+    var x0=Math.floor((cx-rw*1.4)/u)*u,x1=cx+rw*1.4,y0=Math.floor((cy-rh*2.1)/u)*u,y1=cy+rh*0.8;
+    for(var gy=y0;gy<y1;gy+=u)for(var gx=x0;gx<x1;gx+=u){var dx=gx+u/2-cx,dy=gy+u/2-cy,low=dy>0?0.55:1,an=Math.atan2(dy/(rh*low),dx/rw),d=Math.hypot(dx/rw,dy/(rh*low))/rAt(an);
+      if(d>=1)continue;g.fillStyle=d<0.45?L.c2+"0.5)":d<0.75?L.c1+"0.42)":L.c1+"0.22)";g.fillRect(gx,gy,u,u);}
+    g.restore();g.save();
     /* sparks, or embers once it's on fire, rising off the dancer */
     var n=L.at>=50?14:9;
     for(i=0;i<n;i++){
@@ -5176,12 +5165,11 @@ var STREAK=(function(){
     /* lightning from 100 */
     if(L.at>=100&&Math.floor(t/90+seed)%3!==0){
       var r0=Math.floor(t/90)+seed*7;
-      g.strokeStyle="rgba(220,210,255,.95)";g.lineWidth=Math.max(1,0.6*s);g.beginPath();
+      g.fillStyle="rgba(220,210,255,.95)";
       for(var b=0;b<2;b++){
-        var bx=cx+(b?1:-1)*rw*(0.5+0.4*Math.abs(Math.sin(r0*1.3+b))),by=cy-rh*0.9;g.moveTo(bx,by);
-        for(var j=1;j<6;j++){bx+=Math.sin(r0*7.1+j*3.3+b)*3*s;by+=rh*0.32;g.lineTo(bx,by);}
+        var bx=cx+(b?1:-1)*rw*(0.5+0.4*Math.abs(Math.sin(r0*1.3+b))),by=cy-rh*0.9;
+        for(var j=1;j<6;j++){var nx=bx+Math.sin(r0*7.1+j*3.3+b)*3*s,ny=by+rh*0.32,n=Math.ceil(Math.max(Math.abs(nx-bx),Math.abs(ny-by))/u);for(var q=0;q<=n;q++)g.fillRect(Math.floor((bx+(nx-bx)*q/n)/u)*u,Math.floor((by+(ny-by)*q/n)/u)*u,u,u);bx=nx;by=ny;}   /* a zigzag of pixels */
       }
-      g.stroke();
     }
     g.restore();
   }
@@ -5190,12 +5178,9 @@ var STREAK=(function(){
     if(age>1700)return;
     s=s||1;
     var k=age<160?age/160:1,a=age>1200?1-(age-1200)/500:1,L=level(n)||LV[0];
-    var fs=Math.round((n>=100?20:n>=50?18:16)*s*(0.6+0.4*k)*(age<160?1.25-0.25*k:1));
+    var P=Math.max(2,Math.round((n>=100?2.6:n>=50?2.3:2)*s*(age<160?1.3-0.3*k:1)));   /* pixel text, popping in bigger */
     g.save();g.globalAlpha=Math.max(0,a);
-    g.font="900 "+fs+"px system-ui,sans-serif";g.textAlign="center";g.textBaseline="bottom";
-    var y=headY-6-age*0.018*s,txt=(n>=50?"🔥 ":"⚡ ")+n+" STREAK!";
-    g.lineWidth=Math.max(3,fs*0.22);g.lineJoin="round";g.strokeStyle="rgba(0,0,0,.8)";g.strokeText(txt,x,y);
-    g.fillStyle=L.spark;g.fillText(txt,x,y);
+    ART.pixText(g,n+" STREAK!",x,headY-6-age*0.018*s-7*P,P,L.spark,"center","#000");
     g.restore();
   }
   /* note when someone's combo crosses a milestone (v = the character's record) */
@@ -5430,9 +5415,10 @@ function drawVenueTo(g,W,H,opts){
     var scoreShown=PSCORE.draw(g,p,x,headY,now,sc,rc0);
     if(p.msT&&now-p.msT<1700)STREAK.pop(g,x,headY,p.msN,now-p.msT,Math.max(0.75,sc*0.7));
     else if(scoreShown){}
-    else if(p.dance===5&&p.combo>=3){g.font="800 "+Math.round(11*sc)+"px system-ui,sans-serif";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText("\u00d7"+p.combo,x,headY-4);g.fillStyle=p.combo>=25?"#F5C518":"#fff";g.fillText("\u00d7"+p.combo,x,headY-4);}
+    else if(p.dance===5&&p.combo>=3){var cP=Math.max(2,Math.round(sc*1.1));ART.pixText(g,"x"+p.combo,x,headY-4-7*cP,cP,p.combo>=25?"#F5C518":"#fff","center","#000");}
     heads.push([p,x,headY]);});
   if(stage)KPS.draw(g,W,Y,sc,now);
+  if(stage)PSWIM.draw(g,W,Y,sc,now,rc0);
   if(MOSHG)PMOSH.hud(g,W,H,Y,now,sc,MOSHG);
   ART.fxFront(g,W,H,alay,sfx,{now:now,phase:ph,holes:[{x:W/2,y:py,r:Math.max(70,W*0.14)}]});
   /* speech bubbles on top of everyone; oldest first so the newest is on top */
@@ -5447,6 +5433,21 @@ setInterval(drawAud,50);
 /* ── Points over heads (performer views) ──
    During a game everyone's points float over their head, and a gold "+N" rises when they score, so you can see who's
    doing what. The server sends everyone's score every few seconds (round-all). */
+/* ── Coin dive, seen from the stage: the same coins as everyone's phones (ART.SWIM), popping in on the beat; a coin someone grabs goes ── */
+var PSWIM=(function(){
+  var coins=null,taken={};
+  function on(rc){return !!(rc&&rc.mode==="swim"&&rc.phase==="play"&&rc.chart);}
+  function take(i){taken[i|0]=1;}
+  function draw(g,W,Y,sc,now,rc){if(!on(rc))return;var c=ART.SWIM.build(rc.chart,rc.n||1);if(c!==coins){coins=c;taken={};}
+    var pos=ROUNDS.pos();if(!(pos>-1e8))return;var P=rc.chart.bpm?60000/rc.chart.bpm:500,life=P*(typeof TUNE!=="undefined"?TUNE.v("sw.life")||6:6),b=ART.PIPE.beatAt(rc.chart,pos),ph=((b%1)+1)%1,beatK=Math.pow(1-ph,3);
+    for(var j=0;j<coins.length;j++){var o=coins[j];if(o.t>pos+P)break;if(o.t+life<pos||taken[o.i])continue;
+      var age=pos-o.t,grow=age<0?Math.max(0,1+age/P):1,pop=age>=0&&age<P*0.4?1+0.35*Math.sin(age/(P*0.4)*Math.PI):1,end=o.t+life-pos;
+      if(end<P*1.5&&Math.floor(now/120)%2)continue;
+      var r=(o.k==="g"?7:o.k==="d"?6.5:5)*sc*1.0*grow*pop*(1+beatK*0.12);
+      ART.SWIM.coin(g,o.x*W,Y(o.y),r,Math.abs(Math.cos(now/260+o.i)),o.k,age<0?0.45:1,(age<0?0.25:0.45)*(0.7+beatK*0.3));}}
+  window.ukPSwim=function(){var rc=ROUNDS.current;return{on:on(rc),coins:coins?coins.length:0,taken:Object.keys(taken).length};};
+  return{draw:draw,take:take};
+})();
 var PSCORE=(function(){
   var n=-1;
   function all(m){if(m.n!==n){n=m.n;Object.keys(AUD.people).forEach(function(id){var p=AUD.people[id];p._rs=null;p._rsPop=null;});}

@@ -1688,6 +1688,18 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.56 — Coin dive on the laptop · streak effects in pixel art
+
+**Coin dive on the stage view**
+1. Check the version reads **v1.82.56**. Go live, then start **Coin dive** with a song.
+2. On the laptop's stage view you now see the coins. They're the same coins in the same places as on everyone's phones, popping in on the beat (gold in the loud parts, a ring at the drop).
+3. When someone grabs a coin on their phone, it disappears from the laptop too.
+4. Two phones side by side show the coins in exactly the same spots, even if one has the chat bar open.
+
+**Streak effects**
+5. In a dance game, get a streak going (10+). The flame or glow behind a dancer is now made of blocky pixel cells, and the lightning at 100+ is a pixel zigzag.
+6. The **"25 STREAK!"** pop-ups and the **x12** combo counters over heads are in the pixel font, with no smooth text.
+
 ## v1.82.55 — Harmony and strum start off · a two-key song ticks Alt for you
 
 1. Check the version reads **v1.82.55**. Turn on **Harmony layer** and **Strum**, then reload the page: both are **Off** again. Your harmony interval and strum speed are kept.

@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.55"></script>
-<script src="gfx.js?v=1.82.55"></script>
-<script src="art.js?v=1.82.55"></script>
-<script src="voice.js?v=1.82.55"></script>
-<script src="instruments.js?v=1.82.55"></script>
-<script src="kart.js?v=1.82.55"></script>
-<script src="explain.js?v=1.82.55"></script>
+<script src="tune.js?v=1.82.56"></script>
+<script src="gfx.js?v=1.82.56"></script>
+<script src="art.js?v=1.82.56"></script>
+<script src="voice.js?v=1.82.56"></script>
+<script src="instruments.js?v=1.82.56"></script>
+<script src="kart.js?v=1.82.56"></script>
+<script src="explain.js?v=1.82.56"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4841,34 +4841,17 @@ var SWIM=(function(){
   function K(){return Math.min(W,H);}
   function input(){var x=(held.right?1:0)-(held.left?1:0),y=(held.down?1:0)-(held.up?1:0);if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){x=joy.x;y=joy.y;}var m=Math.hypot(x,y);if(m>1){x/=m;y/=m;}return{x:x,y:y,m:Math.min(1,m)};}
   /* the water you can swim in (fractions of the screen) */
-  function area(){return{x0:0.05,x1:0.95,y0:Math.max(0.1,STAGE_TOP+0.06),y1:FLOOR_BOTTOM-0.03};}
+  function area(){var A=ART.SWIM.A;return{x0:0.04,x1:0.96,y0:A.y0-0.05,y1:Math.max(A.y1+0.02,FLOOR_BOTTOM-0.03)};}   /* where you can swim: a bit more than where the coins go (ART.SWIM.A) */
   function chart(){return ROUND.chart&&ROUND.chart();}
   function songPos(){var p=ROUND.pos();return p>-1e8?p:null;}
   function beatNow(){var c=chart(),p=songPos();if(c&&p!==null)return ART.PIPE.beatAt(c,p);return GAME.beatPos();}
   function per(){var c=chart();return c&&c.bpm?60000/c.bpm:500;}
-  /* ---- the coins, made from the song's analysis (the same on every screen) ---- */
-  function rng(seed){var s=seed>>>0||1;return function(){s=(s+0x6D2B79F5)>>>0;var t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
-  function build(){
-    var c=chart(),A=area(),rn=(typeof ROUND!=="undefined"&&ROUND.n)||1;if(!c)return[];
-    var key=(c.dur||0)+":"+(c.bpm||0)+":"+((c.steps||[]).length)+":"+rn;if(key===cKey)return coins;cKey=key;taken={};firstIdx=0;
-    var P=c.bpm?60000/c.bpm:500,R=rng(rn*7919+(c.steps||[]).length*31+Math.round(c.bpm||120)),bs=c.beats||[],pk=c.peaks||[];
-    function beatOf(t){if(bs.length<2)return t/P;var lo=0,hi=bs.length-1;if(t<=bs[0])return(t-bs[0])/P;if(t>=bs[hi])return hi+(t-bs[hi])/P;while(hi-lo>1){var md=(lo+hi)>>1;if(bs[md]<=t)lo=md;else hi=md;}return lo+(t-bs[lo])/Math.max(1,bs[lo+1]-bs[lo]);}
-    function inPeak(t){for(var i=0;i<pk.length;i++)if(t>=pk[i][0]&&t<=pk[i][1])return true;return false;}
-    /* a waypoint for each bar: the trail sweeps from one to the next across the bar, never too short a hop or too long */
-    var wps=[];function wp(b){while(wps.length<=b){var pv=wps.length?wps[wps.length-1]:[0.5,(A.y0+A.y1)/2],nx,ny,tries=0;
-        do{nx=A.x0+0.06+(A.x1-A.x0-0.12)*R();ny=A.y0+0.04+(A.y1-A.y0-0.08)*R();tries++;}while(tries<12&&(Math.hypot(nx-pv[0],(ny-pv[1])*1.6)<0.22||Math.hypot(nx-pv[0],(ny-pv[1])*1.6)>0.55));
-        wps.push([nx,ny]);}return wps[b];}
-    var src=(c.steps&&c.steps.length>8?c.steps.map(function(s){return[s[0],(s[1]|0)%4];}):bs.map(function(b,i){return[b,i%4];})),out=[],last=-1e9;
-    src.forEach(function(s){var t=s[0];if(t-last<P*0.5)return;last=t;
-      var bi=beatOf(t),bar=Math.max(0,Math.floor(bi/4)),f=(bi-bar*4)/4;f=f*f*(3-2*f);var a=wp(bar),b=wp(bar+1),x=a[0]+(b[0]-a[0])*f,y=a[1]+(b[1]-a[1])*f;
-      var dx=b[0]-a[0],dy=b[1]-a[1],dl=Math.hypot(dx,dy)||1,off=((s[1]|0)-1.5)*0.03;x+=-dy/dl*off;y+=dx/dl*off*1.4;   /* the note's lane nudges it to one side of the trail */
-      var g=inPeak(t);out.push({t:t,x:Math.max(A.x0,Math.min(A.x1,x)),y:Math.max(A.y0,Math.min(A.y1,y)),v:g?25:10,k:g?"g":"c"});});
-    if(c.drop>0){var cx=0.5,cy=(A.y0+A.y1)/2;for(var i=0;i<12;i++){var an=i/12*Math.PI*2;out.push({t:c.drop,x:cx+Math.cos(an)*0.2,y:cy+Math.sin(an)*0.15,v:30,k:"d"});}}   /* the drop: a ring bursts out */
-    out.sort(function(p,q){return p.t-q.t;});out.forEach(function(o,i){o.i=i;});return coins=out;}
+  /* ---- the coins: built in art.js (ART.SWIM), the same on every screen ---- */
+  function build(){var c=chart();if(!c)return coins;var r=ART.SWIM.build(c,(typeof ROUND!=="undefined"&&ROUND.n)||1);if(r!==coins){coins=r;taken={};firstIdx=0;}return coins;}
   function life(){return per()*T("life",6);}
   function visible(o,pos){return pos>=o.t-per()&&pos<=o.t+life()&&!taken[o.i];}
   /* ---- start / stop ---- */
-  function start(round){on=true;score=0;pops=[];spl=[];taken={};cKey=null;botS={};dashAt=-1e9;lastBeat=-1;
+  function start(round){on=true;score=0;pops=[];spl=[];taken={};coins=[];botS={};dashAt=-1e9;lastBeat=-1;
     var me=myId&&viewers[myId],A=area();px=(me?+me.x:0.5)*W;py=Math.max(A.y0,Math.min(A.y1,me?+me.y:0.6))*H;vx=vy=0;hd=0;
     document.body.classList.add("gaming-swim");$("swimUI").classList.add("on");hud();banner("🐠 COIN DIVE");btn(0);}
   function stop(){on=false;document.body.classList.remove("gaming-swim");$("swimUI").classList.remove("on");}
@@ -4934,13 +4917,7 @@ var SWIM=(function(){
     spl=spl.filter(function(q){var a=(now-q.t)/(q.small?450:600);if(a>1)return false;g.save();g.globalAlpha=1-a;g.strokeStyle=q.col||"rgba(200,240,255,.9)";g.lineWidth=Math.max(1,s/2);
       ART.PX.ringO(g,q.x,q.y,(q.small?4:q.big?14:8)*s*(0.4+a),(q.small?3:q.big?10:6)*s*(0.4+a),0);g.restore();return true;});
     pops=pops.filter(function(q){var a=(now-q.t)/1100;if(a>1)return false;g.globalAlpha=1-a*a;g.font="900 "+Math.max(13,s*5)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";var yy=(q.y||H/2)-s*16-a*28;g.strokeText(q.txt,q.x||W/2,yy);g.fillStyle=q.col;g.fillText(q.txt,q.x||W/2,yy);return true;});g.globalAlpha=1;}
-  function coin(g,x,y,r,spin,k,al){var P=Math.max(1,Math.round(r/4)),w=Math.max(P,Math.round(r*spin)),hh=Math.round(r);g.save();g.globalAlpha=al;
-    var face=k==="d"?"#FF8AE0":k==="g"?"#FFD24D":"#F5C518",edge=k==="d"?"#8a2a6a":"#8a5a00";
-    g.fillStyle=edge;g.fillRect(x-w-P,y-hh,(w+P)*2,hh*2);g.fillRect(x-w,y-hh-P,w*2,hh*2+P*2);
-    g.fillStyle=face;g.fillRect(x-w,y-hh,w*2,hh*2);
-    if(w>P*2){g.fillStyle="rgba(255,255,255,.75)";g.fillRect(x-w+P,y-hh+P,P,hh);g.fillStyle=edge;g.fillRect(x-P/2,y-hh/2,P,hh);}
-    if(k==="g"){var tw=Math.floor(performance.now()/150)%4;g.fillStyle="#fff";g.fillRect(x+w+P*(tw%2?2:1),y-hh-P*2,P,P);}
-    g.restore();}
+  function coin(g,x,y,r,spin,k,al){ART.SWIM.coin(g,x,y,r,spin,k,al,0);}
   window.ukSwim=function(){var pos=songPos();return{on:on,score:score,x:+(px/W).toFixed(3),y:+(py/H).toFixed(3),v:+(Math.hypot(vx,vy)/K()).toFixed(3),coins:coins.length,vis:pos===null?0:coins.filter(function(o){return visible(o,pos);}).length,taken:Object.keys(taken).length,beat:+beatNow().toFixed(2)};};
   window.ukSwimCoins=function(){var pos=songPos();return pos===null?[]:coins.filter(function(o){return visible(o,pos)&&pos>=o.t-per()*0.3;}).map(function(o){return[o.i,+o.x.toFixed(3),+o.y.toFixed(3),o.k,Math.round(o.t-pos)];});};
   window.ukSwimAt=function(x,y){px=x*W;py=y*H;vx=vy=0;};
@@ -8683,7 +8660,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.55",SERVER_VERSION="";
+var PAGE_VERSION="1.82.56",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9272,7 +9249,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.55"></script>
+<script src="lab.js?v=1.82.56"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
