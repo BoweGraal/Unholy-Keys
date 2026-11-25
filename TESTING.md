@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.43 — Menu music keeps playing in practice free dance
+
+1. Open the site and check the version reads **v1.82.43**. Tap once so the menu music starts.
+2. Go into **Practice**, then tap **Free dance**. The music keeps playing at the same level while you dance.
+3. Start a mini game from **Start game**. The menu music fades out for the round's song, and comes back when the round ends.
+
 ## v1.82.42 — YouTube videos always play on the Jumbotron
 
 YouTube's embed rules say the player must be visible, at least 200 px tall, never covered, never hidden, and never played muted out of sight. YouTube songs now follow those rules everywhere.
