@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.69 — Fishing minigame: swoop cast, beat reel, tension
+
+1. Once everyone's at the edge, the camera eases in a little (about 135%; the − / + box in practice still changes it).
+2. **Cast:** a dotted swoop curves out from you over the water, with DRAG at its start. Touch anywhere (or press the mouse) and a ball flies along the swoop. Keep your finger on it: the ring is green while you're on it and POWER shows above you. The rod swings round with the ball. Let go early for a short cast. The CAST button / Space is a weak quick cast.
+3. Power sets how far the line lands, how big a fish can bite (a full-power cast can hook a Pike or Golden koi) and the points.
+4. **Reel:** the CAST button turns into a reel stick with a yellow notch at the top. The notch and the dot beside the tension bar pulse on each beat. Wind the stick round past the notch on each beat: the notch flashes green on the beat. One wind per beat on the beat is full speed; spinning faster counts for less. If the song's tempo changes, the beat changes with it.
+5. **Rod:** the left stick swings the rod left and right. The fish runs left and right; pulling the opposite way to its run lowers the strain and lets you gain line.
+6. **Tension bar:** too high (red, flashing) for half a second and the line snaps. Slack (empty) for a few seconds and the fish gets off. If it takes all your line out, it's gone.
+7. Bring it to the edge and it thrashes there: tap NET (Space on a computer) within 4 seconds to land it.
+8. Computer: click / Space on each beat to reel (holding is a slow steady reel), move the mouse or ← → to swing the rod.
+
 ## v1.82.68 — Fishing: the dance floor breaks away
 
 1. Start Fishing. The stage wall flies up and the ocean appears behind it. The dance floor stays a dance floor, not wood.
