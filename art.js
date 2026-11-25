@@ -2501,7 +2501,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
      env.space / env.water go 0..1 as they're switched on (water fills over ~9 s and drains over ~6 s). */
   var env={space:0,water:0},envT=0;
   function easeEnv(fx,now){var dt=Math.min(100,Math.max(0,now-(envT||now)));envT=now;
-    env.space+=Math.max(-dt/2000,Math.min(dt/2500,(fx&&fx.space?1:0)-env.space));env.water+=Math.max(-dt/6000,Math.min(dt/9000,(fx&&fx.water?1:0)-env.water));}
+    env.space+=Math.max(-dt/2000,Math.min(dt/2500,(fx&&fx.space?1:0)-env.space));env.water+=Math.max(-dt/(fx&&fx.waterFast?800:6000),Math.min(dt/(fx&&fx.waterFast?1500:9000),(fx&&fx.water?1:0)-env.water));}   /* a game flooding the venue (coin dive) fills in 1.5 s */
   function smooth(k){return k*k*(3-2*k);}
   /* where the water's surface is (canvas y), or null when there's no water */
   function waterY(lay,H){if(env.water<=0.002)return null;var sb=lay.stageBottom*H,fb=lay.floorBottom*H,top=sb*0.18;return fb-(fb-top)*smooth(env.water);}

@@ -71,6 +71,18 @@ var TUNE=(function(){
     V("bb.bounce","Bump bounce",0.25,0,1,0.05,"Extra push apart when boats hit.",""),
     V("bb.knock","Knock-off points",300,0,1000,10,"Points for knocking someone off.",""),
     V("bb.last","Last boat points",500,0,2000,10,"Bonus for the last boat floating.","")]},
+  {id:"swim",name:"Coin dive",icon:"🐠",mode:"swim",cat:"Ride & race",
+   about:"The venue floods and everyone swims. You glide the way you push, and on every beat you take a stroke that surges you forward. DASH on the beat is a big kick. Coins pop in on the song's beats along trails made from its analysis; gold in the loud parts, a ring at the drop.",
+   vars:[
+    V("sw.speed","Game speed",1,0.4,1.6,0.05,"Everything you do in the water plays at this speed. Lower is slower.","×"),
+    V("sw.glide","Glide pull",0.55,0,2,0.05,"The steady pull while you push the stick, between strokes.",""),
+    V("sw.stroke","Stroke surge",2.4,0,6,0.1,"How hard each beat's stroke surges you forward.",""),
+    V("sw.drag","Water drag",1.5,0.3,4,0.1,"How quickly you slow down when you stop pushing. Lower is floatier.",""),
+    V("sw.max","Top speed",0.8,0.2,2,0.05,"Fastest you can swim (screens per second).",""),
+    V("sw.perfect","DASH: on-beat window",0.13,0.04,0.3,0.01,"How close to the beat a DASH must be for PERFECT (fraction of a beat either side).",""),
+    V("sw.life","Coin time",6,2,12,0.5,"How many beats a coin stays before it goes.","beats"),
+    V("sw.coinSize","Coin size",1,0.5,2,0.05,"How big the coins are drawn.","×"),
+    V("sw.reach","Grab reach",1,0.5,2,0.05,"How close you need to be to grab a coin.","×")]},
   {id:"ski",name:"Ski",icon:"⛷",mode:"ski",cat:"Ride & race",
    about:"Ski down an endless mountain. Point where you want to go: straight down is fastest, sideways slows you, uphill stops you. Go between the slalom flags for points (in a row for a combo), hit ramps for air and press a trick key; trees and rocks knock you down (hop over rocks).",
    vars:[
