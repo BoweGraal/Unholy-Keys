@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.65 — Skip timer works on every practice countdown
+
+What was wrong: Skip only worked on the countdown before the song, when you start a round from the practice menu. Other countdowns showed the button, but tapping did nothing. When the game explainer was showing, the floating Skip button only appeared for that first countdown too.
+
+1. Check the version reads **v1.82.65**. In practice, start any game.
+2. With the game explainer showing: the **Skip timer** button floats at the top. Tap it and the countdown goes straight to GO.
+3. With the explainer closed: tap **Skip timer** on the round card. Same thing.
+4. While the song is still loading, the button says **Starting…** and stays that way until the song starts.
+5. Try a few different games (Fishing, Coin dive, Step dance): Skip works on all of them.
+
 ## v1.82.64 — Shuffle: a stomp and spin
 
 1. Check the version reads **v1.82.64**. In free dance pick **Shuffle → Spin**.
