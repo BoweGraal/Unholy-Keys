@@ -368,7 +368,7 @@ var ART=(function(){
       if(FC===8)px(1,-9+hy,2,1,"#F08AA0");
       if(FC===9){var sb3=shade(skin,-0.3);px(0,-7+hy,1,1,sb3);px(2,-7+hy,1,1,sb3);px(1,-6+hy,1,1,sb3);px(3,-6+hy,1,1,sb3);}
       SEC="hat";sideHat();
-      PAINT.view("hair:"+HR,1,OX,OY+hy);if(HT===14){SEC="hat";sideHat();}PAINT.view("hat:"+HT,1,OX,OY+hy);PAINT.view("extra:"+EX,1,OX,OY+hy);
+      PAINT.view("hair:"+HR,1,OX,OY+hy);if(HT===14){SEC="hat";sideHat();}PAINT.view("hat:"+HT,1,OX,OY+hy);PAINT.view("extra:"+EX,1,OX,OY+hy);if(st.snorkel){SEC="hat";px(0,-12+hy,6,4,"#1d2b3a");px(1,-11+hy,4,2,"#9fe4ff");px(3,-11+hy,1,1,"#15121F");px(-5,-12+hy,5,1,"#1d2b3a");px(-3,-20+hy,2,11,"#F5C518");px(-3,-21+hy,2,1,"#E8505B");px(-2,-18+hy,1,8,"#c99a10");px(-1,-9+hy,6,1,"#F5C518");}
     }else{
       /* ---- back: the arms and legs swap sides, no face, the hair covers the back of the head ---- */
       SEC="legL";legK(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL),1);if(!st.skates)toe(2.5,4,-lL,gL,shoe,1,1);SEC="legR";legK(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR),-1);if(!st.skates)toe(BT?-2:-2.5,4,-lR,gR,shoe,-1,1);
@@ -421,7 +421,7 @@ var ART=(function(){
       if(EX===4)px(-5,-14+hy,10,2,"#D354A0");
       if(EX===5){px(-6,-10+hy,12,1,"#15121F");px(-1,-10+hy,2,3,"#15121F");}   /* mask: the knot at the back */
       SEC="hat";backHat();
-      PAINT.view("hair:"+HR,2,OX,OY+hy);if(HT===14){SEC="hat";backHat();}PAINT.view("hat:"+HT,2,OX,OY+hy);
+      PAINT.view("hair:"+HR,2,OX,OY+hy);if(HT===14){SEC="hat";backHat();}PAINT.view("hat:"+HT,2,OX,OY+hy);if(st.snorkel){SEC="hat";px(-6,-11+hy,12,1,"#1d2b3a");px(5,-20+hy,2,11,"#F5C518");px(5,-21+hy,2,1,"#E8505B");px(6,-18+hy,1,8,"#c99a10");}
     }
     }else{
     SEC="legL";legK(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL),-1);if(!st.skates)toe(-2.5,4,lL,gL,shoe,-1,1);SEC="legR";legK(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR),1);if(!st.skates)toe(FT?2:2.5,4,lR,gR,shoe,1,1);
@@ -578,6 +578,7 @@ var ART=(function(){
     paintLayer("armL",Math.round(OX-6.5),Math.round(OY-4.5),aL);paintLayer("armR",Math.round(OX+6.5),Math.round(OY-4.5),aR);
     paintLayer("legL",Math.round(OX-2.5),OY+4,lL);paintLayer("legR",Math.round(OX+2.5),OY+4,lR);
     if(ht===14){SEC="hat";witchF();}   /* the witch hat goes on last, over any hair */
+    if(st.snorkel){SEC="hat";var SF="#1d2b3a",SL="#9fe4ff",SY="#F5C518";px(-5,-12+hy,10,4,SF);px(-4,-11+hy,3,2,SL);px(1,-11+hy,3,2,SL);px(-3+FT,-11+hy,1,1,"#15121F");px(2+FT,-11+hy,1,1,"#15121F");px(-6,-11+hy,1,1,SF);px(5,-11+hy,1,1,SF);px(6,-19+hy,2,11,SY);px(6,-20+hy,2,1,"#E8505B");px(7,-17+hy,1,8,"#c99a10");px(1,-8+hy,6,1,SY);}   /* swimming: a mask and a snorkel */
     }   /* end of the front view */
     /* outline: a dark silhouette one pixel out all round, under the colours */
     og.globalCompositeOperation="source-over";og.clearRect(0,0,CWD,CHT);
@@ -602,7 +603,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     if(HIDECHAR)return;st=st||{};if(!L)L=random(7);
-    var s={armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,knee:st.knee,butt:st.butt,bj:st.bj,bsx:st.bsx,bsy:st.bsy,head:st.head||0,swing:st.swing,skates:st.skates==="ice"?"ice":!!st.skates};
+    var s={snorkel:!!st.snorkel,armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,legLenL:st.legLenL,legLenR:st.legLenR,knee:st.knee,butt:st.butt,bj:st.bj,bsx:st.bsx,bsy:st.bsy,head:st.head||0,swing:st.swing,skates:st.skates==="ice"?"ice":!!st.skates};
     /* which way they face: 0 front, 1 facing right, 2 back, 3 facing left (the right-facing side view, mirrored) */
     /* 0 front, 1 right, 2 back, 3 left, 4 front-right, 5 back-right, 6 back-left, 7 front-left; the left ones are the right ones mirrored */
     var DIR=(((st.dir|0)%8)+8)%8,SX=st.sx!==undefined?st.sx:1,MIR=DIR===3?1:DIR===6?5:DIR===7?4:0;
@@ -2853,6 +2854,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       g.restore();}
     return{A:A,build:build,coin:coin};
   })();
-  return{SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.72",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.73",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

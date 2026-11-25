@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.73 — Fishing feel sliders, higher sticks, swim DASH button, snorkels
+
+1. **Fishing feel sliders:** in practice (or any room with `?fishtune` in the address), a 🎛 FEEL button sits top left, under the scoreboard, during Fishing. Tap it for sliders: reel speed, on-beat window, fish pull-out, fish strength, how often it runs, tension from reeling, tension from the fish, how much the rod helps, tension response, snap time, slack time, net time, swoop lane width, and the marlin's strength, reel speed, timing and aim reach. Changes apply instantly and stay saved on the device (the full Tuning lab shows the same values). Reset puts them back. Sliding them doesn't cast or swing the rod.
+2. **Sticks higher on phones:** in every game the joystick, the right-hand stick or button, and the hints above them sit about 6% of the screen higher, where thumbs rest. Computers are unchanged.
+3. **Coin dive:** the flick stick is gone, and the big DASH button is back. It dashes the way the left stick points (or the way you're facing) and glows on the beat. The hint reads "Left stick to swim · tap DASH on the beat for PERFECT".
+4. **Snorkels:** everyone swimming in Coin dive wears a mask and a yellow snorkel with a red tip, from every angle.
+
 ## v1.82.72 — Fishing: the first catch is a tutorial
 
 Shows once per device. To see it again, open the site with `?fishtut` added to the address; the first catch of that game is the tutorial.
