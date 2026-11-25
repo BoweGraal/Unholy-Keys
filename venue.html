@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.41"></script>
-<script src="gfx.js?v=1.82.41"></script>
-<script src="art.js?v=1.82.41"></script>
-<script src="voice.js?v=1.82.41"></script>
-<script src="instruments.js?v=1.82.41"></script>
-<script src="kart.js?v=1.82.41"></script>
-<script src="explain.js?v=1.82.41"></script>
+<script src="tune.js?v=1.82.47"></script>
+<script src="gfx.js?v=1.82.47"></script>
+<script src="art.js?v=1.82.47"></script>
+<script src="voice.js?v=1.82.47"></script>
+<script src="instruments.js?v=1.82.47"></script>
+<script src="kart.js?v=1.82.47"></script>
+<script src="explain.js?v=1.82.47"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -111,6 +111,7 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
   box-shadow:0 0 0 2px #2a2440,0 0 36px rgba(211,84,160,.28);
   transform:translateY(calc(-100% - 60px));visibility:hidden;
   transition:transform 1.8s cubic-bezier(.3,1.25,.5,1),visibility 0s linear 1.8s}
+#bigScreen.yt{z-index:7}
 #bigScreen.on{transform:none;visibility:visible;transition:transform 1.8s cubic-bezier(.3,1.25,.5,1),visibility 0s}
 #bigScreen::before,#bigScreen::after{content:"";position:absolute;bottom:calc(100% + 6px);width:3px;height:600px;
   background:repeating-linear-gradient(#5a5078 0 4px,#3a3058 4px 8px)}
@@ -217,6 +218,7 @@ body.gaming-ctf #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #fiBanner,#bbBanner{position:absolute;left:50%;top:20%;transform:translateX(-50%);font:900 clamp(24px,6vw,52px)/1 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:0 0 16px #3DF2FF,0 3px 0 #000;white-space:nowrap;opacity:0}
 #fiBanner.pop,#bbBanner.pop{animation:moshPop 2.2s ease-out forwards}
 #fiScore,#bbScore{position:absolute;right:14px;top:56px;font:900 26px 'Silkscreen',ui-monospace,monospace;color:#3DF2FF;text-shadow:0 2px 0 #000}
+#bbScore[data-r]::before{content:attr(data-r);display:block;font-size:12px;color:#FF8AE0;text-align:right;letter-spacing:1px}   /* the round: R2/3 */
 #fiCount{position:absolute;right:14px;top:90px;font:700 14px 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:0 2px 0 #000}
 #fiHint,#bbHint{position:absolute;left:50%;transform:translateX(-50%);top:64px;font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.88);text-shadow:0 1px 3px #000;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
 #fiBtn,#bbBoost{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 12px);width:104px;height:104px;border:3px solid #3DF2FF;background-color:#1f6fa0;color:#fff;font:900 18px 'Silkscreen',ui-monospace,monospace;pointer-events:auto;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:4px 4px 0 #000}
@@ -3280,8 +3282,8 @@ var GAME=(function(){
      Freestyle (0) is the grab-your-limbs dance below. */
   var fStyle=0,fSub=0,fCtl=[0,0,0,0],fHeld=[null,null],fdBuilt=false,fHand=[null,null],fHandP=[null,null],fBack=0;   /* fBack: quarter turns from facing front (0 front, 1 right, 2 away, 3 left): 90 and 180 turn you and you stay that way. Sent as fd.b: 1 = away, 2 = right, 3 = left (1 matches the old turned-round flag) */
   var shufT=0,shufArm=true,shufSpin=false;
-  window.ukFdStick=function(x,y){window.__fdStick=x===null?null:[x,y];};window.ukShuf=function(){return{spin:mySpin.on,shufSpin:shufSpin,vel:+mySpin.vel.toFixed(2),arm:shufArm};};   /* tests */   /* Shuffle: stick out sideways = the T-step that way (facing front); stick to the top edge = a turnaround spin, once per push */
-  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fStyle===9&&(shufT||shufSpin)?1:fSub,c:fCtl.map(function(v,i){return mySpin.on&&i>=2?0:Math.round(v*100);})};   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=[0,2,1,3][fBack];if(mySpin.on)o.sp=[Math.round((mySpin.ang%(2*Math.PI))*100),Math.round(mySpin.vel*10)];return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
+  window.ukFdStick=function(x,y){window.__fdStick=x===null?null:[x,y];};window.ukShuf=function(){return{spin:mySpin.on,shufSpin:shufSpin,vel:+mySpin.vel.toFixed(2),arm:shufArm,t:shufT,fd:fdState(),xy:me()?[+me().tx.toFixed(3),+me().ty.toFixed(3)]:null};};   /* tests */   /* Shuffle: stick out sideways = the T-step that way (facing front); stick to the top edge = a turnaround spin, once per push */
+  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fStyle===9&&(shufT||shufSpin)?1:fSub,c:fCtl.map(function(v,i){if(fStyle===9&&i===0&&!shufT)v*=0.6;return mySpin.on&&i>=2?0:Math.round(v*100);})};   /* the Shuffle reads the left stick like the games do (x0.6 unless T-stepping) */   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=[0,2,1,3][fBack];if(mySpin.on)o.sp=[Math.round((mySpin.ang%(2*Math.PI))*100),Math.round(mySpin.vel*10)];return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
   function beatPos(){var b=BEAT.get(),now=performance.now();return b.known&&b.period>0?(now-b.t0)/b.period:now/500;}
   /* Move queue: line up dances and moves ahead of time. When it's your turn in the middle, they play in order and
      split your turn evenly between them; the one on now is lit. Kept on this device. */
@@ -3530,15 +3532,15 @@ var GAME=(function(){
     /* the left stick walks you around the floor while the dance loop keeps going (the dance reads the same stick, so the footwork follows) */
     var fm=me(),fdt=Math.min(0.1,(nowS-(fdSpring.t||nowS))/1000);fdSpring.t=nowS;
     if(fm&&fStyle>0&&fdt>0){var lx=fCtl[0],ly=fCtl[1],lm=Math.hypot(lx,ly);
-      if(fStyle===9){   /* the Shuffle: sideways is the T-step, travelling that way (slower the nearer the middle); back to the middle, back to the shuffle */
-        var wasT=shufT;shufT=!shufSpin&&Math.abs(lx)>0.2&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;   /* a small dead zone: a little push sideways starts the T-step */
+      if(fStyle===9){   /* the Shuffle, the same as in the games (Keepy uppy): a steady running man while you move around; the stick pushed right out sideways is the T-step, travelling that way */
+        var wasT=shufT;shufT=!shufSpin&&Math.abs(lx)>0.85&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;
         if(ly<-0.85&&shufArm&&!mySpin.on){shufArm=false;shufSpin=true;spinStart("spin");mySpin.vel=-Math.abs(mySpin.vel);mySpin.pa=Math.atan2(ly,lx);applyToMe();sendPose(true);}   /* up to the top edge: a T-step stomp on the spot that spins you round; circle the stick to keep it going */
         if(ly>-0.3&&!shufSpin)shufArm=true;   /* bring the stick back down (once the spin's done) before you can spin again */
         if(wasT!==shufT){applyToMe();sendPose(true);}
         var ffS=ROUND.featured(),isFS=ffS&&ffS.id===myId;
-        if(shufT&&!isFS){var spS=TUNE.v("walk.speed")*fdt*0.6*Math.min(1,0.25+0.75*(Math.abs(lx)-0.2)/0.75);fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+shufT*spS));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}
-        else if(!shufT&&!shufSpin&&!isFS&&Math.abs(ly)>0.2){   /* up / down still travel you up and down the floor while you shuffle */
-          var spV=TUNE.v("walk.speed")*fdt*0.5*Math.min(1,0.25+0.75*(Math.abs(ly)-0.2)/0.75);fm.ty=Math.max(FLOOR_TOP+0.04,Math.min(FLOOR_BOTTOM,fm.ty+(ly<0?-1:1)*spV));fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
+        if(shufT&&!isFS){var spS=TUNE.v("walk.speed")*fdt*0.6;fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+shufT*spS));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}
+        else if(!shufT&&!shufSpin&&!isFS&&lm>0.18){   /* otherwise the stick walks you around the floor, any direction, while the running man keeps going */
+          var k9=Math.min(1,(lm-0.18)/0.77),sp9=TUNE.v("walk.speed")*fdt*0.55*k9;fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+lx/lm*sp9));fm.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),fm.ty+ly/lm*sp9*(W/H)));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
       else if(lm>0.18){var ff=ROUND.featured(),isF=ff&&ff.id===myId,k2=Math.min(1,(lm-0.18)/0.77),sp2=TUNE.v("walk.speed")*fdt*0.55*k2;
         if(!isF){fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+lx/lm*sp2));fm.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),fm.ty+ly/lm*sp2*(W/H)));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}}
   }
@@ -4615,47 +4617,90 @@ var FISH=(function(){
 /* ============================================================
    BUMPER BOATS (the boats round)
    The dance floor drops away and the pool floats on its own in the dark. Everyone's in a bumper boat: steer with
-   the stick, BOOST to ram. Bumps bounce both boats; go over the edge and you're out till the end of the round,
-   sat on the raft at the bottom watching. Points for staying afloat, for hard bumps, for knocking someone off
-   (if you hit them in the last 3 seconds before they went over), and a big bonus for the last boat floating.
+   the stick, BOOST to ram. Bumps bounce both boats. Past the edge your boat tips over the lip: steer back in to
+   save yourself, but come in too fast (or hang over too long) and you go over, out till the next round, sat on
+   the raft at the bottom watching. Knock someone off and you earn a SAVE: the next time you'd go over, it pulls
+   you back in. The game is played in rounds: everyone's back in at the start of each, and the pool visibly
+   shrinks as the round goes on. Points for staying afloat, for hard bumps, for knocking someone off (if you hit
+   them in the last 3 seconds before they went over), and a big bonus for the last boat floating each round.
    ============================================================ */
 var BOATS=(function(){
   var CX=0.5,CY=0.6,RX=0.34,RY=0.2,BR=0.12;
   var on=false,u=0,v=0,vu=0,vv=0,hd=Math.PI/2,out=false,outAt=0,fallAt=0,boostAt=-1e9,score=0,pops=[],lastT=0,oth={},myHits={},seenOut={},survAt=0,lastBonus=false,splashes=[],dropAt=0,botB={},rivals=0;
+  var tip=0,saves=0,saveAt=-1e9,graceTo=0,rnd=-1,edgeIn=false;   /* tip: how far over the lip you're leaning (1 = over you go); saves: earned by knock-offs */
   function $(id){return document.getElementById(id);}
   function boatsOn(){return GAME.mode==="boats"||(typeof ROUND!=="undefined"&&ROUND.mode==="boats");}
   function T(k,d){try{var x=TUNE.v("bb."+k);return isFinite(x)?x:d;}catch(e){return d;}}
   function sc(){return Math.max(2,Math.round(Math.min(W/420,H/320)));}
   function input(){var x=(held.right?1:0)-(held.left?1:0),y=(held.down?1:0)-(held.up?1:0);if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){x=joy.x;y=joy.y;}var m=Math.hypot(x,y);if(m>1){x/=m;y/=m;}return{x:x,y:y};}
   function toScr(pu,pv){return[CX+pu*RX,CY+pv*RY];}
-  /* the pool slowly shrinks (to just over half size after 80 s) so the round always comes to a finish */
-  var t0=0;function gameLen(){var c=ROUND.chart&&ROUND.chart();return c&&c.gameMs>20000?c.gameMs:90000;}
-  function rad(){return t0?Math.max(0.4,1-0.6*(performance.now()-t0)/gameLen()):1;}   /* the pool drains away over the game, down to 40% by the end */
+  /* rounds: the game splits into 2 or 3 rounds by the clock (the same on every screen). Each round the pool fills back up and
+     everyone's back in, then it visibly shrinks, down to 45% by the end of the round */
+  var t0=0,REFILL=1500;function gameLen(){var c=ROUND.chart&&ROUND.chart();return c&&c.gameMs>20000?c.gameMs:90000;}
+  function nRounds(){return gameLen()>=60000?3:2;}
+  function rLen(){return gameLen()/nRounds();}
+  function rndAt(now){return t0?Math.max(0,Math.min(nRounds()-1,Math.floor((now-t0)/rLen()))):0;}
+  function rad(){if(!t0)return 1;var now=performance.now(),r=rndAt(now),el=now-t0-r*rLen(),k=Math.max(0,Math.min(1,el/rLen())),R=Math.max(0.45,1-0.55*k);
+    if(r>0&&el<REFILL){var f=el/REFILL;f=f*f*(3-2*f);R=0.45+(1-0.45)*f;}   /* refilling at the start of the round */
+    return R;}
   function fromScr(x,y){return[(x-CX)/RX,(y-CY)/RY];}
   function rafPos(id){var ids=Object.keys(viewers).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(2,ids.length);return[0.12+0.76*(i/(n-1)),0.95];}
   function startAng(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]&&viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(1,ids.length);return i/n*Math.PI*2+Math.PI/2;}
-  function start(round){on=true;out=false;score=0;pops=[];myHits={};seenOut={};lastBonus=false;rivals=0;botB={};var a=startAng(myId);u=Math.cos(a)*0.6;v=Math.sin(a)*0.6;vu=vv=0;hd=a+Math.PI;boostAt=-1e9;survAt=performance.now();t0=performance.now();
+  function start(round){on=true;out=false;score=0;pops=[];myHits={};seenOut={};lastBonus=false;rivals=0;botB={};tip=0;saves=0;rnd=-1;var a=startAng(myId);u=Math.cos(a)*0.6;v=Math.sin(a)*0.6;vu=vv=0;hd=a+Math.PI;boostAt=-1e9;survAt=performance.now();t0=performance.now();
     document.body.classList.add("gaming-boats");$("boatsUI").classList.add("on");hud();banner("🚤 BUMPER BOATS");btn();}
   function stop(){on=false;document.body.classList.remove("gaming-boats","bb-out");$("boatsUI").classList.remove("on");}
   function banner(t){var b=$("bbBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("bbScore");if(h)h.textContent=score.toLocaleString();}
   function add(pts,txt,col){score+=pts;GAME.moshPts(pts);hud();pops.push({t:performance.now(),txt:txt+" +"+pts,col:col||"#fff"});}
   function btn(){var b=$("bbBoost");if(!b)return;var cd=Math.max(0,(boostAt+T("boostCd",4500)-performance.now())/T("boostCd",4500));b.style.setProperty("--cd",cd.toFixed(2));b.classList.toggle("dim",out||cd>0);document.body.classList.toggle("bb-out",!!out);
-    var h=$("bbHint");if(h)h.textContent=out?"You're out! Watch who's left":window.matchMedia&&matchMedia("(pointer:coarse)").matches?"Steer with the stick · BOOST to ram · don't go over the edge!":"Steer with arrows / WASD · Space to BOOST · don't go over the edge!";}
+    var h=$("bbHint");if(h)h.textContent=(saves?"🛟×"+saves+" · ":"")+(tip>0.15&&!out?"⚠ STEER BACK IN! · ":"")+(out?"You're out! Back in next round":window.matchMedia&&matchMedia("(pointer:coarse)").matches?"Steer with the stick · BOOST to ram · don't go over the edge!":"Steer with arrows / WASD · Space to BOOST · don't go over the edge!");}
   function boost(){if(!on||out)return;var now=performance.now();if(now<boostAt+T("boostCd",4500))return;boostAt=now;var i=input(),a=Math.hypot(i.x,i.y)>0.2?Math.atan2(i.y,i.x):hd;vu+=Math.cos(a)*T("boost",0.7);vv+=Math.sin(a)*T("boost",0.7);hd=a;}
   /* everyone else's boat, where they are on your screen (smoothed), and how fast they're going */
   function others(now){var list=[];Object.keys(viewers).forEach(function(id){var w=viewers[id];if(!w||w===PH||id===myId||w.dance!==4)return;
       var isOut=w.sk&&w.sk.t===9,p=fromScr(+w.x,+w.y);if(!isFinite(p[0]))return;var o=oth[id]||(oth[id]={u:p[0],v:p[1],vu:0,vv:0,at:now});
       var dt=Math.max(0.016,(now-o.at)/1000);if(Math.abs(p[0]-o.u)+Math.abs(p[1]-o.v)>0.0001){o.vu=o.vu*0.6+0.4*(p[0]-o.u)/dt;o.vv=o.vv*0.6+0.4*(p[1]-o.v)/dt;o.u=p[0];o.v=p[1];o.at=now;}else if(now-o.at>300){o.vu*=0.9;o.vv*=0.9;}
-      if(isOut&&!seenOut[id]){seenOut[id]=1;splashes.push({u:o.lu!==undefined?o.lu:o.u,v:o.lv!==undefined?o.lv:o.v,t:now});if(on&&myHits[id]&&now-myHits[id]<3000)add(T("knock",300),"KNOCKED OFF "+(w.name||"them").toUpperCase()+"!","#F5C518");}
+      if(isOut&&!seenOut[id]){seenOut[id]=1;splashes.push({u:o.lu!==undefined?o.lu:o.u,v:o.lv!==undefined?o.lv:o.v,t:now});if(on&&myHits[id]&&now-myHits[id]<3000){add(T("knock",300),"KNOCKED OFF "+(w.name||"them").toUpperCase()+"!","#F5C518");if(saves<2){saves++;pops.push({t:now+700,txt:"🛟 +1 SAVE",col:"#3DF2FF"});}}}
       if(!isOut){o.lu=o.u;o.lv=o.v;seenOut[id]=0;list.push({id:id,u:o.u,v:o.v,vu:o.vu,vv:o.vv});}});return list;}
+  /* over the lip: you tip outward. The further over and the faster you're heading out, the quicker you tip; steer back in and you
+     come back level. Hit the edge too fast and you go straight over. A SAVE (earned by knocking someone off) catches you instead.
+     Returns true if you went over this frame. */
+  function edge(now,dt,inp){
+    var R=rad(),r=Math.hypot(u,v)||1e-6,over=r-R,nx=u/r,ny=v/r,vo=vu*nx+vv*ny,inward=-(inp.x*nx+inp.y*ny);
+    if(over>0){
+      if(!edgeIn&&vo>T("fallSpd",0.5))return fall(now,"TOO FAST!");   /* came at the edge flat out: no saving that */
+      edgeIn=true;
+      var lean=over/(BR*0.9);
+      tip+=(lean*1.6+Math.max(0,vo)*2.2)*dt;                       /* tipping outward */
+      if(inward>0.25)tip-=inward*(1.9-Math.max(0,vo))*dt;          /* steering back in pulls you level (harder while still heading out) */
+      vu+=nx*(0.25+tip*0.9)*dt;vv+=ny*(0.25+tip*0.9)*dt;          /* the lean drags you further over */
+      if(inward>0.25){vu-=nx*inward*1.2*dt;vv-=ny*inward*1.2*dt;}  /* digging the paddle in */
+      tip=Math.max(0,tip);
+      if(tip>=1||over>BR*1.1)return fall(now,null);
+    }else{edgeIn=false;tip=Math.max(0,tip-dt*2.2);}
+    return false;
+  }
+  function fall(now,why){
+    if(saves>0){saves--;saveAt=now;graceTo=now+1200;tip=0;edgeIn=false;var r=Math.hypot(u,v)||1,R=rad()*0.82;u=u/r*R;v=v/r*R;vu=-u/R*0.45;vv=-v/R*0.45;
+      banner("🛟 SAVED!");pops.push({t:now,txt:"🛟 SAVED!",col:"#3DF2FF"});if(navigator.vibrate)try{navigator.vibrate([30,40,30]);}catch(e){}btn();return true;}
+    out=true;outAt=now;fallAt=now;tip=1;splashes.push({u:u,v:v,t:now});banner(why?"💦 "+why+" YOU'RE OUT!":"💦 YOU'RE OUT!");btn();return true;
+  }
+  /* a new round: everyone's back in their boat at the start spots as the pool fills back up */
+  function newRound(first,now){
+    lastBonus=false;rivals=0;seenOut={};myHits={};tip=0;edgeIn=false;
+    if(!first){out=false;var a=startAng(myId);u=Math.cos(a)*0.55;v=Math.sin(a)*0.55;vu=vv=0;hd=a+Math.PI;graceTo=now+REFILL+800;
+      Object.keys(botB).forEach(function(k){var b=botB[k],ba=startAng(k);b.out=false;b.u=Math.cos(ba)*0.55;b.v=Math.sin(ba)*0.55;b.vu=b.vv=0;});
+      banner("🚤 ROUND "+(rnd+1)+" OF "+nRounds()+(rnd===nRounds()-1?" · FINAL!":""));btn();}
+    else graceTo=now+1500;
+  }
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
-    var me=myId&&viewers[myId];if(!me)return;var list=others(now);rivals=Math.max(rivals,list.length);
+    var me=myId&&viewers[myId];if(!me)return;
+    var rn=rndAt(now);if(rn!==rnd){var first=rnd<0;rnd=rn;newRound(first,now);}
+    var list=others(now);rivals=Math.max(rivals,list.length);
     if(!out){
       var i=input(),acc=T("accel",1.3);vu+=i.x*acc*dt;vv+=i.y*acc*dt;
       /* the lip: near the edge the water pushes you back in, so only a proper hit (or driving off) puts you over */
-      var R=rad(),r0=Math.hypot(u,v);if(r0>R*0.78){var lip=T("lip",1.6)*(r0-R*0.78)/(R*0.22);vu-=u/r0*lip*dt;vv-=v/r0*lip*dt;}var dr=Math.exp(-T("drag",1.1)*dt);vu*=dr;vv*=dr;
+      var R=rad(),r0=Math.hypot(u,v);if(r0>R*0.78&&r0<=R){var lip=T("lip",1.2)*(r0-R*0.78)/(R*0.22);vu-=u/r0*lip*dt;vv-=v/r0*lip*dt;}   /* inside the edge only: past it, you're tipping (see edge) */var dr=Math.exp(-T("drag",1.1)*dt);vu*=dr;vv*=dr;
       var spd=Math.hypot(vu,vv),mx=now<boostAt+500?T("max",0.7)*1.55:T("max",0.7);if(spd>mx){vu*=mx/spd;vv*=mx/spd;}
       if(Math.hypot(i.x,i.y)>0.2){var ta=Math.atan2(i.y,i.x),dd=Math.atan2(Math.sin(ta-hd),Math.cos(ta-hd));hd+=dd*Math.min(1,dt*6);}
       /* bumps: each screen bounces its own boat off the others it hits */
@@ -4666,10 +4711,10 @@ var BOATS=(function(){
           if(mine>=theirs-0.05&&hit>0.25&&(!myHits[o.id]||now-myHits[o.id]>400)){myHits[o.id]=now;add(Math.round(20+hit*90),now<boostAt+600?"RAM!":"BUMP!","#3DF2FF");}
           if(navigator.vibrate&&hit>0.4)try{navigator.vibrate(40);}catch(e){}}});
       u+=vu*dt;v+=vv*dt;
-      if(lastBonus){var rl=Math.hypot(u,v),Rl=rad()*0.92;if(rl>Rl){u*=Rl/rl;v*=Rl/rl;vu*=-0.3;vv*=-0.3;}}   /* the winner stays afloat */
-      if(!lastBonus&&Math.hypot(u,v)>rad()*1.03){out=true;outAt=now;fallAt=now;splashes.push({u:u,v:v,t:now});banner("💦 YOU'RE OUT!");btn();}
+      if(lastBonus||now<graceTo){var rl=Math.hypot(u,v),Rl=rad()*0.92;if(rl>Rl){u*=Rl/rl;v*=Rl/rl;vu*=-0.3;vv*=-0.3;}tip=Math.max(0,tip-dt*3);}   /* the winner (and anyone just saved or just back in) stays afloat */
+      else if(edge(now,dt,i)){}
       else if(now-survAt>500){survAt=now;score+=4;GAME.moshPts(4);hud();}
-      if(!lastBonus&&rivals>0&&list.length===0){lastBonus=true;add(T("last",500),"LAST BOAT FLOATING!","#F5C518");banner("🏆 YOU WIN! LAST BOAT FLOATING");}
+      if(!lastBonus&&rivals>0&&list.length===0){lastBonus=true;add(T("last",500),"LAST BOAT FLOATING!","#F5C518");banner(rnd<nRounds()-1?"🏆 ROUND "+(rnd+1)+" WON! LAST BOAT FLOATING":"🏆 YOU WIN! LAST BOAT FLOATING");}
       var p=toScr(u,v);me.tx=me.x=p[0];me.ty=me.y=p[1];sendPos(p[0],p[1]);
     }else if(now-outAt>1100){var rp=rafPos(myId);me.tx=me.x=rp[0];me.ty=me.y=rp[1];sendPos(rp[0],rp[1]);}
     me.dance=4;var w=Math.sin(now/150)*0.15;GAME.moshPose(out?[0.4,-0.4,0,0]:[1.1+w,-1.1+w,0.1,-0.1]);if(GAME.poseNow)GAME.poseNow();
@@ -4683,19 +4728,26 @@ var BOATS=(function(){
       if(now>b.at){b.at=now+700+Math.random()*900;b.tg=Math.random()<0.5&&!out?{u:u*0.8,v:v*0.8}:{u:(Math.random()-0.5)*0.8*R,v:(Math.random()-0.5)*0.8*R};}
       if(br>R*0.7)b.tg={u:0,v:0};   /* too close to the edge: head back in */
       var dx=b.tg.u-b.u,dy=b.tg.v-b.v,d=Math.hypot(dx,dy)||1;b.vu+=dx/d*1.0*dt;b.vv+=dy/d*1.0*dt;var dr=Math.exp(-1.1*dt);b.vu*=dr;b.vv*=dr;
-      if(br>R*0.78){var lp=1.6*(br-R*0.78)/(R*0.22);b.vu-=b.u/br*lp*dt;b.vv-=b.v/br*lp*dt;}
+      if(br>R*0.78&&br<=R){var lp=1.2*(br-R*0.78)/(R*0.22);b.vu-=b.u/br*lp*dt;b.vv-=b.v/br*lp*dt;}
       var mdx=b.u-u,mdy=b.v-v,md=Math.hypot(mdx,mdy);if(!out&&md<BR*2&&md>1e-4){var nx=mdx/md,ny=mdy/md,rv=(b.vu-vu)*nx+(b.vv-vv)*ny;if(rv<0){b.vu+=nx*(-rv*0.95+0.25);b.vv+=ny*(-rv*0.95+0.25);}}
       b.u+=b.vu*dt;b.v+=b.vv*dt;
       var alive=(out?0:1)+Object.keys(botB).filter(function(k){return !botB[k].out;}).length;
-      if(alive<=1){var rb=Math.hypot(b.u,b.v);if(rb>R*0.92){b.u*=R*0.92/rb;b.v*=R*0.92/rb;}}else if(Math.hypot(b.u,b.v)>R*1.03){b.out=true;}   /* the last boat floating stays afloat */
-      var p=toScr(b.u,b.v);w.tx=w.x=p[0];w.ty=w.y=p[1];w.dance=4;w.sk={h:0,f:0,t:0};w.pose=[1.1,-1.1,0.1,-0.1];w.fd=null;});
+      var rb2=Math.hypot(b.u,b.v)||1e-6;b.tip=b.tip||0;
+      if(alive<=1||now<graceTo){if(rb2>R*0.92){b.u*=R*0.92/rb2;b.v*=R*0.92/rb2;}b.tip=0;}   /* the last boat floating stays afloat */
+      else if(rb2>R){b.tip+=((rb2-R)/(BR*0.9)*1.6+Math.max(0,(b.vu*b.u+b.vv*b.v)/rb2)*2.2)*dt;b.vu-=b.u/rb2*0.9*dt;b.vv-=b.v/rb2*0.9*dt;if(b.tip>=1||rb2>R+BR*1.1)b.out=true;}   /* bots tip too, and paddle back in */
+      else b.tip=Math.max(0,b.tip-dt*2.2);
+      var p=toScr(b.u,b.v);w.tx=w.x=p[0];w.ty=w.y=p[1];w.dance=4;w.sk={h:Math.round((b.tip||0)*100),f:0,t:0};w.pose=[1.1,-1.1,0.1,-0.1];w.fd=null;});
   }
-  function wire(){return{h:0,f:performance.now()<boostAt+500?1:0,t:out?9:((Math.round(hd/(Math.PI/4))%8)+8)%8};}
+  function wire(){return{h:out?0:Math.round(tip*100),f:performance.now()<boostAt+500?1:0,t:out?9:((Math.round(hd/(Math.PI/4))%8)+8)%8};}
   function isOut(w,isMe){return isMe?out&&performance.now()-outAt>1100:!!(w.sk&&w.sk.t===9);}
   function facing(w,isMe){var h=isMe?hd:(w.sk?w.sk.t*Math.PI/4:Math.PI/2);return ART.face8(Math.cos(h),Math.sin(h),-1);}
   /* sat down in the boat, bobbing; going over the edge you drop out of sight */
   function looks(w,isMe,scl){var now=performance.now();if(isOut(w,isMe))return{lift:0,rot:0,ns:true};var bob=Math.sin(now/260+(w.seed||0))*scl;
-    if(isMe&&out){var k=(now-fallAt)/1100;return{lift:6*scl+k*k*80*scl,rot:k*1.2,ns:true};}return{lift:6*scl+bob,rot:Math.sin(now/400+(w.seed||0))*0.05,ns:true};}
+    if(isMe&&out){var k=(now-fallAt)/1100;return{lift:6*scl+k*k*80*scl,rot:(k+0.6)*1.2*(u<0?-1:1),ns:true};}
+    var tp=tipOf(w,isMe),side=tipSide(w,isMe),wob=tp>0.05?Math.sin(now/55)*0.06*tp:0;   /* teetering: leaning out over the edge, wobbling */
+    return{lift:6*scl+bob+tp*3*scl,rot:Math.sin(now/400+(w.seed||0))*0.05+side*(tp*0.7+wob),ns:true};}
+  function tipOf(w,isMe){return isMe?(out?0:tip):Math.max(0,Math.min(1,((w.sk&&w.sk.h)||0)/100));}
+  function tipSide(w,isMe){var x=isMe?u:fromScr(+w.x,+w.y)[0];return x<0?-1:1;}
   /* the floor drops away: the void, the floating pool, the raft for those who are out */
   function under(g){
     if(!boatsOn())return;var now=performance.now();if(!dropAt)dropAt=now;var k=Math.min(1,(now-dropAt)/2000),e=1-Math.pow(1-k,3),s=sc();
@@ -4735,6 +4787,7 @@ var BOATS=(function(){
     r=Math.min(255,r*k);gg=Math.min(255,gg*k);b=Math.min(255,b*k);return"rgb("+Math.round(r)+","+Math.round(gg)+","+Math.round(b)+")";}   /* the same hue, as bright as it goes */
   function coreCol(c){return c.replace(/rgb\((\d+),(\d+),(\d+)\)/,function(_,r,gg,b){return"rgb("+Math.round(+r+(255-r)*0.65)+","+Math.round(+gg+(255-gg)*0.65)+","+Math.round(+b+(255-b)*0.65)+")";});}
   function boat(g,id,bx,by,s,back,now){var col=neonCol((viewers[id]&&viewers[id].color)||"#FF4D6D"),rx=BR*RX*W,ry=BR*RY*H;
+    var wv=viewers[id],tp=wv?tipOf(wv,id===myId):0;if(tp>0){var sd=wv?tipSide(wv,id===myId):1;bx+=sd*tp*rx*0.35;by+=tp*ry*0.5;ry*=1-tp*0.35;}   /* tipping: the boat slides out and tilts up on its side */
     var lw=Math.max(5,ry*0.9),bo=viewers[id]&&(id===myId?now<boostAt+500:viewers[id].sk&&viewers[id].sk.f),gl=s*(bo?9:5);
     if(back){g.save();g.globalAlpha=0.22;g.fillStyle=col;ART.PX.oval(g,bx,by+s*3,rx*1.3,ry*1.25,0);g.restore();   /* its glow on the water */
       g.fillStyle="#07050f";ART.PX.oval(g,bx,by,rx*0.8,ry*0.72,0);
@@ -4745,14 +4798,19 @@ var BOATS=(function(){
       if(bo){g.fillStyle=col;for(var i=0;i<6;i++)g.fillRect(Math.round(bx-rx+Math.random()*rx*2),Math.round(by+ry*0.6+Math.random()*s*4),s,s);}}}
   function draw(g){
     if(!boatsOn())return;var now=performance.now(),s=sc();
-    Object.keys(viewers).forEach(function(id){var w=viewers[id];if(!w||w===PH||w.dance!==4)return;var isMe=id===myId;if(isOut(w,isMe)||(isMe&&out))return;boat(g,id,w.x*W,w.y*H,s,false,now);});
+    Object.keys(viewers).forEach(function(id){var w=viewers[id];if(!w||w===PH||w.dance!==4)return;var isMe=id===myId;if(isOut(w,isMe)||(isMe&&out))return;boat(g,id,w.x*W,w.y*H,s,false,now);
+      var tp=tipOf(w,isMe);if(tp>0.12){var fl2=Math.floor(now/(tp>0.6?90:180))%2;if(fl2){g.font="900 "+Math.max(14,s*7)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="#000";var wy=w.y*H-s*30;g.strokeText("!",w.x*W,wy);g.fillStyle=tp>0.6?"#FF4D6D":"#F5C518";g.fillText("!",w.x*W,wy);}}
+      if(isMe&&now<saveAt+900){var sa=(now-saveAt)/900;g.save();g.globalAlpha=1-sa;g.strokeStyle="#3DF2FF";g.lineWidth=Math.max(2,s);ART.PX.ringO(g,w.x*W,w.y*H,BR*RX*W*(1+sa*1.5),BR*RY*H*(1+sa*1.5),0);g.restore();}});   /* the save: a ring bursting out */
+    /* the round on screen, and the pool's edge flashing as it shrinks */
+    if(on&&t0){var rr=$("bbScore");if(rr)rr.setAttribute("data-r","R"+(rndAt(now)+1)+"/"+nRounds());}
     splashes=splashes.filter(function(p){var a=(now-p.t)/900;if(a>1)return false;var q=toScr(p.u,p.v),x=q[0]*W,y=q[1]*H;g.fillStyle=(Math.floor(now/80)%2?"rgba(61,242,255,":"rgba(255,46,200,")+(1-a)+")";for(var i=0;i<10;i++){var an=i/10*Math.PI*2;g.fillRect(Math.round(x+Math.cos(an)*a*s*16),Math.round(y-Math.abs(Math.sin(an))*a*s*20+a*a*s*20),s*2,s*2);}return true;});
     if(on){var bc=Math.max(0,(boostAt+T("boostCd",4500)-now)/T("boostCd",4500)),bb=$("bbBoost");if(bb)bb.style.setProperty("--cd",bc.toFixed(2));}
     pops=pops.filter(function(p){var a3=(now-p.t)/1300;if(a3>1)return false;var me=viewers[myId];var px=me?me.x*W:W/2,py=me?me.y*H-s*34:H/2;g.globalAlpha=1-a3*a3;g.font="900 "+Math.max(14,s*6)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.75)";g.strokeText(p.txt,px,py-a3*30);g.fillStyle=p.col;g.fillText(p.txt,px,py-a3*30);return true;});
     g.globalAlpha=1;
   }
-  window.ukBoats=function(){return{on:on,out:out,score:score,u:+u.toFixed(3),v:+v.toFixed(3),vu:+vu.toFixed(3),vv:+vv.toFixed(3),rivals:rivals,bots:Object.keys(botB).map(function(k){return[k,botB[k].out];})};};
+  window.ukBoats=function(){return{on:on,out:out,score:score,tip:+tip.toFixed(2),saves:saves,rnd:rndAt(performance.now()),nr:nRounds(),R:+rad().toFixed(3),u:+u.toFixed(3),v:+v.toFixed(3),vu:+vu.toFixed(3),vv:+vv.toFixed(3),rivals:rivals,bots:Object.keys(botB).map(function(k){return[k,botB[k].out];})};};
   window.ukBoatsAt=function(a,b,c,d){u=a;v=b;vu=c||0;vv=d||0;};
+  window.ukBoatsSet=function(o){if(o.saves!==undefined)saves=o.saves;if(o.grace!==undefined)graceTo=performance.now()+o.grace;if(o.t0!==undefined)t0=performance.now()-o.t0;if(o.tip!==undefined)tip=o.tip;};
   return{start:start,stop:stop,tick:tick,boost:boost,under:under,draw:draw,wire:wire,looks:looks,facing:facing,isOut:isOut,boatsOn:boatsOn,reset:function(){dropAt=0;},get on(){return on;},get out(){return out;}};
 })();
 /* ============================================================
@@ -8016,7 +8074,7 @@ var vYT=null;
 function handleVideo(msg){
   var screen=document.getElementById("bigScreen");
   var frame=document.getElementById("ytFrame");
-  if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};frame.style.pointerEvents="none";}   /* the video is not for clicking: nobody can pause it, seek it or click through to YouTube */
+  if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};}   /* the player stays clickable (YouTube's rules): if someone pauses or seeks their copy, the sync puts it back with the performer */
   if(+msg.dur>0)vYT.exp=+msg.dur;   /* the real length, from the performer: a different length means an ad is on */
   if(msg.action==="stop"){JT.video=false;vYT.clear();updTapHint();return;}
   var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
@@ -8386,8 +8444,8 @@ var MENUMUSIC=(function(){
   var a=null,ac=null,gn=null,vol=0,started=false,t0=0,muted=false,BED=0.32,FADE=1200;   /* straight in at a normal background level (a quick fade, no slow swell) */
   try{muted=localStorage.getItem("uk_menumusic")==="0";}catch(e){}
   function menuOn(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&getComputedStyle(j).display!=="none";}
-  /* it also keeps playing in practice while you're just on the dance floor (no round or game running) */
-  function want(){var b=document.body;return menuOn()||(!!b&&b.classList.contains("practice")&&!b.classList.contains("pr-busy")&&!b.getAttribute("data-game"));}
+  /* it also keeps playing in practice while you're just on the dance floor or free dancing (no round or other game running) */
+  function want(){var b=document.body,g=b&&b.getAttribute("data-game");return menuOn()||(!!b&&b.classList.contains("practice")&&!b.classList.contains("pr-busy")&&(!g||g==="free"));}
   var LIST=["After-hours Entry.mp3","Queue Lights.mp3"],cur=0;   /* After-hours Entry, then Queue Lights when it ends, and round again */
   function setVol(v){if(gn&&ac)gn.gain.setTargetAtTime(v,ac.currentTime,0.05);else if(a)a.volume=Math.max(0,Math.min(1,v));}
   function ensure(){if(a)return;a=new Audio("songs/"+encodeURIComponent(LIST[0]));a.loop=false;a.preload="auto";
@@ -8411,7 +8469,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.41",SERVER_VERSION="";
+var PAGE_VERSION="1.82.47",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8580,13 +8638,15 @@ setInterval(function(){
 },66);
 function jumboTick(){
   var el=document.getElementById("bigScreen");if(!el)return;
-  var fx=SHOWFX||{},want=fx.jumbo==="down"||(fx.jumbo!=="up"&&(JT.video||JT.visuals));
+  /* a YouTube video always plays on the Jumbotron, in view (YouTube's embed rules: the player can't be hidden or covered) */
+  var fx=SHOWFX||{},want=JT.video||fx.jumbo==="down"||(fx.jumbo!=="up"&&JT.visuals);
   if(want!==el.classList.contains("on"))el.classList.toggle("on",want);
   document.getElementById("jtLogo").style.display=want&&!JT.video&&!JT.visuals?"flex":"none";
   document.body.classList.toggle("jt-top",want||!!fx.banner);
-  var st=STAGE_TOP*H,sh=(STAGE_BOTTOM-STAGE_TOP)*H,hh=sh*0.7,ww=Math.min(hh*16/9,W*0.62);hh=ww*9/16;
-  var rc={x:Math.round(W/2-ww/2),y:Math.round(st+Math.min(30,sh*0.08)),w:Math.round(ww),h:Math.round(hh)},key=rc.x+","+rc.y+","+rc.w+","+rc.h;
+  var st=STAGE_TOP*H,sh=(STAGE_BOTTOM-STAGE_TOP)*H,hh=sh*0.7,ww=Math.min(hh*16/9,W*0.62);hh=ww*9/16;if(JT.video&&ww-12<356){ww=Math.min(W-4,368);hh=(ww-12)*9/16+20;}   /* YouTube's smallest player is 200 px tall: the screen inside the 6 px frame (14 px at the bottom) is kept at 356 x 200 or more */
+  var rc={x:Math.round(W/2-ww/2),y:Math.round(Math.max(st+Math.min(30,sh*0.08),JT.video?46:0)),w:Math.round(ww),h:Math.round(hh)},key=rc.x+","+rc.y+","+rc.w+","+rc.h;
   if(key!==JT.key){JT.key=key;el.style.left=rc.x+"px";el.style.top=rc.y+"px";el.style.width=rc.w+"px";el.style.height=rc.h+"px";document.getElementById("jtLogo").style.fontSize=Math.max(9,Math.round(rc.w/10))+"px";}
+  el.classList.toggle("yt",!!JT.video);   /* over everything drawn on the stage, the performer included, while a YouTube video plays */
   JT.rect=rc;JT.k+=((want?1:0)-JT.k)*0.04;
 }
 /* ---------- lights following the performer's playing ----------
@@ -8998,7 +9058,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.41"></script>
+<script src="lab.js?v=1.82.47"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

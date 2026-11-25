@@ -1688,6 +1688,69 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.47 — Bumper boats: tipping at the edge, knockout saves, rounds with a shrinking pool
+
+**Tipping at the edge**
+1. Check the version reads **v1.82.47**. Start **Bumper boats** (practice with a few dancers is fine).
+2. Drift slowly over the edge. Your boat slides out and tips, your character leans over, a flashing **!** appears over you, and the hint says **STEER BACK IN!**
+3. Steer back toward the middle: the boat comes back level and you stay in.
+4. Do it again but don't steer: you tip further and go over.
+5. Drive (or BOOST) straight at the edge flat out: you go straight over with **TOO FAST!**
+
+**Knockout saves**
+6. Bump someone so they go over within 3 seconds: you get **KNOCKED OFF** points plus **🛟 +1 SAVE**, and the hint shows 🛟×1. You can hold up to 2.
+7. Next time you'd go over (tipping too far or too fast), a ring bursts out, it says **🛟 SAVED!**, you're pulled back in, and the save is used up.
+
+**Rounds**
+8. The score shows the round above it (R1/3; R1/2 for short songs). The pool visibly shrinks during each round, down to under half size.
+9. When the next round starts, everyone who was out is back in a boat, the pool fills back up, and the banner says **ROUND 2 OF 3**. The last round says **FINAL!**
+10. The last boat floating each round gets the bonus. Points carry across all the rounds.
+
+## v1.82.46 — Free dance Shuffle matches the game version
+
+The Shuffle in free dance now works the same way as in the games (Keepy uppy).
+
+1. Check the version reads **v1.82.46**. In free dance, pick **Shuffle**.
+2. Move the left stick a little, or partway, in any direction. You keep doing the running man while you move around the floor, the same as in Keepy uppy.
+3. Push the stick right out to the side. That's the T-step, travelling that way.
+4. Let go and you're back to the running man on the spot. Pushing the stick to the top edge still does the spin.
+
+## v1.82.45 — Floss reworked
+
+1. Check the version reads **v1.82.45**. In free dance, pick **Silly**, then **Floss**.
+2. On each beat both arms swing together to one side, low and nearly straight. The far arm goes out to the side, and the other crosses the body at hip height.
+3. The body leans toward the arms while the hips and feet swing the other way, then everything swaps on the next beat.
+4. Left stick left and right changes how wide the swing is. Up and down changes the speed.
+
+## v1.82.44 — Skank: the kick is on the opposite side to the arm
+
+1. Check the version reads **v1.82.44**. In free dance, pick **Skank** (Classic).
+2. On each beat one arm swings out. The knee that comes up is on the **other** side, turned in a little but still under its own hip (not crossing under the arm).
+3. The next beat swaps: the other arm out, the other knee up.
+
+## v1.82.43 — Menu music keeps playing in practice free dance
+
+1. Open the site and check the version reads **v1.82.43**. Tap once so the menu music starts.
+2. Go into **Practice**, then tap **Free dance**. The music keeps playing at the same level while you dance.
+3. Start a mini game from **Start game**. The menu music fades out for the round's song, and comes back when the round ends.
+
+## v1.82.42 — YouTube videos always play on the Jumbotron
+
+YouTube's embed rules say the player must be visible, at least 200 px tall, never covered, never hidden, and never played muted out of sight. YouTube songs now follow those rules everywhere.
+
+**On the laptop (performer):**
+1. Start a YouTube song in jam. The screen switches to the stage view and the video plays on the Jumbotron, about 480 x 270, with nothing drawn over it (you stand beside it, not in front).
+2. Press **T**: it says "YouTube videos stay on the Jumbotron" and the video doesn't hide.
+3. In **Stage & FX**, raise the Jumbotron: it stays down while the YouTube video plays.
+4. Start a YouTube song from **Start song**: there's no "getting the video ready" wait any more. If an ad plays, it shows on the Jumbotron and the game waits at the start of the song until the ad is over.
+5. Song search without a YouTube API key now asks for a key (Search → Add key). Pasting a link still works without one. Playlists need the key.
+
+**On a phone:**
+6. While the performer plays a YouTube video, the Jumbotron comes down even if the performer raised it, sits below the fullscreen button, and the video is at least 356 x 200.
+7. You can tap the video now (YouTube's controls work). If you pause your copy, it catches back up with the performer within a few seconds.
+
+Your own music files and the site songs don't change: they still play however the show is set up.
+
 ## v1.82.41 — Main menu music starts on the first tap
 
 The opening song wasn't starting on phones. The first touch on a phone doesn't count as permission to play sound, so the song was blocked and then never tried again. Now every tap or key retries until it's actually playing.
