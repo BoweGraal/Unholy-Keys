@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.40"></script>
-<script src="gfx.js?v=1.82.40"></script>
-<script src="art.js?v=1.82.40"></script>
-<script src="voice.js?v=1.82.40"></script>
-<script src="instruments.js?v=1.82.40"></script>
-<script src="kart.js?v=1.82.40"></script>
-<script src="explain.js?v=1.82.40"></script>
+<script src="tune.js?v=1.82.41"></script>
+<script src="gfx.js?v=1.82.41"></script>
+<script src="art.js?v=1.82.41"></script>
+<script src="voice.js?v=1.82.41"></script>
+<script src="instruments.js?v=1.82.41"></script>
+<script src="kart.js?v=1.82.41"></script>
+<script src="explain.js?v=1.82.41"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -8393,9 +8393,12 @@ var MENUMUSIC=(function(){
   function ensure(){if(a)return;a=new Audio("songs/"+encodeURIComponent(LIST[0]));a.loop=false;a.preload="auto";
     a.addEventListener("ended",function(){cur=(cur+1)%LIST.length;a.src="songs/"+encodeURIComponent(LIST[cur]);if(started&&want()){var pp=a.play();if(pp&&pp.catch)pp.catch(function(){});}});
     try{var AC=window.AudioContext||window.webkitAudioContext;ac=new AC();gn=ac.createGain();gn.gain.value=0;ac.createMediaElementSource(a).connect(gn);gn.connect(ac.destination);a.volume=1;}catch(e){ac=gn=null;a.volume=0;}}
-  function start(){if(started||muted||!want())return;ensure();if(ac&&ac.state==="suspended")ac.resume().catch(function(){});
+  /* every tap or key tries again until the song is really playing: phones don't count pointerdown as permission to play
+     (only the touchend / click after it), and the volume node needs waking inside a tap too, or the song plays silently */
+  function start(){if(muted||!want())return;ensure();if(ac&&ac.state!=="running")ac.resume().catch(function(){});
+    if(started&&!a.paused)return;
     var p=a.play();started=true;t0=performance.now();if(p&&p.then)p.then(function(){t0=performance.now();},function(){started=false;});}
-  ["pointerdown","keydown","touchend"].forEach(function(ev){document.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
+  ["pointerdown","pointerup","touchend","click","keydown"].forEach(function(ev){document.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
   setTimeout(start,300);   /* ...unless this page is already allowed to play */
   setInterval(function(){if(!a)return;var on=want()&&!muted&&started,target=0;
     if(on)target=BED*Math.min(1,(performance.now()-t0)/FADE);
@@ -8405,10 +8408,10 @@ var MENUMUSIC=(function(){
   function btn(){var b=document.getElementById("mmMusic");if(b){b.textContent=muted?"\u266B MUSIC OFF":"\u266B MUSIC ON";b.classList.toggle("off",muted);}}
   var b0=document.getElementById("mmMusic");if(b0){btn();b0.addEventListener("click",function(e){e.stopPropagation();muted=!muted;try{localStorage.setItem("uk_menumusic",muted?"0":"1");}catch(x){}btn();if(!muted)start();});}
   window.ukMenuMusicEnd=function(){if(a)a.dispatchEvent(new Event("ended"));return LIST[cur];};   /* test: as if the song finished */
-  window.ukMenuMusic=function(){return{started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
+  window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.40",SERVER_VERSION="";
+var PAGE_VERSION="1.82.41",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8995,7 +8998,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.40"></script>
+<script src="lab.js?v=1.82.41"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

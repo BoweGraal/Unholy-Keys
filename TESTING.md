@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.41 — Main menu music starts on the first tap
+
+The opening song wasn't starting on phones. The first touch on a phone doesn't count as permission to play sound, so the song was blocked and then never tried again. Now every tap or key retries until it's actually playing.
+
+1. On your phone, open the site fresh (close the tab first). Check the version reads **v1.82.41**.
+2. Tap anywhere on the main menu once. **After-hours Entry** should start within a second at a normal background level.
+3. Try it on a laptop too: one click on the menu should start it.
+4. Tap **MUSIC OFF** and then **MUSIC ON**: it should stop and come back.
+5. If it's still silent on iPhone, check the ringer switch on the side isn't set to silent.
+
 ## v1.82.40 — TV mode: a laptop on the TV, everyone on their phones
 
 **Needs a server redeploy** (clock sync, the TV's song position, the sync check).
