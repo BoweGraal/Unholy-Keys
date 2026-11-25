@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.54 — Alt key off until you tick it · chord mode starts off
+
+1. Check the version reads **v1.82.54**. Reload the laptop page.
+2. **Start song** panel: the **Alt** key row has a checkbox, unticked, and its two dropdowns are greyed out. The same goes for **Setup → Play**: the Alt root, scale, octave and the Swap button are greyed out until you tick **Alt**.
+3. Press **Shift** with Alt off: nothing swaps, and a small note says "Alt key is off: tick Alt to use it".
+4. Tick **Alt** and pick a key: Shift swaps between your key and the alt key as before.
+5. Untick Alt while you're on the alt key: you go back to your main key.
+6. **Chord mode** is off every time the page loads, even if it was on last time. Turn it on when you want it. Picking a preset that has a chord still turns it on.
+
 ## v1.82.53 — Sound effects in pixel art
 
 1. Check the version reads **v1.82.53**. Play a guitar, banjo, horn or anything that sends out sound waves.
