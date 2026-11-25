@@ -14,7 +14,7 @@
   var KINDS=["grand","upright","organ","pipeorgan","synth","keytar","epiano","harpsichord","chip","accordion",
     "acoustic","electric","metal","jazzguitar","bass","banjo","sitar","shamisen","violin","cello","contrabass","harp",
     "trumpet","trombone","horn","tuba","sax","flute","clarinet","bassoon","panflute","ocarina","harmonica","bagpipe",
-    "mallets","glock","steeldrum","kalimba","musicbox","drum","timpani","zither","voice","choir","whistle","bottle","bells","glasses","djdeck"];
+    "mallets","glock","steeldrum","kalimba","musicbox","drum","drumkit","timpani","zither","voice","choir","whistle","bottle","bells","glasses","djdeck"];
 
   /* ---- which art for which instrument ---- */
   var RULES=[
@@ -382,6 +382,32 @@
       }
       break;}
 
+    /* ---------- a drum kit (the computer band's drummer): kick in front of you, snare and hi-hat on the left, rack and floor
+       toms, a crash on the right. 36 = kick (the head flashes, every 4th one hits the crash too), 38 = snare (left stick),
+       42 = hi-hat (right stick, crossed over). Sticks drawn from the hands. ---------- */
+    case "drumkit":{
+      var dm=m,hk=on?Math.max(0,1-age/120):0,isK=dm<=36,isS=dm===38||dm===40,isH=!isK&&!isS,crashHit=isK&&(st.n||0)%4===0;
+      var kitY=y-3*p,kf=on&&isK&&age<130,cf=on&&crashHit&&age<260,hf=on&&isH&&age<120;
+      c=piece("kit"+(kf?"k":"")+(cf?"c":"")+(hf?"h":""),36,26,function(r,ln,disc){
+        var ST="#8a8aa0",CY=hf?"#FFF0A0":"#E8C858",CR=cf?"#FFF0A0":"#E8C858";
+        ln(30,4,30,25,ST);ln(5,6,5,25,ST);ln(10,13,10,25,ST);ln(26,21,26,25,ST);ln(32,21,32,25,ST);   /* stands and legs */
+        r(25,2,11,1,CR);r(27,1,7,1,CR);r(29,3,3,1,"#B89838");                                         /* crash */
+        r(1,4,10,1,CY);r(2,6,8,1,CY);r(5,5,1,1,ST);                                                    /* hi-hat: two cymbals */
+        disc(18,16,8,"#B83A44");disc(18,16,6,kf?"#FFFFFF":"#E8E0D0");r(13,16,11,2,"#B83A44");r(16,15,5,1,"#F5D03C");   /* kick: red shell, white head, a stripe */
+        r(14,5,9,4,"#B83A44");r(14,5,9,1,"#E8E0D0");r(14,8,9,1,"#8a1e3c");                             /* rack tom on the kick */
+        r(24,11,9,10,"#B83A44");r(24,11,9,1,"#E8E0D0");r(24,20,9,1,"#8a1e3c");                         /* floor tom */
+        r(6,9,10,4,"#C8C8D8");r(6,9,10,1,"#F2F2F8");for(var i=0;i<3;i++)r(7+i*3,10,1,3,"#8a8aa0");      /* snare */
+      });
+      front=function(){blit(g,c,x,kitY,p,18,0,0);};
+      /* where the sticks go: left hand on the snare, right crossed over to the hat (or out to the crash) */
+      var up=function(hit){return hit?(1-hk)*3*p:2*p;};
+      var tL=[x-7*p,y+5*p-up(on&&isS)],tR=crashHit&&on?[x+11*p,y-up(true)*0.6]:[x-10*p,y+2*p-up(on&&isH)];
+      if(!on){tL=[x-7*p,y+2*p];tR=[x-10*p,y];}
+      arms(tL,tR);
+      fx=function(){g.strokeStyle="#E8D0A0";g.lineWidth=Math.max(1,p*0.8);[0,1].forEach(function(i){var h=hands[i],j=J[i];if(!h)return;var dx=h[0]-j[0],dy=h[1]-j[1],d=Math.hypot(dx,dy)||1;g.beginPath();g.moveTo(h[0],h[1]);g.lineTo(h[0]+dx/d*5*p,h[1]+dy/d*5*p);g.stroke();});
+        if(kf){g.strokeStyle="rgba(255,240,200,"+(1-age/130)+")";g.lineWidth=Math.max(1,p/2);ART.PX.ringO(g,x,kitY+16*p,(9+age/25)*p,(9+age/25)*p,0);}};
+      break;}
+
     /* ---------- mallets: the mallet goes to the bar for the note and strikes it ---------- */
     case "mallets":case "glock":case "steeldrum":case "drum":case "timpani":case "bells":case "glasses":{
       var nb=kind==="glock"?12:14,bar=Math.round(nrm(m,48,96)*(nb-1)),hitK=on?Math.max(0,1-age/120):0,sideR=bar>=nb/2;
@@ -507,5 +533,5 @@
       if(s2t.on&&(st.now||Date.now())<s2t.t0)s2t.on=false;
       draw(g,x+X[i],y+Y[i],p*S[i],ART.looks.random(101+i*17),kinds[i],s2t);}
   }
-  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:function(g,x,y,p,look,kind,st){return ART.withAdj("inst:"+kind,g,function(){var r=ART.paint.holes?ART.paint.holes("inst:"+kind,g,x,y,p,function(gg){return draw(ART.paint.replaced("inst:"+kind)?ART.paint.dummy():gg,x,y,p,look,kind,st);}):draw(g,x,y,p,look,kind,st);ART.paint.at(g,"inst:"+kind,x,y,p);return r;});},KINDS:KINDS,VERSION:"1.82.50"};
+  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:function(g,x,y,p,look,kind,st){return ART.withAdj("inst:"+kind,g,function(){var r=ART.paint.holes?ART.paint.holes("inst:"+kind,g,x,y,p,function(gg){return draw(ART.paint.replaced("inst:"+kind)?ART.paint.dummy():gg,x,y,p,look,kind,st);}):draw(g,x,y,p,look,kind,st);ART.paint.at(g,"inst:"+kind,x,y,p);return r;});},KINDS:KINDS,VERSION:"1.82.51"};
 })();

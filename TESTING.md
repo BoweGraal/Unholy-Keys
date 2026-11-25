@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.51 — The computer band's drummer plays a full drum kit
+
+1. Check the version reads **v1.82.51**. Start a song with **Auto band** on, so a drummer joins.
+2. The drummer sits behind a kit: kick drum in front (red shell, white head), snare and hi-hat on the left, a rack tom on the kick, a floor tom and a crash cymbal on the right.
+3. On kicks the kick drum's head flashes with a ring. On snares the left stick comes down on the snare. On hi-hats the right stick (crossed over) hits the hat, which flashes. About every 4th kick, the right stick goes out to the crash.
+
 ## v1.82.50 — Ski: one dance jump per ramp (1, 2, Super across jumps), slower, speed sliders · plucked strings start in Impact
 
 **Dance jumps across ramps**
