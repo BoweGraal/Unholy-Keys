@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.70"></script>
-<script src="gfx.js?v=1.82.70"></script>
-<script src="art.js?v=1.82.70"></script>
-<script src="voice.js?v=1.82.70"></script>
-<script src="instruments.js?v=1.82.70"></script>
-<script src="kart.js?v=1.82.70"></script>
-<script src="explain.js?v=1.82.70"></script>
+<script src="tune.js?v=1.82.72"></script>
+<script src="gfx.js?v=1.82.72"></script>
+<script src="art.js?v=1.82.72"></script>
+<script src="voice.js?v=1.82.72"></script>
+<script src="instruments.js?v=1.82.72"></script>
+<script src="kart.js?v=1.82.72"></script>
+<script src="explain.js?v=1.82.72"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -542,7 +542,12 @@ body.fish-reel #fiReel{display:block}#fiReel.held{cursor:grabbing}
 #fiReel .fr-notch.hit{animation:frHit .35s}#fiReel .fr-notch.ok{animation:frOk .35s}#fiReel .fr-notch.miss{animation:frMiss .35s}
 @keyframes frHit{0%{background:#9cff4a;transform:scale(2.2)}}@keyframes frOk{0%{background:#fff;transform:scale(1.6)}}@keyframes frMiss{0%{background:#ff3b5c;transform:scale(1.3)}}
 #fiTen{display:none;position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 168px);width:118px;height:16px;border:3px solid #000;background:linear-gradient(to right,#2a6a3a 0%,#2a6a3a 60%,#7a6a1a 75%,#7a2a2a 100%);pointer-events:none}
-#fiTen.on{display:block}#fiTen i{position:absolute;left:0;top:0;bottom:0;width:0;background:#5bd13a;transition:width .08s linear}
+#fiTen.on{display:block}
+#fiTut{display:none;position:absolute;left:50%;top:32vh;transform:translateX(-50%);max-width:88vw;width:max-content;padding:8px 14px;text-align:center;font:700 15px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(10,7,20,.88);border:3px solid #3DF2FF;pointer-events:none;z-index:5}
+#fiTut.on{display:block}#fiTut.run{border-color:#F5C518;color:#F5C518;animation:fiTutP .5s ease-in-out infinite alternate}#fiTut.ok{border-color:#9cff4a;color:#9cff4a}#fiTut.warn{border-color:#ff3b5c;color:#ff8a8a;animation:fiTutP .25s ease-in-out infinite alternate}
+@keyframes fiTutP{to{transform:translateX(-50%) scale(1.06)}}
+#dpad .fi-ghost{display:none;position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border:3px dashed #F5C518;border-radius:8px;background:rgba(245,197,24,.25);pointer-events:none;animation:fiGh .6s ease-in-out infinite alternate}
+body.fish-tut-rod #dpad .fi-ghost{display:block}@keyframes fiGh{to{opacity:.4}}#fiTen i{position:absolute;left:0;top:0;bottom:0;width:0;background:#5bd13a;transition:width .08s linear}
 #fiTen.warn i{background:#ffb02e}#fiTen.hot i{background:#ff3b5c;animation:fiTenF .18s steps(2) infinite}#fiTen.slack{border-color:#3DF2FF}
 @keyframes fiTenF{50%{background:#ffb02e}}
 #fiTen s{position:absolute;left:-32px;top:-5px;width:20px;height:20px;background:#3a3050;border:2px solid #000;border-radius:50%;text-decoration:none}#fiTen.beat s{background:#F5C518;box-shadow:0 0 12px #F5C518}
@@ -891,7 +896,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <div class="fd-queue" id="fdQueue"></div>
   </div>
   <div id="moveCtl">
-    <div id="dpad" role="application" aria-label="Drag to walk"><i class="joy-tick t-u"></i><i class="joy-tick t-d"></i><i class="joy-tick t-l"></i><i class="joy-tick t-r"></i><div class="joy-knob"></div></div>
+    <div id="dpad" role="application" aria-label="Drag to walk"><i class="joy-tick t-u"></i><i class="joy-tick t-d"></i><i class="joy-tick t-l"></i><i class="joy-tick t-r"></i><div class="fi-ghost"></div><div class="joy-knob"></div></div>
     <div id="actBtns">
       <button id="talkBtn" title="Say something (Enter)">&#128172; Talk</button>
       <button id="voiceBtn" title="Voice chat between songs: your mic switches off while a song plays">&#127897; Voice</button>
@@ -920,7 +925,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <div id="moshUI"><div id="moshBanner">MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><div id="moshStick" aria-label="Punch and swing your arms"><small>AIM · SWING</small><b></b></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
   <div id="partBanner"></div>
   <canvas id="skiCv"></canvas><canvas id="transCv"></canvas>
-  <div id="fishUI"><div id="fiBanner">🎣 GONE FISHING</div><div id="fiScore">0</div><div id="fiCount"></div><div id="fiHint"></div><button id="fiBtn" aria-label="Cast or net">CAST<small>Space</small></button><div id="fiReel" aria-label="Wind round to reel"><div class="fr-spool"></div><div class="fr-arm"></div><div class="fr-knob"></div><div class="fr-notch"></div><b>REEL &#10227;</b></div><div id="fiTen" aria-label="Line tension"><i></i><s></s><b>TENSION</b></div></div>
+  <div id="fishUI"><div id="fiBanner">🎣 GONE FISHING</div><div id="fiScore">0</div><div id="fiCount"></div><div id="fiHint"></div><div id="fiTut"></div><button id="fiBtn" aria-label="Cast or net">CAST<small>Space</small></button><div id="fiReel" aria-label="Wind round to reel"><div class="fr-spool"></div><div class="fr-arm"></div><div class="fr-knob"></div><div class="fr-notch"></div><b>REEL &#10227;</b></div><div id="fiTen" aria-label="Line tension"><i></i><s></s><b>TENSION</b></div></div>
   <div id="boatsUI"><div id="bbBanner">🚤 BUMPER BOATS</div><div id="bbScore">0</div><div id="bbHint"></div><button id="bbBoost" aria-label="Boost">BOOST<small>Space</small></button></div>
   <div id="swimUI"><div id="swBanner">🐠 COIN DIVE</div><div id="swScore">0</div><div id="swHint"></div><button id="swDash" aria-label="Dash">DASH<small>Space</small></button><div id="swStick" aria-label="Flick to dash"><div class="sw-knob"></div><b>FLICK</b></div></div>
   <canvas id="ctfCv"></canvas>
@@ -4448,7 +4453,7 @@ var FISH=(function(){
      notch at the top on each beat (one wind a beat, on the beat, is full speed), the left stick pulls the rod round (pull the opposite
      way to the fish's run and it fights less), and watch the line tension: too high and it snaps, slack too long and the fish gets off.
      Pull it in to the edge, then net it. */
-  var sw=null,power=0,castD=0.8,D=0,T=0,overT=0,slackT=0,reelR=0,reelHold=false,spaceHeld=false,rodA=0,mouseRod=null,mouseAt=0,fishX=0,runDir=1,burst=0,burstAt=0,netAt=0,winds={},lastWind=0,aimX=0,marlinHook=false,lastMk=-1,reelA=0,prevD=0,reelPaint=null,reelHeld=function(){return false;};
+  var sw=null,power=0,castD=0.8,D=0,T=0,overT=0,slackT=0,reelR=0,reelHold=false,spaceHeld=false,rodA=0,mouseRod=null,mouseAt=0,fishX=0,runDir=1,burst=0,burstAt=0,netAt=0,winds={},lastWind=0,tut=false,tutRuns=0,aimX=0,marlinHook=false,lastMk=-1,reelA=0,prevD=0,reelPaint=null,reelHeld=function(){return false;};
   var LC=0.76,px=0.38,py=0.5,fy=0.5,drag=null,pvx=0,pvy=0,pxT=0.38,holdP=false,mouseX=null;   /* the reel box: the fish swims round the wide column; your paddle falls slowly, rises while you reel, bounces softly off the edges */   /* the reel box: the fish swims up and down the left (REEL) column; your paddle (px, py: 0-1 across / down the water) follows your drag */
   var from0=null,on=false,st="idle",stAt=0,ang=0.5,score=0,count=0,kind=0,zx=0,reeling=false,prog=0,ten=0,fx=0,fv=0,ftg=0,ftgAt=0,net=null,pops=[],lastT=0,biteAt=0,openAt=0,shadows=[],botF={},best=0,heldUp=false;
   function $(id){return document.getElementById(id);}
@@ -4474,21 +4479,20 @@ var FISH=(function(){
   function walkPos(u,o){var k=boatK(),sp=standPos(u);if(k>=1||!o)return sp;var kk=Math.min(1,k*1.6);return[o[0]+(sp[0]-o[0])*kk,Math.max(sp[1],o[1]+(RAIL1+0.07-o[1])*kk)];}
   function rimPos(u){return standPos(u);}
   function slotAng(id){return slotU(id);}
-  function set(s){st=s;stAt=performance.now();if(s!=="reel"){holdP=false;drag=null;reelHold=false;spaceHeld=false;reelR=0;}document.body.classList.toggle("fish-reel",on&&s==="reel");var te=$("fiTen");if(te)te.classList.toggle("on",on&&(s==="reel"||s==="net"));btn();}
+  function set(s){st=s;stAt=performance.now();if(tut&&s==="net")setTimeout(function(){coachSay("Got it to the edge! Tap NET","ok");},0);if(s!=="reel"&&s!=="net"&&typeof coachSay==="function")coachSay("");if(s!=="reel"){holdP=false;drag=null;reelHold=false;spaceHeld=false;reelR=0;}document.body.classList.toggle("fish-reel",on&&s==="reel");var te=$("fiTen");if(te)te.classList.toggle("on",on&&(s==="reel"||s==="net"));btn();}
   function start(round){on=true;score=0;count=0;best=0;pops=[];botF={};ang=slotAng(myId);var mm=myId&&viewers[myId];from0=mm?[+mm.x||0.5,+mm.y||0.6]:null;set("idle");document.body.classList.add("gaming-fish");$("fishUI").classList.add("on");hud();banner("🎣 GONE FISHING");}
-  function stop(){on=false;sw=null;var te=$("fiTen");if(te)te.classList.remove("on");document.body.classList.remove("gaming-fish","fish-reel");$("fishUI").classList.remove("on");if(typeof goalHL==="function")goalHL(null,"");}   /* clear the CAST / NET tag so it doesn't hang about after the game */
+  function stop(){on=false;sw=null;tut=false;coachSay("");var te=$("fiTen");if(te)te.classList.remove("on");document.body.classList.remove("gaming-fish","fish-reel");$("fishUI").classList.remove("on");if(typeof goalHL==="function")goalHL(null,"");}   /* clear the CAST / NET tag so it doesn't hang about after the game */
   function banner(t){var b=$("fiBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("fiScore");if(h)h.textContent=score.toLocaleString();var c=$("fiCount");if(c)c.textContent=count?"🐟 ×"+count:"";}
   function btn(){var b=$("fiBtn");if(!b)return;var t=st==="idle"?"CAST":st==="net"?"NET!":st==="reel"?"REEL":st==="aim"||st==="cast"||st==="wait"?"…":st==="bite"?"BITE!":"";
-    b.firstChild.textContent=t;b.classList.toggle("hot",st==="idle"||st==="net");b.classList.toggle("dim",!(st==="idle"||st==="net"));
+    b.firstChild.textContent=t;b.classList.toggle("hot",st==="net");b.classList.toggle("dim",st!=="net");b.style.display=st==="net"?"":"none";   /* casting is the swoop: the button only comes up to net the fish */
     var h=$("fiHint"),touch=window.matchMedia&&matchMedia("(pointer:coarse)").matches;if(!h)return;
     h.textContent=st==="idle"?(touch?"Tap the water to aim · drag from the ring through the swoop":"Click the water to aim · drag from the ring through the swoop · A / D walk"):st==="aim"?"Stay inside the swoop!":st==="cast"||st==="wait"?"Waiting for a bite…":st==="bite"?"Fish on!":
       st==="reel"?(touch?"Wind the reel past the notch on each beat · left stick pulls against the fish":"Wind the reel with the mouse, past the notch on each beat · A / D pull against the fish"):st==="net"?(touch?"Tap NET!":"Space to net it!"):"";
-    if(typeof goalHL==="function")goalHL(st==="idle"||st==="net"?b:null,st==="idle"?"CAST":st==="net"?"NET IT":"");}
+    if(typeof goalHL==="function")goalHL(st==="net"?b:null,st==="net"?"NET IT":"");}
   /* the button: a quick cast (weak, for anyone who doesn't swoop), the net; on a computer Space / click on the beat reels */
   function press(){if(!on||!ready())return;var now=performance.now();
-    if(st==="idle")castNow(0.35);
-    else if(st==="reel"){spaceHeld=true;wind(now);}
+    if(st==="reel"){spaceHeld=true;wind(now);}
     else if(st==="net")landIt(now);}
   /* the reel's on the beat: one wind per beat, passing the notch at the top right on the beat, is full speed. The beat comes from the
      song's own beat grid, so when the song speeds up or slows down, so does the reel. More than one wind in a beat counts for less. */
@@ -4500,8 +4504,19 @@ var FISH=(function(){
   function windRate(){var k=Math.round(beatNow()),v=function(i){var w=winds[i];return w?w.q*Math.pow(0.5,w.n-1):0;};for(var i in winds)if(+i<k-4)delete winds[i];return Math.max((v(k-2)+v(k-1))/2,(v(k-1)+v(k))/2);}
   function castNow(pw){power=Math.max(0,Math.min(1,pw));castD=0.35+0.65*power;D=castD;sw=null;set("cast");var now=performance.now();biteAt=now+700+(loud()?700+Math.random()*1300:1200+Math.random()*2200);
     if(power>=0.85)pops.push({t:now,txt:"PERFECT CAST!",col:"#F5C518"});else if(power>=0.6)pops.push({t:now,txt:"Great cast",col:"#9cff4a"});}
-  function landIt(now){var K=KINDS[kind],pts=Math.round(K.pts*(0.7+power*0.8));score+=pts;count++;best=Math.max(best,kind);GAME.moshPts(pts);hud();
-    pops.push({t:now,txt:K.n+" +"+pts,col:K.col});if(kind>=3)banner(kind===4?"✨ GOLDEN KOI!":"🐟 "+K.n.toUpperCase()+"!");set("caught");}
+  /* ---- the first catch is a little lesson: it can't get away, and a coach says what to do as it happens ---- */
+  function tutWanted(){if(/[?&]fishtut\b/.test(location.search)&&count===0)return true;try{return localStorage.getItem("uk_fish_tut")!=="1";}catch(e){return false;}}
+  function coachSay(txt,cls,rod){var b=$("fiTut");if(b){if(b.textContent!==txt)b.textContent=txt;b.className=txt?"on "+cls:"";}
+    document.body.classList.toggle("fish-tut-rod",rod!==undefined&&rod!==null);var gh=document.querySelector("#dpad .fi-ghost");if(gh&&rod!=null)gh.style.transform="translate("+Math.round(rod*38)+"px,0)";}
+  function coach(now,age){var touch=TOUCHF,want=-runDir,matched=rodA*want>0.5,dir=runDir<0?"LEFT":"RIGHT",push=want<0?(touch?"LEFT ⬅":"A ⬅"):(touch?"RIGHT ➡":"D ➡");
+    if(age<2.5)coachSay("Fish on! Wind the reel past the notch on each beat","info");
+    else if(T>0.62)coachSay("⚠ TOO TIGHT! Slow down your reeling","warn",burst>0.4?want:null);
+    else if(burst>0.4&&!matched)coachSay("It's running "+dir+"! "+(touch?"Push the stick ":"Hold ")+push,"run",want);
+    else if(burst>0.4)coachSay("Nice, hold it there! It's tiring out","ok",want);
+    else if(T<0.12)coachSay("Keep winding on the beat ⟳","info");
+    else coachSay("It's resting: wind on the beat!","info");}
+  function landIt(now){var wasTut=tut;if(tut){tut=false;try{localStorage.setItem("uk_fish_tut","1");}catch(e){}coachSay("");}var K=KINDS[kind],pts=Math.round(K.pts*(0.7+power*0.8));score+=pts;count++;best=Math.max(best,kind);GAME.moshPts(pts);hud();
+    pops.push({t:now,txt:K.n+" +"+pts,col:K.col});if(kind>=3)banner(kind===4?"✨ GOLDEN KOI!":"🐟 "+K.n.toUpperCase()+"!");if(wasTut)banner("🎣 YOU'RE A NATURAL!");set("caught");}
   /* the swoop: from your hands out to the side and round to the far water (where a perfect cast lands) */
   function myPx(){var me=viewers[myId];return me?[me.x*W,me.y*H]:[W/2,H*0.73];}
   /* the swoop: from your hands out round to the far water. Tap the water to aim it left or right. You're always in the middle
@@ -4560,25 +4575,28 @@ var FISH=(function(){
     else if(st==="cast"&&age>0.55){var mm=marlinNow();if(mm&&castD>=0.92){var me2=myPx(),G3=swGeo(me2[0],me2[1]),lx=me2[0]+(G3.ex-me2[0])*castD;if(Math.abs(lx-mm.x)<W*FT("marlinReach",0.11))marlinHook=true;}
       set("wait");if(marlinHook)biteAt=now+250;}
     else if(st==="wait"&&now>=biteAt){kind=marlinHook?5:pickKind();marlinHook=false;if(kind===5)banner("MARLIN ON!");set("bite");}
-    else if(st==="bite"&&age>0.6){set("reel");T=0.2;overT=0;slackT=0;reelR=0;winds={};rodA=0;fishX=0;burst=0.6;runDir=Math.random()<0.5?-1:1;burstAt=now+900;}
-    else if(st==="reel"){var K=KINDS[kind],str=FT("fishStr",1)*(kind===5?FT("marlinStr",0.9):0.35+kind*0.16);
+    else if(st==="bite"&&age>0.6){tut=tutWanted();tutRuns=0;if(tut)kind=Math.min(kind,1);set("reel");T=0.2;overT=0;slackT=0;reelR=0;winds={};rodA=0;fishX=0;burst=0.6;runDir=Math.random()<0.5?-1:1;burstAt=now+900;}
+    else if(st==="reel"){var K=KINDS[kind],str=(tut?0.6:1)*FT("fishStr",1)*(kind===5?FT("marlinStr",0.9):0.35+kind*0.16);
       /* the fish: runs left or right in bursts, rests in between */
-      if(now>burstAt){var big=Math.random()<0.62;burst=big?0.5+Math.random()*0.5:0.08;if(big)runDir=Math.random()<0.5?-1:1;burstAt=now+(big?700+Math.random()*1300:600+Math.random()*900)/(0.8+kind*0.12);}
+      if(tut&&age<2.6){burst=0.08;burstAt=Math.max(burstAt,now);}   /* the lesson: a calm start, then a run each way */
+      else if(now>burstAt){var big=tut&&tutRuns<3?tutRuns%2===0:Math.random()<0.62;if(tut&&tutRuns<3){tutRuns++;if(big){burst=0.9;runDir=tutRuns===1?-1:1;burstAt=now+2600;}else{burst=0.08;burstAt=now+1800;}}else {burst=big?0.5+Math.random()*0.5:0.08;if(big)runDir=Math.random()<0.5?-1:1;burstAt=now+(big?700+Math.random()*1300:600+Math.random()*900)/(0.8+kind*0.12);}}
       fishX=Math.max(-1,Math.min(1,fishX+(runDir*0.85-fishX)*dt*burst*1.6));
       /* the rod: the left stick (or ← →, or the mouse beside you) pulls it round; it springs back to the middle */
       var rodT=Math.abs(inp.x)>0.1?inp.x:0;rodA+=(rodT-rodA)*Math.min(1,dt*8);
       var against=-rodA*runDir,pull=burst*str*(1-0.7*Math.max(0,against)+0.5*Math.max(0,-against));   /* pulling the opposite way to its run tires it */
       /* the reel: winds on the beat; holding on a computer is a slow steady reel */
       var rt=Math.min(1,windRate());if(reelHold||spaceHeld||held.up)rt=Math.max(rt,0.3);reelR+=(rt-reelR)*Math.min(1,dt*(rt>reelR?10:4));
-      D=Math.max(0,Math.min(1.2,D+(pull*FT("run",0.14)-reelR*FT("reel",0.24)*(kind===5?FT("marlinReel",0.55):1)*(1-0.5*Math.min(1,pull)))*dt));
+      D=Math.max(0,Math.min(1.2,D+(pull*FT("run",0.14)-reelR*FT("reel",0.24)*(tut?0.45:1)*(kind===5?FT("marlinReel",0.55):1)*(1-0.5*Math.min(1,pull)))*dt));
       var Tt=reelR*0.45+pull*(reelR>0.15?1.15:0.5)+Math.abs(rodA)*0.08;T+=(Tt-T)*Math.min(1,dt*5);
       if(T>1)overT+=dt;else overT=Math.max(0,overT-dt*2);if(T<0.06)slackT+=dt;else slackT=0;
-      if(overT>FT("snapT",0.5)){pops.push({t:now,txt:"SNAP! The line broke",col:"#ff8a8a"});set("snap");}
+      if(tut){D=Math.min(D,1);if(D<=0.05){netAt=now;set("net");}}
+      else if(overT>FT("snapT",0.5)){pops.push({t:now,txt:"SNAP! The line broke",col:"#ff8a8a"});set("snap");}
       else if(slackT>FT("slackT",3.5)){pops.push({t:now,txt:"Too slack, it got off…",col:"#ff8a8a"});set("lost");}
       else if(D>=1.15){pops.push({t:now,txt:"It ran off with the line!",col:"#ff8a8a"});set("lost");}
       else if(D<=0.05){netAt=now;set("net");}
+      if(tut&&st==="reel")coach(now,age);
       var hn=$("fiHint");if(hn&&age>5&&st==="reel")hn.textContent=K.n.toUpperCase()+" · "+Math.round(4+D*36)+"m";}
-    else if(st==="net"&&now-netAt>FT("netT",4000)){pops.push({t:now,txt:"It swam off!",col:"#ff8a8a"});set("lost");}
+    else if(st==="net"&&!tut&&now-netAt>FT("netT",4000)){pops.push({t:now,txt:"It swam off!",col:"#ff8a8a"});set("lost");}
     else if((st==="caught"||st==="snap"||st==="lost")&&age>(st==="caught"?1.4:1.1))set("idle");
     if(st==="reel"){var bph=((beatNow()%1)+1)%1,nb=Math.min(bph,1-bph)<0.12,rl=$("fiReel");if(rl)rl.classList.toggle("beat",nb);var bd=$("fiTen");if(bd)bd.classList.toggle("beat",nb);}
     var te=$("fiTen");if(te&&(st==="reel"||st==="net")){var tv=st==="net"?0.3:Math.min(1,T);te.firstChild.style.width=Math.round(tv*100)+"%";te.classList.toggle("hot",tv>0.85);te.classList.toggle("warn",tv>0.65&&tv<=0.85);te.classList.toggle("slack",tv<0.08);}
@@ -4602,7 +4620,7 @@ var FISH=(function(){
   function looks(v,isMe,scl){return{lift:0,rot:0,ns:true};}
   /* the ocean, the boat and the flying wall */
   function under(g){
-    if(!fishOn())return;var now=performance.now(),s=sc(),P=ART.PX.unit(g);
+    if(!fishOn()||(!on&&!openAt))return;var now=performance.now(),s=sc(),P=ART.PX.unit(g);   /* not during the round's countdown: everyone's still free on the dance floor then, so the floor can't break away yet */
     if(!openAt){openAt=now;   /* the first frame: take a picture of the stage wall, to send flying */
       try{var cv0=g.canvas,rt=cv0.width/W;snapH=Math.round(RAIL0*H);snap=document.createElement("canvas");snap.width=Math.max(1,Math.round(W*rt));snap.height=Math.max(1,Math.round(snapH*rt));snap.getContext("2d").drawImage(cv0,0,0,snap.width,snap.height,0,0,snap.width,snap.height);
         rt0=rt;snapF=document.createElement("canvas");snapF.width=snap.width;snapF.height=Math.max(1,Math.round((RAIL1-RAIL0+0.05)*H*rt));snapF.getContext("2d").drawImage(cv0,0,Math.round(RAIL0*H*rt),snapF.width,snapF.height,0,0,snapF.width,snapF.height);}catch(e){snap=null;snapF=null;}}
@@ -4647,7 +4665,7 @@ var FISH=(function(){
     g.fillStyle="#2b64b8";g.fillRect(Math.round(-L-s*3),Math.round(-s*3),s*2,s*2.5);g.fillRect(Math.round(-L-s*3),Math.round(s*0.5),s*2,s*2.5);g.fillRect(Math.round(-L-s*1.5),Math.round(-s),s*2,s*2);   /* the tail */
     g.fillStyle="#000";g.fillRect(Math.round(L*0.62),Math.round(-s*0.8),s,s);g.restore();
     if(lp<0.06||(lp>0.36&&lp<0.45)){g.strokeStyle="rgba(230,245,255,.8)";var rr=s*(3+((lp*20)%1)*6);ART.PX.ringO(g,x,y+s*2,rr,rr*0.4,0);}}   /* splashes in and out */
-  window.ukFishScene=function(){return{t:+sceneT().toFixed(2),wall:+wallK().toFixed(2),boat:+boatK().toFixed(2),rail:+railY().toFixed(3),ready:ready(),snap:!!snap};};
+  window.ukFishScene=function(){return{ys:Object.keys(viewers).map(function(k){var v=viewers[k];return v&&v!==PH?(v.dy!==undefined?v.dy:v.y):null;}).filter(function(y){return y!=null;}),t:+sceneT().toFixed(2),wall:+wallK().toFixed(2),boat:+boatK().toFixed(2),rail:+railY().toFixed(3),ready:ready(),snap:!!snap};};
   function boatOn(){return fishOn()&&openAt>0;}
   function perfAt(){return boatK();}
   /* lines and bobbers for everyone, the fish you're holding up, and your reel panel */
@@ -4688,7 +4706,7 @@ var FISH=(function(){
         g.fillStyle=uM>=L[0]?L[2]:"rgba(255,255,255,.55)";for(var k=-hw;k<=hw;k+=P2*2)g.fillRect(Math.round(pp[0]+nn[0]*k-P2/2),Math.round(pp[1]+nn[1]*k-P2/2),P2,P2);
         var lx=pp[0]+nn[0]*(hw+16)*sg,ly=pp[1]+nn[1]*(hw+16)*sg+4;g.strokeText(L[1],lx,ly);g.fillStyle=uM>=L[0]?L[2]:"#fff";g.fillText(L[1],lx,ly);});
       var ep=swAt(G2,1);g.strokeStyle="#F5C518";ART.PX.ringO(g,ep[0],ep[1],G2.r*0.5,G2.r*0.25,0);   /* where a full cast lands */
-      if(st==="idle"){var r4=(now%900)/900;g.strokeStyle="#fff";ART.PX.ring(g,G2.sx,G2.sy,G2.r*(0.6+r4*0.5),Math.max(2,P2));g.font="900 "+Math.max(11,s*5)+"px 'Silkscreen',ui-monospace,monospace";g.strokeText("DRAG",G2.sx,G2.sy-G2.r-8);g.fillStyle="#fff";g.fillText("DRAG",G2.sx,G2.sy-G2.r-8);}
+      if(st==="idle"){var r4=(now%900)/900;g.strokeStyle="#fff";ART.PX.ring(g,G2.sx,G2.sy,G2.r*(0.6+r4*0.5),Math.max(2,P2));g.strokeStyle="rgba(0,0,0,.8)";g.font="900 "+Math.max(11,s*5)+"px 'Silkscreen',ui-monospace,monospace";g.strokeText("DRAG",G2.sx,G2.sy-G2.r-8);g.fillStyle="#fff";g.fillText("DRAG",G2.sx,G2.sy-G2.r-8);}
       else if(sw){g.fillStyle="#fff";ART.PX.disc(g,sw.f[0],sw.f[1],Math.max(P2*3,G2.r*0.22));g.font="900 "+Math.max(11,s*5)+"px 'Silkscreen',ui-monospace,monospace";var pt="POWER "+Math.round(uM*100)+"%";g.strokeText(pt,m[0],m[1]-s*38);g.fillStyle="#9cff4a";g.fillText(pt,m[0],m[1]-s*38);}
       g.restore();}
     pops=pops.filter(function(p){var a3=(now-p.t)/1400;if(a3>1)return false;var me=viewers[myId];var px=me?me.x*W:W/2,py=me?me.y*H-s*36:H/2;g.globalAlpha=1-a3*a3;g.font="900 "+Math.max(14,s*6)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.75)";g.strokeText(p.txt,px,py-a3*30);g.fillStyle=p.col;g.fillText(p.txt,px,py-a3*30);return true;});
@@ -4700,7 +4718,7 @@ var FISH=(function(){
     PXD.tri(g,x-dir*L/2,y,x-dir*(L/2+h*0.8),h*0.6);g.fillStyle="#000";g.fillRect(Math.round(x+dir*L*0.28-s/2),Math.round(y-h*0.2),s,s);}
     window.ukFish=function(){return{on:on,st:st,score:score,count:count,kind:kind,power:+power.toFixed(2),castD:+castD.toFixed(2),D:+D.toFixed(2),T:+T.toFixed(2),reel:+reelR.toFixed(2),rod:+rodA.toFixed(2),fishX:+fishX.toFixed(2),runDir:runDir,sw:sw?{u:+sw.uMax.toFixed(2)}:null,aim:aimX,marlin:marlinNow(),swoop:ready()?(function(){var m=myPx();return swGeo(m[0],m[1]);})():null,zoom:VZS.on?+VZS.Z.toFixed(2):1};};
   window.ukFishForce=function(o){if(o.st)set(o.st);if(o.biteAt!==undefined)biteAt=performance.now()+o.biteAt;if(o.kind!==undefined)kind=o.kind;if(o.D!==undefined)D=o.D;if(o.T!==undefined)T=o.T;if(o.power!==undefined)power=o.power;if(o.aim!==undefined)aimX=o.aim;};window.ukFishMarlin=function(){var B=FT("marlinEvery",26000),t=mClock(),k=Math.floor(t/B);return{now:t,next:k*B+5000+hh(k)*(B-14000)};};
-  window.ukFishScr=function(x,y){return VZS.on?[(x-VZS.cx)*VZS.Z+W/2,(y-VZS.cy)*VZS.Z+VZS.ay]:[x,y];};window.ukFishReel=function(){wind(performance.now());};window.ukFishBeat=function(){return beatNow();};   /* test: one wind of the reel; the beat */
+  window.ukFishScr=function(x,y){return VZS.on?[(x-VZS.cx)*VZS.Z+W/2,(y-VZS.cy)*VZS.Z+VZS.ay]:[x,y];};window.ukFishTut=function(){var b=$("fiTut");return{tut:tut,msg:b?b.textContent:"",cls:b?b.className:"",ghost:document.body.classList.contains("fish-tut-rod")};};window.ukFishReel=function(){wind(performance.now());};window.ukFishBeat=function(){return beatNow();};   /* test: one wind of the reel; the beat */
   return{cam:function(Z0,aY){if(!fishOn()||!openAt)return null;var bk=boatK();if(bk<=0)return null;var m=myPx(),ty=RAIL1*H-(H*FT("edgeY",0.66)-aY)/Math.max(1,Z0);return[W/2+(m[0]-W/2)*bk,aY+(ty-aY)*bk];},boatK:function(){return fishOn()?boatK():0;},pdown:pdown,pmove:pmove,pup:pup,start:start,stop:stop,tick:tick,press:press,under:under,draw:draw,wire:wire,looks:looks,facing:facing,fishOn:fishOn,reset:function(){openAt=0;shadows=[];snap=null;snapF=null;chunks=null;},get on(){return on;},get st(){return st;},get score(){return score;}};
 })();
 /* ============================================================
@@ -8815,7 +8833,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.70",SERVER_VERSION="";
+var PAGE_VERSION="1.82.72",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9415,7 +9433,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.70"></script>
+<script src="lab.js?v=1.82.72"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
