@@ -1688,6 +1688,18 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.48 — Ski: dance jumps (drag and flick the swoop)
+
+1. Check the version reads **v1.82.48**. Start **Ski**. The first few ramps have a sign at the lip: **HOP AT THE END! big air = dance jumps**.
+2. HOP right at the end of a ramp. As you take off, time slows and a swoop pops up: a curl with a hand in its inner end, an arrow and **FLICK!** at the open end, and **DANCE JUMP 1/3** along the bottom.
+3. Put your finger on the hand (or click it with the mouse), drag it along the swoop, and flick it out of the end as hard as you can. You go higher, do a dance move, and get points. The result shows your **POWER %**.
+4. A hard enough flick (100% power) brings up the **2nd** swoop: a longer curl. Get it round and out and the **SUPER 3/3** swoop comes up: a long spiral, a narrower line, and it needs a really hard flick. Too soft says **NOT HARD ENOUGH (x%)**.
+5. Wander off the line and it says **OFF THE LINE**. Let go before the end and it says **FLICK IT OUT THE END!** Either way, no crash: you just land normally.
+6. Roll off a ramp without hopping: you get less air (the swoop still comes up, but there's little time) and a pop-up says **HOP AT THE END = MORE AIR!**
+7. On a computer, the little mouse help picture hides while a swoop is up.
+
+If the power needed feels too hard or too easy on your phone, tell me the % you're getting and I'll tune it.
+
 ## v1.82.47 — Bumper boats: tipping at the edge, knockout saves, rounds with a shrinking pool
 
 **Tipping at the edge**
