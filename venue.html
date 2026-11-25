@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.48"></script>
-<script src="gfx.js?v=1.82.48"></script>
-<script src="art.js?v=1.82.48"></script>
-<script src="voice.js?v=1.82.48"></script>
-<script src="instruments.js?v=1.82.48"></script>
-<script src="kart.js?v=1.82.48"></script>
-<script src="explain.js?v=1.82.48"></script>
+<script src="tune.js?v=1.82.49"></script>
+<script src="gfx.js?v=1.82.49"></script>
+<script src="art.js?v=1.82.49"></script>
+<script src="voice.js?v=1.82.49"></script>
+<script src="instruments.js?v=1.82.49"></script>
+<script src="kart.js?v=1.82.49"></script>
+<script src="explain.js?v=1.82.49"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5461,15 +5461,18 @@ var SKI=(function(){
     var bw=W*0.78,bh=H*0.58,sc=Math.min(bw/(x1-x0),bh/(y1-y0)),cx=W/2,cy=H*0.52;
     return pts.map(function(p){return[cx+(p[0]-(x0+x1)/2)*sc,cy+(p[1]-(y0+y1)/2)*sc];});}
   function djStart(st){var path=djPath(st);dj={st:st,path:path,idx:0,drag:false,samp:[],t0:performance.now(),tol:DJ[st].tol*Math.min(W,H)};
-    banner(st===1?"🖐 DANCE JUMP! DRAG & FLICK":st===2?"🖐 2ND DANCE JUMP!":"🌟 SUPER DANCE JUMP!",st===3?"#F5C518":"#FF5FD2");}
+    if(st===1)banner("🖐 DANCE JUMP! DRAG & FLICK","#FF5FD2");else{var bb=$("skiBanner");if(bb)bb.classList.remove("pop");}}   /* after the first, just the swoop: no banners or labels */
   function djEnd(ok,txt,col){if(!dj)return;djLast={st:dj.st,path:dj.path,idx:dj.idx,ok:ok,txt:txt,col:col,t:performance.now()};dj=null;}
   function djDown(px,py){if(!dj)return false;var h=dj.path[0];if(Math.hypot(px-h[0],py-h[1])<Math.max(44,dj.tol*1.6)){dj.drag=true;dj.samp=[[px,py,performance.now()]];}return true;}   /* while a swoop's up, touches are for it (not steering) */
   function djMove(px,py){if(!dj||!dj.drag)return;var now=performance.now();dj.samp.push([px,py,now]);while(dj.samp.length>2&&now-dj.samp[0][2]>90)dj.samp.shift();
     var best=-1,bd=1e9;for(var i=dj.idx;i<Math.min(dj.path.length,dj.idx+14);i++){var d=Math.hypot(px-dj.path[i][0],py-dj.path[i][1]);if(d<bd){bd=d;best=i;}}
-    if(bd<=dj.tol){dj.idx=Math.max(dj.idx,best);}
-    else if(bd>dj.tol*1.9&&dj.idx<dj.path.length*0.9){djEnd(false,"OFF THE LINE","#aaa");return;}
+    var tl=djTol(dj,best);
+    if(bd<=tl){dj.idx=Math.max(dj.idx,best);}
+    else if(bd>djTol(dj,dj.idx)*1.9&&dj.idx<dj.path.length*0.9){djEnd(false,"OFF THE LINE","#aaa");return;}
     if(dj.idx>=dj.path.length-3){   /* out of the open end: how hard was the flick? (screens a second, over the last tenth of a second) */
       var a0s=dj.samp[0],a1s=dj.samp[dj.samp.length-1],dtS=Math.max(0.016,(a1s[2]-a0s[2])/1000),spd=Math.hypot(a1s[0]-a0s[0],a1s[1]-a0s[1])/dtS/Math.min(W,H);djFlick(spd);}}
+  function djTol(d,i){return d.tol*(1.45-0.95*i/Math.max(1,d.path.length-1));}   /* the swoop starts wide and narrows toward the end */
+  function djW(d,i){var lw=Math.max(14,Math.min(W,H)*DJ[d.st].tol*1.1);return lw*(1.5-1.05*i/Math.max(1,d.path.length-1));}
   function djUp(){if(!dj||!dj.drag)return;if(dj.idx<dj.path.length-3){djEnd(false,dj.idx>dj.path.length*0.7?"FLICK IT OUT THE END!":"KEEP GOING TO THE END","#aaa");}}
   function djFlick(spd){var st=dj.st,cfg=DJ[st],pw=Math.min(1,spd/Math.max(cfg.next||cfg.need||2.5,0.1));
     if(st===3&&spd<cfg.need){djEnd(false,"NOT HARD ENOUGH ("+Math.round(spd/cfg.need*100)+"%)","#aaa");return;}
@@ -5483,22 +5486,24 @@ var SKI=(function(){
   function djTick(dt){if(dj&&air<=0)djEnd(false,"LANDED","#aaa");}
   function djDraw(gg,now){
     var d=dj||djLast;if(!d)return;var age=dj?0:(now-d.t)/1000;if(!dj&&age>0.9){djLast=null;return;}
-    gg.save();gg.globalAlpha=dj?1:Math.max(0,1-age/0.9);var P=d.path,lw=Math.max(14,Math.min(W,H)*DJ[d.st].tol*1.1),kp=Math.max(2,Math.round(Math.min(W,H)/180));
-    gg.fillStyle="rgba(10,14,40,"+(dj?0.28:0.15)+")";gg.fillRect(0,0,W,H);   /* the slope dims behind it */
-    function stroke(i0,i1,w,col){gg.strokeStyle=col;gg.lineWidth=w;gg.lineCap="round";gg.lineJoin="round";gg.beginPath();gg.moveTo(P[i0][0],P[i0][1]);for(var i=i0+1;i<=i1;i++)gg.lineTo(P[i][0],P[i][1]);gg.stroke();}
-    stroke(0,P.length-1,lw+6,"#1d2740");stroke(0,P.length-1,lw,d.st===3?"rgba(255,225,77,.35)":"rgba(255,255,255,.55)");
-    if(d.idx>0)stroke(0,d.idx,lw*0.7,d.ok===false?"#8a8fa8":d.st===3?"#F5C518":"#FF5FD2");
+    var first=d.st===1;   /* only the first swoop has the dimming, titles and FLICK label: after that it's just the swoop */
+    gg.save();gg.globalAlpha=dj?1:Math.max(0,1-age/0.9);var P=d.path,lw=djW(d,P.length-1),kp=Math.max(2,Math.round(Math.min(W,H)/180));
+    if(first){gg.fillStyle="rgba(10,14,40,"+(dj?0.28:0.15)+")";gg.fillRect(0,0,W,H);}   /* the slope dims behind it */
+    function stroke(i0,i1,k,add,col){gg.strokeStyle=col;gg.lineCap="round";gg.lineJoin="round";for(var i=i0;i<i1;i++){gg.lineWidth=djW(d,i)*k+add;gg.beginPath();gg.moveTo(P[i][0],P[i][1]);gg.lineTo(P[i+1][0],P[i+1][1]);gg.stroke();}}   /* wide at the hand, skinny at the end */
+    stroke(0,P.length-1,1,6,"#1d2740");stroke(0,P.length-1,1,0,d.st===3?"rgba(255,225,77,.55)":"rgba(220,226,240,.92)");
+    if(d.idx>0)stroke(0,d.idx,0.7,0,d.ok===false?"#8a8fa8":d.st===3?"#F5C518":"#FF5FD2");
     /* the open end: an arrow to flick out through */
     var e=P[P.length-1],e0=P[P.length-6],ang=Math.atan2(e[1]-e0[1],e[0]-e0[0]);gg.save();gg.translate(e[0],e[1]);gg.rotate(ang);gg.fillStyle="#FFE14D";gg.strokeStyle="#1d2740";gg.lineWidth=3;
       gg.beginPath();gg.moveTo(lw*1.1,0);gg.lineTo(-lw*0.2,-lw*0.8);gg.lineTo(-lw*0.2,lw*0.8);gg.closePath();gg.fill();gg.stroke();gg.restore();
     gg.font="900 "+Math.max(14,kp*7)+"px 'Silkscreen',ui-monospace,monospace";gg.textAlign="center";gg.lineWidth=4;gg.strokeStyle="#1d2740";
-    gg.fillStyle="#FFE14D";var fx=Math.max(70,Math.min(W-70,e[0]+Math.cos(ang)*lw*2.2)),fy=Math.max(lw+20,Math.min(H-20,e[1]+Math.sin(ang)*lw*2.2));gg.strokeText("FLICK!",fx,fy);gg.fillText("FLICK!",fx,fy);
+    gg.fillStyle="#FFE14D";var fx=Math.max(70,Math.min(W-70,e[0]+Math.cos(ang)*lw*2.2)),fy=Math.max(lw+20,Math.min(H-20,e[1]+Math.sin(ang)*lw*2.2));if(first){gg.strokeText("FLICK!",fx,fy);gg.fillText("FLICK!",fx,fy);}
     /* the hand: waiting in the inner end, or riding under your finger along the line */
     var hp=P[Math.min(P.length-1,d.idx)];if(dj&&dj.drag&&dj.samp.length){var ls=dj.samp[dj.samp.length-1];hp=[ls[0],ls[1]];}
     var bob=dj&&!dj.drag?Math.round(Math.sin(now/160)*2)*kp:0;djHand(gg,hp[0],hp[1]+bob,kp);
-    if(dj&&!dj.drag){var pul=(now/600)%1;gg.strokeStyle="rgba(255,225,77,"+(1-pul).toFixed(2)+")";gg.lineWidth=3;gg.beginPath();gg.arc(P[0][0],P[0][1],lw*(0.8+pul*1.4),0,Math.PI*2);gg.stroke();}
+    if(dj&&!dj.drag&&first){var pul=(now/600)%1;gg.strokeStyle="rgba(255,225,77,"+(1-pul).toFixed(2)+")";gg.lineWidth=3;gg.beginPath();gg.arc(P[0][0],P[0][1],lw*(0.8+pul*1.4),0,Math.PI*2);gg.stroke();}
     /* the title, and what happened */
-    var t=dj?(d.st===1?"DANCE JUMP 1/3":d.st===2?"DANCE JUMP 2/3":"🌟 SUPER 3/3"):d.txt,ty=H-Math.max(56,kp*20);   /* along the bottom, clear of the round banner up top */
+    if(!first){gg.restore();return;}
+    var t=dj?"DANCE JUMP 1/3":d.txt,ty=H-Math.max(56,kp*20);   /* along the bottom, clear of the round banner up top */
     gg.font="900 "+Math.max(16,kp*9)+"px 'Silkscreen',ui-monospace,monospace";gg.strokeText(t,W/2,ty);gg.fillStyle=dj?(d.st===3?"#F5C518":"#FF5FD2"):d.col;gg.fillText(t,W/2,ty);
     if(dj&&!dj.drag){gg.font="700 "+Math.max(11,kp*5)+"px 'Silkscreen',ui-monospace,monospace";var sub=TOUCHY?"Put your finger on the hand, drag it round, flick it out!":"Click the hand, drag it round, flick it out!";gg.strokeText(sub,W/2,ty+kp*9);gg.fillStyle="#fff";gg.fillText(sub,W/2,ty+kp*9);}
     gg.restore();}
@@ -5604,10 +5609,10 @@ var SKI=(function(){
     var tpo=trick&&!crashed?trickPose(trick.k,Math.min(1,(now-trick.t0)/1000/TRK[trick.k].dur),1,now):null;
     GAME.moshPose(crashed?[2.6,-2.6,1.2,-1.2]:tpo?[tpo.armL,tpo.armR,tpo.legL,tpo.legR]:air>0?[2.4,-2.4,0.6,-0.6]:[0.9-a*0.3,-0.9-a*0.3,0.15,-0.15]);
     if(LBOTS())botTick(dt,now,going);
-    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":dj?"Drag the hand along the swoop and flick it out the end!":air>0?(hopAir?"Swing round now to cut onto a new line":"Dance move! ⬅ Sinking Swim · ⬆ YMCA · ➡ Disco Point"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · left click: hop, in the air: the yellow trick · right click: next trick · land in a divot to swoop");
+    var hn=$("skiHint");if(hn)hn.textContent=!going?(TOUCHY?"Push the left stick the way you want to go: straight down is fastest":"Point where you want to go: straight down is fastest"):crashed?"Ouch! Back up in a moment…":dj?(dj.st===1?"Drag the hand along the swoop and flick it out the end!":""):air>0?(hopAir?"Swing round now to cut onto a new line":"Dance move! ⬅ Sinking Swim · ⬆ YMCA · ➡ Disco Point"):(!course&&SK.zoneAt(y).k==="jump"?"Jump zone: HOP at the very end of a ramp for the biggest jump, then trick (worth ×1.5)":TOUCHY?"Left stick to steer · pass each flag on its arrow side · HOP to pop and cut":"Point to steer · left click: hop, in the air: the yellow trick · right click: next trick · land in a divot to swoop");
     /* on a computer: a little pixel mouse instead of the line of text (left = hop / trick in the air, right = next trick) */
     var pcM=!TOUCHY&&going&&!crashed&&!dj&&(air>0?!hopAir:!(!course&&SK.zoneAt(y).k==="jump")),sm=skiMouse();
-    if(hn)hn.style.display=pcM?"none":"";if(sm){sm.classList.toggle("on",pcM);sm.classList.toggle("air",air>0);}
+    if(hn)hn.style.display=pcM||!hn.textContent?"none":"";if(sm){sm.classList.toggle("on",pcM);sm.classList.toggle("air",air>0);}
   }
   /* practice: the practice skiers follow the slalom line at their own pace, now and then crashing */
   function botTick(dt,now,going){
@@ -8544,7 +8549,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.48",SERVER_VERSION="";
+var PAGE_VERSION="1.82.49",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9133,7 +9138,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.48"></script>
+<script src="lab.js?v=1.82.49"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

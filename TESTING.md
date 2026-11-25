@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.49 — Ski: clean swoops after the first, tapering from wide to skinny
+
+1. Check the version reads **v1.82.49**. HOP off a ramp: the first swoop still has the dimmed slope, the title and the **FLICK!** label, so you learn it.
+2. Flick it hard enough for the 2nd: it's just the swoop and the hand. No dimming, banner, titles, FLICK! label or hint text. The same goes for the Super.
+3. Every swoop starts wide at the hand and narrows toward the end, and the line you have to stay on narrows with it.
+
 ## v1.82.48 — Ski: dance jumps (drag and flick the swoop)
 
 1. Check the version reads **v1.82.48**. Start **Ski**. The first few ramps have a sign at the lip: **HOP AT THE END! big air = dance jumps**.
