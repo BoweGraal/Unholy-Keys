@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.72 — Fishing: the first catch is a tutorial
+
+Shows once per device. To see it again, open the site with `?fishtut` added to the address; the first catch of that game is the tutorial.
+
+1. Cast and hook a fish. A coach box appears mid-screen: "Fish on! Wind the reel past the notch on each beat".
+2. After a calm start the fish runs one way, then the other. The coach calls it out ("It's running LEFT! Push the stick RIGHT ➡", or "Hold D ➡" on a computer), and a dashed yellow ghost knob on the joystick shows where to push. Match it and it says "Nice, hold it there!".
+3. Wind straight through a run without steering and the tension climbs: "⚠ TOO TIGHT! Slow down your reeling" (red, shaking).
+4. When the fish rests: "It's resting: wind on the beat!".
+5. You can't lose it: the line won't snap or go slack, the fish can't run off, and the net waits as long as you need ("Got it to the edge! Tap NET").
+6. Landing it shows "YOU'RE A NATURAL!". The next fish is a normal one, which you can lose.
+
 ## v1.82.71 — Fishing: nobody standing on water, no CAST button
 
 1. Start a real Fishing round with the countdown. During the countdown it's still the normal dance floor; the wall only flies up and the floor only breaks away once the game starts. Nobody should ever be standing on the water.
