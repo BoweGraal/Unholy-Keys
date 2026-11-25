@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.67"></script>
-<script src="gfx.js?v=1.82.67"></script>
-<script src="art.js?v=1.82.67"></script>
-<script src="voice.js?v=1.82.67"></script>
-<script src="instruments.js?v=1.82.67"></script>
-<script src="kart.js?v=1.82.67"></script>
-<script src="explain.js?v=1.82.67"></script>
+<script src="tune.js?v=1.82.68"></script>
+<script src="gfx.js?v=1.82.68"></script>
+<script src="art.js?v=1.82.68"></script>
+<script src="voice.js?v=1.82.68"></script>
+<script src="instruments.js?v=1.82.68"></script>
+<script src="kart.js?v=1.82.68"></script>
+<script src="explain.js?v=1.82.68"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -220,6 +220,7 @@ body.gaming-ctf #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #fiScore,#bbScore,#swScore{position:absolute;right:14px;top:56px;font:900 26px 'Silkscreen',ui-monospace,monospace;color:#3DF2FF;text-shadow:0 2px 0 #000}
 #bbScore[data-r]::before{content:attr(data-r);display:block;font-size:12px;color:#FF8AE0;text-align:right;letter-spacing:1px}   /* the round: R2/3 */
 #fiCount{position:absolute;right:14px;top:90px;font:700 14px 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:0 2px 0 #000}
+body[data-game="fish"] #fiHint{top:max(178px,22vh);white-space:normal;text-align:center;width:max-content;max-width:80vw}
 #fiHint,#bbHint,#swHint{position:absolute;left:50%;transform:translateX(-50%);top:64px;font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.88);text-shadow:0 1px 3px #000;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
 #fiBtn,#bbBoost,#swDash{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 12px);width:104px;height:104px;border:3px solid #3DF2FF;background-color:#1f6fa0;color:#fff;font:900 18px 'Silkscreen',ui-monospace,monospace;pointer-events:auto;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:4px 4px 0 #000}
 #fiBtn small,#bbBoost small,#swDash small{font:600 10px 'Silkscreen',ui-monospace,monospace;opacity:.75;margin-top:4px}
@@ -4434,17 +4435,17 @@ var FISH=(function(){
     var sec=(c.sections||[]).filter(function(s){return s[0]<=t;}).pop();return !!(sec&&/chorus|drop|finale/i.test(String(sec[1])));}
   /* ---- the boat: the stage wall flies up, behind it the ocean; the dance floor is the back deck of a boat, and the camera
      moves up so everyone's at the rail with the open water ahead. openAt = when the scene started ---- */
-  var RAIL0=0.30,RAIL1=0.42,snap=null,snapH=0;
+  var RAIL0=0.30,RAIL1=0.66,snap=null,snapH=0,chunks=null,snapF=null,rt0=1;
   function sceneT(){return openAt?(performance.now()-openAt)/1000:0;}
   function ease(k){k=Math.max(0,Math.min(1,k));return k*k*(3-2*k);}
   function wallK(){var k=Math.max(0,Math.min(1,sceneT()/1.3));return k*k*k;}             /* the wall: slow to start, then away */
-  function boatK(){return ease((sceneT()-1.0)/1.5);}                                     /* the camera move onto the boat */
+  function boatK(){return ease((sceneT()-1.0)/2.2);}                                     /* the floor breaking away, edge moving down */
   function railY(){return RAIL0+(RAIL1-RAIL0)*boatK();}                                 /* the boat's rail (a fraction of the screen) */
   function ready(){return boatK()>=1;}
   function slotU(id){var ids=Object.keys(viewers).filter(function(k){return viewers[k]&&viewers[k]!==PH;}).sort(),i=Math.max(0,ids.indexOf(id)),n=Math.max(1,ids.length);return n<2?0.5:0.1+0.8*i/(n-1);}
-  function standPos(u){return[u,railY()+0.065];}
-  /* during the camera move everyone walks from where they were to their spot at the rail */
-  function walkPos(u,o){var k=boatK(),sp=standPos(u);if(k>=1||!o)return sp;return[o[0]+(sp[0]-o[0])*k,o[1]+(sp[1]-o[1])*k];}
+  function standPos(u){return[u,railY()+0.07];}
+  /* as the floor breaks away everyone runs to the new edge, always staying just ahead of the crumbling bit */
+  function walkPos(u,o){var k=boatK(),sp=standPos(u);if(k>=1||!o)return sp;var kk=Math.min(1,k*1.6);return[o[0]+(sp[0]-o[0])*kk,Math.max(sp[1],o[1]+(RAIL1+0.07-o[1])*kk)];}
   function rimPos(u){return standPos(u);}
   function slotAng(id){return slotU(id);}
   function set(s){st=s;stAt=performance.now();if(s!=="reel"){holdP=false;drag=null;}document.body.classList.toggle("fish-reel",on&&s==="reel");btn();}
@@ -4455,7 +4456,7 @@ var FISH=(function(){
   function btn(){var b=$("fiBtn");if(!b)return;var t=st==="idle"?"CAST":st==="net"?"NET!":st==="reel"?"REEL":st==="cast"||st==="wait"?"…":st==="bite"?"BITE!":"";
     b.firstChild.textContent=t;b.classList.toggle("hot",st==="idle"||st==="net");b.classList.toggle("dim",!(st==="idle"||st==="net"));
     var h=$("fiHint"),touch=window.matchMedia&&matchMedia("(pointer:coarse)").matches;if(!h)return;
-    h.textContent=st==="idle"?(touch?"Tap CAST · walk along the rail with the stick":"Space to cast · ← → walk along the rail"):st==="wait"||st==="cast"?"Waiting for a bite…":st==="reel"?(touch?"Top bar reels · bottom bar lets go · slide to steer":"Hold the mouse to reel (the paddle rises), let go and it falls · move the mouse left/right · keep it on the fish!"):st==="net"?(touch?"Tap NET when the net is over the fish":"Space when the net is over the fish"):"";
+    h.textContent=st==="idle"?(touch?"Tap CAST · stick walks the edge":"Space to cast · ← → walk the edge"):st==="wait"||st==="cast"?"Waiting for a bite…":st==="reel"?(touch?"Top bar reels · bottom bar lets go · slide to steer":"Hold the mouse to reel (the paddle rises), let go and it falls · move the mouse left/right · keep it on the fish!"):st==="net"?(touch?"Tap NET when the net is over the fish":"Space when the net is over the fish"):"";
     if(typeof goalHL==="function")goalHL(st==="idle"||st==="net"?b:null,st==="idle"?"CAST":st==="net"?"NET IT":"");}
   /* the button: cast, or swing the net */
   function press(){if(!on||!ready())return;var now=performance.now();
@@ -4547,7 +4548,8 @@ var FISH=(function(){
   function under(g){
     if(!fishOn())return;var now=performance.now(),s=sc(),P=ART.PX.unit(g);
     if(!openAt){openAt=now;   /* the first frame: take a picture of the stage wall, to send flying */
-      try{var cv0=g.canvas,rt=cv0.width/W;snapH=Math.round(RAIL0*H);snap=document.createElement("canvas");snap.width=Math.max(1,Math.round(W*rt));snap.height=Math.max(1,Math.round(snapH*rt));snap.getContext("2d").drawImage(cv0,0,0,snap.width,snap.height,0,0,snap.width,snap.height);}catch(e){snap=null;}}
+      try{var cv0=g.canvas,rt=cv0.width/W;snapH=Math.round(RAIL0*H);snap=document.createElement("canvas");snap.width=Math.max(1,Math.round(W*rt));snap.height=Math.max(1,Math.round(snapH*rt));snap.getContext("2d").drawImage(cv0,0,0,snap.width,snap.height,0,0,snap.width,snap.height);
+        rt0=rt;snapF=document.createElement("canvas");snapF.width=snap.width;snapF.height=Math.max(1,Math.round((RAIL1-RAIL0+0.05)*H*rt));snapF.getContext("2d").drawImage(cv0,0,Math.round(RAIL0*H*rt),snapF.width,snapF.height,0,0,snapF.width,snapF.height);}catch(e){snap=null;snapF=null;}}
     var wk=wallK(),bk=boatK(),ry=Math.round(railY()*H),hz=Math.round(Math.max(P*4,Math.min(ry*0.3,H*0.1)));
     g.save();
     /* the night sky and the moon */
@@ -4562,15 +4564,15 @@ var FISH=(function(){
     /* fish shadows out in the water */
     if(!shadows.length)for(var j=0;j<7;j++)shadows.push({x:Math.random(),y:0.3+Math.random()*0.65,sp:(Math.random()<0.5?-1:1)*(0.01+Math.random()*0.02),l:3+Math.random()*5});
     shadows.forEach(function(f){f.x+=f.sp*0.016;if(f.x>1.1)f.x=-0.1;if(f.x<-0.1)f.x=1.1;var fy0=hz+(ry-hz)*f.y,sz=0.5+f.y;g.fillStyle="rgba(5,22,45,.45)";ART.PX.oval(g,f.x*W,fy0,f.l*s*sz,f.l*s*0.35*sz,0);});
-    /* the back deck of the boat (the dance floor turning into wood), the rail along its edge */
-    if(bk>0){g.globalAlpha=Math.min(1,bk*1.6);var ph=P*5;
-      for(var y5=ry,row=0;y5<H;y5+=ph,row++){g.fillStyle=row%2?"#6b3f22":"#7a4a2a";g.fillRect(0,y5,W,ph);g.fillStyle="#4a2a16";g.fillRect(0,y5+ph-P,W,P);
-        for(var x5=(row%2?P*7:0);x5<W;x5+=P*22){g.fillRect(Math.floor(x5/P)*P,y5,P,ph-P);g.fillStyle="#c49a6a";g.fillRect(Math.floor(x5/P)*P+P*2,y5+P,P,P);g.fillStyle="#4a2a16";}}
-      g.globalAlpha=1;}
-    var rk=Math.max(0,Math.min(1,(sceneT()-0.9)/0.6));
-    if(rk>0){g.globalAlpha=rk;g.fillStyle="#3a2010";g.fillRect(0,ry-P,W,P*4);g.fillStyle="#9a6236";g.fillRect(0,ry-P*3,W,P*2);g.fillStyle="#d8b07a";g.fillRect(0,ry-P*3,W,P);g.fillStyle="#f2eede";g.fillRect(0,ry+P*3,W,P);   /* the gunwale, its rail, a white trim */
-      for(var px5=P*6;px5<W;px5+=Math.round(W/9)){g.fillStyle="#5a3418";g.fillRect(Math.floor(px5/P)*P,ry-P*9,P*2,P*7);g.fillStyle="#9a6236";g.fillRect(Math.floor(px5/P)*P,ry-P*10,P*2,P);}   /* posts */
-      g.fillStyle="#9a6236";g.fillRect(0,ry-P*10,W,P);g.globalAlpha=1;}
+    /* the edge of what's left of the dance floor: a jagged broken line, the floor's thickness under it, foam where it meets the water */
+    var T=P*6,cols=Math.ceil(W/T);
+    for(var c=0;c<cols;c++){var jg=((c*7919)%5)*P,ex=c*T,ey=ry+jg-P*2;
+      g.fillStyle="#1a1226";g.fillRect(ex,ey,T,P*4);g.fillStyle="#2c1f3e";g.fillRect(ex,ey,T,P);   /* the broken face */
+      if((Math.floor(now/250)+c)%4)g.fillStyle="rgba(230,245,255,.7)";else g.fillStyle="rgba(230,245,255,.35)";g.fillRect(ex,ey-P,T,P);}   /* foam */
+    /* chunks of floor breaking off and sinking as the edge passes them */
+    if(snapF&&bk>0&&bk<1.2){if(!chunks){chunks=[];var rows=Math.ceil((RAIL1-RAIL0)*H/T);for(var rr=0;rr<rows;rr++)for(var c2=0;c2<cols;c2++)chunks.push({x:c2*T,y:RAIL0*H+rr*T,r:((c2*31+rr*17)%11)/11});}
+      chunks.forEach(function(ch){var gone=ry-ch.y;if(gone<-T*0.5)return;var a2=Math.min(1,(gone+T*0.5)/(H*0.12)+ch.r*0.2);if(a2>=1)return;
+        g.globalAlpha=1-a2;var dyy=a2*a2*T*2,sh=1-a2*0.5;g.drawImage(snapF,ch.x*rt0,(ch.y-RAIL0*H)*rt0,T*rt0,T*rt0,ch.x+T*(1-sh)/2,ch.y+dyy,T*sh,T*sh);});g.globalAlpha=1;}
     /* the stage wall flying up and away */
     if(snap&&wk<1){var dy5=-wk*(snapH+60);g.drawImage(snap,0,Math.round(dy5),W,snapH);}
     g.restore();
@@ -4657,7 +4659,7 @@ var FISH=(function(){
     g.fillStyle="#3c7a3a";for(var q=0;q<2;q++){var ex=x+w*(0.25+q*0.45);g.fillRect(Math.round(ex),y+h-16,2,6);g.fillRect(Math.round(ex)+3,y+h-18,2,8);}}
   window.ukFish=function(){var GB=geo();return{box:GB,padGeo:padGeo(),hold:reeling,vy:+pvy.toFixed(3),pad:[+px.toFixed(3),+py.toFixed(3)],fish:[+fx.toFixed(3),+fy.toFixed(3)],reeling:reeling,over:zx===1,on:on,st:st,score:score,count:count,kind:kind,prog:+prog.toFixed(2),ten:+ten.toFixed(2),fx:+fx.toFixed(2),zx:+zx.toFixed(2),net:net&&{x:+net.x.toFixed(2),fx:net.fx,tries:net.tries}};};
   window.ukFishForce=function(o){if(o.st)set(o.st);if(o.biteAt!==undefined)biteAt=performance.now()+o.biteAt;if(o.prog!==undefined)prog=o.prog;if(o.ten!==undefined)ten=o.ten;if(o.kind!==undefined)kind=o.kind;if(o.netAt!==undefined&&net)net.x=o.netAt;};
-  return{boatK:function(){return fishOn()?boatK():0;},pdown:pdown,pmove:pmove,pup:pup,start:start,stop:stop,tick:tick,press:press,under:under,draw:draw,wire:wire,looks:looks,facing:facing,fishOn:fishOn,reset:function(){openAt=0;shadows=[];snap=null;},get on(){return on;},get st(){return st;},get score(){return score;}};
+  return{boatK:function(){return fishOn()?boatK():0;},pdown:pdown,pmove:pmove,pup:pup,start:start,stop:stop,tick:tick,press:press,under:under,draw:draw,wire:wire,looks:looks,facing:facing,fishOn:fishOn,reset:function(){openAt=0;shadows=[];snap=null;snapF=null;chunks=null;},get on(){return on;},get st(){return st;},get score(){return score;}};
 })();
 /* ============================================================
    BUMPER BOATS (the boats round)
@@ -8771,7 +8773,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.67",SERVER_VERSION="";
+var PAGE_VERSION="1.82.68",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9179,7 +9181,7 @@ function renderLoop(){
   perfShift+=(side-perfShift)*0.12;perfPx+=perfShift;
   /* the performer stands on the stage: the piano's legs on the stage edge, the lid below the sign (smaller on a short landscape stage) */
   var seY=STAGE_BOTTOM*H;PERF_S=Math.max(2,Math.min(3,Math.floor((seY+4-36)/40)));var perfPy=seY+4-21*PERF_S;
-  var fbK=typeof FISH!=="undefined"?FISH.boatK():0;if(fbK>0){perfPy+=(H*0.62-perfPy)*fbK;perfPx+=(W*0.5-perfPx)*fbK;}   /* fishing: the performer plays on at the back of the boat */
+  var fbK=typeof FISH!=="undefined"?FISH.boatK():0;if(fbK>0){fbK=Math.min(1,fbK*1.8);perfPy+=(H*0.875-perfPy)*fbK;perfPx+=(W*0.5-perfPx)*fbK;}   /* fishing: the performer plays on at the back of the boat */
   jumboTick();crowdCheck();
   if(JT.rect&&JT.k>0.01){var py2=Math.min(STAGE_BOTTOM*H-14*3,JT.rect.y+JT.rect.h+20+19*3);if(py2>perfPy)perfPy+=(py2-perfPy)*JT.k;}
   /* the roller rink: the performer plays on the island in the middle */
@@ -9371,7 +9373,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.67"></script>
+<script src="lab.js?v=1.82.68"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

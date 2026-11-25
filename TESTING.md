@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.68 — Fishing: the dance floor breaks away
+
+1. Start Fishing. The stage wall flies up and the ocean appears behind it. The dance floor stays a dance floor, not wood.
+2. The top of the floor should break away in chunks that sink, with the water revealing down the screen. Everyone runs ahead of it to the new edge, about two thirds of the way down.
+3. Anglers end up in a row at the jagged, foamy edge, facing the water. Cast lines go a long way out to sea.
+4. The piano slides down to the bottom middle, between the joystick and CAST, and never sits over the water.
+5. The hint ("Tap CAST · stick walks the edge") sits below the scoreboard and score, not over them.
+
 ## v1.82.67 — Menu music: fail-safes so it always starts
 
 1. iPhone with the ring/silent switch ON: open the site and tap anywhere. The menu music should play (before this, the silent switch could mute it).
