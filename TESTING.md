@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.57 — Coin dive: coins spread across the whole water
+
+1. Check the version reads **v1.82.57**. Play **Coin dive** with a few people (or practice swimmers).
+2. Coins now come in on **three trails at once**, one in each third of the water (left, middle, right), each sweeping around its own area. The song's notes are shared between them, so there's always something to go for away from everyone else.
+3. The drop's ring is much bigger, right across the water (16 coins).
+4. Practice swimmers each work their own trail, so they spread out instead of piling onto one coin.
+
 ## v1.82.56 — Coin dive on the laptop · streak effects in pixel art
 
 **Coin dive on the stage view**
