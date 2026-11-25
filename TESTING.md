@@ -1688,6 +1688,21 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.52 — New mini game: Coin dive (swim to the beat, grab the coins)
+
+**Needs the Render server redeployed** (the server now relays coin grabs).
+
+1. Check the version reads **v1.82.52**. On a phone, go into **Practice → Start game → Ride & race → Coin dive** with a song. Or on the laptop, **Start song** → the **Water** category → **Coin dive**.
+2. The venue floods within a couple of seconds and everyone lies flat, swimming.
+3. Push the stick (or the arrows / WASD). You glide that way, and on **every beat** you take a stroke that surges you forward. Your arms pull round in time, and a little swirl shows behind you each stroke.
+4. **DASH** (the button bottom right, or Space) lights up gold on the beat. Dash right on the beat: **PERFECT**, a big kick and +5. Off the beat: a small kick and **OFF BEAT**.
+5. Coins pop in on the song's beats. They follow trails made from the song's notes that sweep across the water bar by bar, so you swim along them in time. Loud parts make **gold** coins worth more, and the drop bursts a **pink ring** of coins.
+6. Grab a coin while it's fresh for full points (less once it's older), and **on the beat for double**. Coins blink before they go (about 6 beats).
+7. Practice swimmers chase coins too, and a coin anyone grabs disappears.
+8. Live with 2 phones: a coin one person grabs disappears on the other phone too, and only the first grab counts.
+9. The laptop's stage view floods as well.
+10. **Sliders:** Setup → Tuning lab → Coin dive: game speed, glide, stroke surge, water drag, top speed, the DASH on-beat window, how long coins last, coin size and grab reach.
+
 ## v1.82.51 — The computer band's drummer plays a full drum kit
 
 1. Check the version reads **v1.82.51**. Start a song with **Auto band** on, so a drummer joins.
