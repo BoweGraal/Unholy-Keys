@@ -176,6 +176,7 @@ var TUNE=(function(){
     V("kp.cooldown","Hit cooldown",380,100,1500,20,"Time before you can hit the same object again.","ms"),
     V("kp.dblKick","Double-jump kick boost",1.25,1,3,0.05,"How much harder a double-jump hit launches the object.","×"),
     V("kp.dblPts","Double-jump points",2,1,5,0.5,"Score multiplier for a double-jump hit.","×"),
+    V("kp.spinPts","Spin-in-air bonus",2,1,5,0.5,"Score multiplier for a hit while you're in the air and spinning (SPIN, TWIRL, or the double jump's spin). Stacks with the double-jump bonus.","×"),
     V("kp.streak","Streak bonus",0.15,0,1,0.05,"Extra score per hit in a row on the same object.","×")]},
   {id:"skate",name:"Roller & Ice rink",icon:"🛼",mode:"skate",cat:"Ride & race",
    about:"Skate laps round the island. Build speed, jump for air, then hold a direction on the wheel for tricks and switch for a chain. Let go before you land or you bail. Laps and tricks score.",

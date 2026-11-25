@@ -1688,6 +1688,21 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.74 — Your star, neon hands, ice routine controls, keepy uppy facing + spin bonus
+
+1. **Your star:** in every game a small gold star bobs over your own head (nobody else's), so you can always find yourself, even in neon bumper boats or when you're out.
+2. **Neon hands:** in neon bumper boats, the performer's hands are glowing outlines like the rest of them (they used to be plain skin-coloured squares).
+3. **Ice routine (phone):**
+   - The joystick is in the middle, bigger, and level with the TAP button.
+   - Only the control you need right now shows: the stick for steps, spins and jumps; TAP for pumping and the final pose; neither while you just skate together. (Free dance still uses its pad.)
+   - The move prompt (arrow plus countdown ring) is big and sits right on the performer, with rings closing in on him every beat. Its words sit just above it.
+   - The free-dance buttons (with Stop) no longer show during the routine.
+4. **Keepy uppy:**
+   - Everyone faces the front while moving around.
+   - A double jump spins you all the way round on the way up, arms out in a T, and you land facing front. SPIN and TWIRL still spin you.
+   - A hit while you're in the air and spinning (SPIN, TWIRL, or the double jump's spin) shows "SPIN BONUS!" and scores ×2 (Tuning lab: "Spin-in-air bonus"), on top of the double-jump bonus.
+   - The hint sits above the controls.
+
 ## v1.82.73 — Fishing feel sliders, higher sticks, swim DASH button, snorkels
 
 1. **Fishing feel sliders:** in practice (or any room with `?fishtune` in the address), a 🎛 FEEL button sits top left, under the scoreboard, during Fishing. Tap it for sliders: reel speed, on-beat window, fish pull-out, fish strength, how often it runs, tension from reeling, tension from the fish, how much the rod helps, tension response, snap time, slack time, net time, swoop lane width, and the marlin's strength, reel speed, timing and aim reach. Changes apply instantly and stay saved on the device (the full Tuning lab shows the same values). Reset puts them back. Sliding them doesn't cast or swing the rod.

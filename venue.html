@@ -18,13 +18,13 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.73"></script>
-<script src="gfx.js?v=1.82.73"></script>
-<script src="art.js?v=1.82.73"></script>
-<script src="voice.js?v=1.82.73"></script>
-<script src="instruments.js?v=1.82.73"></script>
-<script src="kart.js?v=1.82.73"></script>
-<script src="explain.js?v=1.82.73"></script>
+<script src="tune.js?v=1.82.74"></script>
+<script src="gfx.js?v=1.82.74"></script>
+<script src="art.js?v=1.82.74"></script>
+<script src="voice.js?v=1.82.74"></script>
+<script src="instruments.js?v=1.82.74"></script>
+<script src="kart.js?v=1.82.74"></script>
+<script src="explain.js?v=1.82.74"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -321,7 +321,7 @@ body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint,
 #kpBanner.pop{animation:moshPop 2.2s ease-out forwards}
 #kpScore{position:absolute;right:14px;top:56px;font:900 26px 'Silkscreen',ui-monospace,monospace;color:#FF4D6D;text-shadow:0 2px 0 #000}
 #kpScore::before{content:none}
-#kpHint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 70px);font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000;white-space:nowrap}
+#kpHint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 150px);font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000;white-space:nowrap}
 #kpJump{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 12px);width:96px;height:96px;border-radius:50%;border:3px solid #FF4D6D;background:radial-gradient(circle,rgba(255,77,109,.5),rgba(20,8,30,.85));color:#fff;font:900 18px 'Silkscreen',ui-monospace,monospace;pointer-events:auto;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 #kpJump small{font:600 10px 'Silkscreen',ui-monospace,monospace;opacity:.75;margin-top:3px}
 #kpJump.dn{transform:scale(.94)}
@@ -4409,8 +4409,9 @@ var KEEPY=(function(){
       if(Math.abs(dx)>TUNE.v("kp.reachX")||Math.abs(dy)>TUNE.v("kp.reachY"))return;
       if(s2.z<zp+TUNE.v("kp.zMin")||s2.z>zp+TUNE.v("kp.zMax")||s2.vz>40)return;
       cool[o.k]=now+TUNE.v("kp.cooldown");var T=ART.KEEPY.TYPES[o.type],isDbl=dbl&&zp>6,str=kick(o,me.x,me.y,vx,vy,isDbl,t,"me");
-      var pts=Math.round(T.pts*(isDbl?TUNE.v("kp.dblPts"):1)*(1+TUNE.v("kp.streak")*(str-1)));score+=pts;GAME.moshPts(pts);hud();
-      pops.push({x:me.x*W,y:me.y*H-zp*2-60,t:now,txt:(isDbl?"DOUBLE! ":"")+(o.type==="feather"?"🪶":o.type==="ball"?"⚽":"🎈")+(str>1?" ×"+str:"")+" +"+pts,col:T.col});
+      var rp0=ART.reactPose(me.reacts||[],now,2),spinHit=zp>6&&((rp0&&rp0.dir!==undefined)||autoSpin());   /* in the air AND spinning or twirling: style bonus */
+      var pts=Math.round(T.pts*(isDbl?TUNE.v("kp.dblPts"):1)*(spinHit?TUNE.v("kp.spinPts"):1)*(1+TUNE.v("kp.streak")*(str-1)));score+=pts;GAME.moshPts(pts);hud();
+      pops.push({x:me.x*W,y:me.y*H-zp*2-60,t:now,txt:(spinHit?"SPIN BONUS! ":"")+(isDbl?"DOUBLE! ":"")+(o.type==="feather"?"🪶":o.type==="ball"?"⚽":"🎈")+(str>1?" ×"+str:"")+" +"+pts,col:T.col});
     });
     GAME.moshPose(zp>0?(dbl?[2.9,-2.9,0.7,-0.7]:[2.5,-2.5,0.35,-0.35]):[0.5+Math.sin(now/200)*0.15,-0.5-Math.sin(now/200)*0.15,Math.abs(inp.x)+Math.abs(inp.y)>0?Math.sin(now/110)*0.4:0,Math.abs(inp.x)+Math.abs(inp.y)>0?-Math.sin(now/110)*0.4:0]);
     var h=$("kpHint");if(h)h.textContent=jumps===1?"Jump again for a double jump!":(window.matchMedia&&matchMedia("(pointer:coarse)").matches?"Get under them · JUMP, again in the air for more height · SPIN / TWIRL for style":"Get under them · Space to jump (again in the air for more height) · Q spin · E twirl");
@@ -4435,13 +4436,18 @@ var KEEPY=(function(){
     pops=pops.filter(function(p){var a3=(now-p.t)/1000;if(a3>1)return false;g.globalAlpha=1-a3;g.font="900 16px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(p.txt,p.x,p.y-a3*30);g.fillStyle=p.col;g.fillText(p.txt,p.x,p.y-a3*30);return true;});
     g.globalAlpha=1;
   }
-  function wire(){return{h:Math.round(zp),f:0,t:0};}
+  function autoSpin(){return on&&dbl&&vz>0&&zp>2;}   /* the double jump: a spin on the way up, arms out in a T */
+  function wire(){return{h:Math.round(zp),f:0,t:autoSpin()?1:0};}
+  var R8K=[0,4,1,5,2,6,3,7];
+  function facing(v,isMe){var sp=isMe?autoSpin():!!(v.sk&&v.sk.t===1);return sp?R8K[Math.floor(performance.now()/55)%8]:0;}
+  function tArms(v,isMe){return isMe?autoSpin():!!(v.sk&&v.sk.t===1);}
+  window.ukKeepyFace=function(){var w=wire();return{h:w.h,spin:w.t,face:facing({},true),zp:+zp.toFixed(1),vz:+vz.toFixed(1),jumps:jumps};};
   /* the whole game you're locked in a steady shuffle: running man on the spot or moving, and with the stick pushed right out sideways the T-step, travelling that way */
   function fd(){var i=on?input():{x:0,y:0},side=Math.abs(i.x)>0.85;return{s:9,m:side?1:0,c:[Math.round((side?i.x:i.x*0.6)*100),0,0,0]};}
   function looks(v,isMe,scl){var h=isMe?zp:(v.sk&&v.sk.h)||0;return{lift:-h*scl,rot:0,ns:true};}
   window.ukKeepyAt=function(x,y){var me=myId&&viewers[myId];if(me){me.tx=me.x=x;me.ty=me.y=y;}};
   window.ukKeepy=function(){return{on:on,score:score,z:Math.round(zp),jumps:jumps,objs:objs.map(function(o){return{type:o.type,x:+o.s.x.toFixed(3),y:+o.s.y.toFixed(3),z:Math.round(o.s.z),down:!!o.down,streak:o.streak||0};})};};
-  return{start:start,stop:stop,tick:tick,jump:jump,onKick:onKick,draw:draw,wire:wire,looks:looks,fd:fd,get on(){return on;}};
+  return{start:start,stop:stop,tick:tick,jump:jump,onKick:onKick,draw:draw,wire:wire,looks:looks,facing:facing,tArms:tArms,fd:fd,get on(){return on;}};
 })();
 /* ============================================================
    FISHING (the fish round)
@@ -8871,7 +8877,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.73",SERVER_VERSION="";
+var PAGE_VERSION="1.82.74",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9412,6 +9418,7 @@ function renderLoop(){
       if(!cdn&&!ck||skl)ART.footShadow(ctx,vx,vy,sc2,(rpo?rpo.lift:0)+(epo?epo.lift:0)+(skl?skl.lift:0));
       if(skl)AVO=AVO?Object.assign(AVO,{sk:skl}):{sk:skl};
       AVDIR=PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.facing(v,ids[i]===myId):WALK.walkRound()&&v.dance===4?WALK.facing(v):ck?0:cdn===4?(RINK?(wk.face|0):GAME.mode==="free"?(fdTurn(wk,ids[i]===myId,vx,vy,pnow)?(wk.face|0):(cfd&&cfd.b?[0,2,1,3][cfd.b]:0)):(wk.k>0.3?(wk.face|0):0)):cdn?0:(wk.face|0);
+      if(v!==PH&&keepyOn()){AVDIR=KEEPY.facing(v,ids[i]===myId);if(KEEPY.tArms(v,ids[i]===myId)){AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},{armL:1.5,armR:-1.5});}}   /* keepy uppy: face the front; a double jump spins you round with your arms out */
       if(rpo&&rpo.dir!==undefined)AVDIR=cdn===4&&cfd&&cfd.b&&GAME.mode==="free"?rot8(rpo.dir,[0,2,1,3][cfd.b]):rpo.dir;   /* a spin or turn goes round through all the facings */
       if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;
       if(v!==PH&&v.dance===4){if(FISH.fishOn())AVDIR=FISH.facing(vx,vy);else if(BOATS.boatsOn()&&!BOATS.isOut(v,ids[i]===myId))AVDIR=BOATS.facing(v,ids[i]===myId);}   /* anglers face the water; boaters face where they're steering */
@@ -9475,7 +9482,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.73"></script>
+<script src="lab.js?v=1.82.74"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
