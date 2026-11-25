@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.71 — Fishing: nobody standing on water, no CAST button
+
+1. Start a real Fishing round with the countdown. During the countdown it's still the normal dance floor; the wall only flies up and the floor only breaks away once the game starts. Nobody should ever be standing on the water.
+2. There's no CAST button any more: you cast with the swoop. The button only comes up as NET when a fish reaches the edge.
+3. The DRAG label over the swoop's ring is readable (before, it showed as a white bar).
+
 ## v1.82.70 — Fishing: aim and swoop, a real reel, the marlin
 
 1. **Camera:** at the edge you're always in the middle of the screen, zoomed to 135%, with the edge low so it's mostly water.
