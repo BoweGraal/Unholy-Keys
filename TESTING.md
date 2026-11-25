@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.63 — Thriller opens with the claw walk
+
+1. Check the version reads **v1.82.63**. In free dance tap **Thriller**: it starts on **Claw walk** (that button is lit), not Zombie arms.
+2. Pick **Mix it up**: it opens with the claw walk, then zombie arms, then the shoulder pop, round again.
+
 ## v1.82.62 — Phone light faces the right way
 
 1. Check the version reads **v1.82.62**. In free dance pick **Lighters up → Phone light**.
