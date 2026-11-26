@@ -1688,6 +1688,35 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.105 — Fishing: the symbols are pixel art too
+
+- Every symbol in fishing is drawn as **8-bit pixel art** instead of your phone's smooth emoji: ⭐ ✔ ✖ ⚠ ❗ ⏳ 👆 🖱 🥅 👀 👋 🐟 🐢 ⚡ ⟳ ↺ ⇗ ↔ ♩ ⬅ ➡ ↓ 🎣 💥. That covers the hint line, the first-catch coach, the button, the ⭐ ◀ ▶ adjuster, the BPM panel, the tension and reel labels, and the pop-ups over your head. The keepy uppy pop-ups get them too.
+- **No soft glows:** the beat pulse on the screen edge is now hard pixel bands (colour / black / colour), the beat lights get hard rings, and the tension bar's colours are solid bands (green / yellow / red) that step as they fill.
+
+## v1.82.104 — Fishing: fewer words, more symbols; the screen edge pulses on the beat
+
+1. **Much less text:**
+   - **Hints:** "👆 aim · ⇗ swoop fast", "⇗ stay in!", "⏳", "❗ JERK!", "⟳ to the ♩ · ↔ vs fish", "⟳ reel in", "🥅 NET!".
+   - **Pop-ups:** ⭐ PERFECT · GREAT · ✔ HOOKED · ✖ TOO EARLY · ✖ TOO SLOW · ⚠ TOO FAST · 💥 SNAP · ✖ SLACK · ⏳ MARLIN · 👀 MARLIN · ✔ READY.
+   - **First-catch coach:** "⟳ one turn each ♩", "🐟 ⬅ pull", "⚠ slow down", "🥅 NET!".
+   - **Panels:** ⭐ ◀ 0.53s ▶ for the perfect cast; 120 ♩ / ⟳ 119 with 🐢 ✔ ⚠ on the BPM gauge; ⚡ under the tension bar; ⟳ under the reel; the button reads ↺ RECAST.
+2. **The edges of the screen flash on every beat while you reel:** green when you're on the BPM, blue when you're spinning slow (easing off), red when you're straining, yellow when you're not spinning. You can keep the beat without looking at the panel.
+
+## v1.82.103 — Fishing: no more tension spikes
+
+- **Tension can only climb so fast:** at most about a third of the meter per second (empty to full takes about 3 s), and **half that for the first 2 s after the hook**, so it no longer shoots up right away or jumps. It can still drop faster than it rises (up to about 0.9 of the meter per second).
+- Three new FEEL / Tuning-lab sliders to fine-tune it: "Tension: fastest climb", "first 2 s after the hook", "fastest drop".
+
+## v1.82.102 — Fishing: spinning slow is a tool, not a mistake; tension meter on the right
+
+1. **Slower than the BPM:** the reel turns slower in proportion (half the BPM = half speed) and **the tension drops**, so easing off calms a fighting fish.
+   - **At the BPM:** full speed.
+   - **Faster:** still full speed, but tension climbs ("TOO FAST!").
+   - Measured: at the BPM, tension about 80%; at half, about 40%; at double, over the top.
+2. The BPM panel's gauge now reads **EASY · ON IT · STRAIN** (blue → green → red).
+3. **The vertical TENSION meter is on the right side** of the screen, above the BPM panel and the reel.
+4. New FEEL/Tuning-lab slider: "Tension eased by spinning slow".
+
 ## v1.82.101 — Fishing: easier perfect cast, a PERFECT CAST adjuster, and RECAST
 
 1. **Easier perfect cast:** you now have about **0.53 s** to get round the swoop for a top-of-the-bar cast (was about 0.35 s). The power also drains more slowly after that.
