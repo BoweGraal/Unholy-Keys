@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.94"></script>
-<script src="gfx.js?v=1.82.94"></script>
-<script src="art.js?v=1.82.94"></script>
-<script src="qr.js?v=1.82.94"></script>
-<script src="voice.js?v=1.82.94"></script>
-<script src="instruments.js?v=1.82.94"></script>
-<script src="kart.js?v=1.82.94"></script>
-<script src="explain.js?v=1.82.94"></script>
+<script src="tune.js?v=1.82.95"></script>
+<script src="gfx.js?v=1.82.95"></script>
+<script src="art.js?v=1.82.95"></script>
+<script src="qr.js?v=1.82.95"></script>
+<script src="voice.js?v=1.82.95"></script>
+<script src="instruments.js?v=1.82.95"></script>
+<script src="kart.js?v=1.82.95"></script>
+<script src="explain.js?v=1.82.95"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4674,7 +4674,9 @@ var PXD={P:function(g){return ART.PX.unit(g);},
   arcDots:function(g,x,y,r,a0,a1,w,ry){ry=ry||r;var P=ART.PX.unit(g),n=Math.max(4,Math.ceil(Math.abs(a1-a0)*r/P)),c=Math.max(1,Math.round(w/P)),fs=g.fillStyle;g.fillStyle=g.strokeStyle;for(var i=0;i<=n;i++){var a=a0+(a1-a0)*i/n;g.fillRect(Math.floor((x+Math.cos(a)*r)/P)*P-Math.floor(c/2)*P,Math.floor((y+Math.sin(a)*ry)/P)*P-Math.floor(c/2)*P,c*P,c*P);}g.fillStyle=fs;}};
 var FISH=(function(){
   var CX=0.5,CY=0.52,RX=0.2,RY=0.11,RIM_X=1.3,RIM_Y=1.55;
-  var KINDS=[{n:"Minnow",pts:60,sp:0.7,jit:0.6,col:"#9fd8ff",len:5,pull:0},{n:"Perch",pts:120,sp:0.95,jit:0.8,col:"#F5C518",len:7,pull:0.04},{n:"Bass",pts:220,sp:1.25,jit:1.05,col:"#5bd17a",len:9,pull:0.08},{n:"Pike",pts:380,sp:1.6,jit:1.35,col:"#b9c79a",len:12,pull:0.13},{n:"Golden koi",pts:650,sp:1.9,jit:1.7,col:"#ffb02e",len:11,pull:0.17},{n:"Marlin",pts:1500,sp:2.4,jit:2,col:"#3a7bd5",len:16,pull:0.3},{n:"Sea bass",pts:1000,sp:2.15,jit:1.85,col:"#7f97b3",len:14,pull:0.25}];   /* sea bass: the top of the power bar when the marlin isn't out; tough, ~3x */   /* the marlin: only from the far water, about 4x a normal fish */
+  /* ocean fish, smallest (near) to biggest (far): what can bite depends on the cast's power. The top of the power bar is the marlin
+     when he's out, otherwise a bluefin tuna */
+  var KINDS=[{n:"Barred knifejaw",pts:60,sp:0.7,jit:0.6,col:"#e2dcb4",len:6,pull:0},{n:"Salmon",pts:140,sp:0.95,jit:0.8,col:"#c9d3d8",len:9,pull:0.04},{n:"Cod",pts:240,sp:1.2,jit:1,col:"#b5a46a",len:9,pull:0.08},{n:"Barracuda",pts:400,sp:1.6,jit:1.35,col:"#c6d0d6",len:13,pull:0.13},{n:"Kingfish",pts:650,sp:1.9,jit:1.7,col:"#f2c230",len:12,pull:0.17},{n:"Marlin",pts:1500,sp:2.4,jit:2,col:"#3a7bd5",len:16,pull:0.3},{n:"Bluefin tuna",pts:1000,sp:2.15,jit:1.85,col:"#5a74a8",len:14,pull:0.25}];
   var CODE={idle:0,aim:1,cast:1,wait:2,bite:3,reel:4,net:5,caught:6,snap:7,lost:8};
   /* the cast: a big easy swoop out over the water; keep your finger on the ball as it flies round, and how well you kept up is the
      power. Power = how far the line goes, how big a fish can bite, and the points. Then reeling: wind the right stick round past the
@@ -4748,7 +4750,7 @@ var FISH=(function(){
     else if(T<0.12)coachSay("Keep winding on the beat ⟳","info");
     else coachSay("It's resting: wind on the beat!","info");}
   function landIt(now){var wasTut=tut;if(tut){tut=false;try{localStorage.setItem("uk_fish_tut","1");}catch(e){}coachSay("");}var K=KINDS[kind],pts=Math.round(K.pts*(0.7+power*0.8));score+=pts;count++;best=Math.max(best,kind);GAME.moshPts(pts);hud();
-    pops.push({t:now,txt:K.n+" +"+pts,col:K.col});if(kind>=3)banner(kind===4?"✨ GOLDEN KOI!":"🐟 "+K.n.toUpperCase()+"!");if(wasTut)banner("🎣 YOU'RE A NATURAL!");set("caught");}
+    pops.push({t:now,txt:K.n+" +"+pts,col:K.col});if(kind>=3)banner(kind===4?"✨ KINGFISH!":"🐟 "+K.n.toUpperCase()+"!");if(wasTut)banner("🎣 YOU'RE A NATURAL!");set("caught");}
   /* the swoop: from your hands out to the side and round to the far water (where a perfect cast lands) */
   function myPx(){var me=viewers[myId];return me?[me.x*W,me.y*H]:[W/2,H*0.73];}
   /* the swoop: from your hands out round to the far water. Tap the water to aim it left or right. You're always in the middle
@@ -4816,7 +4818,7 @@ var FISH=(function(){
     if(t<st0||t>st0+dur)return null;var u=(t-st0)/dur,dir=hh(k+9)<0.5?1:-1,x=dir>0?-0.3*W+1.6*W*u:1.3*W-1.6*W*u;return{k:k,u:u,dir:dir,x:x,y:railY()*H*0.56,t:t-st0};}
   /* a stronger cast can hook bigger fish: power sets the biggest kind that can bite, and tips the odds toward the big ones */
   var TOP=0.95;
-  function pickKind(){if(power>=TOP)return 6;var mx=power<0.35?1:power<0.6?2:power<0.85?3:4,w=(loud()?[1,2,3,3,1.6]:[5,4,2.6,1,0.25]).map(function(x,i){return i>mx?0:x*(1+power*i*0.8);}),t=w.reduce(function(a,b){return a+b;},0),r=Math.random()*t;for(var i=0;i<w.length;i++){r-=w[i];if(r<=0)return i;}return 0;}
+  function pickKind(){if(power>=TOP)return 6;var mx=power<0.25?0:power<0.45?1:power<0.65?2:power<0.85?3:4,w=(loud()?[1,2,3,3,1.6]:[5,4,2.6,1,0.25]).map(function(x,i){return i>mx?0:x*(1+power*i*0.8);}),t=w.reduce(function(a,b){return a+b;},0),r=Math.random()*t;for(var i=0;i<w.length;i++){r-=w[i];if(r<=0)return i;}return 0;}
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
     var me=myId&&viewers[myId];if(!me)return;var inp=input(),age=(now-stAt)/1000;
@@ -4828,7 +4830,7 @@ var FISH=(function(){
     else if(st==="wait"&&marlinHold){var mh=marlinNow();
       if(!mh){marlinHold=false;biteAt=now+900+Math.random()*1600;pops.push({t:now,txt:"He swam off\u2026",col:"#9fd8ff"});}
       else if(Math.abs(bobX()-mh.x)<W*FT("marlinReach",0.11)){marlinHold=false;marlinHook=true;biteAt=now+150;}}
-    else if(st==="wait"&&now>=biteAt){kind=marlinHook?5:pickKind();marlinHook=false;if(kind===5)banner("MARLIN ON!");else if(kind===6)banner("SEA BASS ON!");set("bite");jerkBy=now+(tutWanted()?1e9:FT("jerkMs",kind>=5?1000:1200));if(tutWanted()&&typeof coachSay==="function")setTimeout(function(){coachSay("There's the ! \u2014 JERK the stick to hook it","ok");},0);try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}
+    else if(st==="wait"&&now>=biteAt){kind=marlinHook?5:pickKind();marlinHook=false;if(kind===5)banner("MARLIN ON!");else if(kind===6)banner("TUNA ON!");set("bite");jerkBy=now+(tutWanted()?1e9:FT("jerkMs",kind>=5?1000:1200));if(tutWanted()&&typeof coachSay==="function")setTimeout(function(){coachSay("There's the ! \u2014 JERK the stick to hook it","ok");},0);try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}
     else if(st==="wait"&&jerked(inp,now)&&now<biteAt-200){biteAt+=1400;pops.push({t:now,txt:"Too early! Spooked it",col:"#ff8a8a"});}   /* jerking before the "!" scares the fish off a while */
     else if(st==="bite"&&now>jerkBy){var lostM=kind>=5;set("wait");biteAt=now+1400+Math.random()*1800;pops.push({t:now,txt:lostM?"The "+KINDS[kind].n.toLowerCase()+" spat the hook!":"Too slow! It got away",col:"#ff8a8a"});}
     else if(st==="bite"&&jerked(inp,now)){pops.push({t:now,txt:"HOOKED!",col:"#9cff4a"});tut=tutWanted();tutRuns=0;if(tut)kind=Math.min(kind,1);set("reel");T=0.2;overT=0;slackT=0;reelR=0;winds={};rodA=0;fishX=0;burst=0.6;runDir=Math.random()<0.5?-1:1;burstAt=now+900;}
@@ -4955,11 +4957,11 @@ var FISH=(function(){
        out) or a sea bass. The tier you reached lights up */
     if(on&&ready()&&performance.now()-castAt<2600&&(st==="cast"||st==="wait"||st==="bite")){var mR=myPx(),GR=swGeo(mR[0],mR[1]),PR=ART.PX.unit(g),age2=performance.now()-castAt,
         fillR=power*Math.min(1,age2/550),bx=Math.round(mR[0]-GR.side*s*18),bh2=s*46,by2=Math.round(mR[1]-s*54),bw2=s*5,fa=age2>2100?1-(age2-2100)/500:1,mkR=marlinNow();
-      var TIERS=[[0,"MINNOW","#9fd8ff"],[0.35,"BASS","#5bd17a"],[0.6,"PIKE","#b9c79a"],[0.85,"KOI","#ffb02e"],[TOP,mkR?"MARLIN":"SEA BASS",mkR?"#3a7bd5":"#7f97b3"]],got=0;
+      var TIERS=[[0,"KNIFEJAW","#e2dcb4"],[0.25,"SALMON","#ff9f8a"],[0.45,"COD","#b5a46a"],[0.65,"BARRACUDA","#c6d0d6"],[0.85,"KINGFISH","#f2c230"],[TOP,mkR?"MARLIN":"BLUEFIN TUNA",mkR?"#3a7bd5":"#5a74a8"]],got=0;
       TIERS.forEach(function(T2,i){if(power>=T2[0])got=i;});
       g.save();g.globalAlpha=Math.max(0,fa);g.fillStyle="rgba(0,0,0,.75)";g.fillRect(bx-bw2/2-PR,by2-PR,bw2+PR*2,bh2+PR*2);
       /* the tiers spaced evenly up the bar (power 0.35 / 0.6 / 0.85 / 0.95 sit at a quarter, half, three quarters, 90%) */
-      function bmap(v){var X=[0,0.35,0.6,0.85,TOP,1],Y=[0,0.25,0.5,0.75,0.9,1];for(var q=1;q<X.length;q++)if(v<=X[q])return Y[q-1]+(Y[q]-Y[q-1])*(v-X[q-1])/(X[q]-X[q-1]);return 1;}
+      function bmap(v){var X=[0,0.25,0.45,0.65,0.85,TOP,1],Y=[0,0.19,0.38,0.57,0.76,0.92,1];for(var q=1;q<X.length;q++)if(v<=X[q])return Y[q-1]+(Y[q]-Y[q-1])*(v-X[q-1])/(X[q]-X[q-1]);return 1;}
       var fh2=Math.round(bh2*bmap(fillR));g.fillStyle=TIERS[Math.min(got,TIERS.length-1)][2];for(var yy=0;yy<fh2;yy+=PR*2)g.fillRect(bx-bw2/2,by2+bh2-yy-PR*2,bw2,PR*2);   /* stepped fill */
       g.font="700 "+Math.max(9,s*3.3)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign=GR.side>0?"right":"left";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.8)";
       TIERS.forEach(function(T2,i){var ty=Math.round(by2+bh2-bh2*bmap(T2[0]));g.fillStyle="#fff";g.fillRect(bx-bw2/2-PR*2,ty,bw2+PR*4,PR);var lx=bx-GR.side*(bw2+s*3),lit=i===got&&fillR>=power-0.001;
@@ -4981,10 +4983,55 @@ var FISH=(function(){
     pops=pops.filter(function(p){var a3=(now-p.t)/1400;if(a3>1)return false;var me=viewers[myId];var px=me?me.x*W:W/2,py=me?me.y*H-s*36:H/2;g.globalAlpha=1-a3*a3;g.font="900 "+Math.max(14,s*6)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.75)";g.strokeText(p.txt,px,py-a3*30);g.fillStyle=p.col;g.fillText(p.txt,px,py-a3*30);return true;});
     g.globalAlpha=1;
   }
-  function fishIcon(g,x,y,s,K,dir){var L=K.len*s*0.7,h=Math.max(s*2,L*0.4),o=Math.max(1.5,s*0.5);
-    g.fillStyle="#13233a";ART.PX.oval(g,x,y,L/2+o,h/2+o,0);PXD.tri(g,x-dir*(L/2-o),y,x-dir*(L/2+h*0.8+o),h*0.6+o);
-    g.fillStyle=K.col;ART.PX.oval(g,x,y,L/2,h/2,0);
-    PXD.tri(g,x-dir*L/2,y,x-dir*(L/2+h*0.8),h*0.6);g.fillStyle="#000";g.fillRect(Math.round(x+dir*L*0.28-s/2),Math.round(y-h*0.2),s,s);}
+  /* the fish, each drawn to its own look (from reference photos): body shape, colours top to belly, markings, fins, tail, and the
+     odd detail (the knifejaw's beak, the cod's barbel, the barracuda's fangs, the tuna's finlets, the marlin's bill). Built once
+     per fish as a little pixel sprite, facing right, then drawn at the game's pixel size */
+  function hz(n){var x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);}
+  var FSPEC={
+    "Barred knifejaw":{L:12,H:4.6,pw:0.45,back:"#c9c39a",mid:"#e2dcb4",belly:"#efeacc",tail:"sq",dors:[[0.18,0.78,1.6]],anal:[0.2,0.5,1.2],fin:"#4a4a3a",
+      pat:function(t,v){var B=[[0.1,0.17],[0.3,0.38],[0.5,0.58],[0.7,0.77],[0.86,0.92]];for(var i=0;i<B.length;i++)if(t>=B[i][0]&&t<=B[i][1])return"#1e1e1a";return null;},beak:"#3a3a30",eyeT:0.86},
+    "Salmon":{L:16,H:3.1,pw:0.8,back:"#4f7380",mid:"#c9d3d8",belly:"#f1f3f4",tail:"fork",dors:[[0.5,0.62,2],[0.2,0.24,1]],anal:[0.22,0.32,1],fin:"#5f7d88",
+      pat:function(t,v,x,y){if(v<-0.15&&hz(x*7+y*13)<0.22&&t<0.9)return"#1c2428";if(v>-0.1&&v<0.25&&t>0.25&&t<0.8&&hz(x*3+y)<0.25)return"#e8b4b0";return null;},eyeT:0.88},
+    "Cod":{L:16,H:3.4,pw:0.6,back:"#8a7a4a",mid:"#b5a46a",belly:"#ece5cf",tail:"sq",dors:[[0.62,0.78,2],[0.4,0.57,2],[0.2,0.35,1.6]],anal:[0.2,0.5,1.4],fin:"#6e6038",
+      pat:function(t,v,x,y){if(Math.abs(v+0.05)<0.12&&t<0.85)return"#f3ecd6";if(v<0.25&&hz(x*11+y*5)<0.16)return"#5e522e";return null;},barbel:true,eyeT:0.86},
+    "Barracuda":{L:22,H:2.1,pw:0.5,back:"#55666f",mid:"#c6d0d6",belly:"#eef2f4",tail:"fork",dors:[[0.55,0.62,2],[0.24,0.3,1.6]],anal:[0.22,0.28,1.2],fin:"#45535b",
+      pat:function(t,v){if(v>0.05&&v<0.75&&t>0.12&&t<0.85&&((t*9)%1)<0.35)return"#2e3a42";return null;},fangs:true,eyeT:0.86},
+    "Kingfish":{L:19,H:3,pw:0.7,back:"#2f6f8f",mid:"#cfdde4",belly:"#eef2f4",tail:"fork",tailCol:"#f2c230",dors:[[0.35,0.66,1.4]],anal:[0.25,0.45,1.2],fin:"#e0b42a",
+      pat:function(t,v){if(v>-0.2&&v<0.02&&t<0.92)return"#f2c230";return null;},eyeT:0.88},
+    "Bluefin tuna":{L:20,H:4,pw:0.6,back:"#16264a",mid:"#7f8fa8",belly:"#e5e9ee",tail:"cres",tailCol:"#1a2a50",dors:[[0.56,0.72,2.6],[0.36,0.42,2.4]],anal:[0.36,0.42,2.2],fin:"#22345e",
+      pat:function(t,v,x,y){if(v>0.35&&t>0.2&&t<0.8&&(x%3===0)&&hz(y*3+x)<0.6)return"#c9d0dc";return null;},finlets:"#f0c419",eyeT:0.88},
+    "Marlin":{L:22,H:3.6,pw:0.6,back:"#14306b",mid:"#5f86c4",belly:"#dfe6ee",tail:"cres",tailCol:"#14306b",dors:[[0.45,0.82,4.6]],sail:true,anal:[0.3,0.4,1.6],fin:"#1d3f86",
+      pat:function(t,v){if(v>-0.35&&v<0.55&&t>0.18&&t<0.8&&((t*12)%1)<0.2)return"#9cc6f2";return null;},bill:7,eyeT:0.86}};
+  var FCACHE={};
+  function fishSprite(K){if(FCACHE[K.n])return FCACHE[K.n];var F=FSPEC[K.n];if(!F)return null;
+    var tw=Math.max(3,Math.round(F.H*1.05)),top=Math.ceil(F.H+5),hgt=top*2+2,bill=F.bill||0,wid=tw+F.L+bill+3,c=document.createElement("canvas");c.width=wid;c.height=hgt;var g=c.getContext("2d"),cy=top,x0=tw+1,OL="#0f1a2a",grid={};
+    function px(x,y,col){grid[x+","+y]=col;}
+    function prof(t){return Math.pow(Math.max(0,Math.sin(Math.PI*(0.04+0.92*t))),F.pw);}
+    /* fins first (the body draws over their roots) */
+    (F.dors||[]).forEach(function(d,i){for(var x=Math.round(d[0]*(F.L-1));x<=Math.round(d[1]*(F.L-1));x++){var t=x/(F.L-1),u=(t-d[0])/Math.max(0.01,d[1]-d[0]),hh=F.H*prof(t),fh=F.sail?d[2]*(0.35+0.65*Math.pow(u,0.6)):d[2]*Math.sin(Math.PI*Math.min(1,u*1.1+0.05));
+      for(var y=1;y<=Math.round(fh);y++)px(x0+x,cy-Math.round(hh)-y,y===Math.round(fh)?OL:F.fin);}});
+    if(F.anal)for(var xa=Math.round(F.anal[0]*(F.L-1));xa<=Math.round(F.anal[1]*(F.L-1));xa++){var ta=xa/(F.L-1),ua=(ta-F.anal[0])/(F.anal[1]-F.anal[0]),ha=F.H*prof(ta);for(var ya=1;ya<=Math.round(F.anal[2]*Math.sin(Math.PI*ua));ya++)px(x0+xa,cy+Math.round(ha)+ya-1,F.fin);}
+    /* the body: back colour over the side colour over the belly, then the markings, outlined */
+    for(var x=0;x<F.L;x++){var t=x/(F.L-1),hh=Math.max(0.8,F.H*prof(t));for(var y=-Math.ceil(hh);y<=Math.ceil(hh);y++){if(Math.abs(y)>hh+0.35)continue;var v=y/hh,col=v<-0.25?F.back:v<0.3?F.mid:F.belly,pc=F.pat&&F.pat(t,v,x,y);if(pc)col=pc;
+      if(Math.abs(y)>=hh-0.6||x===0||x===F.L-1)col=Math.abs(y)>=hh-0.6&&v<0?OL:Math.abs(y)>=hh-0.6?"#2a3a4a":col;if(x===F.L-1&&Math.abs(y)<hh-0.6)col=OL;px(x0+x,cy+y,col);}}
+    /* the tail */
+    var th=F.H*prof(0)+0.5;for(var i=1;i<=tw;i++){var k=i/tw,xs=x0-i,tc=F.tailCol||F.fin;
+      if(F.tail==="sq"){var hs=th*0.7+k*F.H*0.4;for(var y2=-Math.round(hs);y2<=Math.round(hs);y2++)px(xs,cy+y2,Math.abs(y2)===Math.round(hs)||i===tw?OL:tc);}
+      else{var sp=(F.tail==="cres"?1.2:1)*(th*0.6+k*F.H*0.85),inner=F.tail==="cres"?sp-1.4-k*0.4:sp*(k>0.5?0.5:0)-0.3;for(var y3=-Math.round(sp);y3<=Math.round(sp);y3++){if(Math.abs(y3)<inner&&k>0.3)continue;px(xs,cy+y3,Math.abs(y3)===Math.round(sp)?OL:tc);}}}
+    /* details */
+    if(F.finlets)for(var xf=Math.round(0.08*F.L);xf<=Math.round(0.3*F.L);xf+=2){var hf=F.H*prof(xf/(F.L-1));px(x0+xf,cy-Math.round(hf)-1,F.finlets);px(x0+xf,cy+Math.round(hf)+1,F.finlets);}
+    var ex=x0+Math.round(F.eyeT*(F.L-1)),ey=cy-Math.max(1,Math.round(F.H*0.3));px(ex,ey,"#0a0a0a");px(ex-1,ey,"#0a0a0a");px(ex,ey-1,"#ffffff");
+    var nx=x0+F.L,ny=cy;if(F.beak){px(nx,ny,F.beak);px(nx,ny+1,F.beak);px(nx+1,ny,F.beak);}
+    if(F.barbel){px(nx-2,cy+Math.round(F.H*0.55)+1,F.back);px(nx-2,cy+Math.round(F.H*0.55)+2,F.back);}
+    if(F.fangs){px(nx,ny,F.back);px(nx+1,ny+1,F.back);px(nx-1,ny+1,"#ffffff");px(nx-3,ny+1,"#ffffff");px(nx-1,ny-1,OL);}
+    if(F.bill){for(var bi=0;bi<F.bill;bi++)px(nx+bi,cy-1+(bi>F.bill*0.6?0:0),bi===F.bill-1?"#0a1840":"#1d2f5a");}
+    Object.keys(grid).forEach(function(k2){var q=k2.split(",");g.fillStyle=grid[k2];g.fillRect(+q[0],+q[1],1,1);});
+    FCACHE[K.n]={c:c,cx:x0+F.L/2,cy:cy};return FCACHE[K.n];}
+  function fishIcon(g,x,y,s,K,dir){var sp=fishSprite(K);
+    if(!sp){var L=K.len*s*0.7,h=Math.max(s*2,L*0.4);g.fillStyle=K.col;ART.PX.oval(g,x,y,L/2,h/2,0);return;}
+    var cs=Math.max(1,Math.round(s*0.6)),w=sp.c.width*cs,h2=sp.c.height*cs;g.save();g.imageSmoothingEnabled=false;g.translate(Math.round(x),Math.round(y));if(dir<0)g.scale(-1,1);
+    g.drawImage(sp.c,Math.round(-sp.cx*cs),Math.round(-sp.cy*cs),w,h2);g.restore();}
+  window.ukFishSprites=function(){var o=[];KINDS.forEach(function(K){var sp=fishSprite(K);o.push({n:K.n,w:sp&&sp.c.width,h:sp&&sp.c.height,url:sp&&sp.c.toDataURL()});});return o;};
     window.ukFish=function(){return{on:on,st:st,score:score,count:count,kind:kind,power:+power.toFixed(2),castD:+castD.toFixed(2),D:+D.toFixed(2),T:+T.toFixed(2),reel:+reelR.toFixed(2),rod:+rodA.toFixed(2),fishX:+fishX.toFixed(2),runDir:runDir,sw:sw?{u:+sw.uMax.toFixed(2)}:null,aim:aimX,marlin:marlinNow(),swoop:ready()?(function(){var m=myPx();return swGeo(m[0],m[1]);})():null,zoom:VZS.on?+VZS.Z.toFixed(2):1};};
   window.ukFishSwoop=function(ms,u,end){sw={id:-1,f:[0,0],uMax:u||0,t0:performance.now()-ms};set("aim");if(end)endSwoop();};   /* tests */
   window.ukFishForce=function(o){if(o.st)set(o.st);if(o.biteAt!==undefined)biteAt=performance.now()+o.biteAt;if(o.kind!==undefined)kind=o.kind;if(o.D!==undefined)D=o.D;if(o.T!==undefined)T=o.T;if(o.power!==undefined)power=o.power;if(o.aim!==undefined)aimX=o.aim;};window.ukFishMarlin=function(){var B=FT("marlinEvery",26000),t=mClock(),k=Math.floor(t/B);return{now:t,next:k*B+5000+hh(k)*(B-14000)};};
@@ -9119,7 +9166,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.94",SERVER_VERSION="";
+var PAGE_VERSION="1.82.95",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10115,7 +10162,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.94"></script>
+<script src="lab.js?v=1.82.95"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

@@ -1688,6 +1688,19 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.95 — Fishing: real ocean fish, each with its own pixel sprite
+
+1. **The fish, smallest/nearest to biggest/farthest:** Barred knifejaw (60) → Salmon (140) → Cod (240) → Barracuda (400) → Kingfish (650), and at the top of the power bar the **Marlin** (1,500, when he's out) or a **Bluefin tuna** (1,000, replaces 1.82.94's sea bass: tough fight, 1 s jerk window, "TUNA ON!").
+2. The cast readout's tiers are the same six, spaced evenly up the bar: KNIFEJAW, SALMON, COD, BARRACUDA, KINGFISH, MARLIN / BLUEFIN TUNA. What can bite: under 25% power only knifejaw; 25%+ salmon; 45%+ cod; 65%+ barracuda; 85%+ kingfish; 95%+ the top.
+3. **New sprites from reference photos**, so each one looks like itself:
+   - **Knifejaw:** deep, pale body with bold black bars and a little beak.
+   - **Salmon:** blue-green back, silver sides, black spots, forked tail.
+   - **Cod:** olive and speckled, with a pale side line, three back fins and a chin barbel.
+   - **Barracuda:** long and silver, with dark blotches and fangs.
+   - **Kingfish:** blue-green back with a yellow side stripe and a yellow tail.
+   - **Tuna:** navy torpedo with yellow finlets and a crescent tail.
+   - **Marlin:** cobalt with pale stripes, a tall sail and a bill.
+
 ## v1.82.94 — Fishing: the cast readout with the fish on it, and the sea bass
 
 Replaces 1.82.93's meter during the swoop:
