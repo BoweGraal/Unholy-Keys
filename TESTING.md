@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.105 — Fishing: the symbols are pixel art too
+
+- Every symbol in fishing is drawn as **8-bit pixel art** instead of your phone's smooth emoji: ⭐ ✔ ✖ ⚠ ❗ ⏳ 👆 🖱 🥅 👀 👋 🐟 🐢 ⚡ ⟳ ↺ ⇗ ↔ ♩ ⬅ ➡ ↓ 🎣 💥. That covers the hint line, the first-catch coach, the button, the ⭐ ◀ ▶ adjuster, the BPM panel, the tension and reel labels, and the pop-ups over your head. The keepy uppy pop-ups get them too.
+- **No soft glows:** the beat pulse on the screen edge is now hard pixel bands (colour / black / colour), the beat lights get hard rings, and the tension bar's colours are solid bands (green / yellow / red) that step as they fill.
+
 ## v1.82.104 — Fishing: fewer words, more symbols; the screen edge pulses on the beat
 
 1. **Much less text:**
