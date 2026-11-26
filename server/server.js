@@ -593,6 +593,12 @@ function onMessage(ws, raw, isBinary) {
     send(ws, { type: "nearby", rooms: near.slice(0, 8) });
     return;
   }
+  if (msg.type === "song-req-res") {
+    if (ws.role !== "performer" || !ws.room || !rooms[ws.room]) return;
+    var tv = rooms[ws.room].viewers.get(str(msg.to, 20));
+    if (tv) send(tv.ws, { type: "song-req-res", rid: str(msg.rid, 20), ok: !!msg.ok, title: str(msg.title, 120), why: str(msg.why, 120) });
+    return;
+  }
   if (msg.type === "end-room") { if (ws.role === "performer") ws.ending = true; return; }
   if (msg.type === "resume-room") {
     if (ws.role) return;
@@ -668,6 +674,24 @@ function onMessage(ws, raw, isBinary) {
     return;
   }
   if (ws.role === "screen") return;   /* a TV screen only watches */
+
+  /* ── Song requests: a player sends the host a YouTube link, or a song file in pieces (each under the message limit); the
+     host approves or drops it, and the answer goes back to that player only ── */
+  if (msg.type === "song-req" || msg.type === "song-req-chunk") {
+    if (ws.role !== "viewer" || !ws.room || !rooms[ws.room]) return;
+    var rq = rooms[ws.room];
+    if (msg.type === "song-req") {
+      if (!allow(ws, "sreq", 4, 0.1)) { send(ws, { type: "song-req-res", ok: false, why: "Slow down: one song at a time" }); return; }
+      var out = { type: "song-req", from: ws.viewerId, name: ws.viewerName, rid: str(msg.rid, 20) };
+      if (msg.yt) { var yid = str(msg.yt, 11); if (!/^[A-Za-z0-9_-]{11}$/.test(yid)) return; out.yt = yid; out.title = str(msg.title, 120); }
+      else { out.file = str(msg.file, 120); out.size = Math.min(16 * 1024 * 1024, Math.max(0, +msg.size || 0)); out.n = Math.min(120, Math.max(1, +msg.n || 1)); out.mime = str(msg.mime, 40); }
+      if (rq.performer) send(rq.performer, out); else send(ws, { type: "song-req-res", rid: out.rid, ok: false, why: "The host isn't here right now" });
+      return;
+    }
+    if (!allow(ws, "sreqc", 130, 30)) return;   /* the pieces of a file: a song's worth in a few seconds, no more */
+    if (rq.performer && typeof msg.d === "string" && msg.d.length < 240 * 1024) send(rq.performer, { type: "song-req-chunk", from: ws.viewerId, rid: str(msg.rid, 20), i: +msg.i | 0, d: msg.d });
+    return;
+  }
 
   /* ── Performer broadcasts ── */
   /* ── Voice between songs (performer and audience): the server only introduces people and passes their WebRTC

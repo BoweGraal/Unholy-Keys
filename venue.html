@@ -45,6 +45,13 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 .join-practice-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;font:700 15px 'Silkscreen',ui-monospace,monospace;color:#fff;text-decoration:none;background:linear-gradient(135deg,rgba(211,84,160,.35),rgba(127,119,221,.35));border:1px solid rgba(211,84,160,.7);margin-top:-6px}
 .join-practice-btn:active{transform:scale(.97)}
 /* fullscreen, top left on every screen (iPhones get the Home Screen tip instead) */
+#songReqBtn{display:none;position:fixed;right:10px;top:52px;z-index:70;padding:7px 10px;border-radius:10px;font:700 12px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(42,31,77,.92);border:1px solid #9cff4a;cursor:pointer}
+body.sr-ok #songReqBtn{display:block}
+#songReq{display:none;position:fixed;inset:0;z-index:200;background:rgba(5,3,12,.7);align-items:center;justify-content:center}#songReq.on{display:flex}
+#songReq .sr-in{width:min(360px,90vw);background:#16112a;border:2px solid #7F77DD;border-radius:12px;padding:14px;color:#eee;font:13px system-ui;display:flex;flex-direction:column;gap:6px}
+#songReq b{font:700 15px 'Silkscreen',ui-monospace,monospace}#songReq small{opacity:.7}#songReq label{margin-top:6px;opacity:.85}
+#songReq .sr-row{display:flex;gap:6px}#songReq input{flex:1;min-width:0;padding:9px;border-radius:8px;border:1px solid #5a4cb0;background:#0c0918;color:#fff;font:14px system-ui}
+#songReq button{padding:9px 12px;border-radius:8px;border:1px solid #5a4cb0;background:#2d2360;color:#fff;font:700 13px system-ui;cursor:pointer}#songReq #srMsg{min-height:18px;color:#F5C518}
 #vFsBtn{position:fixed;left:10px;top:10px;z-index:70;padding:7px 10px;border-radius:10px;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#ddd;background:rgba(20,18,32,.85);border:1px solid rgba(127,119,221,.5);cursor:pointer}
 #vFsBtn:hover{color:#fff;border-color:#D354A0}
 #vFsTip{display:none;position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9500;width:min(420px,90vw);background:#1c1830;border:1px solid #D354A0;color:#fff;font:13px/1.45 'Silkscreen',ui-monospace,monospace;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -861,7 +868,10 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
 <body>
 
 <!-- JOIN SCREEN -->
-<button id="vFsBtn" title="Fullscreen">&#9974;</button>
+<button id="vFsBtn" title="Fullscreen">&#9974;</button><button id="songReqBtn" title="Add a song to the playlist">&#127925; ADD SONG</button>
+<div id="songReq"><div class="sr-in"><b>&#127925; Add a song</b><small>The host sees it and adds it to the playlist.</small>
+<label>Paste a YouTube link</label><div class="sr-row"><input id="srYt" type="text" placeholder="https://youtu.be/…" autocomplete="off" spellcheck="false"><button id="srYtGo">Send</button></div>
+<label>or a song from your phone</label><button id="srFile">&#128193; Choose a song file</button><div id="srMsg"></div><button id="srClose">Close</button></div></div>
 <div id="vFsTip">On iPhone, Safari can't make a web page fullscreen. For a fullscreen app: tap <b>Share</b>, then <b>Add to Home Screen</b>, and open it from your home screen.</div>
 <div id="joinScreen" data-view="menu"><button id="mmMusic" aria-label="Menu music on or off">&#9835; MUSIC ON</button>
   <div class="join-logo"><b>Unholy</b> Keys</div>
@@ -1980,6 +1990,27 @@ document.getElementById("enterBtn").addEventListener("click",function(){
   roomCode=room.toUpperCase();
   enterVenue();
 });
+/* ---- song requests: paste a YouTube link or pick a song file; it goes to the host, who adds it to the playlist (or not) ---- */
+var SONGREQ=(function(){var box=document.getElementById("songReq"),btn=document.getElementById("songReqBtn"),msgEl=document.getElementById("srMsg"),busy=false;
+  function say(t){if(msgEl)msgEl.textContent=t||"";}
+  function rid(){return Math.random().toString(36).slice(2,10);}
+  function ytId(t){var m=String(t).match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/);return m?m[1]:/^[A-Za-z0-9_-]{11}$/.test(String(t).trim())?String(t).trim():null;}
+  function okNow(){var v=document.getElementById("venue");return !!v&&v.classList.contains("on")&&!TVSCREEN&&!(typeof PRACTICE!=="undefined"&&PRACTICE&&PRACTICE.on)&&!(typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free");}
+  setInterval(function(){document.body.classList.toggle("sr-ok",okNow());},1000);   /* not in the middle of a game */
+  if(btn)btn.addEventListener("click",function(e){e.stopPropagation();box.classList.add("on");say("");});
+  document.getElementById("srClose").addEventListener("click",function(){box.classList.remove("on");});
+  box.addEventListener("pointerdown",function(e){if(e.target===box)box.classList.remove("on");});
+  ["keydown","keyup"].forEach(function(n){box.addEventListener(n,function(e){e.stopPropagation();});});   /* typing a link doesn't move your dancer */
+  document.getElementById("srYtGo").addEventListener("click",function(){var id=ytId(document.getElementById("srYt").value);if(!id){say("That doesn't look like a YouTube link.");return;}
+    wsSend({type:"song-req",rid:rid(),yt:id});document.getElementById("srYt").value="";say("Sent to the host…");});
+  document.getElementById("srFile").addEventListener("click",function(){if(busy)return;var inp=document.createElement("input");inp.type="file";inp.accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac,.opus";
+    inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;if(f.size>15*1024*1024){say("That file's over 15 MB. Try a smaller one.");return;}
+      var r=rid(),CH=150*1024,n=Math.ceil(f.size/CH),i=0;busy=true;wsSend({type:"song-req",rid:r,file:f.name,size:f.size,n:n,mime:f.type||""});
+      (function next(){if(i>=n){busy=false;say("Sent \""+f.name+"\" to the host…");return;}var fr=new FileReader();fr.onload=function(){var b=String(fr.result),d=b.slice(b.indexOf(",")+1);wsSend({type:"song-req-chunk",rid:r,i:i,d:d});i++;say("Sending… "+Math.round(i/n*100)+"%");setTimeout(next,40);};
+        fr.onerror=function(){busy=false;say("Couldn't read that file.");};fr.readAsDataURL(f.slice(i*CH,Math.min(f.size,(i+1)*CH)));})();};inp.click();});
+  function result(m){var t=m.ok?"\u2714 "+(m.title||"Your song")+" is on the playlist!":"\u2716 "+(m.why||"The host passed on "+(m.title||"that song"));say(t);
+    var d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;left:50%;top:90px;transform:translateX(-50%);z-index:210;background:#16112a;border:2px solid "+(m.ok?"#9cff4a":"#ff8a8a")+";color:#fff;padding:8px 14px;border-radius:10px;font:700 13px system-ui;max-width:90vw;text-align:center";document.body.appendChild(d);setTimeout(function(){d.remove();},4500);}
+  return{result:result};})();
 /* ---- rooms on your WiFi: while the join screen's up, ask the server for rooms hosted on the same network and list them as
    one-tap buttons (the code still works for anyone else) ---- */
 var NEAR=(function(){var sk=null,tm=null,box=document.getElementById("nearRooms");
@@ -2273,6 +2304,7 @@ function sendPos(x,y,ex){
 }
 
 function handleMsg(msg){
+  if(msg.type==="song-req-res"){SONGREQ.result(msg);return;}
   var t=msg.type;
   if(t==="error"){
     /* e.g. "Room not found": this used to be ignored, leaving you alone in an empty venue */
