@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.93 — Fishing: the swoop's speed sets the cast, with a power meter
+
+1. **Faster swoop = farther cast:** a **POWER** meter beside you starts full when you start the swoop from the ring and drains as you go (about 1.3 s after a short head start). How full it is when you reach the top is your cast. About 0.35 s to the top is a perfect cast, about 0.9 s is about half, and dawdling gives a weak flick.
+2. The meter shows green at the perfect line (the white mark, 85%+), then yellow, then red. Stop short or slip off the swoop and you only get part of it.
+3. **No more fish labels** (BASS / PIKE / KOI / MARLIN) along the swoop while casting.
+
 ## v1.82.92 — Fishing: jerk to hook, and a perfect cast waits for the marlin
 
 1. **Hooking takes a jerk:** when a fish bites, a yellow **!** pops over your bobber (the phone buzzes) and the button reads JERK!.
