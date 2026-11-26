@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.91"></script>
-<script src="gfx.js?v=1.82.91"></script>
-<script src="art.js?v=1.82.91"></script>
-<script src="qr.js?v=1.82.91"></script>
-<script src="voice.js?v=1.82.91"></script>
-<script src="instruments.js?v=1.82.91"></script>
-<script src="kart.js?v=1.82.91"></script>
-<script src="explain.js?v=1.82.91"></script>
+<script src="tune.js?v=1.82.92"></script>
+<script src="gfx.js?v=1.82.92"></script>
+<script src="art.js?v=1.82.92"></script>
+<script src="qr.js?v=1.82.92"></script>
+<script src="voice.js?v=1.82.92"></script>
+<script src="instruments.js?v=1.82.92"></script>
+<script src="kart.js?v=1.82.92"></script>
+<script src="explain.js?v=1.82.92"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4712,10 +4712,10 @@ var FISH=(function(){
   function stop(){on=false;sw=null;tut=false;coachSay("");var te=$("fiTen");if(te)te.classList.remove("on");document.body.classList.remove("gaming-fish","fish-reel");$("fishUI").classList.remove("on");if(typeof goalHL==="function")goalHL(null,"");}   /* clear the CAST / NET tag so it doesn't hang about after the game */
   function banner(t){var b=$("fiBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("fiScore");if(h)h.textContent=score.toLocaleString();var c=$("fiCount");if(c)c.textContent=count?"🐟 ×"+count:"";}
-  function btn(){var b=$("fiBtn");if(!b)return;var t=st==="idle"?"CAST":st==="net"?"NET!":st==="reel"?"REEL":st==="aim"||st==="cast"||st==="wait"?"…":st==="bite"?"BITE!":"";
+  function btn(){var b=$("fiBtn");if(!b)return;var t=st==="idle"?"CAST":st==="net"?"NET!":st==="reel"?"REEL":st==="aim"||st==="cast"||st==="wait"?"…":st==="bite"?"JERK!":"";
     b.firstChild.textContent=t;b.classList.toggle("hot",st==="net");b.classList.toggle("dim",st!=="net");b.style.display=st==="net"?"":"none";   /* casting is the swoop: the button only comes up to net the fish */
     var h=$("fiHint"),touch=window.matchMedia&&matchMedia("(pointer:coarse)").matches;if(!h)return;
-    h.textContent=st==="idle"?(touch?"Tap the water to aim · drag from the ring through the swoop":"Click the water to aim · drag from the ring through the swoop · A / D walk"):st==="aim"?"Stay inside the swoop!":st==="cast"||st==="wait"?"Waiting for a bite…":st==="bite"?"Fish on!":
+    h.textContent=st==="idle"?(touch?"Tap the water to aim · drag from the ring through the swoop":"Click the water to aim · drag from the ring through the swoop · A / D walk"):st==="aim"?"Stay inside the swoop!":st==="cast"||st==="wait"?"Waiting for a bite…":st==="bite"?(touch?"! \u2014 JERK the stick to hook it!":"! \u2014 tap S / \u2193 to hook it!"):
       st==="reel"?(touch?"Wind the reel past the notch on each beat · left stick pulls against the fish":"Wind the reel with the mouse, past the notch on each beat · A / D pull against the fish"):st==="net"?(touch?"Tap NET!":"Space to net it!"):"";
     if(typeof goalHL==="function")goalHL(st==="net"?b:null,st==="net"?"NET IT":"");}
   /* the button: a quick cast (weak, for anyone who doesn't swoop), the net; on a computer Space / click on the beat reels */
@@ -4730,6 +4730,10 @@ var FISH=(function(){
     var bl=$("fiTen");if(bl){bl.classList.remove("hit","miss");void bl.offsetWidth;bl.classList.add(q===1?"hit":"miss");}
     if(q===1&&Math.random()<0.3)pops.push({t:now,txt:"ON BEAT!",col:"#9cff4a"});}
   function windRate(){var k=Math.round(beatNow()),v=function(i){var w=winds[i];return w?w.q*Math.pow(0.5,w.n-1):0;};for(var i in winds)if(+i<k-4)delete winds[i];return Math.max((v(k-2)+v(k-1))/2,(v(k-1)+v(k))/2);}
+  /* a jerk of the stick: from resting (or nearly) to right out at the edge within a fifth of a second; a key press does it too */
+  var restAt=0,jerkBy=0,marlinHold=false;
+  function jerked(inp,now){var m=Math.hypot(inp.x,inp.y);if(m<0.35){restAt=now;return false;}return m>0.85&&now-restAt<220&&(restAt=-1e9,true);}
+  function bobX(){var me2=myPx(),G3=swGeo(me2[0],me2[1]);return me2[0]+(G3.ex-me2[0])*castD;}
   function castNow(pw){power=Math.max(0,Math.min(1,pw));castD=0.35+0.65*power;D=castD;sw=null;set("cast");var now=performance.now();biteAt=now+700+(loud()?700+Math.random()*1300:1200+Math.random()*2200);
     if(power>=0.85)pops.push({t:now,txt:"PERFECT CAST!",col:"#F5C518"});else if(power>=0.6)pops.push({t:now,txt:"Great cast",col:"#9cff4a"});}
   /* ---- the first catch is a little lesson: it can't get away, and a coach says what to do as it happens ---- */
@@ -4815,10 +4819,16 @@ var FISH=(function(){
     var me=myId&&viewers[myId];if(!me)return;var inp=input(),age=(now-stAt)/1000;
     if(st==="idle"){if(ready()&&Math.abs(inp.x)>0.2)ang=Math.max(0.05,Math.min(0.95,ang+inp.x*dt*0.35));}   /* walk along the edge */
     else if(st==="aim"){}
-    else if(st==="cast"&&age>0.55){var mm=marlinNow();if(mm&&castD>=0.92){var me2=myPx(),G3=swGeo(me2[0],me2[1]),lx=me2[0]+(G3.ex-me2[0])*castD;if(Math.abs(lx-mm.x)<W*FT("marlinReach",0.11))marlinHook=true;}
-      set("wait");if(marlinHook)biteAt=now+250;}
-    else if(st==="wait"&&now>=biteAt){kind=marlinHook?5:pickKind();marlinHook=false;if(kind===5)banner("MARLIN ON!");set("bite");}
-    else if(st==="bite"&&age>0.6){tut=tutWanted();tutRuns=0;if(tut)kind=Math.min(kind,1);set("reel");T=0.2;overT=0;slackT=0;reelR=0;winds={};rodA=0;fishX=0;burst=0.6;runDir=Math.random()<0.5?-1:1;burstAt=now+900;}
+    else if(st==="cast"&&age>0.55){var mm=marlinNow(),perfect=power>=0.85;marlinHold=false;
+      if(mm&&(castD>=0.92||perfect)){if(Math.abs(bobX()-mm.x)<W*FT("marlinReach",0.11))marlinHook=true;else if(perfect){marlinHold=true;pops.push({t:now,txt:"WAITING FOR THE MARLIN\u2026",col:"#7fc4ff"});}}   /* a perfect cast with him out: nothing else bites till he takes it or leaves */
+      set("wait");if(marlinHook)biteAt=now+250;else if(marlinHold)biteAt=Infinity;}
+    else if(st==="wait"&&marlinHold){var mh=marlinNow();
+      if(!mh){marlinHold=false;biteAt=now+900+Math.random()*1600;pops.push({t:now,txt:"He swam off\u2026",col:"#9fd8ff"});}
+      else if(Math.abs(bobX()-mh.x)<W*FT("marlinReach",0.11)){marlinHold=false;marlinHook=true;biteAt=now+150;}}
+    else if(st==="wait"&&now>=biteAt){kind=marlinHook?5:pickKind();marlinHook=false;if(kind===5)banner("MARLIN ON!");set("bite");jerkBy=now+(tutWanted()?1e9:FT("jerkMs",kind===5?1000:1200));if(tutWanted()&&typeof coachSay==="function")setTimeout(function(){coachSay("There's the ! \u2014 JERK the stick to hook it","ok");},0);try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}
+    else if(st==="wait"&&jerked(inp,now)&&now<biteAt-200){biteAt+=1400;pops.push({t:now,txt:"Too early! Spooked it",col:"#ff8a8a"});}   /* jerking before the "!" scares the fish off a while */
+    else if(st==="bite"&&now>jerkBy){var lostM=kind===5;set("wait");biteAt=now+1400+Math.random()*1800;pops.push({t:now,txt:lostM?"The marlin spat the hook!":"Too slow! It got away",col:"#ff8a8a"});}
+    else if(st==="bite"&&jerked(inp,now)){pops.push({t:now,txt:"HOOKED!",col:"#9cff4a"});tut=tutWanted();tutRuns=0;if(tut)kind=Math.min(kind,1);set("reel");T=0.2;overT=0;slackT=0;reelR=0;winds={};rodA=0;fishX=0;burst=0.6;runDir=Math.random()<0.5?-1:1;burstAt=now+900;}
     else if(st==="reel"){var K=KINDS[kind],str=(tut?0.6:1)*FT("fishStr",1)*(kind===5?FT("marlinStr",0.9):0.35+kind*0.16);
       /* the fish: runs left or right in bursts, rests in between */
       if(tut&&age<2.6){burst=0.08;burstAt=Math.max(burstAt,now);}   /* the lesson: a calm start, then a run each way */
@@ -9092,7 +9102,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.91",SERVER_VERSION="";
+var PAGE_VERSION="1.82.92",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10088,7 +10098,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.91"></script>
+<script src="lab.js?v=1.82.92"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

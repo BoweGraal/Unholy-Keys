@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.92 — Fishing: jerk to hook, and a perfect cast waits for the marlin
+
+1. **Hooking takes a jerk:** when a fish bites, a yellow **!** pops over your bobber (the phone buzzes) and the button reads JERK!.
+   - **Phone:** flick the stick hard (from resting to the edge in a flash).
+   - **Keyboard:** tap S or ↓.
+   - You have about 1.2 s (1 s for the marlin), or "Too slow! It got away" / "The marlin spat the hook!" and you wait for another bite.
+   - Jerking before the ! shows: "Too early! Spooked it", and the bite comes later.
+   - On the first-catch lesson there's no time limit, and the coach tells you to jerk.
+2. **A perfect cast while the marlin is out holds for him:** "WAITING FOR THE MARLIN…". Nothing else bites until he swims past your bobber (MARLIN ON!) or leaves ("He swam off…"), and then normal bites start again.
+
 ## v1.82.91 — Step dance, 7-key highway and Target dance get the same treatment
 
 All the rhythm games now build their notes the same way as the 4-key highway (1.82.90): **the song's own rhythm at every level**, off-beats included, spaced out more on the easier levels (Easy 1 beat apart, Normal ½ beat with at most two quick notes then a breath, Hard ⅓, Expert ¼). The level thinning no longer leaves long empty stretches. Hand-made charts are unchanged.
