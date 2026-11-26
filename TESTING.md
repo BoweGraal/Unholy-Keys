@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.99 — Fishing: vertical tension meter
+
+- The **TENSION meter is a tall vertical bar** up by the water, just left of the middle beside the fish. It fills from the bottom (green → yellow → red at the top), with the beat light above it and the TENSION label below.
+
 ## v1.82.98 — Fishing: overspinning strains the line; the tension meter moved to the middle
 
 1. **Spinning faster than the BPM raises tension:** the more you overspin, the more it climbs (double speed can push it past the limit and snap the line), with a **"TOO FAST! Easy on the reel"** warning. Slow spinning just reels slowly.
