@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.94 — Fishing: the cast readout with the fish on it, and the sea bass
+
+Replaces 1.82.93's meter during the swoop:
+1. **The flick sets the power:** the quicker you get from the ring to the top of the swoop, the stronger the cast. There's no meter while you swoop.
+2. **Then the readout:** right after the cast a bar beside you fills up to your power, with the fish marked along it: MINNOW, BASS, PIKE, KOI, and at the very top **MARLIN** (when he's out) or **SEA BASS**. The tier you reached lights up and blinks, and the bar fades after about 2.5 s.
+3. **The top of the bar** (95%+, a quick clean flick, "PERFECT CAST!"):
+   - If the marlin is out, you hook him, or it holds for him until he passes or leaves.
+   - Otherwise a **sea bass** bites. It's new: tough to reel in (a little easier than the marlin), worth about 3× a normal fish (1,000 base), "SEA BASS ON!", and a 1 s jerk window like the marlin.
+4. Lower tiers work as before: the higher your power, the bigger the fish that can bite.
+
 ## v1.82.93 — Fishing: the swoop's speed sets the cast, with a power meter
 
 1. **Faster swoop = farther cast:** a **POWER** meter beside you starts full when you start the swoop from the ring and drains as you go (about 1.3 s after a short head start). How full it is when you reach the top is your cast. About 0.35 s to the top is a perfect cast, about 0.9 s is about half, and dawdling gives a weak flick.

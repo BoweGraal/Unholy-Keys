@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.93"></script>
-<script src="gfx.js?v=1.82.93"></script>
-<script src="art.js?v=1.82.93"></script>
-<script src="qr.js?v=1.82.93"></script>
-<script src="voice.js?v=1.82.93"></script>
-<script src="instruments.js?v=1.82.93"></script>
-<script src="kart.js?v=1.82.93"></script>
-<script src="explain.js?v=1.82.93"></script>
+<script src="tune.js?v=1.82.94"></script>
+<script src="gfx.js?v=1.82.94"></script>
+<script src="art.js?v=1.82.94"></script>
+<script src="qr.js?v=1.82.94"></script>
+<script src="voice.js?v=1.82.94"></script>
+<script src="instruments.js?v=1.82.94"></script>
+<script src="kart.js?v=1.82.94"></script>
+<script src="explain.js?v=1.82.94"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4674,7 +4674,7 @@ var PXD={P:function(g){return ART.PX.unit(g);},
   arcDots:function(g,x,y,r,a0,a1,w,ry){ry=ry||r;var P=ART.PX.unit(g),n=Math.max(4,Math.ceil(Math.abs(a1-a0)*r/P)),c=Math.max(1,Math.round(w/P)),fs=g.fillStyle;g.fillStyle=g.strokeStyle;for(var i=0;i<=n;i++){var a=a0+(a1-a0)*i/n;g.fillRect(Math.floor((x+Math.cos(a)*r)/P)*P-Math.floor(c/2)*P,Math.floor((y+Math.sin(a)*ry)/P)*P-Math.floor(c/2)*P,c*P,c*P);}g.fillStyle=fs;}};
 var FISH=(function(){
   var CX=0.5,CY=0.52,RX=0.2,RY=0.11,RIM_X=1.3,RIM_Y=1.55;
-  var KINDS=[{n:"Minnow",pts:60,sp:0.7,jit:0.6,col:"#9fd8ff",len:5,pull:0},{n:"Perch",pts:120,sp:0.95,jit:0.8,col:"#F5C518",len:7,pull:0.04},{n:"Bass",pts:220,sp:1.25,jit:1.05,col:"#5bd17a",len:9,pull:0.08},{n:"Pike",pts:380,sp:1.6,jit:1.35,col:"#b9c79a",len:12,pull:0.13},{n:"Golden koi",pts:650,sp:1.9,jit:1.7,col:"#ffb02e",len:11,pull:0.17},{n:"Marlin",pts:1500,sp:2.4,jit:2,col:"#3a7bd5",len:16,pull:0.3}];   /* the marlin: only from the far water, about 4x a normal fish */
+  var KINDS=[{n:"Minnow",pts:60,sp:0.7,jit:0.6,col:"#9fd8ff",len:5,pull:0},{n:"Perch",pts:120,sp:0.95,jit:0.8,col:"#F5C518",len:7,pull:0.04},{n:"Bass",pts:220,sp:1.25,jit:1.05,col:"#5bd17a",len:9,pull:0.08},{n:"Pike",pts:380,sp:1.6,jit:1.35,col:"#b9c79a",len:12,pull:0.13},{n:"Golden koi",pts:650,sp:1.9,jit:1.7,col:"#ffb02e",len:11,pull:0.17},{n:"Marlin",pts:1500,sp:2.4,jit:2,col:"#3a7bd5",len:16,pull:0.3},{n:"Sea bass",pts:1000,sp:2.15,jit:1.85,col:"#7f97b3",len:14,pull:0.25}];   /* sea bass: the top of the power bar when the marlin isn't out; tough, ~3x */   /* the marlin: only from the far water, about 4x a normal fish */
   var CODE={idle:0,aim:1,cast:1,wait:2,bite:3,reel:4,net:5,caught:6,snap:7,lost:8};
   /* the cast: a big easy swoop out over the water; keep your finger on the ball as it flies round, and how well you kept up is the
      power. Power = how far the line goes, how big a fish can bite, and the points. Then reeling: wind the right stick round past the
@@ -4731,11 +4731,11 @@ var FISH=(function(){
     if(q===1&&Math.random()<0.3)pops.push({t:now,txt:"ON BEAT!",col:"#9cff4a"});}
   function windRate(){var k=Math.round(beatNow()),v=function(i){var w=winds[i];return w?w.q*Math.pow(0.5,w.n-1):0;};for(var i in winds)if(+i<k-4)delete winds[i];return Math.max((v(k-2)+v(k-1))/2,(v(k-1)+v(k))/2);}
   /* a jerk of the stick: from resting (or nearly) to right out at the edge within a fifth of a second; a key press does it too */
-  var restAt=0,jerkBy=0,marlinHold=false;
+  var restAt=0,jerkBy=0,marlinHold=false,castAt=-1e9;
   function jerked(inp,now){var m=Math.hypot(inp.x,inp.y);if(m<0.35){restAt=now;return false;}return m>0.85&&now-restAt<220&&(restAt=-1e9,true);}
   function bobX(){var me2=myPx(),G3=swGeo(me2[0],me2[1]);return me2[0]+(G3.ex-me2[0])*castD;}
   function castNow(pw){power=Math.max(0,Math.min(1,pw));castD=0.35+0.65*power;D=castD;sw=null;set("cast");var now=performance.now();biteAt=now+700+(loud()?700+Math.random()*1300:1200+Math.random()*2200);
-    if(power>=0.85)pops.push({t:now,txt:"PERFECT CAST!",col:"#F5C518"});else if(power>=0.6)pops.push({t:now,txt:"Great cast",col:"#9cff4a"});}
+    castAt=now;if(power>=TOP)pops.push({t:now,txt:"PERFECT CAST!",col:"#F5C518"});else if(power>=0.6)pops.push({t:now,txt:"Great cast",col:"#9cff4a"});}
   /* ---- the first catch is a little lesson: it can't get away, and a coach says what to do as it happens ---- */
   function tutWanted(){if(/[?&]fishtut\b/.test(location.search)&&count===0)return true;try{return localStorage.getItem("uk_fish_tut")!=="1";}catch(e){return false;}}
   function coachSay(txt,cls,rod){var b=$("fiTut");if(b){if(b.textContent!==txt)b.textContent=txt;b.className=txt?"on "+cls:"";}
@@ -4815,23 +4815,24 @@ var FISH=(function(){
   function marlinNow(){if(!ready())return null;var t=mClock(),B=FT("marlinEvery",26000),k=Math.floor(t/B),st0=k*B+5000+hh(k)*(B-14000),dur=FT("marlinMs",8000);
     if(t<st0||t>st0+dur)return null;var u=(t-st0)/dur,dir=hh(k+9)<0.5?1:-1,x=dir>0?-0.3*W+1.6*W*u:1.3*W-1.6*W*u;return{k:k,u:u,dir:dir,x:x,y:railY()*H*0.56,t:t-st0};}
   /* a stronger cast can hook bigger fish: power sets the biggest kind that can bite, and tips the odds toward the big ones */
-  function pickKind(){var mx=power<0.35?1:power<0.6?2:power<0.85?3:4,w=(loud()?[1,2,3,3,1.6]:[5,4,2.6,1,0.25]).map(function(x,i){return i>mx?0:x*(1+power*i*0.8);}),t=w.reduce(function(a,b){return a+b;},0),r=Math.random()*t;for(var i=0;i<w.length;i++){r-=w[i];if(r<=0)return i;}return 0;}
+  var TOP=0.95;
+  function pickKind(){if(power>=TOP)return 6;var mx=power<0.35?1:power<0.6?2:power<0.85?3:4,w=(loud()?[1,2,3,3,1.6]:[5,4,2.6,1,0.25]).map(function(x,i){return i>mx?0:x*(1+power*i*0.8);}),t=w.reduce(function(a,b){return a+b;},0),r=Math.random()*t;for(var i=0;i<w.length;i++){r-=w[i];if(r<=0)return i;}return 0;}
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
     var me=myId&&viewers[myId];if(!me)return;var inp=input(),age=(now-stAt)/1000;
     if(st==="idle"){if(ready()&&Math.abs(inp.x)>0.2)ang=Math.max(0.05,Math.min(0.95,ang+inp.x*dt*0.35));}   /* walk along the edge */
     else if(st==="aim"){}
-    else if(st==="cast"&&age>0.55){var mm=marlinNow(),perfect=power>=0.85;marlinHold=false;
-      if(mm&&(castD>=0.92||perfect)){if(Math.abs(bobX()-mm.x)<W*FT("marlinReach",0.11))marlinHook=true;else if(perfect){marlinHold=true;pops.push({t:now,txt:"WAITING FOR THE MARLIN\u2026",col:"#7fc4ff"});}}   /* a perfect cast with him out: nothing else bites till he takes it or leaves */
+    else if(st==="cast"&&age>0.55){var mm=marlinNow(),perfect=power>=TOP;marlinHold=false;
+      if(mm&&perfect){if(Math.abs(bobX()-mm.x)<W*FT("marlinReach",0.11))marlinHook=true;else if(perfect){marlinHold=true;pops.push({t:now,txt:"WAITING FOR THE MARLIN\u2026",col:"#7fc4ff"});}}   /* a perfect cast with him out: nothing else bites till he takes it or leaves */
       set("wait");if(marlinHook)biteAt=now+250;else if(marlinHold)biteAt=Infinity;}
     else if(st==="wait"&&marlinHold){var mh=marlinNow();
       if(!mh){marlinHold=false;biteAt=now+900+Math.random()*1600;pops.push({t:now,txt:"He swam off\u2026",col:"#9fd8ff"});}
       else if(Math.abs(bobX()-mh.x)<W*FT("marlinReach",0.11)){marlinHold=false;marlinHook=true;biteAt=now+150;}}
-    else if(st==="wait"&&now>=biteAt){kind=marlinHook?5:pickKind();marlinHook=false;if(kind===5)banner("MARLIN ON!");set("bite");jerkBy=now+(tutWanted()?1e9:FT("jerkMs",kind===5?1000:1200));if(tutWanted()&&typeof coachSay==="function")setTimeout(function(){coachSay("There's the ! \u2014 JERK the stick to hook it","ok");},0);try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}
+    else if(st==="wait"&&now>=biteAt){kind=marlinHook?5:pickKind();marlinHook=false;if(kind===5)banner("MARLIN ON!");else if(kind===6)banner("SEA BASS ON!");set("bite");jerkBy=now+(tutWanted()?1e9:FT("jerkMs",kind>=5?1000:1200));if(tutWanted()&&typeof coachSay==="function")setTimeout(function(){coachSay("There's the ! \u2014 JERK the stick to hook it","ok");},0);try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}
     else if(st==="wait"&&jerked(inp,now)&&now<biteAt-200){biteAt+=1400;pops.push({t:now,txt:"Too early! Spooked it",col:"#ff8a8a"});}   /* jerking before the "!" scares the fish off a while */
-    else if(st==="bite"&&now>jerkBy){var lostM=kind===5;set("wait");biteAt=now+1400+Math.random()*1800;pops.push({t:now,txt:lostM?"The marlin spat the hook!":"Too slow! It got away",col:"#ff8a8a"});}
+    else if(st==="bite"&&now>jerkBy){var lostM=kind>=5;set("wait");biteAt=now+1400+Math.random()*1800;pops.push({t:now,txt:lostM?"The "+KINDS[kind].n.toLowerCase()+" spat the hook!":"Too slow! It got away",col:"#ff8a8a"});}
     else if(st==="bite"&&jerked(inp,now)){pops.push({t:now,txt:"HOOKED!",col:"#9cff4a"});tut=tutWanted();tutRuns=0;if(tut)kind=Math.min(kind,1);set("reel");T=0.2;overT=0;slackT=0;reelR=0;winds={};rodA=0;fishX=0;burst=0.6;runDir=Math.random()<0.5?-1:1;burstAt=now+900;}
-    else if(st==="reel"){var K=KINDS[kind],str=(tut?0.6:1)*FT("fishStr",1)*(kind===5?FT("marlinStr",0.9):0.35+kind*0.16);
+    else if(st==="reel"){var K=KINDS[kind],str=(tut?0.6:1)*FT("fishStr",1)*(kind===5?FT("marlinStr",0.9):kind===6?FT("seabassStr",0.8):0.35+kind*0.16);
       /* the fish: runs left or right in bursts, rests in between */
       if(tut&&age<2.6){burst=0.08;burstAt=Math.max(burstAt,now);}   /* the lesson: a calm start, then a run each way */
       else if(now>burstAt){var big=tut&&tutRuns<3?tutRuns%2===0:Math.random()<FT("burst",0.62);if(tut&&tutRuns<3){tutRuns++;if(big){burst=0.9;runDir=tutRuns===1?-1:1;burstAt=now+2600;}else{burst=0.08;burstAt=now+1800;}}else {burst=big?0.5+Math.random()*0.5:0.08;if(big)runDir=Math.random()<0.5?-1:1;burstAt=now+(big?700+Math.random()*1300:600+Math.random()*900)/(0.8+kind*0.12);}}
@@ -4841,7 +4842,7 @@ var FISH=(function(){
       var against=-rodA*runDir,pull=burst*str*(1-FT("rodHelp",0.7)*Math.max(0,against)+0.5*Math.max(0,-against));   /* pulling the opposite way to its run tires it */
       /* the reel: winds on the beat; holding on a computer is a slow steady reel */
       var rt=Math.min(1,windRate());if(reelHold||spaceHeld||held.up)rt=Math.max(rt,0.3);reelR+=(rt-reelR)*Math.min(1,dt*(rt>reelR?10:4));
-      D=Math.max(0,Math.min(1.2,D+(pull*FT("run",0.14)-reelR*FT("reel",0.24)*(tut?0.45:1)*(kind===5?FT("marlinReel",0.55):1)*(1-0.5*Math.min(1,pull)))*dt));
+      D=Math.max(0,Math.min(1.2,D+(pull*FT("run",0.14)-reelR*FT("reel",0.24)*(tut?0.45:1)*(kind===5?FT("marlinReel",0.55):kind===6?FT("seabassReel",0.65):1)*(1-0.5*Math.min(1,pull)))*dt));
       var Tt=reelR*FT("tenReel",0.45)+pull*(reelR>0.15?FT("tenPull",1.15):FT("tenPull",1.15)*0.43)+Math.abs(rodA)*0.08;T+=(Tt-T)*Math.min(1,dt*FT("tenRise",5));
       if(T>1)overT+=dt;else overT=Math.max(0,overT-dt*2);if(T<0.06)slackT+=dt;else slackT=0;
       if(tut){D=Math.min(D,1);if(D<=0.05){netAt=now;set("net");}}
@@ -4950,6 +4951,21 @@ var FISH=(function(){
       if(code===3){g.font="900 "+(s*7)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="#F5C518";g.fillText("!",bx,by-s*6);g.strokeStyle="rgba(255,255,255,.6)";var rr=(now%500)/500;ART.PX.ringO(g,bx,by+s,s*3+rr*s*8,(s*3+rr*s*8)*0.45,0);}
       if(code===4){g.strokeStyle="rgba(255,255,255,.35)";var r2=(now%700)/700;ART.PX.ringO(g,bx,by+s,s*2+r2*s*6,(s*2+r2*s*6)*0.45,0);}
     });
+    /* the cast readout: after the flick, a bar fills up to your power with the fish along it; the very top is the marlin (when he's
+       out) or a sea bass. The tier you reached lights up */
+    if(on&&ready()&&performance.now()-castAt<2600&&(st==="cast"||st==="wait"||st==="bite")){var mR=myPx(),GR=swGeo(mR[0],mR[1]),PR=ART.PX.unit(g),age2=performance.now()-castAt,
+        fillR=power*Math.min(1,age2/550),bx=Math.round(mR[0]-GR.side*s*18),bh2=s*46,by2=Math.round(mR[1]-s*54),bw2=s*5,fa=age2>2100?1-(age2-2100)/500:1,mkR=marlinNow();
+      var TIERS=[[0,"MINNOW","#9fd8ff"],[0.35,"BASS","#5bd17a"],[0.6,"PIKE","#b9c79a"],[0.85,"KOI","#ffb02e"],[TOP,mkR?"MARLIN":"SEA BASS",mkR?"#3a7bd5":"#7f97b3"]],got=0;
+      TIERS.forEach(function(T2,i){if(power>=T2[0])got=i;});
+      g.save();g.globalAlpha=Math.max(0,fa);g.fillStyle="rgba(0,0,0,.75)";g.fillRect(bx-bw2/2-PR,by2-PR,bw2+PR*2,bh2+PR*2);
+      /* the tiers spaced evenly up the bar (power 0.35 / 0.6 / 0.85 / 0.95 sit at a quarter, half, three quarters, 90%) */
+      function bmap(v){var X=[0,0.35,0.6,0.85,TOP,1],Y=[0,0.25,0.5,0.75,0.9,1];for(var q=1;q<X.length;q++)if(v<=X[q])return Y[q-1]+(Y[q]-Y[q-1])*(v-X[q-1])/(X[q]-X[q-1]);return 1;}
+      var fh2=Math.round(bh2*bmap(fillR));g.fillStyle=TIERS[Math.min(got,TIERS.length-1)][2];for(var yy=0;yy<fh2;yy+=PR*2)g.fillRect(bx-bw2/2,by2+bh2-yy-PR*2,bw2,PR*2);   /* stepped fill */
+      g.font="700 "+Math.max(9,s*3.3)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign=GR.side>0?"right":"left";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.8)";
+      TIERS.forEach(function(T2,i){var ty=Math.round(by2+bh2-bh2*bmap(T2[0]));g.fillStyle="#fff";g.fillRect(bx-bw2/2-PR*2,ty,bw2+PR*4,PR);var lx=bx-GR.side*(bw2+s*3),lit=i===got&&fillR>=power-0.001;
+        g.strokeText(T2[1],lx,ty+s*1.5);g.fillStyle=lit?T2[2]:i<=got?"rgba(255,255,255,.85)":"rgba(255,255,255,.4)";g.fillText(T2[1],lx,ty+s*1.5);
+        if(lit&&Math.floor(age2/180)%2){g.fillStyle=T2[2];g.fillRect(lx+(GR.side>0?s:-s*2),ty,PR*2,PR*2);}});
+      g.restore();}
     /* your swoop: a lane out over the water. Its edges, how far you've got (green), the fish you can reach from each point on it */
     if(on&&ready()&&(st==="idle"||st==="aim")){var m=myPx(),G2=swGeo(m[0],m[1]),P2=ART.PX.unit(g),uM=sw?sw.uMax:0,al=st==="idle"?0.55+0.2*Math.sin(now/300):0.9;
       g.save();
@@ -4957,10 +4973,7 @@ var FISH=(function(){
         g.fillRect(Math.round(pp[0]+nn[0]*hw-P2),Math.round(pp[1]+nn[1]*hw-P2),P2*2,P2*2);g.fillRect(Math.round(pp[0]-nn[0]*hw-P2),Math.round(pp[1]-nn[1]*hw-P2),P2*2,P2*2);
         if(q%3===0){g.globalAlpha=al*0.45;g.fillStyle=u<=uM?"#9cff4a":"#fff";g.fillRect(Math.round(pp[0]-P2/2),Math.round(pp[1]-P2/2),P2,P2);}}
       g.globalAlpha=1;g.font="700 "+Math.max(9,s*3.5)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.75)";
-      /* the power meter: full at the start of the swoop, draining as you go; the line marks a perfect cast */
-      var pw=st==="aim"?swPow(now):1,mx=Math.round(m[0]-G2.side*s*16),mh=s*26,my0=Math.round(m[1]-s*34),mw=s*4,fh=Math.round(mh*pw);
-      g.fillStyle="rgba(0,0,0,.7)";g.fillRect(mx-mw/2-P2,my0-P2,mw+P2*2,mh+P2*2);g.fillStyle=pw>=0.85?"#9cff4a":pw>=0.6?"#F5C518":"#ff5a3c";if(st==="aim"||Math.floor(now/400)%2)g.fillRect(mx-mw/2,my0+mh-fh,mw,fh);
-      g.fillStyle="#fff";g.fillRect(mx-mw/2-P2*2,Math.round(my0+mh*0.15),mw+P2*4,P2);g.strokeText("POWER",mx,my0+mh+s*5);g.fillStyle="#fff";g.fillText("POWER",mx,my0+mh+s*5);
+
       var ep=swAt(G2,1);g.strokeStyle="#F5C518";ART.PX.ringO(g,ep[0],ep[1],G2.r*0.5,G2.r*0.25,0);   /* where a full cast lands */
       if(st==="idle"){var r4=(now%900)/900;g.strokeStyle="#fff";ART.PX.ring(g,G2.sx,G2.sy,G2.r*(0.6+r4*0.5),Math.max(2,P2));g.strokeStyle="rgba(0,0,0,.8)";g.font="900 "+Math.max(11,s*5)+"px 'Silkscreen',ui-monospace,monospace";g.strokeText("DRAG",G2.sx,G2.sy-G2.r-8);g.fillStyle="#fff";g.fillText("DRAG",G2.sx,G2.sy-G2.r-8);}
       else if(sw){g.fillStyle="#fff";ART.PX.disc(g,sw.f[0],sw.f[1],Math.max(P2*3,G2.r*0.22));g.font="900 "+Math.max(11,s*5)+"px 'Silkscreen',ui-monospace,monospace";var pt="POWER "+Math.round(uM*100)+"%";g.strokeText(pt,m[0],m[1]-s*38);g.fillStyle="#9cff4a";g.fillText(pt,m[0],m[1]-s*38);}
@@ -9106,7 +9119,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.93",SERVER_VERSION="";
+var PAGE_VERSION="1.82.94",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10102,7 +10115,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.93"></script>
+<script src="lab.js?v=1.82.94"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
