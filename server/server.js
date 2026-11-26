@@ -508,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.82";
+var VERSION = "1.82.83";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -874,7 +874,7 @@ function onMessage(ws, raw, isBinary) {
       /* Dragon riders: fireballs that hit the boss organ come off one shared health bar */
       var drd = rooms[ws.room].round;
       if (!drd || drd.mode !== "dragon" || drd.phase !== "play" || !allow(ws, "drgHit", 8, 5)) return;
-      if (!drd.boss) { var bmx = 120 + 70 * Math.max(1, rooms[ws.room].viewers.size); drd.boss = { hp: bmx, max: bmx }; }
+      if (!drd.boss) { var bmx = 60 + 45 * Math.max(1, rooms[ws.room].viewers.size); drd.boss = { hp: bmx, max: bmx }; }
       if (drd.boss.hp <= 0) return;
       drd.boss.hp = Math.max(0, drd.boss.hp - intIn(msg.d, 0, 20, 0));
       broadcast(ws.room, { type: "drgHp", hp: drd.boss.hp, max: drd.boss.max, id: ws.viewerId });

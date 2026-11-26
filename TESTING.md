@@ -1688,6 +1688,24 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.83 — Dragon riders (Hell's gig); Ball Run runs itself; Skip timer fix; star only in boats
+
+**Dragon riders** (new game, in the song picker under Dance; in practice: Dragon riders):
+1. Everyone rides a saddled dragon through a burning sky. Fly with the stick, arrows or WASD; your dragon breathes fire by itself.
+2. Imps, flaming skulls, bat swarms and stone gargoyles come in from the right. Burn them for 10 / 15 / 6 / 30 points. If one hits you, you're SCORCHED and can't breathe fire for a moment.
+3. Host: during the round, each arrow you play sends a wave (← imps, → skulls, ↑ bats, ↓ a gargoyle). A toast tells you when it starts.
+4. About 62% of the way through, THE ORGANIST RISES: a demon on a floating cathedral organ. Now each arrow fires a flaming note out of one of its four pipes, and the notes chase the riders a little.
+5. Everyone's fireballs come off one shared boss health bar (+2 per hit). Bring it down and every rider gets +250.
+6. No performer pressing (practice, a bot performer, or you've stopped for 4 s): the waves and the boss's notes come from the song's own steps, the same on every phone.
+
+**Ball Run with nobody steering:** if the host page isn't steering the ball (bot performer, no host page), the server now rolls the ball itself after the nearest player, so the ball shows and the bots run. If practice showed no ball before: that build loaded an old cached art file. 1.82.83 fixes that.
+
+**Skip timer** on the practice countdown card now works even when something see-through is layered over the card.
+
+**Gold star over you:** bumper boats only.
+
+**Render needs a redeploy** (server changes).
+
 ## v1.82.82 — Ball Run minigame; soft elbows when you dance
 
 **Ball Run** (new game, in the song picker under the dance games):
