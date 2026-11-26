@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.81 — No star over you in fishing
+
+1. Play Fishing: no gold star over your head (the camera keeps you in the middle anyway).
+2. Every other game still shows your star.
+
 ## v1.82.80 — Your notes make the snow; chat above the keyboard; free dance on the beat
 
 1. **Snow from your playing:** on the ice rink and in the ski game, every note the performer plays drops a little flurry of three flakes (one with a sparkle). Low notes fall on the left, high notes on the right; the flakes drift down and melt near the bottom. The rink no longer snows by itself, so the snow is yours. The dance floor and other games are unchanged.
