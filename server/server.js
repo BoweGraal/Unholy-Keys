@@ -756,6 +756,7 @@ function onMessage(ws, raw, isBinary) {
     /* Ball Run: the host's page rolls the ball (steered by the arrows); everyone sees it where the host says it is */
     if (msg.type === "ball") {
       if (!allow(ws, "ball", 40, 24)) return;
+      if (rooms[ws.room].round) rooms[ws.room].round.ballHostAt = Date.now();   /* the host is steering: the server's own ball steps aside */
       var bu = +msg.u, bv = +msg.v, bvu = +msg.vu, bvv = +msg.vv;
       if (![bu, bv, bvu, bvv].every(isFinite)) return;
       var cl = function(x, m) { return Math.round(Math.max(-m, Math.min(m, x)) * 1000) / 1000; };
@@ -1080,6 +1081,35 @@ server.listen(PORT, function() {
 });
 
 /* Tell each performer how much stream data their show has sent, so they can watch their bandwidth. */
+/* Ball Run with nobody steering (no host page, a bot performer, the host away): the server rolls the ball itself,
+   after whoever's nearest, and tells everyone where it is, the same way the host's page would */
+var SBALL = { R: 0.2, step: function(b, t, dt) {
+  var ax = 0, ay = 0, best = null, bd = 1e9;
+  t.forEach(function(p) { var d = Math.hypot(p[0] - b.u, p[1] - b.v); if (d < bd) { bd = d; best = p; } });
+  if (best) { var dx = best[0] - b.u, dy = best[1] - b.v, dm = Math.hypot(dx, dy) || 1; ax = dx / dm * 1.0; ay = dy / dm * 1.0; }
+  else { ax = Math.cos(Date.now() / 1300) * 0.6; ay = Math.sin(Date.now() / 1700) * 0.6; }   /* nobody on the disk: wander */
+  b.vu += ax * dt; b.vv += ay * dt; var dr = Math.exp(-0.9 * dt); b.vu *= dr; b.vv *= dr;
+  var sp = Math.hypot(b.vu, b.vv), vmax = 0.8; if (sp > vmax) { b.vu *= vmax / sp; b.vv *= vmax / sp; }
+  b.u += b.vu * dt; b.v += b.vv * dt;
+  var r = Math.hypot(b.u, b.v), lim = 1 - 0.2 * 0.6; if (r > lim) { var nu = b.u / r, nv = b.v / r; b.u = nu * lim; b.v = nv * lim; var dot = b.vu * nu + b.vv * nv; if (dot > 0) { b.vu -= 1.7 * dot * nu; b.vv -= 1.7 * dot * nv; } }
+} };
+setInterval(function() {
+  var now = Date.now();
+  Object.keys(rooms).forEach(function(k) {
+    var r = rooms[k], rd = r.round;
+    if (!rd || rd.mode !== "ball" || rd.phase !== "play" || rd.paused || !rd.playAt) return;
+    if (now - (rd.ballHostAt || 0) < 1500) { rd.sball = null; return; }
+    var gm = rd.chart && rd.chart.gameMs > 20000 ? rd.chart.gameMs : 90000, rk = Math.max(0, Math.min(2, Math.floor(3 * (now - rd.playAt) / gm)));
+    if (!rd.sball || rd.sball.k !== rk) rd.sball = { u: 0, v: -0.2, vu: 0, vv: 0, k: rk, t0: now, at: now };
+    var b = rd.sball, dt = Math.min(0.2, (now - b.at) / 1000); b.at = now;
+    if (now - b.t0 > 1200) {
+      var t = []; r.viewers.forEach(function(v) { if (typeof v.x !== "number") return; var u = (v.x - 0.5) / 0.4, w = (v.y - 0.62) / 0.22; if (Math.hypot(u, w) < 1.02) t.push([u, w]); });   /* on the disk (the flattened sit off it) */
+      SBALL.step(b, t, dt);
+    }
+    var c = function(x) { return Math.round(x * 1000) / 1000; };
+    broadcast(k, { type: "ball", u: c(b.u), v: c(b.v), vu: c(b.vu), vv: c(b.vv), k: rk, s: now, srv: 1 });
+  });
+}, 90);
 setInterval(function() {
   Object.keys(rooms).forEach(function(k) {
     var r = rooms[k];
