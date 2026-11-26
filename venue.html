@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.114"></script>
-<script src="tune.js?v=1.82.114"></script>
-<script src="gfx.js?v=1.82.114"></script>
-<script src="art.js?v=1.82.114"></script>
-<script src="qr.js?v=1.82.114"></script>
-<script src="voice.js?v=1.82.114"></script>
-<script src="instruments.js?v=1.82.114"></script>
-<script src="kart.js?v=1.82.114"></script>
-<script src="explain.js?v=1.82.114"></script>
+<script src="px8.js?v=1.82.115"></script>
+<script src="tune.js?v=1.82.115"></script>
+<script src="gfx.js?v=1.82.115"></script>
+<script src="art.js?v=1.82.115"></script>
+<script src="qr.js?v=1.82.115"></script>
+<script src="voice.js?v=1.82.115"></script>
+<script src="instruments.js?v=1.82.115"></script>
+<script src="kart.js?v=1.82.115"></script>
+<script src="explain.js?v=1.82.115"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4991,7 +4991,7 @@ var FISH=(function(){
   function boatOn(){return fishOn()&&openAt>0;}
   function perfAt(){return boatK();}
   /* lines and bobbers for everyone, the fish you're holding up, and your reel panel */
-  function draw(g){
+  function draw(g,pass){
     if(!fishOn())return;var now=performance.now(),s=sc();
     Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4)return;var isMe=id===myId;var code=isMe?CODE[st]:(v.sk?v.sk.t:0);
       var vx=(isMe?v.x:(v.dx!==undefined?v.dx:v.x))*W,vy=(isMe?v.y:(v.dy!==undefined?v.dy:v.y))*H;if(!isFinite(vx))return;
@@ -5005,7 +5005,7 @@ var FISH=(function(){
       if(code===4&&isMe)rang+=Math.sin(now/45)*0.04*burst;   /* the rod shakes as the fish pulls */
       /* they face the water, so the grip's in front of them, out of sight: the rod comes up from behind the shoulders, over the head */
       var rbx=hx+AP*3+Math.sin(rang)*AP*2,rby=vy-AP*9,tipX=rbx+Math.sin(rang)*RL*1.25,tipY=rby-Math.cos(rang)*RL*1.05;   /* from the right hand, up and out over the water */
-      g.strokeStyle="#7a4a22";PXD.line(g,rbx,rby,tipX,tipY,Math.max(2,AP));
+      if(pass==="rod"){g.strokeStyle="#7a4a22";PXD.line(g,rbx,rby,tipX,tipY,Math.max(2,AP));return;}   /* the rod goes under the dancers (their head sits over it); the line and float go on top */
       if(code===0||code===6||code===7||code===8){if(code===6){var K=KINDS[isMe?kind:Math.min(4,Math.floor((v.sk.h||0)%3))];fishIcon(g,vx,vy-s*30-Math.abs(Math.sin(now/120))*s*2,s,K,1);}return;}
       if(isMe&&st==="aim")return;
       /* the bobber: out where the line is (the cast distance, then pulled in as you reel), across with the fish */
@@ -9234,7 +9234,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.114",SERVER_VERSION="";
+var PAGE_VERSION="1.82.115",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10020,7 +10020,7 @@ function renderLoop(){
   /* the roller rink (skate rounds): laid over the floor, under the performer and everyone */
   var RINK=rinkOn()?SKATE.geom():null;if(RINK)ART.rink(ctx,RINK,performance.now(),1,ICE);
   PIPE.bg(ctx);   /* the half pipe: the floor bends up into it */
-  FISH.under(ctx);BOATS.under(ctx);BALL.under(ctx);DRAGON.under(ctx);   /* the fishing pool in the floor; the floating pool once the floor's gone */
+  FISH.under(ctx);try{FISH.draw(ctx,"rod");}catch(e){}BOATS.under(ctx);BALL.under(ctx);DRAGON.under(ctx);   /* the fishing pool in the floor; the floating pool once the floor's gone */
   var KON=typeof KART!=="undefined"&&KART.on;if(KON)KART.bg(ctx,W,H);   /* Mars Rally: the track covers the floor */
   /* Performer avatar */
   var perfPx=performer.x*W;
@@ -10230,7 +10230,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.114"></script>
+<script src="lab.js?v=1.82.115"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

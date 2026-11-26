@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.115 — Fishing: the rod sits behind your head
+
+The rod used to be drawn on top of everyone, across the face. Now it's drawn before the dancers, so your head sits over it, while the line and the float still show on top.
+
+1. Fishing: check the rod comes up from behind your head between casts, while aiming left and right, and with the float out.
+2. Check other players the same way.
+
 ## v1.82.114 — Fishing: real fish under the float, the reel replaces RECAST, a rod you can swing
 
 - **Bites come from real fish.** The fish shadows in the water are now the actual fish. You only get a bite when one swims under your float at the float's distance, and further out means bigger fish. The number of fish grows with the number of players (6 + 3 per player, up to 28).
