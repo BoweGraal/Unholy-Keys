@@ -16,6 +16,14 @@
 body.vz-turn #fdUI .fd-help{display:none}   /* your turn: the camera is on your body, keep it clear */
 body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board */
 .mm-btn.mm-host{background:#7a3d1e;border-color:#c96a3a}
+/* typing: a clear, bigger chat bar on top of the keyboard, recent messages above it */
+body.chat-typing #chatPanel{display:flex!important;height:auto!important;max-height:46vh;background:rgba(14,10,30,.97);border-top:2px solid #D354A0;z-index:300;transition:none}
+body.chat-typing #chatMsgs{display:block!important;max-height:26vh;font-size:15px}
+body.chat-typing #chatInput{padding:10px;gap:8px}
+body.chat-typing #chatText{font-size:17px!important;padding:12px 14px!important;background:#fff!important;color:#120d1e!important;border:2px solid #D354A0!important;border-radius:10px!important;min-height:46px}
+body.chat-typing #chatSend{font-size:15px!important;padding:0 16px!important;min-height:46px}
+body.chat-typing #chatLogBtn{display:none}
+#chatText{font-size:16px}   /* 16px+: iPhones don't zoom the page in when you tap it */
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -2112,6 +2120,16 @@ function backToJoin(msg){
 /* ============================================================
    CANVAS SETUP
    ============================================================ */
+/* ---- typing a chat message on a phone: the chat bar rides right on top of the keyboard (iPhones leave fixed bars
+   underneath it), bigger and clearer, with the last few messages showing above it ---- */
+var CHATKB=(function(){var inp=null,pnl=null;
+  function kb(){var vv=window.visualViewport;if(!vv)return 0;return Math.max(0,Math.round(window.innerHeight-(vv.height+vv.offsetTop)));}
+  function place(){if(!pnl)return;var on=document.body.classList.contains("chat-typing");pnl.style.transform=on?"translateY(-"+kb()+"px)":"";if(on&&(window.scrollY||document.documentElement.scrollTop))window.scrollTo(0,0);}
+  function init(){inp=document.getElementById("chatText");pnl=document.getElementById("chatPanel");if(!inp||!pnl)return;
+    inp.addEventListener("focus",function(){document.body.classList.add("chat-typing");place();[60,200,400,700].forEach(function(t){setTimeout(place,t);});});
+    inp.addEventListener("blur",function(){document.body.classList.remove("chat-typing");place();});
+    if(window.visualViewport){visualViewport.addEventListener("resize",place);visualViewport.addEventListener("scroll",place);}}
+  return{init:init,place:place,kb:kb};})();
 function initCanvas(){
   canvas=document.getElementById("mainCanvas");
   ctx=canvas.getContext("2d");
@@ -2123,9 +2141,11 @@ function initCanvas(){
      the real size whenever the visible area changes, after typing, and twice a second, and lay out again. */
   function vpCheck(){
     if(window.innerWidth!==W||window.innerHeight!==H){try{window.dispatchEvent(new Event("resize"));}catch(e){resize();}}
-    if(window.scrollY||document.documentElement.scrollTop||document.body.scrollTop){window.scrollTo(0,0);document.body.scrollTop=0;}
+    if(!document.body.classList.contains("chat-typing")&&(window.scrollY||document.documentElement.scrollTop||document.body.scrollTop)){window.scrollTo(0,0);document.body.scrollTop=0;}
+    CHATKB.place();
   }
   if(window.visualViewport){visualViewport.addEventListener("resize",vpCheck);visualViewport.addEventListener("scroll",vpCheck);}
+  CHATKB.init();
   document.addEventListener("focusout",function(){setTimeout(vpCheck,150);setTimeout(vpCheck,600);});
   window.addEventListener("pageshow",vpCheck);document.addEventListener("visibilitychange",function(){if(!document.hidden)setTimeout(vpCheck,100);});
   setInterval(vpCheck,500);
