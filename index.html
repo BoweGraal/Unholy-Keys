@@ -28,12 +28,12 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.99"></script>
-<script src="art.js?v=1.82.99"></script>
-<script src="qr.js?v=1.82.99"></script>
-<script src="voice.js?v=1.82.99"></script>
-<script src="instruments.js?v=1.82.99"></script>
-<script src="kart.js?v=1.82.99"></script>
+<script src="gfx.js?v=1.82.101"></script>
+<script src="art.js?v=1.82.101"></script>
+<script src="qr.js?v=1.82.101"></script>
+<script src="voice.js?v=1.82.101"></script>
+<script src="instruments.js?v=1.82.101"></script>
+<script src="kart.js?v=1.82.101"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4956,6 +4956,7 @@ function goLive(rs){
     }
     if(msg.type==="viewer-join"||msg.type==="pos"||msg.type==="viewer-leave"||msg.type==="chat"||msg.type==="dance"||msg.type==="pose"||msg.type==="react"||msg.type==="kick"||msg.type==="swimc")audEvent(msg);
     if(msg.type==="stream-stats")STREAM.stats(msg);
+    if(msg.type==="count-skip"){ROUNDS.skipCount();return;}
     if(msg.type==="drgEnd")showJamToast(msg.win==="demon"?"\uD83D\uDE08 Every dragon fell: YOU WIN, demon!":"\uD83D\uDC09 The riders silenced your organ: they win!",msg.win==="demon"?"#ff3d1f":"#9cff4a",5000);
     if(msg.type==="gvote"){ROUNDS.onGvote(msg);return;}
     if(msg.type==="svote"){LSET.onSvote(msg);return;}
@@ -5000,7 +5001,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.99",SERVER_VERSION="";
+var PAGE_VERSION="1.82.101",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -7272,7 +7273,9 @@ var ROUNDS=(function(){
     var m=$("rdMode"),sc=$("rdSecs"),lv=$("rdLevel"),bt=$("rdBattle");if(m)m.value=cfg.mode;if(sc)sc.value=String(Math.max(18,cfg.secs));if(lv)lv.value=String(cfg.level);if(bt)bt.checked=cfg.battle;
   }
   window.ukFakeRound=function(mode,chart){cur={n:1,mode:mode,title:"Test",phase:"play",chart:chart,endAt:performance.now(),file:false};};   /* tests: pretend a round is playing */
-  return{intercept:intercept,onMsg:onMsg,reset:reset,init:init,buttons:buttons,get current(){return cur;},pos:function(){return cur&&cur.phase==="play"?songPos():-1e9;},get cfg(){return cfg;},
+  /* everyone in the room pressed Skip timer: the game starts now */
+  function skipCount(){if(!cur||cur.phase!=="countdown")return false;clearTimeout(cdT);play();status("Everyone skipped the timer: game on!");return true;}
+  return{skipCount:skipCount,intercept:intercept,onMsg:onMsg,reset:reset,init:init,buttons:buttons,get current(){return cur;},pos:function(){return cur&&cur.phase==="play"?songPos():-1e9;},get cfg(){return cfg;},
     begin:begin,pause:pause,setLine:setLine,onGvote:onGvote,played:played,resetPlayed:resetPlayed,get set(){return set;},end:function(){stopSet();if(!cur)return;if(cur.phase==="play")finish(false);else if(cur.phase==="analyse"||cur.phase==="countdown")finish(true);},setCfg:setCfg,songPos:function(){return cur?songPos():null;}};
 })();
 

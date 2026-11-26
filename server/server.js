@@ -508,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.99";
+var VERSION = "1.82.101";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -868,6 +868,16 @@ function onMessage(ws, raw, isBinary) {
       if (srd2.swimTaken[ci]) return;
       srd2.swimTaken[ci] = ws.viewerId;
       broadcast(ws.room, { type: "swimc", id: ws.viewerId, i: ci }, ws);
+      return;
+    }
+    if (msg.type === "count-skip") {
+      /* Skip timer in a room: when every real player has pressed it (bots don't count), the host starts the game now */
+      var cr = rooms[ws.room], crd = cr.round;
+      if (!crd || crd.phase !== "countdown" || !allow(ws, "count-skip", 3, 1)) return;
+      (crd.skips = crd.skips || {})[ws.viewerId] = 1;
+      var need = 0, have = 0; cr.viewers.forEach(function(v, id) { if (v.ws && v.ws.bot) return; need++; if (crd.skips[id]) have++; });
+      broadcast(ws.room, { type: "count-skips", have: have, need: need });
+      if (have >= need && cr.performer) { try { cr.performer.send(JSON.stringify({ type: "count-skip" })); } catch (e) {} }
       return;
     }
     if (msg.type === "drgHit") {

@@ -1688,6 +1688,19 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.101 — Fishing: easier perfect cast, a PERFECT CAST adjuster, and RECAST
+
+1. **Easier perfect cast:** you now have about **0.53 s** to get round the swoop for a top-of-the-bar cast (was about 0.35 s). The power also drains more slowly after that.
+2. **PERFECT CAST ◀ ▶** in the top right while you're casting or waiting (rooms and practice): ▶ gives you more time (easier), ◀ less, in 0.05 s steps. It's saved on this device, and the same setting is in the FEEL sliders / Tuning lab ("Perfect cast: free time"). New sliders there too: cast power drain, BPM match window, tension from overspinning, recast reel-in speed.
+3. **RECAST:** while you're waiting for a bite, the button reads RECAST. Tap it, then spin the reel (any speed, or tap Space) and the empty line comes in fast (about 1 s of spinning from a long cast). Then you're back to casting. Not spinning barely brings it in.
+
+## v1.82.100 — Skip timer works in a room (not just practice)
+
+The real cause: in a **room**, the countdown card showed Skip timer, but the button only worked in practice. In a room the host runs the countdown, so pressing it did nothing.
+1. **Room:** Skip timer now asks to skip. When **every real player** in the room has pressed it (bots don't count, so if it's just you it's instant), the host starts the game right away. With more people the button shows **"Waiting · 1/3 ready"** and the others see the count on theirs.
+2. **Practice:** unchanged (it already worked there).
+3. **Render needs a redeploy** (server change), and the host page needs a refresh.
+
 ## v1.82.99 — Fishing: vertical tension meter
 
 - The **TENSION meter is a tall vertical bar** up by the water, just left of the middle beside the fish. It fills from the bottom (green → yellow → red at the top), with the beat light above it and the TENSION label below.
