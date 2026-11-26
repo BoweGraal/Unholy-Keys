@@ -28,12 +28,12 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.77"></script>
-<script src="art.js?v=1.82.77"></script>
-<script src="qr.js?v=1.82.77"></script>
-<script src="voice.js?v=1.82.77"></script>
-<script src="instruments.js?v=1.82.77"></script>
-<script src="kart.js?v=1.82.77"></script>
+<script src="gfx.js?v=1.82.78"></script>
+<script src="art.js?v=1.82.78"></script>
+<script src="qr.js?v=1.82.78"></script>
+<script src="voice.js?v=1.82.78"></script>
+<script src="instruments.js?v=1.82.78"></script>
+<script src="kart.js?v=1.82.78"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4876,10 +4876,22 @@ setInterval(function(){var b=document.getElementById("liveVoice");if(!b||!VOICE.
   if(!L.length){b.title=VOICE.state==="off"?"Voice chat with the audience between songs: your mic switches off while you play":"In voice: nobody else has joined yet";return;}
   b.title="Voice: "+L.map(function(l){var p=typeof AUD!=="undefined"&&AUD.people[l.id],nm=p&&p.name||l.id;return nm+" "+(l.state==="connected"?(l.hearing?"\u2713":"\u2713 (tap the page to hear)"):l.state==="failed"?"\u2715 retrying":"\u2026 connecting");}).join(" \u00B7 ");},2000);
 setInterval(function(){VOICE.tick();},200);
-function goLive(){
+/* ---- you're hosting: the room is remembered on this device while it's live. The phone menu then offers "Back to hosting"
+   instead of letting you join your own room as a player, and coming back to this page within the server's minute of
+   grace picks the room back up. ---- */
+var HOSTING={save:function(){try{localStorage.setItem("uk_hosting",JSON.stringify({room:LIVERC.room,key:LIVERC.key,at:Date.now()}));}catch(e){}},
+  clear:function(){try{localStorage.removeItem("uk_hosting");}catch(e){}},
+  saved:function(){try{var v=JSON.parse(localStorage.getItem("uk_hosting")||"null");return v&&v.room&&v.key&&Date.now()-v.at<55000?v:null;}catch(e){return null;}}};
+setInterval(function(){if(liveOn&&LIVERC.room&&LIVERC.key)HOSTING.save();},5000);   /* still live: keep it fresh */
+function resumeHosting(){var v=HOSTING.saved();if(!v||liveOn||liveWs)return false;
+  if(typeof jamOn!=="undefined"&&!jamOn)try{enterJam();}catch(e){}
+  goLive(v);
+  showJamToast("📡 Getting your room back…","#F5C518",2500);return true;}
+setTimeout(resumeHosting,1200);
+function goLive(rs){
   if(liveOn){endLive();return;}
   var btn=document.getElementById("bLive");
-  STREAM.start();                                          /* must run straight from the click: Chrome only shows the share prompt for a click */
+  if(rs){LIVERC.room=rs.room;LIVERC.key=rs.key;LIVERC.n=0;}else STREAM.start();   /* coming back to your room: no new screen-share prompt */                                          /* must run straight from the click: Chrome only shows the share prompt for a click */
   function liveFail(){
     if(liveOn)return;
     STREAM.stop();
@@ -4892,7 +4904,7 @@ function goLive(){
   try{liveWs=new WebSocket(LIVE_URL);}catch(e){liveFail();return;}
   btn.textContent="Connecting";
   liveWs.onopen=function(){
-    liveWs.send(JSON.stringify({type:"create-room",name:stageName(),look:perfLookStr()}));
+    liveWs.send(JSON.stringify(rs?{type:"resume-room",room:rs.room,key:rs.key}:{type:"create-room",name:stageName(),look:perfLookStr()}));
   };
   /* a dropped connection mid-show: keep the show going and reconnect to the same room (the server holds it for a minute) */
   function liveReconnect(){
@@ -4914,7 +4926,8 @@ function goLive(){
     if(msg.type==="time"){PCLOCK.got(msg);return;}if(msg.type==="cal-tap"){TVMODE.tap(msg);return;}
     if(msg.type==="gnote"){GUESTS.note(msg);return;}if(msg.type==="stage"){GUESTS.list(msg.list||[]);return;}
     if(msg.type==="resume-failed"){LIVERC.until=0;endLive();showJamToast("Couldn't get back into the room: the show has ended","#E8505B",4000);return;}
-    if(msg.type==="room-resumed"){LIVERC.until=0;LIVERC.n=0;if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();serverAgeWarn();}
+    if(msg.type==="room-resumed"){LIVERC.until=0;LIVERC.n=0;
+      if(!liveOn){liveOn=true;document.getElementById("livePnl").style.display="block";document.getElementById("liveCode").textContent=LIVERC.room;setTimeout(paintAudienceLink,0);}   /* back after leaving the page: live again */if(msg.version){SERVER_VERSION=String(msg.version).slice(0,20);showVersion();serverAgeWarn();}
       document.getElementById("bLive").textContent="LIVE";audReset();
       liveSend({type:"state",root:S.root,scale:S.scale,oct:S.oct,eng:S.eng,mode:S.mode});
       var vm2=videoMsg();if(vm2)liveSend(vm2);STAGEFX.resend();STREAM.announce();
@@ -4953,7 +4966,7 @@ function goLive(){
     if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
     if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();window.CAST&&window.CAST.count(0);}
     if(msg.type==="tv-count"&&window.CAST)window.CAST.count(msg.count);
-    if(msg.type==="room-created"||msg.type==="room-resumed"){PCLOCK.start();TVMODE.joined();}
+    if(msg.type==="room-created"||msg.type==="room-resumed"){PCLOCK.start();TVMODE.joined();HOSTING.save();}
     if(msg.type==="bots-info")BOTFILL.info(msg);
   }
   liveWs.onmessage=liveMsg;
@@ -4961,6 +4974,7 @@ function goLive(){
   liveWs.onerror=function(){liveFail();};
 }
 function endLive(){
+  HOSTING.clear();
   clearTimeout(LIVERC.t);LIVERC.until=0;LIVERC.key=null;
   STREAM.stop();
   liveOn=false;setTimeout(paintAudienceLink,0);try{VOICE.reset();}catch(e){}
@@ -4984,7 +4998,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.77",SERVER_VERSION="";
+var PAGE_VERSION="1.82.78",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or

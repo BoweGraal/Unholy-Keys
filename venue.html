@@ -19,14 +19,14 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.77"></script>
-<script src="gfx.js?v=1.82.77"></script>
-<script src="art.js?v=1.82.77"></script>
-<script src="qr.js?v=1.82.77"></script>
-<script src="voice.js?v=1.82.77"></script>
-<script src="instruments.js?v=1.82.77"></script>
-<script src="kart.js?v=1.82.77"></script>
-<script src="explain.js?v=1.82.77"></script>
+<script src="tune.js?v=1.82.78"></script>
+<script src="gfx.js?v=1.82.78"></script>
+<script src="art.js?v=1.82.78"></script>
+<script src="qr.js?v=1.82.78"></script>
+<script src="voice.js?v=1.82.78"></script>
+<script src="instruments.js?v=1.82.78"></script>
+<script src="kart.js?v=1.82.78"></script>
+<script src="explain.js?v=1.82.78"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -760,6 +760,7 @@ body.tv-screen button,body.tv-screen input,body.tv-screen select,body.tv-screen 
 body.tv-screen{cursor:none;--chatH:0px!important}body.tv-screen #hudRoom,body.tv-screen .hud-room{display:none}
 #nearRooms{display:none;margin-bottom:10px}#nearRooms.on{display:block}
 #nearRooms .near-btn{display:block;width:100%;margin:6px 0;padding:10px 12px;background:#2a1f4d;border:2px solid #9cff4a;border-radius:8px;color:#fff;font:700 14px 'Silkscreen',ui-monospace,monospace;text-align:left;cursor:pointer}
+#nearRooms .near-btn.mine{border-color:#F5C518;background:#4a3410}
 #nearRooms .near-btn small{display:block;font:11px system-ui;opacity:.75;margin-top:2px}
 #tvCard{position:fixed;right:18px;bottom:18px;z-index:40;background:rgba(14,10,30,.88);border:2px solid #7F77DD;border-radius:12px;padding:10px 12px;text-align:center;color:#fff;font:700 12px 'Silkscreen',ui-monospace,monospace;pointer-events:none}
 #tvCard canvas{display:block;width:120px;height:120px;margin:6px auto;image-rendering:pixelated;background:#fff;border-radius:4px}#tvCard .tc-code{font-size:26px;letter-spacing:6px;color:#F5C518}#tvCard small{display:block;font:11px system-ui;opacity:.75}
@@ -1986,6 +1987,7 @@ else if(/[?&]practice\b/.test(location.search))setTimeout(function(){PRACTICE.en
 document.getElementById("enterBtn").addEventListener("click",function(){
   var name=document.getElementById("inName").value.trim();
   var room=document.getElementById("inRoom").value.trim();
+  if(room&&room.toUpperCase()===myHosting()){if(confirm("You're hosting room "+room.toUpperCase()+". Go back to hosting it?"))location.href="index.html?host";return;}   /* you can't be in your own room twice */
   if(!name){MENU.view("menu");var nI=document.getElementById("inName");nI.placeholder="Type your name first";try{nI.focus();}catch(e){}return;}
   if(!room){showJoinErr("Please enter a room code");return;}
   myName=name;
@@ -2016,13 +2018,14 @@ var SONGREQ=(function(){var box=document.getElementById("songReq"),btn=document.
   return{result:result};})();
 /* ---- rooms on your WiFi: while the join screen's up, ask the server for rooms hosted on the same network and list them as
    one-tap buttons (the code still works for anyone else) ---- */
+function myHosting(){try{var v=JSON.parse(localStorage.getItem("uk_hosting")||"null");return v&&v.room&&Date.now()-v.at<60000?v.room:"";}catch(e){return "";}}
 var NEAR=(function(){var sk=null,tm=null,box=document.getElementById("nearRooms");
   function on(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&!TVSCREEN&&!(typeof PRACTICE!=="undefined"&&PRACTICE&&PRACTICE.on);}
   var lastJ="";
-  function render(list){if(!box)return;var j=JSON.stringify(list||[]);if(j===lastJ)return;lastJ=j;   /* only redraw when it changes, so a tap never lands on a button that's being replaced */
+  function render(list){if(!box)return;var hr=myHosting();list=(list||[]).filter(function(r){return r.room!==hr;});if(hr)list.unshift({room:hr,mine:1});var j=JSON.stringify(list);if(j===lastJ)return;lastJ=j;   /* only redraw when it changes, so a tap never lands on a button that's being replaced */
     if(!list||!list.length){box.innerHTML="";box.classList.remove("on");return;}box.classList.add("on");
-    box.innerHTML='<label>On your WiFi</label>'+list.map(function(r){return '<button class="near-btn" data-room="'+r.room+'">&#9654; Join '+String(r.name).replace(/[<>&"]/g,"")+'\'s room<small>'+r.n+' playing · '+r.room+'</small></button>';}).join("");
-    Array.prototype.forEach.call(box.querySelectorAll(".near-btn"),function(b){b.addEventListener("click",function(){document.getElementById("inRoom").value=b.getAttribute("data-room");document.getElementById("enterBtn").click();});});}
+    box.innerHTML='<label>On your WiFi</label>'+list.map(function(r){if(r.mine)return '<button class="near-btn mine" data-host="1">&#9654; Back to hosting your room<small>'+r.room+' · you\'re the host</small></button>';return '<button class="near-btn" data-room="'+r.room+'">&#9654; Join '+String(r.name).replace(/[<>&"]/g,"")+'\'s room<small>'+r.n+' playing · '+r.room+'</small></button>';}).join("");
+    Array.prototype.forEach.call(box.querySelectorAll(".near-btn"),function(b){b.addEventListener("click",function(){if(b.getAttribute("data-host")){location.href="index.html?host";return;}document.getElementById("inRoom").value=b.getAttribute("data-room");document.getElementById("enterBtn").click();});});}
   function ask(){if(!on()){if(sk){try{sk.close();}catch(e){}sk=null;}return;}
     if(!sk||sk.readyState>1){try{sk=new WebSocket(LIVE_URL);sk.onopen=function(){try{sk.send(JSON.stringify({type:"nearby"}));}catch(e){}};sk.onmessage=function(e){try{var m=JSON.parse(e.data);if(m.type==="nearby")render(m.rooms);}catch(x){}};sk.onclose=function(){sk=null;};}catch(e){sk=null;}return;}
     if(sk.readyState===1)try{sk.send(JSON.stringify({type:"nearby"}));}catch(e){}}
@@ -8953,7 +8956,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.77",SERVER_VERSION="";
+var PAGE_VERSION="1.82.78",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9558,7 +9561,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.77"></script>
+<script src="lab.js?v=1.82.78"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

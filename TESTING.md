@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.78 — You can't be in your own room twice; come back to hosting
+
+1. Host a room (Host a room on a phone, or the host page), go live, then leave the host page (Back, or open the phone menu).
+2. The phone menu shows a gold **▶ Back to hosting your room** (with the code) instead of a Join button for it. Tap it: the host page reopens and you're LIVE in the same room again, everyone still in it. This works within about a minute of leaving; after that the room has closed.
+3. Typing your own room's code into Join game asks "You're hosting room XXXX. Go back to hosting it?" and won't join you as a player.
+4. End the show properly and the gold button goes away.
+
 ## v1.82.77 — Phones: the phone menu, with Host a room
 
 1. On a phone, open the host's address (index.html). It goes straight to the phone menu (the same one players use).
