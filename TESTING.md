@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.109 — No ADD SONG during rounds; Skip timer says what it's doing
+
+1. **ADD SONG is hidden during a round's countdown and the game itself.** It comes back between rounds.
+2. **Skip timer in a room** now shows its state:
+   - "Waiting for host…" once your press went through (it starts within a moment).
+   - "Waiting · 1/3 ready" while others still need to press.
+   - **"⚠ Server needs updating"** if the server never answers. That means the live server is an older build without room skips: **redeploy Render, and refresh the host page.**
+3. Fishing's countdown card now explains fishing ("Swoop to cast · jerk on the ❗ · spin the reel to the ♩") instead of "Everyone gets the same steps".
+
 ## v1.82.108 — Playlist nights: the room votes the games before each song
 
 1. **Build a playlist** (host's song menu → Playlist), add your songs, keep "Next song plays on its own" on, and start the first one.
