@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.110 — Fishing: the beat pulse is on the whole time
+
+- The screen edge pulses on every beat **for the whole fishing game**: casting, waiting, the bite, netting. It's **yellow** then, and while reeling it shows your spin (green on the BPM, blue easing off, red straining), as before.
+
 ## v1.82.109 — No ADD SONG during rounds; Skip timer says what it's doing
 
 1. **ADD SONG is hidden during a round's countdown and the game itself.** It comes back between rounds.

@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.109"></script>
-<script src="tune.js?v=1.82.109"></script>
-<script src="gfx.js?v=1.82.109"></script>
-<script src="art.js?v=1.82.109"></script>
-<script src="qr.js?v=1.82.109"></script>
-<script src="voice.js?v=1.82.109"></script>
-<script src="instruments.js?v=1.82.109"></script>
-<script src="kart.js?v=1.82.109"></script>
-<script src="explain.js?v=1.82.109"></script>
+<script src="px8.js?v=1.82.110"></script>
+<script src="tune.js?v=1.82.110"></script>
+<script src="gfx.js?v=1.82.110"></script>
+<script src="art.js?v=1.82.110"></script>
+<script src="qr.js?v=1.82.110"></script>
+<script src="voice.js?v=1.82.110"></script>
+<script src="instruments.js?v=1.82.110"></script>
+<script src="kart.js?v=1.82.110"></script>
+<script src="explain.js?v=1.82.110"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -558,7 +558,7 @@ body.gaming-fish.fi-casting #fiPerf{display:flex}
 #fiPerf span{margin-right:2px}#fiPerf b{min-width:38px;text-align:center;font-size:12px;color:#F5C518}
 #fiPerf button{width:28px;height:26px;padding:0;font:900 12px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#3a3050;border:2px solid #000;cursor:pointer;touch-action:manipulation}
 #fiPulse{display:none;position:fixed;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 0 0 rgba(0,0,0,0);transition:box-shadow .3s steps(3)}
-body.fish-reel #fiPulse{display:block}
+body.gaming-fish #fiPulse{display:block}
 #fiPulse.on{transition:none;box-shadow:inset 0 0 0 8px var(--pc,#9cff4a),inset 0 0 0 12px #000,inset 0 0 0 16px var(--pc,#9cff4a)}   /* hard pixel bands, no blur */
 #fiBpm{display:none;position:absolute;right:max(10px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 212px);width:136px;padding:6px 8px 7px;background:rgba(10,12,22,.82);border:2px solid #3a3f5a;box-shadow:0 0 0 2px #0a0c16;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#c9cbe0;text-align:center;pointer-events:none;image-rendering:pixelated}
 body.fish-reel #fiBpm{display:block}
@@ -4730,7 +4730,7 @@ var FISH=(function(){
   }
   /* the reel's speed: how fast you spin it against the song's tempo. One turn a beat (anywhere round, either way) is full speed; a bit
      off is partial; way off is slow. The tempo comes from the song's beat grid, so it follows the song when it speeds up or slows */
-  var lastFastPop=0,spinRev=0,spinDir=1,spinHist=[],bpmHist=[],bpmNow=120,spinRpm=0,spinQ=0,lastBeatK=-1;
+  var pulseK=-1,lastFastPop=0,spinRev=0,spinDir=1,spinHist=[],bpmHist=[],bpmNow=120,spinRpm=0,spinQ=0,lastBeatK=-1;
   function spinTick(now,dt){var b=beatNow();bpmHist.push({t:now,b:b});while(bpmHist.length>2&&now-bpmHist[0].t>2000)bpmHist.shift();
     var h0=bpmHist[0];if(now-h0.t>400){var bb=(b-h0.b)/((now-h0.t)/60000);if(isFinite(bb)&&bb>40&&bb<260)bpmNow+=(bb-bpmNow)*Math.min(1,dt*3);}
     spinHist.push({t:now,r:spinRev});while(spinHist.length>2&&now-spinHist[0].t>3000)spinHist.shift();
@@ -4857,6 +4857,8 @@ var FISH=(function(){
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;
     var me=myId&&viewers[myId];if(!me)return;var inp=input(),age=(now-stAt)/1000;
+    /* the beat on the screen's edge the whole game: yellow while casting / waiting (reeling colours it by how you're spinning) */
+    var bk=Math.floor(beatNow());if(bk!==pulseK){pulseK=bk;if(st!=="reel"&&st!=="rewind"){var pl=$("fiPulse");if(pl){pl.style.setProperty("--pc","rgba(245,197,24,.7)");pl.classList.add("on");setTimeout(function(){pl.classList.remove("on");},90);}}}
     if(st==="idle"){if(ready()&&Math.abs(inp.x)>0.2)ang=Math.max(0.05,Math.min(0.95,ang+inp.x*dt*0.35));}   /* walk along the edge */
     else if(st==="aim"){}
     else if(st==="cast"&&age>0.55){var mm=marlinNow(),perfect=power>=TOP;marlinHold=false;
@@ -9208,7 +9210,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.109",SERVER_VERSION="";
+var PAGE_VERSION="1.82.110",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10204,7 +10206,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.109"></script>
+<script src="lab.js?v=1.82.110"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
