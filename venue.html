@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.81"></script>
-<script src="gfx.js?v=1.82.81"></script>
-<script src="art.js?v=1.82.81"></script>
-<script src="qr.js?v=1.82.81"></script>
-<script src="voice.js?v=1.82.81"></script>
-<script src="instruments.js?v=1.82.81"></script>
-<script src="kart.js?v=1.82.81"></script>
-<script src="explain.js?v=1.82.81"></script>
+<script src="tune.js?v=1.82.82"></script>
+<script src="gfx.js?v=1.82.82"></script>
+<script src="art.js?v=1.82.82"></script>
+<script src="qr.js?v=1.82.82"></script>
+<script src="voice.js?v=1.82.82"></script>
+<script src="instruments.js?v=1.82.82"></script>
+<script src="kart.js?v=1.82.82"></script>
+<script src="explain.js?v=1.82.82"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -8997,7 +8997,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.81",SERVER_VERSION="";
+var PAGE_VERSION="1.82.82",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9106,6 +9106,7 @@ var BALL=(function(){
   return{start:start,stop:stop,tick:tick,msg:msg,wire:wire,under:under,draw:draw,isOutMe:isOutMe,get on(){return on;}};})();
 function LBOTS(){for(var k in viewers)if(k.indexOf("bot")===0)return true;return false;}   /* this screen's own practice dancers (the server's bots have normal ids) */
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
+var AVFLEX={};   /* per dancer: last arm angles, for the elbow follow-through */
 function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge,look,fd){
   var s=scale||1,cx=x,cy=y;
   /* dance timing: faster while the performer is playing; seed keeps dancers out of lockstep */
@@ -9117,7 +9118,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     var gl=ART.PX.rg(ctx,cx,cy-6*s,2,cx,cy-6*s,22*s);gl.addColorStop(0,hexA(color,0.9));gl.addColorStop(1,hexA(color,0));
     ctx.fillStyle=gl;ART.PX.disc(ctx,cx,cy-6*s,22*s);ctx.restore();
   }
-  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="",knee=0,butt=0,bj=0,bsx=0,bsy=0;
+  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="",knee=0,butt=0,bj=0,bsx=0,bsy=0,flex=false;
   /* walking: moving = the walk state from ART.walkStep (feet planted, stride by distance) */
   if(moving&&!dance){var wp=ART.walkPose(moving);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*s;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*6*s;armL=2.7+Math.sin(dT*2)*0.35;armR=-armL;legL=Math.sin(dT*2)*0.25;legR=-legL;}
@@ -9131,7 +9132,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       /* a dance with its own facing (Running man side-on, Shake it facing away, the moonwalk, the shuffle spin): turned by whatever
          the 90 / 180 buttons or a spin have done, instead of replacing it */
       if(rg.dir!==undefined){var qq8=-1;for(var q8=0;q8<4;q8+=0.5)if(rot8(0,q8)===AVDIR){qq8=q8;break;}AVDIR=qq8>0?rot8(rg.dir,qq8):rg.dir;}
-      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;bsx=rg.bsx||0;bsy=rg.bsy||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
+      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;if(fd.s!==6)flex=true;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;bsx=rg.bsx||0;bsy=rg.bsy||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
       /* a side-on dance (Running man, the shuffle) turned to face front or back: its legs swing forward and back, which from the
          front or back is a knee coming up toward you, not a leg kicking out sideways. So the swing becomes a shorter (lifted) leg
          that stays under the hip; half way for the three-quarter views */
@@ -9145,7 +9146,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       /* the dance walk race: really walking forward while doing the style, so the legs stride (with a bit of the dance in them) and the body keeps the dance's arms and bounce */
       if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()&&!(fd&&fd.s===7)){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;knee=0;butt=0;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
     }else{
-    var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];
+    var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];flex=true;
     bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
     if(hitAge<220){bob-=(1-hitAge/220)*5*s;mouth=true;}
     }
@@ -9160,7 +9161,9 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     if(ro){bob+=ro.lift||0;if(ro.armL!==undefined)armL=ro.armL;if(ro.armR!==undefined)armR=ro.armR;if(ro.legL!==undefined)legL=ro.legL;if(ro.legR!==undefined)legR=ro.legR;if(ro.mouth)mouth=true;if(ro.alL)alL=ro.alL;if(ro.alR)alR=ro.alR;if(ro.head!==undefined)hdA=ro.head;if(ro.dx)dxs+=ro.dx;if(ro.lgL)lgL=ro.lgL;if(ro.lgR)lgR=ro.lgR;if(ro.rot!==undefined)rot=ro.rot;}
     if(eo){var ek=eo.k;bob+=eo.lift;rot=rot*(1-ek)+eo.rot;if(!ro){armL=armL*(1-ek)+eo.armL*ek;armR=armR*(1-ek)+eo.armR*ek;}legL=legL*(1-ek)+eo.legL*ek;legR=legR*(1-ek)+eo.legR*ek;}}
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  /* soft elbows on freely posed arms (not the robot, not a move that shapes its own arms) */
+  var bnd=null;if(flex&&alL===undefined&&alR===undefined&&ART.elbows){var fk=(name||"")+"|"+(seed||0),fm=AVFLEX[fk]||(AVFLEX[fk]={});bnd=ART.elbows(armL,armR,fm,performance.now());}
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{bendL:bnd?bnd[0]:0,bendR:bnd?bnd[1]:0,snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
   /* in a game: a gold star over your own head, so you can always pick yourself out */
   if(isMe&&!isPerf&&typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free"&&GAME.mode!=="fish"){   /* not fishing: the camera keeps you dead centre there anyway */var su=Math.max(1,Math.round(s*0.8)),SP=["...#...","..###..","#######",".#####.","..###..",".##.##.","##...##"],sx0=Math.round(x-3.5*su),sy0=Math.round(cy-27*s+Math.sin(Date.now()/250)*s);
     ctx.save();ctx.fillStyle="#120D1E";SP.forEach(function(r,j){for(var i=0;i<7;i++)if(r[i]==="#")ctx.fillRect(sx0+i*su-su,sy0+j*su-su,su*3,su*3);});
@@ -9682,7 +9685,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.81"></script>
+<script src="lab.js?v=1.82.82"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

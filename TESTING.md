@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.82 — Ball Run minigame; soft elbows when you dance
+
+**Ball Run** (new game, in the song picker under the dance games):
+1. Host: pick Ball run for a round and go live. During play, your instrument arrow keys steer a giant ball round a circular disk (a toast tells you). Stop pressing for about 2 seconds and the ball chases the nearest player by itself.
+2. Phone: run with the stick / arrows / WASD. Everyone gets 2.5 seconds to scatter at the start of each of the 3 rounds. Get rolled over and you see FLATTENED!, then sit out on the sideline with 💫 until the next round.
+3. Points: +4 a second while you're alive, +100 for the last one standing in a round.
+4. Practice: Ride → Ball run. The ball chases you and the practice bots; the bots dodge.
+5. Render needs a redeploy for this (server and bots changed). The YouTube ad-break notice also shows in the song bar again.
+
+**Soft elbows:** in free dance (dragging the hands) and in dances where the stick points an arm, arms now bend a little at the elbow. They curve more as they rise, and the forearm trails behind when you swing fast. The robot stays stiff, and moves with their own arm shapes are unchanged.
+
 ## v1.82.81 — No star over you in fishing
 
 1. Play Fishing: no gold star over your head (the camera keeps you in the middle anyway).
