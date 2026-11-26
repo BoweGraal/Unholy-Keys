@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.113 — Fishing: RECAST reels itself in
+
+Pressing **↺ RECAST** while you wait for a bite now pulls the line straight back in by itself, at full speed. You no longer have to spin or hold to bring it back. Spinning still makes it a bit quicker.
+
+1. Cast, then press **↺ RECAST** while you wait.
+2. Take your hands off: the line comes back in about a second and you're ready to cast again.
+3. Spin the reel during it: it comes in a little faster.
+
 ## v1.82.112 — New game intros: 8-bit demos and short instructions for every game
 
 The card that shows before each game (the last ~15 s of the countdown) is redone for all 22 games. The instructions are cut down to a goal line, 2–3 short HOW lines and 2–3 RULES, with symbols instead of sentences. Every demo is now drawn in whole pixels (no smooth circles or lines). The fishing, mosh pit and ice rink demos are rebuilt to match how those games work now, and Coin dive, Ball run and Dragon riders get a card for the first time.
