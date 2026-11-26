@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.102"></script>
-<script src="gfx.js?v=1.82.102"></script>
-<script src="art.js?v=1.82.102"></script>
-<script src="qr.js?v=1.82.102"></script>
-<script src="voice.js?v=1.82.102"></script>
-<script src="instruments.js?v=1.82.102"></script>
-<script src="kart.js?v=1.82.102"></script>
-<script src="explain.js?v=1.82.102"></script>
+<script src="tune.js?v=1.82.103"></script>
+<script src="gfx.js?v=1.82.103"></script>
+<script src="art.js?v=1.82.103"></script>
+<script src="qr.js?v=1.82.103"></script>
+<script src="voice.js?v=1.82.103"></script>
+<script src="instruments.js?v=1.82.103"></script>
+<script src="kart.js?v=1.82.103"></script>
+<script src="explain.js?v=1.82.103"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4887,7 +4887,8 @@ var FISH=(function(){
       var ovs=spinRpm>8?Math.max(0,spinRpm/bpmNow-1-FT("spinWin",0.15)):0;   /* spinning faster than the beat strains the line */
       var Tt=reelR*FT("tenReel",0.45)+pull*(reelR>0.15?FT("tenPull",1.15):FT("tenPull",1.15)*0.43)+Math.abs(rodA)*0.08+ovs*FT("tenOver",0.9);
       var und=spinRpm>8?Math.max(0,1-FT("spinWin",0.15)-spinRpm/bpmNow):(reelR<0.05?0.3:0);Tt*=1-Math.min(0.6,und*FT("tenUnder",0.8));   /* spinning slower eases the line */
-      if(ovs>0.15&&now-(lastFastPop||0)>1600){lastFastPop=now;pops.push({t:now,txt:"TOO FAST! Easy on the reel",col:"#ff8a5a"});}T+=(Tt-T)*Math.min(1,dt*FT("tenRise",5));
+      if(ovs>0.15&&now-(lastFastPop||0)>1600){lastFastPop=now;pops.push({t:now,txt:"TOO FAST! Easy on the reel",col:"#ff8a5a"});}var dT=(Tt-T)*Math.min(1,dt*FT("tenRise",5));   /* tension can only climb so fast (slower still just after the hook); it can drop quicker */
+      if(dT>0)dT=Math.min(dT,FT("tenMaxRise",0.35)*dt*(age<2?FT("tenHookEase",0.5):1));else dT=Math.max(dT,-FT("tenMaxFall",0.9)*dt);T+=dT;
       if(T>1)overT+=dt;else overT=Math.max(0,overT-dt*2);if(T<0.06)slackT+=dt;else slackT=0;
       if(tut){D=Math.min(D,1);if(D<=0.05){netAt=now;set("net");}}
       else if(overT>FT("snapT",0.5)){pops.push({t:now,txt:"SNAP! The line broke",col:"#ff8a8a"});set("snap");}
@@ -9208,7 +9209,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.102",SERVER_VERSION="";
+var PAGE_VERSION="1.82.103",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10204,7 +10205,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.102"></script>
+<script src="lab.js?v=1.82.103"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

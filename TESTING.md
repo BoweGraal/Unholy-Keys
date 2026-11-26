@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.103 — Fishing: no more tension spikes
+
+- **Tension can only climb so fast:** at most about a third of the meter per second (empty to full takes about 3 s), and **half that for the first 2 s after the hook**, so it no longer shoots up right away or jumps. It can still drop faster than it rises (up to about 0.9 of the meter per second).
+- Three new FEEL / Tuning-lab sliders to fine-tune it: "Tension: fastest climb", "first 2 s after the hook", "fastest drop".
+
 ## v1.82.102 — Fishing: spinning slow is a tool, not a mistake; tension meter on the right
 
 1. **Slower than the BPM:** the reel turns slower in proportion (half the BPM = half speed) and **the tension drops**, so easing off calms a fighting fish.
