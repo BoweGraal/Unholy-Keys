@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.88 — Note highway · 4 keys: real patterns, on the beat
+
+1. **More notes, on the beat:** the 4-key highway fills in the beat grid wherever the song is playing. Easy: every other beat. Normal: every beat. Hard: every beat, plus half beats in the big moments. Expert: half beats all the way through, with a few rests for swing. Song breaks (8+ beats with nothing) stay quiet.
+2. **Patterns that bounce:** alternating hands (D K, F J), staircases (D F J K / K J F D), zig-zags, rolls (D J F K), and hand-to-hand runs on fast stretches. The pattern changes every bar or so, never the same key three times running, and chords land on the big downbeats (more at higher levels).
+3. **Holds:** short ones become taps, long ones are cut to 2 beats (3 on Easy/Normal). While you hold a key, that hand rests and the other hand plays.
+4. Same song and level = the same notes on every phone. Hand-written charts are unchanged.
+
 ## v1.82.87 — Dragon riders: new dragons, real wingbeats, barrel roll
 
 1. **New dragons:** big bony-fingered wings with a scalloped membrane, a long S-curved neck, horned head (the jaw drops open when it breathes fire), spikes down the back, a long tail that ripples as it flies, claws tucked underneath, saddle and strap.

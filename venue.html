@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.87"></script>
-<script src="gfx.js?v=1.82.87"></script>
-<script src="art.js?v=1.82.87"></script>
-<script src="qr.js?v=1.82.87"></script>
-<script src="voice.js?v=1.82.87"></script>
-<script src="instruments.js?v=1.82.87"></script>
-<script src="kart.js?v=1.82.87"></script>
-<script src="explain.js?v=1.82.87"></script>
+<script src="tune.js?v=1.82.88"></script>
+<script src="gfx.js?v=1.82.88"></script>
+<script src="art.js?v=1.82.88"></script>
+<script src="qr.js?v=1.82.88"></script>
+<script src="voice.js?v=1.82.88"></script>
+<script src="instruments.js?v=1.82.88"></script>
+<script src="kart.js?v=1.82.88"></script>
+<script src="explain.js?v=1.82.88"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3304,23 +3304,50 @@ var GAME=(function(){
   /* The 4-key highway's mapping, for the rhythm rather than the tune: beats 1 and 3 on the left hand, 2 and 4
      on the right (like a kick and a snare), switching between the inner and outer key every bar; half beats on
      the other hand's inner key. Both outer keys together on a bar start in the big moments. Never more than two. */
+  /* the 4-key highway's rhythm: the song's steps, filled in on the beat (half beats at Hard, all through at Expert, in the big
+     moments at Hard) wherever the song is playing; a gap of 4+ beats with no steps stays a break. Holds: short ones become
+     taps, long ones are cut to 2 beats so they don't stall the bouncing */
+  function pump4(chart,diff,raw){if(!chart||!chart.steps||chart.hand||!chart.steps.length)return chart;var rs=(raw&&raw.steps&&raw.steps.length?raw:chart).steps,rj=0;var per=60000/(chart.bpm||120),st=chart.steps.map(function(x){return x.slice();}),pk=chart.peaks||[];
+    function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
+    st.forEach(function(x){if(x.length>2){var h=+x[2]||0;if(h<per*0.75)x.length=2;else x[2]=Math.round(Math.min(h,per*(diff>=2?2:3)));}});
+    var step=diff>=2?0.5:diff===1?1:2,t0=Math.min(st[0][0],rs[0][0]),tEnd=Math.max(st[st.length-1][0],rs[rs.length-1][0]),add=[],j=0,holdTo=-1e9,times=st.map(function(x){return x[0];});
+    for(var t=t0;t<=tEnd;t+=per*step){
+      var half=Math.abs(((t-t0)/per)%1-0.5)<0.01;if(half&&diff===2&&!inPk(t))continue;
+      if(half){var hz=Math.sin(Math.round(t)*0.0137)*43758.5453;if(hz-Math.floor(hz)<(inPk(t)?0.1:0.3))continue;}   /* a little swing: some half beats rest */
+      while(j<st.length&&st[j][0]<t-per*4.5)j++;
+      var near=false,act=false;for(var k=j;k<st.length&&st[k][0]<=t+per*4.5;k++){var d=st[k][0]-t;if(Math.abs(d)<per*0.24)near=true;if(st[k].length>2&&st[k][0]<t&&st[k][0]+st[k][2]>t-per*0.2)near=true;}
+      while(rj<rs.length&&rs[rj][0]<t-per*4)rj++;act=rj<rs.length&&Math.abs(rs[rj][0]-t)<=per*4;   /* the song's playing here (from its full step list, before the level thinned it) */
+      if(!near&&act)add.push([Math.round(t),1]);}
+    if(!add.length)return chart;var all=st.concat(add).sort(function(a,b){return a[0]-b[0];}),c={};for(var kk in chart)c[kk]=chart[kk];c.steps=all;return c;}
+  window.ukPump4=function(c,d,r){return pump4(c,d,r);};
   function keyLanes4(chart,diff){
     var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9,p1=-1,p2=-1,lastDbl=-1e9;
     if(diff===undefined)diff=1;
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
     if(chart.hand){for(var hi2=0;hi2<st.length;hi2++){var hl=[];for(var hb=0;hb<4;hb++)if(st[hi2][1]&(1<<hb))hl.push(hb);out.push(hl);}return out;}   /* hand-made: the lanes as written (left D, down F, up J, right K) */
-    /* the chart's own lanes (its runs and patterns flow across all four), not the beat number: picking lanes from the beat put
-       everything on the left whenever beats 2 and 4 were thinned out */
+    /* a pattern engine: the notes bounce across the four keys to the beat (alternating hands, staircases, zig-zags, rolls,
+       trills on fast runs), switching pattern every bar or so; chords land on the big downbeats; a held key's hand rests.
+       Same chart + level = the same notes on every phone. */
+    var t0=st.length?st[0][0]:0,PAT=[[[0,3],[1,2],[0,1,2,3],[3,2,1,0]],                                   /* Easy */
+      [[0,3],[1,2],[0,2],[1,3],[0,1,2,3],[3,2,1,0],[0,1,2,3,2,1],[0,3,1,2]],                              /* Normal */
+      [[0,2,1,3],[0,3,1,2],[0,1,2,3,2,1],[3,2,1,0,1,2],[0,2],[1,3],[0,3],[2,1,3,0],[0,1,3,2]],             /* Hard */
+      [[0,2,1,3],[3,1,2,0],[0,3,1,2],[0,1,2,3,2,1],[3,2,1,0,1,2],[0,2,1,3,2,0,3,1],[0,1,0,2,3,2,3,1],[1,2,0,3],[2,3,1,0]]][Math.max(0,Math.min(3,diff))];
+    var FAST=[[0,2],[1,3],[0,3,1,2],[2,0,3,1]];   /* quick runs: always hand to hand */
+    function hsh(n){var x=Math.sin(n*91.7+st.length*0.37)*43758.5453;return x-Math.floor(x);}
+    var pat=null,pi=0,pbar=-1,used=0,holdLane=-1,holdEnd=-1e9,prev=-1,prev2=-1;
     for(var i=0;i<st.length;i++){
-      var s=st[i],bits=[];for(var b=0;b<4;b++)if(s[1]&(1<<b))bits.push(b);
-      var big=inPk(s[0]),gap=diff>=3?per*0.2:diff===2?per*0.4:per*0.45;   /* the ladder has already thinned the chart */
-      if(!bits.length||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
-      var l=bits.length>1?Math.log2(fairBit(s[1],s[0],p1>=0?1<<p1:0)):bits[0];
-      if(l===p1&&l===p2)l=(l+(s[0]%2?1:3))%4;                         /* never the same key three times running */
+      var s=st[i],big=inPk(s[0]),gap=diff>=3?per*0.2:diff===2?per*0.36:per*0.45;
+      if(!s[1]||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
+      var bt=Math.round((s[0]-t0)/per*2)/2,bar=Math.floor(bt/4),onBeat=bt%1===0,down=onBeat&&bt%4===0,fast=s[0]-last<per*0.6;
+      if(bar!==pbar&&(used>=4||!pat)||used>=8){pbar=bar;used=0;pi=0;var pool=fast&&diff>=2?FAST.concat(PAT):PAT;pat=pool[Math.floor(hsh(bar*7+i)*pool.length)];}
+      var l=pat[pi%pat.length];pi++;used++;
+      if(s[0]<holdEnd&&(l===holdLane||(l<2)===(holdLane<2)))l=holdLane<2?2+(pi%2):(pi%2);   /* the hand holding a key rests: the other hand plays */
+      if(l===prev&&l===prev2)l=(l+2)%4;                                                    /* never the same key three times running */
       last=s[0]+(s[2]>0?+s[2]:0);
-      if(bits.length>1&&big&&diff>0&&!(s[2]>0)&&(diff>=2||s[0]-lastDbl>=per*3.9)){var o2=bits.filter(function(x){return x!==l;});out.push([l,o2.length?o2[0]:(l+2)%4].sort());lastDbl=s[0];}   /* Normal: a chord at most once a bar */
-      else out.push([l]);
-      p2=p1;p1=l;
+      var chord=!(s[2]>0)&&s[0]>=holdEnd&&big&&down&&(diff>=2||(diff===1&&bar%2===0))||(diff>=3&&big&&onBeat&&bt%4===2&&!(s[2]>0)&&s[0]>=holdEnd);
+      if(chord){var c2=l<2?(l===0?3:2):(l===3?0:1);out.push([l,c2].sort());}else out.push([l]);
+      if(s[2]>0){holdLane=l;holdEnd=s[0]+(+s[2]);}
+      prev2=prev;prev=l;
     }
     return out;
   }          /* for testing the difficulty levels */
@@ -3348,7 +3375,7 @@ var GAME=(function(){
     if(!chart)return [];
     var key=n+"|"+m;
     if(bsCache.chart===chart&&bsCache.key===key)return bsCache.out;
-    var d=diffOf(n),c=easeChart(chart,d),km=m==="keys"?keyLanes(c,d):m==="keys4"?keyLanes4(c,d):null,out=[];
+    var d=diffOf(n),c=easeChart(chart,d);if(m==="keys4")c=pump4(c,d,chart);var km=m==="keys"?keyLanes(c,d):m==="keys4"?keyLanes4(c,d):null,out=[];
     for(var i=0;i<c.steps.length;i++){
       var s=c.steps[i],lanes=[];
       if(km)lanes=km[i]||[];else for(var b=0;b<4;b++)if(s[1]&(1<<b))lanes.push(b);
@@ -4354,7 +4381,7 @@ var GAME=(function(){
     if(mode)stop(true);
     four=m==="keys4";if(four)m="keys";
     rnd=round||null;rndIdx=0;sentScore=-1;fCtl=[0,0,0,0];
-    if(window.ukLvRefresh)window.ukLvRefresh();if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart)rnd.chart=easeChart(rnd.chart,rnd.diff);}clkOff=null;clkJumps=0;swoopEnd=-1e9;aimLast={t:-1e9,x:0.5,y:0.5};finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
+    if(window.ukLvRefresh)window.ukLvRefresh();if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart){var rawC=rnd.chart;rnd.chart=easeChart(rnd.chart,rnd.diff);if(four)rnd.chart=pump4(rnd.chart,rnd.diff,rawC);}}clkOff=null;clkJumps=0;swoopEnd=-1e9;aimLast={t:-1e9,x:0.5,y:0.5};finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
     mode=m;myDance=m==="free"||m==="mosh"||m==="skate"||m==="keepy"||m==="kart"||m==="walk"||m==="pipe"||m==="ski"||m==="ctf"||m==="fish"||m==="boats"||m==="swim"||m==="ball"||m==="dragon"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
@@ -9010,7 +9037,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.87",SERVER_VERSION="";
+var PAGE_VERSION="1.82.88",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10004,7 +10031,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.87"></script>
+<script src="lab.js?v=1.82.88"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
