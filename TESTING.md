@@ -1688,6 +1688,76 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.95 — Fishing: real ocean fish, each with its own pixel sprite
+
+1. **The fish, smallest/nearest to biggest/farthest:** Barred knifejaw (60) → Salmon (140) → Cod (240) → Barracuda (400) → Kingfish (650), and at the top of the power bar the **Marlin** (1,500, when he's out) or a **Bluefin tuna** (1,000, replaces 1.82.94's sea bass: tough fight, 1 s jerk window, "TUNA ON!").
+2. The cast readout's tiers are the same six, spaced evenly up the bar: KNIFEJAW, SALMON, COD, BARRACUDA, KINGFISH, MARLIN / BLUEFIN TUNA. What can bite: under 25% power only knifejaw; 25%+ salmon; 45%+ cod; 65%+ barracuda; 85%+ kingfish; 95%+ the top.
+3. **New sprites from reference photos**, so each one looks like itself:
+   - **Knifejaw:** deep, pale body with bold black bars and a little beak.
+   - **Salmon:** blue-green back, silver sides, black spots, forked tail.
+   - **Cod:** olive and speckled, with a pale side line, three back fins and a chin barbel.
+   - **Barracuda:** long and silver, with dark blotches and fangs.
+   - **Kingfish:** blue-green back with a yellow side stripe and a yellow tail.
+   - **Tuna:** navy torpedo with yellow finlets and a crescent tail.
+   - **Marlin:** cobalt with pale stripes, a tall sail and a bill.
+
+## v1.82.94 — Fishing: the cast readout with the fish on it, and the sea bass
+
+Replaces 1.82.93's meter during the swoop:
+1. **The flick sets the power:** the quicker you get from the ring to the top of the swoop, the stronger the cast. There's no meter while you swoop.
+2. **Then the readout:** right after the cast a bar beside you fills up to your power, with the fish marked along it: MINNOW, BASS, PIKE, KOI, and at the very top **MARLIN** (when he's out) or **SEA BASS**. The tier you reached lights up and blinks, and the bar fades after about 2.5 s.
+3. **The top of the bar** (95%+, a quick clean flick, "PERFECT CAST!"):
+   - If the marlin is out, you hook him, or it holds for him until he passes or leaves.
+   - Otherwise a **sea bass** bites. It's new: tough to reel in (a little easier than the marlin), worth about 3× a normal fish (1,000 base), "SEA BASS ON!", and a 1 s jerk window like the marlin.
+4. Lower tiers work as before: the higher your power, the bigger the fish that can bite.
+
+## v1.82.93 — Fishing: the swoop's speed sets the cast, with a power meter
+
+1. **Faster swoop = farther cast:** a **POWER** meter beside you starts full when you start the swoop from the ring and drains as you go (about 1.3 s after a short head start). How full it is when you reach the top is your cast. About 0.35 s to the top is a perfect cast, about 0.9 s is about half, and dawdling gives a weak flick.
+2. The meter shows green at the perfect line (the white mark, 85%+), then yellow, then red. Stop short or slip off the swoop and you only get part of it.
+3. **No more fish labels** (BASS / PIKE / KOI / MARLIN) along the swoop while casting.
+
+## v1.82.92 — Fishing: jerk to hook, and a perfect cast waits for the marlin
+
+1. **Hooking takes a jerk:** when a fish bites, a yellow **!** pops over your bobber (the phone buzzes) and the button reads JERK!.
+   - **Phone:** flick the stick hard (from resting to the edge in a flash).
+   - **Keyboard:** tap S or ↓.
+   - You have about 1.2 s (1 s for the marlin), or "Too slow! It got away" / "The marlin spat the hook!" and you wait for another bite.
+   - Jerking before the ! shows: "Too early! Spooked it", and the bite comes later.
+   - On the first-catch lesson there's no time limit, and the coach tells you to jerk.
+2. **A perfect cast while the marlin is out holds for him:** "WAITING FOR THE MARLIN…". Nothing else bites until he swims past your bobber (MARLIN ON!) or leaves ("He swam off…"), and then normal bites start again.
+
+## v1.82.91 — Step dance, 7-key highway and Target dance get the same treatment
+
+All the rhythm games now build their notes the same way as the 4-key highway (1.82.90): **the song's own rhythm at every level**, off-beats included, spaced out more on the easier levels (Easy 1 beat apart, Normal ½ beat with at most two quick notes then a breath, Hard ⅓, Expert ¼). The level thinning no longer leaves long empty stretches. Hand-made charts are unchanged.
+1. **Step dance:** the arrows come from the pattern engine: walks (← ↑ ← ↑), stairs (← ↓ ↑ →), side to side (← →), and no same arrow twice on fast runs. Jumps (two arrows) land on the big downbeats, more on higher levels.
+2. **Note highway (7 keys):** its own pattern engine: scales up and down, arpeggios (A D G J G D), hand-to-hand jumps on fast runs, trills, and chords on the big downbeats. Easy stays on the middle five keys. While you hold a key, that hand rests.
+3. **Target dance:** targets flow along a shape in time with the beat (a circle, a zig-zag, a figure 8, a sweep), a new shape every 2 bars, instead of popping up at random. Easy keeps the moves smaller.
+
+## v1.82.90 — 4-key highway follows the song's own rhythm at every level
+
+Replaces the beat-grid fill from 1.82.88 (Normal was locked to on-beat notes, which felt robotic):
+1. Every level now uses **the song's own rhythm**, off-beats and syncopation included. The levels only differ in how close together notes can be. The beat notes go in first, then the song's other notes wherever they fit:
+   - **Easy:** at least 1 beat apart (mostly the beat).
+   - **Normal:** half a beat, but never more than two quick notes in a row, then a breath of a beat. Easier and slower, but it still grooves with the song.
+   - **Hard:** a third of a beat.
+   - **Expert:** a quarter of a beat (sixteenth runs where the song has them).
+2. Notes on the beat are only added for a long stretch where the song is playing but no notes were found (every other beat on Easy).
+3. Normal's patterns are simpler (D K, F J, staircases, D J F K) and stay longer before changing, so they're fun to settle into.
+4. Holds as before: short → tap, long → cut to 2 beats (3 on Easy/Normal).
+
+## v1.82.89 — Dragon riders: barrel roll, and the whole sky in landscape
+
+- **The spin is a real barrel roll now:** the dragon rolls along its own length (squashes edge-on, turns belly-up with the rider hanging under it, then comes back), not a loop. Air spirals off behind it.
+- On a phone turned sideways you couldn't fly lower than about halfway: the room kept for the chat box (160 px) took half of a landscape screen. In Dragon riders you can now fly down to 87% of the height in landscape (82% in portrait, where the stick and FIRE sit low).
+
+## v1.82.88 — Note highway · 4 keys: real patterns, on the beat
+
+1. **More notes, on the beat:** the 4-key highway fills in the beat grid wherever the song is playing. Easy: every other beat. Normal: every beat. Hard: every beat, plus half beats in the big moments. Expert: half beats all the way through, with a few rests for swing. Song breaks (8+ beats with nothing) stay quiet.
+2. **Patterns that bounce:** alternating hands (D K, F J), staircases (D F J K / K J F D), zig-zags, rolls (D J F K), and hand-to-hand runs on fast stretches. The pattern changes every bar or so, never the same key three times running, and chords land on the big downbeats (more at higher levels).
+3. **Holds:** short ones become taps, long ones are cut to 2 beats (3 on Easy/Normal). While you hold a key, that hand rests and the other hand plays.
+4. Same song and level = the same notes on every phone. Hand-written charts are unchanged.
+
 ## v1.82.87 — Dragon riders: new dragons, real wingbeats, barrel roll
 
 1. **New dragons:** big bony-fingered wings with a scalloped membrane, a long S-curved neck, horned head (the jaw drops open when it breathes fire), spikes down the back, a long tail that ripples as it flies, claws tucked underneath, saddle and strap.
