@@ -6829,8 +6829,12 @@ var DRAGONHOST=(function(){var told=false,last=0,sent=0;
   window.addEventListener("keydown",function(e){if(e.repeat||!(e.key in K))return;var r=cur();if(!r)return;var now=performance.now();
     if(!told){told=true;showJamToast("\uD83D\uDC09 DRAGON RIDERS: your arrows send the monsters, then fire the organ's notes!","#ff5a3c",3500);}
     if(now-last<110)return;last=now;sent++;liveSend({type:"drg",k:K[e.key]});},true);
-  setInterval(function(){if(!cur())told=false;},1000);
-  window.ukDragonHost=function(){return{sent:sent,live:!!cur()};};
+  /* the boss fight: you turn demonic and fly into the organ, so your instrument becomes a church organ; it goes back after */
+  var organ=false,prevEng=null;
+  setInterval(function(){var r=cur();if(!r){told=false;if(organ){organ=false;if(prevEng&&typeof selInst==="function")try{selInst(prevEng);}catch(e){}prevEng=null;}return;}
+    var gm=r.chart&&r.chart.gameMs>20000?r.chart.gameMs:90000,p=typeof ROUNDS.pos==="function"?ROUNDS.pos():-1;
+    if(!organ&&p>=gm*0.62){organ=true;prevEng=S.eng;try{selInst("gm-church-organ");}catch(e){}showJamToast("\uD83D\uDE08 You've turned demonic! You're the ORGANIST now: every arrow fires a flaming note","#ff3d1f",4000);}},400);
+  window.ukDragonHost=function(){return{sent:sent,live:!!cur(),organ:organ,eng:S.eng};};
   return{};})();
 /* ---- the performer's bot: a bot with your name and look that dances and plays the games for you on the dance floor
    (handy when the song's a track you aren't playing live). "Play the game" opens your player view over this page: the bot
