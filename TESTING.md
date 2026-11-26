@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.84 — Dragon riders: 8-bit, breath meter, eat the notes for a SUPER, demon performer in the organ
+
+1. **8-bit:** the whole dragon scene (sky, dragons, monsters, fire, the organ) is drawn in chunky pixels with hard edges, in banded colours.
+2. **Breath meter:** the orange bar under your dragon fills in about a second. Tap **FIRE** (bottom right; Space on a keyboard) to let it go. The fireball's size and damage match the bar (a full one does 4 damage and burns through several monsters), then the bar empties.
+3. **Eat the notes:** catch the demon organ's flaming notes in your dragon's jaws (+5 each). If one hits your body instead, you're scorched. Five fills the pips under the breath bar, and a **🔥 SUPER** button appears (E or Q on a keyboard): a 3-second flamethrower that burns everything in its line and pounds the organ.
+4. **The boss is the performer:** when the monster waves end, the performer on stage turns demonic (red flashes), leaves the stage and flies into the organ. The boss is the performer's own character, burned red, with horns, wings and glowing eyes: "DEMON <name>". On the host, your instrument switches to **Church Organ** for the fight and back to what you had when the round ends.
+5. **Boss health fix:** your hits now take health off the boss on your phone straight away, and the server's shared number (everyone's hits) pulls it lower. Before, the bar only moved when the server answered, so on a server that hadn't been redeployed it never went down.
+
 ## v1.82.83 — Dragon riders (Hell's gig); Ball Run runs itself; Skip timer fix; star only in boats
 
 **Dragon riders** (new game, in the song picker under Dance; in practice: Dragon riders):

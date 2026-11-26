@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.83"></script>
-<script src="gfx.js?v=1.82.83"></script>
-<script src="art.js?v=1.82.83"></script>
-<script src="qr.js?v=1.82.83"></script>
-<script src="voice.js?v=1.82.83"></script>
-<script src="instruments.js?v=1.82.83"></script>
-<script src="kart.js?v=1.82.83"></script>
-<script src="explain.js?v=1.82.83"></script>
+<script src="tune.js?v=1.82.84"></script>
+<script src="gfx.js?v=1.82.84"></script>
+<script src="art.js?v=1.82.84"></script>
+<script src="qr.js?v=1.82.84"></script>
+<script src="voice.js?v=1.82.84"></script>
+<script src="instruments.js?v=1.82.84"></script>
+<script src="kart.js?v=1.82.84"></script>
+<script src="explain.js?v=1.82.84"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -8902,6 +8902,7 @@ var PERF={kind:"synth",id:null,off:0,n:0};
 function perfKind(){if(PERF.id!==activeInst){var ins=findInst(activeInst);PERF.id=activeInst;PERF.kind=ART.INST.kindOf(activeInst,ins&&ins.l);PERF.band=ART.INST.section(activeInst,ins&&ins.l);}return PERF.kind;}
 var PERF_S=3;
 function drawPerformer(x,y){
+  if(typeof DRAGON!=="undefined"&&DRAGON.on){DRAGON.perfPos(x,y);if(DRAGON.hidePerf())return;}   /* dragon riders: gone demonic, down in the organ */
   var s=PERF_S,now=Date.now();
   if(isPerformerPlaying){var pulse=0.35+0.25*Math.sin(now*0.008);ctx.save();ctx.globalAlpha=pulse;var gl=ART.PX.rg(ctx,x,y-6*s,2,x,y-6*s,22*s);gl.addColorStop(0,hexA(performer.color,0.9));gl.addColorStop(1,hexA(performer.color,0));ctx.fillStyle=gl;ART.PX.disc(ctx,x,y-6*s,22*s);ctx.restore();}
   var _pk=perfKind(),_ps={midi:lastNoteMidi,on:isPerformerPlaying,t0:lastNoteTime,off:PERF.off,now:now,n:PERF.n};
@@ -9006,7 +9007,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.83",SERVER_VERSION="";
+var PAGE_VERSION="1.82.84",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9119,6 +9120,7 @@ var BALL=(function(){
    performer, or just nobody pressing) the waves and the boss's notes come from the song's own steps, the same on every phone. */
 var DRAGON=(function(){
   var on=false,local=false,lastT=0,pops=[],en=[],fb=[],notes=[],others={},score=0,stunTo=0,fireAt=0,perfAt=0,
+      gotMax=false,charge=0,superTo=0,supAcc=0,supBtn=null,breath=0,wantFire=false,fireBtn=null,
       waves=[],wi=0,bossShots=[],bi=0,bossAt=0,bossIn=0,bossHp=0,bossMax=0,bossDead=false,deadAt=0,pend=0,sentAt=0,lastFbTime=0,botB={},boom=[],seedN=1;
   var Y0=0.38,Y1=0.82,BX=0.83;
   function gm(){var c=typeof ROUND!=="undefined"&&ROUND.chart&&ROUND.chart();return c&&c.gameMs>20000?c.gameMs:90000;}
@@ -9134,14 +9136,17 @@ var DRAGON=(function(){
     if(!bossShots.length)for(var t2=bossAt+2500;t2<g;t2+=700)bossShots.push({t:t2,k:Math.floor(h01(t2)*4)});
     wi=0;bi=0;}
   function start(){on=true;local=!!(typeof PRACTICE!=="undefined"&&PRACTICE&&PRACTICE.on);lastT=0;lastT0=performance.now();pops=[];en=[];fb=[];notes=[];others={};score=0;stunTo=0;fireAt=0;perfAt=0;
-    bossIn=0;bossDead=false;deadAt=0;pend=0;sentAt=0;botB={};boom=[];seedN=(typeof ROUND!=="undefined"&&ROUND.n)||1;bossMax=60+45*Math.max(1,Object.keys(viewers).filter(function(id){return viewers[id]&&viewers[id]!==PH;}).length);bossHp=bossMax;
+    bossIn=0;bossDead=false;deadAt=0;pend=0;sentAt=0;botB={};boom=[];gotMax=false;charge=0;superTo=0;supAcc=0;breath=0;wantFire=false;supUI();seedN=(typeof ROUND!=="undefined"&&ROUND.n)||1;bossMax=60+45*Math.max(1,Object.keys(viewers).filter(function(id){return viewers[id]&&viewers[id]!==PH;}).length);bossHp=bossMax;
     plan();document.body.classList.add("gaming-dragon");var me=myId&&viewers[myId];if(me)setMe(0.18,0.55+h01(7)*0.25);}
-  function stop(){on=false;document.body.classList.remove("gaming-dragon");}
+  function stop(){on=false;document.body.classList.remove("gaming-dragon");supUI();}
   function inBoss(t){return t>=bossAt&&!bossDead;}
   /* the performer: an arrow is a wave (or a note from the organ, in the boss fight) */
   function msg(m){perfAt=performance.now();var t=sp();if(inBoss(t))fireNote(m.k|0);else spawn(m.k|0,h01((m.s|0)%100000));}
-  function hp(m){if(local)return;bossMax=m.max|0||bossMax;bossHp=Math.max(0,m.hp|0);if(bossHp<=0&&!bossDead)kill();}
-  function kill(){bossDead=true;deadAt=performance.now();score+=250;GAME.moshPts(250);pops.push({t:deadAt,txt:"THE ORGANIST FALLS! +250",col:"#9cff4a",big:1});
+  /* the server's shared bar: hits count on this phone at once, and the server's number (everyone's hits) pulls it lower */
+  function hp(m){if(m.max|0){if(!gotMax){gotMax=true;bossMax=m.max|0;bossHp=Math.min(bossHp,bossMax);}}bossHp=Math.min(bossHp,Math.max(0,m.hp|0));if(bossHp<=0&&!bossDead)kill();}
+  function bossHit(n){bossHp=Math.max(0,bossHp-n);if(bossHp<=0&&!bossDead)kill();}
+  function pname(){var n=typeof performer!=="undefined"&&performer&&performer.name||"THE PERFORMER";return String(n).toUpperCase().slice(0,16);}
+  function kill(){bossDead=true;deadAt=performance.now();score+=250;GAME.moshPts(250);pops.push({t:deadAt,txt:"DEMON "+pname()+" FALLS! +250",col:"#9cff4a",big:1});
     for(var i=0;i<26;i++)boom.push({x:BX,y:0.6,vx:(Math.random()-0.5)*0.6,vy:(Math.random()-0.6)*0.6,t:deadAt,c:i%2?"#ffb21f":"#ff3d1f"});notes=[];}
   function isMe(){return true;}
   function setMe(x,y){var me=viewers[myId];if(!me)return;me.tx=me.x=x;me.ty=me.y=y;sendPos(x,y);}
@@ -9153,32 +9158,69 @@ var DRAGON=(function(){
     else en.push({k:3,x:1.08,y:yy,by:yy,vx:-0.14,hp:4,t:now,ph:0});}
   function pipeY(k,now){return bossY(now)-0.12+k*0.07;}
   function bossY(now){return 0.64+Math.sin(now/1100)*0.08;}
-  function bossX(now){return BX+Math.max(0,1-(now-bossIn)/2000)*0.3;}
-  function fireNote(k){var now=performance.now();if(!bossIn)return;notes.push({x:bossX(now)-0.08,y:pipeY(k,now),k:k,t:now,vx:-0.4});}
-  function wire(){return{h:0,f:0,t:performance.now()<stunTo?1:0};}
+  function bossX(now){return BX+Math.max(0,1-(now-bossIn)/2400)*0.3;}
+  /* the transformation: 0.9 s turning demonic on the stage, then the flight down into the organ; seated at 2.6 s */
+  var TURN=900,SEAT=2600,perfXY=null;
+  function seated(now){return bossIn&&now-bossIn>=SEAT;}
+  function hidePerf(){var now=performance.now();return on&&bossIn&&(!bossDead||now-deadAt<1600);}
+  function perfPos(x,y){perfXY=[x,y];}
+  function flight(g,now){if(!bossIn||seated(now)||bossDead)return;var p=now-bossIn,sx=perfXY?perfXY[0]:W/2,sy=perfXY?perfXY[1]:Y0*H-60,dm=demon(now),x,y;
+    if(p<TURN){x=sx+(Math.random()-0.5)*4;y=sy;if(Math.floor(p/90)%2){g.fillStyle="#ff2a1a";g.beginPath();g.arc(x,y-30,30+p/30,0,7);g.fill();}}   /* the change: red flashes, shaking */
+    else{var u=Math.min(1,(p-TURN)/(SEAT-TURN)),e=u*u*(3-2*u),bs=Math.min(1.1,W/390);x=sx+(bossX(now)*W-sx)*e;y=sy+(bossY(now)*H+(22-DMH+DMH)*bs-sy)*e-Math.sin(u*Math.PI)*70;
+      for(var tr=1;tr<5;tr++){g.fillStyle=tr%2?"#ff5a14":"#c81e12";g.fillRect(x-tr*10*(1-e)-6,y-34+tr*3,8,8);}}   /* a trail of fire */
+    g.drawImage(dm,Math.round(x-DMW/2),Math.round(y-DMH+8));}
+  function fireNote(k){var now=performance.now();if(!seated(now))return;notes.push({x:bossX(now)-0.08,y:pipeY(k,now),k:k,t:now,vx:-0.4});}
+  function wire(){var now=performance.now();return{h:0,f:now<superTo?1:0,t:now<stunTo?1:0};}
+  var CH=5;
+  function breathe(){var now=performance.now(),me=myId&&viewers[myId];if(!me||now<stunTo||now<superTo||breath<0.12)return;var lv=breath;breath=0;
+    fb.push({x:me.x+0.1,y:me.y-0.035,t:now,r:4+lv*11,dmg:1+Math.round(lv*3)});if(lv>=0.99)pops.push({t:now,x:me.x+0.12,y:me.y-0.06,txt:"MAX!",col:"#fff1a0"});}
+  function fireSuper(){var now=performance.now();if(!on||charge<CH||now<superTo)return;charge=0;superTo=now+3000;supAcc=0;pops.push({t:now,txt:"SUPER FLAME!",col:"#ff5a1f",big:1});try{if(navigator.vibrate)navigator.vibrate([30,20,30,20,60]);}catch(e){}supUI();}
+  /* the SUPER button (bottom right; Space on a keyboard), only when it's charged */
+  function supUI(){if(!fireBtn){fireBtn=document.createElement("button");fireBtn.id="drgFire";fireBtn.textContent="FIRE";
+      fireBtn.style.cssText="position:fixed;right:22px;bottom:calc(34px + env(safe-area-inset-bottom));z-index:60;display:none;width:96px;height:96px;font:900 18px 'Silkscreen',ui-monospace,monospace;color:#fff1a0;background:#7a1408;border:4px solid #ff8a1f;box-shadow:0 0 0 4px #2a0604;border-radius:50%;touch-action:manipulation";
+      ["pointerdown","touchstart"].forEach(function(ev){fireBtn.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();wantFire=true;},{passive:false});});document.body.appendChild(fireBtn);
+      window.addEventListener("keydown",function(e){if(!on)return;if(e.code==="Space"||e.key===" "){e.preventDefault();e.stopPropagation();if(!e.repeat)wantFire=true;}else if((e.key==="e"||e.key==="E"||e.key==="q"||e.key==="Q")&&charge>=CH){e.preventDefault();fireSuper();}},true);}
+    fireBtn.style.display=on?"block":"none";
+    if(!supBtn){supBtn=document.createElement("button");supBtn.id="drgSuper";supBtn.innerHTML="\uD83D\uDD25 SUPER";
+      supBtn.style.cssText="position:fixed;right:18px;bottom:calc(146px + env(safe-area-inset-bottom));z-index:60;display:none;font:900 16px 'Silkscreen',ui-monospace,monospace;color:#fff6c8;background:#b3260c;border:3px solid #ffb21f;box-shadow:0 0 0 3px #3a0a06,0 0 18px #ff6a1a;padding:16px 18px;border-radius:0;animation:drgPulse .5s steps(2) infinite alternate;touch-action:manipulation";
+      var st=document.createElement("style");st.textContent="@keyframes drgPulse{to{transform:scale(1.08);box-shadow:0 0 0 3px #3a0a06,0 0 30px #ffb21f}}";document.head.appendChild(st);
+      ["pointerdown","touchstart"].forEach(function(ev){supBtn.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();fireSuper();},{passive:false});});document.body.appendChild(supBtn);
+}
+    supBtn.style.display=on&&charge>=CH&&performance.now()>=superTo?"block":"none";}
   function tick(){if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;var me=myId&&viewers[myId];if(!me)return;
     var t=sp(),idle=now-perfAt>4000;
     /* keep to the sky on the left */
     var cx=Math.max(0.06,Math.min(0.58,me.x)),cy=Math.max(Y0+0.05,Math.min(Y1,me.y));if(cx!==me.x||cy!==me.y)setMe(cx,cy);
     /* the chart: waves, then the boss's notes (only when the performer isn't sending them; a light trickle even then) */
     while(wi<waves.length&&waves[wi].t<=t){var w=waves[wi++];if(idle||wi%3===0)if(!inBoss(t))spawn(w.k,w.y);}
-    if(t>=bossAt&&!bossIn&&!bossDead){bossIn=now;pops.push({t:now,txt:"THE ORGANIST RISES",col:"#ff5a3c",big:1});en.forEach(function(e){e.hp=0;});}
-    while(bi<bossShots.length&&bossShots[bi].t<=t){var b=bossShots[bi++];if(idle&&bossIn&&!bossDead&&now-bossIn>2000)fireNote(b.k);}
+    if(t>=bossAt&&!bossIn&&!bossDead){bossIn=now;pops.push({t:now,txt:pname()+" TURNS DEMONIC!",col:"#ff5a3c",big:1});en.forEach(function(e){e.hp=0;});}
+    while(bi<bossShots.length&&bossShots[bi].t<=t){var b=bossShots[bi++];if(idle&&bossIn&&!bossDead&&seated(now))fireNote(b.k);}
     /* breathe fire */
     var mx=me.x,my=me.y,stun=now<stunTo;
-    if(!stun&&now-fireAt>270){fireAt=now;fb.push({x:mx+0.1,y:my-0.03,t:now});}
+    if(!stun&&now>=superTo)breath=Math.min(1,breath+dt/1.0);   /* the breath builds up; FIRE lets it go */
+    if(wantFire){wantFire=false;breathe();}
     fb.forEach(function(f){f.x+=0.95*dt;});
     /* the enemies */
     en.forEach(function(e){e.x+=e.vx*dt;if(e.k===0)e.y=e.by+Math.sin(now/260+e.ph)*0.04;else if(e.k===1)e.y+=Math.max(-0.12,Math.min(0.12,(my-0.03-e.y)*1.2))*dt;else if(e.k===2)e.y+=e.vy*dt;else e.y=e.by+Math.sin(now/600)*0.02;});
     var hitR=function(e){return e.k===3?22:e.k===2?11:15;};
     fb.forEach(function(f){if(f.dead)return;
-      for(var i=0;i<en.length;i++){var e=en[i];if(e.hp<=0)continue;if(Math.hypot((f.x-e.x)*W,(f.y-e.y)*H)<hitR(e)+6){f.dead=1;e.hp--;if(e.hp<=0){var p=[10,15,6,30][e.k];score+=p;GAME.moshPts(p);pops.push({t:now,x:e.x,y:e.y,txt:"+"+p,col:"#ffd24a"});for(var z=0;z<6;z++)boom.push({x:e.x,y:e.y,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,t:now,c:"#ff8a1f"});}break;}}
-      if(!f.dead&&bossIn&&!bossDead&&now-bossIn>1500){var bx=bossX(now),by=bossY(now);if(f.x>bx-0.1&&Math.abs(f.y-by)<0.17){f.dead=1;pend++;score+=2;GAME.moshPts(2);if(local){bossHp=Math.max(0,bossHp-1);if(bossHp<=0)kill();}}}});
+      for(var i=0;i<en.length;i++){var e=en[i];if(e.hp<=0||(f.hit&&f.hit.indexOf(e)>=0))continue;if(Math.hypot((f.x-e.x)*W,(f.y-e.y)*H)<hitR(e)+(f.r||6)){var use=Math.min(f.dmg||1,e.hp);e.hp-=use;f.dmg=(f.dmg||1)-use;(f.hit=f.hit||[]).push(e);if(f.dmg<=0)f.dead=1;   /* a big one burns on through */
+        if(e.hp<=0){var p=[10,15,6,30][e.k];score+=p;GAME.moshPts(p);pops.push({t:now,x:e.x,y:e.y,txt:"+"+p,col:"#ffd24a"});for(var z=0;z<6;z++)boom.push({x:e.x,y:e.y,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,t:now,c:"#ff8a1f"});}if(f.dead)break;}}
+      if(!f.dead&&bossIn&&!bossDead&&seated(now)){var bx=bossX(now),by=bossY(now);if(f.x>bx-0.1&&Math.abs(f.y-by)<0.17){f.dead=1;var dm=f.dmg||1;pend+=dm;score+=2*dm;GAME.moshPts(2*dm);bossHit(dm);}}});
     fb=fb.filter(function(f){return !f.dead&&f.x<1.05&&now-f.t<3000;});
     /* the notes from the organ come after you, a little */
-    notes.forEach(function(n){n.x+=n.vx*dt;n.y+=Math.max(-0.1,Math.min(0.1,(my-0.03-n.y)*0.9))*dt;});
+    notes.forEach(function(n){n.x+=n.vx*dt;n.y+=Math.max(-0.1,Math.min(0.1,(my-0.035-n.y)*0.9))*dt;});
+    /* catch a note in your dragon's jaws: it feeds the super flame */
+    var mxp=mx*W+50,myp=my*H-31;notes.forEach(function(n){if(n.dead)return;if(Math.hypot(n.x*W-mxp,n.y*H-myp)<20){n.dead=1;var was=charge;charge=Math.min(CH,charge+1);score+=5;GAME.moshPts(5);
+      pops.push({t:now,x:n.x,y:n.y,txt:"GULP +5",col:"#ffd24a"});if(charge>=CH&&was<CH)pops.push({t:now,txt:"SUPER FLAME READY!",col:"#ffb21f",big:1});supUI();}});
+    var sup=now<superTo;
+    if(sup){/* the flamethrower: everything in the beam burns; the organ takes a pounding */
+      var by0=myp;en.forEach(function(e){if(e.hp>0&&e.x>mx&&Math.abs(e.y*H-by0)<hitR(e)+12){e.hp=0;var p=[10,15,6,30][e.k];score+=p;GAME.moshPts(p);pops.push({t:now,x:e.x,y:e.y,txt:"+"+p,col:"#ffd24a"});}});
+      if(bossIn&&!bossDead&&seated(now)&&Math.abs(by0/H-bossY(now))<0.19){supAcc+=16*dt;var nh=Math.floor(supAcc);if(nh>0){supAcc-=nh;pend+=nh;score+=2*nh;GAME.moshPts(2*nh);bossHit(nh);}}
+      notes.forEach(function(n){if(n.x>mx&&Math.abs(n.y*H-by0)<22)n.dead=1;});}
     /* getting hit: scorched for a moment (no fire) */
-    if(!stun){var hit=null;en.forEach(function(e){if(e.hp>0&&Math.hypot((e.x-mx)*W,(e.y-(my-0.025))*H)<hitR(e)+12)hit=e;});notes.forEach(function(n){if(!n.dead&&Math.hypot((n.x-mx)*W,(n.y-(my-0.025))*H)<22)hit=n;});
+    var onBody=function(x,y,pad){var dx=(x-mx)*W,dy=y*H-(my*H-10);return(dx*dx)/((30+pad)*(30+pad))+(dy*dy)/((16+pad)*(16+pad))<1;};
+    if(!stun&&now>=superTo){var hit=null;en.forEach(function(e){if(e.hp>0&&onBody(e.x,e.y,hitR(e)*0.6))hit=e;});notes.forEach(function(n){if(!n.dead&&onBody(n.x,n.y,6))hit=n;});
       if(hit){hit.dead=1;if(hit.hp!==undefined)hit.hp=0;stunTo=now+1400;pops.push({t:now,txt:"SCORCHED!",col:"#ff8a8a",big:1});try{if(navigator.vibrate)navigator.vibrate([50,30,70]);}catch(x){}}}
     en=en.filter(function(e){return e.hp>0&&e.x>-0.1&&e.y<1.05;});notes=notes.filter(function(n){return !n.dead&&n.x>-0.1;});
     /* boss hits go to the server in little bundles */
@@ -9187,31 +9229,38 @@ var DRAGON=(function(){
     Object.keys(viewers).forEach(function(id){var w=viewers[id];if(id===myId||!w||w===PH)return;var o=others[id]||(others[id]={at:now+Math.random()*300,fb:[]});
       if(now-o.at>320&&!(w.sk&&w.sk.t===1)){o.at=now;var wx=w.dx!==undefined?w.dx:w.x,wy=w.dy!==undefined?w.dy:w.y;o.fb.push({x:wx+0.1,y:wy-0.03,t:now});}
       o.fb.forEach(function(f){f.x+=0.95*dt;});o.fb=o.fb.filter(function(f){return f.x<1.05;});});
-    me.dance=4;GAME.moshPose(stun?[2.6,-2.6,0.5,-0.5]:[0.75,-0.75,0.6,-0.6]);if(GAME.poseNow)GAME.poseNow();
+    if(supBtn&&(supBtn.style.display==="block")!==(charge>=CH&&!sup))supUI();
+    me.dance=4;GAME.moshPose(stun?[2.6,-2.6,0.5,-0.5]:sup?[1.6,-1.6,0.6,-0.6]:[0.75,-0.75,0.6,-0.6]);if(GAME.poseNow)GAME.poseNow();
     if(LBOTS())botTick(dt,now);}
   /* this screen's practice riders: weave about, and chip at the boss */
   function botTick(dt,now){Object.keys(viewers).filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id,i){var w=viewers[id];if(!w)return;var o=botB[id]||(botB[id]={w:Math.random()*6,hitAt:0,sk:0.4+Math.random()*0.5});
       var x=0.18+0.12*Math.sin(now/1400+o.w)+i*0.03,y=0.62+0.2*Math.sin(now/900+o.w*2);w.tx=w.x=x;w.ty=w.y=y;w.dance=4;w.pose=[0.75,-0.75,0.6,-0.6];w.sk={h:0,f:0,t:0};
-      if(local&&bossIn&&!bossDead&&now-bossIn>2000&&now-o.hitAt>650){o.hitAt=now;if(Math.random()<o.sk){bossHp=Math.max(0,bossHp-1);if(bossHp<=0)kill();}}});}
-  /* ---- drawing ---- */
+      if(local&&bossIn&&!bossDead&&seated(now)&&now-o.hitAt>650){o.hitAt=now;if(Math.random()<o.sk){bossHp=Math.max(0,bossHp-1);if(bossHp<=0)kill();}}});}
+  /* ---- drawing: everything goes on a half-size layer with hard edges (no soft alpha), then scaled up: 8-bit ---- */
+  var LAY=[null,null],PX=2;
+  function layer(i){var w=Math.max(1,Math.ceil(W/PX)),h=Math.max(1,Math.ceil(H/PX)),L=LAY[i];if(!L){var c=document.createElement("canvas");L=LAY[i]={c:c,g:c.getContext("2d",{willReadFrequently:true})};}
+    if(L.c.width!==w||L.c.height!==h){L.c.width=w;L.c.height=h;}L.g.setTransform(1,0,0,1,0,0);L.g.clearRect(0,0,w,h);L.g.setTransform(1/PX,0,0,1/PX,0,0);L.g.imageSmoothingEnabled=false;return L;}
+  function blit(g,L){var id=L.g.getImageData(0,0,L.c.width,L.c.height),d=id.data;for(var i=3;i<d.length;i+=4)d[i]=d[i]<110?0:255;L.g.putImageData(id,0,0);
+    g.save();g.imageSmoothingEnabled=false;g.drawImage(L.c,0,0,W,H);g.restore();}
   var EMB=[];for(var i=0;i<46;i++)EMB.push([Math.random(),Math.random(),0.4+Math.random()*1.2,Math.random()*6]);
   function ridge(g,base,amp,speed,col,seed,now,top){var off=(now/1000*speed)%400;g.fillStyle=col;g.beginPath();g.moveTo(0,H);
     for(var x=-20;x<=W+20;x+=10){var u=(x+off)/400*6.283,yv=base-amp*(0.55+0.3*Math.sin(u*1.7+seed)+0.15*Math.sin(u*4.3+seed*2)+0.1*Math.abs(Math.sin(u*9+seed)));g.lineTo(x,Math.max(top,yv));}
     g.lineTo(W+20,H);g.closePath();g.fill();}
-  function under(g){if(!on)return;var now=performance.now(),top=Y0*H-28;g.save();
-    var gr=g.createLinearGradient(0,top,0,H);gr.addColorStop(0,"#1a0306");gr.addColorStop(0.45,"#5a0d08");gr.addColorStop(0.8,"#b32a0c");gr.addColorStop(1,"#ff6a1a");
-    g.fillStyle=gr;g.fillRect(0,top,W,H-top);
+  function under(g0){if(!on)return;var now=performance.now(),top=Y0*H-28,L=layer(0),g=L.g;g.save();
+    /* the sky in hard bands, like an old console */
+    var BAND=["#1a0306","#2a0508","#3d0909","#55100a","#70180b","#8f220c","#b3300d","#d8460f"],bh=(H-top)/BAND.length;BAND.forEach(function(c,i){g.fillStyle=c;g.fillRect(0,top+Math.floor(i*bh),W,Math.ceil(bh)+1);
+      if(i){g.fillStyle=BAND[i-1];for(var x=(i%2)*4;x<W;x+=8)g.fillRect(x,top+Math.floor(i*bh),4,2);}});   /* a dithered seam between bands */
     /* a hellish moon and smoke */
-    g.fillStyle="rgba(255,120,60,.18)";g.beginPath();g.arc(W*0.7,top+60,46,0,7);g.fill();g.fillStyle="rgba(255,190,120,.55)";g.beginPath();g.arc(W*0.7,top+60,26,0,7);g.fill();
-    for(var s=0;s<5;s++){var sx=((s*170-now/1000*22)%(W+260)+W+260)%(W+260)-130,sy=top+40+s*48;g.fillStyle="rgba(20,4,6,.35)";g.beginPath();g.ellipse(sx,sy,110,16,0,0,7);g.fill();}
+    g.fillStyle="#7a2412";g.beginPath();g.arc(W*0.7,top+60,34,0,7);g.fill();g.fillStyle="#ffb070";g.beginPath();g.arc(W*0.7,top+60,24,0,7);g.fill();g.fillStyle="#e08a50";g.fillRect(W*0.7-10,top+52,8,6);g.fillRect(W*0.7+6,top+66,6,4);
+    for(var s=0;s<5;s++){var sx=((s*170-now/1000*22)%(W+260)+W+260)%(W+260)-130,sy=top+40+s*48;g.fillStyle=s%2?"#2e070b":"#3a0a0c";g.fillRect(sx-100,sy-6,200,12);g.fillRect(sx-70,sy-12,130,6);}
     ridge(g,H*0.86,H*0.17,14,"#3a0a0d",1.3,now,top);ridge(g,H*0.97,H*0.12,42,"#170306",4.1,now,top);
     /* lava along the bottom */
-    var lg=g.createLinearGradient(0,H-26,0,H);lg.addColorStop(0,"rgba(255,90,20,0)");lg.addColorStop(1,"rgba(255,170,40,.9)");g.fillStyle=lg;g.fillRect(0,H-26,W,26);
+    g.fillStyle="#ff5a14";g.fillRect(0,H-18,W,18);g.fillStyle="#ffb21f";for(var lx=((-now/30)%24);lx<W;lx+=24)g.fillRect(lx,H-14+((lx/24|0)%2)*4,12,4);g.fillStyle="#fff1a0";g.fillRect(0,H-4,W,4);
     /* embers rising, drifting back */
     EMB.forEach(function(e){var y=H-((e[1]*H+now/1000*40*e[2])%(H-top)),x=((e[0]*W-now/1000*60*e[2])%W+W)%W;g.fillStyle=e[3]>3?"#ffb21f":"#ff4a1a";g.globalAlpha=0.5+0.5*Math.sin(now/300+e[3]);g.fillRect(x,y,2,2);});g.globalAlpha=1;
     /* everyone's far wing, behind them */
     riders(function(id,w,x,y,col,ph){wing(g,x-4,y-14,col,ph,true);});
-    g.restore();}
+    g.restore();blit(g0,L);}
   function riders(fn){var now=performance.now();Object.keys(viewers).forEach(function(id){var w=viewers[id];if(!w||w===PH)return;var x=(w.dx!==undefined?w.dx:w.x)*W,y=(w.dy!==undefined?w.dy:w.y)*H;
     var col=w.color||"#D354A0",ph=Math.sin(now/150+(id.length*1.7+(id.charCodeAt(0)||0)));fn(id,w,x,y,col,ph);});}
   function shade(c,f){var n=parseInt(String(c).replace("#",""),16);if(!isFinite(n))return c;var r=(n>>16)&255,g2=(n>>8)&255,b=n&255;var m=function(v){return Math.max(0,Math.min(255,Math.round(f<0?v*(1+f):v+(255-v)*f)));};return"rgb("+m(r)+","+m(g2)+","+m(b)+")";}
@@ -9235,8 +9284,10 @@ var DRAGON=(function(){
     /* the saddle and its strap */
     g.fillStyle="#5a2e14";g.fillRect(x-9,y-17,18,4);g.fillStyle="#c9a227";g.fillRect(x+6,y-19,3,3);g.fillStyle="#3a1c0a";g.fillRect(x-2,y-13,3,12);
     g.restore();}
-  function fire(g,x,y,r,now,k){var fl=0.8+0.2*Math.sin(now/40+k);var gg=g.createRadialGradient(x,y,1,x,y,r*1.8);gg.addColorStop(0,"#fff6c8");gg.addColorStop(0.35,"#ffb21f");gg.addColorStop(0.7,"rgba(255,70,20,.8)");gg.addColorStop(1,"rgba(255,40,10,0)");
-    g.fillStyle=gg;g.beginPath();g.ellipse(x-r*0.5,y,r*1.8*fl,r*1.05,0,0,7);g.fill();}
+  function fire(g,x,y,r,now,k){var fl=Math.floor(now/70+k)%2;
+    g.fillStyle="#c81e12";g.beginPath();g.ellipse(x-r*0.6,y,r*(1.7+fl*0.2),r*0.95,0,0,7);g.fill();
+    g.fillStyle="#ff8a1f";g.beginPath();g.ellipse(x-r*0.3,y,r*1.15,r*0.65,0,0,7);g.fill();
+    g.fillStyle="#fff1a0";g.beginPath();g.ellipse(x,y,r*0.55,r*0.35,0,0,7);g.fill();}
   function enemy(g,e,now){var x=e.x*W,y=e.y*H,f=Math.sin(now/90+(e.ph||0));g.save();
     if(e.k===0){/* imp: red, horns, bat wings */g.fillStyle="#7a0d12";g.beginPath();g.moveTo(x,y);g.lineTo(x+14,y-10-f*6);g.lineTo(x+10,y+2);g.closePath();g.fill();g.beginPath();g.moveTo(x,y);g.lineTo(x-14,y-10-f*6);g.lineTo(x-10,y+2);g.closePath();g.fill();
       g.fillStyle="#e2382a";g.beginPath();g.arc(x,y,7,0,7);g.fill();g.fillStyle="#2a0406";g.beginPath();g.moveTo(x-5,y-5);g.lineTo(x-7,y-12);g.lineTo(x-2,y-6);g.moveTo(x+5,y-5);g.lineTo(x+7,y-12);g.lineTo(x+2,y-6);g.fill();g.fillStyle="#ffe14a";g.fillRect(x-4,y-2,2,2);g.fillRect(x-8,y-2,2,2);}
@@ -9248,7 +9299,7 @@ var DRAGON=(function(){
   /* the boss: a floating gothic organ with four gold pipes, a demon at the keys */
   function boss(g,now){var x=bossX(now)*W,y=bossY(now)*H,s=Math.min(1.1,W/390),dmg=bossMax?1-bossHp/bossMax:0;g.save();g.translate(x,y);g.scale(s,s);
     var sh=bossDead?(now-deadAt)/1600:0;if(bossDead){g.globalAlpha=Math.max(0,1-sh);g.translate((Math.random()-0.5)*8,sh*120);g.rotate(sh*0.4);}
-    g.fillStyle="rgba(255,80,20,.25)";g.beginPath();g.ellipse(0,64,70,14,0,0,7);g.fill();   /* fire under it */
+    g.fillStyle="#5a1408";g.fillRect(-60,60,120,8);   /* scorch under it */
     fire(g,-20,70,10,now,1);fire(g,20,72,9,now,2);
     /* pipes */
     for(var k=0;k<4;k++){var px=-30+k*16,ph=58+k*10,pu=Math.max(0,1-(now-(lastPipe[k]||0))/250);g.fillStyle=pu?"#fff1a0":"#c9a227";g.fillRect(px-5,-ph-28,10,ph);g.fillStyle="#7a5c10";g.fillRect(px-5,-ph-28,2,ph);g.fillStyle="#1a0a0a";g.fillRect(px-3,-ph-24,6,4);if(pu)fire(g,px,-ph-32,8*pu+3,now,k);}
@@ -9257,24 +9308,42 @@ var DRAGON=(function(){
     g.fillStyle="#7a1020";g.beginPath();g.arc(0,-24,12,0,7);g.fill();g.strokeStyle="#ff5a3c";g.beginPath();for(var a=0;a<8;a++){g.moveTo(0,-24);g.lineTo(Math.cos(a*0.785)*12,-24+Math.sin(a*0.785)*12);}g.stroke();
     /* the keys and the organist */
     g.fillStyle="#f1ead6";g.fillRect(-40,20,80,8);g.fillStyle="#120d1e";for(var kk=0;kk<9;kk++)g.fillRect(-36+kk*9,20,3,5);
-    var bob=Math.sin(now/180)*2;g.fillStyle="#b3121e";g.fillRect(-12,-4+bob,24,24);   /* robe */
-    g.fillStyle="#d8352a";g.beginPath();g.arc(0,-12+bob,11,0,7);g.fill();g.fillStyle="#1a0406";g.beginPath();g.moveTo(-8,-18+bob);g.lineTo(-16,-34+bob);g.lineTo(-4,-21+bob);g.moveTo(8,-18+bob);g.lineTo(16,-34+bob);g.lineTo(4,-21+bob);g.fill();
-    g.fillStyle="#ffe14a";g.fillRect(-6,-14+bob,4,3);g.fillRect(3,-14+bob,4,3);g.fillStyle="#1a0406";g.fillRect(-5,-6+bob,10,2);
-    g.fillStyle="#d8352a";var hl=Math.sin(now/90)*3;g.fillRect(-22,14+hl,8,5);g.fillRect(14,14-hl,8,5);   /* hands hammering the keys */
+    var bob=Math.sin(now/180)*2;if(seated(now)){var dm=demon(now);g.drawImage(dm,-DMW/2,-DMH+22+bob);}   /* the performer, gone to the dark side, hammering the keys */
     if(dmg>0.3){g.strokeStyle="rgba(0,0,0,.6)";g.lineWidth=1.5;g.beginPath();g.moveTo(-40,0);g.lineTo(-26,14);g.lineTo(-30,30);g.stroke();}if(dmg>0.65){g.beginPath();g.moveTo(36,-20);g.lineTo(24,0);g.lineTo(30,18);g.stroke();}
     g.restore();}
   var lastPipe={};
-  function draw(g){if(!on)return;var now=performance.now();g.save();
+  /* the demon organist IS the performer: their own character, burned red, with horns, glowing eyes and little wings */
+  var DMW=64,DMH=78,dmC=null;
+  function demon(now){if(!dmC){dmC=document.createElement("canvas");dmC.width=DMW;dmC.height=DMH;}var d=dmC.getContext("2d");d.setTransform(1,0,0,1,0,0);d.clearRect(0,0,DMW,DMH);d.imageSmoothingEnabled=false;
+    var pf=typeof performer!=="undefined"&&performer?performer:{},L=pf.look||ART.looks.fromColor(pf.color||"#D354A0",1),hm=Math.sin(now/90);
+    d.fillStyle="#3a0610";d.beginPath();d.moveTo(32,30);d.lineTo(4,10+hm*3);d.lineTo(10,34);d.lineTo(2,40);d.lineTo(28,40);d.fill();d.beginPath();d.moveTo(32,30);d.lineTo(60,10-hm*3);d.lineTo(54,34);d.lineTo(62,40);d.lineTo(36,40);d.fill();
+    try{ART.drawChar(d,32,58,2,L,{armL:1.25+hm*0.35,armR:-1.25+hm*0.35,legL:0.1,legR:-0.1,mouth:true});}catch(e){}
+    d.globalCompositeOperation="source-atop";d.fillStyle="rgba(200,20,20,.5)";d.fillRect(0,0,DMW,DMH);d.globalCompositeOperation="source-over";
+    d.fillStyle="#1a0406";d.fillRect(20,10,4,6);d.fillRect(18,6,3,5);d.fillRect(16,3,3,4);d.fillRect(40,10,4,6);d.fillRect(43,6,3,5);d.fillRect(45,3,3,4);
+    d.fillStyle="#ffe14a";d.fillRect(26,24,4,2);d.fillRect(34,24,4,2);
+    return dmC;}
+  function draw(g0){if(!on)return;var now=performance.now(),L=layer(1),g=L.g;g.save();
     /* fireballs: mine and everyone's */
-    fb.forEach(function(f,i){fire(g,f.x*W,f.y*H,6,now,i);});Object.keys(others).forEach(function(id){others[id].fb.forEach(function(f,i){g.globalAlpha=0.75;fire(g,f.x*W,f.y*H,5,now,i);g.globalAlpha=1;});});
+    fb.forEach(function(f,i){fire(g,f.x*W,f.y*H,f.r||6,now,i);});Object.keys(others).forEach(function(id){others[id].fb.forEach(function(f,i){g.globalAlpha=0.75;fire(g,f.x*W,f.y*H,5,now,i);g.globalAlpha=1;});});
     /* riders' dragons and near wings */
     riders(function(id,w,x,y,col,ph){var st=id===myId?performance.now()<stunTo:(w.sk&&w.sk.t===1);dragon(g,x,y,col,ph,st);wing(g,x+2,y-12,col,ph*0.9+0.1,false);});
     en.forEach(function(e){enemy(g,e,now);});
     if(bossIn&&(!bossDead||now-deadAt<1600))boss(g,now);
     notes.forEach(function(n){var x=n.x*W,y=n.y*H;fire(g,x+6,y,9,now,n.k);g.fillStyle="#fff6c8";g.font="bold 20px system-ui";g.textAlign="center";g.fillText(n.k%2?"♫":"♪",x,y+7);});
     boom=boom.filter(function(b){return now-b.t<900;});boom.forEach(function(b){var a=(now-b.t)/1000;g.fillStyle=b.c;g.globalAlpha=1-a/0.9;g.fillRect((b.x+b.vx*a)*W,(b.y+b.vy*a)*H,3,3);});g.globalAlpha=1;
+    /* the flamethrowers (mine and anyone else's) */
+    riders(function(id,w,x,y,col,ph){var sp2=id===myId?now<superTo:(w.sk&&w.sk.f===1);if(!sp2)return;var bx=x+52,by=y-31,fl=Math.floor(now/60)%2;
+      g.fillStyle="#c81e12";g.fillRect(bx,by-11-fl*2,W-bx,22+fl*4);g.fillStyle="#ff8a1f";g.fillRect(bx,by-7,W-bx,14);g.fillStyle="#fff1a0";g.fillRect(bx,by-3+fl,W-bx,6);
+      for(var q=0;q<8;q++){var qx=bx+((now/3+q*53)%(W-bx));g.fillStyle=q%2?"#ffb21f":"#ff5a14";g.fillRect(qx,by-14-(q%3)*3,6,6);}});
+    /* the transformation: the performer flies down off the stage into the organ */
+    flight(g,now);
     /* the boss's health bar */
-    if(bossIn&&!bossDead){var bw=W*0.6,bx0=W*0.2,by0=Y0*H-22,fr=bossMax?bossHp/bossMax:1;g.fillStyle="rgba(0,0,0,.7)";g.fillRect(bx0-2,by0-2,bw+4,12);g.fillStyle="#ff3d1f";g.fillRect(bx0,by0,bw*fr,8);g.font="10px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="#fff";g.fillText("THE ORGANIST",W/2,by0-4);}
+    var bar=bossIn&&!bossDead;if(bar){var bw=W*0.6,bx0=W*0.2,by0=Y0*H-22,fr=bossMax?bossHp/bossMax:1;g.fillStyle="#120306";g.fillRect(bx0-2,by0-2,bw+4,12);g.fillStyle="#ff3d1f";g.fillRect(bx0,by0,bw*fr,8);}
+    g.restore();blit(g0,L);g=g0;g.save();
+    if(bar){g.font="10px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="#fff";g.fillText("DEMON "+pname(),W/2,Y0*H-26);}
+    var mev=myId&&viewers[myId];if(mev){var mx2=(mev.dx!==undefined?mev.dx:mev.x)*W,my2=(mev.dy!==undefined?mev.dy:mev.y)*H+18,full=charge>=CH;
+      g.fillStyle="#120306";g.fillRect(mx2-28,my2-10,56,7);g.fillStyle=breath>=1&&Math.floor(now/120)%2?"#fff1a0":breath>=1?"#ffb21f":"#ff5a14";g.fillRect(mx2-27,my2-9,Math.round(54*breath),5);   /* the breath: how big the next fireball is */
+      for(var c=0;c<CH;c++){g.fillStyle="#120306";g.fillRect(mx2-26+c*11,my2,10,6);g.fillStyle=c<charge?(full&&Math.floor(now/150)%2?"#fff1a0":"#ff8a1f"):"#3a0a0c";g.fillRect(mx2-25+c*11,my2+1,8,4);}}
     /* words */
     pops=pops.filter(function(o){return now-o.t<1500;});pops.forEach(function(o,i){var a=1-Math.max(0,(now-o.t-800)/700);g.globalAlpha=Math.max(0,a);g.textAlign="center";g.lineWidth=4;g.strokeStyle="rgba(0,0,0,.85)";
       if(o.x!==undefined){g.font="900 13px 'Silkscreen',ui-monospace,monospace";var px=o.x*W,py=o.y*H-(now-o.t)/30;g.strokeText(o.txt,px,py);g.fillStyle=o.col;g.fillText(o.txt,px,py);}
@@ -9282,9 +9351,10 @@ var DRAGON=(function(){
     g.restore();}
   /* light up the pipe that fired */
   var _fn=fireNote;fireNote=function(k){lastPipe[k]=performance.now();_fn(k);};
-  window.ukDragon=function(){return{on:on,local:local,score:score,enemies:en.length,notes:notes.length,boss:!!bossIn,dead:bossDead,hp:bossHp,max:bossMax,stun:performance.now()<stunTo,waves:waves.length,shots:bossShots.length,t:Math.round(sp()),bossAt:Math.round(bossAt)};};
+  window.ukDragonCharge=function(n){charge=n;supUI();};window.ukDragonFire=function(){wantFire=true;};window.ukDragonSuper=fireSuper;
+  window.ukDragon=function(){return{charge:charge,sup:performance.now()<superTo,on:on,local:local,score:score,enemies:en.length,notes:notes.length,boss:!!bossIn,dead:bossDead,hp:bossHp,max:bossMax,stun:performance.now()<stunTo,waves:waves.length,shots:bossShots.length,t:Math.round(sp()),bossAt:Math.round(bossAt)};};
   window.ukDragonJump=function(ms){jump+=ms;};   /* tests */
-  return{start:start,stop:stop,tick:tick,msg:msg,hp:hp,wire:wire,under:under,draw:draw,get on(){return on;}};})();
+  return{start:start,stop:stop,tick:tick,msg:msg,hp:hp,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
 function LBOTS(){for(var k in viewers)if(k.indexOf("bot")===0)return true;return false;}   /* this screen's own practice dancers (the server's bots have normal ids) */
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
 var AVFLEX={};   /* per dancer: last arm angles, for the elbow follow-through */
@@ -9866,7 +9936,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.83"></script>
+<script src="lab.js?v=1.82.84"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
