@@ -337,7 +337,7 @@ function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
     if (r && r.stage && Object.keys(r.stage).length) stageClear(ws.room, "song");
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || msg.mode === "fish" || msg.mode === "boats" || msg.mode === "swim" || msg.mode === "ball" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || msg.mode === "fish" || msg.mode === "boats" || msg.mode === "swim" || msg.mode === "ball" || msg.mode === "dragon" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
@@ -409,7 +409,7 @@ function roundMessage(ws, msg) {
 /* ── The crowd picks the next game ──
    The performer opens a vote between a few games (gvote-open); everyone taps one (gvote-pick); when time is up the
    game with the most votes wins (ties drawn at random, nobody voting = a random pick). Bots vote too. */
-var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf", "kflag", "fish", "boats", "swim", "ball"];
+var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf", "kflag", "fish", "boats", "swim", "ball", "dragon"];
 function gvotePublic(g) {
   var c = g.opts.map(function() { return 0; });
   g.picks.forEach(function(m) { var i = g.opts.indexOf(m); if (i >= 0) c[i]++; });
@@ -508,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.82";
+var VERSION = "1.82.83";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -756,10 +756,17 @@ function onMessage(ws, raw, isBinary) {
     /* Ball Run: the host's page rolls the ball (steered by the arrows); everyone sees it where the host says it is */
     if (msg.type === "ball") {
       if (!allow(ws, "ball", 40, 24)) return;
+      if (rooms[ws.room].round) rooms[ws.room].round.ballHostAt = Date.now();   /* the host is steering: the server's own ball steps aside */
       var bu = +msg.u, bv = +msg.v, bvu = +msg.vu, bvv = +msg.vv;
       if (![bu, bv, bvu, bvv].every(isFinite)) return;
       var cl = function(x, m) { return Math.round(Math.max(-m, Math.min(m, x)) * 1000) / 1000; };
       broadcast(ws.room, { type: "ball", u: cl(bu, 1.2), v: cl(bv, 1.2), vu: cl(bvu, 3), vv: cl(bvv, 3), k: intIn(msg.k, 0, 9, 0), s: Date.now() }, ws);
+      return;
+    }
+    /* Dragon riders: the performer's arrows send out imps and skulls, then (in the boss fight) flaming notes from the organ's pipes */
+    if (msg.type === "drg") {
+      if (!allow(ws, "drg", 12, 8)) return;
+      broadcast(ws.room, { type: "drg", k: intIn(msg.k, 0, 3, 0), s: Date.now() }, ws);
       return;
     }
     if (!PERFORMER_TYPES[msg.type]) return;
@@ -863,6 +870,16 @@ function onMessage(ws, raw, isBinary) {
       broadcast(ws.room, { type: "swimc", id: ws.viewerId, i: ci }, ws);
       return;
     }
+    if (msg.type === "drgHit") {
+      /* Dragon riders: fireballs that hit the boss organ come off one shared health bar */
+      var drd = rooms[ws.room].round;
+      if (!drd || drd.mode !== "dragon" || drd.phase !== "play" || !allow(ws, "drgHit", 8, 5)) return;
+      if (!drd.boss) { var bmx = 60 + 45 * Math.max(1, rooms[ws.room].viewers.size); drd.boss = { hp: bmx, max: bmx }; }
+      if (drd.boss.hp <= 0) return;
+      drd.boss.hp = Math.max(0, drd.boss.hp - intIn(msg.d, 0, 20, 0));
+      broadcast(ws.room, { type: "drgHp", hp: drd.boss.hp, max: drd.boss.max, id: ws.viewerId });
+      return;
+    }
     if (msg.type === "kick") {
       /* keepy uppy: someone hit the balloon, ball or feather; pass its new flight on to everyone (numbers clamped) */
       var krd = rooms[ws.room].round;
@@ -948,7 +965,7 @@ function onMessage(ws, raw, isBinary) {
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
       if (!srd || !sv || srd.mode === "free" || srd.mode === "ctf" || (srd.phase !== "play" && srd.phase !== "tally") || (!msg.fin && !allow(ws, "score", 6, 2))) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
-      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" || srd.mode === "fish" || srd.mode === "boats" || srd.mode === "swim" || srd.mode === "ball" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0) + (srd.link ? sv.roundBase || 0 : 0);   // no higher than a perfect run; a 2-parter's second half adds onto the first
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" || srd.mode === "fish" || srd.mode === "boats" || srd.mode === "swim" || srd.mode === "ball" || srd.mode === "dragon" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0) + (srd.link ? sv.roundBase || 0 : 0);   // no higher than a perfect run; a 2-parter's second half adds onto the first
       /* dance walk race: the server keeps the finish order so every screen agrees on the places;
          over the line = 1000 + 3000 / place, still racing = distance (up to 1000). When everyone's in, the round ends. */
       if (srd.mode === "walk") {
@@ -1064,6 +1081,35 @@ server.listen(PORT, function() {
 });
 
 /* Tell each performer how much stream data their show has sent, so they can watch their bandwidth. */
+/* Ball Run with nobody steering (no host page, a bot performer, the host away): the server rolls the ball itself,
+   after whoever's nearest, and tells everyone where it is, the same way the host's page would */
+var SBALL = { R: 0.2, step: function(b, t, dt) {
+  var ax = 0, ay = 0, best = null, bd = 1e9;
+  t.forEach(function(p) { var d = Math.hypot(p[0] - b.u, p[1] - b.v); if (d < bd) { bd = d; best = p; } });
+  if (best) { var dx = best[0] - b.u, dy = best[1] - b.v, dm = Math.hypot(dx, dy) || 1; ax = dx / dm * 1.0; ay = dy / dm * 1.0; }
+  else { ax = Math.cos(Date.now() / 1300) * 0.6; ay = Math.sin(Date.now() / 1700) * 0.6; }   /* nobody on the disk: wander */
+  b.vu += ax * dt; b.vv += ay * dt; var dr = Math.exp(-0.9 * dt); b.vu *= dr; b.vv *= dr;
+  var sp = Math.hypot(b.vu, b.vv), vmax = 0.8; if (sp > vmax) { b.vu *= vmax / sp; b.vv *= vmax / sp; }
+  b.u += b.vu * dt; b.v += b.vv * dt;
+  var r = Math.hypot(b.u, b.v), lim = 1 - 0.2 * 0.6; if (r > lim) { var nu = b.u / r, nv = b.v / r; b.u = nu * lim; b.v = nv * lim; var dot = b.vu * nu + b.vv * nv; if (dot > 0) { b.vu -= 1.7 * dot * nu; b.vv -= 1.7 * dot * nv; } }
+} };
+setInterval(function() {
+  var now = Date.now();
+  Object.keys(rooms).forEach(function(k) {
+    var r = rooms[k], rd = r.round;
+    if (!rd || rd.mode !== "ball" || rd.phase !== "play" || rd.paused || !rd.playAt) return;
+    if (now - (rd.ballHostAt || 0) < 1500) { rd.sball = null; return; }
+    var gm = rd.chart && rd.chart.gameMs > 20000 ? rd.chart.gameMs : 90000, rk = Math.max(0, Math.min(2, Math.floor(3 * (now - rd.playAt) / gm)));
+    if (!rd.sball || rd.sball.k !== rk) rd.sball = { u: 0, v: -0.2, vu: 0, vv: 0, k: rk, t0: now, at: now };
+    var b = rd.sball, dt = Math.min(0.2, (now - b.at) / 1000); b.at = now;
+    if (now - b.t0 > 1200) {
+      var t = []; r.viewers.forEach(function(v) { if (typeof v.x !== "number") return; var u = (v.x - 0.5) / 0.4, w = (v.y - 0.62) / 0.22; if (Math.hypot(u, w) < 1.02) t.push([u, w]); });   /* on the disk (the flattened sit off it) */
+      SBALL.step(b, t, dt);
+    }
+    var c = function(x) { return Math.round(x * 1000) / 1000; };
+    broadcast(k, { type: "ball", u: c(b.u), v: c(b.v), vu: c(b.vu), vv: c(b.vv), k: rk, s: now, srv: 1 });
+  });
+}, 90);
 setInterval(function() {
   Object.keys(rooms).forEach(function(k) {
     var r = rooms[k];
