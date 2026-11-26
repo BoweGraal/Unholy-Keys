@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.101 — Fishing: easier perfect cast, a PERFECT CAST adjuster, and RECAST
+
+1. **Easier perfect cast:** you now have about **0.53 s** to get round the swoop for a top-of-the-bar cast (was about 0.35 s). The power also drains more slowly after that.
+2. **PERFECT CAST ◀ ▶** in the top right while you're casting or waiting (rooms and practice): ▶ gives you more time (easier), ◀ less, in 0.05 s steps. It's saved on this device, and the same setting is in the FEEL sliders / Tuning lab ("Perfect cast: free time"). New sliders there too: cast power drain, BPM match window, tension from overspinning, recast reel-in speed.
+3. **RECAST:** while you're waiting for a bite, the button reads RECAST. Tap it, then spin the reel (any speed, or tap Space) and the empty line comes in fast (about 1 s of spinning from a long cast). Then you're back to casting. Not spinning barely brings it in.
+
 ## v1.82.100 — Skip timer works in a room (not just practice)
 
 The real cause: in a **room**, the countdown card showed Skip timer, but the button only worked in practice. In a room the host runs the countdown, so pressing it did nothing.
