@@ -1688,6 +1688,19 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.116 — Voice chat during songs (host option)
+
+New host button next to **🎙 Voice**: **🎵 Voice in songs: off / ON**. It's remembered on this browser and sent each time you go live. Turned on, voice chat no longer mutes while a song, a video or a game plays: people's mics stay open. In a game, phones get a small mic button at the top centre: tap to talk, tap again to mute. Turned off, everything works as before: mics mute for the song.
+
+**Needs the Render redeploy** (the server passes the setting on) and a refresh of the host page.
+
+1. Host: go live and turn on **🎵 Voice in songs**.
+2. Phone: join, then start a game. A small mic button shows at the top centre. Tap it: it turns green and you're talking. Talk on a second phone and check the first hears it during the game.
+3. Start a video or play on the host keyboard: the phone mics stay on (the button doesn't change to "mic off for the song").
+4. Host: turn it off mid-song. The phone mics mute for the song and the small button goes away.
+5. Join with the setting already on: it applies straight away.
+6. Note: on phones, having the mic open can make the music a bit quieter (the phone switches to call audio). That's why it's off by default.
+
 ## v1.82.115 — Fishing: the rod sits behind your head
 
 The rod used to be drawn on top of everyone, across the face. Now it's drawn before the dancers, so your head sits over it, while the line and the float still show on top.

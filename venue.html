@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.115"></script>
-<script src="tune.js?v=1.82.115"></script>
-<script src="gfx.js?v=1.82.115"></script>
-<script src="art.js?v=1.82.115"></script>
-<script src="qr.js?v=1.82.115"></script>
-<script src="voice.js?v=1.82.115"></script>
-<script src="instruments.js?v=1.82.115"></script>
-<script src="kart.js?v=1.82.115"></script>
-<script src="explain.js?v=1.82.115"></script>
+<script src="px8.js?v=1.82.116"></script>
+<script src="tune.js?v=1.82.116"></script>
+<script src="gfx.js?v=1.82.116"></script>
+<script src="art.js?v=1.82.116"></script>
+<script src="qr.js?v=1.82.116"></script>
+<script src="voice.js?v=1.82.116"></script>
+<script src="instruments.js?v=1.82.116"></script>
+<script src="kart.js?v=1.82.116"></script>
+<script src="explain.js?v=1.82.116"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -765,7 +765,7 @@ body.practice #chatPanel,body.practice #talkBtn,body.practice #voiceBtn,body.pra
 #voiceBtn.on{border-color:#4CC38A;color:#4CC38A}
 #vTalk{display:none;position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 48px);transform:translateX(-50%);z-index:9100;padding:10px 16px;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#2a1f4a;border:3px solid #7F77DD;box-shadow:4px 4px 0 #000;cursor:pointer;white-space:nowrap}
 #vTalk.on{display:block}#vTalk.idle{animation:vtPulse 1.6s ease-in-out infinite}#vTalk.live{background:#145a3a;border-color:#4CC38A}#vTalk.live.talk{box-shadow:0 0 0 3px #4CC38A,4px 4px 0 #000}
-#vTalk.song,#vTalk.full{background:#2a2440;border-color:#6a6290;color:#c8c2e8}
+#vTalk.mini{top:calc(env(safe-area-inset-top,0px) + 6px);padding:5px 8px;font-size:14px;animation:none}#vTalk.song,#vTalk.full{background:#2a2440;border-color:#6a6290;color:#c8c2e8}
 @keyframes vtPulse{0%,100%{box-shadow:4px 4px 0 #000}50%{box-shadow:0 0 0 4px rgba(127,119,221,.6),4px 4px 0 #000}}#voiceBtn.song{border-color:#8f88b8;color:#8f88b8}#voiceBtn.talk{background:#1f3a2c}
 body.practice #moveCtl{bottom:calc(var(--chatH) + 18px)}
 body.practice #moveHint{bottom:190px}
@@ -2386,7 +2386,7 @@ function handleMsg(msg){
     ROUND.setTotals(msg.totals);
     SHOWFX=msg.fx||null;primeFx(SHOWFX);
     if(msg.round)ROUND.onMsg(msg.round);else ROUND.reset();
-    if(msg.gvote)GVOTE.on(msg.gvote);if(msg.svote)GVOTE.on(msg.svote,true);if(msg.voiceOpen)try{VOICE.listen();}catch(e){}   /* voice is already open: join in, listening */
+    if(msg.gvote)GVOTE.on(msg.gvote);if(msg.svote)GVOTE.on(msg.svote,true);if(msg.voiceOpen)try{VOICE.listen();}catch(e){}window.__voiceSongs=!!msg.voiceSongs;   /* voice is already open: join in, listening */
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
     if(msg.perfPos)perfPos(msg.perfPos);
@@ -2460,6 +2460,7 @@ function handleMsg(msg){
   else if(t==="tug"){MOSH.onTug(msg);}
   else if(t==="react"){if(msg.id!==myId&&viewers[msg.id])addReact(msg.id,String(msg.k));}
   else if(t==="stage"){STAGEUP.onList(msg);}else if(t==="stage-no"){STAGEUP.no(msg.why);}else if(t==="gnote"){STAGEUP.note(msg);}else if(t==="time"){CLOCK.got(msg);}else if(t==="tvpos"){TVSYNC.set(msg);}else if(t==="av"){TVSYNC.av(msg.ms);}else if(t==="cal"){CALUI.show(msg.on);}else if(t==="band"){if(msg.m)ART.BAND.set(msg.m,msg.p);else if(msg.p)ART.BAND.set(ART.BAND.members,msg.p);if(msg.e)ART.BAND.ev(msg.e,msg.i,msg.ms);}
+  else if(t==="voice-songs"){window.__voiceSongs=!!msg.on;}
   else if(typeof t==="string"&&t.indexOf("voice-")===0){VOICE.onMsg(msg);}
   else if(t==="note"){
     if(msg.on){
@@ -2831,14 +2832,16 @@ document.getElementById("talkBtn").addEventListener("click",function(e){e.preven
 /* voice between songs: tap to join; the mic is open between songs and fully off while one plays (a game, the video, the performer playing) */
 (function(){
   var vb=document.getElementById("voiceBtn");
-  function songOn(){return !!(JT&&JT.video)||Date.now()-lastNoteTime<6000||(typeof ROUND!=="undefined"&&ROUND.active())||!!PART||(typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free");}
+  function songOn(){if(window.__voiceSongs)return false;   /* the host lets voice carry on through songs */
+    return !!(JT&&JT.video)||Date.now()-lastNoteTime<6000||(typeof ROUND!=="undefined"&&ROUND.active())||!!PART||(typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free");}
   function show(st){var lb={off:"\uD83C\uDF99 Voice",listen:VOICE.noMic?"\uD83C\uDFA7 Listening (no mic)":"\uD83C\uDFA7 Listening",on:"\uD83C\uDF99 Mic on",song:"\uD83D\uDD07 Song on",full:"Voice full (8)",denied:"No mic access"}[st]||"\uD83C\uDF99 Voice";vb.textContent=lb;vb.classList.toggle("on",st==="on");vb.classList.toggle("song",st==="song");vtUI();}
   /* the big button: once voice is open (someone turned their mic on), everyone is listening; this turns your own mic on and off */
   var vt=document.createElement("button");vt.id="vTalk";vt.type="button";document.body.appendChild(vt);
   vt.addEventListener("click",function(e){e.preventDefault();vt.blur();if(!myId)return;VOICE.toggle();});
-  function vtUI(){if(!vt)return;var st=VOICE.state,g=document.body.getAttribute("data-game")||"",show=VOICE.open&&(!g||g==="free")&&!document.body.classList.contains("practice");
+  function vtUI(){if(!vt)return;var st=VOICE.state,g=document.body.getAttribute("data-game")||"",inGame=!!(g&&g!=="free"),show=(inGame?!!window.__voiceSongs:VOICE.open)&&!document.body.classList.contains("practice");
     vt.classList.toggle("on",show);if(!show)return;
-    vt.className="on "+(st==="on"?"live":st==="song"?"song":st==="full"?"full":"idle");
+    vt.className="on "+(inGame?"mini ":"")+(st==="on"?"live":st==="song"?"song":st==="full"?"full":"idle");
+    if(inGame){vt.textContent=st==="on"?"\uD83C\uDF99":st==="full"?"\uD83C\uDFA7":"\uD83D\uDD07";vt.title=st==="on"?"Mic on: tap to mute":"Tap to talk";return;}   /* in a game: just a small mic button up top */
     vt.textContent=st==="on"?"\uD83C\uDF99 MIC ON \u00B7 TAP TO MUTE":st==="song"?"\uD83D\uDD07 MIC OFF FOR THE SONG":st==="full"?"VOICE FULL \u00B7 LISTENING":VOICE.noMic?"\uD83C\uDFA7 LISTENING (NO MIC FOUND)":"\uD83C\uDF99 TAP TO TALK";}
   VOICE.init({send:wsSend,myId:function(){return myId;},songOn:songOn,onChange:show});
   vb.addEventListener("click",function(e){e.preventDefault();vb.blur();if(!myId)return;VOICE.toggle();});
@@ -9234,7 +9237,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.115",SERVER_VERSION="";
+var PAGE_VERSION="1.82.116",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10230,7 +10233,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.115"></script>
+<script src="lab.js?v=1.82.116"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
