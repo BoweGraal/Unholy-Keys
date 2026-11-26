@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.87 — Dragon riders: new dragons, real wingbeats, barrel roll
+
+1. **New dragons:** big bony-fingered wings with a scalloped membrane, a long S-curved neck, horned head (the jaw drops open when it breathes fire), spikes down the back, a long tail that ripples as it flies, claws tucked underneath, saddle and strap.
+2. **Flying:** a quick downstroke and a slower upstroke, and the body lifts a little on each beat. Wings beat faster when climbing and slower when diving. The dragon banks (tilts) as you climb or dive.
+3. **Barrel roll:** flick the stick from right at the top to right at the bottom fast (or tap ↑ then ↓ quickly on a keyboard). The dragon and rider roll a full turn with a whoosh and "SPIN!". You can't be hit while rolling, so use it to dodge. Everyone else sees your roll too.
+
 ## v1.82.86 — Dragon riders: the boss is the last 90 s, much tougher, and comes back for an ENCORE
 
 1. The demon organist now takes over for the **last 90 seconds of the song** (or the last 70% of a short song) instead of at 62%.
