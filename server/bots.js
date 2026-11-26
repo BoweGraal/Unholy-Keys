@@ -40,19 +40,19 @@ module.exports = function(api) {
   var rooms = api.rooms;
 
   function realCount(r) { var n = 0; r.viewers.forEach(function(v) { if (!(v.ws && v.ws.bot)) n++; }); return n; }
-  function botsIn(r) { var out = []; r.viewers.forEach(function(v) { if (v.ws && v.ws.bot && !v.ws.ctfFill) out.push(v.ws); }); return out; }   /* the fill bots (not the one evening up a CTF game) */
+  function botsIn(r) { var out = []; r.viewers.forEach(function(v) { if (v.ws && v.ws.bot && !v.ws.ctfFill && !v.ws.pbot) out.push(v.ws); }); return out; }   /* the fill bots (not the one evening up a CTF game) */
 
-  function makeBot(code, r) {
+  function makeBot(code, r, as) {
     var used = {}; r.viewers.forEach(function(v) { used[v.name] = 1; });
-    var base = NAMES.filter(function(n) { return !used["🤖 " + n]; }), name = "🤖 " + (base.length ? pick(base) : pick(NAMES));
-    var b = { bot: true, readyState: 1, isAlive: true, skill: rnd(0.25, 0.62), chat: rnd(0.5, 1.4), groove: rnd(0.7, 1.3), arms: rnd(0.6, 1.4),
+    var base = NAMES.filter(function(n) { return !used["🤖 " + n]; }), name = as ? as.name : "🤖 " + (base.length ? pick(base) : pick(NAMES));
+    var b = { bot: true, pbot: !!as, readyState: 1, isAlive: true, skill: as ? 0.72 : rnd(0.25, 0.62), chat: rnd(0.5, 1.4), groove: rnd(0.7, 1.3), arms: rnd(0.6, 1.4),
       x: 0.5, y: 0.55, rd: null, lastNote: 0, nextMove: 0, nextChat: 0, nextReact: 0, nextDance: 0, dancing: false, danceUntil: 0, voted: -1, bvoted: {}, scoreAt: 0, tugAt: 0 };
     b.terminate = b.ping = function() {};
     b.send = function(data) { try { hear(b, JSON.parse(data)); } catch (e) {} };
     b.act = function(msg) { if (b.room && rooms[b.room]) api.onMessage(b, Buffer.from(JSON.stringify(msg)), false); };
     var now = Date.now();
     b.nextMove = now + wait(1000, 5000); b.nextChat = now + wait(15000, 45000) / b.chat; b.nextReact = now + wait(5000, 15000); b.nextDance = now + wait(8000, 30000);
-    api.onMessage(b, Buffer.from(JSON.stringify({ type: "join-room", room: code, name: name, color: pick(COLORS), look: randomLook() })), false);
+    api.onMessage(b, Buffer.from(JSON.stringify({ type: "join-room", room: code, name: name, color: as ? (as.color || pick(COLORS)) : pick(COLORS), look: as && as.look ? as.look : randomLook() })), false);
     if (!b.viewerId) return null;
     var me = r.viewers.get(b.viewerId); if (me) { b.x = me.x; b.y = me.y; }
     b.timer = setInterval(function() { think(b); }, 200);
@@ -75,13 +75,21 @@ module.exports = function(api) {
     n = Math.floor(+n); r.botFill = isFinite(n) ? Math.max(0, Math.min(MAX_FILL, n)) : 0;
     rebalance(code);
   }
-  function stopRoom(code) { var r = rooms[code]; if (!r) return; botsIn(r).forEach(function(b) { clearInterval(b.timer); b.dead = true; }); }
+  function stopRoom(code) { var r = rooms[code]; if (!r) return; botsIn(r).forEach(function(b) { clearInterval(b.timer); b.dead = true; }); if (r.pbot) { clearInterval(r.pbot.timer); r.pbot.dead = true; r.pbot = null; } }
+  /* the performer's own bot: their name and look, dancing and playing the games for them, until they take over themselves */
+  function perfBot(code, on) {
+    var r = rooms[code]; if (!r) return;
+    if (on && !r.pbot) { r.pbot = makeBot(code, r, { name: r.performerName || "Performer", look: r.performerLook || "" }) || null; }
+    else if (!on && r.pbot) { var b = r.pbot; r.pbot = null; removeBot(b); }
+    if (r.performer) api.send(r.performer, { type: "pbot-info", on: !!r.pbot, playing: !!r.pPlayer });
+  }
 
   /* ---- what a bot hears ---- */
   function hear(b, m) {
     if (!m || b.dead) return;
     if (m.type === "room-state" && m.round) hear(b, m.round);
     if (m.type === "note") b.lastNote = Date.now();
+    if (m.type === "ball") b.ballPos = { u: m.u, v: m.v, vu: m.vu, vv: m.vv, at: Date.now() };
     if (m.type === "round") {
       if (m.phase === "countdown" || m.phase === "play" || m.phase === "vote" || m.phase === "tally") {
         var fresh = !b.rd || b.rd.n !== m.n;
@@ -119,6 +127,7 @@ module.exports = function(api) {
     if (playing && rd.mode === "ski") { ski(b, now, rd); }
     if (playing && rd.mode === "fish") { fish(b, now); }
     if (playing && rd.mode === "boats") { boats(b, now); }
+    if (playing && rd.mode === "ball") { ball(b, now); }
     if (playing && rd.mode === "mosh") { mosh(b, now, rd); }
     if (playing && rd.mode === "ctf") { ctf(b, now, rd); }
     if (playing && rd.mode === "keepy") { if (!b.hopAt && Math.random() < 0.05) b.hopAt = now; var hu = b.hopAt ? (now - b.hopAt) / 900 : 0; if (hu >= 1) { b.hopAt = 0; hu = 0; } b.skH = b.hopAt ? Math.round(24 * 4 * hu * (1 - hu)) : 0; }
@@ -167,7 +176,7 @@ module.exports = function(api) {
       /* a score that grows through the song at this bot's skill */
       if (b.rs0n !== rd.n) { b.rs0n = rd.n; b.rs0 = pos; b.score = 0; }   /* a game can start part way into the song (two games per song) */
       var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, (pos - b.rs0) / Math.max(60000, Math.min(150000, dur - b.rs0))));
-      var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : rd.mode === "fish" ? 4000 : rd.mode === "boats" ? 1500 : rd.mode === "swim" ? 2500 : arrows * 100 * (1 + arrows / 100) * 0.55;
+      var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : rd.mode === "fish" ? 4000 : rd.mode === "boats" ? 1500 : rd.mode === "ball" ? 1200 : rd.mode === "swim" ? 2500 : arrows * 100 * (1 + arrows / 100) * 0.55;
       b.score = Math.max(b.score || 0, Math.round(full * frac * b.skill * rnd(0.9, 1.1)));
       var sm = { type: "score", s: b.score }; if (slot >= 0) sm.m = slot;
       b.act(sm); b.scoreAt = now + 2000;
@@ -197,6 +206,22 @@ module.exports = function(api) {
     if (now - f.posAt > 1000) { f.posAt = now; b.x = +(0.5 + Math.cos(f.a) * 0.2 * 1.3).toFixed(3); b.y = +(0.52 + Math.sin(f.a) * 0.11 * 1.55).toFixed(3); b.act({ type: "pos", x: b.x, y: b.y }); }
   }
   /* bumper boats: drift round the floating pool, steer away from the edge, and now and then get knocked off (then sit on the raft) */
+  /* Ball Run: keep away from the ball; flattened = out until the next of the game's three rounds */
+  function ball(b, now) {
+    var rd = b.rd, gm = rd.chart && rd.chart.gameMs > 20000 ? rd.chart.gameMs : 90000, k = Math.max(0, Math.min(2, Math.floor(3 * (now - rd.playAt) / gm)));
+    if (!b.bl || b.bl.n0 !== rd.n || b.bl.k !== k) { var a0 = Math.random() * 6.283, r0 = 0.55 + Math.random() * 0.35; b.bl = { n0: rd.n, k: k, u: Math.cos(a0) * r0, v: Math.sin(a0) * r0, out: false, posAt: 0, wob: Math.random() * 6 }; }
+    var o = b.bl, bp = b.ballPos, dt = 0.2;
+    if (!o.out && bp) {
+      var age = Math.min(0.5, (now - bp.at) / 1000), bu = bp.u + bp.vu * age, bv = bp.v + bp.vv * age;
+      var dx = o.u - bu, dy = o.v - bv, d = Math.hypot(dx, dy) || 1, r = Math.hypot(o.u, o.v);
+      var fu = dx / d, fv = dy / d; if (r > 0.75) { fu -= o.u / r * 0.9; fv -= o.v / r * 0.9; }   /* away from the ball, but not off the edge */
+      fu += Math.cos(now / 900 + o.wob) * 0.25; fv += Math.sin(now / 700 + o.wob) * 0.25;
+      var fm = Math.hypot(fu, fv) || 1, spd = d < 0.7 ? 0.32 + b.skill * 0.32 : 0.12;
+      o.u += fu / fm * spd * dt; o.v += fv / fm * spd * dt; var r2 = Math.hypot(o.u, o.v); if (r2 > 0.95) { o.u *= 0.95 / r2; o.v *= 0.95 / r2; }
+      if (Math.hypot(o.u - bu, (o.v - bv) * 1.15) < 0.2 * 0.92) o.out = true;   /* flattened */
+    }
+    if (now - o.posAt > 150) { o.posAt = now; if (o.out) { b.x = +(0.08 + 0.84 * ((b.viewerId.charCodeAt(0) * 37) % 100) / 100).toFixed(3); b.y = 0.95; } else { b.x = +(0.5 + o.u * 0.4).toFixed(4); b.y = +(0.62 + o.v * 0.22).toFixed(4); } b.act({ type: "pos", x: b.x, y: b.y }); }
+  }
   function boats(b, now) {
     if (!b.bb || b.bb.n0 !== b.rd.n) { var a0 = Math.random() * 6.283; b.bb = { n0: b.rd.n, u: Math.cos(a0) * 0.6, v: Math.sin(a0) * 0.6, vu: 0, vv: 0, out: false, posAt: 0, t0: now, hd: 0 }; }
     var o = b.bb, dt = 0.2, gm = b.rd.chart && b.rd.chart.gameMs > 20000 ? b.rd.chart.gameMs : 90000, R = Math.max(0.4, 1 - 0.6 * (now - o.t0) / gm);
@@ -395,6 +420,7 @@ module.exports = function(api) {
     if (b.rd && b.rd.mode === "free") { if (!b.fds || Math.random() < 0.01) { b.fds = Math.random() < 0.35 ? 9 : 1 + Math.floor(Math.random() * 15); b.fdm = Math.floor(Math.random() * 4); } pm.fd = { s: b.fds, m: b.fdm, c: [0, 0, 0, 0] }; }
     if (b.rd && b.rd.mode === "kart") { pm.sk = { h: b.kh || 0, f: b.kf ? 1 : 0, t: 0 }; pm.a = [210, -210, 25, -25]; }
     else if (b.rd && b.rd.mode === "fish" && b.fi) { pm.sk = { h: Math.min(60, b.fi.n), f: b.fi.s === 7 ? 1 : 0, t: b.fi.s }; pm.a = b.fi.s === 6 ? [290, -290, 20, -20] : [-55, 55, 0, 0]; }
+    else if (b.rd && b.rd.mode === "ball" && b.bl) { pm.sk = { h: 0, f: 0, t: b.bl.out ? 1 : 0 }; pm.a = b.bl.out ? [20, -20, 0, 0] : [140, -140, 30, -30]; }
     else if (b.rd && b.rd.mode === "boats" && b.bb) { pm.sk = { h: 0, f: 0, t: b.bb.out ? 9 : ((Math.round(b.bb.hd / (Math.PI / 4)) % 8) + 8) % 8 }; pm.a = b.bb.out ? [40, -40, 0, 0] : [110, -110, 10, -10]; }
     else if (b.rd && b.rd.mode === "ski" && b.sk2) { var cr = now < b.sk2.crash; pm.sk = { h: Math.max(0, Math.min(60, Math.floor(Math.max(0, b.sk2.y) / 1000))), f: cr ? 1 : 0, t: cr ? 9 : Math.max(0, Math.min(6, Math.round(b.sk2.a / (Math.PI / 6)) + 3)) }; pm.a = cr ? [260, -260, 120, -120] : [90, -90, 15, -15]; }
     else if (b.rd && b.rd.mode === "pipe" && b.pp) { var pa = b.pp.air; pm.sk = { h: 0, f: now < b.pp.bail ? 1 : 0, t: pa ? pa.k : 0 }; if (pa) pm.fd = { s: PPD[pa.k], m: 0, c: [0, 0, 0, 0] }; pm.a = now < b.pp.bail ? [260, -260, 120, -120] : pa ? [230, -230, 50, -50] : [120, -120, 35, -35]; }
@@ -412,5 +438,5 @@ module.exports = function(api) {
     var b = makeBot(code, r); if (b) { b.ctfFill = true; r.ctfBot = b; }
   }
   function ctfEnd(code) { var r = rooms[code]; if (!r || !r.ctfBot) return; var b = r.ctfBot; r.ctfBot = null; if (!b.dead) removeBot(b); }
-  return { ctfEven: ctfEven, ctfEnd: ctfEnd, setFill: setFill, rebalance: rebalance, stopRoom: stopRoom, isBot: function(ws) { return !!(ws && ws.bot); } };
+  return { perfBot: perfBot, ctfEven: ctfEven, ctfEnd: ctfEnd, setFill: setFill, rebalance: rebalance, stopRoom: stopRoom, isBot: function(ws) { return !!(ws && ws.bot); } };
 };

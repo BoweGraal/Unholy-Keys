@@ -1688,6 +1688,45 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.82 — Ball Run minigame; soft elbows when you dance
+
+**Ball Run** (new game, in the song picker under the dance games):
+1. Host: pick Ball run for a round and go live. During play, your instrument arrow keys steer a giant ball round a circular disk (a toast tells you). Stop pressing for about 2 seconds and the ball chases the nearest player by itself.
+2. Phone: run with the stick / arrows / WASD. Everyone gets 2.5 seconds to scatter at the start of each of the 3 rounds. Get rolled over and you see FLATTENED!, then sit out on the sideline with 💫 until the next round.
+3. Points: +4 a second while you're alive, +100 for the last one standing in a round.
+4. Practice: Ride → Ball run. The ball chases you and the practice bots; the bots dodge.
+5. Render needs a redeploy for this (server and bots changed). The YouTube ad-break notice also shows in the song bar again.
+
+**Soft elbows:** in free dance (dragging the hands) and in dances where the stick points an arm, arms now bend a little at the elbow. They curve more as they rise, and the forearm trails behind when you swing fast. The robot stays stiff, and moves with their own arm shapes are unchanged.
+
+## v1.82.81 — No star over you in fishing
+
+1. Play Fishing: no gold star over your head (the camera keeps you in the middle anyway).
+2. Every other game still shows your star.
+
+## v1.82.80 — Your notes make the snow; chat above the keyboard; free dance on the beat
+
+1. **Snow from your playing:** on the ice rink and in the ski game, every note the performer plays drops a little flurry of three flakes (one with a sparkle). Low notes fall on the left, high notes on the right; the flakes drift down and melt near the bottom. The rink no longer snows by itself, so the snow is yours. The dance floor and other games are unchanged.
+2. **Chat on a phone:** tap Say something. The chat bar sits right on top of the keyboard (it used to hide behind it) and gets bigger: a white box with large text, a big pink Send, and recent messages above it. It goes back to normal when the keyboard closes. iPhones won't zoom in when you tap it.
+3. **Free dance in practice keeps to the song:** the menu music now goes through the same sound system the beat detector listens to, so the shuffle (and every free-dance move) follows the song's real tempo, like in the dance game. It takes a few seconds to lock on when a song starts. (Before, it ran on a fixed 120 BPM clock, so it drifted behind.)
+
+## v1.82.79 — The performer's bot (and playing the game yourself)
+
+Server change: redeploy Render.
+
+1. Go live. A bot with your stage name and look joins the dance floor and dances and plays every game as you. It plays a bit better than the filler bots, and the bot fill never removes it.
+2. **🤖 My bot: on / off** (host's bottom bar) switches it. The setting is remembered on this computer.
+3. **🎮 Play the game** opens your player view over the host page: your bot steps aside and you're on the floor as yourself, where it was standing. Your song keeps playing on the host page (the player view is silent so there's no echo).
+4. **⬅ Back to the stage** closes it and your bot takes over again. Ending the show closes it too.
+5. Good for a backing track or YouTube song you aren't playing live: hop in and play the game.
+
+## v1.82.78 — You can't be in your own room twice; come back to hosting
+
+1. Host a room (Host a room on a phone, or the host page), go live, then leave the host page (Back, or open the phone menu).
+2. The phone menu shows a gold **▶ Back to hosting your room** (with the code) instead of a Join button for it. Tap it: the host page reopens and you're LIVE in the same room again, everyone still in it. This works within about a minute of leaving; after that the room has closed.
+3. Typing your own room's code into Join game asks "You're hosting room XXXX. Go back to hosting it?" and won't join you as a player.
+4. End the show properly and the gold button goes away.
+
 ## v1.82.77 — Phones: the phone menu, with Host a room
 
 1. On a phone, open the host's address (index.html). It goes straight to the phone menu (the same one players use).
