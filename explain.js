@@ -12,59 +12,68 @@ var EXPLAIN=(function(){
   function look(i){if(!looks[i]){try{looks[i]=ART.looks.fromColor(["#D354A0","#3DF2FF","#F5C518","#4CC38A","#FF4D6D","#7F77DD"][i%6],i*7+3);}catch(e){looks[i]=null;}}return looks[i];}
   var touch="ontouchstart" in window||(navigator.maxTouchPoints|0)>0;
 
-  /* ---------- what each game says ---------- */
+  /* ---------- what each game says: short, symbols over words ---------- */
   var INFO={
-    step:{n:"Step dance",i:"⬆️",goal:"Hit every arrow as it reaches the top.",
-      how:[["Tap the arrow pads at the bottom of the screen","Press the arrow keys"],"Hit it right on the beat: PERFECT scores the most, then GREAT, then GOOD","If an arrow stretches out, hold it and let go when it ends"],
-      rules:["Everyone gets the same steps","Hits in a row build your combo","Highest score wins the round"]},
-    aim:{n:"Target dance",i:"🎯",goal:"Hit each target as its ring closes on it.",
-      how:[["Tap each target","Click each target"],"Hit it just as the ring closes on it","Early or late still counts, but scores less"],
-      rules:["Everyone gets the same targets","Hits in a row build your combo","Highest score wins the round"]},
-    keys:{n:"Note highway",i:"🎹",goal:"Play each note as it lands on its key.",
-      how:[["Tap the key as its note lands","Press A S D F G H J as notes land"],"Hit it right on the beat for the best score","Long notes: hold, then let go when they end"],
-      rules:["Everyone gets the same notes","Hits in a row build your combo and your HYPE","Highest score wins the round"]},
-    keys4:{n:"Note highway · 4 keys",i:"🥁",goal:"Play each note as it lands on its pad.",
-      how:[["Tap the pad as its note lands","Press D F J K as notes land"],"Hit it right on the beat for the best score","Long notes: hold, then let go when they end"],
-      rules:["Everyone gets the same notes","Hits in a row build your combo and your HYPE","Highest score wins the round"]},
+    step:{n:"Step dance",i:"⬆",goal:"Hit the arrows on the beat.",
+      how:[["Tap the pad as each arrow hits the top","Arrow keys as each arrow hits the top"],"Long arrow: hold it"],
+      rules:["PERFECT › GREAT › GOOD","Combo = more points"]},
+    aim:{n:"Target dance",i:"🎯",goal:"Tap each target as its ring closes.",
+      how:[["Tap the target when the ring closes","Click the target when the ring closes"],"Early or late: fewer points"],
+      rules:["Combo = more points","Top score wins"]},
+    keys:{n:"Note highway",i:"🎹",goal:"Play each note as it lands.",
+      how:[["Tap the key as its note lands","A S D F G H J as notes land"],"Long note: hold it"],
+      rules:["Combo fills HYPE","Top score wins"]},
+    keys4:{n:"Highway · 4 keys",i:"🥁",goal:"Play each note as it lands.",
+      how:[["Tap the pad as its note lands","D F J K as notes land"],"Long note: hold it"],
+      rules:["Combo fills HYPE","Top score wins"]},
     free:{n:"Free dance",i:"🕺",goal:"Dance however you like.",
-      how:[["Drag your hands and feet, or tap the floor to walk","Drag your hands and feet, or click the floor or use the arrow keys to walk"],"Pick a dance from the menu at the sides","Line up moves for your turn in the spotlight"],
-      rules:["There are no points: the room votes","Everyone gets a turn in the spotlight later in the song","Vote for your favourite when the song ends"]},
-    mosh:{n:"Mosh pit",i:"🤘",goal:"Get stuck in and score off the whole pit.",
-      how:[["Drag circles on the floor to swing your arms. Bump into people","Move with the arrows or WASD. Bump into people"],"The pit changes: plain mosh, circle pit, wall of death, push war","Watch the top left for what's on and what's next"],
-      rules:["Bumps and shoves score","Run laps in the circle pit","In the wall of death and push war, the winning side gets a bonus"]},
-    skate:{n:"Roller rink",i:"🛼",goal:"Skate fast, jump, and land tricks.",
-      how:[["Steer with the stick. Tap JUMP","Steer with the arrows or WASD. Press Space to jump"],"Hold a direction in the air for a trick","Let go before you land or you bail"],
-      rules:["Speed and clean tricks score","A bail costs you your speed","Highest score wins the round"]},
-    ice:{n:"Ice rink",i:"🧊",goal:"Skate fast, jump, and land tricks. It's slippery!",
-      how:[["Steer with the stick. Tap JUMP","Steer with the arrows or WASD. Press Space to jump"],"Hold a direction in the air for a trick","Let go before you land or you bail"],
-      rules:["Speed and clean tricks score","The ice keeps you sliding, so plan your turns","Highest score wins the round"]},
-    keepy:{n:"Keepy uppy",i:"🎈",goal:"Keep the balloon, the ball and the feather off the floor.",
-      how:[["Move with the stick. Tap JUMP to head them up, tap again in the air to double jump","Move with the arrows or WASD. Space to jump, Space again in the air to double jump"],"Get under them and head them back up","Don't let anything touch the floor"],
-      rules:["Every hit scores; hits in a row build a multiplier","The feather and double-jump hits score the most","Highest score wins the round"]},
-    fish:{n:"Fishing",i:"🎣",goal:"Catch the most fish before the song moves on. Bigger fish score more.",
-      how:[["Tap CAST, wait for a bite","Space to cast, wait for a bite"],["Top bar (stick UP) reels in; bottom bar (DOWN) sways without reeling; left/right keep the box on the fish","↑ (top bar) reels in; ↓ (bottom bar) sways without reeling; ← → keep the box on the fish"],["When the net comes out, tap NET as it swings over the fish","When the net comes out, press Space as it swings over the fish"]],
-      rules:["Reeling off the fish pulls the line tight: too tight and it snaps","The big fish bite in the loud parts of the song","Most points wins the round"]},
-    boats:{n:"Bumper boats",i:"🚤",goal:"Knock everyone off the floating pool. Last boat floating wins big.",
-      how:[["Steer with the stick","Steer with the arrows or WASD"],["Tap BOOST to ram","Space to BOOST and ram"],"Hit them hard near the edge to push them over"],
-      rules:["Go over the edge and you're out till the end of the round","Points for staying afloat, hard bumps, and knocking people off","The pool slowly shrinks"]},
-    kart:{n:"Mars Rally",i:"🚀",goal:"Race round the track. The stick is your speed and direction.",
-      how:[["Push the stick the way you want to go. Further is faster, pull back to reverse","Push the stick (or WASD) the way you want to go. Further is faster, pull back to reverse"],"Push when the 2 lights up for a rocket start","Tap DRIFT to hop, swing into the turn and hold it for a boost"],
-      rules:["Distance, laps, boosts and overtakes all score","Highest score wins the round"]},
-    walk:{n:"Dance walk race",i:"🚶",goal:"Dance-walk to the finish line first.",
-      how:[["Drag to keep your circle inside the moving circle","Move the mouse to keep your circle inside the moving circle"],"When it says GO, keep it there to walk forward","Stay on it through the dance style changes"],
-      rules:["Staying in the circle moves you forward","Falling out stops you","First to the finish wins"]},
-    pipe:{n:"Half pipe",i:"🛹",goal:"Swing from wall to wall, boost on the beat, and land dance tricks.",
-      how:[["Left stick steers. Press the right stick at the line on the ramp to crouch, then flick it at the lip: the flick is your trick, a faster flick goes higher","WASD steers. Hold the mouse button at the line to crouch, then drag and flick up at the lip: the flick is your trick, a faster flick goes higher"],"Roll over the lit pad in the middle for a BOOST","A harder flick goes higher"],
-      rules:["Tricks score: bigger tricks and combos score more","Land straight, or you bail","Highest score wins the round"]},
-    ski:{n:"Ski",i:"⛷️",goal:"Race down the mountain through flag zones and jump zones.",
-      how:[["Point the stick the way you want to go. Tap HOP","Steer with the arrows or WASD. Space hops"],"Flag zones: carve through the gates","Jump zones: hit the ramps and do tricks"],
-      rules:["Gates, speed and tricks score (tricks are worth more in jump zones)","Hop and land on a new line for a CUT boost","Highest score wins the round"]},
-    ctf:{n:"Capture the flag",i:"🚩",goal:"Steal their flag and bring it home.",
-      how:[["Run with the stick. Hold SPRINT for a burst","Run with the arrows or WASD. Hold Space or Shift to sprint"],"Grab the other team's flag, then run it back to your base","Collect ⚡ to refill your sprint"],
-      rules:["Capture while your own flag is at home: +500 and a point for your team","Tag their flag carrier and the flag flies home","Everyone else is solid: block for your teammates","Most team points wins"]},
-    kflag:{n:"Kart flag",i:"🏎️",goal:"Capture the flag in karts: launch across the arena, blast your flag back.",
-      how:[["Steer with the stick, the gas is automatic","Steer with the arrows or WASD, the gas is automatic"],["LAUNCH: hold it, aim with the stick, let go to shoot off (longer hold, harder launch)","LAUNCH (Shift or X): hold, aim, let go to shoot off (longer hold, harder launch)"],["IMPACT: a blast round you, then a short cooldown","IMPACT (Space): a blast round you, then a short cooldown"]],
-      rules:["Grab their flag and drive it home: +500 and a point for your team","IMPACT a carrier and your flag flies home; anyone else spins out","Most team points wins"]}
+      how:[["Drag hands & feet · tap floor to walk","Drag hands & feet · click floor to walk"],"Pick moves from the side menu"],
+      rules:["No points: the room votes 🗳","Everyone gets a spotlight turn"]},
+    mosh:{n:"Mosh pit",i:"🤘",goal:"Swing on the beat. Rule the pit.",
+      how:[["Hold the right stick at someone: you swing each beat","Hold the mouse at someone: you swing each beat"],["Headbang: tap as the block hits the line","Headbang: Space as the block hits the line"],"Wall of death: pick a side, charge on the drop"],
+      rules:["Dead centre = SMASH 💥","Winning side gets a bonus"]},
+    skate:{n:"Roller rink",i:"🛼",goal:"Skate fast, jump, land tricks.",
+      how:[["Stick to skate · tap JUMP","Arrows to skate · Space to jump"],"In the air: hold a direction = trick"],
+      rules:["Let go before you land or you bail","Bail = speed lost"]},
+    ice:{n:"Ice rink",i:"⛸",goal:"A figure skating routine, all together.",
+      how:[["Flick the stick the way the arrow points, on the beat","Press the arrow it shows, on the beat"],["Spin: circle the stick, then hold","Spin: circle the arrows, then hold"],["Jump: mash, pull back, push forward","Jump: mash Space, ↓ then ↑"]],
+      rules:["On the beat = PERFECT","Highest jump gets a bonus"]},
+    keepy:{n:"Keepy uppy",i:"🎈",goal:"Keep 🎈 ⚽ 🪶 off the floor.",
+      how:[["Stick to move · tap JUMP to head it","Arrows to move · Space to head it"],"Jump again in the air = double jump"],
+      rules:["Hits in a row = multiplier","🪶 and double jumps score most"]},
+    fish:{n:"Fishing",i:"🎣",goal:"Biggest catch wins. 🐟",
+      how:[["Drag the water to aim · swoop up fast to cast","Point to aim · swoop the mouse up fast to cast"],"A fish under the float bites · ⟳ pulls it in to line up","❗ jerk ↓","Spin ⟳ to the beat ♩ · 🥅 net it"],
+      rules:["Too fast ⚡ up · slower ⚡ down","⚡ full = 💥 SNAP","⚠ LINE OUT: reel!"]},
+    boats:{n:"Bumper boats",i:"🚤",goal:"Knock everyone off the pool.",
+      how:[["Steer with the stick · BOOST to ram","Arrows to steer · Space to BOOST"],"Hit them near the edge"],
+      rules:["Over the edge = out","Knock-offs earn a 🛟 save"]},
+    kart:{n:"Mars Rally",i:"🚀",goal:"Race round the Mars track.",
+      how:[["Stick = direction & speed","WASD = direction & speed"],"Push on the 2 = rocket start",["Hold DRIFT through turns = boost","Hold Space through turns = boost"]],
+      rules:["Laps, boosts & overtakes score","Top score wins"]},
+    walk:{n:"Dance walk race",i:"🚶",goal:"Dance-walk to the finish.",
+      how:[["Keep your circle in the moving circle","Keep the cursor in the moving circle"],"Fall out = you stop"],
+      rules:["First to the finish wins"]},
+    pipe:{n:"Half pipe",i:"🛹",goal:"Ride the pipe, flick dance tricks.",
+      how:[["Left stick steers","WASD steers"],["Press the right stick at the line · flick at the lip","Hold the mouse at the line · flick at the lip"],"Lit pad = BOOST"],
+      rules:["Land straight or bail","Clean landings fill SUPER ⭐"]},
+    ski:{n:"Ski",i:"⛷",goal:"Race down: flags, then jumps.",
+      how:[["Stick steers · tap HOP","Point to steer · click to hop"],"Pass flags on their arrow side","Jump zone: hop at the ramp end"],
+      rules:["Hop + cut = speed boost","Jump zone tricks ×1.5"]},
+    ctf:{n:"Capture the flag",i:"🚩",goal:"Grab their flag, bring it home.",
+      how:[["Stick to run · hold SPRINT","Arrows to run · hold Space to sprint"],"Tag their carrier: flag goes home","⚡ refills sprint"],
+      rules:["Capture = +500","Most captures wins"]},
+    kflag:{n:"Kart flag",i:"🏎",goal:"Capture the flag in karts.",
+      how:[["Steer with the stick (gas is auto)","Point or WASD to steer (gas is auto)"],["LAUNCH: hold, aim, let go","LAUNCH: hold left click, aim, let go"],["IMPACT: blast round you","IMPACT: right click or Space"]],
+      rules:["IMPACT the carrier: flag home","Capture = +500"]},
+    swim:{n:"Coin dive",i:"🐠",goal:"Swim to the beat, grab the coins.",
+      how:[["Left stick swims","Arrows swim"],["Tap DASH on the beat = PERFECT","Click to dash · on the beat = PERFECT"]],
+      rules:["Fresh coins score most","On the beat = double"]},
+    ball:{n:"Ball run",i:"⚪",goal:"Don't get squashed by the ball.",
+      how:[["Stick to run","Arrows to run"],"The performer steers the ball"],
+      rules:["Squashed = out this round","3 rounds · last standing scores"]},
+    dragon:{n:"Dragon riders",i:"🐉",goal:"Fly dragons. Beat the demon organ.",
+      how:[["Stick to fly · tap 🔥 FIRE","Arrows to fly · Space = fire"],"Fuller 🔥 bar = bigger fireball",["Eat fire notes · SUPER = flamethrower","Eat fire notes · E = SUPER flamethrower"]],
+      rules:["Last 90 s: the boss ☠","Boss down = you win · all down = performer wins"]}
   };
   function pick(a){return Array.isArray(a)?(touch?a[0]:a[1]):a;}
 
@@ -72,9 +81,19 @@ var EXPLAIN=(function(){
   function R(c,x,y,w,h){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
   function TX(s,x,y,p,c,al){try{ART.pixText(g,s,x,y,p,c,al||"left",0.7);}catch(e){}}
   function av(i,x,y,p,st){var L=look(i);if(!L)return;try{ART.drawChar(g,Math.round(x),Math.round(y),p,L,st||{});}catch(e){}}
-  function circ(c,x,y,r){g.fillStyle=c;g.beginPath();g.arc(Math.round(x),Math.round(y),r,0,6.283);g.fill();}
-  function ring(c,x,y,r,w){g.strokeStyle=c;g.lineWidth=w||1;g.beginPath();g.arc(Math.round(x),Math.round(y),Math.max(0.5,r),0,6.283);g.stroke();}
-  function arrow(c,x,y,s,rot){g.save();g.translate(x,y);g.rotate(rot);g.fillStyle=c;g.beginPath();g.moveTo(s,0);g.lineTo(-s*0.2,-s);g.lineTo(-s*0.2,-s*0.4);g.lineTo(-s,-s*0.4);g.lineTo(-s,s*0.4);g.lineTo(-s*0.2,s*0.4);g.lineTo(-s*0.2,s);g.closePath();g.fill();g.restore();}
+  /* everything is drawn in whole pixels (no smooth paths): discs, ellipses, rings and lines are built from rects */
+  function ell(c,x,y,rx,ry){x=Math.round(x);y=Math.round(y);g.fillStyle=c;var n=Math.max(1,Math.round(ry));for(var d=-n;d<=n;d++){var w=Math.round(rx*Math.sqrt(Math.max(0,1-(d*d)/(n*n))));g.fillRect(x-w,y+d,w*2+1,1);}}
+  function circ(c,x,y,r){ell(c,x,y,r,r);}
+  function eRing(c,x,y,rx,ry,w){w=Math.max(1,Math.round(w||1));g.fillStyle=c;var n=Math.max(8,Math.ceil(6.283*Math.max(rx,ry)/1.2)),seen={};for(var i=0;i<n;i++){var a=i/n*6.283,px=Math.round(x+Math.cos(a)*rx-w/2),py=Math.round(y+Math.sin(a)*ry-w/2),k=px+","+py;if(seen[k])continue;seen[k]=1;g.fillRect(px,py,w,w);}}
+  function ring(c,x,y,r,w){eRing(c,x,y,Math.max(0.5,r),Math.max(0.5,r),w);}
+  function line(c,x0,y0,x1,y1,w){w=w||1;g.fillStyle=c;var n=Math.max(1,Math.ceil(Math.max(Math.abs(x1-x0),Math.abs(y1-y0))));for(var i=0;i<=n;i++)g.fillRect(Math.round(x0+(x1-x0)*i/n-w/2),Math.round(y0+(y1-y0)*i/n-w/2),w,w);}
+  /* a pixel arrow pointing right / down / left / up (rot is rounded to the nearest quarter turn) */
+  function arrow(c,x,y,s,rot){var q=((Math.round(rot/(Math.PI/2))%4)+4)%4;s=Math.max(2,Math.round(s));x=Math.round(x);y=Math.round(y);g.fillStyle=c;
+    for(var u=-s;u<=s;u++){var hw=u<-Math.round(s*0.2)?Math.round(s*0.4):Math.round(s*(s-u)/(s*1.2));if(hw<0)continue;
+      if(q===0)g.fillRect(x+u,y-hw,1,hw*2+1);else if(q===2)g.fillRect(x-u,y-hw,1,hw*2+1);else if(q===1)g.fillRect(x-hw,y+u,hw*2+1,1);else g.fillRect(x-hw,y-u,hw*2+1,1);}}
+  function heart(c,x,y){x=Math.round(x);y=Math.round(y);R(c,x+1,y,2,1);R(c,x+4,y,2,1);R(c,x,y+1,7,2);R(c,x+1,y+3,5,1);R(c,x+2,y+4,3,1);R(c,x+3,y+5,1,1);}
+  /* a finger (touch) or a pointer: shows what to do with your hands */
+  function finger(x,y,press){x=Math.round(x);y=Math.round(y);if(press)ring("rgba(255,255,255,.7)",x,y,7,1);R("#000",x-2,y-1,5,9);R("#fde3c8",x-1,y,3,7);R("#000",x-3,y+6,7,6);R("#fde3c8",x-2,y+6,5,5);}
   function pop(txt,x,y,age,c,p){if(age<0||age>0.8)return;g.globalAlpha=1-age/0.8;TX(txt,x,y-age*14,p||1,c,"center");g.globalAlpha=1;}
   function badge(txt,c){var w=txt.length*6+8;R("rgba(0,0,0,.55)",6,6,w,12);TX(txt,10,9,1,c||COL.yel);}
   function score(v){TX("SCORE "+v,250,8,1,COL.yel,"right");}
@@ -109,7 +128,7 @@ var EXPLAIN=(function(){
     for(var k=0;k<seq.length;k++){var s0=k*per+0.5,age=tt-s0;if(age>=0)sc+=100;
       if(age>-0.1&&age<1.2){var r=26-(age/1.2)*18;ring(COL.pink,seq[k][0],seq[k][1],r,2);circ("rgba(61,242,255,.25)",seq[k][0],seq[k][1],8);ring(COL.cyan,seq[k][0],seq[k][1],8,1);}
       if(age>=1.2&&age<1.6){var a2=(age-1.2)/0.4;ring(COL.yel,seq[k][0],seq[k][1],8+a2*14,2);pop("PERFECT",seq[k][0],seq[k][1]-10,age-1.2,COL.yel,1);}}
-    var cur=Math.max(0,Math.min(seq.length-1,Math.floor((tt-0.5)/per+0.2))),nx=seq[cur];g.fillStyle="#fff";g.fillRect(nx[0]+3,nx[1]+3,6,8);g.fillRect(nx[0]+3,nx[1]+3,3,3);
+    var cur=Math.max(0,Math.min(seq.length-1,Math.floor((tt-0.5)/per+0.2))),nx=seq[cur];finger(nx[0]+4,nx[1]+4,false);
     score(sc);}
   function d_keys(t){R("#120e24",0,0,W,H);var sc=lanesDemo(t,7,false,["#D354A0","#E8873A","#F5C518","#3CCB8A","#5FB4F0","#7F77DD","#cfcfe8"],["A","S","D","F","G","H","J"],28,28);
     TX("HYPE",8,8,1,"#aaa");R("#2a2540",38,7,60,6);R(COL.pur,38,7,20+Math.min(40,t%12*4),6);score(sc);}
@@ -123,15 +142,6 @@ var EXPLAIN=(function(){
     var fx=70+Math.sin(t*3.2)*18,fy=52+Math.cos(t*3.2)*10;circ("rgba(255,255,255,.35)",fx,fy,6);ring("#fff",fx,fy,6,1);
     R("rgba(0,0,0,.5)",168,100,82,36);TX("ROOM VOTE",172,104,1,"#aaa");R("#2a2540",172,116,74,6);R(COL.pink,172,116,30+((t*8)%40),6);R("#2a2540",172,126,74,6);R(COL.cyan,172,126,20+((t*5)%30),6);
     var bt=Math.floor(t/2)%3;badge(["DRAG TO DANCE","PICK A DANCE","VOTE AT THE END"][bt]);}
-  function d_mosh(t){floor("#20121f","#2a1830");var ph=Math.floor(t/3.5)%3,u=(t%3.5)/3.5,cx=128,cy=84,label=["MOSH PIT","CIRCLE PIT","WALL OF DEATH"][ph];
-    if(ph===1){ring("rgba(255,77,109,.5)",cx,cy,40,2);ring("rgba(255,77,109,.5)",cx,cy,22,2);}
-    if(ph===2){for(var y=20;y<130;y+=8)R("rgba(255,255,255,.35)",127,y,2,4);}
-    for(var i=0;i<8;i++){var x,y2,dir=0,st;
-      if(ph===0){x=cx+Math.sin(t*3+i*2.1)*(30+(i%3)*10);y2=cy+Math.cos(t*2.6+i*1.7)*(20+(i%2)*10);st={armL:2.4+Math.sin(t*9+i),armR:-2.4+Math.sin(t*9+i),bob:Math.abs(Math.sin(t*8+i))*2};}
-      else if(ph===1){var a=t*2.4+i*0.78,rr=i%2?40:22;x=cx+Math.cos(a)*rr*1.5;y2=cy+Math.sin(a)*rr*0.8;dir=Math.cos(a)>0?3:1;st={legL:Math.sin(t*14+i)*0.5,legR:-Math.sin(t*14+i)*0.5,armL:1.2,armR:-1.2};}
-      else{var side=i<4?-1:1,k=Math.min(1,u*1.3),rowY=28+(i%4)*26;x=cx+side*(100-100*k*0.9)+(k>0.8?Math.sin(t*20+i)*3:0);y2=rowY;dir=side<0?1:3;st={legL:Math.sin(t*16+i)*0.5,legR:-Math.sin(t*16+i)*0.5,armL:2,armR:-2};}
-      st.dir=dir;av(i%6,x,y2,1.5,st);}
-    badge(label,COL.red);score(Math.floor(t*60)%1000);}
   function d_skate(t,ice){R(ice?"#bfe3f2":"#c98b4a",0,0,W,H);for(var x=0;x<W;x+=16)R(ice?"#a8d4e8":"#b87a3c",x,0,2,H);
     ring(ice?"#ffffff":"#fff2",128,84,86,2);var a=t*1.3,x1=128+Math.cos(a)*86,y1=86+Math.sin(a)*38,jp=Math.max(0,Math.sin(t*2.2));jp=jp>0.7?(jp-0.7)/0.3:0;
     R("rgba(0,0,0,.25)",x1-8,y1+14,16,4);av(2,x1,y1-jp*24,1.5,{skates:ice?"ice":true,dir:Math.cos(a)>0?3:1,armL:1+jp*2,armR:-1-jp*2,legL:Math.sin(t*12)*0.4,legR:-Math.sin(t*12)*0.4});
@@ -143,17 +153,99 @@ var EXPLAIN=(function(){
       if(ph<0.08){ring("#fff",x,100,10+ph*120,1);pop("+"+[100,60,200][i],x,88,ph,COL.yel,1);}});
     var jmp=Math.abs(Math.sin(t*3));av(0,ax,104-jmp*8,1.5,{armL:2.3,armR:-2.3,legL:jmp,legR:-jmp,dir:0});
     R("#0006",0,128,W,16);TX("COMBO ×"+(2+Math.floor(t)%5),8,134,1,COL.yel);score(Math.floor(t*50));}
-  function d_fish(t){floor("#161233","#1c1840");g.fillStyle="#5a5277";g.beginPath();g.ellipse(128,62,70,26,0,0,6.283);g.fill();g.fillStyle="#1a6f9e";g.beginPath();g.ellipse(128,62,64,22,0,0,6.283);g.fill();
-    var ph=t%4,ax=40;av(0,ax,92,1.5,{armL:1.3,armR:-1.1,dir:1});R("#7a4a22",ax+4,64,2,1);g.strokeStyle="#fff";g.beginPath();g.moveTo(ax+10,62);g.lineTo(100,60+(ph>1?Math.sin(t*20):0));g.stroke();R(ph>1?"#F5C518":"#ff3b5c",99,58,3,3);
-    if(ph>1.2){R("#1c1830",70,108,116,10);R("#2a4a7a",70,96,116,10);var fx=128+Math.sin(t*2.3)*40,zx=128+Math.sin(t*2.3-0.3)*40;R("#3DF2FF66",zx-14,96,28,10);R("#F5C518",fx-4,99,8,4);R("#5bd17a",70,120,(ph-1.2)/2.8*116,3);TX("REEL",72,98,1,"#fff");}
-    if(ph>3.6)pop("BASS +220",128,40,ph-3.6,COL.yel,1);score(Math.floor(t*40));}
-  function d_boats(t){R("#0b0618",0,0,W,H);for(var i=0;i<30;i++)R("#fff4",(i*53)%W,(i*37+t*8)%H,1,1);g.fillStyle="#2a1f3d";g.beginPath();g.moveTo(40,70);g.quadraticCurveTo(128,150,216,70);g.fill();
-    g.fillStyle="#6c6390";g.beginPath();g.ellipse(128,70,90,32,0,0,6.283);g.fill();g.fillStyle="#1b76a8";g.beginPath();g.ellipse(128,70,86,29,0,0,6.283);g.fill();
+  /* fishing: swoop to cast (the power bar is the fish), wait, ❗ jerk, spin the reel to the beat, watch the tension, net it */
+  function fishPx(x,y,len,col){x=Math.round(x);y=Math.round(y);ell(col,x,y,len,Math.max(2,len*0.32));R("#fff",x+len-4,y-1,1,1);R(col,x-len-5,y-4,3,3);R(col,x-len-5,y+2,3,3);R(col,x-len-3,y-2,3,5);R("#cfe8ff",x+len,y,6,1);}
+  function d_fish(t){var T=t%11,bpm=120,bt=T*bpm/60,onB=(bt%1)<0.18;
+    R("#2a1f4a",0,0,W,30);R("#1a6f9e",0,30,W,72);for(var i=0;i<14;i++)R("#3a96c8",(i*41+t*10)%W,34+(i*13)%62,10,1);
+    R("#5a3a22",0,100,W,44);for(var x=0;x<W;x+=24)R("#4a2e1a",x,100,1,44);R("#8a5a32",0,100,W,3);
+    var px=44,py=104;av(0,px,py,1.6,{dir:3,armL:T<1.6?1.2+T*0.9:2.2,armR:-1.1});
+    var tipX=px+14,tipY=py-34,bob=null,cap="",bobDy=0;
+    /* 1: swoop up (the readout fills, the tiers are the fish) */
+    var pw=T<1.6?Math.min(0.97,T/1.4):0.97;
+    if(T<2.6){cap="1  SWOOP UP FAST";var fx=60+Math.min(1,T/1.4)*70,fy=128-Math.sin(Math.min(1,T/1.4)*1.5)*86;if(T<1.6)finger(fx,fy,true);
+      var bx0=150,bw=96;R("#000",bx0-1,8,bw+2,10);var TC=["#e2dcb4","#c9d3d8","#b5a46a","#c6d0d6","#f2c230","#3a7bd5"],TS=[0,0.25,0.45,0.65,0.85,0.95,1];
+      for(var k=0;k<6;k++)R(TC[k],bx0+TS[k]*bw,9,Math.ceil((TS[k+1]-TS[k])*bw)-1,8);R("#fff",bx0+pw*bw-1,5,2,16);
+      if(T>1.5){pop("PERFECT! MARLIN",196,26,(T-1.5)*0.5,COL.yel,1);}}
+    if(T>=1.6&&T<2.6){var k2=(T-1.6),bxp=tipX+(200-tipX)*k2,byp=tipY-Math.sin(k2*Math.PI)*24+(56-tipY)*k2;bob=[bxp,byp];}
+    if(T>=2.6&&T<3.9){bob=[200,56];bobDy=Math.round(Math.sin(t*6));cap="2  FISH UNDER THE FLOAT";ell("rgba(5,22,45,.6)",120+Math.min(1,(T-2.6)/0.6)*80,60,10,3);if(T>3.1){cap="3  JERK!";R(COL.red,198,40,4,8);R(COL.red,198,50,4,3);if(T>3.4){finger(120,92+Math.min(1,(T-3.4)*6)*20,true);}if(T>3.6)pop("HOOKED",200,30,T-3.6,COL.grn,1);}}
+    /* 4: reel: spin to the beat, tension on the right */
+    var reel=T>=3.9&&T<8.6,tens=0;
+    if(reel){var rk=(T-3.9)/4.7,run=Math.sin((T-3.9)*1.3);bob=[200-rk*130+run*14,58+Math.round(Math.sin(t*9))];cap="4  SPIN ON THE BEAT";
+      fishPx(bob[0]+10,bob[1]+10,9,"#2a5a9a");
+      var ra=bt*Math.PI*2,rcx=212,rcy=118;ring("#fff",rcx,rcy,13,2);R("#000",rcx-3,rcy-3,6,6);finger(rcx+Math.cos(ra)*13,rcy+Math.sin(ra)*13,false);
+      TX(bpm+" BPM",rcx,96,1,onB?COL.grn:"#bbb","center");
+      tens=0.45+Math.sin((T-3.9)*2.1)*0.2;if(T>6.2&&T<6.9){tens=0.82;pop("TOO FAST",150,40,(T-6.2),"#ff8a5a",1);}
+      TX(Math.round(40-rk*36)+"M",248,20,1,"#fff","right");}
+    if(T>=8.6&&T<10){cap="5  NET IT!";var lk=Math.min(1,(T-8.6)/0.6);fishPx(80,70-lk*30,13,"#3a7bd5");R("#7a4a22",64,30,2,40);eRing("#ddd",80,72-lk*30,16,8,1);
+      if(T<9.1){R("#D354A0",150,60,60,18);R("#000",150,78,60,2);TX("NET!",180,65,1,"#fff","center");finger(180,74,true);}
+      if(T>9.1)pop("MARLIN +1500",128,30,(T-9.1)*0.6,COL.yel,2);}
+    if(bob){line("#fff",tipX,tipY,bob[0],bob[1]+bobDy,1);R(COL.yel,bob[0]-1,bob[1]-1+bobDy,3,3);R(COL.red,bob[0]-1,bob[1]-3+bobDy,3,2);}
+    else if(T<1.6)line("#fff",tipX,tipY,tipX+4,tipY+10,1);
+    R("#7a4a22",px+4,py-20,2,1);line("#9a6a3a",px+6,py-18,tipX,tipY,1);
+    /* the tension bar (right) and the beat pulse round the edge */
+    if(reel){R("#000",244,30,8,56);R("#2a6a3a",245,31,6,33);R("#7a6a1a",245,64,6,11);R("#7a2a2a",245,75,6,10);var th=Math.round(tens*54);R(tens>0.8?"#ff3b5c":tens>0.65?"#ffb02e":"#5bd13a",245,85-th,6,th);}
+    if(onB){var pc=reel?COL.grn:COL.yel;R(pc,0,0,W,2);R(pc,0,H-2,W,2);R(pc,0,0,2,H);R(pc,W-2,0,2,H);}
+    if(cap)badge(cap,COL.cyan);}
+  /* mosh: swing on the beat, headbang on the line, wall of death */
+  function d_mosh(t){floor("#20121f","#2a1830");var ph=Math.floor(t/4)%3,u=(t%4)/4,bt=t*2,onB=(bt%1)<0.25,cx=128,cy=84;
+    if(ph===0){for(var i=0;i<6;i++){var x=cx+Math.cos(i*1.05+t*0.4)*60,y=cy+Math.sin(i*1.05+t*0.4)*30,sw=onB&&i%2===0;av(i,x,y,1.5,{armL:sw?0.3:2.4,armR:sw?-0.3:-2.4,bob:onB?2:0,dir:Math.cos(i*1.05+t*0.4)>0?1:3});}
+      var hx=cx+Math.cos(t*0.4)*60,hy=cy+Math.sin(t*0.4)*30;if(onB){pop(Math.floor(bt)%3===0?"SMASH!":"HIT +20",hx,hy-24,(bt%1)*2,Math.floor(bt)%3===0?COL.red:COL.yel,1);}
+      finger(200,120,true);line("rgba(255,255,255,.5)",200,120,hx,hy,1);badge("SWING ON THE BEAT",COL.red);}
+    else if(ph===1){R("#0008",40,108,176,20);R("#fff",128,106,2,24);for(var k=0;k<6;k++){var bx=128+((k-bt)%6+6)%6*16;if(bx<212)R(COL.pink,bx-5,111,10,14);}
+      for(i=0;i<5;i++)av(i,60+i*34,80,1.5,{bob:onB?4:0,armL:1,armR:-1,dir:0});if(onB)pop("PERFECT",128,96,(bt%1)*2,COL.yel,1);badge("HEADBANG ON THE LINE",COL.pink);}
+    else{for(var y2=20;y2<130;y2+=8)R("rgba(255,255,255,.35)",127,y2,2,4);
+      for(i=0;i<8;i++){var side=i<4?-1:1,kk=Math.min(1,u*1.3),rowY=28+(i%4)*26,x3=cx+side*(100-100*kk*0.9)+(kk>0.8?Math.sin(t*20+i)*3:0);av(i%6,x3,rowY,1.5,{dir:side<0?1:3,legL:Math.sin(t*16+i)*0.5,legR:-Math.sin(t*16+i)*0.5,armL:2,armR:-2});}
+      badge(u<0.3?"PICK A SIDE":"CHARGE ON THE DROP!",COL.red);}
+    score(Math.floor(t*60)%1000);}
+  /* ice: the figure skating routine: copy the arrows on the beat, the spin, the big jump */
+  function d_ice(t){R("#bfe3f2",0,0,W,H);for(var x=0;x<W;x+=16)R("#a8d4e8",x,0,2,H);for(var i=0;i<16;i++)R("#fff",(i*47+t*6)%W,(i*29+t*20)%H,1,1);
+    var ph=Math.floor(t/4)%3,u=(t%4)/4,bt=t*2,onB=(bt%1)<0.25;
+    for(i=0;i<4;i++){var a=t*0.8+i*0.5,sx=128+Math.cos(a)*90,sy=96+Math.sin(a)*26;if(i===0&&ph>0)continue;av(i+1,sx,sy,1.2,{skates:"ice",dir:Math.sin(a)<0?3:1,armL:1.2,armR:-1.2});}
+    if(ph===0){var dirs=[3,0,1,2],q=dirs[Math.floor(bt)%4];R("#14102a",112,16,32,32);ring("#fff",128,32,Math.max(9,22-(bt%1)*14),1);arrow(COL.pink,128,32,9,q*Math.PI/2);if(onB)pop("PERFECT",128,58,(bt%1)*2,COL.yel,1);badge("COPY THE ARROWS",COL.pink);}
+    else if(ph===1){var R8=[0,4,1,5,2,6,3,7];av(0,128,90,2,{skates:"ice",dir:R8[Math.floor(t*12)%8]%4,armL:2.6,armR:-2.6,legL:u>0.5?1.4:0});var fa=t*8;finger(200+Math.cos(fa)*12,100+Math.sin(fa)*12,false);ring("rgba(20,16,42,.6)",200,100,12,1);badge(u<0.5?"SPIN: CIRCLE":"SPIN: HOLD IT",COL.cyan);}
+    else{var jp=u<0.45?0:Math.sin(Math.min(1,(u-0.45)/0.45)*Math.PI);R("#0003",120,96,16,4);av(0,128,90-jp*40,2,{skates:"ice",dir:jp>0?Math.floor(t*14)%4:3,armL:jp>0?0.3:1.2,armR:jp>0?-0.3:-1.2,legL:jp?0.2:0});
+      R("#14102a",60,124,136,8);R(COL.yel,61,125,Math.min(134,u*2.6*134),6);TX(u<0.45?"MASH!":"JUMP!",56,125,1,"#14102a","right");if(jp>0.9)pop("TRIPLE!",128,30,0.1,COL.pink,2);badge("BIG JUMP",COL.yel);}
+    score(Math.floor(t*55));}
+  /* coin dive: swim, dash on the beat, grab coins */
+  function d_swim(t){R("#0b3a63",0,0,W,H);for(var i=0;i<20;i++)R("#1b5a8a",(i*61)%W,((i*37-t*14)%H+H)%H,2,2);R("#8a7a4a",0,128,W,16);
+    var bt=t*2,onB=(bt%1)<0.25,a=t*0.9,sx=128+Math.cos(a)*80,sy=70+Math.sin(a*1.6)*36;
+    for(var c=0;c<10;c++){var ca=c/10*6.283,cxp=128+Math.cos(ca)*80,cyp=70+Math.sin(ca*1.6)*36,ang=((a-ca)%6.283+6.283)%6.283;if(ang<4.5&&ang>0.12)continue;if(ang<=0.12&&ang>0)pop(onB?"+40 x2":"+20",cxp,cyp-8,ang*6,COL.yel,1);else{circ("#000",cxp,cyp,4);circ(COL.yel,cxp,cyp,3);R("#fff6",cxp-1,cyp-2,1,1);}}
+    var dash=onB;if(dash)for(var k=1;k<5;k++)R("rgba(255,255,255,"+(0.5-k*0.1)+")",sx-Math.cos(a)*k*6,sy-Math.sin(a*1.6)*k*4,3,3);
+    av(2,sx,sy,1.4,{dir:-Math.sin(a)>0?3:1,armL:2.8,armR:-2.8,legL:Math.sin(t*12)*0.4,legR:-Math.sin(t*12)*0.4});
+    ring(onB?COL.yel:"#ffffff55",230,20,onB?9:6,2);TX("BEAT",230,32,1,"#fff","center");if(onB)pop("PERFECT DASH",sx,sy-26,(bt%1)*2,COL.yel,1);
+    badge("DASH ON THE BEAT",COL.cyan);score(Math.floor(t*40));}
+  /* ball run: the performer rolls a giant ball round the floor: keep away from it */
+  function d_ball(t){R("#120e24",0,0,W,H);ell("#2a2250",128,80,110,52);ell("#3a3070",128,78,106,49);
+    var rk=Math.floor(t/4)%3,u=(t%4)/4,ba=t*1.2,bx=128+Math.cos(ba)*70,by=80+Math.sin(ba*1.3)*30;
+    var ppl=[[0,1.2],[1,2.6],[3,4],[4,5.3]];ppl.forEach(function(p,i){var pa=p[1]+t*0.5,px=128+Math.cos(pa)*84,py=80+Math.sin(pa)*38,dx=px-bx,dy=py-by,dd=Math.hypot(dx,dy)||1;if(dd<40){px+=dx/dd*(40-dd);py+=dy/dd*(40-dd)*0.6;}
+      var squash=i===1&&u>0.6&&u<0.85;if(squash){R("#000",px-8,py+2,16,3);R(["#D354A0","#3DF2FF","#F5C518","#4CC38A"][i],px-7,py+2,14,2);pop("SQUASHED!",px,py-14,(u-0.6)*3,COL.red,1);}else av(p[0],px,py,1.3,{dir:dx>0?3:1,legL:Math.sin(t*14+i)*0.6,legR:-Math.sin(t*14+i)*0.6,armL:1.5,armR:-1.5});});
+    R("#0004",bx-20,by+16,40,6);circ("#000",bx,by,21);circ("#e8e8f4",bx,by,20);for(var s=0;s<3;s++){var sa=t*4+s*2.1;R("#9a96b8",bx+Math.cos(sa)*12-2,by+Math.sin(sa)*12-2,5,5);}R("#fff",bx-9,by-12,5,3);
+    R("#0008",8,118,46,20);arrow("#fff",20,128,5,Math.PI);arrow("#fff",42,128,5,0);TX("PERFORMER",31,108,1,"#aaa","center");
+    badge("ROUND "+(rk+1)+"/3  RUN!",COL.yel);}
+  /* dragon riders: fly, breathe fireballs (fuller bar = bigger), eat fire notes for SUPER, then the boss organ */
+  function dragonPx(x,y,c,t){x=Math.round(x);y=Math.round(y);var f=Math.floor(t*6)%2;R(c,x-10,y-2,18,6);R(c,x+6,y-5,7,5);R("#fff",x+10,y-4,1,1);R(c,x-16,y,7,2);R(c,x-19,y-2,3,3);
+    if(f)R(c,x-6,y-11,10,9);else R(c,x-6,y+3,10,7);R("#5a2a1a",x-4,y-5,6,3);}
+  function d_dragon(t){var T=t%12,boss=T>6;R(boss?"#2a0a12":"#1a0a24",0,0,W,H);for(var i=0;i<20;i++)R("#fff3",((i*53)-t*30%W+W*2)%W,(i*37)%H,1,1);
+    var dy=72+Math.sin(t*1.7)*28,dx=56;dragonPx(dx,dy,"#4CC38A",t);av(1,dx-2,dy-10,0.9,{dir:3,armL:1,armR:-1});dragonPx(40,40+Math.sin(t*1.3)*14,"#D354A0",t+0.3);
+    var fill=(T%2)/2,shot=(T%2)<0.12;R("#000",8,130,62,8);R("#ff8a2a",9,131,fill*60,6);TX("FIRE",39,121,1,"#ffb02e","center");
+    for(var b=0;b<3;b++){var age=((T-b*2)%2+2)%2;if(age<1.8){var fx=dx+14+age*120;circ("#ff8a2a",fx,dy-2,3+b);circ("#ffe14d",fx,dy-2,1+b*0.5);}}
+    for(var h=0;h<5;h++)heart(h<4?"#ff3b5c":"#4a2030",8+h*9,8);
+    if(!boss){for(var e=0;e<3;e++){var ex=W-((T*40+e*70)%220),ey=40+e*30;R("#7a2a6a",ex-5,ey-5,10,10);R("#ff3b5c",ex-3,ey-2,2,2);R("#ff3b5c",ex+1,ey-2,2,2);}
+      var nx=W-((T*50)%200),ny=dy;if(nx>dx+20){R("#ff8a2a",nx-3,ny-3,6,6);R("#ffe14d",nx-1,ny-1,2,2);}else pop("SUPER +1",dx,dy-24,0.2,COL.yel,1);
+      R("#000",186,130,62,8);R(COL.yel,187,131,Math.min(60,(T/6)*60),6);TX("SUPER",217,121,1,COL.yel,"center");badge("FIRE + EAT THE NOTES",COL.yel);}
+    else{R("#3a2030",200,50,56,80);for(var p=0;p<5;p++)R("#c9b48a",204+p*10,30,6,24);var dm=Math.floor(t*4)%2;R("#c03030",216,64,16,16);R("#ffe14d",219,69,3,2);R("#ffe14d",226,69,3,2);R("#c03030",214,60,3,6);R("#c03030",231,60,3,6);
+      var hp=Math.max(0.05,1-(T-6)/6);R("#000",150,4,100,7);R(COL.red,151,5,98*hp,5);
+      if(T>8.5&&T<10){for(var f2=0;f2<10;f2++)R(f2%2?"#ffe14d":"#ff8a2a",dx+14+f2*14,dy-4+Math.sin(t*30+f2)*3,12,7);pop("SUPER FLAMETHROWER",128,30,0.1,COL.yel,1);}
+      for(var n=0;n<2;n++){var nx2=200-((T*60+n*80)%160);R("#ff4d2a",nx2-3,60+n*30,6,6);}
+      badge("BOSS: DEMON ORGAN",COL.red);}
+    if(dm&&boss)R("#ffe14d",219,69,3,2);}
+  function d_boats(t){R("#0b0618",0,0,W,H);for(var i=0;i<30;i++)R("#fff4",(i*53)%W,(i*37+t*8)%H,1,1);ell("#2a1f3d",128,86,84,40);
+    ell("#6c6390",128,70,90,32);ell("#1b76a8",128,70,86,29);for(var wv=0;wv<6;wv++)R("#3a96c8",70+((wv*37+t*12)%110),56+wv*5,8,1);
     var k=(t%3)/3,ax=70+k*60,bx=150+(k>0.6?(k-0.6)*120:0),by=70-(k>0.6?(k-0.6)*30:0);
-    [[ax,74,"#FF4D6D",0],[bx,by,"#3DF2FF",1]].forEach(function(b){g.strokeStyle=b[2];g.lineWidth=4;g.beginPath();g.ellipse(b[0],b[1],14,6,0,0,6.283);g.stroke();av(b[3],b[0],b[1]+2,1.2,{armL:1.1,armR:-1.1,dir:0});});
+    [[ax,74,"#FF4D6D",0],[bx,by,"#3DF2FF",1]].forEach(function(b){eRing(b[2],b[0],b[1],14,6,3);av(b[3],b[0],b[1]+2,1.2,{armL:1.1,armR:-1.1,dir:0});});
     if(k>0.55&&k<0.75)pop("RAM! +90",bx,50,(k-0.55)*4,COL.yel,1);score(Math.floor(t*30));}
   function d_kart(t){R("#0b0820",0,0,W,H);for(var i=0;i<40;i++)R("#fff4",(i*53)%W,(i*37)%H,1,1);
-    var cx=128,cy=84,rx=88,ry=44;g.strokeStyle="#3a3070";g.lineWidth=22;g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,6.283);g.stroke();g.strokeStyle="#6a5ad0";g.lineWidth=1;g.setLineDash([4,4]);g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,6.283);g.stroke();g.setLineDash([]);
+    var cx=128,cy=84,rx=88,ry=44;for(var tk=0;tk<120;tk++){var ta=tk/120*6.283;R("#3a3070",cx+Math.cos(ta)*rx-11,cy+Math.sin(ta)*ry-11,22,22);}for(tk=0;tk<60;tk+=2){var tb=tk/60*6.283;R("#6a5ad0",cx+Math.cos(tb)*rx,cy+Math.sin(tb)*ry,2,1);}
     var a=t*1.1,kx=cx+Math.cos(a)*rx,ky=cy+Math.sin(a)*ry,dr=Math.sin(a*2)>0.6;
     for(var k=1;k<8;k++){var aa=a-k*0.07;circ(dr?"rgba(255,170,40,"+(0.6-k*0.07)+")":"rgba(61,242,255,"+(0.4-k*0.05)+")",cx+Math.cos(aa)*rx,cy+Math.sin(aa)*ry,4-k*0.4);}
     R(COL.pink,kx-5,ky-4,10,8);R("#fff",kx-2,ky-2,4,3);
@@ -171,12 +263,11 @@ var EXPLAIN=(function(){
   function d_pipe(t){R("#14102a",0,0,W,H);
     var cx=128,wl=52,fy=106,ph=t*1.35,A=Math.min(1.3,0.6+t%12*0.1),s=Math.sin(ph),u=Math.max(-1,Math.min(1,A*s)),air=Math.abs(A*s)>1;
     function prof(a){a=Math.abs(a);return a<0.42?0:(1-Math.sqrt(Math.max(0,1-Math.pow((a-0.42)/0.58,2))));}
-    g.fillStyle="#2a2250";g.beginPath();g.moveTo(8,20);for(var k=-1;k<=1.001;k+=0.05){g.lineTo(cx+k*112,fy-prof(k)*wl*1.2);}g.lineTo(248,20);g.lineTo(248,H);g.lineTo(8,H);g.closePath();g.fill();
-    g.strokeStyle="#D354A0";g.lineWidth=2;g.beginPath();for(k=-1;k<=1.001;k+=0.05){var yy=fy-prof(k)*wl*1.2;if(k<-0.999)g.moveTo(cx+k*112,yy);else g.lineTo(cx+k*112,yy);}g.stroke();
+    for(var col=8;col<248;col++){var kk=(col-cx)/112,yy=Math.round(fy-prof(kk)*wl*1.2);R("#2a2250",col,yy,1,H-yy);R("#D354A0",col,yy,1,2);}
     var beat=Math.floor(t*2)%2;for(var p=0;p<2;p++){var lit=p===beat;R(lit?COL.yel:"#2a2540",cx-22+p*28,fy+16+p*6,18,5);if(lit)R("rgba(245,197,24,.25)",cx-26+p*28,fy+12+p*6,26,12);}
-    var ux=Math.max(-1,Math.min(1,u)),px=cx+ux*112,py=fy-prof(ux)*wl*1.2-(air?(Math.abs(A*s)-1)*60:0),spin=air?t*14:0;
+    var ux=Math.max(-1,Math.min(1,u)),px=cx+ux*112,py=fy-prof(ux)*wl*1.2-(air?Math.min(60,(Math.abs(A*s)-1)*60):0),spin=air?t*14:0;
     var slope=(prof(ux+0.01)-prof(ux-0.01))/0.02*wl*1.2/112;var ang=air?spin:-Math.atan(slope)*0.35;
-    g.save();g.translate(px,py+4);g.rotate(ang);R("#3DF2FF",-10,0,20,3);g.restore();av(1,px,py-12,1.5,{dir:0,armL:air?2.4:1,armR:air?-2.4:-1,legL:0.2,legR:-0.2});
+    if(air&&Math.floor(t*8)%2)R("#3DF2FF",px-1,py-6,3,20);else R("#3DF2FF",px-10,py+4,20,3);av(1,px,py-12,1.5,{dir:0,armL:air?2.4:1,armR:air?-2.4:-1,legL:0.2,legR:-0.2});
     if(air&&Math.abs(Math.sin(ph))>0.5)pop(["HEADSPIN +150","THRILLER +200","ROBOT +200"][Math.floor(t/2.3)%3],px,py-30,0.1,COL.pink,1);
     if(Math.abs(u)<0.2&&beat===0&&Math.sin(t*1.35)!==0)pop("BOOST!",cx,fy+4,((t*2)%1)*0.6,COL.yel,1);
     badge("HALF PIPE",COL.cyan);score(Math.floor(t*45));}
@@ -204,7 +295,7 @@ var EXPLAIN=(function(){
   function d_kflag(t){R("#0e0b1a",0,0,W,H);for(var y=0;y<H;y+=16)for(var x=(y/16%2)*16;x<W;x+=32)R("#16122a",x,y,16,16);
     R("#2a2244",0,0,W,4);R("#2a2244",0,H-4,W,4);R("#3a3070",60,30,8,8);R("#3a3070",188,98,8,8);R("#3a3070",124,64,8,8);   /* an open arena, a few pillars */
     R("rgba(255,77,109,.3)",6,52,20,40);R("rgba(95,180,240,.3)",230,52,20,40);
-    function kart(x,y,a,c){g.save();g.translate(Math.round(x),Math.round(y));g.rotate(a);R("#000",-9,-6,18,12);R(c,-8,-5,16,10);R("#fff8",-8,-5,16,2);R("#111",-7,-7,4,2);R("#111",3,-7,4,2);R("#111",-7,5,4,2);R("#111",3,5,4,2);R("#f1c27d",-2,-3,5,5);g.restore();}
+    function kart(x,y,a,c){g.save();g.translate(Math.round(x),Math.round(y));g.rotate(Math.round(a/(Math.PI/2))*Math.PI/2);R("#000",-9,-6,18,12);R(c,-8,-5,16,10);R("#fff8",-8,-5,16,2);R("#111",-7,-7,4,2);R("#111",3,-7,4,2);R("#111",-7,5,4,2);R("#111",3,5,4,2);R("#f1c27d",-2,-3,5,5);g.restore();}
     function flag(c,x,y){R("#ddd",x,y-12,1,16);R(c,x+1,y-12,8,5);}
     var u=(t%8)/8;
     /* blue kart: hop, aim (arrow grows), launch across to red's flag */
@@ -215,38 +306,38 @@ var EXPLAIN=(function(){
     if(fly>0){for(var k=1;k<5;k++)R("rgba(255,154,46,"+(0.6-k*0.12)+")",bx+k*7,by-1,3,3);}
     /* red kart chases; at 0.6 it IMPACTs and the flag flies home */
     var rx=60+Math.max(0,u-0.45)*120,ry=60+Math.sin(t*2)*6;
-    if(u>=0.6&&u<0.75){var rr=(u-0.6)/0.15;g.strokeStyle=COL.red;g.globalAlpha=1-rr;g.lineWidth=2;g.beginPath();g.arc(rx,ry,8+rr*40,0,6.3);g.stroke();g.globalAlpha=1;}
-    var spin=u>=0.6&&u<0.8?t*14:0;
+    if(u>=0.6&&u<0.75){var rr=(u-0.6)/0.15;g.globalAlpha=1-rr;ring(COL.red,rx,ry,8+rr*40,2);g.globalAlpha=1;}
+    var spin=u>=0.6&&u<0.8?Math.floor(t*10)*Math.PI/2:0;
     kart(rx,ry,0,COL.red);kart(bx,by+(u<0.25?-3:0),ba+spin,COL.blu);
     flag(COL.blu,236,72);if(carry&&u<0.6)flag(COL.red,bx+6,by-4);else if(u>=0.6&&u<0.75){var fp=(u-0.6)/0.15;flag(COL.red,bx+(16-bx)*fp,by-4-Math.sin(fp*Math.PI)*20);}else flag(COL.red,16,72);
-    R("rgba(255,255,255,.08)",120,110,16,16);var hue=(t*80)%360;g.fillStyle="hsl("+hue+",90%,60%)";g.fillRect(122,112,12,12);TX("?",128,113,1,"#fff","center");
+    R("rgba(255,255,255,.08)",120,110,16,16);g.fillStyle=["#FF4D6D","#F5C518","#4CC38A","#3DF2FF","#D354A0"][Math.floor(t*4)%5];g.fillRect(122,112,12,12);TX("?",128,113,1,"#fff","center");
     if(u<0.25)pop("LAUNCH: hold, aim…",150,40,0.2,"#3DF2FF",1);else if(u<0.45)pop("…let go!",120,40,0.2,COL.yel,1);else if(u>=0.6&&u<0.75)pop("IMPACT! FLAG HOME",110,30,(u-0.6)/0.15*0.6,COL.red,1);
     TX("RED",90,6,2,COL.red,"center");TX("0",128,6,2,"#fff","center");TX("BLUE",166,6,2,COL.blu,"center");}
-  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:function(t){d_skate(t,true);},keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf,kflag:d_kflag,fish:d_fish,boats:d_boats};
+  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:d_ice,keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf,kflag:d_kflag,fish:d_fish,boats:d_boats,swim:d_swim,ball:d_ball,dragon:d_dragon};
 
   /* ---------- the card ---------- */
   var CSS="#explain{display:none;position:fixed;left:0;right:0;bottom:0;top:0;z-index:60;background:none;pointer-events:none;align-items:flex-start;justify-content:center;padding:4px 10px 10px;box-sizing:border-box;-webkit-tap-highlight-color:transparent}"+
     "#explain.on{display:flex}body.explain-on #roundBox{visibility:hidden}"+
-    "#explain .xc{pointer-events:auto;width:min(560px,100%);max-height:100%;overflow:auto;background:#14102a;border:2px solid #D354A0;box-shadow:0 0 0 2px #0008,0 0 28px rgba(211,84,160,.35);padding:12px 14px 12px;box-sizing:border-box;color:#fff;font:500 13px/1.45 system-ui,sans-serif}"+
+    "#explain .xc{pointer-events:auto;width:min(560px,100%);max-height:100%;overflow:auto;background:#14102a;border:3px solid #D354A0;box-shadow:0 0 0 3px #000;padding:10px 12px;box-sizing:border-box;color:#fff;font:400 11px/1.6 'Silkscreen',ui-monospace,monospace;letter-spacing:.5px}"+
     "#explain .xh{display:flex;align-items:center;gap:8px;margin-bottom:8px}"+
-    "#explain .xt{font:700 16px 'Silkscreen',system-ui,sans-serif;letter-spacing:.5px;color:#F5C518;flex:1;line-height:1.2}"+
-    "#explain .xs{background:#0006;border:1px solid #fff4;color:#fff;font:600 12px system-ui,sans-serif;padding:6px 10px;border-radius:6px;cursor:pointer}"+
-    "#explain canvas{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:2px solid #3a3070;background:#0e0b1a;box-sizing:border-box}"+
-    "#explain .xg{margin:8px 0 6px;font:700 14px system-ui,sans-serif;color:#fff}"+
+    "#explain .xt{font:700 15px 'Silkscreen',ui-monospace,monospace;color:#F5C518;flex:1;line-height:1.2}"+
+    "#explain .xs{background:#000;border:2px solid #fff6;color:#fff;font:700 11px 'Silkscreen',ui-monospace,monospace;padding:5px 9px;cursor:pointer}"+
+    "#explain canvas{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:3px solid #3a3070;background:#0e0b1a;box-sizing:border-box}"+
+    "#explain .xg{margin:8px 0 6px;font:700 13px/1.4 'Silkscreen',ui-monospace,monospace;color:#fff}"+
     "#explain .xcols{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}"+
-    "#explain .xcols h4{margin:0 0 3px;font:700 11px 'Silkscreen',system-ui,sans-serif;color:#3DF2FF;letter-spacing:.5px}"+
-    "#explain ul{margin:0;padding:0 0 0 16px}#explain li{margin:0 0 3px;color:rgba(255,255,255,.9)}"+
-    "#explain .xb{margin-top:6px;font:600 12px system-ui,sans-serif;color:#F5C518}"+
-    "#explain .xp{margin-top:10px;display:flex;align-items:center;gap:10px}"+
-    "#explain .xbar{flex:1;height:8px;background:#2a2540;border:1px solid #0008}#explain .xbar i{display:block;height:100%;background:#D354A0;width:0}"+
-    "#explain .xn{font:700 12px 'Silkscreen',system-ui,sans-serif;color:#fff;min-width:78px;text-align:right}"+
-    "@media (min-width:760px) and (orientation:landscape){#explain .xc{width:min(860px,100%);display:grid;grid-template-columns:46% 1fr;column-gap:14px;align-content:start}#explain .xh,#explain .xp{grid-column:1/-1}#explain canvas{grid-column:1;grid-row:2/4;align-self:start}#explain .xg{grid-column:2;grid-row:2;margin-top:0}#explain .xcols{grid-column:2;grid-row:3;grid-template-columns:1fr}}"+
-    "@media (max-width:560px){#explain{padding:4px 8px 8px}#explain .xcols{grid-template-columns:1fr}#explain .xt{font-size:14px}#explain .xc{font-size:12.5px;padding:10px 12px}}";
+    "#explain .xcols h4{margin:0 0 2px;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#3DF2FF;letter-spacing:1px}"+
+    "#explain ul{margin:0;padding:0;list-style:none}#explain li{margin:0 0 3px;padding-left:12px;position:relative;color:rgba(255,255,255,.92)}#explain li:before{content:'';position:absolute;left:0;top:6px;width:5px;height:5px;background:#D354A0}#explain .xrules li:before{background:#3DF2FF}"+
+    "#explain .xb{margin-top:6px;color:#F5C518}"+
+    "#explain .xp{margin-top:8px;display:flex;align-items:center;gap:10px}"+
+    "#explain .xbar{flex:1;height:8px;background:#2a2540;border:2px solid #000}#explain .xbar i{display:block;height:100%;background:#D354A0;width:0}"+
+    "#explain .xn{font:700 11px 'Silkscreen',ui-monospace,monospace;color:#fff;min-width:70px;text-align:right}"+
+    "@media (min-width:760px) and (orientation:landscape){#explain .xc{width:min(860px,100%);display:grid;grid-template-columns:52% 1fr;column-gap:14px;align-content:start}#explain .xh,#explain .xp{grid-column:1/-1}#explain canvas{grid-column:1;grid-row:2/4;align-self:start}#explain .xg{grid-column:2;grid-row:2;margin-top:0}#explain .xcols{grid-column:2;grid-row:3;grid-template-columns:1fr}}"+
+    "@media (max-width:560px){#explain{padding:4px 8px 8px}#explain .xt{font-size:13px}#explain .xc{font-size:10px;padding:9px 10px}#explain .xg{font-size:11px}}";
   function build(){
     if(root)return;
     var st=document.createElement("style");st.textContent=CSS;document.head.appendChild(st);
     root=document.createElement("div");root.id="explain";
-    root.innerHTML="<div class='xc'><div class='xh'><div class='xt'></div><button class='xs' type='button'>Skip ✕</button></div><canvas width='"+W+"' height='"+H+"'></canvas><div class='xg'></div><div class='xcols'><div><h4>HOW TO PLAY</h4><ul class='xhow'></ul></div><div><h4>RULES</h4><ul class='xrules'></ul><div class='xb'></div></div></div><div class='xp'><div class='xbar'><i></i></div><div class='xn'></div></div></div>";
+    root.innerHTML="<div class='xc'><div class='xh'><div class='xt'></div><button class='xs' type='button'>SKIP ✖</button></div><canvas width='"+W+"' height='"+H+"'></canvas><div class='xg'></div><div class='xcols'><div><h4>HOW</h4><ul class='xhow'></ul></div><div><h4>RULES</h4><ul class='xrules'></ul><div class='xb'></div></div></div><div class='xp'><div class='xbar'><i></i></div><div class='xn'></div></div></div>";
     document.body.appendChild(root);
     cv=root.querySelector("canvas");g=cv.getContext("2d");g.imageSmoothingEnabled=false;
     root.querySelector(".xs").onclick=function(){dismissed[curKey]=true;hide();};
@@ -267,7 +358,7 @@ var EXPLAIN=(function(){
       root.querySelector(".xt").textContent=inf.i+" "+inf.n;
       root.querySelector(".xg").textContent=inf.goal;
       fill(".xhow",inf.how);
-      var rules=inf.rules.slice();root.querySelector(".xb").textContent=opts.battle?"⚔ Battle round: everyone free dances, then 1 v 1s on the stage. "+(m==="free"?"The room votes each match.":"The higher score goes through."):"";
+      var rules=inf.rules.slice();root.querySelector(".xb").textContent=opts.battle?"⚔ Battle: free dance, then 1v1s on stage · "+(m==="free"?"room votes":"top score goes through"):"";
       fill(".xrules",rules);
     }
     /* sit below the stage so the performer stays in view while the card is up */
@@ -281,7 +372,7 @@ var EXPLAIN=(function(){
     show(mode,key,opts);
     var n=Math.ceil(secs-SHOW_MIN+0.001);
     root.querySelector(".xbar i").style.width=Math.max(0,Math.min(100,(1-(secs-SHOW_MIN)/(SHOW_MAX-SHOW_MIN))*100))+"%";
-    root.querySelector(".xn").textContent="Starts in "+Math.ceil(secs)+" s";
+    root.querySelector(".xn").textContent="⏱ "+Math.ceil(secs);
   }
   return{tick:tick,hide:hide,show:function(m,o){dismissed={};curKey="demo";show(m,"demo"+Date.now(),o);},get on(){return on;},INFO:INFO,DEMOS:DEMOS,draw:function(m,t){build();curMode=m;DEMOS[m](t);}};
 })();

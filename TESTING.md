@@ -1688,6 +1688,47 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.114 — Fishing: real fish under the float, the reel replaces RECAST, a rod you can swing
+
+- **Bites come from real fish.** The fish shadows in the water are now the actual fish. You only get a bite when one swims under your float at the float's distance, and further out means bigger fish. The number of fish grows with the number of players (6 + 3 per player, up to 28).
+- **Line it up with the reel.** While you wait, the RECAST button is gone and the reel sits in its place. Spinning it (or holding ↑ / Space) pulls the float in, so you can drop it into a passing fish's path. Pull it all the way in to cast again. Moving the float spooks a fish that's nosing at it.
+- **The rod.** Between casts, drag on the water (on a computer, just move the mouse) and the rod swings round with your aim. Once the float is out, the rod points at it. It now comes from your right hand and reaches up and out over the water. You can still walk along the side with the stick or the arrows between casts.
+
+1. Cast, then don't touch anything: you only get a ❗ when a shadow is right under your float.
+2. Spin the reel during the wait: the float comes in. Line it up so a shadow swims into it, and it bites.
+3. Spin it all the way in: ✔ READY, then cast again.
+4. Between casts, drag left and right on the water: the rod and the swoop swing round. Push the stick left or right to walk.
+5. With more players in the room there are more shadows.
+6. The BPM panel stays hidden while you wait, so the cast readout isn't covered.
+
+## v1.82.113 — Fishing: RECAST reels itself in
+
+Pressing **↺ RECAST** while you wait for a bite now pulls the line straight back in by itself, at full speed. You no longer have to spin or hold to bring it back. Spinning still makes it a bit quicker.
+
+1. Cast, then press **↺ RECAST** while you wait.
+2. Take your hands off: the line comes back in about a second and you're ready to cast again.
+3. Spin the reel during it: it comes in a little faster.
+
+## v1.82.112 — New game intros: 8-bit demos and short instructions for every game
+
+The card that shows before each game (the last ~15 s of the countdown) is redone for all 22 games. The instructions are cut down to a goal line, 2–3 short HOW lines and 2–3 RULES, with symbols instead of sentences. Every demo is now drawn in whole pixels (no smooth circles or lines). The fishing, mosh pit and ice rink demos are rebuilt to match how those games work now, and Coin dive, Ball run and Dragon riders get a card for the first time.
+
+1. Start practice, pick **Fishing**, and watch the card during the countdown. The demo runs through the 5 steps, with a caption for each: **1 SWOOP UP FAST** (the power bar with the fish tiers, PERFECT! MARLIN), **2 WAIT**, **3 JERK!** (❗ over the float), **4 SPIN ON THE BEAT** (the reel, the BPM, the vertical tension bar on the right, the edge pulsing on the beat, TOO FAST), **5 NET IT!** (MARLIN +1500). The text says nothing about the old box or bars.
+2. **Mosh pit**: SWING ON THE BEAT → HEADBANG ON THE LINE → PICK A SIDE / CHARGE ON THE DROP.
+3. **Ice rink**: COPY THE ARROWS → SPIN: CIRCLE / HOLD IT → BIG JUMP (mash bar, then the jump).
+4. **Coin dive**, **Ball run** and **Dragon riders** now get a card: the dive shows dashing on the beat for coins; the ball run shows a giant ball steered by the performer squashing a runner; the dragons show the fire bar, eating notes for SUPER, then the boss organ with its HP bar and the flamethrower.
+5. Spot-check the rest: every card fits on a phone without much scrolling, the text is short, and nothing looks smooth or blurry.
+6. The help line in the game for Dragon riders and Fishing now matches the current controls.
+
+## v1.82.111 — Fishing: no more snaps with the tension bar half full
+
+A big fish (usually the marlin) used to "snap" out of nowhere: once it had pulled out all your line, the catch ended on the spot, wherever the tension bar was. Now when it runs out your line you get a warning, and the bar climbs to the top before the line goes.
+
+1. Hook a marlin and stop reeling so it keeps running.
+2. When it's nearly out of line: **⚠ LINE OUT!** pops up, the phone buzzes and the tension bar's border flashes red.
+3. Keep not reeling: the tension climbs to the top (red) and only then does it **💥 SNAP**.
+4. Reel hard as soon as you see the warning: the tension drops and the fish comes back in.
+
 ## v1.82.110 — Fishing: the beat pulse is on the whole time
 
 - The screen edge pulses on every beat **for the whole fishing game**: casting, waiting, the bite, netting. It's **yellow** then, and while reeling it shows your spin (green on the BPM, blue easing off, red straining), as before.
