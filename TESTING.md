@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.118 — Walking diagonally: the feet point the right way
+
+On the four diagonal facings, the shoes used to point outward (one each way), copied from the straight front and back views. Walking up and to the right, the near foot looked backwards. Now both toes point the way you're heading: right for front-right and back-right, left for front-left and back-left.
+
+1. Walk diagonally up-right, up-left, down-right and down-left: both shoes point the way you're going.
+2. Straight front, back and side views look the same as before.
+
 ## v1.82.117 — Dragon riders: riders sit side on in the saddle
 
 Riders used to face the front, standing with their legs dangling below the dragon. Now they face the way the dragon flies (side on). They sit down in the saddle with their knees forward over the flank and their hands forward on the reins (raised up for SUPER), and bob with the wingbeat.

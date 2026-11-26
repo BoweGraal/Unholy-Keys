@@ -541,5 +541,5 @@
       if(s2t.on&&(st.now||Date.now())<s2t.t0)s2t.on=false;
       draw(g,x+X[i],y+Y[i],p*S[i],ART.looks.random(101+i*17),kinds[i],s2t);}
   }
-  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:function(g,x,y,p,look,kind,st){CUR_LOOK=look;return ART.withAdj("inst:"+kind,g,function(){var r=ART.paint.holes?ART.paint.holes("inst:"+kind,g,x,y,p,function(gg){return draw(ART.paint.replaced("inst:"+kind)?ART.paint.dummy():gg,x,y,p,look,kind,st);}):draw(g,x,y,p,look,kind,st);ART.paint.at(g,"inst:"+kind,x,y,p);return r;});},KINDS:KINDS,VERSION:"1.82.117"};
+  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:function(g,x,y,p,look,kind,st){CUR_LOOK=look;return ART.withAdj("inst:"+kind,g,function(){var r=ART.paint.holes?ART.paint.holes("inst:"+kind,g,x,y,p,function(gg){return draw(ART.paint.replaced("inst:"+kind)?ART.paint.dummy():gg,x,y,p,look,kind,st);}):draw(g,x,y,p,look,kind,st);ART.paint.at(g,"inst:"+kind,x,y,p);return r;});},KINDS:KINDS,VERSION:"1.82.118"};
 })();
