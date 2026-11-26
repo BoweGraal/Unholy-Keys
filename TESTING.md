@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.106 — 8-bit everywhere: pixel symbols and pixel text in every game; a pixel reel
+
+1. **Every symbol in every game on the phone** (all 120 used, from arrows and stars to 🎣 🐉 🛹 🏆) is drawn as **pixel art**, never your phone's smooth emoji:
+   - Page text (buttons, banners, hints, cards, menus) swaps them in automatically.
+   - So does anything a game draws on its canvas (pop-ups, labels).
+   - The skate/ski score icons and "⏸ Paused" set in the CSS get pixel icons too.
+   - Typed text in boxes is left alone.
+2. **One pixel font everywhere** (Silkscreen): any text that used a smooth system font (some labels, the dragon's notes, a few canvas texts) now uses it. No faux-bold smearing.
+3. **The fishing reel is real pixel art:** a 40×40 sprite with a stepped rim, eight spokes that turn as you wind, the arm and a chunky knob. The rim lights cyan while you hold it and yellow on the beat.
+4. Checked: all 20 games started in practice, with no symbol lacking a pixel version and no smooth emoji left in visible text.
+
 ## v1.82.105 — Fishing: the symbols are pixel art too
 
 - Every symbol in fishing is drawn as **8-bit pixel art** instead of your phone's smooth emoji: ⭐ ✔ ✖ ⚠ ❗ ⏳ 👆 🖱 🥅 👀 👋 🐟 🐢 ⚡ ⟳ ↺ ⇗ ↔ ♩ ⬅ ➡ ↓ 🎣 💥. That covers the hint line, the first-catch coach, the button, the ⭐ ◀ ▶ adjuster, the BPM panel, the tension and reel labels, and the pop-ups over your head. The keepy uppy pop-ups get them too.
