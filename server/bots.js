@@ -128,6 +128,7 @@ module.exports = function(api) {
     if (playing && rd.mode === "fish") { fish(b, now); }
     if (playing && rd.mode === "boats") { boats(b, now); }
     if (playing && rd.mode === "ball") { ball(b, now); }
+    if (playing && rd.mode === "dragon") { dragon(b, now); }
     if (playing && rd.mode === "mosh") { mosh(b, now, rd); }
     if (playing && rd.mode === "ctf") { ctf(b, now, rd); }
     if (playing && rd.mode === "keepy") { if (!b.hopAt && Math.random() < 0.05) b.hopAt = now; var hu = b.hopAt ? (now - b.hopAt) / 900 : 0; if (hu >= 1) { b.hopAt = 0; hu = 0; } b.skH = b.hopAt ? Math.round(24 * 4 * hu * (1 - hu)) : 0; }
@@ -176,7 +177,7 @@ module.exports = function(api) {
       /* a score that grows through the song at this bot's skill */
       if (b.rs0n !== rd.n) { b.rs0n = rd.n; b.rs0 = pos; b.score = 0; }   /* a game can start part way into the song (two games per song) */
       var arrows = ch && ch.arrows || 200, dur = ch && ch.dur || 180000, frac = Math.max(0, Math.min(1, (pos - b.rs0) / Math.max(60000, Math.min(150000, dur - b.rs0))));
-      var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : rd.mode === "fish" ? 4000 : rd.mode === "boats" ? 1500 : rd.mode === "ball" ? 1200 : rd.mode === "swim" ? 2500 : arrows * 100 * (1 + arrows / 100) * 0.55;
+      var full = rd.mode === "mosh" || rd.mode === "skate" || rd.mode === "kart" || rd.mode === "pipe" ? 60000 : rd.mode === "keepy" ? 8000 : rd.mode === "fish" ? 4000 : rd.mode === "boats" ? 1500 : rd.mode === "ball" ? 1200 : rd.mode === "dragon" ? 1600 : rd.mode === "swim" ? 2500 : arrows * 100 * (1 + arrows / 100) * 0.55;
       b.score = Math.max(b.score || 0, Math.round(full * frac * b.skill * rnd(0.9, 1.1)));
       var sm = { type: "score", s: b.score }; if (slot >= 0) sm.m = slot;
       b.act(sm); b.scoreAt = now + 2000;
@@ -221,6 +222,16 @@ module.exports = function(api) {
       if (Math.hypot(o.u - bu, (o.v - bv) * 1.15) < 0.2 * 0.92) o.out = true;   /* flattened */
     }
     if (now - o.posAt > 150) { o.posAt = now; if (o.out) { b.x = +(0.08 + 0.84 * ((b.viewerId.charCodeAt(0) * 37) % 100) / 100).toFixed(3); b.y = 0.95; } else { b.x = +(0.5 + o.u * 0.4).toFixed(4); b.y = +(0.62 + o.v * 0.22).toFixed(4); } b.act({ type: "pos", x: b.x, y: b.y }); }
+  }
+  /* Dragon riders: weave about the left of the sky; in the boss fight, now and then a volley lands on the organ */
+  function dragon(b, now) {
+    var rd = b.rd, gm = rd.chart && rd.chart.gameMs > 20000 ? rd.chart.gameMs : 90000, ph = (now - rd.playAt) / gm;
+    if (!b.dg || b.dg.n0 !== rd.n) b.dg = { n0: rd.n, posAt: 0, hitAt: 0, w: Math.random() * 6 };
+    var o = b.dg;
+    if (now - o.posAt > 180) { o.posAt = now; var t = now / 1000;
+      b.x = +(0.2 + 0.12 * Math.sin(t * 0.7 + o.w) + 0.05 * b.skill).toFixed(4); b.y = +(0.62 + 0.22 * Math.sin(t * 1.1 + o.w * 2)).toFixed(4);
+      b.act({ type: "pos", x: b.x, y: b.y }); }
+    if (ph > 0.62 && now - o.hitAt > 600) { o.hitAt = now; if (Math.random() < 0.4 + b.skill * 0.4) b.act({ type: "drgHit", d: 1 + Math.floor(Math.random() * 2) }); }
   }
   function boats(b, now) {
     if (!b.bb || b.bb.n0 !== b.rd.n) { var a0 = Math.random() * 6.283; b.bb = { n0: b.rd.n, u: Math.cos(a0) * 0.6, v: Math.sin(a0) * 0.6, vu: 0, vv: 0, out: false, posAt: 0, t0: now, hd: 0 }; }
@@ -420,6 +431,7 @@ module.exports = function(api) {
     if (b.rd && b.rd.mode === "free") { if (!b.fds || Math.random() < 0.01) { b.fds = Math.random() < 0.35 ? 9 : 1 + Math.floor(Math.random() * 15); b.fdm = Math.floor(Math.random() * 4); } pm.fd = { s: b.fds, m: b.fdm, c: [0, 0, 0, 0] }; }
     if (b.rd && b.rd.mode === "kart") { pm.sk = { h: b.kh || 0, f: b.kf ? 1 : 0, t: 0 }; pm.a = [210, -210, 25, -25]; }
     else if (b.rd && b.rd.mode === "fish" && b.fi) { pm.sk = { h: Math.min(60, b.fi.n), f: b.fi.s === 7 ? 1 : 0, t: b.fi.s }; pm.a = b.fi.s === 6 ? [290, -290, 20, -20] : [-55, 55, 0, 0]; }
+    else if (b.rd && b.rd.mode === "dragon") { pm.sk = { h: 0, f: 0, t: 0 }; pm.a = [95, -95, 50, -50]; }
     else if (b.rd && b.rd.mode === "ball" && b.bl) { pm.sk = { h: 0, f: 0, t: b.bl.out ? 1 : 0 }; pm.a = b.bl.out ? [20, -20, 0, 0] : [140, -140, 30, -30]; }
     else if (b.rd && b.rd.mode === "boats" && b.bb) { pm.sk = { h: 0, f: 0, t: b.bb.out ? 9 : ((Math.round(b.bb.hd / (Math.PI / 4)) % 8) + 8) % 8 }; pm.a = b.bb.out ? [40, -40, 0, 0] : [110, -110, 10, -10]; }
     else if (b.rd && b.rd.mode === "ski" && b.sk2) { var cr = now < b.sk2.crash; pm.sk = { h: Math.max(0, Math.min(60, Math.floor(Math.max(0, b.sk2.y) / 1000))), f: cr ? 1 : 0, t: cr ? 9 : Math.max(0, Math.min(6, Math.round(b.sk2.a / (Math.PI / 6)) + 3)) }; pm.a = cr ? [260, -260, 120, -120] : [90, -90, 15, -15]; }
