@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.97 — Fishing: spin the reel at the BPM (no notch)
+
+1. **Reeling is about speed, not position:** spin the reel at the song's tempo, one full turn per beat, anywhere round and either way. Within about 15% of the BPM is full reel speed, a bit off is partial, and way off (like half or double) is slow. The notch is gone.
+2. **BPM panel** above the tension bar while reeling:
+   - The song's **BPM**, with a light that blinks on every beat.
+   - **YOUR SPIN** (turns per minute): green when you're on it, yellow when close, red when off.
+   - A gauge from SLOW to FAST, with the needle in the middle when you match.
+   - The target follows the song if it speeds up or slows down.
+3. **Computer:** wind with the mouse the same way, or tap Space / click once per beat (each counts as a turn).
+
 ## v1.82.96 — Keepy uppy is in the Dance section
 
 - **Keepy uppy** moved from "Ride & race" to **Dance**, both in the host's game picker (song menu) and in the phone's practice menu.
