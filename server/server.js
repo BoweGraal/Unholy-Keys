@@ -508,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.84";
+var VERSION = "1.82.87";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -874,10 +874,27 @@ function onMessage(ws, raw, isBinary) {
       /* Dragon riders: fireballs that hit the boss organ come off one shared health bar */
       var drd = rooms[ws.room].round;
       if (!drd || drd.mode !== "dragon" || drd.phase !== "play" || !allow(ws, "drgHit", 8, 5)) return;
-      if (!drd.boss) { var bmx = 60 + 45 * Math.max(1, rooms[ws.room].viewers.size); drd.boss = { hp: bmx, max: bmx }; }
+      if (!drd.boss) { var bmx = 100 + 150 * Math.max(1, rooms[ws.room].viewers.size); drd.boss = { hp: bmx, max: bmx }; }
       if (drd.boss.hp <= 0) return;
       drd.boss.hp = Math.max(0, drd.boss.hp - intIn(msg.d, 0, 20, 0));
       broadcast(ws.room, { type: "drgHp", hp: drd.boss.hp, max: drd.boss.max, id: ws.viewerId });
+      if (drd.boss.hp <= 0) {
+        dragonEnd(ws.room, "riders");
+        /* beaten early: an ENCORE after a few seconds, with half as much health again, until the song ends */
+        var eroom = ws.room;
+        if (!drd.boss.encT) drd.boss.encT = setTimeout(function() { var er = rooms[eroom], erd = er && er.round; if (erd !== drd || erd.phase !== "play") return;
+          drd.boss.n = (drd.boss.n || 0) + 1; drd.boss.max = Math.round(drd.boss.max * 1.5); drd.boss.hp = drd.boss.max; drd.boss.encT = null;
+          broadcast(eroom, { type: "drgEncore", n: drd.boss.n, max: drd.boss.max }); }, 4500);
+      }
+      return;
+    }
+    if (msg.type === "drgDown") {
+      /* a dragon fell: when every rider in this round has fallen, the demon (the performer) wins */
+      var ddr = rooms[ws.room].round;
+      if (!ddr || ddr.mode !== "dragon" || ddr.phase !== "play" || ddr.dEnd || !allow(ws, "drgDown", 3, 1)) return;
+      (ddr.dDown = ddr.dDown || {})[ws.viewerId] = 1; (ddr.dIn = ddr.dIn || {})[ws.viewerId] = 1;
+      var vr = rooms[ws.room].viewers, ins = Object.keys(ddr.dIn).filter(function(id) { return vr.has(id); });
+      if (ins.length && ins.every(function(id) { return ddr.dDown[id]; })) dragonEnd(ws.room, "demon");
       return;
     }
     if (msg.type === "kick") {
@@ -897,6 +914,7 @@ function onMessage(ws, raw, isBinary) {
       var v = rooms[ws.room].viewers.get(ws.viewerId);
       if (v) { v.x = x; v.y = y; }
       var pm2 = { type: "pos", id: ws.viewerId, name: ws.viewerName, x: x, y: y };
+      var prd = rooms[ws.room].round; if (prd && prd.mode === "dragon" && prd.phase === "play") (prd.dIn = prd.dIn || {})[ws.viewerId] = 1;   /* riding in this dragon round */
       if (msg.z !== undefined) pm2.z = unit(msg.z) || 0;                       /* half pipe: how high in the air (0..1) */
       if (msg.r !== undefined) pm2.r = intIn(msg.r, -1440, 1440, 0);           /* and how far they've spun (degrees) */
       broadcast(ws.room, pm2, ws);
@@ -1081,6 +1099,8 @@ server.listen(PORT, function() {
 });
 
 /* Tell each performer how much stream data their show has sent, so they can watch their bandwidth. */
+/* Dragon riders: the result, once (the riders bring the organ down, or every dragon falls) */
+function dragonEnd(code, w) { var r = rooms[code], rd = r && r.round; if (!rd || rd.dEnd) return; rd.dEnd = w; broadcast(code, { type: "drgEnd", win: w }); }
 /* Ball Run with nobody steering (no host page, a bot performer, the host away): the server rolls the ball itself,
    after whoever's nearest, and tells everyone where it is, the same way the host's page would */
 var SBALL = { R: 0.2, step: function(b, t, dt) {

@@ -1688,6 +1688,27 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.87 — Dragon riders: new dragons, real wingbeats, barrel roll
+
+1. **New dragons:** big bony-fingered wings with a scalloped membrane, a long S-curved neck, horned head (the jaw drops open when it breathes fire), spikes down the back, a long tail that ripples as it flies, claws tucked underneath, saddle and strap.
+2. **Flying:** a quick downstroke and a slower upstroke, and the body lifts a little on each beat. Wings beat faster when climbing and slower when diving. The dragon banks (tilts) as you climb or dive.
+3. **Barrel roll:** flick the stick from right at the top to right at the bottom fast (or tap ↑ then ↓ quickly on a keyboard). The dragon and rider roll a full turn with a whoosh and "SPIN!". You can't be hit while rolling, so use it to dodge. Everyone else sees your roll too.
+
+## v1.82.86 — Dragon riders: the boss is the last 90 s, much tougher, and comes back for an ENCORE
+
+1. The demon organist now takes over for the **last 90 seconds of the song** (or the last 70% of a short song) instead of at 62%.
+2. **Much more health:** 100 + 150 per rider (was 60 + 45).
+3. **Beat it before the song ends:** "THE RIDERS WIN!" shows, then after about 4.5 s **"ENCORE! <name> RETURNS"**. The organ slides back in with 1.5× the health and its notes fly faster, again each time. Every kill pays +250 to the riders still flying. No more empty flying around at the end.
+4. The host's switch to the church organ happens at the same new time.
+
+## v1.82.85 — Dragon riders: health, and someone wins
+
+1. Every rider has **5 hearts** (under your dragon, below the breath bar and super pips). A monster or a flaming note hitting your dragon's body costs one heart. Catching a note in the jaws still feeds the SUPER and doesn't hurt.
+2. At 0 hearts **your dragon falls into the lava**: you're out for the rest of the round, standing at the bottom edge to watch, and the FIRE button goes away.
+3. **The riders win** if they bring the organ's health to 0: "THE RIDERS WIN!", and +250 to every rider still flying.
+4. **The demon (the performer) wins** if every rider who joined the round falls first: "DEMON <name> WINS!". The server referees, so every phone, the host and the TV agree. The host gets a toast either way.
+5. Bots lose hearts too (more often in the boss fight). In practice, your bots count.
+
 ## v1.82.84 — Dragon riders: 8-bit, breath meter, eat the notes for a SUPER, demon performer in the organ
 
 1. **8-bit:** the whole dragon scene (sky, dragons, monsters, fire, the organ) is drawn in chunky pixels with hard edges, in banded colours.
