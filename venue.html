@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.88"></script>
-<script src="gfx.js?v=1.82.88"></script>
-<script src="art.js?v=1.82.88"></script>
-<script src="qr.js?v=1.82.88"></script>
-<script src="voice.js?v=1.82.88"></script>
-<script src="instruments.js?v=1.82.88"></script>
-<script src="kart.js?v=1.82.88"></script>
-<script src="explain.js?v=1.82.88"></script>
+<script src="tune.js?v=1.82.89"></script>
+<script src="gfx.js?v=1.82.89"></script>
+<script src="art.js?v=1.82.89"></script>
+<script src="qr.js?v=1.82.89"></script>
+<script src="voice.js?v=1.82.89"></script>
+<script src="instruments.js?v=1.82.89"></script>
+<script src="kart.js?v=1.82.89"></script>
+<script src="explain.js?v=1.82.89"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2746,6 +2746,7 @@ function share1000(list) {
 function danceStyle(v){v=Math.floor(+v||0);return v>=1&&v<=5?v:0;}
 function safePose(a){if(!Array.isArray(a)||a.length!==4)return null;var o=[];for(var i=0;i<4;i++){var n=+a[i];if(!isFinite(n))return null;o.push(Math.max(-3.2,Math.min(3.2,n/100)));}return o;}
 function floorMaxY(){
+  if(typeof DRAGON!=="undefined"&&DRAGON.on)return DRAGON.maxY();   /* dragon riders: the whole sky (a landscape phone lost half of it to the chat's space) */
   var cp=document.getElementById("chatPanel"),top=cp&&getComputedStyle(cp).display!=="none"?cp.getBoundingClientRect().top:H-160;
   return Math.min(FLOOR_BOTTOM-0.02,(top-14)/H);
 }
@@ -9037,7 +9038,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.88",SERVER_VERSION="";
+var PAGE_VERSION="1.82.89",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9153,6 +9154,7 @@ var DRAGON=(function(){
       gotMax=false,encN=0,encAt=0,charge=0,superTo=0,supAcc=0,supBtn=null,breath=0,wantFire=false,fireBtn=null,hearts=5,down=false,downAt=0,ended="",endAt=0,
       waves=[],wi=0,bossShots=[],bi=0,bossAt=0,bossIn=0,bossHp=0,bossMax=0,bossDead=false,deadAt=0,pend=0,sentAt=0,lastFbTime=0,botB={},boom=[],seedN=1;
   var Y0=0.38,Y1=0.82,BX=0.83;
+  function maxY(){return W>H?0.87:Y1;}   /* landscape: the stick and FIRE sit at the sides, so the full height */
   function gm(){var c=typeof ROUND!=="undefined"&&ROUND.chart&&ROUND.chart();return c&&c.gameMs>20000?c.gameMs:90000;}
   var jump=0;function sp(){try{var p=ROUND.pos();if(isFinite(p))return p+jump;}catch(e){}return performance.now()-lastT0+jump;}
   var lastT0=0;
@@ -9241,7 +9243,7 @@ var DRAGON=(function(){
       en.forEach(function(e){e.x+=e.vx*dt;});notes.forEach(function(n){n.x+=n.vx*dt;});if(LBOTS())botTick(dt,now);localEnd();return;}
     var syv=stickY();if(syv<-0.75)topAt=now;if(syv>0.75&&now-topAt<400&&now-spinAt>SPIN+450){spinAt=now;topAt=-1e9;pops.push({t:now,x:me.x,y:me.y-0.07,txt:"SPIN!",col:"#9cff4a"});}
     /* keep to the sky on the left */
-    var cx=Math.max(0.06,Math.min(0.58,me.x)),cy=Math.max(Y0+0.05,Math.min(Y1,me.y));if(cx!==me.x||cy!==me.y)setMe(cx,cy);
+    var cx=Math.max(0.06,Math.min(0.58,me.x)),cy=Math.max(Y0+0.05,Math.min(maxY(),me.y));if(cx!==me.x||cy!==me.y)setMe(cx,cy);
     /* the chart: waves, then the boss's notes (only when the performer isn't sending them; a light trickle even then) */
     while(wi<waves.length&&waves[wi].t<=t){var w=waves[wi++];if((idle||wi%3===0)&&!ended)if(!inBoss(t))spawn(w.k,w.y);}
     if(t>=bossAt&&!bossIn&&!bossDead){bossIn=now;pops.push({t:now,txt:pname()+" TURNS DEMONIC!",col:"#ff5a3c",big:1});en.forEach(function(e){e.hp=0;});}
@@ -9448,7 +9450,7 @@ var DRAGON=(function(){
   window.ukDragonCharge=function(n){charge=n;supUI();};window.ukDragonHurt=function(n){for(var i=0;i<(n||1);i++){stunTo=0;hurt(performance.now());}};window.ukDragonFire=function(){wantFire=true;};window.ukDragonSuper=fireSuper;
   window.ukDragonKill=function(){bossHit(bossHp);};window.ukDragonSpin=function(){spinAt=performance.now();};window.ukDragon=function(){return{enc:encN,hearts:hearts,down:down,ended:ended,charge:charge,sup:performance.now()<superTo,on:on,local:local,score:score,enemies:en.length,notes:notes.length,boss:!!bossIn,dead:bossDead,hp:bossHp,max:bossMax,stun:performance.now()<stunTo,waves:waves.length,shots:bossShots.length,t:Math.round(sp()),bossAt:Math.round(bossAt)};};
   window.ukDragonJump=function(ms){jump+=ms;};   /* tests */
-  return{spinning:spinning,start:start,stop:stop,tick:tick,msg:msg,hp:hp,over:over,enc:enc,isOutMe:isOutMe,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
+  return{maxY:maxY,spinning:spinning,start:start,stop:stop,tick:tick,msg:msg,hp:hp,over:over,enc:enc,isOutMe:isOutMe,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
 function LBOTS(){for(var k in viewers)if(k.indexOf("bot")===0)return true;return false;}   /* this screen's own practice dancers (the server's bots have normal ids) */
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
 var AVFLEX={};   /* per dancer: last arm angles, for the elbow follow-through */
@@ -10031,7 +10033,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.88"></script>
+<script src="lab.js?v=1.82.89"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

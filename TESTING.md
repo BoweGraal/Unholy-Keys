@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.89 — Dragon riders: fly the whole sky in landscape
+
+- On a phone turned sideways you couldn't fly lower than about halfway: the room kept for the chat box (160 px) took half of a landscape screen. In Dragon riders you can now fly down to 87% of the height in landscape (82% in portrait, where the stick and FIRE sit low).
+
 ## v1.82.88 — Note highway · 4 keys: real patterns, on the beat
 
 1. **More notes, on the beat:** the 4-key highway fills in the beat grid wherever the song is playing. Easy: every other beat. Normal: every beat. Hard: every beat, plus half beats in the big moments. Expert: half beats all the way through, with a few rests for swing. Song breaks (8+ beats with nothing) stay quiet.
