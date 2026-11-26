@@ -1688,6 +1688,25 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.75 — Cast to a TV while you host; join rooms on your WiFi
+
+Server change: redeploy Render.
+
+**Cast to TV (host):**
+1. Go live, then press 📡 Cast to TV (next to TV mode). A panel offers three ways:
+   - **Cast** (Chrome or Edge): picks a Chromecast or cast-ready TV on your WiFi.
+   - **Open a TV window:** drag it onto a TV on HDMI and double-click it for fullscreen.
+   - **The link,** for a smart TV's web browser.
+2. The TV shows the whole room: stage, performer, every player, games, scoreboards and round cards. There's nothing to tap on it, it doesn't zoom in, and the screen stays awake.
+3. A JOIN ON YOUR PHONE card (QR plus code) sits in the TV's corner.
+4. You keep playing instruments and picking songs on the computer. The TV isn't a player, isn't counted in the viewer count, and makes no sound (the sound stays on your computer; add `&sound=1` to the TV link if you want it).
+5. The button shows 📺 On 1 TV while a TV is watching, and goes back when it leaves.
+
+**Rooms on your WiFi (players):**
+1. With a host live on the same WiFi, open the site on a phone. Under your name, "On your WiFi" lists ▶ Join Brian's room (with the player count and code).
+2. Tap it to go straight in, no code needed. Joining with the code still works.
+3. It refreshes every few seconds. On a server running on the host's own computer, every room on it shows.
+
 ## v1.82.74 — Your star, neon hands, ice routine controls, keepy uppy facing + spin bonus
 
 1. **Your star:** in every game a small gold star bobs over your own head (nobody else's), so you can always find yourself, even in neon bumper boats or when you're out.

@@ -14,12 +14,12 @@
 <style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.74"></script>
-<script src="art.js?v=1.82.74"></script>
-<script src="qr.js?v=1.82.74"></script>
-<script src="voice.js?v=1.82.74"></script>
-<script src="instruments.js?v=1.82.74"></script>
-<script src="kart.js?v=1.82.74"></script>
+<script src="gfx.js?v=1.82.75"></script>
+<script src="art.js?v=1.82.75"></script>
+<script src="qr.js?v=1.82.75"></script>
+<script src="voice.js?v=1.82.75"></script>
+<script src="instruments.js?v=1.82.75"></script>
+<script src="kart.js?v=1.82.75"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4935,7 +4935,8 @@ function goLive(){
     if(msg.type==="round"&&msg.ctf)CTFVIEW.msg(msg.ctf);
     if(msg.type==="tug"){PMOSH.tug=[+msg.s[0]||0,+msg.s[1]||0];PMOSH.done=!!msg.done;return;}
     if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
-    if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();}
+    if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();window.CAST&&window.CAST.count(0);}
+    if(msg.type==="tv-count"&&window.CAST)window.CAST.count(msg.count);
     if(msg.type==="room-created"||msg.type==="room-resumed"){PCLOCK.start();TVMODE.joined();}
     if(msg.type==="bots-info")BOTFILL.info(msg);
   }
@@ -4967,7 +4968,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.74",SERVER_VERSION="";
+var PAGE_VERSION="1.82.75",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -6091,6 +6092,7 @@ window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.i
   setInterval(iName,1000);iName();
   ["jStageBtn","jSongBtn","jHangBtn"].forEach(function(id){var e=document.getElementById(id);if(e)bb.appendChild(e);});
   (function(){var tb=document.createElement("button");tb.id="jTvBtn";tb.title="TV mode: the show on a TV, everyone joins on their phones";tb.innerHTML="&#128250; TV mode";bb.appendChild(tb);})();
+  (function(){var cb=document.createElement("button");cb.id="jCastBtn";cb.title="Put the show on a TV while you keep playing here";cb.innerHTML="&#128225; Cast to TV";bb.appendChild(cb);cb.addEventListener("click",function(e){e.stopPropagation();window.CAST.open();});})();
   /* the old visualizer buttons (FX, alt, next, random, picker, play/stop) are gone from the bar: the song panel runs the song, and the visual FX live in the Stage menu */
   ["jVizFxBtn","jVizAltBtn","jVizCycBtn","jVizRandBtn","jPickBtn","jPlayStop"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.setProperty("display","none","important");});
   (function(){var sb2=document.getElementById("jStageBtn"),sp2=document.getElementById("jStagePop");if(!sb2||!sp2)return;sb2.innerHTML="&#127967; Stage &amp; FX";
@@ -6673,6 +6675,34 @@ var PCLOCK=(function(){var off=0,best=1e9,n=0,ok=false,tm=null;
   function start(){n=0;best=1e9;clearInterval(tm);var k=0;tm=setInterval(function(){ping();if(++k>=6){clearInterval(tm);tm=setInterval(ping,15000);}},400);}
   function got(m){var now=Date.now(),rtt=now-(+m.c||now);if(!(rtt>=0&&rtt<3000))return;n++;if(rtt<=best*1.2||n<3){if(rtt<best)best=rtt;var o=(+m.s)+rtt/2-now;off=ok?off*0.6+o*0.4:o;ok=true;}}
   return{start:start,got:got,now:function(){return Date.now()+off;},get ok(){return ok;}};})();
+/* ---- Cast to TV: a second screen that shows the whole show (the stage and every player) while you keep playing, picking
+   songs and hosting here. The TV joins the room as a screen: it isn't a player and makes no sound (your sound stays here). ---- */
+var CAST=(function(){
+  var pane=null,conn=null,tvs=0;
+  function code(){return typeof LIVERC!=="undefined"&&LIVERC.room&&liveOn?LIVERC.room:"";}
+  function tvUrl(c){var base=location.href.split("#")[0].split("?")[0].replace(/[^\/]*$/,"");var u=base+"venue.html?tv="+encodeURIComponent(c);
+    if(typeof LIVE_URL==="string"&&typeof WS_URL==="string"&&LIVE_URL!==WS_URL)u+="&ws="+encodeURIComponent(LIVE_URL);return u;}
+  function label(){var b=document.getElementById("jCastBtn");if(b){b.innerHTML=tvs?"&#128250; On "+tvs+" TV"+(tvs>1?"s":""):"&#128225; Cast to TV";b.classList.toggle("on",tvs>0);}}
+  function msg(t){var m=pane&&pane.querySelector(".cs-msg");if(m)m.textContent=t||"";}
+  function build(){pane=document.createElement("div");pane.id="castPane";
+    pane.style.cssText="position:fixed;right:16px;top:64px;z-index:9999;width:min(340px,92vw);background:#16112a;border:1px solid #5a4cb0;border-radius:10px;padding:12px;color:#eee;font:13px system-ui;box-shadow:0 10px 30px rgba(0,0,0,.6)";
+    pane.innerHTML='<b style="font-size:14px">&#128225; Put the show on a TV</b><div style="opacity:.75;margin:4px 0 10px">The TV shows the stage and everyone playing. You keep playing and picking songs here; the sound stays on this computer.</div>'+
+      '<button class="cs-cast" style="width:100%;margin:3px 0;padding:8px">&#128225; Cast (Chromecast / cast-ready TV)</button>'+
+      '<button class="cs-win" style="width:100%;margin:3px 0;padding:8px">&#128421; Open a TV window (drag it to a TV on HDMI)</button>'+
+      '<div style="margin-top:8px;opacity:.8">Or open this on the TV\'s web browser:</div><div class="cs-url" style="font:12px monospace;background:#0c0918;padding:6px;border-radius:6px;word-break:break-all;margin:4px 0;cursor:pointer" title="Click to copy"></div>'+
+      '<div class="cs-msg" style="color:#F5C518;min-height:16px;margin-top:6px"></div><button class="cs-x" style="float:right;margin-top:4px">Close</button>';
+    document.body.appendChild(pane);pane.addEventListener("click",function(e){e.stopPropagation();});
+    pane.querySelector(".cs-x").onclick=function(){pane.style.display="none";};
+    pane.querySelector(".cs-url").onclick=function(){try{navigator.clipboard.writeText(this.textContent);msg("Link copied");}catch(e){}};
+    pane.querySelector(".cs-win").onclick=function(){var c=code();if(!c){msg("Go live first.");return;}var w=window.open(tvUrl(c),"ukTV","popup,width=1280,height=720");msg(w?"Drag that window onto the TV and double-click it for fullscreen.":"Your browser blocked the window: allow pop-ups for this site.");};
+    pane.querySelector(".cs-cast").onclick=function(){var c=code();if(!c){msg("Go live first.");return;}
+      if(!window.PresentationRequest||!navigator.presentation){msg("Casting needs Chrome or Edge. Use the TV window or the link instead.");return;}
+      try{var req=new PresentationRequest([tvUrl(c)]);req.start().then(function(cn){conn=cn;msg("Casting! The TV is joining the room…");cn.onterminate=cn.onclose=function(){conn=null;msg("Casting stopped.");};})
+        .catch(function(e){msg(e&&e.name==="NotAllowedError"?"Cast cancelled.":e&&e.name==="NotFoundError"?"No TVs found on this WiFi. Try the TV window or the link.":"Couldn't cast: "+(e&&e.message||e));});}catch(e){msg("Couldn't cast: "+e.message);}};}
+  function open(){var c=code();if(!pane)build();pane.style.display="block";pane.querySelector(".cs-url").textContent=c?tvUrl(c):"(go live first)";msg(c?"":"Go live first: the TV joins your room.");}
+  document.addEventListener("click",function(){if(pane)pane.style.display="none";});
+  return{open:open,count:function(n){tvs=n|0;label();},url:tvUrl};
+})();window.CAST=CAST;
 var TVMODE=(function(){
   var on=false,av=0,wasPlay=false,cal=null,idleT=null,el=function(id){return document.getElementById(id);};
   try{av=+localStorage.getItem("uk_tvav")||0;}catch(e){}

@@ -18,13 +18,14 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.74"></script>
-<script src="gfx.js?v=1.82.74"></script>
-<script src="art.js?v=1.82.74"></script>
-<script src="voice.js?v=1.82.74"></script>
-<script src="instruments.js?v=1.82.74"></script>
-<script src="kart.js?v=1.82.74"></script>
-<script src="explain.js?v=1.82.74"></script>
+<script src="tune.js?v=1.82.75"></script>
+<script src="gfx.js?v=1.82.75"></script>
+<script src="art.js?v=1.82.75"></script>
+<script src="qr.js?v=1.82.75"></script>
+<script src="voice.js?v=1.82.75"></script>
+<script src="instruments.js?v=1.82.75"></script>
+<script src="kart.js?v=1.82.75"></script>
+<script src="explain.js?v=1.82.75"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -746,6 +747,14 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
 #prBar input[type=file]{display:none}
 /* the chat log folds away: speech shows above heads anyway; the log is there to look back at */
 :root{--chatH:54px}body.chat-open{--chatH:200px}
+/* the TV screen: only the show (and the scoreboards, banners and round cards); nothing to tap */
+body.tv-screen button,body.tv-screen input,body.tv-screen select,body.tv-screen #moveCtl,body.tv-screen #chatBar,body.tv-screen #chatBox,body.tv-screen [id$="Hint"],body.tv-screen #fiTuneW,body.tv-screen #fiTen,body.tv-screen #fiReel,body.tv-screen #fgRing,body.tv-screen #fiTut,body.tv-screen #joinScreen{display:none!important}
+body.tv-screen{cursor:none;--chatH:0px!important}body.tv-screen #hudRoom,body.tv-screen .hud-room{display:none}
+#nearRooms{display:none;margin-bottom:10px}#nearRooms.on{display:block}
+#nearRooms .near-btn{display:block;width:100%;margin:6px 0;padding:10px 12px;background:#2a1f4d;border:2px solid #9cff4a;border-radius:8px;color:#fff;font:700 14px 'Silkscreen',ui-monospace,monospace;text-align:left;cursor:pointer}
+#nearRooms .near-btn small{display:block;font:11px system-ui;opacity:.75;margin-top:2px}
+#tvCard{position:fixed;right:18px;bottom:18px;z-index:40;background:rgba(14,10,30,.88);border:2px solid #7F77DD;border-radius:12px;padding:10px 12px;text-align:center;color:#fff;font:700 12px 'Silkscreen',ui-monospace,monospace;pointer-events:none}
+#tvCard canvas{display:block;width:120px;height:120px;margin:6px auto;image-rendering:pixelated;background:#fff;border-radius:4px}#tvCard .tc-code{font-size:26px;letter-spacing:6px;color:#F5C518}#tvCard small{display:block;font:11px system-ui;opacity:.75}
 /* phones: the game sticks and buttons sit a little higher, where thumbs naturally rest (everything placed off the bottom moves together) */
 body{--chatH0:var(--chatH)}
 @media (pointer:coarse){body[data-game]:not([data-game=""]) #moveCtl,body[data-game]:not([data-game=""]) #boatsUI,body[data-game]:not([data-game=""]) #calUI,body[data-game]:not([data-game=""]) #ctfUI,body[data-game]:not([data-game=""]) #fdUI,body[data-game]:not([data-game=""]) #figUI,body[data-game]:not([data-game=""]) #fishUI,body[data-game]:not([data-game=""]) #keepyUI,body[data-game]:not([data-game=""]) #moshUI,body[data-game]:not([data-game=""]) #pipeUI,body[data-game]:not([data-game=""]) #skateUI,body[data-game]:not([data-game=""]) #skiUI,body[data-game]:not([data-game=""]) #swimUI,body[data-game]:not([data-game=""]) #walkUI{--chatH:calc(var(--chatH0) + clamp(36px,6vh,70px))}}
@@ -863,6 +872,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <canvas id="menuChar" width="220" height="230" aria-label="Your character"></canvas>
     <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" aria-label="Your name">
     <div class="mm-btns">
+      <div id="nearRooms"></div>
       <button class="mm-btn mm-join" id="mmJoin"><i class="pxi" data-pxi="play"></i> Join game<small>enter a room code</small></button>
       <button class="mm-btn mm-prac" id="mmPrac"><i class="pxi" data-pxi="dance"></i> Practice<small>the practice zone, no show needed</small></button>
       <button class="mm-btn mm-char" id="mmChar"><i class="pxi" data-pxi="palette"></i> Character<small>change your look</small></button>
@@ -1054,6 +1064,8 @@ function resolveWsUrl(){
   return WS_URL;
 }
 var LIVE_URL = resolveWsUrl();
+/* TV screen (venue.html?tv=CODE, opened by the host's "Cast to TV"): shows the whole show, isn't a player, makes no sound */
+var TVSCREEN=((location.search.match(/[?&]tv=([A-Za-z0-9]{4})\b/)||[])[1]||"").toUpperCase();
 /* an audience link can carry the room code (?room=ABCD): it's filled in on the join screen */
 (function(){function ok(t){return t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable||(t.closest&&t.closest("#chatMsgs")));}
   document.addEventListener("selectstart",function(e){if(!ok(e.target))e.preventDefault();});
@@ -1968,6 +1980,34 @@ document.getElementById("enterBtn").addEventListener("click",function(){
   roomCode=room.toUpperCase();
   enterVenue();
 });
+/* ---- rooms on your WiFi: while the join screen's up, ask the server for rooms hosted on the same network and list them as
+   one-tap buttons (the code still works for anyone else) ---- */
+var NEAR=(function(){var sk=null,tm=null,box=document.getElementById("nearRooms");
+  function on(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&!TVSCREEN&&!(typeof PRACTICE!=="undefined"&&PRACTICE&&PRACTICE.on);}
+  var lastJ="";
+  function render(list){if(!box)return;var j=JSON.stringify(list||[]);if(j===lastJ)return;lastJ=j;   /* only redraw when it changes, so a tap never lands on a button that's being replaced */
+    if(!list||!list.length){box.innerHTML="";box.classList.remove("on");return;}box.classList.add("on");
+    box.innerHTML='<label>On your WiFi</label>'+list.map(function(r){return '<button class="near-btn" data-room="'+r.room+'">&#9654; Join '+String(r.name).replace(/[<>&"]/g,"")+'\'s room<small>'+r.n+' playing · '+r.room+'</small></button>';}).join("");
+    Array.prototype.forEach.call(box.querySelectorAll(".near-btn"),function(b){b.addEventListener("click",function(){document.getElementById("inRoom").value=b.getAttribute("data-room");document.getElementById("enterBtn").click();});});}
+  function ask(){if(!on()){if(sk){try{sk.close();}catch(e){}sk=null;}return;}
+    if(!sk||sk.readyState>1){try{sk=new WebSocket(LIVE_URL);sk.onopen=function(){try{sk.send(JSON.stringify({type:"nearby"}));}catch(e){}};sk.onmessage=function(e){try{var m=JSON.parse(e.data);if(m.type==="nearby")render(m.rooms);}catch(x){}};sk.onclose=function(){sk=null;};}catch(e){sk=null;}return;}
+    if(sk.readyState===1)try{sk.send(JSON.stringify({type:"nearby"}));}catch(e){}}
+  tm=setInterval(ask,4000);setTimeout(ask,600);
+  window.ukNear=function(){return box?box.textContent:"";};return{render:render};})();
+/* ---- the TV screen: straight into the room, everything you'd tap hidden, no sound, the screen kept awake, and a corner card
+   so people in the room can join on their phones ---- */
+if(TVSCREEN)setTimeout(function(){
+  document.body.classList.add("tv-screen");roomCode=TVSCREEN;myName="TV";
+  var snd=/[?&]sound\b/.test(location.search);
+  if(!snd){var _pl=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){try{this.muted=true;}catch(e){}return _pl.apply(this,arguments);};}
+  enterVenue();
+  if(!snd)setTimeout(function(){try{Tone.Destination.mute=true;}catch(e){}},300);
+  function wake(){try{if(navigator.wakeLock)navigator.wakeLock.request("screen").catch(function(){});}catch(e){}}wake();document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")wake();});
+  document.addEventListener("dblclick",function(){try{var d=document;if(d.fullscreenElement)d.exitFullscreen();else d.documentElement.requestFullscreen();}catch(e){}});
+  var base=location.href.split("#")[0].split("?")[0],wsq=(location.search.match(/[?&]ws=([^&]+)/)||[])[1],jurl=base+"?room="+TVSCREEN+(wsq?"&ws="+wsq:"");
+  var c=document.createElement("div");c.id="tvCard";c.innerHTML='<b>JOIN ON YOUR PHONE</b><canvas id="tvCardQr"></canvas><div class="tc-code">'+TVSCREEN+'</div><small>'+jurl.replace(/^https?:\/\//,"").replace(/\?.*$/,"")+'</small>';
+  document.body.appendChild(c);try{UKQR.draw(document.getElementById("tvCardQr"),jurl,4);}catch(e){}
+},0);
 /* fullscreen on any screen; iPhones can't, so they get the Home Screen tip */
 (function(){
   var b=document.getElementById("vFsBtn"),tip=document.getElementById("vFsTip");
@@ -2064,7 +2104,7 @@ function resize(){
 var GZS={};try{GZS=JSON.parse(localStorage.getItem("uk_gz")||"{}")||{};}catch(e){GZS={};}
 var GZ_PC=!!(window.matchMedia&&matchMedia("(pointer:fine)").matches);
 function gzDef(k){return k==="free"&&GZ_PC?1.5:k==="fish"?1.35:1;}   /* fishing: a little closer, so the line and the fish are easy to see */   /* a computer: free dance starts at 150% */
-window.ukGZ=function(k){var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
+window.ukGZ=function(k){if(TVSCREEN)return 1;var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
 var GZNAME={ctf:"CTF",kflag:"Kart flag",ski:"Ski",kart:"Mars Rally",pipe:"Half pipe",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",walk:"Walk race",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Highway 4 keys",crowd:"Crowd vote",fish:"Fishing",boats:"Bumper boats",swim:"Coin dive"};
 function gzKey(){var m=typeof GAME!=="undefined"&&GAME.mode;if(!m)return null;if(m==="ctf")return document.body.classList.contains("ctf-kart")?"kflag":"ctf";if(m==="skate"&&typeof ICE!=="undefined"&&ICE)return "ice";return m;}
 function gzUI(){var k=gzKey(),show=!!k&&((typeof PRACTICE!=="undefined"&&PRACTICE.on)||/[?&]zoom\b/.test(location.search)||localStorage.getItem("uk_gzui")==="1"),b=document.getElementById("gzBox");
@@ -2077,7 +2117,7 @@ window.ukGzSet=function(k,z){if(z===1)delete GZS[k];else GZS[k]=z;try{localStora
 /* scroll-wheel zoom on the venue floor (PC): wheel up zooms in, wheel down out, anchored low so the dancers grow upward; taps are mapped back through it */
 var VZ=1,VZ_AY=0.62;
 try{var vzs=localStorage.getItem("uk_vz");VZ=Math.max(1,Math.min(2.6,vzs?+vzs||1:(window.matchMedia&&matchMedia("(pointer:fine)").matches?1.5:1)));}catch(e){}   /* a computer starts a little zoomed in (150%) on the dance floor */
-function vzActive(){return VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
+function vzActive(){return !TVSCREEN&&VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
 /* the camera: the wheel zoom, plus an automatic push in on you while it's your turn in the spotlight, so you can see (and steer) the whole body */
 var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null,VZ_H=60,VZ_B=[0,0],RING_C=null,VZ_VB=0;
 function vzCalc(){
@@ -2171,7 +2211,7 @@ function connectWS(){
   }
   ws.onopen=function(){RECON.n=0;setTimeout(function(){CLOCK.start();},200);
     wsReady=true;
-    ws.send(JSON.stringify({type:"join-room",room:roomCode,name:myName,color:myColor,look:ART.looks.pack(myLook)}));
+    ws.send(JSON.stringify(TVSCREEN?{type:"join-room",room:roomCode,screen:1}:{type:"join-room",room:roomCode,name:myName,color:myColor,look:ART.looks.pack(myLook)}));
   };
   ws.binaryType="arraybuffer";
   ws.onmessage=function(e){
@@ -2214,6 +2254,7 @@ var GVOTE=(function(){
   return{on:on};
 })();
 function wsSend(obj){
+  if(TVSCREEN)return;   /* a TV screen only watches */
   if(ws&&wsReady)ws.send(JSON.stringify(obj));
 }
 
@@ -8877,7 +8918,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.74",SERVER_VERSION="";
+var PAGE_VERSION="1.82.75",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9482,7 +9523,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.74"></script>
+<script src="lab.js?v=1.82.75"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

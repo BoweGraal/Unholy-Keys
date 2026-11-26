@@ -118,6 +118,7 @@ function broadcast(room, msg, exclude) {
   var r = rooms[room]; if (!r) return;
   var data = JSON.stringify(msg);
   if (r.performer && r.performer !== exclude) try { r.performer.send(data); } catch(e) {}
+  if (r.screens) r.screens.forEach(function(sw) { if (sw !== exclude) try { sw.send(data); } catch(e) {} });   /* TV screens see everything */
   r.viewers.forEach(function(v) {
     if (v.ws !== exclude) try { v.ws.send(data); } catch(e) {}
   });
@@ -507,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.74";
+var VERSION = "1.82.75";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -579,6 +580,19 @@ function onMessage(ws, raw, isBinary) {
 
   /* ── Audience joins room ── */
   /* ── Performer coming back after a dropped connection: same room, same audience, if they have the room's key ── */
+  /* ── Rooms on your WiFi: rooms whose host is on the same network (same public address) as you. On a server running on
+     the host's own machine everyone is on the same network, so every room shows. ── */
+  if (msg.type === "nearby") {
+    if (!allow(ws, "near", 6, 0.5)) return;
+    var near = [];
+    Object.keys(rooms).forEach(function(code) { var rm = rooms[code]; if (!rm.performer) return;
+      if (HOSTED === "self" || (ws.ip && rm.performer.ip && rm.performer.ip === ws.ip)) {
+        var n = 0; rm.viewers.forEach(function(v) { if (!v.ws.bot) n++; });
+        near.push({ room: code, name: rm.performerName || "Host", n: n });
+      } });
+    send(ws, { type: "nearby", rooms: near.slice(0, 8) });
+    return;
+  }
   if (msg.type === "end-room") { if (ws.role === "performer") ws.ending = true; return; }
   if (msg.type === "resume-room") {
     if (ws.role) return;
@@ -600,6 +614,16 @@ function onMessage(ws, raw, isBinary) {
     var roomCode = str(msg.room, 12).toUpperCase();
     var r = rooms[roomCode];
     if (!r) { send(ws, { type: "error", msg: "Room not found" }); return; }
+    /* a TV screen: sees the whole show, isn't a player (no character, not counted, sends nothing) */
+    if (msg.screen) {
+      ws.room = roomCode; ws.role = "screen"; (r.screens || (r.screens = new Set())).add(ws);
+      send(ws, { type: "room-state", version: VERSION, host: HOSTED, hostName: HOST_NAME, yourId: "tv", screen: 1, viewers: viewerList(roomCode), performerState: r.state, video: liveVideo(r), stream: r.stream || null,
+        performer: { name: r.performerName || "Performer", look: r.performerLook || "" }, round: roundPublic(r), totals: totalsList(r), fx: r.fx || null, perfPos: r.perfPos || null,
+        stage: { list: stageList(r), song: r.songOn ? 1 : 0 }, band: r.band && r.band.m && r.band.m.length ? r.band : null, av: r.av || 0 });
+      if (r.performer) send(r.performer, { type: "tv-count", count: r.screens.size });
+      console.log("A TV screen joined room", roomCode);
+      return;
+    }
     if (r.viewers.size >= MAX_VIEWERS) { send(ws, { type: "error", msg: "Room is full" }); return; }
     var id = genId();
     ws.room = roomCode;
@@ -643,6 +667,7 @@ function onMessage(ws, raw, isBinary) {
     if (r.botFill && !ws.bot) setImmediate(function() { BOTS.rebalance(roomCode); });   /* a real person: a bot makes room */
     return;
   }
+  if (ws.role === "screen") return;   /* a TV screen only watches */
 
   /* ── Performer broadcasts ── */
   /* ── Voice between songs (performer and audience): the server only introduces people and passes their WebRTC
@@ -928,6 +953,7 @@ function onMessage(ws, raw, isBinary) {
 }
 function onClose(ws) {
   if (!ws.room) return;
+  if (ws.role === "screen") { var sr = rooms[ws.room]; if (sr && sr.screens) { sr.screens.delete(ws); if (sr.performer) send(sr.performer, { type: "tv-count", count: sr.screens.size }); } return; }
   /* leaving drops you out of voice */
   var vr0 = rooms[ws.room], vid0 = ws.role === "performer" ? "performer" : ws.viewerId;
   if (vr0 && vr0.voice && vid0 && vr0.voice[vid0]) { delete vr0.voice[vid0]; broadcast(ws.room, { type: "voice-off", id: vid0 }, ws); }
@@ -961,8 +987,10 @@ function onClose(ws) {
 /* bots that keep the room at the size the performer chose (see bots.js) */
 var BOTS = require("./bots.js")({ rooms: rooms, onMessage: onMessage, onClose: onClose, send: send });
 
-wss.on("connection", function(ws) {
+wss.on("connection", function(ws, req) {
   ws.isAlive = true;
+  /* where they're connecting from: phones on the host's WiFi share its public address, which is how "rooms on your WiFi" works */
+  try { var xf = req && req.headers && req.headers["x-forwarded-for"]; ws.ip = String(xf ? xf.split(",")[0] : (req && req.socket && req.socket.remoteAddress) || "").trim().replace(/^::ffff:/, ""); } catch (e) { ws.ip = ""; }
   ws.on("pong", function() { ws.isAlive = true; });
   ws.on("error", function() {});
 
