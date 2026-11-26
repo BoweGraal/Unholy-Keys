@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.117 — Dragon riders: riders sit side on in the saddle
+
+Riders used to face the front, standing with their legs dangling below the dragon. Now they face the way the dragon flies (side on). They sit down in the saddle with their knees forward over the flank and their hands forward on the reins (raised up for SUPER), and bob with the wingbeat.
+
+1. Dragon riders (practice is fine): your rider and the others face right and sit in the saddle, with no legs hanging below the belly.
+2. Fire a SUPER: the arms go up.
+3. A rider whose dragon has fallen goes back to standing on the sideline as before.
+
 ## v1.82.116 — Voice chat during songs (host option)
 
 New host button next to **🎙 Voice**: **🎵 Voice in songs: off / ON**. It's remembered on this browser and sent each time you go live. Turned on, voice chat no longer mutes while a song, a video or a game plays: people's mics stay open. In a game, phones get a small mic button at the top centre: tap to talk, tap again to mute. Turned off, everything works as before: mics mute for the song.
