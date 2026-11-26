@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.97"></script>
-<script src="gfx.js?v=1.82.97"></script>
-<script src="art.js?v=1.82.97"></script>
-<script src="qr.js?v=1.82.97"></script>
-<script src="voice.js?v=1.82.97"></script>
-<script src="instruments.js?v=1.82.97"></script>
-<script src="kart.js?v=1.82.97"></script>
-<script src="explain.js?v=1.82.97"></script>
+<script src="tune.js?v=1.82.98"></script>
+<script src="gfx.js?v=1.82.98"></script>
+<script src="art.js?v=1.82.98"></script>
+<script src="qr.js?v=1.82.98"></script>
+<script src="voice.js?v=1.82.98"></script>
+<script src="instruments.js?v=1.82.98"></script>
+<script src="kart.js?v=1.82.98"></script>
+<script src="explain.js?v=1.82.98"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -558,7 +558,7 @@ body.fish-reel #fiBpm{display:block}
 #fiBpm .fb-dot{width:10px;height:10px;background:#3a3f5a}#fiBpm .fb-dot.on{background:#F5C518;box-shadow:0 0 8px #F5C518}
 #fiBpm .fb-you{margin-top:3px;font-size:11px}#fiBpm.on .fb-you{color:#9cff4a}#fiBpm.near .fb-you{color:#F5C518}#fiBpm.off .fb-you{color:#ff7a6a}
 #fiBpm .fb-g{position:relative;height:8px;margin-top:5px;background:linear-gradient(90deg,#5a1e1e 0 22%,#5a4a1e 22% 38%,#1e5a2a 38% 62%,#5a4a1e 62% 78%,#5a1e1e 78%)}
-#fiBpm .fb-n{position:absolute;top:-3px;width:4px;height:14px;margin-left:-2px;background:#fff;left:50%;transition:left .12s steps(3)}
+#fiBpm .fb-n{position:absolute;top:-3px;width:4px;height:14px;margin-left:-2px;background:#fff;left:50%}
 #fiBpm .fb-l{display:flex;justify-content:space-between;margin-top:2px;font-size:8px;color:#8a8ca8}
 #fiReel .fr-notch{display:none!important}
 #fiReel .fr-spool{position:absolute;inset:6px;border-radius:50%;border:4px solid #11131a;background:radial-gradient(circle,#e3e6ee 0 12%,#11131a 13% 16%,transparent 17%),repeating-conic-gradient(#9aa1b8 0 12deg,#6b7290 12deg 24deg);box-shadow:inset 0 0 0 5px #4a5068,inset 0 0 0 8px #11131a;pointer-events:none}
@@ -571,7 +571,7 @@ body.fish-reel #fiBpm{display:block}
 #fiReel.beat .fr-notch{transform:scale(1.5)}#fiReel.beat{filter:drop-shadow(0 0 8px #F5C518)}
 #fiReel .fr-notch.hit{animation:frHit .35s}#fiReel .fr-notch.ok{animation:frOk .35s}#fiReel .fr-notch.miss{animation:frMiss .35s}
 @keyframes frHit{0%{background:#9cff4a;transform:scale(2.2)}}@keyframes frOk{0%{background:#fff;transform:scale(1.6)}}@keyframes frMiss{0%{background:#ff3b5c;transform:scale(1.3)}}
-#fiTen{display:none;position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 168px);width:118px;height:16px;border:3px solid #000;background:linear-gradient(to right,#2a6a3a 0%,#2a6a3a 60%,#7a6a1a 75%,#7a2a2a 100%);pointer-events:none}
+#fiTen{display:none;position:absolute;left:50%;right:auto;top:30%;bottom:auto;transform:translateX(-50%);width:min(64vw,260px);height:18px;border:3px solid #000;background:linear-gradient(to right,#2a6a3a 0%,#2a6a3a 60%,#7a6a1a 75%,#7a2a2a 100%);pointer-events:none}
 #fiTen.on{display:block}
 #fiTuneW{display:none;position:fixed;left:8px;top:max(180px,24vh);z-index:30;font:600 11px system-ui;color:#e8e4f8}
 body.gaming-fish.fi-tune #fiTuneW{display:block}
@@ -4739,7 +4739,7 @@ var FISH=(function(){
   }
   /* the reel's speed: how fast you spin it against the song's tempo. One turn a beat (anywhere round, either way) is full speed; a bit
      off is partial; way off is slow. The tempo comes from the song's beat grid, so it follows the song when it speeds up or slows */
-  var spinRev=0,spinDir=1,spinHist=[],bpmHist=[],bpmNow=120,spinRpm=0,spinQ=0,lastBeatK=-1;
+  var lastFastPop=0,spinRev=0,spinDir=1,spinHist=[],bpmHist=[],bpmNow=120,spinRpm=0,spinQ=0,lastBeatK=-1;
   function spinTick(now,dt){var b=beatNow();bpmHist.push({t:now,b:b});while(bpmHist.length>2&&now-bpmHist[0].t>2000)bpmHist.shift();
     var h0=bpmHist[0];if(now-h0.t>400){var bb=(b-h0.b)/((now-h0.t)/60000);if(isFinite(bb)&&bb>40&&bb<260)bpmNow+=(bb-bpmNow)*Math.min(1,dt*3);}
     spinHist.push({t:now,r:spinRev});while(spinHist.length>2&&now-spinHist[0].t>3000)spinHist.shift();
@@ -4866,7 +4866,9 @@ var FISH=(function(){
       /* the reel: winds on the beat; holding on a computer is a slow steady reel */
       spinTick(now,dt);var rt=Math.min(1,windRate());if(reelHold||spaceHeld||held.up)rt=Math.max(rt,0.3);reelR+=(rt-reelR)*Math.min(1,dt*(rt>reelR?10:4));
       D=Math.max(0,Math.min(1.2,D+(pull*FT("run",0.14)-reelR*FT("reel",0.24)*(tut?0.45:1)*(kind===5?FT("marlinReel",0.55):kind===6?FT("seabassReel",0.65):1)*(1-0.5*Math.min(1,pull)))*dt));
-      var Tt=reelR*FT("tenReel",0.45)+pull*(reelR>0.15?FT("tenPull",1.15):FT("tenPull",1.15)*0.43)+Math.abs(rodA)*0.08;T+=(Tt-T)*Math.min(1,dt*FT("tenRise",5));
+      var ovs=spinRpm>8?Math.max(0,spinRpm/bpmNow-1-FT("spinWin",0.15)):0;   /* spinning faster than the beat strains the line */
+      var Tt=reelR*FT("tenReel",0.45)+pull*(reelR>0.15?FT("tenPull",1.15):FT("tenPull",1.15)*0.43)+Math.abs(rodA)*0.08+ovs*FT("tenOver",0.9);
+      if(ovs>0.15&&now-(lastFastPop||0)>1600){lastFastPop=now;pops.push({t:now,txt:"TOO FAST! Easy on the reel",col:"#ff8a5a"});}T+=(Tt-T)*Math.min(1,dt*FT("tenRise",5));
       if(T>1)overT+=dt;else overT=Math.max(0,overT-dt*2);if(T<0.06)slackT+=dt;else slackT=0;
       if(tut){D=Math.min(D,1);if(D<=0.05){netAt=now;set("net");}}
       else if(overT>FT("snapT",0.5)){pops.push({t:now,txt:"SNAP! The line broke",col:"#ff8a8a"});set("snap");}
@@ -9187,7 +9189,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.97",SERVER_VERSION="";
+var PAGE_VERSION="1.82.98",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10183,7 +10185,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.97"></script>
+<script src="lab.js?v=1.82.98"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

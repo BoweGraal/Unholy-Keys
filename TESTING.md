@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.98 — Fishing: overspinning strains the line; the tension meter moved to the middle
+
+1. **Spinning faster than the BPM raises tension:** the more you overspin, the more it climbs (double speed can push it past the limit and snap the line), with a **"TOO FAST! Easy on the reel"** warning. Slow spinning just reels slowly.
+2. **The TENSION meter is now in the middle of the screen, up by the water,** wider and right above where the fish is, so you can watch tension without looking away from the fish.
+3. Fix: the BPM panel's needle now moves (it was stuck at the left).
+
 ## v1.82.97 — Fishing: spin the reel at the BPM (no notch)
 
 1. **Reeling is about speed, not position:** spin the reel at the song's tempo, one full turn per beat, anywhere round and either way. Within about 15% of the BPM is full reel speed, a bit off is partial, and way off (like half or double) is slow. The notch is gone.
