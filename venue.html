@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.99"></script>
-<script src="gfx.js?v=1.82.99"></script>
-<script src="art.js?v=1.82.99"></script>
-<script src="qr.js?v=1.82.99"></script>
-<script src="voice.js?v=1.82.99"></script>
-<script src="instruments.js?v=1.82.99"></script>
-<script src="kart.js?v=1.82.99"></script>
-<script src="explain.js?v=1.82.99"></script>
+<script src="tune.js?v=1.82.100"></script>
+<script src="gfx.js?v=1.82.100"></script>
+<script src="art.js?v=1.82.100"></script>
+<script src="qr.js?v=1.82.100"></script>
+<script src="voice.js?v=1.82.100"></script>
+<script src="instruments.js?v=1.82.100"></script>
+<script src="kart.js?v=1.82.100"></script>
+<script src="explain.js?v=1.82.100"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2355,6 +2355,7 @@ function handleMsg(msg){
   if(msg.type==="drgHp"){DRAGON.hp(msg);return;}
   if(msg.type==="drgEnd"){DRAGON.over(msg);return;}
   if(msg.type==="drgEncore"){DRAGON.enc(msg);return;}
+  if(msg.type==="count-skips"){SKIPS={have:msg.have|0,need:msg.need|0,n:ROUND.n};return;}
   var t=msg.type;
   if(t==="error"){
     /* e.g. "Room not found": this used to be ignored, leaving you alone in an empty venue */
@@ -7456,7 +7457,7 @@ var ROUND=(function(){
     var left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
     try{EXPLAIN.tick(rd.mode,(endAt-performance.now())/1000,"r"+rd.n,{ice:ICE,battle:rd.isBattle,kflag:rd.kflag});}catch(e){}
     show([head(),mk("div","rb-title",rd.title),mk("div","rb-big",left>0?String(left):"GO!"),
-      mk("div","rb-sub",rd.isBattle?"Everyone dances; then it's 1 v 1s on the stage, knockout style, with the final at the end of the song."+(rd.mode==="free"?" The room votes each match.":" Highest score in each match goes through."):rd.mode==="free"?"Dance however you like. Everyone votes when the song ends.":rd.mode==="kart"?"The performer takes off in a UFO and the dance floor becomes a space race track! The stick is your speed and direction. Push it when the 2 lights up for a rocket start. Tap DRIFT to hop, swing into the turn and hold it for a boost. Distance, laps, boosts and overtakes all score.":rd.mode==="skate"?"Skate the rink! Build speed, JUMP (Space), hold directions for tricks, let go before you land.":rd.mode==="keepy"?"Keep the balloon, the ball and the feather off the floor! Jump, double jump for height. The feather and double-jump hits score most.":rd.mode==="dragon"?"Hell's gig! Ride your dragon through the burning sky. It breathes fire by itself: steer into the imps and skulls, dodge what hits back. Then the demon organist rises: everyone shoots the organ while the performer's notes fly out of its pipes.":rd.mode==="ball"?"The performer rolls a giant ball round the disk. Run! Get flattened and you sit out till the next of the 3 rounds. Points every second you're alive, a bonus for the last one standing.":rd.mode==="ctf"?(rd.kflag?"Grab their flag and drive it home. LAUNCH: hold, aim, let go. IMPACT knocks your flag home.":"Grab their flag and run it home. Tag their carrier; block everyone else with your body."):"Everyone gets the same steps. Highest score wins the round.")].concat(document.body.classList.contains("practice")&&left>1?[mk("button","rb-btn rb-skip",window.__skipPressed?"\u23E9 Starting\u2026":"\u23E9 Skip timer")]:[]),"count");
+      mk("div","rb-sub",rd.isBattle?"Everyone dances; then it's 1 v 1s on the stage, knockout style, with the final at the end of the song."+(rd.mode==="free"?" The room votes each match.":" Highest score in each match goes through."):rd.mode==="free"?"Dance however you like. Everyone votes when the song ends.":rd.mode==="kart"?"The performer takes off in a UFO and the dance floor becomes a space race track! The stick is your speed and direction. Push it when the 2 lights up for a rocket start. Tap DRIFT to hop, swing into the turn and hold it for a boost. Distance, laps, boosts and overtakes all score.":rd.mode==="skate"?"Skate the rink! Build speed, JUMP (Space), hold directions for tricks, let go before you land.":rd.mode==="keepy"?"Keep the balloon, the ball and the feather off the floor! Jump, double jump for height. The feather and double-jump hits score most.":rd.mode==="dragon"?"Hell's gig! Ride your dragon through the burning sky. It breathes fire by itself: steer into the imps and skulls, dodge what hits back. Then the demon organist rises: everyone shoots the organ while the performer's notes fly out of its pipes.":rd.mode==="ball"?"The performer rolls a giant ball round the disk. Run! Get flattened and you sit out till the next of the 3 rounds. Points every second you're alive, a bonus for the last one standing.":rd.mode==="ctf"?(rd.kflag?"Grab their flag and drive it home. LAUNCH: hold, aim, let go. IMPACT knocks your flag home.":"Grab their flag and run it home. Tag their carrier; block everyone else with your body."):"Everyone gets the same steps. Highest score wins the round.")].concat(left>1&&(document.body.classList.contains("practice")||(myId&&roomCode&&roomCode!=="PRACTICE"&&!TVSCREEN))?[mk("button","rb-btn rb-skip",window.__skipPressed?(SKIPS&&SKIPS.need>1&&SKIPS.n===rd.n?"\u23E9 Waiting \u00B7 "+SKIPS.have+"/"+SKIPS.need+" ready":"\u23E9 Starting\u2026"):"\u23E9 Skip timer"+(SKIPS&&SKIPS.have&&SKIPS.n===rd.n?" \u00B7 "+SKIPS.have+"/"+SKIPS.need:""))]:[]),"count");
   }
   /* free dance spotlight: the plan, and who's on now */
   function setSpot(turns,ring){
@@ -8672,7 +8673,7 @@ var PRACTICE=(function(){
   window.ukPracticeStop=function(){if(on&&document.body.classList.contains("pr-busy")){stopAll();note("Back on the dance floor.");}};   /* STOP / Esc in any practice game */
   /* skip the countdown: start the song now (only once its steps are ready) */
   var skipWant=false;
-  function skipTimer(){if(!on)return false;
+  function skipTimer(){if(!on){if(ROUND.counting&&roomCode&&roomCode!=="PRACTICE"){window.__skipPressed=true;setTimeout(function(){window.__skipPressed=false;},20000);wsSend({type:"count-skip"});return true;}return false;}
     if(!document.body.classList.contains("pr-count")){window.__skipPressed=false;return ROUND.counting?ROUND.skipCount():false;}   /* a countdown that didn't come from starting the song here: just end it */
     window.__skipPressed=true;setTimeout(function(){window.__skipPressed=false;},20000);
     if(!startT||!chart){skipWant=true;Array.prototype.forEach.call(document.querySelectorAll(".rb-skip,#prSkip"),function(b){b.textContent="\u23E9 Starting\u2026";});return true;}   /* the song's still loading: go as soon as it's ready */
@@ -8684,7 +8685,7 @@ var PRACTICE=(function(){
   /* hit-test by position too: a see-through layer over the countdown card (the dim, the how-to card) can take the touch first */
   function skipUnder(e){var pt=e.changedTouches&&e.changedTouches[0]||e;if(typeof pt.clientX!=="number")return null;var bs=document.querySelectorAll(".rb-skip,#prSkip");
     for(var i=0;i<bs.length;i++){var r=bs[i].getBoundingClientRect();if(r.width>0&&r.height>0&&pt.clientX>=r.left-6&&pt.clientX<=r.right+6&&pt.clientY>=r.top-6&&pt.clientY<=r.bottom+6)return bs[i];}return null;}
-  ["pointerdown","pointerup","click","touchend"].forEach(function(ev){window.addEventListener(ev,function(e){var t=e.target&&e.target.closest&&e.target.closest(".rb-skip,#prSkip");if(!t&&document.body.classList.contains("practice")&&(document.body.classList.contains("pr-count")||ROUND.counting))t=skipUnder(e);if(!t)return;e.preventDefault();e.stopPropagation();
+  ["pointerdown","pointerup","click","touchend"].forEach(function(ev){window.addEventListener(ev,function(e){var t=e.target&&e.target.closest&&e.target.closest(".rb-skip,#prSkip");if(!t&&(document.body.classList.contains("pr-count")||ROUND.counting))t=skipUnder(e);if(!t)return;e.preventDefault();e.stopPropagation();
     if(ev==="pointerdown"||(ev==="touchend"&&performance.now()-skipAt>600)){skipAt=performance.now();skipTimer();}},{capture:true,passive:false});});   /* on the press, before anything else can grab the pointer */
   window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
   window.ukPracticeBattle=function(){return plan?pub():null;};
@@ -9189,7 +9190,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.99",SERVER_VERSION="";
+var PAGE_VERSION="1.82.100",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9605,7 +9606,7 @@ var DRAGON=(function(){
   return{maxY:maxY,spinning:spinning,start:start,stop:stop,tick:tick,msg:msg,hp:hp,over:over,enc:enc,isOutMe:isOutMe,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
 function LBOTS(){for(var k in viewers)if(k.indexOf("bot")===0)return true;return false;}   /* this screen's own practice dancers (the server's bots have normal ids) */
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
-var AVFLEX={};   /* per dancer: last arm angles, for the elbow follow-through */
+var AVFLEX={},SKIPS=null;   /* SKIPS: how many in the room have pressed Skip timer this countdown */   /* per dancer: last arm angles, for the elbow follow-through */
 function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge,look,fd){
   if(typeof DRAGON!=="undefined"&&DRAGON.on&&!isPerf&&DRAGON.spinning(name,isMe))return;   /* dragon riders: mid barrel roll, drawn with the dragon */
   var s=scale||1,cx=x,cy=y;
@@ -10185,7 +10186,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.99"></script>
+<script src="lab.js?v=1.82.100"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

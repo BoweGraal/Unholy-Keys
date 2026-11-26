@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.100 — Skip timer works in a room (not just practice)
+
+The real cause: in a **room**, the countdown card showed Skip timer, but the button only worked in practice. In a room the host runs the countdown, so pressing it did nothing.
+1. **Room:** Skip timer now asks to skip. When **every real player** in the room has pressed it (bots don't count, so if it's just you it's instant), the host starts the game right away. With more people the button shows **"Waiting · 1/3 ready"** and the others see the count on theirs.
+2. **Practice:** unchanged (it already worked there).
+3. **Render needs a redeploy** (server change), and the host page needs a refresh.
+
 ## v1.82.99 — Fishing: vertical tension meter
 
 - The **TENSION meter is a tall vertical bar** up by the water, just left of the middle beside the fish. It fills from the bottom (green → yellow → red at the top), with the beat light above it and the TENSION label below.
