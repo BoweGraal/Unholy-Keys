@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.96 — Keepy uppy is in the Dance section
+
+- **Keepy uppy** moved from "Ride & race" to **Dance**, both in the host's game picker (song menu) and in the phone's practice menu.
+
 ## v1.82.95 — Fishing: real ocean fish, each with its own pixel sprite
 
 1. **The fish, smallest/nearest to biggest/farthest:** Barred knifejaw (60) → Salmon (140) → Cod (240) → Barracuda (400) → Kingfish (650), and at the top of the power bar the **Marlin** (1,500, when he's out) or a **Bluefin tuna** (1,000, replaces 1.82.94's sea bass: tough fight, 1 s jerk window, "TUNA ON!").
