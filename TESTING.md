@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.104 — Fishing: fewer words, more symbols; the screen edge pulses on the beat
+
+1. **Much less text:**
+   - **Hints:** "👆 aim · ⇗ swoop fast", "⇗ stay in!", "⏳", "❗ JERK!", "⟳ to the ♩ · ↔ vs fish", "⟳ reel in", "🥅 NET!".
+   - **Pop-ups:** ⭐ PERFECT · GREAT · ✔ HOOKED · ✖ TOO EARLY · ✖ TOO SLOW · ⚠ TOO FAST · 💥 SNAP · ✖ SLACK · ⏳ MARLIN · 👀 MARLIN · ✔ READY.
+   - **First-catch coach:** "⟳ one turn each ♩", "🐟 ⬅ pull", "⚠ slow down", "🥅 NET!".
+   - **Panels:** ⭐ ◀ 0.53s ▶ for the perfect cast; 120 ♩ / ⟳ 119 with 🐢 ✔ ⚠ on the BPM gauge; ⚡ under the tension bar; ⟳ under the reel; the button reads ↺ RECAST.
+2. **The edges of the screen flash on every beat while you reel:** green when you're on the BPM, blue when you're spinning slow (easing off), red when you're straining, yellow when you're not spinning. You can keep the beat without looking at the panel.
+
 ## v1.82.103 — Fishing: no more tension spikes
 
 - **Tension can only climb so fast:** at most about a third of the meter per second (empty to full takes about 3 s), and **half that for the first 2 s after the hook**, so it no longer shoots up right away or jumps. It can still drop faster than it rises (up to about 0.9 of the meter per second).
