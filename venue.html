@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.89"></script>
-<script src="gfx.js?v=1.82.89"></script>
-<script src="art.js?v=1.82.89"></script>
-<script src="qr.js?v=1.82.89"></script>
-<script src="voice.js?v=1.82.89"></script>
-<script src="instruments.js?v=1.82.89"></script>
-<script src="kart.js?v=1.82.89"></script>
-<script src="explain.js?v=1.82.89"></script>
+<script src="tune.js?v=1.82.90"></script>
+<script src="gfx.js?v=1.82.90"></script>
+<script src="art.js?v=1.82.90"></script>
+<script src="qr.js?v=1.82.90"></script>
+<script src="voice.js?v=1.82.90"></script>
+<script src="instruments.js?v=1.82.90"></script>
+<script src="kart.js?v=1.82.90"></script>
+<script src="explain.js?v=1.82.90"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3308,18 +3308,32 @@ var GAME=(function(){
   /* the 4-key highway's rhythm: the song's steps, filled in on the beat (half beats at Hard, all through at Expert, in the big
      moments at Hard) wherever the song is playing; a gap of 4+ beats with no steps stays a break. Holds: short ones become
      taps, long ones are cut to 2 beats so they don't stall the bouncing */
-  function pump4(chart,diff,raw){if(!chart||!chart.steps||chart.hand||!chart.steps.length)return chart;var rs=(raw&&raw.steps&&raw.steps.length?raw:chart).steps,rj=0;var per=60000/(chart.bpm||120),st=chart.steps.map(function(x){return x.slice();}),pk=chart.peaks||[];
+  /* the 4-key highway's rhythm, from the song's own rhythm at every level (its off-beats and syncopation too), just spaced out
+     more on the easier levels: the on-beat notes go in first, then the song's other notes wherever the level's spacing allows
+     (Easy 1 beat apart, Normal half a beat but never more than two quick ones running, Hard a third, Expert a quarter).
+     Only a long stretch where the song's playing but nothing was found gets notes on the beat. Holds: short ones become taps,
+     long ones are cut to 2 beats (3 on Easy/Normal). Same song + level = the same notes on every phone. */
+  function pump4(chart,diff,raw){if(!chart||!chart.steps||chart.hand||!chart.steps.length)return chart;
+    var per=60000/(chart.bpm||120),src=(raw&&raw.steps&&raw.steps.length?raw:chart).steps,pk=chart.peaks||[],bt0=chart.beats&&chart.beats.length?chart.beats[0]:src[0][0];
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
-    st.forEach(function(x){if(x.length>2){var h=+x[2]||0;if(h<per*0.75)x.length=2;else x[2]=Math.round(Math.min(h,per*(diff>=2?2:3)));}});
-    var step=diff>=2?0.5:diff===1?1:2,t0=Math.min(st[0][0],rs[0][0]),tEnd=Math.max(st[st.length-1][0],rs[rs.length-1][0]),add=[],j=0,holdTo=-1e9,times=st.map(function(x){return x[0];});
-    for(var t=t0;t<=tEnd;t+=per*step){
-      var half=Math.abs(((t-t0)/per)%1-0.5)<0.01;if(half&&diff===2&&!inPk(t))continue;
-      if(half){var hz=Math.sin(Math.round(t)*0.0137)*43758.5453;if(hz-Math.floor(hz)<(inPk(t)?0.1:0.3))continue;}   /* a little swing: some half beats rest */
-      while(j<st.length&&st[j][0]<t-per*4.5)j++;
-      var near=false,act=false;for(var k=j;k<st.length&&st[k][0]<=t+per*4.5;k++){var d=st[k][0]-t;if(Math.abs(d)<per*0.24)near=true;if(st[k].length>2&&st[k][0]<t&&st[k][0]+st[k][2]>t-per*0.2)near=true;}
-      while(rj<rs.length&&rs[rj][0]<t-per*4)rj++;act=rj<rs.length&&Math.abs(rs[rj][0]-t)<=per*4;   /* the song's playing here (from its full step list, before the level thinned it) */
-      if(!near&&act)add.push([Math.round(t),1]);}
-    if(!add.length)return chart;var all=st.concat(add).sort(function(a,b){return a[0]-b[0];}),c={};for(var kk in chart)c[kk]=chart[kk];c.steps=all;return c;}
+    function bpos(t){return (t-bt0)/per;}
+    function onBeat(t){var f=bpos(t)%1;if(f<0)f+=1;return f<0.12||f>0.88;}
+    var gapB=[1,0.5,0.33,0.25][Math.max(0,Math.min(3,diff))],minG=per*gapB-20,holdCap=per*(diff>=2?2:3);
+    var cand=src.map(function(x){var h=x.length>2?+x[2]||0:0;return{t:+x[0],h:h};}).sort(function(a,b){return a.t-b.t;});
+    var kept=[];
+    function fits(t){/* binary-ish scan: no kept note closer than the level's spacing */for(var i=kept.length-1;i>=0;i--){var d=Math.abs(kept[i].t-t);if(d<minG)return false;if(kept[i].t<t-per*4)break;}return true;}
+    function add(n){var i=kept.length;while(i>0&&kept[i-1].t>n.t)i--;kept.splice(i,0,n);}
+    cand.forEach(function(c){if(onBeat(c.t)&&fits(c.t))add(c);});                          /* the beat first */
+    cand.forEach(function(c){if(!onBeat(c.t)&&fits(c.t)&&(diff>=1||inPk(c.t)))add(c);});    /* then the song's off-beats */
+    /* Normal: at most two quick notes running, then a breath */
+    if(diff===1){var out1=[],run=0;for(var i=0;i<kept.length;i++){var g=i?kept[i].t-out1[out1.length-1].t:1e9;if(out1.length&&g<per*0.75){if(run>=1)continue;run++;}else run=0;out1.push(kept[i]);}kept=out1;}
+    /* a long stretch with the song playing but no notes: on the beat (every other beat on Easy) */
+    var fillB=diff===0?2:1,ri=0,ext=[];
+    for(var k=0;k+1<kept.length;k++){var a0=kept[k].t+(kept[k].h||0),b0=kept[k+1].t;if(b0-a0<=per*(fillB*2+0.5))continue;
+      for(var t=Math.ceil(bpos(a0+per*fillB*0.9)/fillB)*fillB*per+bt0;t<b0-per*fillB*0.9;t+=per*fillB){while(ri<cand.length&&cand[ri].t<t-per*4)ri++;if(ri<cand.length&&Math.abs(cand[ri].t-t)<=per*4)ext.push({t:Math.round(t),h:0});}}
+    ext.forEach(add);
+    var steps=kept.map(function(n){var h=n.h<per*0.75?0:Math.round(Math.min(n.h,holdCap));return h?[n.t,1,h]:[n.t,1];});
+    var c={};for(var kk in chart)c[kk]=chart[kk];c.steps=steps;return c;}
   window.ukPump4=function(c,d,r){return pump4(c,d,r);};
   function keyLanes4(chart,diff){
     var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9,p1=-1,p2=-1,lastDbl=-1e9;
@@ -3330,7 +3344,7 @@ var GAME=(function(){
        trills on fast runs), switching pattern every bar or so; chords land on the big downbeats; a held key's hand rests.
        Same chart + level = the same notes on every phone. */
     var t0=st.length?st[0][0]:0,PAT=[[[0,3],[1,2],[0,1,2,3],[3,2,1,0]],                                   /* Easy */
-      [[0,3],[1,2],[0,2],[1,3],[0,1,2,3],[3,2,1,0],[0,1,2,3,2,1],[0,3,1,2]],                              /* Normal */
+      [[0,3],[1,2],[0,2],[1,3],[0,1,2,3],[3,2,1,0],[0,3,1,2]],                                            /* Normal: simple, fun, settles in */
       [[0,2,1,3],[0,3,1,2],[0,1,2,3,2,1],[3,2,1,0,1,2],[0,2],[1,3],[0,3],[2,1,3,0],[0,1,3,2]],             /* Hard */
       [[0,2,1,3],[3,1,2,0],[0,3,1,2],[0,1,2,3,2,1],[3,2,1,0,1,2],[0,2,1,3,2,0,3,1],[0,1,0,2,3,2,3,1],[1,2,0,3],[2,3,1,0]]][Math.max(0,Math.min(3,diff))];
     var FAST=[[0,2],[1,3],[0,3,1,2],[2,0,3,1]];   /* quick runs: always hand to hand */
@@ -3340,7 +3354,7 @@ var GAME=(function(){
       var s=st[i],big=inPk(s[0]),gap=diff>=3?per*0.2:diff===2?per*0.36:per*0.45;
       if(!s[1]||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
       var bt=Math.round((s[0]-t0)/per*2)/2,bar=Math.floor(bt/4),onBeat=bt%1===0,down=onBeat&&bt%4===0,fast=s[0]-last<per*0.6;
-      if(bar!==pbar&&(used>=4||!pat)||used>=8){pbar=bar;used=0;pi=0;var pool=fast&&diff>=2?FAST.concat(PAT):PAT;pat=pool[Math.floor(hsh(bar*7+i)*pool.length)];}
+      if(bar!==pbar&&(used>=(diff<=1?8:4)||!pat)||used>=(diff<=1?12:8)){pbar=bar;used=0;pi=0;var pool=fast&&diff>=2?FAST.concat(PAT):PAT;pat=pool[Math.floor(hsh(bar*7+i)*pool.length)];}
       var l=pat[pi%pat.length];pi++;used++;
       if(s[0]<holdEnd&&(l===holdLane||(l<2)===(holdLane<2)))l=holdLane<2?2+(pi%2):(pi%2);   /* the hand holding a key rests: the other hand plays */
       if(l===prev&&l===prev2)l=(l+2)%4;                                                    /* never the same key three times running */
@@ -9038,7 +9052,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.89",SERVER_VERSION="";
+var PAGE_VERSION="1.82.90",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10034,7 +10048,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.89"></script>
+<script src="lab.js?v=1.82.90"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

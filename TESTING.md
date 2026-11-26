@@ -1688,6 +1688,18 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.90 — 4-key highway follows the song's own rhythm at every level
+
+Replaces the beat-grid fill from 1.82.88 (Normal was locked to on-beat notes, which felt robotic):
+1. Every level now uses **the song's own rhythm**, off-beats and syncopation included. The levels only differ in how close together notes can be. The beat notes go in first, then the song's other notes wherever they fit:
+   - **Easy:** at least 1 beat apart (mostly the beat).
+   - **Normal:** half a beat, but never more than two quick notes in a row, then a breath of a beat. Easier and slower, but it still grooves with the song.
+   - **Hard:** a third of a beat.
+   - **Expert:** a quarter of a beat (sixteenth runs where the song has them).
+2. Notes on the beat are only added for a long stretch where the song is playing but no notes were found (every other beat on Easy).
+3. Normal's patterns are simpler (D K, F J, staircases, D J F K) and stay longer before changing, so they're fun to settle into.
+4. Holds as before: short → tap, long → cut to 2 beats (3 on Easy/Normal).
+
 ## v1.82.89 — Dragon riders: barrel roll, and the whole sky in landscape
 
 - **The spin is a real barrel roll now:** the dragon rolls along its own length (squashes edge-on, turns belly-up with the rider hanging under it, then comes back), not a loop. Air spirals off behind it.
