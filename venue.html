@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.90"></script>
-<script src="gfx.js?v=1.82.90"></script>
-<script src="art.js?v=1.82.90"></script>
-<script src="qr.js?v=1.82.90"></script>
-<script src="voice.js?v=1.82.90"></script>
-<script src="instruments.js?v=1.82.90"></script>
-<script src="kart.js?v=1.82.90"></script>
-<script src="explain.js?v=1.82.90"></script>
+<script src="tune.js?v=1.82.91"></script>
+<script src="gfx.js?v=1.82.91"></script>
+<script src="art.js?v=1.82.91"></script>
+<script src="qr.js?v=1.82.91"></script>
+<script src="voice.js?v=1.82.91"></script>
+<script src="instruments.js?v=1.82.91"></script>
+<script src="kart.js?v=1.82.91"></script>
+<script src="explain.js?v=1.82.91"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3334,6 +3334,19 @@ var GAME=(function(){
     ext.forEach(add);
     var steps=kept.map(function(n){var h=n.h<per*0.75?0:Math.round(Math.min(n.h,holdCap));return h?[n.t,1,h]:[n.t,1];});
     var c={};for(var kk in chart)c[kk]=chart[kk];c.steps=steps;return c;}
+  /* step dance: put the 4-lane pattern engine's arrows into the steps (bit 0 left, 1 down, 2 up, 3 right) */
+  function stepMasks(chart,diff){if(!chart||!chart.steps||chart.hand)return chart;var km=keyLanes4(chart,diff),c={};for(var k in chart)c[k]=chart[k];
+    c.steps=chart.steps.map(function(x,i){var l=km[i]||[],m=0;l.forEach(function(b){m|=1<<b;});var y=x.slice();y[1]=m;return y;});return c;}
+  /* target dance: the targets flow along a shape in time with the beat (circle, zig-zag, figure 8, sweep), a new shape every
+     2 bars, instead of jumping to random spots. Returns [0..1, 0..1] like spot(). Easy keeps the moves smaller */
+  function flowPos(chart,ms,i,diff){var per=60000/((chart&&chart.bpm)||120),t0=chart&&chart.steps&&chart.steps.length?chart.steps[0][0]:0,bt=(ms-t0)/per,bar=Math.floor(bt/4),
+      sh=Math.floor(Math.abs(Math.sin(Math.floor(bar/2)*12.9898+((chart&&chart.steps)||[]).length)*43758.5453)%4),a=diff<=0?0.6:diff===1?0.8:1,x=0.5,y=0.5;
+    if(sh===0){var an=bt*Math.PI/2+Math.floor(bar/2);x=0.5+0.4*a*Math.cos(an);y=0.5+0.4*a*Math.sin(an);}
+    else if(sh===1){x=0.5+(i%2?0.38:-0.38)*a;y=0.5+(((bt%8)/8)-0.5)*0.8*a;}
+    else if(sh===2){x=0.5+0.4*a*Math.sin(bt*Math.PI/4);y=0.5+0.38*a*Math.sin(bt*Math.PI/2);}
+    else{var f=(bt%4)/4;if(bar%2)f=1-f;x=0.5+(f-0.5)*0.8*a;y=0.5+(bar%4<2?-0.25:0.25)*a+0.08*Math.sin(bt*Math.PI);}
+    return[Math.max(0,Math.min(1,x)),Math.max(0,Math.min(1,y))];}
+  window.ukStepMasks=function(c,d){return stepMasks(c,d);};window.ukFlowPos=function(c,ms,i,d){return flowPos(c,ms,i,d);};window.ukKeyLanes7=function(c,d){return keyLanes7(c,d);};
   window.ukPump4=function(c,d,r){return pump4(c,d,r);};
   function keyLanes4(chart,diff){
     var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9,p1=-1,p2=-1,lastDbl=-1e9;
@@ -3366,7 +3379,34 @@ var GAME=(function(){
     }
     return out;
   }          /* for testing the difficulty levels */
+  /* the 7-key highway's pattern engine: scales, arpeggios, hand-to-hand jumps, trills; chords on the big downbeats; Easy keeps to
+     the middle five keys; the hand holding a key rests. Hand-made charts keep the old walk (below). */
+  function keyLanes7(chart,diff){
+    var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],out=[],last=-1e9;diff=Math.max(0,Math.min(3,diff===undefined?1:diff));
+    function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
+    var PAT=[[[1,3,5,3],[2,4],[1,2,3,4,5],[5,4,3,2,1],[2,3,4,3],[1,5]],
+      [[0,2,4,6,4,2],[1,5],[2,4],[0,1,2,3,4,5,6],[6,5,4,3,2,1,0],[1,3,5,3],[2,5,1,4]],
+      [[0,4,1,5,2,6],[6,2,5,1,4,0],[0,6],[3,0,3,6],[1,2,3,5,4,3],[0,2,1,3,2,4,3,5],[0,2,4,6,4,2],[6,4,2,0,2,4]],
+      [[0,1,2,3,4,5,6,5,4,3,2,1],[0,6,1,5,2,4,3],[3,4,3,2,3,4,5,6],[0,3,6,3],[0,4,1,5,2,6],[6,3,5,2,4,1],[0,2,1,3,2,4,3,5,4,6]]][diff];
+    var FAST=[[0,4],[1,5],[2,6],[1,4,2,5],[0,4,1,5,2,6]],t0=st.length?st[0][0]:0;
+    function hsh(n){var x=Math.sin(n*57.3+st.length*0.71)*43758.5453;return x-Math.floor(x);}
+    function hand(l){return l<3?0:l>3?1:-1;}
+    var lo=diff===0?1:0,hi=diff===0?5:6,pat=null,pi=0,pbar=-1,used=0,hL=-1,hEnd=-1e9,p1=-1,p2=-1;
+    for(var i=0;i<st.length;i++){var s=st[i],big=inPk(s[0]),gap=diff>=3?per*0.2:diff===2?per*0.3:per*0.45;
+      if(!s[1]||(s[0]-last<gap&&!(s[2]>0))){out.push([]);continue;}
+      var bt=Math.round((s[0]-t0)/per*2)/2,bar=Math.floor(bt/4),down=bt%4===0,fast=s[0]-last<per*0.6;
+      if(bar!==pbar&&(used>=(diff<=1?8:4)||!pat)||used>=(diff<=1?12:8)){pbar=bar;used=0;pi=0;var pool=fast&&diff>=2?FAST.concat(PAT):PAT;pat=pool[Math.floor(hsh(bar*5+i)*pool.length)];}
+      var l=pat[pi%pat.length];pi++;used++;l=Math.max(lo,Math.min(hi,l));
+      if(s[0]<hEnd&&(l===hL||(hand(l)>=0&&hand(l)===hand(hL))))l=Math.max(lo,Math.min(hi,6-l));
+      if(l===p1&&l===p2)l=l+2<=hi?l+2:l-2;
+      last=s[0]+(s[2]>0?+s[2]:0);
+      var chord=!(s[2]>0)&&s[0]>=hEnd&&big&&down&&(diff>=2||(diff===1&&bar%2===0))||(diff>=3&&big&&bt%4===2&&!(s[2]>0)&&s[0]>=hEnd);
+      if(chord){var c2=l<3?l+4:l-4;c2=Math.max(lo,Math.min(hi,c2));out.push(c2!==l?[l,c2].sort():[l]);}else out.push([l]);
+      if(s[2]>0){hL=l;hEnd=s[0]+(+s[2]);}
+      p2=p1;p1=l;}
+    return out;}
   function keyLanes(chart,diff){
+    if(chart&&!chart.hand)return keyLanes7(chart,diff);
     var st=chart.steps,per=60000/(chart.bpm||120),pk=chart.peaks||[],c=3,out=[],last=-1e9,D=[-1,-1,1,1],half=0,hrun=0;
     if(diff===undefined)diff=1;
     function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
@@ -3390,12 +3430,12 @@ var GAME=(function(){
     if(!chart)return [];
     var key=n+"|"+m;
     if(bsCache.chart===chart&&bsCache.key===key)return bsCache.out;
-    var d=diffOf(n),c=easeChart(chart,d);if(m==="keys4")c=pump4(c,d,chart);var km=m==="keys"?keyLanes(c,d):m==="keys4"?keyLanes4(c,d):null,out=[];
+    var d=diffOf(n),c=easeChart(chart,d);if(m==="keys4"||m==="keys"||m==="step"||m==="aim")c=pump4(c,d,chart);if(m==="step")c=stepMasks(c,d);var km=m==="keys"?keyLanes(c,d):m==="keys4"?keyLanes4(c,d):null,out=[];
     for(var i=0;i<c.steps.length;i++){
       var s=c.steps[i],lanes=[];
       if(km)lanes=km[i]||[];else for(var b=0;b<4;b++)if(s[1]&(1<<b))lanes.push(b);
       if(!lanes.length)continue;
-      var h=spot(i*4+lanes[0]);
+      var h=m==="aim"&&!c.hand?flowPos(c,s[0],i,d):spot(i*4+lanes[0]);
       out.push({ms:s[0],lanes:m==="aim"?[lanes[0]]:lanes,hold:+s[2]||0,x:0.14+h[0]*0.72,y:0.12+h[1]*0.76});
     }
     bsCache={chart:chart,key:key,out:out};return out;
@@ -3447,7 +3487,7 @@ var GAME=(function(){
         if(s[0]<swoopEnd+120+bt.period*swGap){rndIdx++;continue;}
         if(aimLast.t>-1e8&&s[0]-aimLast.t<bt.period*gapA-30){rndIdx++;continue;}
         var lane0=0;for(var b0=0;b0<4;b0++)if(s[1]&(1<<b0)){lane0=b0;break;}
-        var h0=spot(rndIdx*4+lane0),sw=s[2]>0?Math.max(bt.period*0.9,Math.min(2400,+s[2])):0;
+        var h0=rnd.chart.hand?spot(rndIdx*4+lane0):flowPos(rnd.chart,s[0],rndIdx,dfA),sw=s[2]>0?Math.max(bt.period*0.9,Math.min(2400,+s[2])):0;
         var nx0=0.14+h0[0]*0.72,ny0=0.12+h0[1]*0.76,reach=[0.38,0.45,0.7,9][dfA]||9;
         if(aimLast.t>-1e8){var ddx=nx0-aimLast.x,ddy=ny0-aimLast.y,dd0=Math.hypot(ddx,ddy);if(dd0>reach){nx0=aimLast.x+ddx/dd0*reach;ny0=aimLast.y+ddy/dd0*reach;}}
         var nn={ms:s[0],lane:lane0,x:nx0,y:ny0,t:0,j:"",jt:0,hold:sw};aimLast={t:s[0],x:nx0,y:ny0};
@@ -4396,7 +4436,7 @@ var GAME=(function(){
     if(mode)stop(true);
     four=m==="keys4";if(four)m="keys";
     rnd=round||null;rndIdx=0;sentScore=-1;fCtl=[0,0,0,0];
-    if(window.ukLvRefresh)window.ukLvRefresh();if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart){var rawC=rnd.chart;rnd.chart=easeChart(rnd.chart,rnd.diff);if(four)rnd.chart=pump4(rnd.chart,rnd.diff,rawC);}}clkOff=null;clkJumps=0;swoopEnd=-1e9;aimLast={t:-1e9,x:0.5,y:0.5};finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
+    if(window.ukLvRefresh)window.ukLvRefresh();if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart){var rawC=rnd.chart;rnd.chart=easeChart(rnd.chart,rnd.diff);if(four||m==="keys"||m==="step"||m==="aim")rnd.chart=pump4(rnd.chart,rnd.diff,rawC);if(m==="step")rnd.chart=stepMasks(rnd.chart,rnd.diff);}}clkOff=null;clkJumps=0;swoopEnd=-1e9;aimLast={t:-1e9,x:0.5,y:0.5};finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
     mode=m;myDance=m==="free"||m==="mosh"||m==="skate"||m==="keepy"||m==="kart"||m==="walk"||m==="pipe"||m==="ski"||m==="ctf"||m==="fish"||m==="boats"||m==="swim"||m==="ball"||m==="dragon"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
@@ -9052,7 +9092,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.90",SERVER_VERSION="";
+var PAGE_VERSION="1.82.91",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10048,7 +10088,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.90"></script>
+<script src="lab.js?v=1.82.91"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

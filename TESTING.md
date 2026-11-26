@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.91 — Step dance, 7-key highway and Target dance get the same treatment
+
+All the rhythm games now build their notes the same way as the 4-key highway (1.82.90): **the song's own rhythm at every level**, off-beats included, spaced out more on the easier levels (Easy 1 beat apart, Normal ½ beat with at most two quick notes then a breath, Hard ⅓, Expert ¼). The level thinning no longer leaves long empty stretches. Hand-made charts are unchanged.
+1. **Step dance:** the arrows come from the pattern engine: walks (← ↑ ← ↑), stairs (← ↓ ↑ →), side to side (← →), and no same arrow twice on fast runs. Jumps (two arrows) land on the big downbeats, more on higher levels.
+2. **Note highway (7 keys):** its own pattern engine: scales up and down, arpeggios (A D G J G D), hand-to-hand jumps on fast runs, trills, and chords on the big downbeats. Easy stays on the middle five keys. While you hold a key, that hand rests.
+3. **Target dance:** targets flow along a shape in time with the beat (a circle, a zig-zag, a figure 8, a sweep), a new shape every 2 bars, instead of popping up at random. Easy keeps the moves smaller.
+
 ## v1.82.90 — 4-key highway follows the song's own rhythm at every level
 
 Replaces the beat-grid fill from 1.82.88 (Normal was locked to on-beat notes, which felt robotic):
