@@ -1688,6 +1688,31 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.76 — Playlists, song requests from the room, crowd votes the next song
+
+Server change: redeploy Render.
+
+**Host: the 📜 Playlist tab** (in Start song; it opens there once you have a queue or saved playlists)
+1. **Up next:** pick a song above (site song, your music, a video or YouTube) and press ＋ to queue it. Each row has ▶ play now, ▲▼ reorder, ☆ favourite and ✕ remove. Name tonight's playlist in the box.
+2. **Settings** (all on by default):
+   - When a song ends, go on to the next from this playlist.
+   - The crowd votes on which one (from the next 4).
+   - The crowd picks the game too.
+
+   After a song, the phones get "🗳 PICK THE NEXT SONG"; 20 seconds later the winner starts, with the crowd's game vote. With the vote off (or only one song left), the next song just plays.
+3. **💾 Save playlist** keeps it. Saved playlists each have Load (becomes tonight's queue), ＋ (add to the queue), ★ favourite and ✕ delete; favourites sit on top.
+4. **History:** every night's played songs, with Load and 💾 save as a playlist.
+5. **Favourite songs:** starred songs, with ＋ to queue.
+6. **Export / Import** moves playlists between computers.
+7. Everything is saved on this computer. Your own song files and ones players send are kept in the browser's storage, so saved playlists still play next time.
+
+**Players: 🎵 ADD SONG** (top right in the room; hidden during games)
+1. Paste a YouTube link and press Send, or Choose a song file (up to 15 MB; it shows Sending… %).
+2. On the host, a toast appears, the Start song button glows green, and the Playlist tab shows "Songs the room sent" with ✔ add / ✕ pass. YouTube titles fill in by themselves.
+3. The player is told "✔ <song> is on the playlist!" or that the host passed.
+
+**YouTube ads:** they play in the normal player on the host and TV (YouTube's rules: never hidden or muted). The game waits while an ad plays: the phones show "📺 Ad break · back in a moment" and the host shows "Ad break: the game waits"; the game picks up when the song starts.
+
 ## v1.82.75 — Cast to a TV while you host; join rooms on your WiFi
 
 Server change: redeploy Render.
