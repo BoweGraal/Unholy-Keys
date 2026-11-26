@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.112 — New game intros: 8-bit demos and short instructions for every game
+
+The card that shows before each game (the last ~15 s of the countdown) is redone for all 22 games. The instructions are cut down to a goal line, 2–3 short HOW lines and 2–3 RULES, with symbols instead of sentences. Every demo is now drawn in whole pixels (no smooth circles or lines). The fishing, mosh pit and ice rink demos are rebuilt to match how those games work now, and Coin dive, Ball run and Dragon riders get a card for the first time.
+
+1. Start practice, pick **Fishing**, and watch the card during the countdown. The demo runs through the 5 steps, with a caption for each: **1 SWOOP UP FAST** (the power bar with the fish tiers, PERFECT! MARLIN), **2 WAIT**, **3 JERK!** (❗ over the float), **4 SPIN ON THE BEAT** (the reel, the BPM, the vertical tension bar on the right, the edge pulsing on the beat, TOO FAST), **5 NET IT!** (MARLIN +1500). The text says nothing about the old box or bars.
+2. **Mosh pit**: SWING ON THE BEAT → HEADBANG ON THE LINE → PICK A SIDE / CHARGE ON THE DROP.
+3. **Ice rink**: COPY THE ARROWS → SPIN: CIRCLE / HOLD IT → BIG JUMP (mash bar, then the jump).
+4. **Coin dive**, **Ball run** and **Dragon riders** now get a card: the dive shows dashing on the beat for coins; the ball run shows a giant ball steered by the performer squashing a runner; the dragons show the fire bar, eating notes for SUPER, then the boss organ with its HP bar and the flamethrower.
+5. Spot-check the rest: every card fits on a phone without much scrolling, the text is short, and nothing looks smooth or blurry.
+6. The help line in the game for Dragon riders and Fishing now matches the current controls.
+
 ## v1.82.111 — Fishing: no more snaps with the tension bar half full
 
 A big fish (usually the marlin) used to "snap" out of nowhere: once it had pulled out all your line, the catch ended on the spot, wherever the tension bar was. Now when it runs out your line you get a warning, and the bar climbs to the top before the line goes.
