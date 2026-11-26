@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.86 — Dragon riders: the boss is the last 90 s, much tougher, and comes back for an ENCORE
+
+1. The demon organist now takes over for the **last 90 seconds of the song** (or the last 70% of a short song) instead of at 62%.
+2. **Much more health:** 100 + 150 per rider (was 60 + 45).
+3. **Beat it before the song ends:** "THE RIDERS WIN!" shows, then after about 4.5 s **"ENCORE! <name> RETURNS"**. The organ slides back in with 1.5× the health and its notes fly faster, again each time. Every kill pays +250 to the riders still flying. No more empty flying around at the end.
+4. The host's switch to the church organ happens at the same new time.
+
 ## v1.82.85 — Dragon riders: health, and someone wins
 
 1. Every rider has **5 hearts** (under your dragon, below the breath bar and super pips). A monster or a flaming note hitting your dragon's body costs one heart. Catching a note in the jaws still feeds the SUPER and doesn't hurt.

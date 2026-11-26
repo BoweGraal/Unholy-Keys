@@ -508,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.85";
+var VERSION = "1.82.86";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -874,11 +874,18 @@ function onMessage(ws, raw, isBinary) {
       /* Dragon riders: fireballs that hit the boss organ come off one shared health bar */
       var drd = rooms[ws.room].round;
       if (!drd || drd.mode !== "dragon" || drd.phase !== "play" || !allow(ws, "drgHit", 8, 5)) return;
-      if (!drd.boss) { var bmx = 60 + 45 * Math.max(1, rooms[ws.room].viewers.size); drd.boss = { hp: bmx, max: bmx }; }
+      if (!drd.boss) { var bmx = 100 + 150 * Math.max(1, rooms[ws.room].viewers.size); drd.boss = { hp: bmx, max: bmx }; }
       if (drd.boss.hp <= 0) return;
       drd.boss.hp = Math.max(0, drd.boss.hp - intIn(msg.d, 0, 20, 0));
       broadcast(ws.room, { type: "drgHp", hp: drd.boss.hp, max: drd.boss.max, id: ws.viewerId });
-      if (drd.boss.hp <= 0) dragonEnd(ws.room, "riders");
+      if (drd.boss.hp <= 0) {
+        dragonEnd(ws.room, "riders");
+        /* beaten early: an ENCORE after a few seconds, with half as much health again, until the song ends */
+        var eroom = ws.room;
+        if (!drd.boss.encT) drd.boss.encT = setTimeout(function() { var er = rooms[eroom], erd = er && er.round; if (erd !== drd || erd.phase !== "play") return;
+          drd.boss.n = (drd.boss.n || 0) + 1; drd.boss.max = Math.round(drd.boss.max * 1.5); drd.boss.hp = drd.boss.max; drd.boss.encT = null;
+          broadcast(eroom, { type: "drgEncore", n: drd.boss.n, max: drd.boss.max }); }, 4500);
+      }
       return;
     }
     if (msg.type === "drgDown") {

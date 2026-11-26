@@ -229,12 +229,12 @@ module.exports = function(api) {
     if (!b.dg || b.dg.n0 !== rd.n) b.dg = { n0: rd.n, posAt: 0, hitAt: 0, w: Math.random() * 6, hp: 5, down: false, dmgAt: now };
     var o = b.dg;
     /* hit now and then (more in the boss fight); five hits and its dragon falls */
-    if (!o.down && now - o.dmgAt > 1000) { o.dmgAt = now; if (Math.random() < (ph > 0.62 ? 0.1 : 0.04) * (1.5 - b.skill)) { o.hp--; if (o.hp <= 0) { o.down = true; b.act({ type: "drgDown" }); b.x = +(0.08 + 0.84 * Math.random()).toFixed(3); b.y = 0.975; b.act({ type: "pos", x: b.x, y: b.y }); } } }
+    if (!o.down && now - o.dmgAt > 1000) { o.dmgAt = now; if (Math.random() < (boss ? 0.1 : 0.04) * (1.5 - b.skill)) { o.hp--; if (o.hp <= 0) { o.down = true; b.act({ type: "drgDown" }); b.x = +(0.08 + 0.84 * Math.random()).toFixed(3); b.y = 0.975; b.act({ type: "pos", x: b.x, y: b.y }); } } }
     if (o.down) return;
     if (now - o.posAt > 180) { o.posAt = now; var t = now / 1000;
       b.x = +(0.2 + 0.12 * Math.sin(t * 0.7 + o.w) + 0.05 * b.skill).toFixed(4); b.y = +(0.62 + 0.22 * Math.sin(t * 1.1 + o.w * 2)).toFixed(4);
       b.act({ type: "pos", x: b.x, y: b.y }); }
-    if (ph > 0.62 && now - o.hitAt > 600) { o.hitAt = now; if (Math.random() < 0.4 + b.skill * 0.4) b.act({ type: "drgHit", d: 1 + Math.floor(Math.random() * 2) }); }
+    if (boss && now - o.hitAt > 600) { o.hitAt = now; if (Math.random() < 0.4 + b.skill * 0.4) b.act({ type: "drgHit", d: 1 + Math.floor(Math.random() * 2) }); }
   }
   function boats(b, now) {
     if (!b.bb || b.bb.n0 !== b.rd.n) { var a0 = Math.random() * 6.283; b.bb = { n0: b.rd.n, u: Math.cos(a0) * 0.6, v: Math.sin(a0) * 0.6, vu: 0, vv: 0, out: false, posAt: 0, t0: now, hd: 0 }; }

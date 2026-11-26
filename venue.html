@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.85"></script>
-<script src="gfx.js?v=1.82.85"></script>
-<script src="art.js?v=1.82.85"></script>
-<script src="qr.js?v=1.82.85"></script>
-<script src="voice.js?v=1.82.85"></script>
-<script src="instruments.js?v=1.82.85"></script>
-<script src="kart.js?v=1.82.85"></script>
-<script src="explain.js?v=1.82.85"></script>
+<script src="tune.js?v=1.82.86"></script>
+<script src="gfx.js?v=1.82.86"></script>
+<script src="art.js?v=1.82.86"></script>
+<script src="qr.js?v=1.82.86"></script>
+<script src="voice.js?v=1.82.86"></script>
+<script src="instruments.js?v=1.82.86"></script>
+<script src="kart.js?v=1.82.86"></script>
+<script src="explain.js?v=1.82.86"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2345,6 +2345,7 @@ function handleMsg(msg){
   if(msg.type==="drg"){DRAGON.msg(msg);return;}
   if(msg.type==="drgHp"){DRAGON.hp(msg);return;}
   if(msg.type==="drgEnd"){DRAGON.over(msg);return;}
+  if(msg.type==="drgEncore"){DRAGON.enc(msg);return;}
   var t=msg.type;
   if(t==="error"){
     /* e.g. "Room not found": this used to be ignored, leaving you alone in an empty venue */
@@ -9009,7 +9010,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.85",SERVER_VERSION="";
+var PAGE_VERSION="1.82.86",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9122,7 +9123,7 @@ var BALL=(function(){
    performer, or just nobody pressing) the waves and the boss's notes come from the song's own steps, the same on every phone. */
 var DRAGON=(function(){
   var on=false,local=false,lastT=0,pops=[],en=[],fb=[],notes=[],others={},score=0,stunTo=0,fireAt=0,perfAt=0,
-      gotMax=false,charge=0,superTo=0,supAcc=0,supBtn=null,breath=0,wantFire=false,fireBtn=null,hearts=5,down=false,downAt=0,ended="",endAt=0,
+      gotMax=false,encN=0,encAt=0,charge=0,superTo=0,supAcc=0,supBtn=null,breath=0,wantFire=false,fireBtn=null,hearts=5,down=false,downAt=0,ended="",endAt=0,
       waves=[],wi=0,bossShots=[],bi=0,bossAt=0,bossIn=0,bossHp=0,bossMax=0,bossDead=false,deadAt=0,pend=0,sentAt=0,lastFbTime=0,botB={},boom=[],seedN=1;
   var Y0=0.38,Y1=0.82,BX=0.83;
   function gm(){var c=typeof ROUND!=="undefined"&&ROUND.chart&&ROUND.chart();return c&&c.gameMs>20000?c.gameMs:90000;}
@@ -9130,7 +9131,7 @@ var DRAGON=(function(){
   var lastT0=0;
   function h01(n){var x=Math.sin(n*12.9898+seedN*78.233)*43758.5453;return x-Math.floor(x);}
   /* the song's steps become the waves (about one every 1.2 s) and, in the boss fight, the organ's notes (one every 0.65 s) */
-  function plan(){var c=typeof ROUND!=="undefined"&&ROUND.chart&&ROUND.chart(),st=c&&c.steps||[],g=gm();bossAt=g*0.62;waves=[];bossShots=[];var lw=-1e9,lb=-1e9;
+  function plan(){var c=typeof ROUND!=="undefined"&&ROUND.chart&&ROUND.chart(),st=c&&c.steps||[],g=gm();bossAt=Math.max(g*0.3,g-90000);   /* the boss: the song's last 90 s */waves=[];bossShots=[];var lw=-1e9,lb=-1e9;
     st.forEach(function(s,i){var t=+s[0],m=+s[1]||1,ln=m&1?0:m&2?1:m&4?2:3;
       if(t<bossAt-2500){if(t-lw>=1150&&t>2500){lw=t;waves.push({t:t,k:ln,y:h01(i)});}}
       else if(t>bossAt+2500){if(t-lb>=650){lb=t;bossShots.push({t:t,k:ln});}}});
@@ -9138,18 +9139,22 @@ var DRAGON=(function(){
     if(!bossShots.length)for(var t2=bossAt+2500;t2<g;t2+=700)bossShots.push({t:t2,k:Math.floor(h01(t2)*4)});
     wi=0;bi=0;}
   function start(){on=true;local=!!(typeof PRACTICE!=="undefined"&&PRACTICE&&PRACTICE.on);lastT=0;lastT0=performance.now();pops=[];en=[];fb=[];notes=[];others={};score=0;stunTo=0;fireAt=0;perfAt=0;
-    bossIn=0;bossDead=false;deadAt=0;pend=0;sentAt=0;botB={};boom=[];gotMax=false;charge=0;superTo=0;supAcc=0;breath=0;wantFire=false;hearts=HEARTS;down=false;downAt=0;ended="";endAt=0;supUI();seedN=(typeof ROUND!=="undefined"&&ROUND.n)||1;bossMax=60+45*Math.max(1,Object.keys(viewers).filter(function(id){return viewers[id]&&viewers[id]!==PH;}).length);bossHp=bossMax;
+    bossIn=0;bossDead=false;deadAt=0;pend=0;sentAt=0;botB={};boom=[];gotMax=false;encN=0;encAt=0;charge=0;superTo=0;supAcc=0;breath=0;wantFire=false;hearts=HEARTS;down=false;downAt=0;ended="";endAt=0;supUI();seedN=(typeof ROUND!=="undefined"&&ROUND.n)||1;bossMax=100+150*Math.max(1,Object.keys(viewers).filter(function(id){return viewers[id]&&viewers[id]!==PH;}).length);bossHp=bossMax;
     plan();document.body.classList.add("gaming-dragon");var me=myId&&viewers[myId];if(me)setMe(0.18,0.55+h01(7)*0.25);}
   function stop(){on=false;document.body.classList.remove("gaming-dragon");supUI();}
   function inBoss(t){return t>=bossAt&&!bossDead;}
   /* the performer: an arrow is a wave (or a note from the organ, in the boss fight) */
   function msg(m){if(ended)return;perfAt=performance.now();var t=sp();if(inBoss(t))fireNote(m.k|0);else spawn(m.k|0,h01((m.s|0)%100000));}
   /* the server's shared bar: hits count on this phone at once, and the server's number (everyone's hits) pulls it lower */
+  function enc(m){encore(Math.max(1,m.max|0));}
   function over(m){end(m.win==="demon"?"demon":"riders");if(m.win==="riders"&&!bossDead)kill();}
   function hp(m){if(m.max|0){if(!gotMax){gotMax=true;bossMax=m.max|0;bossHp=Math.min(bossHp,bossMax);}}bossHp=Math.min(bossHp,Math.max(0,m.hp|0));if(bossHp<=0&&!bossDead)kill();}
   function bossHit(n){bossHp=Math.max(0,bossHp-n);if(bossHp<=0&&!bossDead)kill();}
   function pname(){var n=typeof performer!=="undefined"&&performer&&performer.name||"THE PERFORMER";return String(n).toUpperCase().slice(0,16);}
-  function kill(){bossDead=true;deadAt=performance.now();end("riders");if(!down){score+=250;GAME.moshPts(250);}pops.push({t:deadAt,txt:"DEMON "+pname()+" FALLS! +250",col:"#9cff4a",big:1});
+  /* beaten before the song's over: the demon comes back for an ENCORE, tougher, until the song ends */
+  function encore(max){var now=performance.now();encN++;encAt=0;bossDead=false;ended="";bossMax=max;bossHp=max;gotMax=true;bossIn=now-1000;notes=[];
+    pops.push({t:now,txt:"ENCORE! "+pname()+" RETURNS",col:"#ff3d1f",big:1});supUI();}
+  function kill(){bossDead=true;deadAt=performance.now();if(local)encAt=deadAt+4500;end("riders");if(!down){score+=250;GAME.moshPts(250);}pops.push({t:deadAt,txt:"DEMON "+pname()+" FALLS! +250",col:"#9cff4a",big:1});
     for(var i=0;i<26;i++)boom.push({x:BX,y:0.6,vx:(Math.random()-0.5)*0.6,vy:(Math.random()-0.6)*0.6,t:deadAt,c:i%2?"#ffb21f":"#ff3d1f"});notes=[];}
   function isMe(){return true;}
   function setMe(x,y){var me=viewers[myId];if(!me)return;me.tx=me.x=x;me.ty=me.y=y;sendPos(x,y);}
@@ -9172,7 +9177,7 @@ var DRAGON=(function(){
     else{var u=Math.min(1,(p-TURN)/(SEAT-TURN)),e=u*u*(3-2*u),bs=Math.min(1.1,W/390);x=sx+(bossX(now)*W-sx)*e;y=sy+(bossY(now)*H+(22-DMH+DMH)*bs-sy)*e-Math.sin(u*Math.PI)*70;
       for(var tr=1;tr<5;tr++){g.fillStyle=tr%2?"#ff5a14":"#c81e12";g.fillRect(x-tr*10*(1-e)-6,y-34+tr*3,8,8);}}   /* a trail of fire */
     g.drawImage(dm,Math.round(x-DMW/2),Math.round(y-DMH+8));}
-  function fireNote(k){var now=performance.now();if(!seated(now)||ended)return;notes.push({x:bossX(now)-0.08,y:pipeY(k,now),k:k,t:now,vx:-0.4});}
+  function fireNote(k){var now=performance.now();if(!seated(now)||ended)return;notes.push({x:bossX(now)-0.08,y:pipeY(k,now),k:k,t:now,vx:-0.4*(1+0.2*encN)});}
   function wire(){var now=performance.now();return{h:hearts,f:now<superTo?1:0,t:down?2:now<stunTo?1:0};}
   var CH=5,HEARTS=5;
   function isOutMe(){return on&&down;}
@@ -9245,6 +9250,7 @@ var DRAGON=(function(){
       o.fb.forEach(function(f){f.x+=0.95*dt;});o.fb=o.fb.filter(function(f){return f.x<1.05;});});
     if(supBtn&&(supBtn.style.display==="block")!==(charge>=CH&&!sup))supUI();
     me.dance=4;GAME.moshPose(stun?[2.6,-2.6,0.5,-0.5]:sup?[1.6,-1.6,0.6,-0.6]:[0.75,-0.75,0.6,-0.6]);if(GAME.poseNow)GAME.poseNow();
+    if(local&&bossDead&&encAt&&now>=encAt&&!down)encore(Math.round(bossMax*1.5));
     if(LBOTS())botTick(dt,now);localEnd();}
   /* this screen's practice riders: weave about, and chip at the boss */
   function localEnd(){if(local&&!ended){var alive=down?0:1;Object.keys(viewers).forEach(function(id){if(id.indexOf("bot")===0&&!(botB[id]&&botB[id].down))alive++;});if(alive===0)end("demon");}}
@@ -9377,9 +9383,9 @@ var DRAGON=(function(){
   /* light up the pipe that fired */
   var _fn=fireNote;fireNote=function(k){lastPipe[k]=performance.now();_fn(k);};
   window.ukDragonCharge=function(n){charge=n;supUI();};window.ukDragonHurt=function(n){for(var i=0;i<(n||1);i++){stunTo=0;hurt(performance.now());}};window.ukDragonFire=function(){wantFire=true;};window.ukDragonSuper=fireSuper;
-  window.ukDragon=function(){return{hearts:hearts,down:down,ended:ended,charge:charge,sup:performance.now()<superTo,on:on,local:local,score:score,enemies:en.length,notes:notes.length,boss:!!bossIn,dead:bossDead,hp:bossHp,max:bossMax,stun:performance.now()<stunTo,waves:waves.length,shots:bossShots.length,t:Math.round(sp()),bossAt:Math.round(bossAt)};};
+  window.ukDragonKill=function(){bossHit(bossHp);};window.ukDragon=function(){return{enc:encN,hearts:hearts,down:down,ended:ended,charge:charge,sup:performance.now()<superTo,on:on,local:local,score:score,enemies:en.length,notes:notes.length,boss:!!bossIn,dead:bossDead,hp:bossHp,max:bossMax,stun:performance.now()<stunTo,waves:waves.length,shots:bossShots.length,t:Math.round(sp()),bossAt:Math.round(bossAt)};};
   window.ukDragonJump=function(ms){jump+=ms;};   /* tests */
-  return{start:start,stop:stop,tick:tick,msg:msg,hp:hp,over:over,isOutMe:isOutMe,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
+  return{start:start,stop:stop,tick:tick,msg:msg,hp:hp,over:over,enc:enc,isOutMe:isOutMe,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
 function LBOTS(){for(var k in viewers)if(k.indexOf("bot")===0)return true;return false;}   /* this screen's own practice dancers (the server's bots have normal ids) */
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
 var AVFLEX={};   /* per dancer: last arm angles, for the elbow follow-through */
@@ -9961,7 +9967,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.85"></script>
+<script src="lab.js?v=1.82.86"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
