@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.85 — Dragon riders: health, and someone wins
+
+1. Every rider has **5 hearts** (under your dragon, below the breath bar and super pips). A monster or a flaming note hitting your dragon's body costs one heart. Catching a note in the jaws still feeds the SUPER and doesn't hurt.
+2. At 0 hearts **your dragon falls into the lava**: you're out for the rest of the round, standing at the bottom edge to watch, and the FIRE button goes away.
+3. **The riders win** if they bring the organ's health to 0: "THE RIDERS WIN!", and +250 to every rider still flying.
+4. **The demon (the performer) wins** if every rider who joined the round falls first: "DEMON <name> WINS!". The server referees, so every phone, the host and the TV agree. The host gets a toast either way.
+5. Bots lose hearts too (more often in the boss fight). In practice, your bots count.
+
 ## v1.82.84 — Dragon riders: 8-bit, breath meter, eat the notes for a SUPER, demon performer in the organ
 
 1. **8-bit:** the whole dragon scene (sky, dragons, monsters, fire, the organ) is drawn in chunky pixels with hard edges, in banded colours.

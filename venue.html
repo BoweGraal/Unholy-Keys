@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.84"></script>
-<script src="gfx.js?v=1.82.84"></script>
-<script src="art.js?v=1.82.84"></script>
-<script src="qr.js?v=1.82.84"></script>
-<script src="voice.js?v=1.82.84"></script>
-<script src="instruments.js?v=1.82.84"></script>
-<script src="kart.js?v=1.82.84"></script>
-<script src="explain.js?v=1.82.84"></script>
+<script src="tune.js?v=1.82.85"></script>
+<script src="gfx.js?v=1.82.85"></script>
+<script src="art.js?v=1.82.85"></script>
+<script src="qr.js?v=1.82.85"></script>
+<script src="voice.js?v=1.82.85"></script>
+<script src="instruments.js?v=1.82.85"></script>
+<script src="kart.js?v=1.82.85"></script>
+<script src="explain.js?v=1.82.85"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2344,6 +2344,7 @@ function handleMsg(msg){
   if(msg.type==="ball"){BALL.msg(msg);return;}
   if(msg.type==="drg"){DRAGON.msg(msg);return;}
   if(msg.type==="drgHp"){DRAGON.hp(msg);return;}
+  if(msg.type==="drgEnd"){DRAGON.over(msg);return;}
   var t=msg.type;
   if(t==="error"){
     /* e.g. "Room not found": this used to be ignored, leaving you alone in an empty venue */
@@ -2761,7 +2762,8 @@ function moveTick(){
   if(typeof KEEPY!=="undefined"&&KEEPY.on){requestAnimationFrame(moveTick);return;}
   if(typeof FISH!=="undefined"&&FISH.on){requestAnimationFrame(moveTick);return;}   /* fishing: you stand at the edge */
   if(typeof BOATS!=="undefined"&&BOATS.on){requestAnimationFrame(moveTick);return;}   /* the boat drives you */
-  if(typeof BALL!=="undefined"&&BALL.isOutMe()){requestAnimationFrame(moveTick);return;}   /* flattened: you watch from the side */
+  if(typeof BALL!=="undefined"&&BALL.isOutMe()){requestAnimationFrame(moveTick);return;}
+  if(typeof DRAGON!=="undefined"&&DRAGON.isOutMe()){requestAnimationFrame(moveTick);return;}   /* your dragon fell: you watch */   /* flattened: you watch from the side */
   if(typeof SWIM!=="undefined"&&SWIM.on){requestAnimationFrame(moveTick);return;}   /* swimming moves you */
   if(typeof WALK!=="undefined"&&WALK.on){requestAnimationFrame(moveTick);return;}
   if(typeof PIPE!=="undefined"&&PIPE.on){requestAnimationFrame(moveTick);return;}
@@ -9007,7 +9009,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.84",SERVER_VERSION="";
+var PAGE_VERSION="1.82.85",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9120,7 +9122,7 @@ var BALL=(function(){
    performer, or just nobody pressing) the waves and the boss's notes come from the song's own steps, the same on every phone. */
 var DRAGON=(function(){
   var on=false,local=false,lastT=0,pops=[],en=[],fb=[],notes=[],others={},score=0,stunTo=0,fireAt=0,perfAt=0,
-      gotMax=false,charge=0,superTo=0,supAcc=0,supBtn=null,breath=0,wantFire=false,fireBtn=null,
+      gotMax=false,charge=0,superTo=0,supAcc=0,supBtn=null,breath=0,wantFire=false,fireBtn=null,hearts=5,down=false,downAt=0,ended="",endAt=0,
       waves=[],wi=0,bossShots=[],bi=0,bossAt=0,bossIn=0,bossHp=0,bossMax=0,bossDead=false,deadAt=0,pend=0,sentAt=0,lastFbTime=0,botB={},boom=[],seedN=1;
   var Y0=0.38,Y1=0.82,BX=0.83;
   function gm(){var c=typeof ROUND!=="undefined"&&ROUND.chart&&ROUND.chart();return c&&c.gameMs>20000?c.gameMs:90000;}
@@ -9136,17 +9138,18 @@ var DRAGON=(function(){
     if(!bossShots.length)for(var t2=bossAt+2500;t2<g;t2+=700)bossShots.push({t:t2,k:Math.floor(h01(t2)*4)});
     wi=0;bi=0;}
   function start(){on=true;local=!!(typeof PRACTICE!=="undefined"&&PRACTICE&&PRACTICE.on);lastT=0;lastT0=performance.now();pops=[];en=[];fb=[];notes=[];others={};score=0;stunTo=0;fireAt=0;perfAt=0;
-    bossIn=0;bossDead=false;deadAt=0;pend=0;sentAt=0;botB={};boom=[];gotMax=false;charge=0;superTo=0;supAcc=0;breath=0;wantFire=false;supUI();seedN=(typeof ROUND!=="undefined"&&ROUND.n)||1;bossMax=60+45*Math.max(1,Object.keys(viewers).filter(function(id){return viewers[id]&&viewers[id]!==PH;}).length);bossHp=bossMax;
+    bossIn=0;bossDead=false;deadAt=0;pend=0;sentAt=0;botB={};boom=[];gotMax=false;charge=0;superTo=0;supAcc=0;breath=0;wantFire=false;hearts=HEARTS;down=false;downAt=0;ended="";endAt=0;supUI();seedN=(typeof ROUND!=="undefined"&&ROUND.n)||1;bossMax=60+45*Math.max(1,Object.keys(viewers).filter(function(id){return viewers[id]&&viewers[id]!==PH;}).length);bossHp=bossMax;
     plan();document.body.classList.add("gaming-dragon");var me=myId&&viewers[myId];if(me)setMe(0.18,0.55+h01(7)*0.25);}
   function stop(){on=false;document.body.classList.remove("gaming-dragon");supUI();}
   function inBoss(t){return t>=bossAt&&!bossDead;}
   /* the performer: an arrow is a wave (or a note from the organ, in the boss fight) */
-  function msg(m){perfAt=performance.now();var t=sp();if(inBoss(t))fireNote(m.k|0);else spawn(m.k|0,h01((m.s|0)%100000));}
+  function msg(m){if(ended)return;perfAt=performance.now();var t=sp();if(inBoss(t))fireNote(m.k|0);else spawn(m.k|0,h01((m.s|0)%100000));}
   /* the server's shared bar: hits count on this phone at once, and the server's number (everyone's hits) pulls it lower */
+  function over(m){end(m.win==="demon"?"demon":"riders");if(m.win==="riders"&&!bossDead)kill();}
   function hp(m){if(m.max|0){if(!gotMax){gotMax=true;bossMax=m.max|0;bossHp=Math.min(bossHp,bossMax);}}bossHp=Math.min(bossHp,Math.max(0,m.hp|0));if(bossHp<=0&&!bossDead)kill();}
   function bossHit(n){bossHp=Math.max(0,bossHp-n);if(bossHp<=0&&!bossDead)kill();}
   function pname(){var n=typeof performer!=="undefined"&&performer&&performer.name||"THE PERFORMER";return String(n).toUpperCase().slice(0,16);}
-  function kill(){bossDead=true;deadAt=performance.now();score+=250;GAME.moshPts(250);pops.push({t:deadAt,txt:"DEMON "+pname()+" FALLS! +250",col:"#9cff4a",big:1});
+  function kill(){bossDead=true;deadAt=performance.now();end("riders");if(!down){score+=250;GAME.moshPts(250);}pops.push({t:deadAt,txt:"DEMON "+pname()+" FALLS! +250",col:"#9cff4a",big:1});
     for(var i=0;i<26;i++)boom.push({x:BX,y:0.6,vx:(Math.random()-0.5)*0.6,vy:(Math.random()-0.6)*0.6,t:deadAt,c:i%2?"#ffb21f":"#ff3d1f"});notes=[];}
   function isMe(){return true;}
   function setMe(x,y){var me=viewers[myId];if(!me)return;me.tx=me.x=x;me.ty=me.y=y;sendPos(x,y);}
@@ -9169,9 +9172,18 @@ var DRAGON=(function(){
     else{var u=Math.min(1,(p-TURN)/(SEAT-TURN)),e=u*u*(3-2*u),bs=Math.min(1.1,W/390);x=sx+(bossX(now)*W-sx)*e;y=sy+(bossY(now)*H+(22-DMH+DMH)*bs-sy)*e-Math.sin(u*Math.PI)*70;
       for(var tr=1;tr<5;tr++){g.fillStyle=tr%2?"#ff5a14":"#c81e12";g.fillRect(x-tr*10*(1-e)-6,y-34+tr*3,8,8);}}   /* a trail of fire */
     g.drawImage(dm,Math.round(x-DMW/2),Math.round(y-DMH+8));}
-  function fireNote(k){var now=performance.now();if(!seated(now))return;notes.push({x:bossX(now)-0.08,y:pipeY(k,now),k:k,t:now,vx:-0.4});}
-  function wire(){var now=performance.now();return{h:0,f:now<superTo?1:0,t:now<stunTo?1:0};}
-  var CH=5;
+  function fireNote(k){var now=performance.now();if(!seated(now)||ended)return;notes.push({x:bossX(now)-0.08,y:pipeY(k,now),k:k,t:now,vx:-0.4});}
+  function wire(){var now=performance.now();return{h:hearts,f:now<superTo?1:0,t:down?2:now<stunTo?1:0};}
+  var CH=5,HEARTS=5;
+  function isOutMe(){return on&&down;}
+  function sideline(id){var h=0;for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))%997;return[0.06+0.88*(h/997),0.975];}
+  /* hit: a heart gone; the last one and your dragon falls into the lava (you watch from the edge) */
+  function hurt(now){hearts=Math.max(0,hearts-1);if(hearts>0){stunTo=now+1400;pops.push({t:now,txt:"OUCH! "+hearts+" \u2764 LEFT",col:"#ff8a8a",big:1});try{if(navigator.vibrate)navigator.vibrate([50,30,70]);}catch(x){}return;}
+    down=true;downAt=now;charge=0;superTo=0;pops.push({t:now,txt:"YOUR DRAGON FALLS!",col:"#ff5a3c",big:1});try{if(navigator.vibrate)navigator.vibrate([80,40,80,40,160]);}catch(x){}
+    if(!local)wsSend({type:"drgDown"});var me=viewers[myId];if(me)boomAt(me.x,me.y-0.02,now);supUI();}
+  function boomAt(x,y,now){for(var z=0;z<16;z++)boom.push({x:x,y:y,vx:(Math.random()-0.5)*0.5,vy:(Math.random()-0.7)*0.5,t:now,c:z%2?"#ffb21f":"#ff3d1f"});}
+  /* the end: the riders win by bringing the organ down, the demon (the performer) wins if every dragon falls first */
+  function end(w){if(ended)return;ended=w;endAt=performance.now();notes=[];en=[];supUI();}
   function breathe(){var now=performance.now(),me=myId&&viewers[myId];if(!me||now<stunTo||now<superTo||breath<0.12)return;var lv=breath;breath=0;
     fb.push({x:me.x+0.1,y:me.y-0.035,t:now,r:4+lv*11,dmg:1+Math.round(lv*3)});if(lv>=0.99)pops.push({t:now,x:me.x+0.12,y:me.y-0.06,txt:"MAX!",col:"#fff1a0"});}
   function fireSuper(){var now=performance.now();if(!on||charge<CH||now<superTo)return;charge=0;superTo=now+3000;supAcc=0;pops.push({t:now,txt:"SUPER FLAME!",col:"#ff5a1f",big:1});try{if(navigator.vibrate)navigator.vibrate([30,20,30,20,60]);}catch(e){}supUI();}
@@ -9180,7 +9192,7 @@ var DRAGON=(function(){
       fireBtn.style.cssText="position:fixed;right:22px;bottom:calc(34px + env(safe-area-inset-bottom));z-index:60;display:none;width:96px;height:96px;font:900 18px 'Silkscreen',ui-monospace,monospace;color:#fff1a0;background:#7a1408;border:4px solid #ff8a1f;box-shadow:0 0 0 4px #2a0604;border-radius:50%;touch-action:manipulation";
       ["pointerdown","touchstart"].forEach(function(ev){fireBtn.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();wantFire=true;},{passive:false});});document.body.appendChild(fireBtn);
       window.addEventListener("keydown",function(e){if(!on)return;if(e.code==="Space"||e.key===" "){e.preventDefault();e.stopPropagation();if(!e.repeat)wantFire=true;}else if((e.key==="e"||e.key==="E"||e.key==="q"||e.key==="Q")&&charge>=CH){e.preventDefault();fireSuper();}},true);}
-    fireBtn.style.display=on?"block":"none";
+    fireBtn.style.display=on&&!down&&!ended?"block":"none";
     if(!supBtn){supBtn=document.createElement("button");supBtn.id="drgSuper";supBtn.innerHTML="\uD83D\uDD25 SUPER";
       supBtn.style.cssText="position:fixed;right:18px;bottom:calc(146px + env(safe-area-inset-bottom));z-index:60;display:none;font:900 16px 'Silkscreen',ui-monospace,monospace;color:#fff6c8;background:#b3260c;border:3px solid #ffb21f;box-shadow:0 0 0 3px #3a0a06,0 0 18px #ff6a1a;padding:16px 18px;border-radius:0;animation:drgPulse .5s steps(2) infinite alternate;touch-action:manipulation";
       var st=document.createElement("style");st.textContent="@keyframes drgPulse{to{transform:scale(1.08);box-shadow:0 0 0 3px #3a0a06,0 0 30px #ffb21f}}";document.head.appendChild(st);
@@ -9189,10 +9201,12 @@ var DRAGON=(function(){
     supBtn.style.display=on&&charge>=CH&&performance.now()>=superTo?"block":"none";}
   function tick(){if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;var me=myId&&viewers[myId];if(!me)return;
     var t=sp(),idle=now-perfAt>4000;
+    if(down){var sl=sideline(myId);if(Math.abs(me.x-sl[0])>0.01||Math.abs(me.y-sl[1])>0.01)setMe(sl[0],sl[1]);me.dance=4;GAME.moshPose([0.4,-0.4,0,0]);if(GAME.poseNow)GAME.poseNow();
+      en.forEach(function(e){e.x+=e.vx*dt;});notes.forEach(function(n){n.x+=n.vx*dt;});if(LBOTS())botTick(dt,now);localEnd();return;}
     /* keep to the sky on the left */
     var cx=Math.max(0.06,Math.min(0.58,me.x)),cy=Math.max(Y0+0.05,Math.min(Y1,me.y));if(cx!==me.x||cy!==me.y)setMe(cx,cy);
     /* the chart: waves, then the boss's notes (only when the performer isn't sending them; a light trickle even then) */
-    while(wi<waves.length&&waves[wi].t<=t){var w=waves[wi++];if(idle||wi%3===0)if(!inBoss(t))spawn(w.k,w.y);}
+    while(wi<waves.length&&waves[wi].t<=t){var w=waves[wi++];if((idle||wi%3===0)&&!ended)if(!inBoss(t))spawn(w.k,w.y);}
     if(t>=bossAt&&!bossIn&&!bossDead){bossIn=now;pops.push({t:now,txt:pname()+" TURNS DEMONIC!",col:"#ff5a3c",big:1});en.forEach(function(e){e.hp=0;});}
     while(bi<bossShots.length&&bossShots[bi].t<=t){var b=bossShots[bi++];if(idle&&bossIn&&!bossDead&&seated(now))fireNote(b.k);}
     /* breathe fire */
@@ -9221,7 +9235,7 @@ var DRAGON=(function(){
     /* getting hit: scorched for a moment (no fire) */
     var onBody=function(x,y,pad){var dx=(x-mx)*W,dy=y*H-(my*H-10);return(dx*dx)/((30+pad)*(30+pad))+(dy*dy)/((16+pad)*(16+pad))<1;};
     if(!stun&&now>=superTo){var hit=null;en.forEach(function(e){if(e.hp>0&&onBody(e.x,e.y,hitR(e)*0.6))hit=e;});notes.forEach(function(n){if(!n.dead&&onBody(n.x,n.y,6))hit=n;});
-      if(hit){hit.dead=1;if(hit.hp!==undefined)hit.hp=0;stunTo=now+1400;pops.push({t:now,txt:"SCORCHED!",col:"#ff8a8a",big:1});try{if(navigator.vibrate)navigator.vibrate([50,30,70]);}catch(x){}}}
+      if(hit){hit.dead=1;if(hit.hp!==undefined)hit.hp=0;hurt(now);}}
     en=en.filter(function(e){return e.hp>0&&e.x>-0.1&&e.y<1.05;});notes=notes.filter(function(n){return !n.dead&&n.x>-0.1;});
     /* boss hits go to the server in little bundles */
     if(!local&&pend>0&&now-sentAt>300){sentAt=now;wsSend({type:"drgHit",d:Math.min(20,pend)});pend=Math.max(0,pend-20);}
@@ -9231,11 +9245,16 @@ var DRAGON=(function(){
       o.fb.forEach(function(f){f.x+=0.95*dt;});o.fb=o.fb.filter(function(f){return f.x<1.05;});});
     if(supBtn&&(supBtn.style.display==="block")!==(charge>=CH&&!sup))supUI();
     me.dance=4;GAME.moshPose(stun?[2.6,-2.6,0.5,-0.5]:sup?[1.6,-1.6,0.6,-0.6]:[0.75,-0.75,0.6,-0.6]);if(GAME.poseNow)GAME.poseNow();
-    if(LBOTS())botTick(dt,now);}
+    if(LBOTS())botTick(dt,now);localEnd();}
   /* this screen's practice riders: weave about, and chip at the boss */
-  function botTick(dt,now){Object.keys(viewers).filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id,i){var w=viewers[id];if(!w)return;var o=botB[id]||(botB[id]={w:Math.random()*6,hitAt:0,sk:0.4+Math.random()*0.5});
-      var x=0.18+0.12*Math.sin(now/1400+o.w)+i*0.03,y=0.62+0.2*Math.sin(now/900+o.w*2);w.tx=w.x=x;w.ty=w.y=y;w.dance=4;w.pose=[0.75,-0.75,0.6,-0.6];w.sk={h:0,f:0,t:0};
-      if(local&&bossIn&&!bossDead&&seated(now)&&now-o.hitAt>650){o.hitAt=now;if(Math.random()<o.sk){bossHp=Math.max(0,bossHp-1);if(bossHp<=0)kill();}}});}
+  function localEnd(){if(local&&!ended){var alive=down?0:1;Object.keys(viewers).forEach(function(id){if(id.indexOf("bot")===0&&!(botB[id]&&botB[id].down))alive++;});if(alive===0)end("demon");}}
+  function botTick(dt,now){
+    Object.keys(viewers).filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id,i){var w=viewers[id];if(!w)return;var o=botB[id]||(botB[id]={w:Math.random()*6,hitAt:0,sk:0.4+Math.random()*0.5});
+      if(o.hp===undefined)o.hp=HEARTS;
+      if(!o.down&&!ended&&now-(o.dmgAt||0)>1000){o.dmgAt=now;if(Math.random()<(bossIn?0.1:0.04)*(1.5-o.sk)){o.hp--;if(o.hp<=0){o.down=true;boomAt(w.x,w.y-0.02,now);}}}
+      if(o.down){var sl=sideline(id);w.tx=w.x=sl[0];w.ty=w.y=sl[1];w.dance=4;w.sk={h:0,f:0,t:2};return;}
+      var x=0.18+0.12*Math.sin(now/1400+o.w)+i*0.03,y=0.62+0.2*Math.sin(now/900+o.w*2);w.tx=w.x=x;w.ty=w.y=y;w.dance=4;w.pose=[0.75,-0.75,0.6,-0.6];w.sk={h:o.hp,f:0,t:0};
+      if(local&&bossIn&&!bossDead&&!o.down&&seated(now)&&now-o.hitAt>650){o.hitAt=now;if(Math.random()<o.sk){bossHp=Math.max(0,bossHp-1);if(bossHp<=0)kill();}}});}
   /* ---- drawing: everything goes on a half-size layer with hard edges (no soft alpha), then scaled up: 8-bit ---- */
   var LAY=[null,null],PX=2;
   function layer(i){var w=Math.max(1,Math.ceil(W/PX)),h=Math.max(1,Math.ceil(H/PX)),L=LAY[i];if(!L){var c=document.createElement("canvas");L=LAY[i]={c:c,g:c.getContext("2d",{willReadFrequently:true})};}
@@ -9261,7 +9280,7 @@ var DRAGON=(function(){
     /* everyone's far wing, behind them */
     riders(function(id,w,x,y,col,ph){wing(g,x-4,y-14,col,ph,true);});
     g.restore();blit(g0,L);}
-  function riders(fn){var now=performance.now();Object.keys(viewers).forEach(function(id){var w=viewers[id];if(!w||w===PH)return;var x=(w.dx!==undefined?w.dx:w.x)*W,y=(w.dy!==undefined?w.dy:w.y)*H;
+  function riders(fn){var now=performance.now();Object.keys(viewers).forEach(function(id){var w=viewers[id];if(!w||w===PH)return;if(id===myId?down:(w.sk&&w.sk.t===2))return;var x=(w.dx!==undefined?w.dx:w.x)*W,y=(w.dy!==undefined?w.dy:w.y)*H;
     var col=w.color||"#D354A0",ph=Math.sin(now/150+(id.length*1.7+(id.charCodeAt(0)||0)));fn(id,w,x,y,col,ph);});}
   function shade(c,f){var n=parseInt(String(c).replace("#",""),16);if(!isFinite(n))return c;var r=(n>>16)&255,g2=(n>>8)&255,b=n&255;var m=function(v){return Math.max(0,Math.min(255,Math.round(f<0?v*(1+f):v+(255-v)*f)));};return"rgb("+m(r)+","+m(g2)+","+m(b)+")";}
   function wing(g,x,y,col,ph,back){g.fillStyle=back?shade(col,-0.55):shade(col,-0.25);g.strokeStyle=shade(col,-0.7);g.lineWidth=1.5;var tipY=y-34*ph*(back?0.9:1),tipX=x-26;
@@ -9343,7 +9362,13 @@ var DRAGON=(function(){
     if(bar){g.font="10px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="#fff";g.fillText("DEMON "+pname(),W/2,Y0*H-26);}
     var mev=myId&&viewers[myId];if(mev){var mx2=(mev.dx!==undefined?mev.dx:mev.x)*W,my2=(mev.dy!==undefined?mev.dy:mev.y)*H+18,full=charge>=CH;
       g.fillStyle="#120306";g.fillRect(mx2-28,my2-10,56,7);g.fillStyle=breath>=1&&Math.floor(now/120)%2?"#fff1a0":breath>=1?"#ffb21f":"#ff5a14";g.fillRect(mx2-27,my2-9,Math.round(54*breath),5);   /* the breath: how big the next fireball is */
-      for(var c=0;c<CH;c++){g.fillStyle="#120306";g.fillRect(mx2-26+c*11,my2,10,6);g.fillStyle=c<charge?(full&&Math.floor(now/150)%2?"#fff1a0":"#ff8a1f"):"#3a0a0c";g.fillRect(mx2-25+c*11,my2+1,8,4);}}
+      if(!down)for(var hh=0;hh<HEARTS;hh++){var hx=mx2-27+hh*11,hy=my2+9,HP=[".#.#.","#####","#####",".###.","..#.."];g.fillStyle=hh<hearts?"#ff3d4a":"#3a0a0c";HP.forEach(function(r,j){for(var q=0;q<5;q++)if(r[q]==="#")g.fillRect(hx+q*2,hy+j*2,2,2);});}
+      if(!down)for(var c=0;c<CH;c++){g.fillStyle="#120306";g.fillRect(mx2-26+c*11,my2,10,6);g.fillStyle=c<charge?(full&&Math.floor(now/150)%2?"#fff1a0":"#ff8a1f"):"#3a0a0c";g.fillRect(mx2-25+c*11,my2+1,8,4);}}
+    /* the result */
+    if(ended){var ea=Math.min(1,(now-endAt)/400),rw=ended==="riders";g.globalAlpha=ea;g.fillStyle="rgba(10,2,4,.78)";g.fillRect(0,H*0.5-46,W,92);g.globalAlpha=1;g.textAlign="center";g.lineWidth=5;g.strokeStyle="#000";
+      g.font="900 22px 'Silkscreen',ui-monospace,monospace";var t1=rw?"THE RIDERS WIN!":"DEMON "+pname()+" WINS!";g.strokeText(t1,W/2,H*0.5-6);g.fillStyle=rw?"#9cff4a":"#ff3d1f";g.fillText(t1,W/2,H*0.5-6);
+      g.font="12px 'Silkscreen',ui-monospace,monospace";g.fillStyle="#fff1a0";g.fillText(rw?"The organ is silenced":"Every dragon fell into the lava",W/2,H*0.5+22);}
+    if(down&&!ended){g.textAlign="center";g.font="12px 'Silkscreen',ui-monospace,monospace";g.fillStyle="#ffb21f";g.fillText("Your dragon fell \u00B7 cheer them on!",W/2,H*0.93);}
     /* words */
     pops=pops.filter(function(o){return now-o.t<1500;});pops.forEach(function(o,i){var a=1-Math.max(0,(now-o.t-800)/700);g.globalAlpha=Math.max(0,a);g.textAlign="center";g.lineWidth=4;g.strokeStyle="rgba(0,0,0,.85)";
       if(o.x!==undefined){g.font="900 13px 'Silkscreen',ui-monospace,monospace";var px=o.x*W,py=o.y*H-(now-o.t)/30;g.strokeText(o.txt,px,py);g.fillStyle=o.col;g.fillText(o.txt,px,py);}
@@ -9351,10 +9376,10 @@ var DRAGON=(function(){
     g.restore();}
   /* light up the pipe that fired */
   var _fn=fireNote;fireNote=function(k){lastPipe[k]=performance.now();_fn(k);};
-  window.ukDragonCharge=function(n){charge=n;supUI();};window.ukDragonFire=function(){wantFire=true;};window.ukDragonSuper=fireSuper;
-  window.ukDragon=function(){return{charge:charge,sup:performance.now()<superTo,on:on,local:local,score:score,enemies:en.length,notes:notes.length,boss:!!bossIn,dead:bossDead,hp:bossHp,max:bossMax,stun:performance.now()<stunTo,waves:waves.length,shots:bossShots.length,t:Math.round(sp()),bossAt:Math.round(bossAt)};};
+  window.ukDragonCharge=function(n){charge=n;supUI();};window.ukDragonHurt=function(n){for(var i=0;i<(n||1);i++){stunTo=0;hurt(performance.now());}};window.ukDragonFire=function(){wantFire=true;};window.ukDragonSuper=fireSuper;
+  window.ukDragon=function(){return{hearts:hearts,down:down,ended:ended,charge:charge,sup:performance.now()<superTo,on:on,local:local,score:score,enemies:en.length,notes:notes.length,boss:!!bossIn,dead:bossDead,hp:bossHp,max:bossMax,stun:performance.now()<stunTo,waves:waves.length,shots:bossShots.length,t:Math.round(sp()),bossAt:Math.round(bossAt)};};
   window.ukDragonJump=function(ms){jump+=ms;};   /* tests */
-  return{start:start,stop:stop,tick:tick,msg:msg,hp:hp,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
+  return{start:start,stop:stop,tick:tick,msg:msg,hp:hp,over:over,isOutMe:isOutMe,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
 function LBOTS(){for(var k in viewers)if(k.indexOf("bot")===0)return true;return false;}   /* this screen's own practice dancers (the server's bots have normal ids) */
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
 var AVFLEX={};   /* per dancer: last arm angles, for the elbow follow-through */
@@ -9936,7 +9961,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.84"></script>
+<script src="lab.js?v=1.82.85"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
