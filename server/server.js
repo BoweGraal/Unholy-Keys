@@ -337,7 +337,7 @@ function roundMessage(ws, msg) {
   var code = ws.room, r = rooms[code], rd = r.round;
   if (msg.type === "round-start") {
     if (r && r.stage && Object.keys(r.stage).length) stageClear(ws.room, "song");
-    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || msg.mode === "fish" || msg.mode === "boats" || msg.mode === "swim" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
+    var mode = msg.mode === "aim" || msg.mode === "free" || msg.mode === "keys" || msg.mode === "keys4" || msg.mode === "mosh" || msg.mode === "skate" || msg.mode === "keepy" || msg.mode === "kart" || msg.mode === "walk" || msg.mode === "pipe" || msg.mode === "ski" || msg.mode === "fish" || msg.mode === "boats" || msg.mode === "swim" || msg.mode === "ball" || (msg.mode === "ctf" && CTF) ? msg.mode : "step";
     roundStop(r);
     r.roundN = (r.roundN || 0) + 1;
     var ms = intIn(msg.countdown, 3000, 60000, 10000);
@@ -409,7 +409,7 @@ function roundMessage(ws, msg) {
 /* ── The crowd picks the next game ──
    The performer opens a vote between a few games (gvote-open); everyone taps one (gvote-pick); when time is up the
    game with the most votes wins (ties drawn at random, nobody voting = a random pick). Bots vote too. */
-var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf", "kflag", "fish", "boats", "swim"];
+var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy", "kart", "walk", "pipe", "ski", "ctf", "kflag", "fish", "boats", "swim", "ball"];
 function gvotePublic(g) {
   var c = g.opts.map(function() { return 0; });
   g.picks.forEach(function(m) { var i = g.opts.indexOf(m); if (i >= 0) c[i]++; });
@@ -753,6 +753,15 @@ function onMessage(ws, raw, isBinary) {
     if (msg.type === "svote-cancel") { var sr2 = rooms[ws.room]; if (sr2.svote && !sr2.svote.done) { svoteStop(sr2); broadcast(ws.room, { type: "svote", cancel: 1 }); } return; }
     if (msg.type === "gvote-close") { var gr = rooms[ws.room]; if (gr.gvote) gvoteClose(ws.room, gr.gvote); return; }
     if (msg.type === "gvote-cancel") { var gr2 = rooms[ws.room]; if (gr2.gvote && !gr2.gvote.done) { gvoteStop(gr2); broadcast(ws.room, { type: "gvote", cancel: 1 }); } return; }
+    /* Ball Run: the host's page rolls the ball (steered by the arrows); everyone sees it where the host says it is */
+    if (msg.type === "ball") {
+      if (!allow(ws, "ball", 40, 24)) return;
+      var bu = +msg.u, bv = +msg.v, bvu = +msg.vu, bvv = +msg.vv;
+      if (![bu, bv, bvu, bvv].every(isFinite)) return;
+      var cl = function(x, m) { return Math.round(Math.max(-m, Math.min(m, x)) * 1000) / 1000; };
+      broadcast(ws.room, { type: "ball", u: cl(bu, 1.2), v: cl(bv, 1.2), vu: cl(bvu, 3), vv: cl(bvv, 3), k: intIn(msg.k, 0, 9, 0), s: Date.now() }, ws);
+      return;
+    }
     if (!PERFORMER_TYPES[msg.type]) return;
     /* TV MODE: the laptop on the TV is the clock the phones play to. tvpos = the song position being heard right now, at server time s */
     if (msg.type === "tvpos") { if (!allow(ws, "tvpos", 10, 4)) return; var tp = +msg.p, ts = +msg.s; if (!isFinite(tp) || !isFinite(ts)) return;
@@ -789,7 +798,7 @@ function onMessage(ws, raw, isBinary) {
     /* the performer talking: everyone sees it in the chat and over the performer's head */
     if (msg.type === "song-part") {
       /* which part of the song is playing (verse, chorus, solo, finale...), or "" when it ends: for the audience's banner */
-      var part = msg.k === "" ? "" : SECTION_NAMES.indexOf(msg.k) >= 0 ? msg.k : null;
+      var part = msg.k === "" ? "" : SECTION_NAMES.indexOf(msg.k) >= 0 ? msg.k : /^\uD83D\uDCFA Ad break/.test(String(msg.k || "")) ? str(msg.k, 60) : null;   /* or the ad-break notice */
       if (part === null || !allow(ws, "part", 4, 1)) return;
       rooms[ws.room].part = part;
       broadcast(ws.room, { type: "song-part", k: part }, ws);
@@ -939,7 +948,7 @@ function onMessage(ws, raw, isBinary) {
       var srd = rooms[ws.room].round, sv = rooms[ws.room].viewers.get(ws.viewerId);
       if (!srd || !sv || srd.mode === "free" || srd.mode === "ctf" || (srd.phase !== "play" && srd.phase !== "tally") || (!msg.fin && !allow(ws, "score", 6, 2))) return;
       var arrows = srd.chart ? srd.chart.arrows : 20000;
-      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" || srd.mode === "fish" || srd.mode === "boats" || srd.mode === "swim" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0) + (srd.link ? sv.roundBase || 0 : 0);   // no higher than a perfect run; a 2-parter's second half adds onto the first
+      sv.roundScore = intIn(msg.s, 0, srd.mode === "mosh" || srd.mode === "skate" || srd.mode === "keepy" || srd.mode === "kart" || srd.mode === "pipe" || srd.mode === "ski" || srd.mode === "fish" || srd.mode === "boats" || srd.mode === "swim" || srd.mode === "ball" ? 400000 : Math.round(arrows * 100 * (1 + arrows / 100)), 0) + (srd.link ? sv.roundBase || 0 : 0);   // no higher than a perfect run; a 2-parter's second half adds onto the first
       /* dance walk race: the server keeps the finish order so every screen agrees on the places;
          over the line = 1000 + 3000 / place, still racing = distance (up to 1000). When everyone's in, the round ends. */
       if (srd.mode === "walk") {
