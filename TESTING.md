@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.80 — Your notes make the snow; chat above the keyboard; free dance on the beat
+
+1. **Snow from your playing:** on the ice rink and in the ski game, every note the performer plays drops a little flurry of three flakes (one with a sparkle). Low notes fall on the left, high notes on the right; the flakes drift down and melt near the bottom. The rink no longer snows by itself, so the snow is yours. The dance floor and other games are unchanged.
+2. **Chat on a phone:** tap Say something. The chat bar sits right on top of the keyboard (it used to hide behind it) and gets bigger: a white box with large text, a big pink Send, and recent messages above it. It goes back to normal when the keyboard closes. iPhones won't zoom in when you tap it.
+3. **Free dance in practice keeps to the song:** the menu music now goes through the same sound system the beat detector listens to, so the shuffle (and every free-dance move) follows the song's real tempo, like in the dance game. It takes a few seconds to lock on when a song starts. (Before, it ran on a fixed 120 BPM clock, so it drifted behind.)
+
 ## v1.82.79 — The performer's bot (and playing the game yourself)
 
 Server change: redeploy Render.

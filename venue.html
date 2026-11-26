@@ -27,14 +27,14 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.79"></script>
-<script src="gfx.js?v=1.82.79"></script>
-<script src="art.js?v=1.82.79"></script>
-<script src="qr.js?v=1.82.79"></script>
-<script src="voice.js?v=1.82.79"></script>
-<script src="instruments.js?v=1.82.79"></script>
-<script src="kart.js?v=1.82.79"></script>
-<script src="explain.js?v=1.82.79"></script>
+<script src="tune.js?v=1.82.80"></script>
+<script src="gfx.js?v=1.82.80"></script>
+<script src="art.js?v=1.82.80"></script>
+<script src="qr.js?v=1.82.80"></script>
+<script src="voice.js?v=1.82.80"></script>
+<script src="instruments.js?v=1.82.80"></script>
+<script src="kart.js?v=1.82.80"></script>
+<script src="explain.js?v=1.82.80"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2713,6 +2713,7 @@ var BEAT=(function(){
   window.ukBeat=function(){var g=get();return{bpm:Math.round(g.bpm*10)/10,live:g.live,known:g.known,beatPhase:Math.round(phase(performance.now())*100)/100,intensity:Math.round(level()*100)/100,confidence:Math.round(lastConf*100)/100,steadiness:Math.round(lastRep*100)/100,latestReading:lastRaw,analyses:runs,listening:!!an};};
   /* how intense the music is right now, 0 (the quiet parts) to 1 (the loud parts); 0.5 until it has heard a range */
   function level(){if(lvHi-lvLo<6)return 0.5;return Math.max(0,Math.min(1,(lvl-lvLo)/(lvHi-lvLo)));}
+  window.ukBeat=function(){return get();};
   return{tap:tap,get:get,phase:phase,level:level};
 })();
 
@@ -8925,7 +8926,7 @@ var MENUMUSIC=(function(){
      5. A song that won't load skips to the other one (and retries with a fresh address).
      6. Coming back to the app (unlocking, switching back) starts it again.
      7. If it still isn't playing after you've tapped, the MUSIC button says "TAP FOR MUSIC". */
-  var a=null,ac=null,gn=null,vol=0,started=false,t0=0,muted=false,BED=0.32,FADE=1200,tries=0,plain=false,fails=0,lastT=-1,stuck=0,heal=0,bust=0,acBad=0;
+  var shared=false,a=null,ac=null,gn=null,vol=0,started=false,t0=0,muted=false,BED=0.32,FADE=1200,tries=0,plain=false,fails=0,lastT=-1,stuck=0,heal=0,bust=0,acBad=0;
   try{muted=localStorage.getItem("uk_menumusic")==="0";}catch(e){}
   try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
   function menuOn(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&getComputedStyle(j).display!=="none";}
@@ -8940,11 +8941,16 @@ var MENUMUSIC=(function(){
     a=new Audio();a.preload="auto";a.loop=false;a.setAttribute("playsinline","");a.src=url(cur);
     a.addEventListener("ended",function(){cur=(cur+1)%LIST.length;a.src=url(cur);if(started&&want())tryPlay();});
     a.addEventListener("error",function(){cur=(cur+1)%LIST.length;bust=Date.now();setTimeout(function(){if(!a)return;a.src=url(cur);if(started&&want())tryPlay();},400);});   /* won't load: the other song, fresh */
-    if(!plain&&gesture){try{var AC=window.AudioContext||window.webkitAudioContext;ac=new AC();gn=ac.createGain();gn.gain.value=0;ac.createMediaElementSource(a).connect(gn);gn.connect(ac.destination);a.volume=1;}catch(e){ac=gn=null;plain=true;}}
+    if(!plain&&gesture){try{
+      /* through the game's own audio (when it's there), so the tempo detector hears the song and free dance stays on its beat */
+      var tc=null;try{tc=window.Tone&&Tone.getContext&&Tone.getContext().rawContext;}catch(x){tc=null;}shared=!!(tc&&tc.createMediaElementSource);
+      var AC=window.AudioContext||window.webkitAudioContext;ac=shared?tc:new AC();gn=ac.createGain();gn.gain.value=0;var src=ac.createMediaElementSource(a);src.connect(gn);gn.connect(ac.destination);a.volume=1;
+      if(shared&&typeof BEAT!=="undefined"&&BEAT.tap)BEAT.tap(src);
+    }catch(e){ac=gn=null;plain=true;shared=false;}}
     if(!ac){ac=gn=null;a.volume=0;}}
-  function wake(){if(!ac)return;try{if(ac.state!=="running")ac.resume().catch(function(){});var bf=ac.createBuffer(1,1,22050),sn=ac.createBufferSource();sn.buffer=bf;sn.connect(ac.destination);sn.start(0);}catch(e){}}   /* the silent blip that unlocks iOS */
+  function wake(){if(!ac)return;try{if(shared&&window.Tone&&Tone.start)Tone.start().catch(function(){});if(ac.state!=="running")ac.resume().catch(function(){});var bf=ac.createBuffer(1,1,22050),sn=ac.createBufferSource();sn.buffer=bf;sn.connect(ac.destination);sn.start(0);}catch(e){}}   /* the silent blip that unlocks iOS */
   /* throw the player away and make a fresh one (inside the next tap) */
-  function rebuild(goPlain){try{if(a){a.pause();a.removeAttribute("src");a.load();}}catch(e){}try{if(ac)ac.close();}catch(e){}a=null;ac=gn=null;if(goPlain)plain=true;started=false;lastT=-1;stuck=0;}
+  function rebuild(goPlain){try{if(a){a.pause();a.removeAttribute("src");a.load();}}catch(e){}try{if(ac&&!shared)ac.close();}catch(e){}shared=false;a=null;ac=gn=null;if(goPlain)plain=true;started=false;lastT=-1;stuck=0;}
   function start(e){if(muted||!want())return;var gesture=!!(e&&e.type&&e.isTrusted!==false);
     if(a&&!ac&&!plain&&gesture){var keep=a.currentTime;rebuild(false);build(true);try{a.currentTime=keep;}catch(x){}}   /* the tap-less first try had no volume node: rebuild it properly inside this tap */
     if(!a){if(!gesture&&!(navigator.userActivation&&navigator.userActivation.isActive))return;build(gesture);}
@@ -8985,7 +8991,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.79",SERVER_VERSION="";
+var PAGE_VERSION="1.82.80",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9605,7 +9611,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.79"></script>
+<script src="lab.js?v=1.82.80"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
