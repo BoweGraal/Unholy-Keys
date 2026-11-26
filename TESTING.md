@@ -1688,6 +1688,29 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.108 — Playlist nights: the room votes the games before each song
+
+1. **Build a playlist** (host's song menu → Playlist), add your songs, keep "Next song plays on its own" on, and start the first one.
+2. When a song ends, the room votes on the next song (from the next 4, as before). Then, **before it starts, the room votes on the games** (3 choices, about 15 s on every phone).
+3. **The top-voted game plays, or the top two in vote order for a song over 3 minutes** (a song under 3 minutes always gets one game). Ties are drawn at random, and if nobody votes the order is random.
+4. Videos play on the TV as before. Any YouTube ad plays while the song is starting, and the games wait for the song itself (they follow the video's clock), so an ad never eats into a game.
+5. The "Crowd picks the game too" switch is now "The crowd votes the games before each song".
+
+## v1.82.107 — 8-bit graphics pass, and the host page and TV go 8-bit too
+
+1. **New shared file `px8.js`** (loaded by the phone page / TV and the host page). It holds the pixel icons (now **190+**, every symbol on both pages, from the host menu to the faces) and the 8-bit rules below.
+2. **Game graphics:**
+   - Canvases are scaled up with hard pixel edges (they were softly blurred up to the phone's resolution).
+   - Image smoothing is always off.
+   - Canvas glows (soft blur) are switched off.
+   - Smooth gradients become 4 hard colour bands between each pair of colours (the rink, the water, the skies, the glows).
+3. **Page styles:**
+   - Blurred shadows and glows become hard pixel ones: a glow becomes a solid ring, a soft drop shadow becomes a hard offset.
+   - No backdrop blur.
+   - Square corners everywhere.
+4. **Host page:** the pixel font, pixel icons and hard styles too. The TV screen is the phone page, so it's covered.
+5. Checked: all 20 games and the host page, with no symbol lacking a pixel version, no smooth emoji left, and no errors.
+
 ## v1.82.106 — 8-bit everywhere: pixel symbols and pixel text in every game; a pixel reel
 
 1. **Every symbol in every game on the phone** (all 120 used, from arrows and stars to 🎣 🐉 🛹 🏆) is drawn as **pixel art**, never your phone's smooth emoji:

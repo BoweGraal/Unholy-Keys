@@ -28,12 +28,13 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.106"></script>
-<script src="art.js?v=1.82.106"></script>
-<script src="qr.js?v=1.82.106"></script>
-<script src="voice.js?v=1.82.106"></script>
-<script src="instruments.js?v=1.82.106"></script>
-<script src="kart.js?v=1.82.106"></script>
+<script src="gfx.js?v=1.82.108"></script>
+<script src="px8.js?v=1.82.108"></script>
+<script src="art.js?v=1.82.108"></script>
+<script src="qr.js?v=1.82.108"></script>
+<script src="voice.js?v=1.82.108"></script>
+<script src="instruments.js?v=1.82.108"></script>
+<script src="kart.js?v=1.82.108"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5001,7 +5002,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.106",SERVER_VERSION="";
+var PAGE_VERSION="1.82.108",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5818,8 +5819,9 @@ var LSET=(function(){
     /* the next song, picked and started */
     function playItem(it,delay){if(!it)return;toPick(it).then(function(o){
         var ix=queue.indexOf(it);if(ix>=0){queue.splice(ix,1);save();}
-        if(cfg.voteGame&&liveOn){games=["crowd"];game="crowd";}   /* the crowd picks the game too */
-        choose(o);showJamToast("NEXT: "+it.title,"#F5C518",2200);setTimeout(function(){start();},delay||0);render2();})
+        showJamToast("NEXT: "+it.title,"#F5C518",2200);render2();
+        if(cfg.voteGame&&liveOn){ROUNDS.preVote(function(rank){if(rank&&rank.length){games=rank.slice(0,2);game=games[0];}else{games=["crowd"];game="crowd";}choose(o);start();});return;}   /* the crowd votes the games first: the top 2 (just 1 for a song under 3 min) */
+        choose(o);setTimeout(function(){start();},delay||0);})
       .catch(function(e){showJamToast(e&&e.message?e.message:"Couldn't load that song","#ff8a8a",2500);var ix=queue.indexOf(it);if(ix>=0){queue.splice(ix,1);save();}render2();});}
     /* a song from the queue started: it's in tonight's history */
     function started(o){var ix=-1;queue.forEach(function(q,k){if(ix<0&&q.key===o.key)ix=k;});var it=ix>=0?queue[ix]:null;if(ix>=0)queue.splice(ix,1);
@@ -5856,7 +5858,7 @@ var LSET=(function(){
         ["▶","Play this now",function(){end(false);playItem(it,300);}],["▲","Up",function(){if(k>0){queue.splice(k,1);queue.splice(k-1,0,it);save();renderP();}}],["▼","Down",function(){if(k<queue.length-1){queue.splice(k,1);queue.splice(k+1,0,it);save();renderP();}}],
         [fav?"★":"☆",fav?"Unfavourite":"Favourite",function(){if(D.favs[it.key])delete D.favs[it.key];else D.favs[it.key]=it;save();renderP();}],["✕","Take it off",function(){queue.splice(k,1);save();renderP();}]]);});
       var ctl=mk("div","pl-ctl");function tog(key,txt){var l=mk("label");var c=mk("input");c.type="checkbox";c.checked=!!cfg[key];c.onchange=function(){cfg[key]=c.checked;save();};l.appendChild(c);l.appendChild(document.createTextNode(" "+txt));ctl.appendChild(l);}
-      tog("auto","When a song ends, go on to the next from this playlist");tog("vote","The crowd votes on which one (from the next 4)");tog("voteGame","The crowd picks the game too");el.appendChild(ctl);
+      tog("auto","When a song ends, go on to the next from this playlist");tog("vote","The crowd votes on which one (from the next 4)");tog("voteGame","The crowd votes the games before each song (the top one, or top two for a song over 3 minutes)");el.appendChild(ctl);
       var acts=mk("div","pl-top");var sb=mk("button","","💾 Save playlist");sb.disabled=!queue.length;sb.onclick=function(){var ex=D.lists.filter(function(x){return x.name===qName;})[0];if(ex){ex.items=queue.slice();ex.at=Date.now();}else D.lists.unshift({id:"p"+Date.now(),name:qName,items:queue.slice(),fav:false,at:Date.now()});save();showJamToast("Saved “"+qName+"”","#9cff4a",1500);renderP();};acts.appendChild(sb);
       var cb=mk("button","","🗑 Clear");cb.disabled=!queue.length;cb.onclick=function(){if(confirm("Clear the queue?")){queue=[];save();renderP();}};acts.appendChild(cb);el.appendChild(acts);
       /* requests */
@@ -7053,9 +7055,18 @@ var ROUNDS=(function(){
     for(var k=pool.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1)),t=pool[k];pool[k]=pool[j];pool[j]=t;}
     return pool.slice(0,3);
   }
+  /* before a song from the playlist: the room votes on the games; the ranking (most votes first, ties drawn at random) comes back,
+     and the top one or two are played in that order */
+  var pre=null;
+  function preVote(cb){if(typeof liveOn==="undefined"||!liveOn){cb(null);return;}var op=voteOpts();if(pre)clearTimeout(pre.to);
+    pre={cb:cb,opts:op,to:setTimeout(function(){finishPre(null);},VOTE_MS+6000)};liveSend({type:"gvote-open",opts:op,ms:VOTE_MS});showJamToast("\uD83D\uDDF3 VOTE: THE GAMES","#D354A0",1800);}
+  function finishPre(counts){var p=pre;if(!p)return;pre=null;clearTimeout(p.to);
+    var rank=p.opts.map(function(m,i){return{m:m,c:counts?(counts[i]||0):0,r:Math.random()};}).sort(function(a,b){return b.c-a.c||a.r-b.r;}).map(function(x){return x.m;});
+    p.cb(rank);}
   function onGvote(m){
     if(m.cancel){gv=null;return;}
     gv={id:m.id,opts:(m.opts||[]).slice(0,4),counts:(m.counts||[]).slice(0,4),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
+    if(pre&&gv.done&&gv.opts.join()===pre.opts.join()){finishPre(gv.counts);return;}
     if(set&&gv.done&&ALLG.indexOf(gv.win)>=0)set.plan.forEach(function(q){if(q.voting&&q.voteId===gv.id){q.voting=false;q.mode=gv.win;}});
     setTick();
   }
@@ -7070,6 +7081,7 @@ var ROUNDS=(function(){
       var mid=I1+tot/2,S=mid;
       if(chart){var dr=chart.drop||0;if(dr>mid-tot*0.2&&dr<mid+tot*0.2)S=dr;else S=nearestCut(cuts(chart),mid,mid-15000,mid+15000);}
       return[{mode:LK[0],start:Math.round(I1),end:Math.round(S),cd:Math.max(10000,cfg.secs*1000)},{mode:LK[1],start:Math.round(S),end:Math.round(I1+tot),cd:3200,link:LK[0]}];}
+    if(games.length>1&&D<180000)games=games.slice(0,1);   /* a song under 3 minutes: one game */
     var n=games.length,cr=games.indexOf("crowd")>=0,I=Math.max(cr&&games[0]==="crowd"?36000:15000,Math.min(cr?45000:30000,D*0.1)),M0=games[1]==="crowd"?40000:20000,O0=12000,G,p=[];
     if(n===2){G=Math.min(GAME_MAX,(D-I-M0-O0)/2);if(G<GAME_MIN){n=1;games=games.slice(0,1);}}
     if(n===1){G=Math.min(GAME_MAX,D-I-O0);if(G<GAME_MIN){I=Math.max(8000,Math.min(I,D-O0-GAME_MIN));G=Math.max(20000,Math.min(GAME_MAX,D-I-O0));}}
@@ -7275,7 +7287,7 @@ var ROUNDS=(function(){
   window.ukFakeRound=function(mode,chart){cur={n:1,mode:mode,title:"Test",phase:"play",chart:chart,endAt:performance.now(),file:false};};   /* tests: pretend a round is playing */
   /* everyone in the room pressed Skip timer: the game starts now */
   function skipCount(){if(!cur||cur.phase!=="countdown")return false;clearTimeout(cdT);play();status("Everyone skipped the timer: game on!");return true;}
-  return{skipCount:skipCount,intercept:intercept,onMsg:onMsg,reset:reset,init:init,buttons:buttons,get current(){return cur;},pos:function(){return cur&&cur.phase==="play"?songPos():-1e9;},get cfg(){return cfg;},
+  return{preVote:preVote,skipCount:skipCount,intercept:intercept,onMsg:onMsg,reset:reset,init:init,buttons:buttons,get current(){return cur;},pos:function(){return cur&&cur.phase==="play"?songPos():-1e9;},get cfg(){return cfg;},
     begin:begin,pause:pause,setLine:setLine,onGvote:onGvote,played:played,resetPlayed:resetPlayed,get set(){return set;},end:function(){stopSet();if(!cur)return;if(cur.phase==="play")finish(false);else if(cur.phase==="analyse"||cur.phase==="countdown")finish(true);},setCfg:setCfg,songPos:function(){return cur?songPos():null;}};
 })();
 
