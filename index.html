@@ -28,12 +28,12 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.78"></script>
-<script src="art.js?v=1.82.78"></script>
-<script src="qr.js?v=1.82.78"></script>
-<script src="voice.js?v=1.82.78"></script>
-<script src="instruments.js?v=1.82.78"></script>
-<script src="kart.js?v=1.82.78"></script>
+<script src="gfx.js?v=1.82.79"></script>
+<script src="art.js?v=1.82.79"></script>
+<script src="qr.js?v=1.82.79"></script>
+<script src="voice.js?v=1.82.79"></script>
+<script src="instruments.js?v=1.82.79"></script>
+<script src="kart.js?v=1.82.79"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4966,7 +4966,8 @@ function goLive(rs){
     if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
     if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();window.CAST&&window.CAST.count(0);}
     if(msg.type==="tv-count"&&window.CAST)window.CAST.count(msg.count);
-    if(msg.type==="room-created"||msg.type==="room-resumed"){PCLOCK.start();TVMODE.joined();HOSTING.save();}
+    if(msg.type==="room-created"||msg.type==="room-resumed"){PCLOCK.start();TVMODE.joined();HOSTING.save();setTimeout(function(){window.PBOT&&window.PBOT.send();},300);}
+    if(msg.type==="pbot-info"&&window.PBOT)window.PBOT.info(msg);
     if(msg.type==="bots-info")BOTFILL.info(msg);
   }
   liveWs.onmessage=liveMsg;
@@ -4974,7 +4975,7 @@ function goLive(rs){
   liveWs.onerror=function(){liveFail();};
 }
 function endLive(){
-  HOSTING.clear();
+  HOSTING.clear();try{window.PBOT&&window.PBOT.close();}catch(e){}
   clearTimeout(LIVERC.t);LIVERC.until=0;LIVERC.key=null;
   STREAM.stop();
   liveOn=false;setTimeout(paintAudienceLink,0);try{VOICE.reset();}catch(e){}
@@ -4998,7 +4999,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.78",SERVER_VERSION="";
+var PAGE_VERSION="1.82.79",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -6217,6 +6218,8 @@ window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.i
   setInterval(iName,1000);iName();
   ["jStageBtn","jSongBtn","jHangBtn"].forEach(function(id){var e=document.getElementById(id);if(e)bb.appendChild(e);});
   (function(){var tb=document.createElement("button");tb.id="jTvBtn";tb.title="TV mode: the show on a TV, everyone joins on their phones";tb.innerHTML="&#128250; TV mode";bb.appendChild(tb);})();
+  (function(){var pb=document.createElement("button");pb.id="jPbotBtn";pb.title="Your bot: it dances and plays the games as you on the dance floor";bb.appendChild(pb);pb.addEventListener("click",function(e){e.stopPropagation();PBOT.toggle();});
+    var gb=document.createElement("button");gb.id="jPlayBtn";gb.title="Play the game yourself (your bot steps aside)";gb.innerHTML="&#127918; Play the game";bb.appendChild(gb);gb.addEventListener("click",function(e){e.stopPropagation();PBOT.play();});setTimeout(function(){PBOT.label();},0);})();
   (function(){var cb=document.createElement("button");cb.id="jCastBtn";cb.title="Put the show on a TV while you keep playing here";cb.innerHTML="&#128225; Cast to TV";bb.appendChild(cb);cb.addEventListener("click",function(e){e.stopPropagation();window.CAST.open();});})();
   /* the old visualizer buttons (FX, alt, next, random, picker, play/stop) are gone from the bar: the song panel runs the song, and the visual FX live in the Stage menu */
   ["jVizFxBtn","jVizAltBtn","jVizCycBtn","jVizRandBtn","jPickBtn","jPlayStop"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.setProperty("display","none","important");});
@@ -6800,6 +6803,24 @@ var PCLOCK=(function(){var off=0,best=1e9,n=0,ok=false,tm=null;
   function start(){n=0;best=1e9;clearInterval(tm);var k=0;tm=setInterval(function(){ping();if(++k>=6){clearInterval(tm);tm=setInterval(ping,15000);}},400);}
   function got(m){var now=Date.now(),rtt=now-(+m.c||now);if(!(rtt>=0&&rtt<3000))return;n++;if(rtt<=best*1.2||n<3){if(rtt<best)best=rtt;var o=(+m.s)+rtt/2-now;off=ok?off*0.6+o*0.4:o;ok=true;}}
   return{start:start,got:got,now:function(){return Date.now()+off;},get ok(){return ok;}};})();
+/* ---- the performer's bot: a bot with your name and look that dances and plays the games for you on the dance floor
+   (handy when the song's a track you aren't playing live). "Play the game" opens your player view over this page: the bot
+   steps aside and it's you; close it and the bot takes over again. ---- */
+var PBOT=(function(){var on=true,playing=false,ov=null;try{on=localStorage.getItem("uk_pbot")!=="0";}catch(e){}
+  function code(){return typeof LIVERC!=="undefined"&&LIVERC.room&&liveOn?LIVERC.room:"";}
+  function send(){if(code())liveSend({type:"pbot",on:on});}
+  function label(){var b=document.getElementById("jPbotBtn");if(b){b.innerHTML=on?"&#129302; My bot: on":"&#129302; My bot: off";b.classList.toggle("on",on);}var g=document.getElementById("jPlayBtn");if(g)g.classList.toggle("on",playing);}
+  function toggle(){on=!on;try{localStorage.setItem("uk_pbot",on?"1":"0");}catch(e){}send();label();showJamToast(on?"🤖 Your bot is on the dance floor":"Your bot left the dance floor","#7F77DD",1800);}
+  function close(){if(ov){ov.remove();ov=null;}playing=false;label();}
+  function play(){var c=code();if(!c){showJamToast("Go live first: then you can play the game in your own room","#F5C518",2500);return;}if(ov)return;
+    var base=location.href.split("#")[0].split("?")[0].replace(/[^\/]*$/,""),u=base+"venue.html?room="+encodeURIComponent(c)+"&hostplay="+encodeURIComponent(LIVERC.key)+"&name="+encodeURIComponent(stageName()||"Performer");
+    if(typeof WS_URL==="string"&&LIVE_URL!==WS_URL)u+="&ws="+encodeURIComponent(LIVE_URL);
+    ov=document.createElement("div");ov.id="hostPlay";ov.style.cssText="position:fixed;inset:0;z-index:99990;background:#000";
+    ov.innerHTML='<iframe src="'+u+'" allow="autoplay; fullscreen; microphone" style="border:0;width:100%;height:100%"></iframe><button style="position:absolute;left:10px;top:10px;z-index:2;padding:8px 12px;border-radius:8px;border:2px solid #F5C518;background:#16112a;color:#fff;font:700 13px system-ui;cursor:pointer">&#11013; Back to the stage</button>';
+    ov.querySelector("button").onclick=close;document.body.appendChild(ov);playing=true;label();}
+  window.addEventListener("message",function(e){if(e.data&&e.data.uk==="hpclose")close();});
+  return{toggle:toggle,play:play,close:close,label:label,send:send,info:function(m){playing=!!m.playing||!!ov;label();},get on(){return on;}};})();
+window.PBOT=PBOT;
 /* ---- Cast to TV: a second screen that shows the whole show (the stage and every player) while you keep playing, picking
    songs and hosting here. The TV joins the room as a screen: it isn't a player and makes no sound (your sound stays here). ---- */
 var CAST=(function(){

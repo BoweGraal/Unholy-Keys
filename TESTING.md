@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.79 — The performer's bot (and playing the game yourself)
+
+Server change: redeploy Render.
+
+1. Go live. A bot with your stage name and look joins the dance floor and dances and plays every game as you. It plays a bit better than the filler bots, and the bot fill never removes it.
+2. **🤖 My bot: on / off** (host's bottom bar) switches it. The setting is remembered on this computer.
+3. **🎮 Play the game** opens your player view over the host page: your bot steps aside and you're on the floor as yourself, where it was standing. Your song keeps playing on the host page (the player view is silent so there's no echo).
+4. **⬅ Back to the stage** closes it and your bot takes over again. Ending the show closes it too.
+5. Good for a backing track or YouTube song you aren't playing live: hop in and play the game.
+
 ## v1.82.78 — You can't be in your own room twice; come back to hosting
 
 1. Host a room (Host a room on a phone, or the host page), go live, then leave the host page (Back, or open the phone menu).

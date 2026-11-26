@@ -508,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.78";
+var VERSION = "1.82.79";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -639,9 +639,17 @@ function onMessage(ws, raw, isBinary) {
     ws.viewerName = str(msg.name, 24) || "Anonymous";
     ws.viewerColor = color(msg.color);
     ws.viewerLook = look(msg.look);
+    /* the performer playing the game themselves (from their own page): their bot steps aside, they're them */
+    if (msg.hostKey && r.key && str(msg.hostKey, 40) === r.key && !ws.bot) {
+      if (r.pPlayer && r.pPlayer !== ws) { try { r.pPlayer.terminate(); } catch (e) {} }
+      r.pPlayer = ws; ws.hostPlayer = true; ws.viewerName = r.performerName || "Performer"; if (r.performerLook) ws.viewerLook = look(r.performerLook);
+      if (r.pbot) { var pbx = r.pbot.x, pby = r.pbot.y; BOTS.perfBot(roomCode, false); ws.takeXY = [pbx, pby]; }
+    }
     var startX = +(0.25 + Math.random() * 0.5).toFixed(3);   // 0.25–0.75 normalized
     var startY = +(0.35 + Math.random() * 0.30).toFixed(3); // 0.35–0.65 normalized
+    if (ws.takeXY) { startX = ws.takeXY[0]; startY = ws.takeXY[1]; }   /* right where your bot was */
     r.viewers.set(id, { ws: ws, name: ws.viewerName, x: startX, y: startY, color: ws.viewerColor, look: ws.viewerLook });
+    if (ws.hostPlayer && r.performer) send(r.performer, { type: "pbot-info", on: false, playing: true });
 
     // Send room state to new viewer
     send(ws, {
@@ -738,6 +746,7 @@ function onMessage(ws, raw, isBinary) {
     if (msg.type === "round-start" || msg.type === "round-play" || msg.type === "round-end" || msg.type === "round-vote" || msg.type === "round-bvote") { roundMessage(ws, msg); return; }
     /* fill the room with bots up to this many people (0 = no bots) */
     if (msg.type === "bots") { BOTS.setFill(ws.room, msg.fill); return; }
+    if (msg.type === "pbot") { var pr = rooms[ws.room]; if (pr) { pr.pbotOn = !!msg.on; BOTS.perfBot(ws.room, pr.pbotOn && !pr.pPlayer); } return; }
     if (msg.type === "gvote-open") { gvoteOpen(ws.room, msg); return; }
     if (msg.type === "svote-open") { svoteOpen(ws.room, msg); return; }
     if (msg.type === "svote-close") { var sr = rooms[ws.room]; if (sr.svote) svoteClose(ws.room, sr.svote); return; }
@@ -1005,7 +1014,8 @@ function onClose(ws) {
     if (rooms[ws.room].stage && rooms[ws.room].stage[ws.viewerId]) { delete rooms[ws.room].stage[ws.viewerId]; stageSend(ws.room, ""); }
     var r = rooms[ws.room];
     if (r && r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
-    if (r && r.botFill && !ws.bot) { var lc = ws.room; setImmediate(function() { BOTS.rebalance(lc); }); }   /* someone left: a bot can take their place */
+    if (r && r.botFill && !ws.bot) { var lc = ws.room; setImmediate(function() { BOTS.rebalance(lc); }); }
+    if (r && r.pPlayer === ws) { r.pPlayer = null; var lc2 = ws.room; if (r.pbotOn) setImmediate(function() { BOTS.perfBot(lc2, true); }); else if (r.performer) send(r.performer, { type: "pbot-info", on: false, playing: false }); }   /* stopped playing: the bot takes over again */   /* someone left: a bot can take their place */
   }
 }
 

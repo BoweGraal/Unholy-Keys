@@ -40,19 +40,19 @@ module.exports = function(api) {
   var rooms = api.rooms;
 
   function realCount(r) { var n = 0; r.viewers.forEach(function(v) { if (!(v.ws && v.ws.bot)) n++; }); return n; }
-  function botsIn(r) { var out = []; r.viewers.forEach(function(v) { if (v.ws && v.ws.bot && !v.ws.ctfFill) out.push(v.ws); }); return out; }   /* the fill bots (not the one evening up a CTF game) */
+  function botsIn(r) { var out = []; r.viewers.forEach(function(v) { if (v.ws && v.ws.bot && !v.ws.ctfFill && !v.ws.pbot) out.push(v.ws); }); return out; }   /* the fill bots (not the one evening up a CTF game) */
 
-  function makeBot(code, r) {
+  function makeBot(code, r, as) {
     var used = {}; r.viewers.forEach(function(v) { used[v.name] = 1; });
-    var base = NAMES.filter(function(n) { return !used["🤖 " + n]; }), name = "🤖 " + (base.length ? pick(base) : pick(NAMES));
-    var b = { bot: true, readyState: 1, isAlive: true, skill: rnd(0.25, 0.62), chat: rnd(0.5, 1.4), groove: rnd(0.7, 1.3), arms: rnd(0.6, 1.4),
+    var base = NAMES.filter(function(n) { return !used["🤖 " + n]; }), name = as ? as.name : "🤖 " + (base.length ? pick(base) : pick(NAMES));
+    var b = { bot: true, pbot: !!as, readyState: 1, isAlive: true, skill: as ? 0.72 : rnd(0.25, 0.62), chat: rnd(0.5, 1.4), groove: rnd(0.7, 1.3), arms: rnd(0.6, 1.4),
       x: 0.5, y: 0.55, rd: null, lastNote: 0, nextMove: 0, nextChat: 0, nextReact: 0, nextDance: 0, dancing: false, danceUntil: 0, voted: -1, bvoted: {}, scoreAt: 0, tugAt: 0 };
     b.terminate = b.ping = function() {};
     b.send = function(data) { try { hear(b, JSON.parse(data)); } catch (e) {} };
     b.act = function(msg) { if (b.room && rooms[b.room]) api.onMessage(b, Buffer.from(JSON.stringify(msg)), false); };
     var now = Date.now();
     b.nextMove = now + wait(1000, 5000); b.nextChat = now + wait(15000, 45000) / b.chat; b.nextReact = now + wait(5000, 15000); b.nextDance = now + wait(8000, 30000);
-    api.onMessage(b, Buffer.from(JSON.stringify({ type: "join-room", room: code, name: name, color: pick(COLORS), look: randomLook() })), false);
+    api.onMessage(b, Buffer.from(JSON.stringify({ type: "join-room", room: code, name: name, color: as ? (as.color || pick(COLORS)) : pick(COLORS), look: as && as.look ? as.look : randomLook() })), false);
     if (!b.viewerId) return null;
     var me = r.viewers.get(b.viewerId); if (me) { b.x = me.x; b.y = me.y; }
     b.timer = setInterval(function() { think(b); }, 200);
@@ -75,7 +75,14 @@ module.exports = function(api) {
     n = Math.floor(+n); r.botFill = isFinite(n) ? Math.max(0, Math.min(MAX_FILL, n)) : 0;
     rebalance(code);
   }
-  function stopRoom(code) { var r = rooms[code]; if (!r) return; botsIn(r).forEach(function(b) { clearInterval(b.timer); b.dead = true; }); }
+  function stopRoom(code) { var r = rooms[code]; if (!r) return; botsIn(r).forEach(function(b) { clearInterval(b.timer); b.dead = true; }); if (r.pbot) { clearInterval(r.pbot.timer); r.pbot.dead = true; r.pbot = null; } }
+  /* the performer's own bot: their name and look, dancing and playing the games for them, until they take over themselves */
+  function perfBot(code, on) {
+    var r = rooms[code]; if (!r) return;
+    if (on && !r.pbot) { r.pbot = makeBot(code, r, { name: r.performerName || "Performer", look: r.performerLook || "" }) || null; }
+    else if (!on && r.pbot) { var b = r.pbot; r.pbot = null; removeBot(b); }
+    if (r.performer) api.send(r.performer, { type: "pbot-info", on: !!r.pbot, playing: !!r.pPlayer });
+  }
 
   /* ---- what a bot hears ---- */
   function hear(b, m) {
@@ -412,5 +419,5 @@ module.exports = function(api) {
     var b = makeBot(code, r); if (b) { b.ctfFill = true; r.ctfBot = b; }
   }
   function ctfEnd(code) { var r = rooms[code]; if (!r || !r.ctfBot) return; var b = r.ctfBot; r.ctfBot = null; if (!b.dead) removeBot(b); }
-  return { ctfEven: ctfEven, ctfEnd: ctfEnd, setFill: setFill, rebalance: rebalance, stopRoom: stopRoom, isBot: function(ws) { return !!(ws && ws.bot); } };
+  return { perfBot: perfBot, ctfEven: ctfEven, ctfEnd: ctfEnd, setFill: setFill, rebalance: rebalance, stopRoom: stopRoom, isBot: function(ws) { return !!(ws && ws.bot); } };
 };

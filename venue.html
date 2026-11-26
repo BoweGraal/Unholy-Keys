@@ -19,14 +19,14 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.78"></script>
-<script src="gfx.js?v=1.82.78"></script>
-<script src="art.js?v=1.82.78"></script>
-<script src="qr.js?v=1.82.78"></script>
-<script src="voice.js?v=1.82.78"></script>
-<script src="instruments.js?v=1.82.78"></script>
-<script src="kart.js?v=1.82.78"></script>
-<script src="explain.js?v=1.82.78"></script>
+<script src="tune.js?v=1.82.79"></script>
+<script src="gfx.js?v=1.82.79"></script>
+<script src="art.js?v=1.82.79"></script>
+<script src="qr.js?v=1.82.79"></script>
+<script src="voice.js?v=1.82.79"></script>
+<script src="instruments.js?v=1.82.79"></script>
+<script src="kart.js?v=1.82.79"></script>
+<script src="explain.js?v=1.82.79"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -757,6 +757,7 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
 :root{--chatH:54px}body.chat-open{--chatH:200px}
 /* the TV screen: only the show (and the scoreboards, banners and round cards); nothing to tap */
 body.tv-screen button,body.tv-screen input,body.tv-screen select,body.tv-screen #moveCtl,body.tv-screen #chatBar,body.tv-screen #chatBox,body.tv-screen [id$="Hint"],body.tv-screen #fiTuneW,body.tv-screen #fiTen,body.tv-screen #fiReel,body.tv-screen #fgRing,body.tv-screen #fiTut,body.tv-screen #joinScreen{display:none!important}
+body.host-play #songReqBtn{display:none!important}
 body.tv-screen{cursor:none;--chatH:0px!important}body.tv-screen #hudRoom,body.tv-screen .hud-room{display:none}
 #nearRooms{display:none;margin-bottom:10px}#nearRooms.on{display:block}
 #nearRooms .near-btn{display:block;width:100%;margin:6px 0;padding:10px 12px;background:#2a1f4d;border:2px solid #9cff4a;border-radius:8px;color:#fff;font:700 14px 'Silkscreen',ui-monospace,monospace;text-align:left;cursor:pointer}
@@ -1079,6 +1080,8 @@ function resolveWsUrl(){
 var LIVE_URL = resolveWsUrl();
 /* TV screen (venue.html?tv=CODE, opened by the host's "Cast to TV"): shows the whole show, isn't a player, makes no sound */
 var TVSCREEN=((location.search.match(/[?&]tv=([A-Za-z0-9]{4})\b/)||[])[1]||"").toUpperCase();
+/* the performer playing the game from their own page (venue.html?room=CODE&hostplay=KEY&name=...): straight in as themselves */
+var HOSTPLAY=decodeURIComponent((location.search.match(/[?&]hostplay=([^&]+)/)||[])[1]||"");
 /* an audience link can carry the room code (?room=ABCD): it's filled in on the join screen */
 (function(){function ok(t){return t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable||(t.closest&&t.closest("#chatMsgs")));}
   document.addEventListener("selectstart",function(e){if(!ok(e.target))e.preventDefault();});
@@ -2033,6 +2036,11 @@ var NEAR=(function(){var sk=null,tm=null,box=document.getElementById("nearRooms"
   window.ukNear=function(){return box?box.textContent:"";};return{render:render};})();
 /* ---- the TV screen: straight into the room, everything you'd tap hidden, no sound, the screen kept awake, and a corner card
    so people in the room can join on their phones ---- */
+if(HOSTPLAY)setTimeout(function(){
+  document.body.classList.add("host-play");roomCode=((location.search.match(/[?&]room=([A-Za-z0-9]{4})/)||[])[1]||"").toUpperCase();myName=decodeURIComponent((location.search.match(/[?&]name=([^&]+)/)||[])[1]||"Performer");
+  var _pl=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){try{this.muted=true;}catch(e){}return _pl.apply(this,arguments);};   /* the sound's already playing on your own page */
+  enterVenue();setTimeout(function(){try{Tone.Destination.mute=true;}catch(e){}},300);
+},0);
 if(TVSCREEN)setTimeout(function(){
   document.body.classList.add("tv-screen");roomCode=TVSCREEN;myName="TV";
   var snd=/[?&]sound\b/.test(location.search);
@@ -2248,7 +2256,7 @@ function connectWS(){
   }
   ws.onopen=function(){RECON.n=0;setTimeout(function(){CLOCK.start();},200);
     wsReady=true;
-    ws.send(JSON.stringify(TVSCREEN?{type:"join-room",room:roomCode,screen:1}:{type:"join-room",room:roomCode,name:myName,color:myColor,look:ART.looks.pack(myLook)}));
+    ws.send(JSON.stringify(TVSCREEN?{type:"join-room",room:roomCode,screen:1}:{type:"join-room",room:roomCode,name:myName,color:myColor,look:ART.looks.pack(myLook),hostKey:HOSTPLAY||undefined}));
   };
   ws.binaryType="arraybuffer";
   ws.onmessage=function(e){
@@ -8956,7 +8964,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.78",SERVER_VERSION="";
+var PAGE_VERSION="1.82.79",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9561,7 +9569,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.78"></script>
+<script src="lab.js?v=1.82.79"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
