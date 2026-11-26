@@ -2418,6 +2418,7 @@ function handleMsg(msg){
     if(msg.on){
       var _m=+msg.midi;if(isFinite(_m)&&_m>=0&&_m<=128){lastNoteMidi=_m;lastNoteTime=Date.now();isPerformerPlaying=true;PERF.n++;JN.push({m:_m,t0:Date.now(),t1:0,h:((_m%12)+12)%12*30});if(JN.length>80)JN.shift();}
       keyPadNote(msg.nk);   /* the lights follow the playing even with your sound off */
+      NOTESNOW.note(_m);
       playNoteFromEvent(msg.midi,msg.inst||activeInst,msg.mode||"sustain");
     }else{
       silenceNote();keyPadNote(null);JN.forEach(function(n){if(!n.t1)n.t1=Date.now();});
@@ -9124,6 +9125,20 @@ function roundRect(c,x,y,w,h,r){
    ============================================================ */
 /* the performer's show effects (lights, fog, lasers, darkness, weather, sunset, fire, fireworks); see art.js */
 var SHOWFX=null,ICE=false;   /* ICE: this skate round is on the ice rink (snowing) */
+/* ---- the performer makes the snow: on the ice rink and the ski slope every note they play drops a little flurry, low notes to
+   the left, high notes to the right, drifting and melting as it lands ---- */
+var NOTESNOW=(function(){var F=[];
+  function on(){return (typeof rinkOn==="function"&&rinkOn()&&ICE)||(typeof SKI!=="undefined"&&SKI.on)||(typeof ROUND!=="undefined"&&ROUND.mode==="ski");}
+  function note(m){if(!on()||!isFinite(m))return;var k=Math.max(0,Math.min(1,(m-36)/48)),now=performance.now();
+    for(var i=0;i<3;i++)F.push({x:(0.06+0.88*k+(Math.random()-0.5)*0.12)*W,y:-8-Math.random()*30,vx:(Math.random()-0.5)*14,vy:38+Math.random()*30,s:2+Math.floor(Math.random()*3),ph:Math.random()*6.28,t0:now,big:i===0});
+    if(F.length>260)F.splice(0,F.length-260);}
+  function draw(g){if(!F.length)return;var now=performance.now();g.save();
+    for(var i=F.length-1;i>=0;i--){var f=F[i],t=(now-f.t0)/1000,y=f.y+f.vy*t,x=f.x+f.vx*t+Math.sin(f.ph+t*2.2)*10,a=y>H*0.92?Math.max(0,1-(y-H*0.92)/(H*0.08)):1;
+      if(a<=0||t>14){F.splice(i,1);continue;}var s=f.s*(f.big?1.6:1);g.globalAlpha=a*0.95;g.fillStyle="#ffffff";g.fillRect(Math.round(x-s/2),Math.round(y-s/2),Math.round(s),Math.round(s));
+      if(f.big){g.globalAlpha=a*0.5;g.fillRect(Math.round(x-s*1.2),Math.round(y-s/4),Math.round(s*2.4),Math.max(1,Math.round(s/2)));g.fillRect(Math.round(x-s/4),Math.round(y-s*1.2),Math.max(1,Math.round(s/2)),Math.round(s*2.4));}}
+    g.restore();}
+  window.ukNoteSnow=function(m){if(m!==undefined)note(m);return{n:F.length,on:on()};};
+  return{note:note,draw:draw,on:on};})();
 window.ukShowFx=function(f){if(f!==undefined)SHOWFX=f;return SHOWFX;};
 /* the stage and the dance floor (art.js), moving with the beat and the performer's notes */
 /* ---------- the Jumbotron ----------
@@ -9194,7 +9209,7 @@ function drawScene(){
     now:Date.now(),phase:BEAT.phase(performance.now()),level:BEAT.level(),playing:isPerformerPlaying||(typeof PRACTICE!=="undefined"&&PRACTICE.on),
     hue:(((lastNoteMidi%12)+12)%12)*30,hueA:isPerformerPlaying&&nAge<1500?0.1*(1-nAge/1500):0,
     lights:fx.lights,fog:fx.fog,spotX:performer.x*W+perfShift,follow:fx.follow?followState():null});
-  ART.setForce(rinkOn()?(ICE?{disco:1,weather:"snow"}:{disco:1}):(typeof BOATS!=="undefined"&&BOATS.boatsOn())?{neon:1,neonPool:1,lasers:1}:(typeof SWIM!=="undefined"&&SWIM.swimOn())?{water:1,waterFast:1}:null);   /* bumper boats is always neon night */   /* the rink brings its own mirror ball (and snow on the ice) */
+  ART.setForce(rinkOn()?{disco:1}:(typeof BOATS!=="undefined"&&BOATS.boatsOn())?{neon:1,neonPool:1,lasers:1}:(typeof SWIM!=="undefined"&&SWIM.swimOn())?{water:1,waterFast:1}:null);   /* bumper boats is always neon night */   /* the rink brings its own mirror ball (and snow on the ice) */
   ART.fxBack(ctx,W,H,lay,SHOWFX,{now:Date.now(),jumbo:JT.k>0.5});
   /* the performer's key panel on the back wall, top left (not in practice: there's no performer) */
   if(!(typeof PRACTICE!=="undefined"&&PRACTICE.on)){var kp=ART.keyPadSpot(W,H,lay,JT.k>0.3&&JT.rect?JT.rect:null,KPAD_AVOID());if(kp)ART.keyPad(ctx,kp.x,kp.y,kp.p,KPAD.st());}
@@ -9556,6 +9571,7 @@ function renderLoop(){
   if(myId&&viewers[myId]){var mv=viewers[myId],mx=mv.x*W,my=mv.y*H;["reactBar","moveCtl"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.offsetWidth)return;var r=el.getBoundingClientRect(),hit=mx>r.left-14&&mx<r.right+14&&my>r.top-6&&my-46<r.bottom;el.classList.toggle("dim",hit);});}
 
   if(vzOn)ctx.restore();
+  NOTESNOW.draw(ctx);   /* the performer's notes, falling as snow on the rink and the slopes */
   requestAnimationFrame(renderLoop);
 }
 
