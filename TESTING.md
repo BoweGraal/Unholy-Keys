@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.111 — Fishing: no more snaps with the tension bar half full
+
+A big fish (usually the marlin) used to "snap" out of nowhere: once it had pulled out all your line, the catch ended on the spot, wherever the tension bar was. Now when it runs out your line you get a warning, and the bar climbs to the top before the line goes.
+
+1. Hook a marlin and stop reeling so it keeps running.
+2. When it's nearly out of line: **⚠ LINE OUT!** pops up, the phone buzzes and the tension bar's border flashes red.
+3. Keep not reeling: the tension climbs to the top (red) and only then does it **💥 SNAP**.
+4. Reel hard as soon as you see the warning: the tension drops and the fish comes back in.
+
 ## v1.82.110 — Fishing: the beat pulse is on the whole time
 
 - The screen edge pulses on every beat **for the whole fishing game**: casting, waiting, the bite, netting. It's **yellow** then, and while reeling it shows your spin (green on the BPM, blue easing off, red straining), as before.
