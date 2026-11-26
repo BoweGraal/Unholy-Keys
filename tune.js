@@ -51,6 +51,7 @@ var TUNE=(function(){
     V("fi.reel","Reel speed",0.24,0.05,0.8,0.01,"How fast a full-speed reel (spinning at the BPM) pulls the line in.","/s"),
     V("fi.spinWin","BPM match window",0.15,0.04,0.4,0.01,"How close your spin has to be to the BPM for full speed (share either side). Over it also adds tension.",""),
     V("fi.tenOver","Tension from overspinning",0.9,0,3,0.05,"How much spinning faster than the BPM strains the line.",""),
+    V("fi.tenUnder","Tension eased by spinning slow",0.8,0,2,0.05,"How much spinning slower than the BPM lowers the tension (it also reels slower).",""),
     V("fi.recastSpd","Recast reel-in speed",0.9,0.2,3,0.05,"How fast the line comes in while you spin the reel after pressing RECAST.","/s"),
     V("fi.run","Fish pull-out",0.14,0,0.6,0.01,"How fast a running fish pulls line back out.","/s"),
     V("fi.fishStr","Fish strength",1,0.2,2.5,0.05,"How hard every fish fights (multiplies its pull).","×"),

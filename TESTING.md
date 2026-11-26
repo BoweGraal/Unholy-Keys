@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.102 — Fishing: spinning slow is a tool, not a mistake; tension meter on the right
+
+1. **Slower than the BPM:** the reel turns slower in proportion (half the BPM = half speed) and **the tension drops**, so easing off calms a fighting fish.
+   - **At the BPM:** full speed.
+   - **Faster:** still full speed, but tension climbs ("TOO FAST!").
+   - Measured: at the BPM, tension about 80%; at half, about 40%; at double, over the top.
+2. The BPM panel's gauge now reads **EASY · ON IT · STRAIN** (blue → green → red).
+3. **The vertical TENSION meter is on the right side** of the screen, above the BPM panel and the reel.
+4. New FEEL/Tuning-lab slider: "Tension eased by spinning slow".
+
 ## v1.82.101 — Fishing: easier perfect cast, a PERFECT CAST adjuster, and RECAST
 
 1. **Easier perfect cast:** you now have about **0.53 s** to get round the swoop for a top-of-the-bar cast (was about 0.35 s). The power also drains more slowly after that.
