@@ -78,7 +78,11 @@
   /* arm angle so the hand points at target t from shoulder j; and where the hand ends up */
   function aim(j,t){return Math.atan2(-(t[0]-j[0]),t[1]-j[1]);}
   function handAt(j,a,p,n){return [j[0]-Math.sin(a)*((n||9)-1)*p,j[1]+Math.cos(a)*((n||9)-1)*p];}
-  function hand(g,h,p,skin){var q=Math.max(1,p),s=Math.round(3*q);g.fillStyle="#120D1E";g.fillRect(Math.round(h[0]-s/2-q),Math.round(h[1]-s/2-q),s+2*q,s+2*q);g.fillStyle=skin;g.fillRect(Math.round(h[0]-s/2),Math.round(h[1]-s/2),s,s);}
+  var CUR_LOOK=null;
+  function hand(g,h,p,skin){var q=Math.max(1,p),s=Math.round(3*q);
+    var nc=ART.neonOf&&CUR_LOOK?ART.neonOf(CUR_LOOK):null;
+    if(nc){var x0=Math.round(h[0]-s/2-q),y0=Math.round(h[1]-s/2-q),w0=s+2*q;g.save();g.shadowColor=nc;g.shadowBlur=6*q;g.fillStyle=nc;   /* neon night: the hands are glowing outlines too */
+      g.fillRect(x0,y0,w0,q);g.fillRect(x0,y0+w0-q,w0,q);g.fillRect(x0,y0,q,w0);g.fillRect(x0+w0-q,y0,q,w0);g.restore();g.globalAlpha=0.16;g.fillStyle=skin;g.fillRect(x0+q,y0+q,s,s);g.globalAlpha=1;return;}g.fillStyle="#120D1E";g.fillRect(Math.round(h[0]-s/2-q),Math.round(h[1]-s/2-q),s+2*q,s+2*q);g.fillStyle=skin;g.fillRect(Math.round(h[0]-s/2),Math.round(h[1]-s/2),s,s);}
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function nrm(m,lo,hi){return clamp((m-lo)/(hi-lo),0,1);}
   /* sound coming off the instrument: little arcs at (x, y) heading along angle dir */
@@ -537,5 +541,5 @@
       if(s2t.on&&(st.now||Date.now())<s2t.t0)s2t.on=false;
       draw(g,x+X[i],y+Y[i],p*S[i],ART.looks.random(101+i*17),kinds[i],s2t);}
   }
-  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:function(g,x,y,p,look,kind,st){return ART.withAdj("inst:"+kind,g,function(){var r=ART.paint.holes?ART.paint.holes("inst:"+kind,g,x,y,p,function(gg){return draw(ART.paint.replaced("inst:"+kind)?ART.paint.dummy():gg,x,y,p,look,kind,st);}):draw(g,x,y,p,look,kind,st);ART.paint.at(g,"inst:"+kind,x,y,p);return r;});},KINDS:KINDS,VERSION:"1.82.72"};
+  ART.INST={section:section,drawBand:drawBand,kindOf:kindOf,draw:function(g,x,y,p,look,kind,st){CUR_LOOK=look;return ART.withAdj("inst:"+kind,g,function(){var r=ART.paint.holes?ART.paint.holes("inst:"+kind,g,x,y,p,function(gg){return draw(ART.paint.replaced("inst:"+kind)?ART.paint.dummy():gg,x,y,p,look,kind,st);}):draw(g,x,y,p,look,kind,st);ART.paint.at(g,"inst:"+kind,x,y,p);return r;});},KINDS:KINDS,VERSION:"1.82.76"};
 })();

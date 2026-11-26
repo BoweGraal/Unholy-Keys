@@ -118,6 +118,7 @@ function broadcast(room, msg, exclude) {
   var r = rooms[room]; if (!r) return;
   var data = JSON.stringify(msg);
   if (r.performer && r.performer !== exclude) try { r.performer.send(data); } catch(e) {}
+  if (r.screens) r.screens.forEach(function(sw) { if (sw !== exclude) try { sw.send(data); } catch(e) {} });   /* TV screens see everything */
   r.viewers.forEach(function(v) {
     if (v.ws !== exclude) try { v.ws.send(data); } catch(e) {}
   });
@@ -507,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.72";
+var VERSION = "1.82.76";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -557,7 +558,8 @@ function onMessage(ws, raw, isBinary) {
   /* the performer's stream packets are big; so is the performer's round start (a long song's step chart, a custom kart track),
      so the performer may send text up to 240 KB. Everyone else is capped at 16 KB, and anything larger drops the sender. */
   if (isBinary && ws.role === "performer") { relayStream(ws, raw); return; }
-  if (raw.length > (ws.role === "performer" ? 240 * 1024 : 16 * 1024)) { console.log("Dropped an oversized message (" + raw.length + " bytes) from a " + (ws.role || "new connection")); try { ws.terminate(); } catch (e) {} return; }
+  var songPiece = ws.role === "viewer" && raw.length <= 240 * 1024 && String(raw.slice(0, 40)).indexOf('"song-req-chunk"') >= 0;   /* a piece of a song file a player is sending the host (rate-limited below) */
+  if (raw.length > (ws.role === "performer" || songPiece ? 240 * 1024 : 16 * 1024)) { console.log("Dropped an oversized message (" + raw.length + " bytes) from a " + (ws.role || "new connection")); try { ws.terminate(); } catch (e) {} return; }
   if (isBinary) return;
   var msg;
   try { msg = JSON.parse(raw); } catch(e) { return; }
@@ -579,6 +581,25 @@ function onMessage(ws, raw, isBinary) {
 
   /* ── Audience joins room ── */
   /* ── Performer coming back after a dropped connection: same room, same audience, if they have the room's key ── */
+  /* ── Rooms on your WiFi: rooms whose host is on the same network (same public address) as you. On a server running on
+     the host's own machine everyone is on the same network, so every room shows. ── */
+  if (msg.type === "nearby") {
+    if (!allow(ws, "near", 6, 0.5)) return;
+    var near = [];
+    Object.keys(rooms).forEach(function(code) { var rm = rooms[code]; if (!rm.performer) return;
+      if (HOSTED === "self" || (ws.ip && rm.performer.ip && rm.performer.ip === ws.ip)) {
+        var n = 0; rm.viewers.forEach(function(v) { if (!v.ws.bot) n++; });
+        near.push({ room: code, name: rm.performerName || "Host", n: n });
+      } });
+    send(ws, { type: "nearby", rooms: near.slice(0, 8) });
+    return;
+  }
+  if (msg.type === "song-req-res") {
+    if (ws.role !== "performer" || !ws.room || !rooms[ws.room]) return;
+    var tv = rooms[ws.room].viewers.get(str(msg.to, 20));
+    if (tv) send(tv.ws, { type: "song-req-res", rid: str(msg.rid, 20), ok: !!msg.ok, title: str(msg.title, 120), why: str(msg.why, 120) });
+    return;
+  }
   if (msg.type === "end-room") { if (ws.role === "performer") ws.ending = true; return; }
   if (msg.type === "resume-room") {
     if (ws.role) return;
@@ -600,6 +621,16 @@ function onMessage(ws, raw, isBinary) {
     var roomCode = str(msg.room, 12).toUpperCase();
     var r = rooms[roomCode];
     if (!r) { send(ws, { type: "error", msg: "Room not found" }); return; }
+    /* a TV screen: sees the whole show, isn't a player (no character, not counted, sends nothing) */
+    if (msg.screen) {
+      ws.room = roomCode; ws.role = "screen"; (r.screens || (r.screens = new Set())).add(ws);
+      send(ws, { type: "room-state", version: VERSION, host: HOSTED, hostName: HOST_NAME, yourId: "tv", screen: 1, viewers: viewerList(roomCode), performerState: r.state, video: liveVideo(r), stream: r.stream || null,
+        performer: { name: r.performerName || "Performer", look: r.performerLook || "" }, round: roundPublic(r), totals: totalsList(r), fx: r.fx || null, perfPos: r.perfPos || null,
+        stage: { list: stageList(r), song: r.songOn ? 1 : 0 }, band: r.band && r.band.m && r.band.m.length ? r.band : null, av: r.av || 0 });
+      if (r.performer) send(r.performer, { type: "tv-count", count: r.screens.size });
+      console.log("A TV screen joined room", roomCode);
+      return;
+    }
     if (r.viewers.size >= MAX_VIEWERS) { send(ws, { type: "error", msg: "Room is full" }); return; }
     var id = genId();
     ws.room = roomCode;
@@ -641,6 +672,25 @@ function onMessage(ws, raw, isBinary) {
     if (r.performer) send(r.performer, { type: "viewer-count", count: r.viewers.size });
     if (!ws.bot) console.log(ws.viewerName, "joined room", roomCode, "(" + r.viewers.size + " viewers)");
     if (r.botFill && !ws.bot) setImmediate(function() { BOTS.rebalance(roomCode); });   /* a real person: a bot makes room */
+    return;
+  }
+  if (ws.role === "screen") return;   /* a TV screen only watches */
+
+  /* ── Song requests: a player sends the host a YouTube link, or a song file in pieces (each under the message limit); the
+     host approves or drops it, and the answer goes back to that player only ── */
+  if (msg.type === "song-req" || msg.type === "song-req-chunk") {
+    if (ws.role !== "viewer" || !ws.room || !rooms[ws.room]) return;
+    var rq = rooms[ws.room];
+    if (msg.type === "song-req") {
+      if (!allow(ws, "sreq", 4, 0.1)) { send(ws, { type: "song-req-res", ok: false, why: "Slow down: one song at a time" }); return; }
+      var out = { type: "song-req", from: ws.viewerId, name: ws.viewerName, rid: str(msg.rid, 20) };
+      if (msg.yt) { var yid = str(msg.yt, 11); if (!/^[A-Za-z0-9_-]{11}$/.test(yid)) return; out.yt = yid; out.title = str(msg.title, 120); }
+      else { out.file = str(msg.file, 120); out.size = Math.min(16 * 1024 * 1024, Math.max(0, +msg.size || 0)); out.n = Math.min(120, Math.max(1, +msg.n || 1)); out.mime = str(msg.mime, 40); }
+      if (rq.performer) send(rq.performer, out); else send(ws, { type: "song-req-res", rid: out.rid, ok: false, why: "The host isn't here right now" });
+      return;
+    }
+    if (!allow(ws, "sreqc", 130, 30)) return;   /* the pieces of a file: a song's worth in a few seconds, no more */
+    if (rq.performer && typeof msg.d === "string" && msg.d.length < 240 * 1024) send(rq.performer, { type: "song-req-chunk", from: ws.viewerId, rid: str(msg.rid, 20), i: +msg.i | 0, d: msg.d });
     return;
   }
 
@@ -928,6 +978,7 @@ function onMessage(ws, raw, isBinary) {
 }
 function onClose(ws) {
   if (!ws.room) return;
+  if (ws.role === "screen") { var sr = rooms[ws.room]; if (sr && sr.screens) { sr.screens.delete(ws); if (sr.performer) send(sr.performer, { type: "tv-count", count: sr.screens.size }); } return; }
   /* leaving drops you out of voice */
   var vr0 = rooms[ws.room], vid0 = ws.role === "performer" ? "performer" : ws.viewerId;
   if (vr0 && vr0.voice && vid0 && vr0.voice[vid0]) { delete vr0.voice[vid0]; broadcast(ws.room, { type: "voice-off", id: vid0 }, ws); }
@@ -961,8 +1012,10 @@ function onClose(ws) {
 /* bots that keep the room at the size the performer chose (see bots.js) */
 var BOTS = require("./bots.js")({ rooms: rooms, onMessage: onMessage, onClose: onClose, send: send });
 
-wss.on("connection", function(ws) {
+wss.on("connection", function(ws, req) {
   ws.isAlive = true;
+  /* where they're connecting from: phones on the host's WiFi share its public address, which is how "rooms on your WiFi" works */
+  try { var xf = req && req.headers && req.headers["x-forwarded-for"]; ws.ip = String(xf ? xf.split(",")[0] : (req && req.socket && req.socket.remoteAddress) || "").trim().replace(/^::ffff:/, ""); } catch (e) { ws.ip = ""; }
   ws.on("pong", function() { ws.isAlive = true; });
   ws.on("error", function() {});
 

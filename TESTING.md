@@ -1688,6 +1688,72 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.76 — Playlists, song requests from the room, crowd votes the next song
+
+Server change: redeploy Render.
+
+**Host: the 📜 Playlist tab** (in Start song; it opens there once you have a queue or saved playlists)
+1. **Up next:** pick a song above (site song, your music, a video or YouTube) and press ＋ to queue it. Each row has ▶ play now, ▲▼ reorder, ☆ favourite and ✕ remove. Name tonight's playlist in the box.
+2. **Settings** (all on by default):
+   - When a song ends, go on to the next from this playlist.
+   - The crowd votes on which one (from the next 4).
+   - The crowd picks the game too.
+
+   After a song, the phones get "🗳 PICK THE NEXT SONG"; 20 seconds later the winner starts, with the crowd's game vote. With the vote off (or only one song left), the next song just plays.
+3. **💾 Save playlist** keeps it. Saved playlists each have Load (becomes tonight's queue), ＋ (add to the queue), ★ favourite and ✕ delete; favourites sit on top.
+4. **History:** every night's played songs, with Load and 💾 save as a playlist.
+5. **Favourite songs:** starred songs, with ＋ to queue.
+6. **Export / Import** moves playlists between computers.
+7. Everything is saved on this computer. Your own song files and ones players send are kept in the browser's storage, so saved playlists still play next time.
+
+**Players: 🎵 ADD SONG** (top right in the room; hidden during games)
+1. Paste a YouTube link and press Send, or Choose a song file (up to 15 MB; it shows Sending… %).
+2. On the host, a toast appears, the Start song button glows green, and the Playlist tab shows "Songs the room sent" with ✔ add / ✕ pass. YouTube titles fill in by themselves.
+3. The player is told "✔ <song> is on the playlist!" or that the host passed.
+
+**YouTube ads:** they play in the normal player on the host and TV (YouTube's rules: never hidden or muted). The game waits while an ad plays: the phones show "📺 Ad break · back in a moment" and the host shows "Ad break: the game waits"; the game picks up when the song starts.
+
+## v1.82.75 — Cast to a TV while you host; join rooms on your WiFi
+
+Server change: redeploy Render.
+
+**Cast to TV (host):**
+1. Go live, then press 📡 Cast to TV (next to TV mode). A panel offers three ways:
+   - **Cast** (Chrome or Edge): picks a Chromecast or cast-ready TV on your WiFi.
+   - **Open a TV window:** drag it onto a TV on HDMI and double-click it for fullscreen.
+   - **The link,** for a smart TV's web browser.
+2. The TV shows the whole room: stage, performer, every player, games, scoreboards and round cards. There's nothing to tap on it, it doesn't zoom in, and the screen stays awake.
+3. A JOIN ON YOUR PHONE card (QR plus code) sits in the TV's corner.
+4. You keep playing instruments and picking songs on the computer. The TV isn't a player, isn't counted in the viewer count, and makes no sound (the sound stays on your computer; add `&sound=1` to the TV link if you want it).
+5. The button shows 📺 On 1 TV while a TV is watching, and goes back when it leaves.
+
+**Rooms on your WiFi (players):**
+1. With a host live on the same WiFi, open the site on a phone. Under your name, "On your WiFi" lists ▶ Join Brian's room (with the player count and code).
+2. Tap it to go straight in, no code needed. Joining with the code still works.
+3. It refreshes every few seconds. On a server running on the host's own computer, every room on it shows.
+
+## v1.82.74 — Your star, neon hands, ice routine controls, keepy uppy facing + spin bonus
+
+1. **Your star:** in every game a small gold star bobs over your own head (nobody else's), so you can always find yourself, even in neon bumper boats or when you're out.
+2. **Neon hands:** in neon bumper boats, the performer's hands are glowing outlines like the rest of them (they used to be plain skin-coloured squares).
+3. **Ice routine (phone):**
+   - The joystick is in the middle, bigger, and level with the TAP button.
+   - Only the control you need right now shows: the stick for steps, spins and jumps; TAP for pumping and the final pose; neither while you just skate together. (Free dance still uses its pad.)
+   - The move prompt (arrow plus countdown ring) is big and sits right on the performer, with rings closing in on him every beat. Its words sit just above it.
+   - The free-dance buttons (with Stop) no longer show during the routine.
+4. **Keepy uppy:**
+   - Everyone faces the front while moving around.
+   - A double jump spins you all the way round on the way up, arms out in a T, and you land facing front. SPIN and TWIRL still spin you.
+   - A hit while you're in the air and spinning (SPIN, TWIRL, or the double jump's spin) shows "SPIN BONUS!" and scores ×2 (Tuning lab: "Spin-in-air bonus"), on top of the double-jump bonus.
+   - The hint sits above the controls.
+
+## v1.82.73 — Fishing feel sliders, higher sticks, swim DASH button, snorkels
+
+1. **Fishing feel sliders:** in practice (or any room with `?fishtune` in the address), a 🎛 FEEL button sits top left, under the scoreboard, during Fishing. Tap it for sliders: reel speed, on-beat window, fish pull-out, fish strength, how often it runs, tension from reeling, tension from the fish, how much the rod helps, tension response, snap time, slack time, net time, swoop lane width, and the marlin's strength, reel speed, timing and aim reach. Changes apply instantly and stay saved on the device (the full Tuning lab shows the same values). Reset puts them back. Sliding them doesn't cast or swing the rod.
+2. **Sticks higher on phones:** in every game the joystick, the right-hand stick or button, and the hints above them sit about 6% of the screen higher, where thumbs rest. Computers are unchanged.
+3. **Coin dive:** the flick stick is gone, and the big DASH button is back. It dashes the way the left stick points (or the way you're facing) and glows on the beat. The hint reads "Left stick to swim · tap DASH on the beat for PERFECT".
+4. **Snorkels:** everyone swimming in Coin dive wears a mask and a yellow snorkel with a red tip, from every angle.
+
 ## v1.82.72 — Fishing: the first catch is a tutorial
 
 Shows once per device. To see it again, open the site with `?fishtut` added to the address; the first catch of that game is the tutorial.

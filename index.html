@@ -11,15 +11,21 @@
 <title>Unholy Keys</title>
 <script>/* iPhones can't make a web page fullscreen (and the Home Screen app already is), so the fullscreen buttons are hidden there */
 (function(){try{var d=document.documentElement,ios=/iPhone|iPod/.test(navigator.userAgent),api=!!(d.requestFullscreen||d.webkitRequestFullscreen),app=window.navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);if(ios||!api||app)d.classList.add("no-fs");}catch(e){}})();</script>
-<style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}</style>
+<style>html.no-fs #vFsBtn,html.no-fs #vFsTip,html.no-fs #jFsBtn,html.no-fs #mb-fs,html.no-fs #fsBtn,html.no-fs #fsTip{display:none!important}html.no-fs #prExit{left:10px!important}html.no-fs #hudTL{left:14px!important}#lsPl .pl-h{margin:10px 0 4px;font-weight:700;opacity:.9}#lsPl .pl-top{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}#lsPl .pl-top input{flex:1;min-width:120px}
+#lsPl .pl-row{display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.04);margin:2px 0}#lsPl .pl-row.req{background:rgba(156,255,74,.10)}#lsPl .pl-row.wait{opacity:.6}
+#lsPl .pl-t{flex:1;min-width:0}#lsPl .pl-t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#lsPl .pl-t i{display:block;font-style:normal;font-size:11px;opacity:.65}
+#lsPl button{background:#2d2360;color:#fff;border:1px solid #5a4cb0;border-radius:6px;padding:5px 9px;font:600 12px system-ui;cursor:pointer}#lsPl button:disabled{opacity:.45;cursor:default}#lsPl button:hover:not(:disabled){border-color:#9cff4a}
+#lsPl .pl-row button{padding:3px 7px;min-width:28px}#lsPl .pl-ctl{display:flex;flex-direction:column;gap:3px;margin:8px 0;font-size:12px}#lsPl .em{opacity:.6;font-size:12px;padding:4px}
+#jSongBtn.req{box-shadow:0 0 0 2px #9cff4a,0 0 12px #9cff4a}
+</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.72"></script>
-<script src="art.js?v=1.82.72"></script>
-<script src="qr.js?v=1.82.72"></script>
-<script src="voice.js?v=1.82.72"></script>
-<script src="instruments.js?v=1.82.72"></script>
-<script src="kart.js?v=1.82.72"></script>
+<script src="gfx.js?v=1.82.76"></script>
+<script src="art.js?v=1.82.76"></script>
+<script src="qr.js?v=1.82.76"></script>
+<script src="voice.js?v=1.82.76"></script>
+<script src="instruments.js?v=1.82.76"></script>
+<script src="kart.js?v=1.82.76"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -960,10 +966,11 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <div class="hd"><b>&#127925; Start a song</b><button id="lsClose" title="Close (Esc)">&#10005;</button></div>
       <div class="st">1 · Pick the song</div>
       <div class="row"><select id="lsSite" title="Songs that come with the site"><option value="">&#127925; Pick a site song…</option></select></div>
-      <div class="tabs" id="lsTabs"><span class="or">or your own:</span><button data-t="music">&#127925; Music</button><button data-t="video">&#127916; Video</button><button data-t="yt">&#9654;&#65039; YouTube</button></div>
+      <div class="tabs" id="lsTabs"><span class="or">or your own:</span><button data-t="music">&#127925; Music</button><button data-t="video">&#127916; Video</button><button data-t="yt">&#9654;&#65039; YouTube</button><button data-t="pl">&#128220; Playlist<span id="lsPlN"></span></button></div>
       <div class="pane" id="lsMusic"><div class="row"><input id="lsMQ" placeholder="Filter…" autocomplete="off"><button id="lsMFile">+ Song file</button><button id="lsMFolder">&#128193; Folder</button></div><div class="list" id="lsMList"></div></div>
       <div class="pane" id="lsVideo" style="display:none"><div class="row"><button id="lsVFile">+ Video file</button><button id="lsVFolder">&#128193; Video folder</button><button id="lsVVote" title="The room votes between 4 of your videos (go live first)">&#128499; Crowd picks</button><span class="tip">The sound goes to everyone; the picture shows on the Jumbotron for you.</span></div><div class="list" id="lsVList"></div></div>
       <div class="pane" id="lsYt" style="display:none"><div class="row"><input id="lsYQ" placeholder="Search YouTube, or paste a link" autocomplete="off"><button id="lsYGo">Search</button></div><div class="list" id="lsYList"></div></div>
+      <div class="pane" id="lsPl" style="display:none"></div>
       <div class="sel" id="lsSel">No song picked yet</div>
       <div class="opts" id="lsKeys"><label title="Your instrument's key for this song. Picked for you when the song's name has the key in it (e.g. &quot;Song - F# Mixolydian&quot;)">&#128273; Key <select id="lsKR"></select><select id="lsKS"></select></label>
         <label title="A second key, swapped to with Shift. Off until you tick it."><input type="checkbox" id="lsAltOn"> Alt <select id="lsAR"></select><select id="lsAS"></select></label><span class="tip" id="lsKTip"></span></div>
@@ -4930,12 +4937,14 @@ function goLive(){
     if(msg.type==="stream-stats")STREAM.stats(msg);
     if(msg.type==="gvote"){ROUNDS.onGvote(msg);return;}
     if(msg.type==="svote"){LSET.onSvote(msg);return;}
+    if(msg.type==="song-req"||msg.type==="song-req-chunk"){LSET.req(msg);return;}
     if(msg.type==="round-all"){PSCORE.all(msg);return;}
     if(msg.type==="ctf"){CTFVIEW.msg(msg);return;}
     if(msg.type==="round"&&msg.ctf)CTFVIEW.msg(msg.ctf);
     if(msg.type==="tug"){PMOSH.tug=[+msg.s[0]||0,+msg.s[1]||0];PMOSH.done=!!msg.done;return;}
     if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
-    if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();}
+    if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();window.CAST&&window.CAST.count(0);}
+    if(msg.type==="tv-count"&&window.CAST)window.CAST.count(msg.count);
     if(msg.type==="room-created"||msg.type==="room-resumed"){PCLOCK.start();TVMODE.joined();}
     if(msg.type==="bots-info")BOTFILL.info(msg);
   }
@@ -4967,7 +4976,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.72",SERVER_VERSION="";
+var PAGE_VERSION="1.82.76",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5525,7 +5534,7 @@ var LSET=(function(){
   var readyAsked=false;
   function setTab(t,keep){if(!keep&&t===tab)t="";tab=t;   /* the tabs open your own music / a video / YouTube; click again to fold it away */
     if(t==="yt"&&!readyAsked&&$("lsModal").classList.contains("on")){readyAsked=true;loadReady();}Array.prototype.forEach.call($("lsTabs").children,function(b){b.classList.toggle("on",b.getAttribute("data-t")===t);});
-    $("lsMusic").style.display=t==="music"?"":"none";$("lsVideo").style.display=t==="video"?"":"none";$("lsYt").style.display=t==="yt"?"":"none";render();if(t==="yt")setTimeout(function(){$("lsYQ").focus();},30);}
+    $("lsMusic").style.display=t==="music"?"":"none";$("lsVideo").style.display=t==="video"?"":"none";$("lsYt").style.display=t==="yt"?"":"none";$("lsPl").style.display=t==="pl"?"":"none";render();if(t==="pl")PL.render();if(t==="yt")setTimeout(function(){$("lsYQ").focus();},30);}
   function item(list,label,meta,obj){var b=mk("button","it"+(pick&&pick.key===obj.key?" on":""));b.appendChild(mk("b","",label));if(meta)b.appendChild(mk("i","",meta));b.onclick=function(){choose(obj);};list.appendChild(b);}
   function render(){
     var q=($("lsMQ").value||"").toLowerCase();
@@ -5622,7 +5631,7 @@ var LSET=(function(){
     if(!jamOn)return;loadSite();if(tab==="yt"||liveOn)loadReady();   /* the server is only asked once you want YouTube songs, or you're live anyway */
     var r=ROUNDS.cfg;$("lsLevel").value=String(r.level);$("lsBattle").checked=!!r.battle;$("lsSecs").value=String(SECS);if($("lsSecs").selectedIndex<0)$("lsSecs").value="10";
     if(!curCat&&games.length)CATS.forEach(function(c){if(!curCat&&c.g.indexOf(games[0])>=0)curCat=c.c;});
-    setGame(game,true);setTab(tab,true);keysNow();if(pick)keysFromTitle(pick.title);$("lsModal").classList.toggle("float",!liveOn);$("lsModal").classList.add("on");   /* only takes over the screen when you're live */
+    setGame(game,true);if(!tab&&(PL.queue.length||PL.hasLists()))tab="pl";setTab(tab,true);   /* you've got playlists: start there */keysNow();if(pick)keysFromTitle(pick.title);$("lsModal").classList.toggle("float",!liveOn);$("lsModal").classList.add("on");   /* only takes over the screen when you're live */
   }
   function close(){$("lsModal").classList.remove("on");}
   function start(){
@@ -5633,7 +5642,7 @@ var LSET=(function(){
       var w=setInterval(function(){if(liveOn){clearInterval(w);btn.innerHTML="&#9654; Start";BOTFILL.send();setTimeout(start,600);}else if(Date.now()-t0>80000||(!liveWs&&Date.now()-t0>3000)){clearInterval(w);btn.innerHTML="&#9654; Start";btn.disabled=false;$("lsNote").textContent="Couldn't go live (the server didn't answer). Try again, or pick No game.";}},300);
       return;
     }
-    var o=pick;stopMedia();applyKeys();
+    var o=pick;stopMedia();applyKeys();try{PL.started(o);}catch(e){}
     SECS=+$("lsSecs").value;save();
     var useGame=game!=="off"&&liveOn,secs=Math.max(5,SECS||5);
     var whole=games.filter(function(x){return WHOLE.indexOf(x)>=0;})[0];
@@ -5678,7 +5687,9 @@ var LSET=(function(){
   function watch(){
     if(!cur){clearInterval(tick);tick=null;return;}
     if(isEnded()){end(true);return;}
-    if(cur.started&&!cur.paused)SONGMAP.tick(pos());
+    /* a YouTube ad: it plays in view on the big screen (YouTube's rules); the game waits, and the phones say why */
+    if(cur.kind==="yt"&&cur.started){var ad=YT.adOn();if(ad!==!!cur.ad){cur.ad=ad;liveSend({type:"song-part",k:ad?"\uD83D\uDCFA Ad break \u00B7 back in a moment":""});if(ad)showJamToast("Ad break: the game waits","#888",1500);}}
+    if(cur.started&&!cur.paused&&!cur.ad)SONGMAP.tick(pos());
     bar();
   }
   function bar(){
@@ -5711,6 +5722,7 @@ var LSET=(function(){
     if(ROUNDS.current)ROUNDS.end();           /* counts the scores (or cancels if it hadn't started) */
     SONGMAP.stop();liveSend({type:"song-part",k:""});
     stopMedia();cur=null;$("jm").classList.remove("song");
+    try{PL.ended(natural);}catch(e){}   /* tonight's playlist: on to the next song (the crowd votes) */
   }
   /* the menu's keys: Esc closes it, typing goes to its boxes; P pauses while a song is on */
   function key(e){
@@ -5755,6 +5767,97 @@ var LSET=(function(){
     $("lsModal").addEventListener("pointerdown",function(e){if(e.target===$("lsModal"))close();});
     $("lsModal").addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Escape")close();if(e.key==="Enter"&&e.target.id==="lsYQ")ytSearch();});
   }
+
+  /* ==== PLAYLISTS: tonight's queue ("up next"), saved playlists, history and favourites, all kept on this computer (song
+     files in the browser's own storage, so a saved playlist still plays next time). When a song ends the crowd votes on the
+     next one from the queue (and on the game), or it just plays the next in order. Players can send songs in: you approve. ==== */
+  var PL=(function(){
+    var D={lists:[],history:[],favs:{}},queue=[],qName="Tonight",reqs=[],sess="h"+Date.now(),cfg={vote:true,voteGame:true,auto:true};
+    try{var sd=JSON.parse(localStorage.getItem("uk_pl")||"{}");if(sd.lists)D.lists=sd.lists;if(sd.history)D.history=sd.history;if(sd.favs)D.favs=sd.favs;if(sd.queue)queue=sd.queue;if(sd.qName)qName=sd.qName;if(sd.cfg)for(var k in sd.cfg)cfg[k]=sd.cfg[k];}catch(e){}
+    function save(){try{localStorage.setItem("uk_pl",JSON.stringify({lists:D.lists,history:D.history.slice(0,30),favs:D.favs,queue:queue,qName:qName,cfg:cfg}));}catch(e){}badge();}
+    /* song files: kept in IndexedDB */
+    var dbp=null;function db(){if(!dbp)dbp=new Promise(function(res,rej){try{var r=indexedDB.open("ukPlaylist",1);r.onupgradeneeded=function(){r.result.createObjectStore("songs");};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});return dbp;}
+    function idbPut(id,val){return db().then(function(d){return new Promise(function(res,rej){var t=d.transaction("songs","readwrite");t.objectStore("songs").put(val,id);t.oncomplete=function(){res();};t.onerror=function(){rej(t.error);};});});}
+    function idbGet(id){return db().then(function(d){return new Promise(function(res,rej){var q=d.transaction("songs").objectStore("songs").get(id);q.onsuccess=function(){res(q.result);};q.onerror=function(){rej(q.error);};});});}
+    /* what a song is, in a playlist: a YouTube video, one of the site's songs, or a stored file */
+    function fromPick(o){if(!o)return Promise.reject();
+      if(o.kind==="yt")return Promise.resolve({key:o.key,kind:"yt",vid:o.vid,title:clean(o.title)});
+      if(o.f&&!o.f.file&&/^songs\//.test(o.f.url||""))return Promise.resolve({key:o.key,kind:"track",title:clean(o.title),f:{name:o.f.name,filename:o.f.filename,url:o.f.url}});
+      var id="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+      return fetch(o.f.url).then(function(r){return r.blob();}).then(function(b){return idbPut(id,{blob:b,name:o.f.filename||o.title}).then(function(){return{key:"d:"+id,kind:"blob",bid:id,title:clean(o.title),video:!!o.video};});});}
+    function toPick(it){
+      if(it.kind==="yt")return Promise.resolve({key:it.key,kind:"yt",vid:it.vid,title:it.title});
+      if(it.kind==="track")return Promise.resolve({key:it.key,kind:"track",title:it.title,f:{name:it.f.name,filename:it.f.filename,url:it.f.url,file:null}});
+      return idbGet(it.bid).then(function(v){if(!v)throw new Error("That song file isn't on this computer any more");var name=v.name||it.title,fl=new File([v.blob],name,{type:v.blob.type||"audio/mpeg"});BACKING.addFiles([fl]);
+        return new Promise(function(res,rej){var n=0,iv=setInterval(function(){var nf=BACKING.lib.filter(function(f){return f.filename===name;}).pop();if(nf){clearInterval(iv);res({key:"b:"+nf.url,kind:"track",video:!!nf.video,title:it.title,f:nf});}else if(++n>40){clearInterval(iv);rej(new Error("Couldn't load that song file"));}},100);});});}
+    /* the next song, picked and started */
+    function playItem(it,delay){if(!it)return;toPick(it).then(function(o){
+        var ix=queue.indexOf(it);if(ix>=0){queue.splice(ix,1);save();}
+        if(cfg.voteGame&&liveOn){games=["crowd"];game="crowd";}   /* the crowd picks the game too */
+        choose(o);showJamToast("NEXT: "+it.title,"#F5C518",2200);setTimeout(function(){start();},delay||0);render2();})
+      .catch(function(e){showJamToast(e&&e.message?e.message:"Couldn't load that song","#ff8a8a",2500);var ix=queue.indexOf(it);if(ix>=0){queue.splice(ix,1);save();}render2();});}
+    /* a song from the queue started: it's in tonight's history */
+    function started(o){var ix=-1;queue.forEach(function(q,k){if(ix<0&&q.key===o.key)ix=k;});var it=ix>=0?queue[ix]:null;if(ix>=0)queue.splice(ix,1);
+      var h=D.history.filter(function(x){return x.id===sess;})[0];if(!h){h={id:sess,at:Date.now(),name:qName,items:[]};D.history.unshift(h);}
+      if(it)h.items.push(it);else fromPick(o).then(function(x){h.items.push(x);save();}).catch(function(){});h.name=qName;save();render2();}
+    /* the song ended: the crowd picks the next from the queue (and the game), or the next one just plays */
+    var sv2=null;
+    function ended(natural){if(!natural||!cfg.auto||!queue.length)return false;
+      if(cfg.vote&&liveOn&&queue.length>=2){sv2={items:queue.slice(0,4),done:false};liveSend({type:"svote-open",opts:sv2.items.map(function(x){return x.title;}),ms:20000});showJamToast("VOTE: NEXT SONG","#D354A0",1600);sv=sv2;return true;}
+      playItem(queue[0],4000);return true;}
+    function voted(win){var s2=sv2;sv2=null;if(!s2)return false;playItem(s2.items[win|0]||s2.items[0],2500);return true;}
+    /* song requests from players */
+    function req(m){if(m.type==="song-req"){var r={rid:m.rid,from:m.from,name:m.name||"Someone",yt:m.yt||null,title:m.yt?(m.title||"YouTube video"):clean(m.file||"A song"),n:m.n||0,got:0,parts:[],mime:m.mime||"audio/mpeg",at:Date.now()};
+        reqs.push(r);if(r.yt)ytTitle(r);showJamToast("\u{1F3B5} "+r.name+" sent a song","#9cff4a",2000);render2();badge();return;}
+      var q=reqs.filter(function(x){return x.rid===m.rid&&x.from===m.from;})[0];if(!q||q.parts[m.i])return;q.parts[m.i]=m.d;q.got++;if(q.got>=q.n||q.got%8===0)render2();}
+    function ytTitle(r){fetch("https://www.youtube.com/oembed?format=json&url="+encodeURIComponent("https://youtu.be/"+r.yt)).then(function(x){return x.json();}).then(function(j){if(j&&j.title){r.title=j.title;render2();}}).catch(function(){});}
+    function answer(r,ok,why){reqs=reqs.filter(function(x){return x!==r;});liveSend({type:"song-req-res",to:r.from,rid:r.rid,ok:ok,title:r.title,why:why||""});badge();render2();}
+    function approve(r){if(r.yt){queue.push({key:"y:"+r.yt,kind:"yt",vid:r.yt,title:r.title,by:r.name});save();answer(r,true);return;}
+      if(r.got<r.n)return;var bytes=r.parts.map(function(b64){var bin=atob(b64),a=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a;}),bl=new Blob(bytes,{type:r.mime}),id="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+      idbPut(id,{blob:bl,name:r.title}).then(function(){queue.push({key:"d:"+id,kind:"blob",bid:id,title:r.title,by:r.name});save();answer(r,true);}).catch(function(){answer(r,false,"The host's computer couldn't store it");});}
+    function badge(){var n=reqs.length,t=$("lsPlN");if(t)t.textContent=n?" ("+n+")":queue.length?" · "+queue.length:"";var b=$("jSongBtn");if(b)b.classList.toggle("req",n>0);}
+    /* the panel */
+    function row(list,txt,sub,btns,cls){var r=mk("div","pl-row"+(cls?" "+cls:""));var t=mk("div","pl-t");t.appendChild(mk("b","",txt));if(sub)t.appendChild(mk("i","",sub));r.appendChild(t);
+      btns.forEach(function(b){var e=mk("button","",b[0]);e.title=b[1];e.onclick=function(ev){ev.stopPropagation();b[2]();};r.appendChild(e);});list.appendChild(r);return r;}
+    function head(el,t){el.appendChild(mk("div","pl-h",t));}
+    function render2(){if($("lsPl")&&$("lsPl").style.display!=="none")renderP();badge();}
+    function renderP(){var el=$("lsPl");if(!el)return;el.textContent="";
+      /* tonight's queue */
+      var top=mk("div","pl-top");var nm=mk("input");nm.value=qName;nm.placeholder="Playlist name";nm.oninput=function(){qName=nm.value||"Tonight";save();};top.appendChild(nm);
+      var add=mk("button","","＋ Add the picked song");add.disabled=!pick;add.title="Put the song you picked above on the end of the playlist";add.onclick=function(){fromPick(pick).then(function(it){queue.push(it);save();renderP();}).catch(function(){});};top.appendChild(add);el.appendChild(top);
+      head(el,"Up next"+(queue.length?" ("+queue.length+")":""));
+      if(!queue.length)el.appendChild(mk("div","em","Nothing queued. Pick songs above and press ＋, load a saved playlist below, or let the room send songs in."));
+      queue.forEach(function(it,k){var fav=!!D.favs[it.key];row(el,(k+1)+". "+(it.kind==="yt"?"▶️ ":"🎵 ")+it.title,it.by?"from "+it.by:"",[
+        ["▶","Play this now",function(){end(false);playItem(it,300);}],["▲","Up",function(){if(k>0){queue.splice(k,1);queue.splice(k-1,0,it);save();renderP();}}],["▼","Down",function(){if(k<queue.length-1){queue.splice(k,1);queue.splice(k+1,0,it);save();renderP();}}],
+        [fav?"★":"☆",fav?"Unfavourite":"Favourite",function(){if(D.favs[it.key])delete D.favs[it.key];else D.favs[it.key]=it;save();renderP();}],["✕","Take it off",function(){queue.splice(k,1);save();renderP();}]]);});
+      var ctl=mk("div","pl-ctl");function tog(key,txt){var l=mk("label");var c=mk("input");c.type="checkbox";c.checked=!!cfg[key];c.onchange=function(){cfg[key]=c.checked;save();};l.appendChild(c);l.appendChild(document.createTextNode(" "+txt));ctl.appendChild(l);}
+      tog("auto","When a song ends, go on to the next from this playlist");tog("vote","The crowd votes on which one (from the next 4)");tog("voteGame","The crowd picks the game too");el.appendChild(ctl);
+      var acts=mk("div","pl-top");var sb=mk("button","","💾 Save playlist");sb.disabled=!queue.length;sb.onclick=function(){var ex=D.lists.filter(function(x){return x.name===qName;})[0];if(ex){ex.items=queue.slice();ex.at=Date.now();}else D.lists.unshift({id:"p"+Date.now(),name:qName,items:queue.slice(),fav:false,at:Date.now()});save();showJamToast("Saved “"+qName+"”","#9cff4a",1500);renderP();};acts.appendChild(sb);
+      var cb=mk("button","","🗑 Clear");cb.disabled=!queue.length;cb.onclick=function(){if(confirm("Clear the queue?")){queue=[];save();renderP();}};acts.appendChild(cb);el.appendChild(acts);
+      /* requests */
+      if(reqs.length){head(el,"Songs the room sent ("+reqs.length+")");reqs.forEach(function(r){var ready=!!r.yt||r.got>=r.n;row(el,(r.yt?"▶️ ":"🎵 ")+r.title,"from "+r.name+(ready?"":" · arriving "+Math.round(r.got/Math.max(1,r.n)*100)+"%"),[
+        ["✔","Add it to the playlist",function(){approve(r);}],["✕","Pass",function(){answer(r,false);}]],"req"+(ready?"":" wait"));});}
+      /* saved playlists */
+      head(el,"Saved playlists");var ls=D.lists.slice().sort(function(a,b){return(b.fav?1:0)-(a.fav?1:0)||(b.last||b.at)-(a.last||a.at);});
+      if(!ls.length)el.appendChild(mk("div","em","None yet: queue some songs and press Save playlist."));
+      ls.forEach(function(L){row(el,(L.fav?"★ ":"")+L.name,L.items.length+" songs"+(L.last?" · played "+new Date(L.last).toLocaleDateString():""),[
+        ["Load","Make this tonight's queue",function(){queue=L.items.slice();qName=L.name;L.last=Date.now();save();renderP();if(queue[0])toPick(queue[0]).then(choose).catch(function(){});}],
+        ["＋","Add its songs to the end of the queue",function(){queue=queue.concat(L.items);save();renderP();}],
+        [L.fav?"★":"☆","Favourite",function(){L.fav=!L.fav;save();renderP();}],["✕","Delete it",function(){if(confirm("Delete “"+L.name+"”?")){D.lists=D.lists.filter(function(x){return x!==L;});save();renderP();}}]]);});
+      /* history */
+      var hs=D.history.filter(function(h){return h.items&&h.items.length;}).slice(0,10);if(hs.length){head(el,"History");hs.forEach(function(h){row(el,h.name+" · "+new Date(h.at).toLocaleDateString()+" "+new Date(h.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),h.items.length+" songs played",[
+        ["Load","Queue these songs again",function(){queue=h.items.slice();qName=h.name;save();renderP();}],["💾","Save as a playlist",function(){D.lists.unshift({id:"p"+Date.now(),name:h.name+" ("+new Date(h.at).toLocaleDateString()+")",items:h.items.slice(),fav:false,at:Date.now()});save();renderP();}]]);});}
+      /* favourite songs */
+      var fv=Object.keys(D.favs).map(function(k){return D.favs[k];});if(fv.length){head(el,"Favourite songs");fv.forEach(function(it){row(el,"★ "+it.title,"",[["＋","Add to the queue",function(){queue.push(it);save();renderP();}],["✕","Unfavourite",function(){delete D.favs[it.key];save();renderP();}]]);});}
+      /* moving playlists between computers */
+      var io=mk("div","pl-top");var ex=mk("button","","⬇ Export");ex.title="Download your playlists (YouTube and site songs; your own files stay on this computer)";ex.onclick=function(){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({lists:D.lists,favs:D.favs},null,1)],{type:"application/json"}));a.download="unholy-keys-playlists.json";a.click();};io.appendChild(ex);
+      var im=mk("button","","⬆ Import");im.onclick=function(){var inp=document.createElement("input");inp.type="file";inp.accept=".json,application/json";inp.onchange=function(){var f=inp.files[0];if(!f)return;f.text().then(function(t){var j=JSON.parse(t);(j.lists||[]).forEach(function(L){if(!D.lists.some(function(x){return x.id===L.id;}))D.lists.push(L);});for(var k in (j.favs||{}))D.favs[k]=j.favs[k];save();renderP();}).catch(function(){alert("That isn't a playlist file.");});};inp.click();};io.appendChild(im);el.appendChild(io);}
+    badge();
+    window.ukPL=function(){return{queue:queue.map(function(x){return x.title;}),reqs:reqs.map(function(r){return{title:r.title,from:r.name,got:r.got,n:r.n};}),lists:D.lists.map(function(L){return L.name+":"+L.items.length;}),history:D.history.map(function(h){return h.items.length;}),favs:Object.keys(D.favs).length,cfg:cfg};};
+    window.ukPLadd=function(it){queue.push(it);save();render2();};
+    window.ukPLapprove=function(){reqs.slice().forEach(approve);};window.ukPLend=function(){return ended(true);};
+    return{hasLists:function(){return D.lists.length>0;},render:renderP,req:req,started:started,ended:ended,voted:voted,get queue(){return queue;},approveAll:function(){reqs.slice().forEach(approve);}};
+  })();
   window.ukLsetAdd=function(files){BACKING.addFiles(files);setTimeout(render,100);};   /* for testing: add song files as if picked */
   window.ukLset=function(){return{open:$("lsModal").classList.contains("on"),pick:pick&&pick.key,game:game,cur:cur&&{kind:cur.kind,title:cur.title,game:cur.game,started:cur.started,paused:cur.paused,pos:Math.round(pos()),cd:cur.cd||0}};};
   /* the crowd picks the next song: a vote between 4 random videos from your library (keys in the names are hidden from the room) */
@@ -5769,9 +5872,10 @@ var LSET=(function(){
     var h=document.createElement("div");h.className="h";h.textContent=m.done?"The crowd picked":"Crowd picking the song · "+left+" s";c.appendChild(h);
     (m.opts||[]).forEach(function(t,k){var r=document.createElement("div");r.className="row"+(m.done&&k===m.win?" win":"");var n=document.createElement("span");n.className="n";n.textContent=t;var v=document.createElement("span");v.textContent=String((m.counts||[])[k]||0);r.appendChild(n);r.appendChild(v);c.appendChild(r);});
     c.classList.add("on");
+    if(m.done&&!sv.done&&sv.items){sv.done=true;setTimeout(function(){c.classList.remove("on");},5000);PL.voted(m.win);return;}   /* a vote between playlist songs */
     if(m.done&&!sv.done){sv.done=true;var f=sv.files[m.win|0];setTimeout(function(){c.classList.remove("on");},5000);
       if(f){showJamToast("NEXT: "+clean(f.name),"#F5C518",2500);open();setTab("video",true);choose({key:"b:"+f.url,kind:"track",video:true,title:f.name,f:f});}}}
-  return{init:init,open:open,key:key,end:end,pos:pos,onSvote:onSvote,get playing(){return !!(cur&&cur.started&&!cur.paused);},ended:function(){var st=YT.status();return !!st.vid&&st.state===0;}};
+  return{req:function(m){PL.req(m);},init:init,open:open,key:key,end:end,pos:pos,onSvote:onSvote,get playing(){return !!(cur&&cur.started&&!cur.paused);},ended:function(){var st=YT.status();return !!st.vid&&st.state===0;}};
 })();
 window.addEventListener("load",function(){LSET.init();});
 
@@ -6091,6 +6195,7 @@ window.addEventListener("load",function(){JAMSTAGE.init();HANG.init();RACEVIEW.i
   setInterval(iName,1000);iName();
   ["jStageBtn","jSongBtn","jHangBtn"].forEach(function(id){var e=document.getElementById(id);if(e)bb.appendChild(e);});
   (function(){var tb=document.createElement("button");tb.id="jTvBtn";tb.title="TV mode: the show on a TV, everyone joins on their phones";tb.innerHTML="&#128250; TV mode";bb.appendChild(tb);})();
+  (function(){var cb=document.createElement("button");cb.id="jCastBtn";cb.title="Put the show on a TV while you keep playing here";cb.innerHTML="&#128225; Cast to TV";bb.appendChild(cb);cb.addEventListener("click",function(e){e.stopPropagation();window.CAST.open();});})();
   /* the old visualizer buttons (FX, alt, next, random, picker, play/stop) are gone from the bar: the song panel runs the song, and the visual FX live in the Stage menu */
   ["jVizFxBtn","jVizAltBtn","jVizCycBtn","jVizRandBtn","jPickBtn","jPlayStop"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.setProperty("display","none","important");});
   (function(){var sb2=document.getElementById("jStageBtn"),sp2=document.getElementById("jStagePop");if(!sb2||!sp2)return;sb2.innerHTML="&#127967; Stage &amp; FX";
@@ -6673,6 +6778,34 @@ var PCLOCK=(function(){var off=0,best=1e9,n=0,ok=false,tm=null;
   function start(){n=0;best=1e9;clearInterval(tm);var k=0;tm=setInterval(function(){ping();if(++k>=6){clearInterval(tm);tm=setInterval(ping,15000);}},400);}
   function got(m){var now=Date.now(),rtt=now-(+m.c||now);if(!(rtt>=0&&rtt<3000))return;n++;if(rtt<=best*1.2||n<3){if(rtt<best)best=rtt;var o=(+m.s)+rtt/2-now;off=ok?off*0.6+o*0.4:o;ok=true;}}
   return{start:start,got:got,now:function(){return Date.now()+off;},get ok(){return ok;}};})();
+/* ---- Cast to TV: a second screen that shows the whole show (the stage and every player) while you keep playing, picking
+   songs and hosting here. The TV joins the room as a screen: it isn't a player and makes no sound (your sound stays here). ---- */
+var CAST=(function(){
+  var pane=null,conn=null,tvs=0;
+  function code(){return typeof LIVERC!=="undefined"&&LIVERC.room&&liveOn?LIVERC.room:"";}
+  function tvUrl(c){var base=location.href.split("#")[0].split("?")[0].replace(/[^\/]*$/,"");var u=base+"venue.html?tv="+encodeURIComponent(c);
+    if(typeof LIVE_URL==="string"&&typeof WS_URL==="string"&&LIVE_URL!==WS_URL)u+="&ws="+encodeURIComponent(LIVE_URL);return u;}
+  function label(){var b=document.getElementById("jCastBtn");if(b){b.innerHTML=tvs?"&#128250; On "+tvs+" TV"+(tvs>1?"s":""):"&#128225; Cast to TV";b.classList.toggle("on",tvs>0);}}
+  function msg(t){var m=pane&&pane.querySelector(".cs-msg");if(m)m.textContent=t||"";}
+  function build(){pane=document.createElement("div");pane.id="castPane";
+    pane.style.cssText="position:fixed;right:16px;top:64px;z-index:9999;width:min(340px,92vw);background:#16112a;border:1px solid #5a4cb0;border-radius:10px;padding:12px;color:#eee;font:13px system-ui;box-shadow:0 10px 30px rgba(0,0,0,.6)";
+    pane.innerHTML='<b style="font-size:14px">&#128225; Put the show on a TV</b><div style="opacity:.75;margin:4px 0 10px">The TV shows the stage and everyone playing. You keep playing and picking songs here; the sound stays on this computer.</div>'+
+      '<button class="cs-cast" style="width:100%;margin:3px 0;padding:8px">&#128225; Cast (Chromecast / cast-ready TV)</button>'+
+      '<button class="cs-win" style="width:100%;margin:3px 0;padding:8px">&#128421; Open a TV window (drag it to a TV on HDMI)</button>'+
+      '<div style="margin-top:8px;opacity:.8">Or open this on the TV\'s web browser:</div><div class="cs-url" style="font:12px monospace;background:#0c0918;padding:6px;border-radius:6px;word-break:break-all;margin:4px 0;cursor:pointer" title="Click to copy"></div>'+
+      '<div class="cs-msg" style="color:#F5C518;min-height:16px;margin-top:6px"></div><button class="cs-x" style="float:right;margin-top:4px">Close</button>';
+    document.body.appendChild(pane);pane.addEventListener("click",function(e){e.stopPropagation();});
+    pane.querySelector(".cs-x").onclick=function(){pane.style.display="none";};
+    pane.querySelector(".cs-url").onclick=function(){try{navigator.clipboard.writeText(this.textContent);msg("Link copied");}catch(e){}};
+    pane.querySelector(".cs-win").onclick=function(){var c=code();if(!c){msg("Go live first.");return;}var w=window.open(tvUrl(c),"ukTV","popup,width=1280,height=720");msg(w?"Drag that window onto the TV and double-click it for fullscreen.":"Your browser blocked the window: allow pop-ups for this site.");};
+    pane.querySelector(".cs-cast").onclick=function(){var c=code();if(!c){msg("Go live first.");return;}
+      if(!window.PresentationRequest||!navigator.presentation){msg("Casting needs Chrome or Edge. Use the TV window or the link instead.");return;}
+      try{var req=new PresentationRequest([tvUrl(c)]);req.start().then(function(cn){conn=cn;msg("Casting! The TV is joining the room…");cn.onterminate=cn.onclose=function(){conn=null;msg("Casting stopped.");};})
+        .catch(function(e){msg(e&&e.name==="NotAllowedError"?"Cast cancelled.":e&&e.name==="NotFoundError"?"No TVs found on this WiFi. Try the TV window or the link.":"Couldn't cast: "+(e&&e.message||e));});}catch(e){msg("Couldn't cast: "+e.message);}};}
+  function open(){var c=code();if(!pane)build();pane.style.display="block";pane.querySelector(".cs-url").textContent=c?tvUrl(c):"(go live first)";msg(c?"":"Go live first: the TV joins your room.");}
+  document.addEventListener("click",function(){if(pane)pane.style.display="none";});
+  return{open:open,count:function(n){tvs=n|0;label();},url:tvUrl};
+})();window.CAST=CAST;
 var TVMODE=(function(){
   var on=false,av=0,wasPlay=false,cal=null,idleT=null,el=function(id){return document.getElementById(id);};
   try{av=+localStorage.getItem("uk_tvav")||0;}catch(e){}

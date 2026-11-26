@@ -18,13 +18,14 @@ body.gaming-ski #skiSpeed{top:128px!important}   /* below the little top-3 board
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="tune.js?v=1.82.72"></script>
-<script src="gfx.js?v=1.82.72"></script>
-<script src="art.js?v=1.82.72"></script>
-<script src="voice.js?v=1.82.72"></script>
-<script src="instruments.js?v=1.82.72"></script>
-<script src="kart.js?v=1.82.72"></script>
-<script src="explain.js?v=1.82.72"></script>
+<script src="tune.js?v=1.82.76"></script>
+<script src="gfx.js?v=1.82.76"></script>
+<script src="art.js?v=1.82.76"></script>
+<script src="qr.js?v=1.82.76"></script>
+<script src="voice.js?v=1.82.76"></script>
+<script src="instruments.js?v=1.82.76"></script>
+<script src="kart.js?v=1.82.76"></script>
+<script src="explain.js?v=1.82.76"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -44,6 +45,13 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 .join-practice-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;font:700 15px 'Silkscreen',ui-monospace,monospace;color:#fff;text-decoration:none;background:linear-gradient(135deg,rgba(211,84,160,.35),rgba(127,119,221,.35));border:1px solid rgba(211,84,160,.7);margin-top:-6px}
 .join-practice-btn:active{transform:scale(.97)}
 /* fullscreen, top left on every screen (iPhones get the Home Screen tip instead) */
+#songReqBtn{display:none;position:fixed;right:10px;top:52px;z-index:70;padding:7px 10px;border-radius:10px;font:700 12px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(42,31,77,.92);border:1px solid #9cff4a;cursor:pointer}
+body.sr-ok #songReqBtn{display:block}
+#songReq{display:none;position:fixed;inset:0;z-index:200;background:rgba(5,3,12,.7);align-items:center;justify-content:center}#songReq.on{display:flex}
+#songReq .sr-in{width:min(360px,90vw);background:#16112a;border:2px solid #7F77DD;border-radius:12px;padding:14px;color:#eee;font:13px system-ui;display:flex;flex-direction:column;gap:6px}
+#songReq b{font:700 15px 'Silkscreen',ui-monospace,monospace}#songReq small{opacity:.7}#songReq label{margin-top:6px;opacity:.85}
+#songReq .sr-row{display:flex;gap:6px}#songReq input{flex:1;min-width:0;padding:9px;border-radius:8px;border:1px solid #5a4cb0;background:#0c0918;color:#fff;font:14px system-ui}
+#songReq button{padding:9px 12px;border-radius:8px;border:1px solid #5a4cb0;background:#2d2360;color:#fff;font:700 13px system-ui;cursor:pointer}#songReq #srMsg{min-height:18px;color:#F5C518}
 #vFsBtn{position:fixed;left:10px;top:10px;z-index:70;padding:7px 10px;border-radius:10px;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#ddd;background:rgba(20,18,32,.85);border:1px solid rgba(127,119,221,.5);cursor:pointer}
 #vFsBtn:hover{color:#fff;border-color:#D354A0}
 #vFsTip{display:none;position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:9500;width:min(420px,90vw);background:#1c1830;border:1px solid #D354A0;color:#fff;font:13px/1.45 'Silkscreen',ui-monospace,monospace;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -228,8 +236,8 @@ body[data-game="fish"] #fiHint{top:max(178px,22vh);white-space:normal;text-align
 #swStick{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 14px);width:124px;height:124px;pointer-events:auto;touch-action:none;background:var(--uiStick) center/100% 100% no-repeat;image-rendering:pixelated;-webkit-tap-highlight-color:transparent}
 #swStick.held{background-image:var(--uiStickOn)}#swStick .sw-knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;background:var(--uiKnob) center/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;transition:transform .12s ease-out}#swStick.held .sw-knob{transition:none}
 #swStick b{position:absolute;left:0;right:0;bottom:-16px;text-align:center;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:0 1px 2px #000}#swStick.beat{filter:drop-shadow(0 0 8px #F5C518)}
-@media (pointer:fine){#swStick{display:none}}   /* swim: the right stick is the dash (flick it); on a computer you click */
-#swDash{display:none!important;border-color:#7FE6FF;background-color:#1a4f8a!important}#swDash.beat{border-color:#F5C518;box-shadow:0 0 18px #F5C518}   /* swim: DASH lights up on the beat */
+#swStick{display:none!important}   /* swim: back to the big DASH button (it dashes the way the left stick points); on a computer you can also click */
+#swDash{border-color:#7FE6FF;background-color:#1a4f8a!important}#swDash.beat{border-color:#F5C518;box-shadow:0 0 18px #F5C518}   /* swim: DASH lights up on the beat */
 @keyframes fiHot{from{box-shadow:4px 4px 0 #000,0 0 0 0 rgba(61,242,255,.6)}to{box-shadow:4px 4px 0 #000,0 0 0 8px rgba(61,242,255,0)}}
 #bbBoost{border-color:#F5C518;background-color:#3a2a50!important;isolation:isolate}#bbBoost::before{content:"";position:absolute;left:0;right:0;bottom:0;height:calc((1 - var(--cd,0)) * 100%);background:repeating-linear-gradient(0deg,#b8458a 0 6px,#d35aa2 6px 12px);z-index:-1}   /* the boost refills from the bottom, in pixel bands */
 #fiBtn{background-color:#1f6fa0!important}
@@ -321,7 +329,7 @@ body.gaming-walk #moveCtl,body.gaming-walk #reactBar,body.gaming-walk #moveHint,
 #kpBanner.pop{animation:moshPop 2.2s ease-out forwards}
 #kpScore{position:absolute;right:14px;top:56px;font:900 26px 'Silkscreen',ui-monospace,monospace;color:#FF4D6D;text-shadow:0 2px 0 #000}
 #kpScore::before{content:none}
-#kpHint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 70px);font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000;white-space:nowrap}
+#kpHint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 150px);font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000;white-space:nowrap}
 #kpJump{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 12px);width:96px;height:96px;border-radius:50%;border:3px solid #FF4D6D;background:radial-gradient(circle,rgba(255,77,109,.5),rgba(20,8,30,.85));color:#fff;font:900 18px 'Silkscreen',ui-monospace,monospace;pointer-events:auto;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 #kpJump small{font:600 10px 'Silkscreen',ui-monospace,monospace;opacity:.75;margin-top:3px}
 #kpJump.dn{transform:scale(.94)}
@@ -409,7 +417,11 @@ body.gaming-fig #skJump,body.gaming-fig #skWheel,body.gaming-fig #skSpeed,body.g
 #figUI .fgFlick.on{display:block}#figUI .fgFlick canvas{width:120px;height:230px;image-rendering:pixelated}#figUI .fgFlick b{display:block;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#F5D03C}
 #figUI .fgPad{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--chatH) + 10px);width:min(560px,94vw);height:min(330px,42vh);background:rgba(18,13,30,.78);border:3px solid #7F77DD;box-shadow:5px 5px 0 #000;pointer-events:auto;touch-action:none;z-index:8}
 #figUI .fgPad.on{display:block}#figUI .fgPad canvas{width:100%;height:100%;display:block}
-body.fig-pad #dpad,body.fig-pad #figUI .fgBtn,body.fig-pad #figUI .fgPrompt canvas{visibility:hidden}body.fig-pad #figUI .fgPrompt{bottom:calc(var(--chatH) + min(330px,42vh) + 20px)}
+body.fig-pad #dpad,body.fig-pad #figUI .fgBtn,body.fig-pad #fgRing{visibility:hidden}
+body.gaming-fig #fdUI{display:none!important}   /* the free-dance buttons don't belong in the ice routine */
+#fgRing{display:none;position:fixed;width:min(56vw,240px);height:min(56vw,240px);transform:translate(-50%,-50%);image-rendering:pixelated;pointer-events:none;z-index:21}body.gaming-fig #fgRing{display:block}
+body.gaming-fig.fig-stick-off #dpad,body.gaming-fig.fig-btn-off #figUI .fgBtn{visibility:hidden}   /* only the control this moment needs */
+@media (pointer:coarse){body.gaming-fig #moveCtl{left:50%!important;transform:translateX(-50%);bottom:calc(var(--chatH) + 106px)!important}body.gaming-fig #dpad{transform:scale(1.3);transform-origin:50% 50%}}   /* the stick: in the middle, bigger, level with the button */body.fig-pad #figUI .fgPrompt{bottom:calc(var(--chatH) + min(330px,42vh) + 20px)}
 #figUI .fgMo{position:absolute;top:-4px;width:4px;height:18px;margin-left:-2px;background:#F5D03C;border:1px solid #000}@media (pointer:fine){#figUI .fgBtn{width:84px;height:56px;font-size:14px;bottom:calc(var(--chatH) + 30px)}}
 .goal{animation:goalGlow .5s steps(2) infinite;position:relative;z-index:30}
 .goal.goalNow{filter:brightness(1.6)}
@@ -418,7 +430,7 @@ body.fig-pad #dpad,body.fig-pad #figUI .fgBtn,body.fig-pad #figUI .fgPrompt canv
 @keyframes goalGlow{50%{box-shadow:0 0 0 2px #fff,0 0 10px 2px rgba(255,255,255,.5)}}
 #goalTag{display:none;position:fixed;z-index:9200;pointer-events:none;padding:5px 9px;background:#F5D03C;color:#1a0f2a;font:700 13px 'Silkscreen',ui-monospace,monospace;border:3px solid #1a0f2a;box-shadow:3px 3px 0 #000;white-space:nowrap;animation:goalTagF .5s steps(2) infinite}
 @keyframes goalTagF{50%{background:#fff}}
-@media (pointer:coarse){body.gaming-fig #skHint{display:none!important}#figUI .fgPrompt{bottom:calc(var(--chatH) + 150px)}}
+@media (pointer:coarse){body.gaming-fig #skHint{display:none!important}#figUI .fgPrompt{bottom:calc(var(--chatH) + 290px)}}
 #moshTap{display:none;position:absolute;left:12px;right:12px;bottom:12px;height:38vh;border-radius:24px;border:3px solid #E8505B;background:radial-gradient(circle,rgba(232,80,91,.45),rgba(30,10,20,.85));color:#fff;pointer-events:auto;touch-action:manipulation;flex-direction:column;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;user-select:none}
 #moshTap b{font:900 clamp(36px,9vw,72px)/1 'Silkscreen',ui-monospace,monospace;letter-spacing:2px}#moshTap span{font:700 18px 'Silkscreen',ui-monospace,monospace;color:#F5D03C}
 #moshTap.hit{animation:moshHit .12s}
@@ -543,6 +555,14 @@ body.fish-reel #fiReel{display:block}#fiReel.held{cursor:grabbing}
 @keyframes frHit{0%{background:#9cff4a;transform:scale(2.2)}}@keyframes frOk{0%{background:#fff;transform:scale(1.6)}}@keyframes frMiss{0%{background:#ff3b5c;transform:scale(1.3)}}
 #fiTen{display:none;position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 168px);width:118px;height:16px;border:3px solid #000;background:linear-gradient(to right,#2a6a3a 0%,#2a6a3a 60%,#7a6a1a 75%,#7a2a2a 100%);pointer-events:none}
 #fiTen.on{display:block}
+#fiTuneW{display:none;position:fixed;left:8px;top:max(180px,24vh);z-index:30;font:600 11px system-ui;color:#e8e4f8}
+body.gaming-fish.fi-tune #fiTuneW{display:block}
+#fiTuneBtn{background:#2a1f4d;color:#fff;border:2px solid #7F77DD;border-radius:6px;padding:4px 8px;font:700 11px 'Silkscreen',ui-monospace,monospace;cursor:pointer}
+#fiTune{display:none;margin-top:4px;width:min(250px,70vw);max-height:52vh;overflow:auto;background:rgba(14,10,30,.94);border:1px solid #4a3d8a;border-radius:8px;padding:6px 8px}
+#fiTuneW.open #fiTune{display:block}#fiTune .ft-h{display:flex;align-items:center;gap:6px;margin-bottom:4px}#fiTune .ft-h b{flex:1;font-size:12px}
+#fiTune button{background:#2d2360;color:#fff;border:1px solid #5a4cb0;border-radius:5px;padding:2px 7px;font:600 11px system-ui}
+#fiTune .ft-r{padding:3px 0;border-top:1px solid #2c2358}#fiTune .ft-r div{display:flex;justify-content:space-between;gap:6px}#fiTune .ft-r.ch span{color:#F5C518}
+#fiTune .ft-r i{font-style:normal;color:#9d95c8;font-variant-numeric:tabular-nums}#fiTune input{width:100%;margin:1px 0 0;accent-color:#D354A0}
 #fiTut{display:none;position:absolute;left:50%;top:32vh;transform:translateX(-50%);max-width:88vw;width:max-content;padding:8px 14px;text-align:center;font:700 15px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(10,7,20,.88);border:3px solid #3DF2FF;pointer-events:none;z-index:5}
 #fiTut.on{display:block}#fiTut.run{border-color:#F5C518;color:#F5C518;animation:fiTutP .5s ease-in-out infinite alternate}#fiTut.ok{border-color:#9cff4a;color:#9cff4a}#fiTut.warn{border-color:#ff3b5c;color:#ff8a8a;animation:fiTutP .25s ease-in-out infinite alternate}
 @keyframes fiTutP{to{transform:translateX(-50%) scale(1.06)}}
@@ -719,7 +739,7 @@ body.practice #chatPanel,body.practice #talkBtn,body.practice #voiceBtn,body.pra
 #vTalk.on{display:block}#vTalk.idle{animation:vtPulse 1.6s ease-in-out infinite}#vTalk.live{background:#145a3a;border-color:#4CC38A}#vTalk.live.talk{box-shadow:0 0 0 3px #4CC38A,4px 4px 0 #000}
 #vTalk.song,#vTalk.full{background:#2a2440;border-color:#6a6290;color:#c8c2e8}
 @keyframes vtPulse{0%,100%{box-shadow:4px 4px 0 #000}50%{box-shadow:0 0 0 4px rgba(127,119,221,.6),4px 4px 0 #000}}#voiceBtn.song{border-color:#8f88b8;color:#8f88b8}#voiceBtn.talk{background:#1f3a2c}
-body.practice #moveCtl{bottom:18px}
+body.practice #moveCtl{bottom:calc(var(--chatH) + 18px)}
 body.practice #moveHint{bottom:190px}
 body.practice #hudBR{bottom:18px}
 body.embed #prBar{top:12px}
@@ -734,6 +754,17 @@ body.practice:not(.pr-busy) #roundBox{top:180px}
 #prBar input[type=file]{display:none}
 /* the chat log folds away: speech shows above heads anyway; the log is there to look back at */
 :root{--chatH:54px}body.chat-open{--chatH:200px}
+/* the TV screen: only the show (and the scoreboards, banners and round cards); nothing to tap */
+body.tv-screen button,body.tv-screen input,body.tv-screen select,body.tv-screen #moveCtl,body.tv-screen #chatBar,body.tv-screen #chatBox,body.tv-screen [id$="Hint"],body.tv-screen #fiTuneW,body.tv-screen #fiTen,body.tv-screen #fiReel,body.tv-screen #fgRing,body.tv-screen #fiTut,body.tv-screen #joinScreen{display:none!important}
+body.tv-screen{cursor:none;--chatH:0px!important}body.tv-screen #hudRoom,body.tv-screen .hud-room{display:none}
+#nearRooms{display:none;margin-bottom:10px}#nearRooms.on{display:block}
+#nearRooms .near-btn{display:block;width:100%;margin:6px 0;padding:10px 12px;background:#2a1f4d;border:2px solid #9cff4a;border-radius:8px;color:#fff;font:700 14px 'Silkscreen',ui-monospace,monospace;text-align:left;cursor:pointer}
+#nearRooms .near-btn small{display:block;font:11px system-ui;opacity:.75;margin-top:2px}
+#tvCard{position:fixed;right:18px;bottom:18px;z-index:40;background:rgba(14,10,30,.88);border:2px solid #7F77DD;border-radius:12px;padding:10px 12px;text-align:center;color:#fff;font:700 12px 'Silkscreen',ui-monospace,monospace;pointer-events:none}
+#tvCard canvas{display:block;width:120px;height:120px;margin:6px auto;image-rendering:pixelated;background:#fff;border-radius:4px}#tvCard .tc-code{font-size:26px;letter-spacing:6px;color:#F5C518}#tvCard small{display:block;font:11px system-ui;opacity:.75}
+/* phones: the game sticks and buttons sit a little higher, where thumbs naturally rest (everything placed off the bottom moves together) */
+body{--chatH0:var(--chatH)}
+@media (pointer:coarse){body[data-game]:not([data-game=""]) #moveCtl,body[data-game]:not([data-game=""]) #boatsUI,body[data-game]:not([data-game=""]) #calUI,body[data-game]:not([data-game=""]) #ctfUI,body[data-game]:not([data-game=""]) #fdUI,body[data-game]:not([data-game=""]) #figUI,body[data-game]:not([data-game=""]) #fishUI,body[data-game]:not([data-game=""]) #keepyUI,body[data-game]:not([data-game=""]) #moshUI,body[data-game]:not([data-game=""]) #pipeUI,body[data-game]:not([data-game=""]) #skateUI,body[data-game]:not([data-game=""]) #skiUI,body[data-game]:not([data-game=""]) #swimUI,body[data-game]:not([data-game=""]) #walkUI{--chatH:calc(var(--chatH0) + clamp(36px,6vh,70px))}}
 #chatMsgs{display:none}body.chat-open #chatMsgs{display:block}
 body.practice,body.practice.chat-open,body.dev-phone[data-game]:not([data-game=""]):not([data-game=free]),body.dev-tablet[data-game]:not([data-game=""]):not([data-game=free]){--chatH:0px}
 body.dev-phone[data-game]:not([data-game=""]):not([data-game=free]) #chatPanel,body.dev-tablet[data-game]:not([data-game=""]):not([data-game=free]) #chatPanel{display:none}
@@ -837,7 +868,10 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
 <body>
 
 <!-- JOIN SCREEN -->
-<button id="vFsBtn" title="Fullscreen">&#9974;</button>
+<button id="vFsBtn" title="Fullscreen">&#9974;</button><button id="songReqBtn" title="Add a song to the playlist">&#127925; ADD SONG</button>
+<div id="songReq"><div class="sr-in"><b>&#127925; Add a song</b><small>The host sees it and adds it to the playlist.</small>
+<label>Paste a YouTube link</label><div class="sr-row"><input id="srYt" type="text" placeholder="https://youtu.be/…" autocomplete="off" spellcheck="false"><button id="srYtGo">Send</button></div>
+<label>or a song from your phone</label><button id="srFile">&#128193; Choose a song file</button><div id="srMsg"></div><button id="srClose">Close</button></div></div>
 <div id="vFsTip">On iPhone, Safari can't make a web page fullscreen. For a fullscreen app: tap <b>Share</b>, then <b>Add to Home Screen</b>, and open it from your home screen.</div>
 <div id="joinScreen" data-view="menu"><button id="mmMusic" aria-label="Menu music on or off">&#9835; MUSIC ON</button>
   <div class="join-logo"><b>Unholy</b> Keys</div>
@@ -848,6 +882,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
     <canvas id="menuChar" width="220" height="230" aria-label="Your character"></canvas>
     <input type="text" id="inName" placeholder="Your name" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" aria-label="Your name">
     <div class="mm-btns">
+      <div id="nearRooms"></div>
       <button class="mm-btn mm-join" id="mmJoin"><i class="pxi" data-pxi="play"></i> Join game<small>enter a room code</small></button>
       <button class="mm-btn mm-prac" id="mmPrac"><i class="pxi" data-pxi="dance"></i> Practice<small>the practice zone, no show needed</small></button>
       <button class="mm-btn mm-char" id="mmChar"><i class="pxi" data-pxi="palette"></i> Character<small>change your look</small></button>
@@ -925,6 +960,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <div id="moshUI"><div id="moshBanner">MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><div id="moshStick" aria-label="Punch and swing your arms"><small>AIM · SWING</small><b></b></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
   <div id="partBanner"></div>
   <canvas id="skiCv"></canvas><canvas id="transCv"></canvas>
+  <div id="fiTuneW"><button id="fiTuneBtn">🎛 FEEL</button><div id="fiTune"><div class="ft-h"><b>Fishing feel</b><button id="fiTuneReset">Reset</button></div><div id="fiTuneRows"></div></div></div>
   <div id="fishUI"><div id="fiBanner">🎣 GONE FISHING</div><div id="fiScore">0</div><div id="fiCount"></div><div id="fiHint"></div><div id="fiTut"></div><button id="fiBtn" aria-label="Cast or net">CAST<small>Space</small></button><div id="fiReel" aria-label="Wind round to reel"><div class="fr-spool"></div><div class="fr-arm"></div><div class="fr-knob"></div><div class="fr-notch"></div><b>REEL &#10227;</b></div><div id="fiTen" aria-label="Line tension"><i></i><s></s><b>TENSION</b></div></div>
   <div id="boatsUI"><div id="bbBanner">🚤 BUMPER BOATS</div><div id="bbScore">0</div><div id="bbHint"></div><button id="bbBoost" aria-label="Boost">BOOST<small>Space</small></button></div>
   <div id="swimUI"><div id="swBanner">🐠 COIN DIVE</div><div id="swScore">0</div><div id="swHint"></div><button id="swDash" aria-label="Dash">DASH<small>Space</small></button><div id="swStick" aria-label="Flick to dash"><div class="sw-knob"></div><b>FLICK</b></div></div>
@@ -1038,6 +1074,8 @@ function resolveWsUrl(){
   return WS_URL;
 }
 var LIVE_URL = resolveWsUrl();
+/* TV screen (venue.html?tv=CODE, opened by the host's "Cast to TV"): shows the whole show, isn't a player, makes no sound */
+var TVSCREEN=((location.search.match(/[?&]tv=([A-Za-z0-9]{4})\b/)||[])[1]||"").toUpperCase();
 /* an audience link can carry the room code (?room=ABCD): it's filled in on the join screen */
 (function(){function ok(t){return t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable||(t.closest&&t.closest("#chatMsgs")));}
   document.addEventListener("selectstart",function(e){if(!ok(e.target))e.preventDefault();});
@@ -1952,6 +1990,55 @@ document.getElementById("enterBtn").addEventListener("click",function(){
   roomCode=room.toUpperCase();
   enterVenue();
 });
+/* ---- song requests: paste a YouTube link or pick a song file; it goes to the host, who adds it to the playlist (or not) ---- */
+var SONGREQ=(function(){var box=document.getElementById("songReq"),btn=document.getElementById("songReqBtn"),msgEl=document.getElementById("srMsg"),busy=false;
+  function say(t){if(msgEl)msgEl.textContent=t||"";}
+  function rid(){return Math.random().toString(36).slice(2,10);}
+  function ytId(t){var m=String(t).match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/);return m?m[1]:/^[A-Za-z0-9_-]{11}$/.test(String(t).trim())?String(t).trim():null;}
+  function okNow(){var v=document.getElementById("venue");return !!v&&v.classList.contains("on")&&!TVSCREEN&&!(typeof PRACTICE!=="undefined"&&PRACTICE&&PRACTICE.on)&&!(typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free");}
+  setInterval(function(){document.body.classList.toggle("sr-ok",okNow());},1000);   /* not in the middle of a game */
+  if(btn)btn.addEventListener("click",function(e){e.stopPropagation();box.classList.add("on");say("");});
+  document.getElementById("srClose").addEventListener("click",function(){box.classList.remove("on");});
+  box.addEventListener("pointerdown",function(e){if(e.target===box)box.classList.remove("on");});
+  ["keydown","keyup"].forEach(function(n){box.addEventListener(n,function(e){e.stopPropagation();});});   /* typing a link doesn't move your dancer */
+  document.getElementById("srYtGo").addEventListener("click",function(){var id=ytId(document.getElementById("srYt").value);if(!id){say("That doesn't look like a YouTube link.");return;}
+    wsSend({type:"song-req",rid:rid(),yt:id});document.getElementById("srYt").value="";say("Sent to the host…");});
+  document.getElementById("srFile").addEventListener("click",function(){if(busy)return;var inp=document.createElement("input");inp.type="file";inp.accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac,.opus";
+    inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;if(f.size>15*1024*1024){say("That file's over 15 MB. Try a smaller one.");return;}
+      var r=rid(),CH=150*1024,n=Math.ceil(f.size/CH),i=0;busy=true;wsSend({type:"song-req",rid:r,file:f.name,size:f.size,n:n,mime:f.type||""});
+      (function next(){if(i>=n){busy=false;say("Sent \""+f.name+"\" to the host…");return;}var fr=new FileReader();fr.onload=function(){var b=String(fr.result),d=b.slice(b.indexOf(",")+1);wsSend({type:"song-req-chunk",rid:r,i:i,d:d});i++;say("Sending… "+Math.round(i/n*100)+"%");setTimeout(next,40);};
+        fr.onerror=function(){busy=false;say("Couldn't read that file.");};fr.readAsDataURL(f.slice(i*CH,Math.min(f.size,(i+1)*CH)));})();};inp.click();});
+  function result(m){var t=m.ok?"\u2714 "+(m.title||"Your song")+" is on the playlist!":"\u2716 "+(m.why||"The host passed on "+(m.title||"that song"));say(t);
+    var d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;left:50%;top:90px;transform:translateX(-50%);z-index:210;background:#16112a;border:2px solid "+(m.ok?"#9cff4a":"#ff8a8a")+";color:#fff;padding:8px 14px;border-radius:10px;font:700 13px system-ui;max-width:90vw;text-align:center";document.body.appendChild(d);setTimeout(function(){d.remove();},4500);}
+  return{result:result};})();
+/* ---- rooms on your WiFi: while the join screen's up, ask the server for rooms hosted on the same network and list them as
+   one-tap buttons (the code still works for anyone else) ---- */
+var NEAR=(function(){var sk=null,tm=null,box=document.getElementById("nearRooms");
+  function on(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&!TVSCREEN&&!(typeof PRACTICE!=="undefined"&&PRACTICE&&PRACTICE.on);}
+  var lastJ="";
+  function render(list){if(!box)return;var j=JSON.stringify(list||[]);if(j===lastJ)return;lastJ=j;   /* only redraw when it changes, so a tap never lands on a button that's being replaced */
+    if(!list||!list.length){box.innerHTML="";box.classList.remove("on");return;}box.classList.add("on");
+    box.innerHTML='<label>On your WiFi</label>'+list.map(function(r){return '<button class="near-btn" data-room="'+r.room+'">&#9654; Join '+String(r.name).replace(/[<>&"]/g,"")+'\'s room<small>'+r.n+' playing · '+r.room+'</small></button>';}).join("");
+    Array.prototype.forEach.call(box.querySelectorAll(".near-btn"),function(b){b.addEventListener("click",function(){document.getElementById("inRoom").value=b.getAttribute("data-room");document.getElementById("enterBtn").click();});});}
+  function ask(){if(!on()){if(sk){try{sk.close();}catch(e){}sk=null;}return;}
+    if(!sk||sk.readyState>1){try{sk=new WebSocket(LIVE_URL);sk.onopen=function(){try{sk.send(JSON.stringify({type:"nearby"}));}catch(e){}};sk.onmessage=function(e){try{var m=JSON.parse(e.data);if(m.type==="nearby")render(m.rooms);}catch(x){}};sk.onclose=function(){sk=null;};}catch(e){sk=null;}return;}
+    if(sk.readyState===1)try{sk.send(JSON.stringify({type:"nearby"}));}catch(e){}}
+  tm=setInterval(ask,4000);setTimeout(ask,600);
+  window.ukNear=function(){return box?box.textContent:"";};return{render:render};})();
+/* ---- the TV screen: straight into the room, everything you'd tap hidden, no sound, the screen kept awake, and a corner card
+   so people in the room can join on their phones ---- */
+if(TVSCREEN)setTimeout(function(){
+  document.body.classList.add("tv-screen");roomCode=TVSCREEN;myName="TV";
+  var snd=/[?&]sound\b/.test(location.search);
+  if(!snd){var _pl=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){try{this.muted=true;}catch(e){}return _pl.apply(this,arguments);};}
+  enterVenue();
+  if(!snd)setTimeout(function(){try{Tone.Destination.mute=true;}catch(e){}},300);
+  function wake(){try{if(navigator.wakeLock)navigator.wakeLock.request("screen").catch(function(){});}catch(e){}}wake();document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")wake();});
+  document.addEventListener("dblclick",function(){try{var d=document;if(d.fullscreenElement)d.exitFullscreen();else d.documentElement.requestFullscreen();}catch(e){}});
+  var base=location.href.split("#")[0].split("?")[0],wsq=(location.search.match(/[?&]ws=([^&]+)/)||[])[1],jurl=base+"?room="+TVSCREEN+(wsq?"&ws="+wsq:"");
+  var c=document.createElement("div");c.id="tvCard";c.innerHTML='<b>JOIN ON YOUR PHONE</b><canvas id="tvCardQr"></canvas><div class="tc-code">'+TVSCREEN+'</div><small>'+jurl.replace(/^https?:\/\//,"").replace(/\?.*$/,"")+'</small>';
+  document.body.appendChild(c);try{UKQR.draw(document.getElementById("tvCardQr"),jurl,4);}catch(e){}
+},0);
 /* fullscreen on any screen; iPhones can't, so they get the Home Screen tip */
 (function(){
   var b=document.getElementById("vFsBtn"),tip=document.getElementById("vFsTip");
@@ -2048,7 +2135,7 @@ function resize(){
 var GZS={};try{GZS=JSON.parse(localStorage.getItem("uk_gz")||"{}")||{};}catch(e){GZS={};}
 var GZ_PC=!!(window.matchMedia&&matchMedia("(pointer:fine)").matches);
 function gzDef(k){return k==="free"&&GZ_PC?1.5:k==="fish"?1.35:1;}   /* fishing: a little closer, so the line and the fish are easy to see */   /* a computer: free dance starts at 150% */
-window.ukGZ=function(k){var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
+window.ukGZ=function(k){if(TVSCREEN)return 1;var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
 var GZNAME={ctf:"CTF",kflag:"Kart flag",ski:"Ski",kart:"Mars Rally",pipe:"Half pipe",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",walk:"Walk race",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Highway 4 keys",crowd:"Crowd vote",fish:"Fishing",boats:"Bumper boats",swim:"Coin dive"};
 function gzKey(){var m=typeof GAME!=="undefined"&&GAME.mode;if(!m)return null;if(m==="ctf")return document.body.classList.contains("ctf-kart")?"kflag":"ctf";if(m==="skate"&&typeof ICE!=="undefined"&&ICE)return "ice";return m;}
 function gzUI(){var k=gzKey(),show=!!k&&((typeof PRACTICE!=="undefined"&&PRACTICE.on)||/[?&]zoom\b/.test(location.search)||localStorage.getItem("uk_gzui")==="1"),b=document.getElementById("gzBox");
@@ -2061,7 +2148,7 @@ window.ukGzSet=function(k,z){if(z===1)delete GZS[k];else GZS[k]=z;try{localStora
 /* scroll-wheel zoom on the venue floor (PC): wheel up zooms in, wheel down out, anchored low so the dancers grow upward; taps are mapped back through it */
 var VZ=1,VZ_AY=0.62;
 try{var vzs=localStorage.getItem("uk_vz");VZ=Math.max(1,Math.min(2.6,vzs?+vzs||1:(window.matchMedia&&matchMedia("(pointer:fine)").matches?1.5:1)));}catch(e){}   /* a computer starts a little zoomed in (150%) on the dance floor */
-function vzActive(){return VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
+function vzActive(){return !TVSCREEN&&VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
 /* the camera: the wheel zoom, plus an automatic push in on you while it's your turn in the spotlight, so you can see (and steer) the whole body */
 var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null,VZ_H=60,VZ_B=[0,0],RING_C=null,VZ_VB=0;
 function vzCalc(){
@@ -2155,7 +2242,7 @@ function connectWS(){
   }
   ws.onopen=function(){RECON.n=0;setTimeout(function(){CLOCK.start();},200);
     wsReady=true;
-    ws.send(JSON.stringify({type:"join-room",room:roomCode,name:myName,color:myColor,look:ART.looks.pack(myLook)}));
+    ws.send(JSON.stringify(TVSCREEN?{type:"join-room",room:roomCode,screen:1}:{type:"join-room",room:roomCode,name:myName,color:myColor,look:ART.looks.pack(myLook)}));
   };
   ws.binaryType="arraybuffer";
   ws.onmessage=function(e){
@@ -2198,6 +2285,7 @@ var GVOTE=(function(){
   return{on:on};
 })();
 function wsSend(obj){
+  if(TVSCREEN)return;   /* a TV screen only watches */
   if(ws&&wsReady)ws.send(JSON.stringify(obj));
 }
 
@@ -2216,6 +2304,7 @@ function sendPos(x,y,ex){
 }
 
 function handleMsg(msg){
+  if(msg.type==="song-req-res"){SONGREQ.result(msg);return;}
   var t=msg.type;
   if(t==="error"){
     /* e.g. "Room not found": this used to be ignored, leaving you alone in an empty venue */
@@ -4393,8 +4482,9 @@ var KEEPY=(function(){
       if(Math.abs(dx)>TUNE.v("kp.reachX")||Math.abs(dy)>TUNE.v("kp.reachY"))return;
       if(s2.z<zp+TUNE.v("kp.zMin")||s2.z>zp+TUNE.v("kp.zMax")||s2.vz>40)return;
       cool[o.k]=now+TUNE.v("kp.cooldown");var T=ART.KEEPY.TYPES[o.type],isDbl=dbl&&zp>6,str=kick(o,me.x,me.y,vx,vy,isDbl,t,"me");
-      var pts=Math.round(T.pts*(isDbl?TUNE.v("kp.dblPts"):1)*(1+TUNE.v("kp.streak")*(str-1)));score+=pts;GAME.moshPts(pts);hud();
-      pops.push({x:me.x*W,y:me.y*H-zp*2-60,t:now,txt:(isDbl?"DOUBLE! ":"")+(o.type==="feather"?"🪶":o.type==="ball"?"⚽":"🎈")+(str>1?" ×"+str:"")+" +"+pts,col:T.col});
+      var rp0=ART.reactPose(me.reacts||[],now,2),spinHit=zp>6&&((rp0&&rp0.dir!==undefined)||autoSpin());   /* in the air AND spinning or twirling: style bonus */
+      var pts=Math.round(T.pts*(isDbl?TUNE.v("kp.dblPts"):1)*(spinHit?TUNE.v("kp.spinPts"):1)*(1+TUNE.v("kp.streak")*(str-1)));score+=pts;GAME.moshPts(pts);hud();
+      pops.push({x:me.x*W,y:me.y*H-zp*2-60,t:now,txt:(spinHit?"SPIN BONUS! ":"")+(isDbl?"DOUBLE! ":"")+(o.type==="feather"?"🪶":o.type==="ball"?"⚽":"🎈")+(str>1?" ×"+str:"")+" +"+pts,col:T.col});
     });
     GAME.moshPose(zp>0?(dbl?[2.9,-2.9,0.7,-0.7]:[2.5,-2.5,0.35,-0.35]):[0.5+Math.sin(now/200)*0.15,-0.5-Math.sin(now/200)*0.15,Math.abs(inp.x)+Math.abs(inp.y)>0?Math.sin(now/110)*0.4:0,Math.abs(inp.x)+Math.abs(inp.y)>0?-Math.sin(now/110)*0.4:0]);
     var h=$("kpHint");if(h)h.textContent=jumps===1?"Jump again for a double jump!":(window.matchMedia&&matchMedia("(pointer:coarse)").matches?"Get under them · JUMP, again in the air for more height · SPIN / TWIRL for style":"Get under them · Space to jump (again in the air for more height) · Q spin · E twirl");
@@ -4419,13 +4509,18 @@ var KEEPY=(function(){
     pops=pops.filter(function(p){var a3=(now-p.t)/1000;if(a3>1)return false;g.globalAlpha=1-a3;g.font="900 16px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(p.txt,p.x,p.y-a3*30);g.fillStyle=p.col;g.fillText(p.txt,p.x,p.y-a3*30);return true;});
     g.globalAlpha=1;
   }
-  function wire(){return{h:Math.round(zp),f:0,t:0};}
+  function autoSpin(){return on&&dbl&&vz>0&&zp>2;}   /* the double jump: a spin on the way up, arms out in a T */
+  function wire(){return{h:Math.round(zp),f:0,t:autoSpin()?1:0};}
+  var R8K=[0,4,1,5,2,6,3,7];
+  function facing(v,isMe){var sp=isMe?autoSpin():!!(v.sk&&v.sk.t===1);return sp?R8K[Math.floor(performance.now()/55)%8]:0;}
+  function tArms(v,isMe){return isMe?autoSpin():!!(v.sk&&v.sk.t===1);}
+  window.ukKeepyFace=function(){var w=wire();return{h:w.h,spin:w.t,face:facing({},true),zp:+zp.toFixed(1),vz:+vz.toFixed(1),jumps:jumps};};
   /* the whole game you're locked in a steady shuffle: running man on the spot or moving, and with the stick pushed right out sideways the T-step, travelling that way */
   function fd(){var i=on?input():{x:0,y:0},side=Math.abs(i.x)>0.85;return{s:9,m:side?1:0,c:[Math.round((side?i.x:i.x*0.6)*100),0,0,0]};}
   function looks(v,isMe,scl){var h=isMe?zp:(v.sk&&v.sk.h)||0;return{lift:-h*scl,rot:0,ns:true};}
   window.ukKeepyAt=function(x,y){var me=myId&&viewers[myId];if(me){me.tx=me.x=x;me.ty=me.y=y;}};
   window.ukKeepy=function(){return{on:on,score:score,z:Math.round(zp),jumps:jumps,objs:objs.map(function(o){return{type:o.type,x:+o.s.x.toFixed(3),y:+o.s.y.toFixed(3),z:Math.round(o.s.z),down:!!o.down,streak:o.streak||0};})};};
-  return{start:start,stop:stop,tick:tick,jump:jump,onKick:onKick,draw:draw,wire:wire,looks:looks,fd:fd,get on(){return on;}};
+  return{start:start,stop:stop,tick:tick,jump:jump,onKick:onKick,draw:draw,wire:wire,looks:looks,facing:facing,tArms:tArms,fd:fd,get on(){return on;}};
 })();
 /* ============================================================
    FISHING (the fish round)
@@ -4453,7 +4548,7 @@ var FISH=(function(){
      notch at the top on each beat (one wind a beat, on the beat, is full speed), the left stick pulls the rod round (pull the opposite
      way to the fish's run and it fights less), and watch the line tension: too high and it snaps, slack too long and the fish gets off.
      Pull it in to the edge, then net it. */
-  var sw=null,power=0,castD=0.8,D=0,T=0,overT=0,slackT=0,reelR=0,reelHold=false,spaceHeld=false,rodA=0,mouseRod=null,mouseAt=0,fishX=0,runDir=1,burst=0,burstAt=0,netAt=0,winds={},lastWind=0,tut=false,tutRuns=0,aimX=0,marlinHook=false,lastMk=-1,reelA=0,prevD=0,reelPaint=null,reelHeld=function(){return false;};
+  var sw=null,power=0,castD=0.8,D=0,T=0,overT=0,slackT=0,reelR=0,reelHold=false,spaceHeld=false,rodA=0,mouseRod=null,mouseAt=0,fishX=0,runDir=1,burst=0,burstAt=0,netAt=0,winds={},lastWind=0,tuneShow=function(){},tut=false,tutRuns=0,aimX=0,marlinHook=false,lastMk=-1,reelA=0,prevD=0,reelPaint=null,reelHeld=function(){return false;};
   var LC=0.76,px=0.38,py=0.5,fy=0.5,drag=null,pvx=0,pvy=0,pxT=0.38,holdP=false,mouseX=null;   /* the reel box: the fish swims round the wide column; your paddle falls slowly, rises while you reel, bounces softly off the edges */   /* the reel box: the fish swims up and down the left (REEL) column; your paddle (px, py: 0-1 across / down the water) follows your drag */
   var from0=null,on=false,st="idle",stAt=0,ang=0.5,score=0,count=0,kind=0,zx=0,reeling=false,prog=0,ten=0,fx=0,fv=0,ftg=0,ftgAt=0,net=null,pops=[],lastT=0,biteAt=0,openAt=0,shadows=[],botF={},best=0,heldUp=false;
   function $(id){return document.getElementById(id);}
@@ -4480,7 +4575,7 @@ var FISH=(function(){
   function rimPos(u){return standPos(u);}
   function slotAng(id){return slotU(id);}
   function set(s){st=s;stAt=performance.now();if(tut&&s==="net")setTimeout(function(){coachSay("Got it to the edge! Tap NET","ok");},0);if(s!=="reel"&&s!=="net"&&typeof coachSay==="function")coachSay("");if(s!=="reel"){holdP=false;drag=null;reelHold=false;spaceHeld=false;reelR=0;}document.body.classList.toggle("fish-reel",on&&s==="reel");var te=$("fiTen");if(te)te.classList.toggle("on",on&&(s==="reel"||s==="net"));btn();}
-  function start(round){on=true;score=0;count=0;best=0;pops=[];botF={};ang=slotAng(myId);var mm=myId&&viewers[myId];from0=mm?[+mm.x||0.5,+mm.y||0.6]:null;set("idle");document.body.classList.add("gaming-fish");$("fishUI").classList.add("on");hud();banner("🎣 GONE FISHING");}
+  function start(round){on=true;tuneShow();score=0;count=0;best=0;pops=[];botF={};ang=slotAng(myId);var mm=myId&&viewers[myId];from0=mm?[+mm.x||0.5,+mm.y||0.6]:null;set("idle");document.body.classList.add("gaming-fish");$("fishUI").classList.add("on");hud();banner("🎣 GONE FISHING");}
   function stop(){on=false;sw=null;tut=false;coachSay("");var te=$("fiTen");if(te)te.classList.remove("on");document.body.classList.remove("gaming-fish","fish-reel");$("fishUI").classList.remove("on");if(typeof goalHL==="function")goalHL(null,"");}   /* clear the CAST / NET tag so it doesn't hang about after the game */
   function banner(t){var b=$("fiBanner");if(!b)return;PXEMO.set(b,t);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("fiScore");if(h)h.textContent=score.toLocaleString();var c=$("fiCount");if(c)c.textContent=count?"🐟 ×"+count:"";}
@@ -4559,6 +4654,21 @@ var FISH=(function(){
     window.ukFishStick=function(){var r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2,w:r.width};};})();
   var TOUCHF=!!(window.matchMedia&&matchMedia("(pointer:coarse)").matches);
   function FT(k,d){try{var v=TUNE.v("fi."+k);return isFinite(v)?v:d;}catch(e){return d;}}
+  /* ---- the feel sliders (practice, or ?fishtune in a room): top left during the game, saved on this device with the Tuning lab ---- */
+  (function(){var w=$("fiTuneW"),rows=$("fiTuneRows"),btn=$("fiTuneBtn");if(!w||!rows||typeof TUNE==="undefined")return;
+    var G=(TUNE.groups||[]).filter(function(g){return g.id==="fish";})[0];if(!G)return;
+    function fmt(v,st){var d=String(st).indexOf(".")<0?0:String(st).split(".")[1].length;return(+v).toFixed(d);}
+    function build(){rows.innerHTML="";G.vars.forEach(function(x){var r=document.createElement("div");r.className="ft-r"+(TUNE.has(x.k)?" ch":"");r.title=x.help;
+      r.innerHTML='<div><span>'+x.label+'</span><i>'+fmt(TUNE.v(x.k),x.step)+(x.unit?" "+x.unit:"")+'</i></div>';
+      var inp=document.createElement("input");inp.type="range";inp.min=x.min;inp.max=x.max;inp.step=x.step;inp.value=TUNE.v(x.k);
+      inp.addEventListener("input",function(){TUNE.set(x.k,+inp.value);r.querySelector("i").textContent=fmt(TUNE.v(x.k),x.step)+(x.unit?" "+x.unit:"");r.classList.toggle("ch",TUNE.has(x.k));});
+      ["pointerdown","keydown"].forEach(function(n){inp.addEventListener(n,function(e){e.stopPropagation();});});   /* sliding it doesn't swing the rod or cast */
+      r.appendChild(inp);rows.appendChild(r);});}
+    btn.addEventListener("click",function(e){e.stopPropagation();w.classList.toggle("open");if(w.classList.contains("open"))build();});
+    $("fiTuneReset").addEventListener("click",function(e){e.stopPropagation();G.vars.forEach(function(x){TUNE.reset?TUNE.reset(x.k):TUNE.set(x.k,x.def);});build();});
+    w.addEventListener("pointerdown",function(e){e.stopPropagation();});
+    tuneShow=function(){document.body.classList.toggle("fi-tune",!!((typeof PRACTICE!=="undefined"&&PRACTICE&&PRACTICE.on)||/[?&](fishtune|lab)\b/.test(location.search)));};
+    window.ukFishTune=function(){return G.vars.map(function(x){return[x.k,TUNE.v(x.k)];});};})();
   /* ---- the marlin: shows up now and then at the very far water and races across. Only a big cast (to the far line) that lands
      near him can hook him. When he comes is worked out from the song clock, so everyone sees him at the same time. ---- */
   function hh(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
@@ -4579,15 +4689,15 @@ var FISH=(function(){
     else if(st==="reel"){var K=KINDS[kind],str=(tut?0.6:1)*FT("fishStr",1)*(kind===5?FT("marlinStr",0.9):0.35+kind*0.16);
       /* the fish: runs left or right in bursts, rests in between */
       if(tut&&age<2.6){burst=0.08;burstAt=Math.max(burstAt,now);}   /* the lesson: a calm start, then a run each way */
-      else if(now>burstAt){var big=tut&&tutRuns<3?tutRuns%2===0:Math.random()<0.62;if(tut&&tutRuns<3){tutRuns++;if(big){burst=0.9;runDir=tutRuns===1?-1:1;burstAt=now+2600;}else{burst=0.08;burstAt=now+1800;}}else {burst=big?0.5+Math.random()*0.5:0.08;if(big)runDir=Math.random()<0.5?-1:1;burstAt=now+(big?700+Math.random()*1300:600+Math.random()*900)/(0.8+kind*0.12);}}
+      else if(now>burstAt){var big=tut&&tutRuns<3?tutRuns%2===0:Math.random()<FT("burst",0.62);if(tut&&tutRuns<3){tutRuns++;if(big){burst=0.9;runDir=tutRuns===1?-1:1;burstAt=now+2600;}else{burst=0.08;burstAt=now+1800;}}else {burst=big?0.5+Math.random()*0.5:0.08;if(big)runDir=Math.random()<0.5?-1:1;burstAt=now+(big?700+Math.random()*1300:600+Math.random()*900)/(0.8+kind*0.12);}}
       fishX=Math.max(-1,Math.min(1,fishX+(runDir*0.85-fishX)*dt*burst*1.6));
       /* the rod: the left stick (or ← →, or the mouse beside you) pulls it round; it springs back to the middle */
       var rodT=Math.abs(inp.x)>0.1?inp.x:0;rodA+=(rodT-rodA)*Math.min(1,dt*8);
-      var against=-rodA*runDir,pull=burst*str*(1-0.7*Math.max(0,against)+0.5*Math.max(0,-against));   /* pulling the opposite way to its run tires it */
+      var against=-rodA*runDir,pull=burst*str*(1-FT("rodHelp",0.7)*Math.max(0,against)+0.5*Math.max(0,-against));   /* pulling the opposite way to its run tires it */
       /* the reel: winds on the beat; holding on a computer is a slow steady reel */
       var rt=Math.min(1,windRate());if(reelHold||spaceHeld||held.up)rt=Math.max(rt,0.3);reelR+=(rt-reelR)*Math.min(1,dt*(rt>reelR?10:4));
       D=Math.max(0,Math.min(1.2,D+(pull*FT("run",0.14)-reelR*FT("reel",0.24)*(tut?0.45:1)*(kind===5?FT("marlinReel",0.55):1)*(1-0.5*Math.min(1,pull)))*dt));
-      var Tt=reelR*0.45+pull*(reelR>0.15?1.15:0.5)+Math.abs(rodA)*0.08;T+=(Tt-T)*Math.min(1,dt*5);
+      var Tt=reelR*FT("tenReel",0.45)+pull*(reelR>0.15?FT("tenPull",1.15):FT("tenPull",1.15)*0.43)+Math.abs(rodA)*0.08;T+=(Tt-T)*Math.min(1,dt*FT("tenRise",5));
       if(T>1)overT+=dt;else overT=Math.max(0,overT-dt*2);if(T<0.06)slackT+=dt;else slackT=0;
       if(tut){D=Math.min(D,1);if(D<=0.05){netAt=now;set("net");}}
       else if(overT>FT("snapT",0.5)){pops.push({t:now,txt:"SNAP! The line broke",col:"#ff8a8a"});set("snap");}
@@ -4957,7 +5067,7 @@ var SWIM=(function(){
   function hud(){var h=$("swScore");if(h)h.textContent=score.toLocaleString();}
   function add(n,txt,col,x,y){score+=n;GAME.moshPts(n);hud();pops.push({t:performance.now(),txt:txt+" +"+n,col:col||"#fff",x:x,y:y});}
   function btn(ph){var b=$("swDash");if(!b)return;var near=Math.min(ph,1-ph)<0.15;b.classList.toggle("beat",near);var sk=$("swStick");if(sk)sk.classList.toggle("beat",near);
-    var h=$("swHint");if(h&&performance.now()>hintT){hintT=performance.now()+500;h.textContent=window.matchMedia&&matchMedia("(pointer:coarse)").matches?"Left stick to swim · FLICK the right stick to dash that way · on the beat = PERFECT":"Arrows / WASD to swim · CLICK to dash that way · on the beat = PERFECT";}}
+    var h=$("swHint");if(h&&performance.now()>hintT){hintT=performance.now()+500;h.textContent=window.matchMedia&&matchMedia("(pointer:coarse)").matches?"Left stick to swim · tap DASH on the beat for PERFECT":"Arrows / WASD to swim · CLICK to dash that way · on the beat = PERFECT";}}
   /* DASH: a kick of speed the way you're going; right on the beat it's a big one */
   /* DASH: flick the stick (phone), click where you want to go (computer), or Space. It turns you that way and kicks you off:
      a sharp change of direction. Right on the beat it's a big one */
@@ -6546,7 +6656,14 @@ var FIG=(function(){
       sub={step:"flick "+STK+" "+MV.d+" on the beat",big:"get ready to pump",axel:"get ready",final:"press "+BTN+" on the last beat"}[near.k];}
     else{lab=lab||"SKATE TOGETHER";sub=U.big!==null&&U.bigIn<16?"big move in "+Math.ceil(U.bigIn):U.seg?"next: "+(F.NAMES[U.seg.k]||"")+" in "+Math.ceil(U.segIn):"";}
     var pr=u.querySelector(".fgPrompt");pr.querySelector("b").textContent=lab||"";pr.querySelector("b").style.color=fx.t&&now-fx.t<450?fx.col:"";pr.querySelector("small").textContent=sub||"";
-    var c=pr.querySelector("canvas"),g=c.getContext("2d");g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
+    /* only the control this moment needs: the stick for steps, spins and jumps; the button to pump and to pose; nothing while you just skate */
+    var needStick=!!((near&&(near.k==="step"||near.k==="axel"))||k==="spin"||fo2),needBtn=!!((pm||(near&&(near.k==="final"||near.k==="big")))&&!(fo2&&TOUCHF));if(needBtn&&!pm&&near&&near.k!=="final"&&needStick)needStick=false;
+    document.body.classList.toggle("fig-stick-off",!needStick);document.body.classList.toggle("fig-btn-off",!needBtn);
+    /* the prompt ring sits on the performer, big, pulsing in to him on every beat */
+    var c=pr.querySelector("canvas");if(c){c.id="fgRing";document.body.appendChild(c);}c=$("fgRing");
+    var pa=window.__perfAt;if(c&&pa){var PS=typeof PERF_S!=="undefined"?PERF_S:3,wx=pa[0],wy=pa[1]+6*PS,sxp=VZS.on?(wx-VZS.cx)*VZS.Z+W/2:wx,syp=VZS.on?(wy-VZS.cy)*VZS.Z+VZS.ay:wy,mc=document.getElementById("mainCanvas"),cr=mc?mc.getBoundingClientRect():{left:0,top:0,width:W,height:H};c.style.left=Math.round(cr.left+sxp*cr.width/W)+"px";c.style.top=Math.round(cr.top+syp*cr.height/H)+"px";var rh=c.getBoundingClientRect();if(rh.height>0){pr.style.bottom="auto";pr.style.top=Math.max(60,Math.round(rh.top-pr.offsetHeight-4))+"px";}}   /* the words just above the ring */
+    var g=c.getContext("2d");g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
+    var bph=((p/pb)%1+1)%1;for(var pr2=0;pr2<2;pr2++){var kk=(bph+pr2*0.5)%1,RR=30-kk*24;g.globalAlpha=(1-kk)*0.55;g.fillStyle="#3DF2FF";for(var a3=0;a3<24;a3++){var an3=a3/24*Math.PI*2;g.fillRect(Math.round(32+Math.cos(an3)*RR)-1,Math.round(32+Math.sin(an3)*RR)-1,2,2);}}g.globalAlpha=1;   /* rings closing in on the beat */
     if(near&&near.k==="step"){g.fillStyle="#F5D03C";var dd2=MOVES[near.m].d,rot={up:0,right:1,down:2,left:3}[dd2];g.save();g.translate(32,32);g.rotate(rot*Math.PI/2);[[-4,-22,8,26],[-12,-14,24,4],[-8,-18,16,4]].forEach(function(r){g.fillRect(r[0],r[1],r[2],r[3]);});g.restore();}   /* the arrow to copy */
     else{g.fillStyle="#7F77DD";[[28,4,8,4],[28,56,8,4],[4,28,4,8],[56,28,4,8]].forEach(function(r){g.fillRect(r[0],r[1],r[2],r[3]);});}
     if(ring>=0){var R=8+ring*24,q=4;g.fillStyle=ring<0.12?"#3DF2FF":"#fff";for(var a=0;a<32;a++){var an=a/32*Math.PI*2;g.fillRect(Math.round((32+Math.cos(an)*R)/q)*q-2,Math.round((32+Math.sin(an)*R)/q)*q-2,4,4);}}
@@ -8833,7 +8950,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.72",SERVER_VERSION="";
+var PAGE_VERSION="1.82.76",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -8931,7 +9048,11 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     if(ro){bob+=ro.lift||0;if(ro.armL!==undefined)armL=ro.armL;if(ro.armR!==undefined)armR=ro.armR;if(ro.legL!==undefined)legL=ro.legL;if(ro.legR!==undefined)legR=ro.legR;if(ro.mouth)mouth=true;if(ro.alL)alL=ro.alL;if(ro.alR)alR=ro.alR;if(ro.head!==undefined)hdA=ro.head;if(ro.dx)dxs+=ro.dx;if(ro.lgL)lgL=ro.lgL;if(ro.lgR)lgR=ro.lgR;if(ro.rot!==undefined)rot=ro.rot;}
     if(eo){var ek=eo.k;bob+=eo.lift;rot=rot*(1-ek)+eo.rot;if(!ro){armL=armL*(1-ek)+eo.armL*ek;armR=armR*(1-ek)+eo.armR*ek;}legL=legL*(1-ek)+eo.legL*ek;legR=legR*(1-ek)+eo.legR*ek;}}
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  /* in a game: a gold star over your own head, so you can always pick yourself out */
+  if(isMe&&!isPerf&&typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free"){var su=Math.max(1,Math.round(s*0.8)),SP=["...#...","..###..","#######",".#####.","..###..",".##.##.","##...##"],sx0=Math.round(x-3.5*su),sy0=Math.round(cy-27*s+Math.sin(Date.now()/250)*s);
+    ctx.save();ctx.fillStyle="#120D1E";SP.forEach(function(r,j){for(var i=0;i<7;i++)if(r[i]==="#")ctx.fillRect(sx0+i*su-su,sy0+j*su-su,su*3,su*3);});
+    ctx.shadowColor="#F5C518";ctx.shadowBlur=8*su;ctx.fillStyle="#F5C518";SP.forEach(function(r,j){for(var i=0;i<7;i++)if(r[i]==="#")ctx.fillRect(sx0+i*su,sy0+j*su,su,su);});ctx.shadowBlur=0;ctx.fillStyle="#FFF6C8";ctx.fillRect(sx0+3*su,sy0+2*su,su,su);ctx.restore();}
   /* name under the feet (stays put while dancing); none under your own character: you know who you are */
   if(name&&!isMe){
     ART.nameTag(ctx,name,x,cy+12*s+3,s>=2.5?2:1,"#fff");   /* pixel lettering; bots get a pixel robot */
@@ -9268,7 +9389,7 @@ function renderLoop(){
     var pfc=document.getElementById("perfFront"),mainCtx=ctx,useFront=pfc&&JT.k>0.02;
     if(pfc){var pfg=pfc.getContext("2d");pfg.clearRect(0,0,pfc.width,pfc.height);if(useFront){pfg.imageSmoothingEnabled=false;pfg.globalAlpha=ctx.globalAlpha;ctx=pfg;}}
     try{
-    drawPerformer(perfPx,perfPy);STAGEUP.draw(perfPx,perfPy);
+    window.__perfAt=[perfPx,perfPy];drawPerformer(perfPx,perfPy);STAGEUP.draw(perfPx,perfPy);
     ART.envFx(ctx,LAYV,H,perfPx,perfPy,3,Date.now(),2);
     var pcAge=crowdAge();if(pcAge<ART.CROWD_MS&&CROWD.kind!=="lasers"&&CROWD.kind!=="float")ART.crowdFx(ctx,CROWD.kind,perfPx,perfPy,3,pcAge,3,null,null);
     }finally{if(ctx!==mainCtx){ctx.globalAlpha=1;ctx=mainCtx;}}
@@ -9362,7 +9483,7 @@ function renderLoop(){
     }
     if(!bigMe&&!onStage){
       var swm=v!==PH&&v.dance===4&&SWIM.swimOn(),rpo=swm?SWIM.pose(v,ids[i]===myId):ART.reactPose(v.reacts,now,sc2),epo=swm?null:ART.envPose(LAYV,H,vx,dyy,sc2,now,v.seed||0);   /* coin dive: everyone swims along their heading, in time with the beat */
-      AVO=rpo||epo?{r:rpo,e:epo}:null;
+      AVO=rpo||epo?{r:rpo,e:epo}:null;if(swm)AVO=Object.assign(AVO||{},{snork:1});   /* coin dive: everyone in a mask and snorkel */
       var wk=v._walk||(v._walk={}),walking=ART.walkStep(wk,vx,vy,pnow,sc2);
       /* dance walk race: racers creep forward a fraction of a pixel a frame, too slow for the step detector, so note whether they moved on in the last third of a second */
       if(WALK.walkRound()&&v.dance===4){if(wk.ax===undefined||pnow-wk.at>330){wk.adv=wk.ax!==undefined&&vx-wk.ax>0.6;wk.ax=vx;wk.at=pnow;}}
@@ -9370,6 +9491,7 @@ function renderLoop(){
       if(!cdn&&!ck||skl)ART.footShadow(ctx,vx,vy,sc2,(rpo?rpo.lift:0)+(epo?epo.lift:0)+(skl?skl.lift:0));
       if(skl)AVO=AVO?Object.assign(AVO,{sk:skl}):{sk:skl};
       AVDIR=PIPE.pipeRound()&&(v.dance===4||ids[i]===myId&&PIPE.on)?PIPE.facing(v,ids[i]===myId):WALK.walkRound()&&v.dance===4?WALK.facing(v):ck?0:cdn===4?(RINK?(wk.face|0):GAME.mode==="free"?(fdTurn(wk,ids[i]===myId,vx,vy,pnow)?(wk.face|0):(cfd&&cfd.b?[0,2,1,3][cfd.b]:0)):(wk.k>0.3?(wk.face|0):0)):cdn?0:(wk.face|0);
+      if(v!==PH&&keepyOn()){AVDIR=KEEPY.facing(v,ids[i]===myId);if(KEEPY.tArms(v,ids[i]===myId)){AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},{armL:1.5,armR:-1.5});}}   /* keepy uppy: face the front; a double jump spins you round with your arms out */
       if(rpo&&rpo.dir!==undefined)AVDIR=cdn===4&&cfd&&cfd.b&&GAME.mode==="free"?rot8(rpo.dir,[0,2,1,3][cfd.b]):rpo.dir;   /* a spin or turn goes round through all the facings */
       if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;
       if(v!==PH&&v.dance===4){if(FISH.fishOn())AVDIR=FISH.facing(vx,vy);else if(BOATS.boatsOn()&&!BOATS.isOut(v,ids[i]===myId))AVDIR=BOATS.facing(v,ids[i]===myId);}   /* anglers face the water; boaters face where they're steering */
@@ -9433,7 +9555,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.72"></script>
+<script src="lab.js?v=1.82.76"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
