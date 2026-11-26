@@ -9412,10 +9412,11 @@ var DRAGON=(function(){
     fb.forEach(function(f,i){fire(g,f.x*W,f.y*H,f.r||6,now,i);});Object.keys(others).forEach(function(id){others[id].fb.forEach(function(f,i){g.globalAlpha=0.75;fire(g,f.x*W,f.y*H,5,now,i);g.globalAlpha=1;});});
     /* riders' dragons and near wings */
     spinNames={};riders(function(id,w,x,y,col,ph){var st=id===myId?now<stunTo:(w.sk&&w.sk.t===1),o=DST[id]||dst(id,w,now),fo=id===myId?now-lastBreath<220:(now-((others[id]||{}).at||0))<160,sp=spinOf(id,w,now);
-      if(sp>=0){var ang=sp*Math.PI*2,cy=y-14;g.save();g.translate(x,cy);g.rotate(-ang);g.translate(-x,-cy);
+      if(sp>=0){var ang=sp*Math.PI*2,cy=y-14,sq=Math.cos(ang);sq=Math.abs(sq)<0.12?(sq<0?-0.12:0.12):sq;   /* a barrel roll round its own length: squashes flat, belly up, and back */
+        g.save();g.translate(x,cy);g.scale(1,sq);g.translate(-x,-cy);
         farWing(g,id,w,x,y,col,now);try{ART.drawChar(g,x,y,2,w.look||ART.looks.fromColor(col,1),{armL:2.4,armR:-2.4,legL:0.5,legR:-0.5,mouth:true});}catch(e){}dragonArt(g,id,w,x,y,col,now,false,fo);g.restore();
         if(w.name)spinNames[w.name]=1;if(id===myId)spinNames.__me=1;
-        g.fillStyle="#fff1a0";for(var sk2=0;sk2<6;sk2++){var aa=ang*1.5+sk2*1.05;g.fillRect(x+Math.cos(aa)*44-1,cy+Math.sin(aa)*30-1,3,3);}   /* whoosh */
+        g.fillStyle="#fff1a0";for(var sk2=0;sk2<5;sk2++){var lx2=x-30-sk2*14,ly2=cy+Math.sin(ang+sk2*0.9)*16;g.fillRect(lx2,ly2-1,8,2);}   /* air spiralling off behind */
       }else dragonArt(g,id,w,x,y,col,now,st,fo);});
     en.forEach(function(e){enemy(g,e,now);});
     if(bossIn&&(!bossDead||now-deadAt<1600))boss(g,now);

@@ -1688,8 +1688,9 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
-## v1.82.89 — Dragon riders: fly the whole sky in landscape
+## v1.82.89 — Dragon riders: barrel roll, and the whole sky in landscape
 
+- **The spin is a real barrel roll now:** the dragon rolls along its own length (squashes edge-on, turns belly-up with the rider hanging under it, then comes back), not a loop. Air spirals off behind it.
 - On a phone turned sideways you couldn't fly lower than about halfway: the room kept for the chat box (160 px) took half of a landscape screen. In Dragon riders you can now fly down to 87% of the height in landscape (82% in portrait, where the stick and FIRE sit low).
 
 ## v1.82.88 — Note highway · 4 keys: real patterns, on the beat
