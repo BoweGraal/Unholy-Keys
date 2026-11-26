@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.77 — Phones: the phone menu, with Host a room
+
+1. On a phone, open the host's address (index.html). It goes straight to the phone menu (the same one players use).
+2. The phone menu has a new orange **Host a room** button ("run the show from here: songs, playlists, the TV"). Tap it: the host's page opens.
+3. On the host's page on a phone, the bottom buttons (Stage & FX, Start song, Hang out, TV mode, Cast to TV) wrap neatly into rows above Setup; no more squashed column with overlapping labels. The Cast to TV panel fits the screen.
+4. Computers are unchanged. The phone instrument (Instrument button) still opens as before.
+
 ## v1.82.76 — Playlists, song requests from the room, crowd votes the next song
 
 Server change: redeploy Render.
