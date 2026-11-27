@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.120"></script>
-<script src="tune.js?v=1.82.120"></script>
-<script src="gfx.js?v=1.82.120"></script>
-<script src="art.js?v=1.82.120"></script>
-<script src="qr.js?v=1.82.120"></script>
-<script src="voice.js?v=1.82.120"></script>
-<script src="instruments.js?v=1.82.120"></script>
-<script src="kart.js?v=1.82.120"></script>
-<script src="explain.js?v=1.82.120"></script>
+<script src="px8.js?v=1.82.122"></script>
+<script src="tune.js?v=1.82.122"></script>
+<script src="gfx.js?v=1.82.122"></script>
+<script src="art.js?v=1.82.122"></script>
+<script src="qr.js?v=1.82.122"></script>
+<script src="voice.js?v=1.82.122"></script>
+<script src="instruments.js?v=1.82.122"></script>
+<script src="kart.js?v=1.82.122"></script>
+<script src="explain.js?v=1.82.122"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -956,7 +956,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <!-- free dance: dance buttons down both edges, the dance's own moves along the bottom, two control dots in the middle -->
   <div id="fdUI" aria-label="Free dance controls">
     <div class="fd-col fd-l"></div><div class="fd-col fd-r"></div>
-    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><button class="fd-jump" aria-label="Jump" title="Jump (Space)">&#10514;<small>Jump</small></button><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div><div class="fd-hand" data-h="0" title="Left hand (hold to control it)"><i></i></div><div class="fd-hand" data-h="1" title="Right hand (hold to control it)"><i></i></div><div class="fd-moveName"></div><div class="fd-mini"><button data-r="turn90" title="90 turn (X)">90</button><button data-r="turn180" title="180 turn (Z)">180</button><button data-r="spinmove" title="Spin (V)">Spin</button><button data-r="twirl" title="Twirl: two fast turns (G)">Twirl</button></div></div>
+    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><button class="fd-jump" aria-label="Jump" title="Jump (Space)">&#10514;<small>Jump</small></button><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div><div class="fd-hand" data-h="0" title="Left hand (hold to control it)"><i></i></div><div class="fd-hand" data-h="1" title="Right hand (hold to control it)"><i></i></div><div class="fd-moveName"></div><div class="fd-mini"><button data-r="turn90" title="90 turn (X)">90</button><button data-r="turn180" title="180 turn (Z)">180</button></div></div>
     <div class="fd-help"></div>
     <div class="fd-subs"></div>
     <div class="fd-queue" id="fdQueue"></div>
@@ -985,8 +985,6 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <div id="emoteW"><div id="emoteRing" aria-label="Emotes"><div id="emoteName"></div></div><button id="emoteBtn" title="Emotes (E)" aria-label="Emotes"><canvas width="28" height="28"></canvas></button></div>
   <div id="reactBar" aria-label="Reactions">
     <button data-r="jump" title="Jump (Q)" aria-label="Jump">&#128588;</button>
-    <button data-r="spin" title="Spin (T)" aria-label="Spin">&#127744;</button>
-    <button data-r="twirl" title="Twirl: two fast turns (G)" aria-label="Twirl">&#128171;</button>
   </div>
   <div id="moshUI"><div id="moshBanner">MOSH PIT</div><div id="moshScore">0</div><div id="moshHint"></div><div id="moshStick" aria-label="Punch and swing your arms"><small>AIM · SWING</small><b></b></div><button id="moshTap" aria-label="Tap as fast as you can"><b>PUSH!</b><span id="moshTapN">0</span></button></div>
   <div id="partBanner"></div>
@@ -3767,14 +3765,26 @@ var GAME=(function(){
   function spinStep(now){
     if(!mySpin.on)return;var dt=Math.min(0.1,(now-mySpin.t)/1000);mySpin.t=now;
     if(shufSpin&&fStyle!==9)shufSpin=false;
-    var sx2=shufSpin?fCtl[0]:fCtl[2],sy2=shufSpin?fCtl[1]:fCtl[3],mg=Math.hypot(sx2,sy2),swing=false;   /* the Shuffle's spin is steered with the left stick: circle it to spin faster */
+    var lsS=shufSpin||mySpin.left,sx2=lsS?fCtl[0]:fCtl[2],sy2=lsS?fCtl[1]:fCtl[3],mg=Math.hypot(sx2,sy2),swing=false;   /* the Shuffle's spin is steered with the left stick: circle it to spin faster */
     if(mg>0.5){var th=Math.atan2(sy2,sx2);if(mySpin.pa!==null){var d=th-mySpin.pa;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;mySpin.vel+=d*5.5;if(Math.abs(d)>0.02)swing=true;}mySpin.pa=th;}else mySpin.pa=null;
     mySpin.vel=Math.max(-14,Math.min(14,mySpin.vel));
     if(Math.abs(mySpin.vel)>1.4||swing){mySpin.ang+=mySpin.vel*dt;mySpin.vel*=Math.pow(swing?0.9:0.3,dt);}
-    else{var tg=Math.round(mySpin.ang/(2*Math.PI))*2*Math.PI;mySpin.ang+=(tg-mySpin.ang)*Math.min(1,dt*9);if(Math.abs(tg-mySpin.ang)<0.04){mySpin.on=false;mySpin.ang=0;mySpin.vel=0;if(shufSpin){shufSpin=false;applyToMe();sendPose(true);}}}
+    else{var tg=Math.round(mySpin.ang/(2*Math.PI))*2*Math.PI;mySpin.ang+=(tg-mySpin.ang)*Math.min(1,dt*9);if(Math.abs(tg-mySpin.ang)<0.04){mySpin.on=false;mySpin.left=false;mySpin.ang=0;mySpin.vel=0;if(shufSpin){shufSpin=false;applyToMe();sendPose(true);}}}
   }
+  /* circle the left stick a full turn and keep going: you spin. Anticlockwise spins you left, clockwise twirls you right
+     (faster); keep circling to keep it going, let go and you finish the turn you're on. (Replaces the Spin / Twirl buttons) */
+  var lsC={a:null,acc:0,t:0};
+  function stickSpin(now){var lx=fCtl[0],ly=fCtl[1],m=Math.hypot(lx,ly);
+    if(mySpin.on||fStyle<=0||fStyle===7||m<0.6){lsC.a=null;if(m<0.6)lsC.acc=0;return;}   /* (the worm's on the floor) */
+    var a=Math.atan2(ly,lx);if(lsC.a!==null){var d=a-lsC.a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;
+      if(d*lsC.acc<0&&Math.abs(d)>0.05)lsC.acc=0;   /* changed direction: start counting again */
+      if(Math.abs(d)>0.03)lsC.t=now;else if(now-lsC.t>500)lsC.acc=0;   /* stopped circling */
+      lsC.acc+=d;}
+    lsC.a=a;
+    if(Math.abs(lsC.acc)>=Math.PI*2){var cw=lsC.acc>0;spinStart(cw?"twirl":"spin");mySpin.vel=(cw?1:-1)*Math.abs(mySpin.vel)*(cw?0.8:1);mySpin.left=true;mySpin.pa=a;lsC.acc=0;lsC.a=null;if(fStyle===9){shufSpin=true;shufArm=false;shufT=0;}applyToMe();sendPose(true);}}   /* the Shuffle: it's the T-step stomp spin */
+  window.ukStickSpin=function(){return{on:mySpin.on,left:!!mySpin.left,vel:+mySpin.vel.toFixed(2),acc:+lsC.acc.toFixed(2)};};
   function fdSpring(){
-    spinStep(performance.now());
+    stickSpin(performance.now());spinStep(performance.now());
     var moved=false,nowS=performance.now();
     fdqTick();
     if(fdAuto(nowS)){fdShow();applyToMe();sendPose();return;}
@@ -3791,14 +3801,14 @@ var GAME=(function(){
     if(fm&&fStyle>0&&fdt>0){var lx=fCtl[0],ly=fCtl[1],lm=Math.hypot(lx,ly);
       if(fStyle===9){   /* the Shuffle, the same as in the games (Keepy uppy): a steady running man while you move around; the stick pushed right out sideways is the T-step, travelling that way */
         var wasT=shufT;shufT=!shufSpin&&Math.abs(lx)>0.85&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;
-        if(ly<-0.85&&shufArm&&!mySpin.on){shufArm=false;shufSpin=true;spinStart("spin");mySpin.vel=-Math.abs(mySpin.vel);mySpin.pa=Math.atan2(ly,lx);applyToMe();sendPose(true);}   /* up to the top edge: a T-step stomp on the spot that spins you round; circle the stick to keep it going */
+        if(ly<-0.85&&shufArm&&!mySpin.on){shufArm=false;shufSpin=true;spinStart("spin");mySpin.vel=(lsC.acc>0.4?1:-1)*Math.abs(mySpin.vel);mySpin.pa=Math.atan2(ly,lx);lsC.acc=0;applyToMe();sendPose(true);}   /* up to the top edge: a T-step stomp on the spot that spins you round; circle the stick to keep it going */
         if(ly>-0.3&&!shufSpin)shufArm=true;   /* bring the stick back down (once the spin's done) before you can spin again */
         if(wasT!==shufT){applyToMe();sendPose(true);}
         var ffS=ROUND.featured(),isFS=ffS&&ffS.id===myId;
         if(shufT&&!isFS){var spS=TUNE.v("walk.speed")*fdt*0.6;fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+shufT*spS));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}
         else if(!shufT&&!shufSpin&&!isFS&&lm>0.18){   /* otherwise the stick walks you around the floor, any direction, while the running man keeps going */
           var k9=Math.min(1,(lm-0.18)/0.77),sp9=TUNE.v("walk.speed")*fdt*0.55*k9;fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+lx/lm*sp9));fm.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),fm.ty+ly/lm*sp9*(W/H)));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
-      else if(lm>0.18){var ff=ROUND.featured(),isF=ff&&ff.id===myId,k2=Math.min(1,(lm-0.18)/0.77),sp2=TUNE.v("walk.speed")*fdt*0.55*k2;
+      else if(lm>0.18&&!(mySpin.on&&mySpin.left)){var ff=ROUND.featured(),isF=ff&&ff.id===myId,k2=Math.min(1,(lm-0.18)/0.77),sp2=TUNE.v("walk.speed")*fdt*0.55*k2;
         if(!isF){fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+lx/lm*sp2));fm.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),fm.ty+ly/lm*sp2*(W/H)));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}}
   }
   /* ---------- free dance ----------
@@ -9237,7 +9247,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.120",SERVER_VERSION="";
+var PAGE_VERSION="1.82.122",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9657,6 +9667,9 @@ var DRAGON=(function(){
 function LBOTS(){for(var k in viewers)if(k.indexOf("bot")===0)return true;return false;}   /* this screen's own practice dancers (the server's bots have normal ids) */
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
 var AVFLEX={},SKIPS=null;   /* SKIPS: how many in the room have pressed Skip timer this countdown */   /* per dancer: last arm angles, for the elbow follow-through */
+/* tests: draw one dancer onto a given canvas, facing dir, dancing fd {s,m,c} at beat bp (the audit of every dance in every direction) */
+window.ukDrawDancer=function(c2,x,y,sc,dir,fd,bp,look,color){var sv=ctx,sd=AVDIR,od=ART.dance;ctx=c2;AVDIR=dir;ART.dance=function(s0,m0,cc,b0){return od(s0,m0,cc,bp);};
+  try{drawAvatar(x,y,color||"#7f5af0","",sc,false,false,false,fd?4:0,3,true,null,9999,look||null,fd);}finally{ctx=sv;AVDIR=sd;ART.dance=od;}};
 function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe,pose,hitAge,look,fd){
   if(typeof DRAGON!=="undefined"&&DRAGON.on&&!isPerf&&DRAGON.spinning(name,isMe))return;   /* dragon riders: mid barrel roll, drawn with the dragon */
   var s=scale||1,cx=x,cy=y;
@@ -9682,9 +9695,13 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       if(!isMe)fdSmooth(fd);var fc=!isMe&&fd.cs?fd.cs:fd.c,rg=ART.dance(fd.s,fd.m,[fc[0]/100,fc[1]/100,fc[2]/100,fc[3]/100],GAME.beatPos());
       /* a dance with its own facing (Running man side-on, Shake it facing away, the moonwalk, the shuffle spin): turned by whatever
          the 90 / 180 buttons or a spin have done, instead of replacing it */
-      if(rg.dir!==undefined){var qq8=-1;for(var q8=0;q8<4;q8+=0.5)if(rot8(0,q8)===AVDIR){qq8=q8;break;}AVDIR=qq8>0?rot8(rg.dir,qq8):rg.dir;}
+      var sideMir=false;
+      if(rg.dir!==undefined){
+        if((rg.dir===1||rg.dir===3)&&!(fd&&fd.b)){   /* a side-on move while you're just facing a way (from walking): it stays side on, turned to the side you face, rather than spun round to show your back or front */
+          var rgt0=AVDIR===1||AVDIR===4||AVDIR===5,lft0=AVDIR===3||AVDIR===6||AVDIR===7;sideMir=lft0||AVDIR===2;AVDIR=sideMir?(rg.dir===1?3:1):rg.dir;}
+        else{var qq8=-1;for(var q8=0;q8<4;q8+=0.5)if(rot8(0,q8)===AVDIR){qq8=q8;break;}AVDIR=qq8>0?rot8(rg.dir,qq8):rg.dir;}}   /* the 90 / 180 buttons turn the move itself round */
       if(rg.worm!==undefined)wormV=rg;   /* the worm draws its own jointed body */
-      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;if(fd.s!==6)flex=true;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;bsx=rg.bsx||0;bsy=rg.bsy||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
+      armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;if(fd.s!==6)flex=true;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=(sideMir?-1:1)*rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;bsx=rg.bsx||0;bsy=rg.bsy||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
       /* a side-on dance (Running man, the shuffle) turned to face front or back: its legs swing forward and back, which from the
          front or back is a knee coming up toward you, not a leg kicking out sideways. So the swing becomes a shorter (lifted) leg
          that stays under the hip; half way for the three-quarter views */
@@ -9715,7 +9732,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
   /* soft elbows on freely posed arms (not the robot, not a move that shapes its own arms) */
   var bnd=null;if(flex&&alL===undefined&&alR===undefined&&ART.elbows){var fk=(name||"")+"|"+(seed||0),fm=AVFLEX[fk]||(AVFLEX[fk]={});bnd=ART.elbows(armL,armR,fm,performance.now());}
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{worm:wormV&&!(AVO&&AVO.r)?wormV.worm:undefined,wface:wormV?wormV.wface:1,wcl:wormV?wormV.wcl:0,whl:wormV?wormV.whl:0,bendL:bnd?bnd[0]:0,bendR:bnd?bnd[1]:0,snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{worm:wormV&&!(AVO&&AVO.r)?wormV.worm:undefined,wface:wormV?wormV.wface*(AVDIR===3||AVDIR===6||AVDIR===7?-1:1):1,wcl:wormV?wormV.wcl:0,whl:wormV?wormV.whl:0,bendL:bnd?bnd[0]:0,bendR:bnd?bnd[1]:0,snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
   /* bumper boats only: a gold star over your own head, since you're hard to pick out on the water */
   if(isMe&&!isPerf&&typeof GAME!=="undefined"&&GAME.mode==="boats"){var su=Math.max(1,Math.round(s*0.8)),SP=["...#...","..###..","#######",".#####.","..###..",".##.##.","##...##"],sx0=Math.round(x-3.5*su),sy0=Math.round(cy-27*s+Math.sin(Date.now()/250)*s);
     ctx.save();ctx.fillStyle="#120D1E";SP.forEach(function(r,j){for(var i=0;i<7;i++)if(r[i]==="#")ctx.fillRect(sx0+i*su-su,sy0+j*su-su,su*3,su*3);});
@@ -10238,7 +10255,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.120"></script>
+<script src="lab.js?v=1.82.122"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
