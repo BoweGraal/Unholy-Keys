@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.127 — Shake it: Drop it holds low, Pop it brings you back
+
+- **Drop it** now drops you down low and keeps you there: bent over, hands on the thighs, the butt still popping on the half beats and the hips tilting. It used to bob up and only drop on beat 4.
+- While you're dropped, the **Drop it** button reads **Pop it**. Press it (or X on a computer) and you pop back up into **Wiggle**.
+
+1. Shake it → Drop it: you stay low the whole time, still popping. The button now says Pop it.
+2. Press Pop it: back up into Wiggle, and the button says Drop it again.
+
 ## v1.82.126 — Free dance WIDE button; Shake it "Hands up" turned round
 
 - **WIDE / NEAR:** a small button next to 90 / 180 in free dance. WIDE zooms right out to the normal view of the whole room: it overrides the close-up camera, your turn in the middle, the dance circle, and any pinch or wheel zoom. NEAR puts the close-up back. It's remembered on this device.
