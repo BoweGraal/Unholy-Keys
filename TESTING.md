@@ -1688,6 +1688,23 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.139 — Pool fishing (the original fishing game, back as a second game); dragon corkscrew
+
+- **Pool fishing** (new game, in Water next to Fishing, also in practice and the crowd vote): the original fishing game, where a round pool opens in the dance floor and everyone stands round its edge.
+  - **Controls:** CAST, wait for the bite, then the Stardew-style bamboo reel box.
+  - **Reeling:** the old version needed the two joined bars because one finger had to both reel and steer. Now the left stick slides your glow left and right while the other thumb holds REEL to make it rise. Let go and it sinks.
+  - **Catching:** on the fish the meter fills, off it the meter drains. When it's full, tap NET when the net swings over the fish (2 tries).
+  - **Fish:** minnow, perch, bass, pike, golden koi. The big ones bite in the loud parts.
+  - **PC:** Space casts and nets, and held it reels (so do ↑ / W or holding the mouse). ← → or the mouse slide the glow.
+  - **Host TV:** shows the pool with everyone's lines.
+  - Has its own intro card with a demo.
+  - **Server:** accepts the new mode (redeploy Render).
+- **Dragon spin:** now a corkscrew instead of a flat flip. It rolls through 8 steps: side on, tipping, its back from above (rider on top, both wings spread), tipping over, upside down with the rider still in the saddle, tipping back, its belly from below, and side on again. The dragon spirals up and over, down and under, and two trails of air corkscrew off behind.
+- **Dragon far wing:** it never drew in normal flight because of a check bug. It's back.
+
+1. Practice → Pool fishing on a phone: CAST, then hold REEL with one thumb and slide with the stick. Net the fish.
+2. Dragon riders: flick ↑ then ↓ to spin and watch it corkscrew.
+
 ## v1.82.138 — Every button works while you hold a stick
 
 - **The rule:** any button can be tapped while another finger is on a stick, slider or pad, everywhere in the game.
