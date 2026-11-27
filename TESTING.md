@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.140 — Menu: MUSIC ON button in the middle
+
+- The ♫ MUSIC ON / OFF button moved from the top-right corner to the centre under the title, replacing the "Live Venue" line.
+
+1. Open the main menu: the button sits centred under UNHOLY KEYS and still turns the menu music on and off.
+
 ## v1.82.139 — Pool fishing (the original fishing game, back as a second game); dragon corkscrew
 
 - **Pool fishing** (new game, in Water next to Fishing, also in practice and the crowd vote): the original fishing game, where a round pool opens in the dance floor and everyone stands round its edge.
