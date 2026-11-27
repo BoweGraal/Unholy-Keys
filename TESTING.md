@@ -1688,6 +1688,19 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.125 — Each dance jumps its own way; the left stick angles you; robot hands; 90 / 180 bar fixed
+
+- **A flick jump for every dance, each its own way:** two-step tucks; hands on knees keeps the hands on the knees in a squat jump; shake it goes up with the hips out; running man leaps in a stride; skank kick-jumps; the **robot** jumps stiff as a board with its arms locked out; the worm pushes off the floor; **silly** does a star jump; the shuffle kicks its feet out to the sides; **thriller** does a zombie hop; street jam throws a fist up with a knee up; cyber goth reaches up with high knees; **headbang** jumps head down, knees tucked; **lighters up** keeps the lighter held high; techno march punches a fist up; the **puppet** is hauled up limp on its strings.
+- **The left stick in free dance keeps you planted:** pushing it left or right angles your body three-quarters toward that side, feet on the spot, like swinging side to side. Only right at the edge of the stick do you walk (and turn to face the way you go). Everyone sees your angle. The Shuffle and the worm still use the stick their own way.
+- **Robot:** the two little hand controls above the sticks now point the arms the same way the sticks do, snapped to the robot's 45° steps.
+- **90 / 180 bar:** it was still sized for four buttons after Spin and Twirl went, leaving half of it empty. Now it fits the two. Both buttons work: 90 goes front, right, back, left; 180 goes back and forth.
+- There are no spin, twirl or jump buttons anywhere now: spin by circling the left stick, jump by flicking it.
+
+1. Free dance: push the left stick halfway left or right. You turn to that side without moving. Push it all the way: you walk.
+2. Flick-jump in a few dances (Robot, Silly, Thriller, Headbang, Puppet): each has its own air pose.
+3. Robot: drag the little hand controls. The arms snap to 45° like with the sticks.
+4. The 90 / 180 bar is compact and centred.
+
 ## v1.82.124 — Flick to jump; the worm dives in and pushes off
 
 **Jumping is a flick now.** No more jump buttons (the one between the dance sticks and the one on the reaction bar). Pull the **left stick down and flick it up**:
