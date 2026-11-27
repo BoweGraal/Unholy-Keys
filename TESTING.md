@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.128 — Running man faces the crowd
+
+Running man (and the other side-on moves: Fast, Moonwalk, Arms pump, the Shuffle's running man) used to start side on even when you faced the crowd. Now facing the crowd it's done **from the front**: the knees drive up toward you in turn and the arms pump bent in front of the chest. Facing away, it's from the back. Facing left or right (or the diagonals) it's side on, turned to that side. The 90 / 180 buttons work the same way: front → right side → back → left side.
+
+1. Free dance → Running man without walking first: it faces you, knees coming up, arms pumping at the chest.
+2. Tap 90: side on to the right. Again: from the back. Again: side on to the left.
+3. Walk left or right, then stop: side on that way.
+
 ## v1.82.127 — Shake it: Drop it holds low, Pop it brings you back
 
 - **Drop it** now drops you down low and keeps you there: bent over, hands on the thighs, the butt still popping on the half beats and the hips tilting. It used to bob up and only drop on beat 4.
