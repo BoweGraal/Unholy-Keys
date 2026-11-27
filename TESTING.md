@@ -1690,7 +1690,7 @@ Needs a Render redeploy (server.js changed).
 
 ## v1.82.137 — Step dance: a library of step patterns that fits the song; keepy uppy landing spots
 
-- **Step patterns:** Step Dance no longer turns the song's hits into arrows one by one (which on Normal often came out as one arrow a beat for long stretches). It now picks a pattern from a library of 57 hand-designed one-bar patterns for every bar. Each bar takes the pattern that best lands on the song's own hits, with a little randomness. Phrases go A, B, A mirrored, then an ending fill.
+- **Step patterns:** Step Dance no longer turns the song's hits into arrows one by one (which on Normal often came out as one arrow a beat for long stretches). It now picks a pattern from a library of 55 hand-designed one-bar patterns for every bar. Each bar takes the pattern that best lands on the song's own hits, with a little randomness. Phrases go A, B, A mirrored, then an ending fill.
   - **Easy (on the beat):** walk the stairs, ping-pong, box, zig-zag, crossover, double tap, three and rest, hold and step, two holds, hold the bar.
   - **Normal (half beats, never more than three quick ones in a row):** left right left pause right left right pause, anchor (hold ← for the bar and tap ↓ ↑ ↓ in between), gallop, tresillo (3-3-2), tresillo hold, hold and run, pairs, offbeats, jump in, echo, skip, candle, plus fills (stair run, jump finish, hold out).
   - **Hard:** staircase stream, trill and roll, anchor offbeats, jump step, gallop runs, box spin, jacks and cross, hold ladder, tresillo stream, tresillo jumps, plus fills.
