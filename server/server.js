@@ -508,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.115";
+var VERSION = "1.82.119";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -664,6 +664,7 @@ function onMessage(ws, raw, isBinary) {
       gvote: r.gvote && !r.gvote.done ? gvotePublic(r.gvote) : null,
       svote: r.svote && !r.svote.done ? svotePublic(r.svote) : null,
       voiceOpen: r.voice && Object.keys(r.voice).some(function(k) { return r.voice[k].mic; }) ? 1 : 0,   /* someone's talking: join in, listening */
+      voiceSongs: r.voiceSongs ? 1 : 0,   /* the host lets voice stay on during songs */
       totals: totalsList(r),
       fx: r.fx || null,
       perfPos: r.perfPos || null,
@@ -707,7 +708,7 @@ function onMessage(ws, raw, isBinary) {
      setup messages along; the audio itself goes straight between players. At most VOICE_MAX talkers per room. ── */
   if (ws.room && rooms[ws.room] && typeof msg.type === "string" && msg.type.indexOf("voice-") === 0) {
     var vr = rooms[ws.room], vid = ws.role === "performer" ? "performer" : ws.viewerId;
-    if (!vid) return;
+    if (!vid && msg.type !== "voice-songs") return;
     vr.voice = vr.voice || {};   /* id -> { mic: 0/1 }: everyone in voice; only those with the mic on count towards VOICE_MAX */
     var vSend = function(id, o) { var t = id === "performer" ? vr.performer : (vr.viewers.get(id) || {}).ws; if (t) try { t.send(JSON.stringify(o)); } catch(e) {} };
     var vPeers = function() { return Object.keys(vr.voice).filter(function(k) { return k !== vid; }).map(function(k) { return { id: k, mic: vr.voice[k].mic ? 1 : 0 }; }); };
@@ -719,6 +720,7 @@ function onMessage(ws, raw, isBinary) {
       broadcast(ws.room, { type: "voice-on", id: vid, mic: vr.voice[vid].mic }, ws);
       return;
     }
+    if (msg.type === "voice-songs") { if (ws.role === "performer") { vr.voiceSongs = msg.on ? 1 : 0; broadcast(ws.room, { type: "voice-songs", on: vr.voiceSongs }); } return; }   /* the host lets voice stay on during songs */
     if (msg.type === "voice-leave") { if (vr.voice[vid]) { delete vr.voice[vid]; broadcast(ws.room, { type: "voice-off", id: vid }, ws); } return; }
     if (!vr.voice[vid]) return;
     if (msg.type === "voice-mic") {   /* mic on (a talker slot, if one is free) or off */

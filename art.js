@@ -377,7 +377,7 @@ var ART=(function(){
       PAINT.view("hair:"+HR,1,OX,OY+hy);if(HT===14){SEC="hat";sideHat();}PAINT.view("hat:"+HT,1,OX,OY+hy);PAINT.view("extra:"+EX,1,OX,OY+hy);if(st.snorkel){SEC="hat";px(0,-12+hy,6,4,"#1d2b3a");px(1,-11+hy,4,2,"#9fe4ff");px(3,-11+hy,1,1,"#15121F");px(-5,-12+hy,5,1,"#1d2b3a");px(-3,-20+hy,2,11,"#F5C518");px(-3,-21+hy,2,1,"#E8505B");px(-2,-18+hy,1,8,"#c99a10");px(-1,-9+hy,6,1,"#F5C518");}
     }else{
       /* ---- back: the arms and legs swap sides, no face, the hair covers the back of the head ---- */
-      SEC="legL";legK(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL),1);if(!st.skates)toe(2.5,4,-lL,gL,shoe,1,1);SEC="legR";legK(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR),-1);if(!st.skates)toe(BT?-2:-2.5,4,-lR,gR,shoe,-1,1);
+      SEC="legL";legK(2.5,4,-lL,gL,legC(legColsL,gL),strC(gL),1);if(!st.skates)toe(2.5,4,-lL,gL,shoe,1,1);SEC="legR";legK(BT?-2:-2.5,4,-lR,gR,BT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR),-1);if(!st.skates)toe(BT?-2:-2.5,4,-lR,gR,shoe,BT?1:-1,1);   /* turned three-quarters away: both toes point the way they're heading */
       if(st.skates){var ic2=st.skates==="ice";SEC="legL";skate(2.5,4,-lL,gL,ic2);SEC="legR";skate(-2.5,4,-lR,gR,ic2);}
       /* from behind, the arms are on the far side of the body: drawn first, so the back covers them where they cross it */
       SEC="armL";armB(6.5,-4.5,-aL,nL,armC(nL),-(st.bendL||0));SEC="armR";armB(BT?-5.5:-6.5,-4.5,-aR,nR,BT?dimF(armC(nR)):armC(nR),-(st.bendR||0));
@@ -430,7 +430,7 @@ var ART=(function(){
       PAINT.view("hair:"+HR,2,OX,OY+hy);if(HT===14){SEC="hat";backHat();}PAINT.view("hat:"+HT,2,OX,OY+hy);if(st.snorkel){SEC="hat";px(-6,-11+hy,12,1,"#1d2b3a");px(5,-20+hy,2,11,"#F5C518");px(5,-21+hy,2,1,"#E8505B");px(6,-18+hy,1,8,"#c99a10");}
     }
     }else{
-    SEC="legL";legK(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL),-1);if(!st.skates)toe(-2.5,4,lL,gL,shoe,-1,1);SEC="legR";legK(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR),1);if(!st.skates)toe(FT?2:2.5,4,lR,gR,shoe,1,1);
+    SEC="legL";legK(-2.5,4,lL,gL,legC(legColsL,gL),strC(gL),-1);if(!st.skates)toe(-2.5,4,lL,gL,shoe,FT?1:-1,1);SEC="legR";legK(FT?2:2.5,4,lR,gR,FT?dimF(legC(legColsR,gR)):legC(legColsR,gR),strC(gR),1);if(!st.skates)toe(FT?2:2.5,4,lR,gR,shoe,1,1);
     if(st.skates){var ic=st.skates==="ice";SEC="legL";skate(-2.5,4,lL,gL,ic);SEC="legR";skate(2.5,4,lR,gR,ic);}
     SEC="top";
     /* torso */
@@ -609,6 +609,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     if(HIDECHAR)return;st=st||{};if(!L)L=random(7);
+    if(st.worm!==undefined&&st.worm!==null){drawWorm(g,x+(st.dx||0),y,p,L,st.worm,st.wface||1,st.wcl||0,st.whl||0);return;}   /* the worm: its own jointed side-on body */
     var s={snorkel:!!st.snorkel,armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,bendL:st.bendL||0,bendR:st.bendR||0,legLenL:st.legLenL,legLenR:st.legLenR,knee:st.knee,butt:st.butt,bj:st.bj,bsx:st.bsx,bsy:st.bsy,head:st.head||0,swing:st.swing,skates:st.skates==="ice"?"ice":!!st.skates};
     /* which way they face: 0 front, 1 facing right, 2 back, 3 facing left (the right-facing side view, mirrored) */
     /* 0 front, 1 right, 2 back, 3 left, 4 front-right, 5 back-right, 6 back-left, 7 front-left; the left ones are the right ones mirrored */
@@ -629,6 +630,62 @@ var ART=(function(){
     if(st.prop)handProp(g,x,y,q,dx,bob,s,st);
     else if(L.held&&!st.rot&&!st.skates)heldInst(g,x,y,q,dx,bob,L.held|0,s.dir,SX);
   }
+  /* ---------------- the worm, drawn as a jointed body seen side on ----------------
+     The standing sprite can't bend at the hips, and the worm is all hips, so this builds the figure from parts: a torso,
+     thigh + shin, upper arm + forearm, and the side-view head (cut from the real sprite, so the hair, hat and face are
+     theirs). Keyframes from three clips (a ballroom floor, a UFC celebration, a wrestling ring), one cycle per call of
+     ph 0..1, facing right (the way it travels):
+       0.00 chest down on the floor, hands planted by the chest with the elbows up, hips high, legs kicked up behind
+       0.22 the wave runs back: hips coming down, legs lowering, chest still down
+       0.45 hips on the floor, legs flat, chest pushed right up on straight arms, head up
+       0.65 the hands leave the floor and fly forward, chest still up, knees bending so the feet lift
+       0.82 the chest drops forward onto the hands as the hips start to flick up, knees still bent
+     Angles in degrees, y up, 0 = forward. hy: hip height off the floor. hand: planted (dx from the shoulder) or free [upper, fore]. */
+  var WORMK=[
+    {t:0.00,hy:10, tA:-36,thA:128,shA:112,hand:{p:1.5},hdA:-30},
+    {t:0.22,hy:5,  tA:-12,thA:166,shA:160,hand:{p:1.5},hdA:-5},
+    {t:0.45,hy:2.5,tA:34, thA:180,shA:183,hand:{p:1},  hdA:60},
+    {t:0.65,hy:2.5,tA:24, thA:178,shA:138,hand:{f:[-12,-2]},hdA:40},
+    {t:0.82,hy:3.5,tA:-8, thA:172,shA:122,hand:{p:3.5},hdA:5},
+    {t:1.00,hy:10, tA:-36,thA:128,shA:112,hand:{p:1.5},hdA:-30}];
+  var WT=11,WTH=4.5,WSH=4.5,WUA=4,WFA=4.2,WHEAD={},wormCv=null;
+  function wDir(a){a=a*Math.PI/180;return[Math.cos(a),Math.sin(a)];}
+  /* where the elbow and hand go for one keyframe, relative to the shoulder */
+  function wArm(k,S){var h=k.hand;if(h.f){var u=wDir(h.f[0]),f=wDir(h.f[1]),E=[u[0]*WUA,u[1]*WUA];return{E:E,P:[E[0]+f[0]*WFA,E[1]+f[1]*WFA]};}
+    var P=[h.p,1-S[1]],d=Math.hypot(P[0],P[1]),L=WUA+WFA;if(d>L-0.05){P=[P[0]*(L-0.05)/d,P[1]*(L-0.05)/d];d=L-0.05;}
+    var a=Math.atan2(P[1],P[0]),c=Math.acos(Math.max(-1,Math.min(1,(WUA*WUA+d*d-WFA*WFA)/(2*WUA*d)))),ea=a-c;   /* bend the elbow up and back */
+    var E=[Math.cos(ea)*WUA,Math.sin(ea)*WUA];if(E[1]<P[1]){ea=a+c;E=[Math.cos(ea)*WUA,Math.sin(ea)*WUA];}return{E:E,P:P};}
+  function wPose(ph,cl,hl){ph=((ph%1)+1)%1;var i=0;while(i<WORMK.length-2&&ph>=WORMK[i+1].t)i++;var A=WORMK[i],B=WORMK[i+1],u=(ph-A.t)/(B.t-A.t);u=u*u*(3-2*u);
+    function m(k){return A[k]+(B[k]-A[k])*u;}
+    var hy=m("hy")+hl*4,tA=m("tA")+cl*25-hl*12,H=[0,hy],td=wDir(tA),S=[H[0]+td[0]*WT,H[1]+td[1]*WT];
+    var aA=wArm(A,[0,A.hy+wDir(A.tA)[1]*WT]),aB=wArm(B,[0,B.hy+wDir(B.tA)[1]*WT]);
+    var E=[S[0]+aA.E[0]+(aB.E[0]-aA.E[0])*u,S[1]+aA.E[1]+(aB.E[1]-aA.E[1])*u],P=[S[0]+aA.P[0]+(aB.P[0]-aA.P[0])*u,S[1]+aA.P[1]+(aB.P[1]-aA.P[1])*u];
+    var thA=m("thA")-hl*25,shA=m("shA")-hl*20,kd=wDir(thA),K=[H[0]+kd[0]*WTH,H[1]+kd[1]*WTH],sd=wDir(shA),F=[K[0]+sd[0]*WSH,K[1]+sd[1]*WSH];
+    var hd=wDir(m("hdA")),N=[S[0]+hd[0]*5+2,S[1]+hd[1]*5];   /* lying down the head sits ahead of the shoulders, not on top of them */
+    return{H:H,S:S,E:E,P:P,K:K,F:F,N:N,sd:sd};}
+  function wHead(L){var key=JSON.stringify(L);if(WHEAD[key])return WHEAD[key];
+    var c=drawSprite(L,{dir:1,armL:0,armR:0,legL:0,legR:0}),h=canv(22,19),hg=h.getContext("2d");hg.drawImage(c,OX-11,OY-24,22,19,0,0,22,19);   /* the head down to the neck */
+    var ks=Object.keys(WHEAD);if(ks.length>40)delete WHEAD[ks[0]];return(WHEAD[key]=h);}
+  /* draw it: x,y the body centre as drawChar has it (the feet sit 11 art pixels below), p the pixel size, face -1 for left */
+  function drawWorm(g,x,y,p,L,ph,face,cl,hl){
+    if(!wormCv)wormCv=canv(60,40);var W0=60,FY=37,OXW=24,w=wormCv.getContext("2d");w.clearRect(0,0,W0,40);
+    var Q=wPose(ph,cl||0,hl||0),skin=colOf(L,"skin"),tc=colOf(L,"top"),bc=colOf(L,"bot"),shoe=["#2A2238","#EDEDF5","#E8505B","#5A3A22","#EDEDF5","#111018",skin,"#7A2A3A","#F5D03C","#111018"][L.shoes|0]||"#2A2238",OL="#120D1E";
+    function X(pt){return OXW+pt[0];}function Y(pt){return FY-Math.max(0.5,pt[1]);}
+    function seg(a,b,wd,col){var n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])*2));w.fillStyle=col;for(var i=0;i<=n;i++){var px=X(a)+(X(b)-X(a))*i/n,py=Y(a)+(Y(b)-Y(a))*i/n;w.fillRect(Math.round(px-wd/2),Math.round(py-wd/2),wd,wd);}}
+    function limb(a,b,c2,wd,col){seg(a,b,wd+2,OL);seg(b,c2,wd+2,OL);seg(a,b,wd,col);seg(b,c2,wd,col);}
+    var off=[1.2,0.6],far=function(pt){return[pt[0]+off[0],pt[1]+off[1]];};
+    /* far arm and leg, a shade darker, just behind */
+    limb(far(Q.S),far(Q.E),far(Q.P),2,shade(skin,-0.25));limb(far(Q.H),far(Q.K),far(Q.F),3,shade(bc,-0.25));
+    seg(far(Q.F),[far(Q.F)[0]+Q.sd[0]*1.5,far(Q.F)[1]+Q.sd[1]*1.5],3,shade(shoe,-0.2));
+    /* torso: shirt to the shoulders, trousers at the hips */
+    var mid=[Q.H[0]+(Q.S[0]-Q.H[0])*0.3,Q.H[1]+(Q.S[1]-Q.H[1])*0.3];seg(Q.H,Q.S,8,OL);seg(mid,Q.S,6,tc);seg(Q.H,mid,6,bc);
+    /* the head, upright, its neck on the neck point; never through the floor */
+    var hc=wHead(L),hx=Math.round(X(Q.N)-11),hyp=Math.round(Math.min(FY-18,Y(Q.N)-12));w.drawImage(hc,hx,hyp);
+    /* near leg and arm on top */
+    limb(Q.H,Q.K,Q.F,3,bc);seg(Q.F,[Q.F[0]+Q.sd[0]*1.5,Q.F[1]+Q.sd[1]*1.5],3,shoe);
+    limb(Q.S,Q.E,Q.P,2,skin);w.fillStyle=skin;w.fillRect(Math.round(X(Q.P)-1),Math.round(Y(Q.P)-1),2,2);
+    var q=Math.max(1,p),was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.translate(Math.round(x),Math.round(y+11*q));if(face<0)g.scale(-1,1);
+    g.drawImage(wormCv,-OXW*q,-FY*q,W0*q,40*q);g.restore();g.imageSmoothingEnabled=was;}
   /* an instrument you carry (Holding in the character maker): a violin tucked under the chin with its bow, or a black
      sparkly electric guitar slung across the body. Drawn on the body, so it stays put while the arms dance. */
   function heldInst(g,x,y,q,dx,bob,k,dir,SX){
@@ -1977,7 +2034,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       if(sub===2&&ph<0.15){o.bob=-2;o.mouth=true;}                                                /* pop on the beat */
       if(sub===3){o.bob=0;}
       break;}
-    case 7:{ /* the worm (from a clip): flat on the floor, the wave runs through you once a beat: hands planted, the hips and
+    case 7:{ /* the worm (from 3 clips): flat on the floor, the wave runs through you every 2 beats: hands planted, the hips and
                 legs kick up behind while the chest stays down, then the chest pushes up as the legs come down. "Dive in" jumps
                 up arms out and dives into it. The thumbs add chest (left) and hip (right) lift on top */
       var dir=sub===1?-1:1,cl=Math.max(0,-ay)*0.5,hl=Math.max(0,-by)*0.5,wp=((bp%1)+1)%1,leg=0,chest=0,mode=sub;
@@ -1985,13 +2042,10 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
         if(c4<1){var jj=c4;o.rot=0;o.bob=-Math.sin(jj*Math.PI)*7;o.armL=2.5;o.armR=-2.5;o.legL=0.25;o.legR=-0.25;o.mouth=true;break;}   /* jump up, arms out */
         if(c4<1.5){var dv=(c4-1)*2;o.rot=dir*(Math.PI/2)*dv;o.bob=-(1-dv)*5;o.armL=dir*(2.5-dv*3.9);o.armR=-2.5+dv*1.1;o.legL=dir*dv*0.9;o.legR=dir*dv*0.7;break;}   /* the dive */
         mode=0;}
-      if(mode===2){chest=hop*0.9;leg=hop*0.9;}                                                          /* flop */
-      else{var k1=Math.sin(Math.min(1,wp*2)*Math.PI),k2=Math.sin(Math.max(0,wp*2-1)*Math.PI);leg=wp<0.5?k1:0;chest=wp>=0.5?k2:0;}
-      leg=Math.min(1.2,leg+hl);chest=Math.min(1,chest+cl);
-      o.rot=dir*(Math.PI/2-chest*0.55);o.bob=-chest*3-leg*1.5;
-      o.legL=dir*(0.05+leg*1.35);o.legR=dir*(0.05+leg*1.2);                                   /* legs kick up off the floor */
-      o.armL=dir*(-2.55+chest*0.45);o.armR=dir*(-2.1+chest*0.5);o.alL=o.alR=8-chest*2;             /* hands planted out in front */
-      o.dx=dir*((bp%4+4)%4)*1.2-dir*2.4;
+      /* the jointed side-on worm (drawWorm): one full wave every 2 beats; flop rocks between the hips-up and the chest-up */
+      var wph=mode===2?0.12+hop*0.33:((bp/2)%1+1)%1;
+      o.worm=wph;o.wface=dir;o.wcl=cl;o.whl=hl;o.rot=0;o.bob=0;o.armL=0.15;o.armR=-0.15;o.legL=0;o.legR=0;
+      o.dx=mode===2?0:dir*(((bp/2)%2+2)%2)*3-dir*3;   /* inching along, then sliding back to the spot */
       break;}
     case 15:{ /* techno march (from a street-parade clip): a heavy stomping march on every beat, body upright, arms
                  swinging in big arcs, punching a pointing finger out at the crowd, flexing */
@@ -2888,6 +2942,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       mem.t=now;mem.aL=aL;mem.aR=aR;
       bL-=Math.max(-0.55,Math.min(0.55,(mem.vL||0)*0.05));bR-=Math.max(-0.55,Math.min(0.55,(mem.vR||0)*0.05));}
     return[bL,bR];}
-  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.115",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.119",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,wormPose:function(ph){return wPose(ph,0,0);},joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

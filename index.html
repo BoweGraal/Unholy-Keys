@@ -28,13 +28,13 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.115"></script>
-<script src="px8.js?v=1.82.115"></script>
-<script src="art.js?v=1.82.115"></script>
-<script src="qr.js?v=1.82.115"></script>
-<script src="voice.js?v=1.82.115"></script>
-<script src="instruments.js?v=1.82.115"></script>
-<script src="kart.js?v=1.82.115"></script>
+<script src="gfx.js?v=1.82.119"></script>
+<script src="px8.js?v=1.82.119"></script>
+<script src="art.js?v=1.82.119"></script>
+<script src="qr.js?v=1.82.119"></script>
+<script src="voice.js?v=1.82.119"></script>
+<script src="instruments.js?v=1.82.119"></script>
+<script src="kart.js?v=1.82.119"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -659,6 +659,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <div style="display:flex;align-items:center;gap:10px">
         <span id="liveViewers" style="font-size:12px;color:var(--tx3)">0 viewers</span>
         <button class="btn" id="liveVoice" title="Voice chat with the audience between songs: your mic switches off while you play" style="padding:5px 12px;font-size:11px" onclick="this.blur();VOICE.toggle();">&#127897; Voice</button>
+        <button class="btn" id="liveVoiceSongs" title="Let the room keep talking on voice while songs play (on phones the mic being open can make the music a bit quieter)" style="padding:5px 12px;font-size:11px" onclick="this.blur();VSONGS.toggle();">&#127925; Voice in songs: off</button>
         <button class="btn" id="liveStop" style="background:#FF4444;border-color:#FF4444;color:#fff;padding:5px 14px;font-size:11px">End Stream</button>
       </div>
     </div>
@@ -4871,7 +4872,7 @@ function liveSend(msg){if(msg&&msg.type==="note")pvNoteT=Date.now();if(msg&&msg.
 /* voice between songs for the performer too: muted while you play, a video plays or a song map runs */
 var pvNoteT=0,pvVideo=false,pvPart=false;
 function pvShow(st){var b=document.getElementById("liveVoice");if(!b)return;b.textContent={off:"\uD83C\uDF99 Voice",listen:VOICE.noMic?"\uD83C\uDFA7 Listening (no mic)":"\uD83C\uDFA7 Listening \u00B7 tap for mic",on:"\uD83C\uDF99 Mic on",song:"\uD83D\uDD07 Song on",full:"Voice full (8)",denied:"No mic access"}[st]||"\uD83C\uDF99 Voice";b.style.borderColor=st==="on"?"#4CC38A":"";b.style.color=st==="on"?"#4CC38A":"";}
-VOICE.init({listener:true,send:function(o){liveSend(o);},myId:function(){return "performer";},songOn:function(){return Date.now()-pvNoteT<6000||pvVideo||pvPart;},onChange:pvShow});
+VOICE.init({listener:true,send:function(o){liveSend(o);},myId:function(){return "performer";},songOn:function(){return !VSONGS.on()&&(Date.now()-pvNoteT<6000||pvVideo||pvPart);},onChange:pvShow});
 /* hover the Voice button: who you're connected to, and whether their sound is getting through */
 setInterval(function(){var b=document.getElementById("liveVoice");if(!b||!VOICE.links)return;var L=VOICE.links();
   if(!L.length){b.title=VOICE.state==="off"?"Voice chat with the audience between songs: your mic switches off while you play":"In voice: nobody else has joined yet";return;}
@@ -4967,7 +4968,7 @@ function goLive(rs){
     if(msg.type==="round"&&msg.ctf)CTFVIEW.msg(msg.ctf);
     if(msg.type==="tug"){PMOSH.tug=[+msg.s[0]||0,+msg.s[1]||0];PMOSH.done=!!msg.done;return;}
     if(msg.type==="round"||msg.type==="round-scores"||msg.type==="round-votes"||msg.type==="spotlight"||msg.type==="battle"||msg.type==="bscore")ROUNDS.onMsg(msg);
-    if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();window.CAST&&window.CAST.count(0);}
+    if(msg.type==="room-created"){ROUNDS.buttons();BOTFILL.send();VSONGS.send();window.CAST&&window.CAST.count(0);}
     if(msg.type==="tv-count"&&window.CAST)window.CAST.count(msg.count);
     if(msg.type==="room-created"||msg.type==="room-resumed"){PCLOCK.start();TVMODE.joined();HOSTING.save();setTimeout(function(){window.PBOT&&window.PBOT.send();},300);}
     if(msg.type==="pbot-info"&&window.PBOT)window.PBOT.info(msg);
@@ -5002,7 +5003,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.115",SERVER_VERSION="";
+var PAGE_VERSION="1.82.119",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -6958,6 +6959,15 @@ var BANDRUN=(function(){var on=false,hi=0,bi=0,lastPos=-1,memK="",paceK="",tm=nu
    audience gets a countdown, and the song starts at zero. When it ends the scores are counted, or
    for Free dance everyone votes and your vote counts double. "Start a round now" does the same for
    whatever is already sounding (YouTube, or you playing), with steps made live on each device. */
+/* ── Voice in songs: the host's choice to let voice chat carry on while a song (or a game) plays. Remembered on this browser
+   and sent each time you go live; phones keep their mic open and get a small mic button in the games ── */
+var VSONGS=(function(){
+  var on=false;try{on=localStorage.getItem("uk_vsongs")==="1";}catch(e){}
+  function ui(){var b=document.getElementById("liveVoiceSongs");if(b){b.textContent=on?"\uD83C\uDFB5 Voice in songs: ON":"\uD83C\uDFB5 Voice in songs: off";b.classList.toggle("on",on);}}
+  function send(){ui();if(liveOn)liveSend({type:"voice-songs",on:on?1:0});}
+  setTimeout(ui,0);
+  return{on:function(){return on;},send:send,toggle:function(){on=!on;try{localStorage.setItem("uk_vsongs",on?"1":"0");}catch(e){}send();showJamToast(on?"Voice stays on during songs":"Voice mutes during songs",on?"#9cff4a":"#ffb02e",1600);}};
+})();
 /* ── Room-filling bots (live shows) ──
    "Fill the room with bots: up to N people" keeps the room at N by adding bots (the server runs them), and
    they leave as real people arrive. Remembered on this browser and sent each time you go live. */

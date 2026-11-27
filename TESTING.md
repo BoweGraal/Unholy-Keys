@@ -1688,6 +1688,49 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.119 — The worm, rebuilt as a bending body
+
+The worm used to be the standing sprite tipped on its side, so it couldn't bend: the hips could never go up while the chest stayed down, which is the whole move. Now it's drawn as a jointed body seen side on: a torso, thigh + shin and upper arm + forearm, with your own side-view head (your hair, hat and face). The wave is keyed to three clips (a ballroom floor, a UFC celebration, a wrestling ring), one full wave every 2 beats:
+
+1. Chest down on the floor, hands planted by the chest with the elbows up, hips high, legs kicked up behind.
+2. The wave runs back: the hips come down and the legs lower.
+3. Hips and legs flat, chest pushed right up on straight arms, head up.
+4. The hands leave the floor and fly forward, chest up, knees bending so the feet lift.
+5. The chest drops forward onto the hands as the hips flick back up, and round again.
+
+- **Forward** goes right, **Back** goes left, **Flop** rocks between hips-up and chest-up on the beat, and **Dive in** still jumps and dives into it.
+- The thumbsticks still add chest lift (left stick up) and hip kick (right stick up).
+
+To test: free dance, pick **The worm** (key 7), and watch the moves above. Then try Back, Flop and Dive in, and check other players see it the same way.
+
+## v1.82.118 — Walking diagonally: the feet point the right way
+
+On the four diagonal facings, the shoes used to point outward (one each way), copied from the straight front and back views. Walking up and to the right, the near foot looked backwards. Now both toes point the way you're heading: right for front-right and back-right, left for front-left and back-left.
+
+1. Walk diagonally up-right, up-left, down-right and down-left: both shoes point the way you're going.
+2. Straight front, back and side views look the same as before.
+
+## v1.82.117 — Dragon riders: riders sit side on in the saddle
+
+Riders used to face the front, standing with their legs dangling below the dragon. Now they face the way the dragon flies (side on). They sit down in the saddle with their knees forward over the flank and their hands forward on the reins (raised up for SUPER), and bob with the wingbeat.
+
+1. Dragon riders (practice is fine): your rider and the others face right and sit in the saddle, with no legs hanging below the belly.
+2. Fire a SUPER: the arms go up.
+3. A rider whose dragon has fallen goes back to standing on the sideline as before.
+
+## v1.82.116 — Voice chat during songs (host option)
+
+New host button next to **🎙 Voice**: **🎵 Voice in songs: off / ON**. It's remembered on this browser and sent each time you go live. Turned on, voice chat no longer mutes while a song, a video or a game plays: people's mics stay open. In a game, phones get a small mic button at the top centre: tap to talk, tap again to mute. Turned off, everything works as before: mics mute for the song.
+
+**Needs the Render redeploy** (the server passes the setting on) and a refresh of the host page.
+
+1. Host: go live and turn on **🎵 Voice in songs**.
+2. Phone: join, then start a game. A small mic button shows at the top centre. Tap it: it turns green and you're talking. Talk on a second phone and check the first hears it during the game.
+3. Start a video or play on the host keyboard: the phone mics stay on (the button doesn't change to "mic off for the song").
+4. Host: turn it off mid-song. The phone mics mute for the song and the small button goes away.
+5. Join with the setting already on: it applies straight away.
+6. Note: on phones, having the mic open can make the music a bit quieter (the phone switches to call audio). That's why it's off by default.
+
 ## v1.82.115 — Fishing: the rod sits behind your head
 
 The rod used to be drawn on top of everyone, across the face. Now it's drawn before the dancers, so your head sits over it, while the line and the float still show on top.

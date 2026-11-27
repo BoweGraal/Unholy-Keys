@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.115"></script>
-<script src="tune.js?v=1.82.115"></script>
-<script src="gfx.js?v=1.82.115"></script>
-<script src="art.js?v=1.82.115"></script>
-<script src="qr.js?v=1.82.115"></script>
-<script src="voice.js?v=1.82.115"></script>
-<script src="instruments.js?v=1.82.115"></script>
-<script src="kart.js?v=1.82.115"></script>
-<script src="explain.js?v=1.82.115"></script>
+<script src="px8.js?v=1.82.119"></script>
+<script src="tune.js?v=1.82.119"></script>
+<script src="gfx.js?v=1.82.119"></script>
+<script src="art.js?v=1.82.119"></script>
+<script src="qr.js?v=1.82.119"></script>
+<script src="voice.js?v=1.82.119"></script>
+<script src="instruments.js?v=1.82.119"></script>
+<script src="kart.js?v=1.82.119"></script>
+<script src="explain.js?v=1.82.119"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -765,7 +765,7 @@ body.practice #chatPanel,body.practice #talkBtn,body.practice #voiceBtn,body.pra
 #voiceBtn.on{border-color:#4CC38A;color:#4CC38A}
 #vTalk{display:none;position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 48px);transform:translateX(-50%);z-index:9100;padding:10px 16px;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff;background:#2a1f4a;border:3px solid #7F77DD;box-shadow:4px 4px 0 #000;cursor:pointer;white-space:nowrap}
 #vTalk.on{display:block}#vTalk.idle{animation:vtPulse 1.6s ease-in-out infinite}#vTalk.live{background:#145a3a;border-color:#4CC38A}#vTalk.live.talk{box-shadow:0 0 0 3px #4CC38A,4px 4px 0 #000}
-#vTalk.song,#vTalk.full{background:#2a2440;border-color:#6a6290;color:#c8c2e8}
+#vTalk.mini{top:calc(env(safe-area-inset-top,0px) + 6px);padding:5px 8px;font-size:14px;animation:none}#vTalk.song,#vTalk.full{background:#2a2440;border-color:#6a6290;color:#c8c2e8}
 @keyframes vtPulse{0%,100%{box-shadow:4px 4px 0 #000}50%{box-shadow:0 0 0 4px rgba(127,119,221,.6),4px 4px 0 #000}}#voiceBtn.song{border-color:#8f88b8;color:#8f88b8}#voiceBtn.talk{background:#1f3a2c}
 body.practice #moveCtl{bottom:calc(var(--chatH) + 18px)}
 body.practice #moveHint{bottom:190px}
@@ -2386,7 +2386,7 @@ function handleMsg(msg){
     ROUND.setTotals(msg.totals);
     SHOWFX=msg.fx||null;primeFx(SHOWFX);
     if(msg.round)ROUND.onMsg(msg.round);else ROUND.reset();
-    if(msg.gvote)GVOTE.on(msg.gvote);if(msg.svote)GVOTE.on(msg.svote,true);if(msg.voiceOpen)try{VOICE.listen();}catch(e){}   /* voice is already open: join in, listening */
+    if(msg.gvote)GVOTE.on(msg.gvote);if(msg.svote)GVOTE.on(msg.svote,true);if(msg.voiceOpen)try{VOICE.listen();}catch(e){}window.__voiceSongs=!!msg.voiceSongs;   /* voice is already open: join in, listening */
     /* after a reconnect, carry on dancing */
     if(myDance&&viewers[myId]){viewers[myId].dance=myDance;wsSend({type:"dance",style:myDance});}
     if(msg.perfPos)perfPos(msg.perfPos);
@@ -2460,6 +2460,7 @@ function handleMsg(msg){
   else if(t==="tug"){MOSH.onTug(msg);}
   else if(t==="react"){if(msg.id!==myId&&viewers[msg.id])addReact(msg.id,String(msg.k));}
   else if(t==="stage"){STAGEUP.onList(msg);}else if(t==="stage-no"){STAGEUP.no(msg.why);}else if(t==="gnote"){STAGEUP.note(msg);}else if(t==="time"){CLOCK.got(msg);}else if(t==="tvpos"){TVSYNC.set(msg);}else if(t==="av"){TVSYNC.av(msg.ms);}else if(t==="cal"){CALUI.show(msg.on);}else if(t==="band"){if(msg.m)ART.BAND.set(msg.m,msg.p);else if(msg.p)ART.BAND.set(ART.BAND.members,msg.p);if(msg.e)ART.BAND.ev(msg.e,msg.i,msg.ms);}
+  else if(t==="voice-songs"){window.__voiceSongs=!!msg.on;}
   else if(typeof t==="string"&&t.indexOf("voice-")===0){VOICE.onMsg(msg);}
   else if(t==="note"){
     if(msg.on){
@@ -2831,14 +2832,16 @@ document.getElementById("talkBtn").addEventListener("click",function(e){e.preven
 /* voice between songs: tap to join; the mic is open between songs and fully off while one plays (a game, the video, the performer playing) */
 (function(){
   var vb=document.getElementById("voiceBtn");
-  function songOn(){return !!(JT&&JT.video)||Date.now()-lastNoteTime<6000||(typeof ROUND!=="undefined"&&ROUND.active())||!!PART||(typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free");}
+  function songOn(){if(window.__voiceSongs)return false;   /* the host lets voice carry on through songs */
+    return !!(JT&&JT.video)||Date.now()-lastNoteTime<6000||(typeof ROUND!=="undefined"&&ROUND.active())||!!PART||(typeof GAME!=="undefined"&&GAME.mode&&GAME.mode!=="free");}
   function show(st){var lb={off:"\uD83C\uDF99 Voice",listen:VOICE.noMic?"\uD83C\uDFA7 Listening (no mic)":"\uD83C\uDFA7 Listening",on:"\uD83C\uDF99 Mic on",song:"\uD83D\uDD07 Song on",full:"Voice full (8)",denied:"No mic access"}[st]||"\uD83C\uDF99 Voice";vb.textContent=lb;vb.classList.toggle("on",st==="on");vb.classList.toggle("song",st==="song");vtUI();}
   /* the big button: once voice is open (someone turned their mic on), everyone is listening; this turns your own mic on and off */
   var vt=document.createElement("button");vt.id="vTalk";vt.type="button";document.body.appendChild(vt);
   vt.addEventListener("click",function(e){e.preventDefault();vt.blur();if(!myId)return;VOICE.toggle();});
-  function vtUI(){if(!vt)return;var st=VOICE.state,g=document.body.getAttribute("data-game")||"",show=VOICE.open&&(!g||g==="free")&&!document.body.classList.contains("practice");
+  function vtUI(){if(!vt)return;var st=VOICE.state,g=document.body.getAttribute("data-game")||"",inGame=!!(g&&g!=="free"),show=(inGame?!!window.__voiceSongs:VOICE.open)&&!document.body.classList.contains("practice");
     vt.classList.toggle("on",show);if(!show)return;
-    vt.className="on "+(st==="on"?"live":st==="song"?"song":st==="full"?"full":"idle");
+    vt.className="on "+(inGame?"mini ":"")+(st==="on"?"live":st==="song"?"song":st==="full"?"full":"idle");
+    if(inGame){vt.textContent=st==="on"?"\uD83C\uDF99":st==="full"?"\uD83C\uDFA7":"\uD83D\uDD07";vt.title=st==="on"?"Mic on: tap to mute":"Tap to talk";return;}   /* in a game: just a small mic button up top */
     vt.textContent=st==="on"?"\uD83C\uDF99 MIC ON \u00B7 TAP TO MUTE":st==="song"?"\uD83D\uDD07 MIC OFF FOR THE SONG":st==="full"?"VOICE FULL \u00B7 LISTENING":VOICE.noMic?"\uD83C\uDFA7 LISTENING (NO MIC FOUND)":"\uD83C\uDF99 TAP TO TALK";}
   VOICE.init({send:wsSend,myId:function(){return myId;},songOn:songOn,onChange:show});
   vb.addEventListener("click",function(e){e.preventDefault();vb.blur();if(!myId)return;VOICE.toggle();});
@@ -9234,7 +9237,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.115",SERVER_VERSION="";
+var PAGE_VERSION="1.82.119",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9647,7 +9650,10 @@ var DRAGON=(function(){
   window.ukDragonCharge=function(n){charge=n;supUI();};window.ukDragonHurt=function(n){for(var i=0;i<(n||1);i++){stunTo=0;hurt(performance.now());}};window.ukDragonFire=function(){wantFire=true;};window.ukDragonSuper=fireSuper;
   window.ukDragonKill=function(){bossHit(bossHp);};window.ukDragonSpin=function(){spinAt=performance.now();};window.ukDragon=function(){return{enc:encN,hearts:hearts,down:down,ended:ended,charge:charge,sup:performance.now()<superTo,on:on,local:local,score:score,enemies:en.length,notes:notes.length,boss:!!bossIn,dead:bossDead,hp:bossHp,max:bossMax,stun:performance.now()<stunTo,waves:waves.length,shots:bossShots.length,t:Math.round(sp()),bossAt:Math.round(bossAt)};};
   window.ukDragonJump=function(ms){jump+=ms;};   /* tests */
-  return{maxY:maxY,spinning:spinning,start:start,stop:stop,tick:tick,msg:msg,hp:hp,over:over,enc:enc,isOutMe:isOutMe,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
+  /* the rider's seat: side on, knees forward over the dragon's flank, hands forward on the reins; dy lifts them so they sit in the saddle */
+  function seat(id,w){var now=performance.now(),o=DST[id],L=o?beat(o,now):0,sup=id===myId&&now<superTo;return{legL:-1.25,legR:-1.05,lgL:4.6,lgR:4.6,armL:sup?-2.2:-1.1,armR:sup?-2.4:-0.9,dy:-2+L*0.6};}
+  function isOut(id,w){return id===myId?down:!!(w.sk&&w.sk.t===2);}
+  return{seat:seat,isOut:isOut,maxY:maxY,spinning:spinning,start:start,stop:stop,tick:tick,msg:msg,hp:hp,over:over,enc:enc,isOutMe:isOutMe,wire:wire,under:under,draw:draw,hidePerf:hidePerf,perfPos:perfPos,get on(){return on;}};})();
 function LBOTS(){for(var k in viewers)if(k.indexOf("bot")===0)return true;return false;}   /* this screen's own practice dancers (the server's bots have normal ids) */
 function keepyOn(){return GAME.mode==="keepy"||(typeof ROUND!=="undefined"&&ROUND.mode==="keepy");}          /* set just before drawAvatar: {r: reaction pose, e: space / water pose} */
 var AVFLEX={},SKIPS=null;   /* SKIPS: how many in the room have pressed Skip timer this countdown */   /* per dancer: last arm angles, for the elbow follow-through */
@@ -9663,7 +9669,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
     var gl=ART.PX.rg(ctx,cx,cy-6*s,2,cx,cy-6*s,22*s);gl.addColorStop(0,hexA(color,0.9));gl.addColorStop(1,hexA(color,0));
     ctx.fillStyle=gl;ART.PX.disc(ctx,cx,cy-6*s,22*s);ctx.restore();
   }
-  var bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="",knee=0,butt=0,bj=0,bsx=0,bsy=0,flex=false;
+  var wormV=null,bob=0,armL=0.15,armR=-0.15,legL=0,legR=0,mouth=false,dxs=0,rot=0,lgL=7,lgR=7,alL,alR,hdA=0,swg,prA="",knee=0,butt=0,bj=0,bsx=0,bsy=0,flex=false;
   /* walking: moving = the walk state from ART.walkStep (feet planted, stride by distance) */
   if(moving&&!dance){var wp=ART.walkPose(moving);legL=wp.legL;legR=wp.legR;lgL=wp.legLenL;lgR=wp.legLenR;armL=wp.armL;armR=wp.armR;bob=wp.bob*s;alL=wp.lenL;alR=wp.lenR;}
   if(dance===1){bob=-Math.abs(Math.sin(dT))*6*s;armL=2.7+Math.sin(dT*2)*0.35;armR=-armL;legL=Math.sin(dT*2)*0.25;legR=-legL;}
@@ -9677,6 +9683,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       /* a dance with its own facing (Running man side-on, Shake it facing away, the moonwalk, the shuffle spin): turned by whatever
          the 90 / 180 buttons or a spin have done, instead of replacing it */
       if(rg.dir!==undefined){var qq8=-1;for(var q8=0;q8<4;q8+=0.5)if(rot8(0,q8)===AVDIR){qq8=q8;break;}AVDIR=qq8>0?rot8(rg.dir,qq8):rg.dir;}
+      if(rg.worm!==undefined)wormV=rg;   /* the worm draws its own jointed body */
       armL=rg.armL;armR=rg.armR;if(fd.h){if(typeof fd.h[0]==="number")armL=fd.h[0]/100;if(typeof fd.h[1]==="number")armR=-fd.h[1]/100;if(fd.s!==6)flex=true;}legL=rg.legL;legR=rg.legR;bob=rg.bob*s;dxs=rg.dx*s;rot=rg.rot;mouth=rg.mouth;hdA=rg.head||0;swg=rg.swing;prA=rg.prop||"";knee=rg.knee||0;butt=rg.butt||0;bj=rg.bj||0;bsx=rg.bsx||0;bsy=rg.bsy||0;if(rg.lgL)lgL=rg.lgL;if(rg.lgR)lgR=rg.lgR;if(rg.alL)alL=rg.alL;if(rg.alR)alR=rg.alR;
       /* a side-on dance (Running man, the shuffle) turned to face front or back: its legs swing forward and back, which from the
          front or back is a knee coming up toward you, not a leg kicking out sideways. So the swing becomes a shorter (lifted) leg
@@ -9708,7 +9715,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
   /* soft elbows on freely posed arms (not the robot, not a move that shapes its own arms) */
   var bnd=null;if(flex&&alL===undefined&&alR===undefined&&ART.elbows){var fk=(name||"")+"|"+(seed||0),fm=AVFLEX[fk]||(AVFLEX[fk]={});bnd=ART.elbows(armL,armR,fm,performance.now());}
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{bendL:bnd?bnd[0]:0,bendR:bnd?bnd[1]:0,snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{worm:wormV&&!(AVO&&AVO.r)?wormV.worm:undefined,wface:wormV?wormV.wface:1,wcl:wormV?wormV.wcl:0,whl:wormV?wormV.whl:0,bendL:bnd?bnd[0]:0,bendR:bnd?bnd[1]:0,snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:prA||(ART.neon&&!isMe?"glowstick":""),skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
   /* bumper boats only: a gold star over your own head, since you're hard to pick out on the water */
   if(isMe&&!isPerf&&typeof GAME!=="undefined"&&GAME.mode==="boats"){var su=Math.max(1,Math.round(s*0.8)),SP=["...#...","..###..","#######",".#####.","..###..",".##.##.","##...##"],sx0=Math.round(x-3.5*su),sy0=Math.round(cy-27*s+Math.sin(Date.now()/250)*s);
     ctx.save();ctx.fillStyle="#120D1E";SP.forEach(function(r,j){for(var i=0;i<7;i++)if(r[i]==="#")ctx.fillRect(sx0+i*su-su,sy0+j*su-su,su*3,su*3);});
@@ -10168,6 +10175,7 @@ function renderLoop(){
       if(v!==PH&&keepyOn()){AVDIR=KEEPY.facing(v,ids[i]===myId);if(KEEPY.tArms(v,ids[i]===myId)){AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},{armL:1.5,armR:-1.5});}}   /* keepy uppy: face the front; a double jump spins you round with your arms out */
       if(rpo&&rpo.dir!==undefined)AVDIR=cdn===4&&cfd&&cfd.b&&GAME.mode==="free"?rot8(rpo.dir,[0,2,1,3][cfd.b]):rpo.dir;   /* a spin or turn goes round through all the facings */
       if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;
+      if(v!==PH&&v.dance===4&&DRAGON.on&&!DRAGON.isOut(ids[i],v)){AVDIR=1;AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},DRAGON.seat(ids[i],v));dyy+=(AVO.r.dy||0)*sc2;}   /* dragon riders: side on, sat in the saddle, legs astride, hands on the reins */
       if(v!==PH&&v.dance===4){if(FISH.fishOn())AVDIR=FISH.facing(vx,vy);else if(BOATS.boatsOn()&&!BOATS.isOut(v,ids[i]===myId))AVDIR=BOATS.facing(v,ids[i]===myId);}   /* anglers face the water; boaters face where they're steering */
       if(RINK&&ICE){var ffc=FIG.faceOf(v,ids[i]===myId&&FIG.on);if(ffc>=0)AVDIR=ffc;var slk=FIG.spinLook(v,ids[i]===myId&&FIG.on,sc2);if(slk){AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},slk);}}   /* the ice routine: spins and jumps go round */
       else if(ids[i]!==myId&&cdn===4&&GAME.mode==="free"){var rsd=fdSpinDir(cfd);if(rsd>=0)AVDIR=rsd;}   /* their spin, as they see it */   /* your own spin: the stick keeps it going */   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
@@ -10230,7 +10238,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.115"></script>
+<script src="lab.js?v=1.82.119"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
