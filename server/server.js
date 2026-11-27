@@ -508,7 +508,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.123";
+var VERSION = "1.82.124";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -858,7 +858,8 @@ function onMessage(ws, raw, isBinary) {
       /* a quick reaction everyone sees on this dancer: jump, hearts, a big heart, applause, a whistle */
       if (REACTS.indexOf(msg.k) < 0) return;
       if (!allow(ws, "react", 8, 3) || (msg.k === "bigheart" && !allow(ws, "bigheart", 1, 0.25))) return;
-      broadcast(ws.room, { type: "react", id: ws.viewerId, k: msg.k }, ws);
+      var rh = typeof msg.h === "number" && isFinite(msg.h) ? Math.max(0, Math.min(1, Math.round(msg.h * 100) / 100)) : undefined;   /* a flick jump's height */
+      broadcast(ws.room, rh !== undefined ? { type: "react", id: ws.viewerId, k: msg.k, h: rh } : { type: "react", id: ws.viewerId, k: msg.k }, ws);
       return;
     }
     if (msg.type === "swimc") {

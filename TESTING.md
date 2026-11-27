@@ -1688,6 +1688,25 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.124 — Flick to jump; the worm dives in and pushes off
+
+**Jumping is a flick now.** No more jump buttons (the one between the dance sticks and the one on the reaction bar). Pull the **left stick down and flick it up**:
+- **How fast** you flick sets the height: a quick snap is a big leap, a slower flick a small hop.
+- **The angle** of the flick sets where you land: flick up-left and you leap left across the floor, straight up and you jump on the spot.
+- It has to pass through the middle of the stick, so circling the stick to spin never counts as a jump.
+- It works in free dance on the dance stick (including the Shuffle, where a flick no longer sets off the stomp) and on the main stick when you're just walking around.
+- On a computer, **Space** does a middling straight jump.
+- Everyone sees your jump's real height. **Needs the Render redeploy:** the server now passes the height on.
+
+**The worm:** "Dive in" isn't a move choice any more; it's how the worm starts. Picking the worm, you jump up with your arms out and dive onto the floor, then the wave begins. A flick during the worm is a **big push**: the whole worm launches up into the air and lands back into the wave.
+
+1. Free dance (any style): pull the left stick down and snap it up for a high jump, then flick it slowly for a small one.
+2. Flick up-left or up-right: you leap that way.
+3. Circle the stick: you spin, not jump.
+4. Pick The worm: it dives in, then waves. Flick: it launches into the air and lands back in the wave.
+5. Outside a dance, flick the main stick: same jump.
+6. With two phones: the other phone sees the same height.
+
 ## v1.82.123 — Turning mid-dance carries the step straight on
 
 Every facing already shares the dance's beat, so the step was in time. But the view or move changing used to jump to the new pose. Now:
