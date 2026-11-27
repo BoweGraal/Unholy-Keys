@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.142 — Capture the flag: team colours, a bigger team disc, no shaking when standing; Skip fallback
+
+- **Team colours:** everyone in capture the flag now wears their team's colour (red or blue shirt), so you can tell the teams apart at a glance.
+- **Team disc:** the disc under each player is bigger and brighter, with a ring in the team colour.
+- **No shaking:** standing still no longer shakes. The beat bump and the dance bob are gone when you're stopped, and the running stride no longer flickers on and off at low speeds.
+- **Skip timer:** a plain click on Skip now counts too. This covers a tap the phone turns into a gesture while another finger is on the stick.
+
+1. Practice → Capture the flag: red and blue shirts, a bright team disc under everyone.
+2. Stand still: your character stays still. Run: the stride starts and stops cleanly.
+3. Start a second practice game and tap Skip timer while holding the stick.
+
 ## v1.82.141 — Practice from the menu is really practice (ball run had no ball)
 
 - **Cause:** practice only counted as "on" when the page was opened with `?practice` in the address. The menu's Practice button never switched it on, so every game that asks "is this practice?" got "no" and waited for a host or server that isn't there.

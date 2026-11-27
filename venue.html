@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.141"></script>
-<script src="tune.js?v=1.82.141"></script>
-<script src="gfx.js?v=1.82.141"></script>
-<script src="art.js?v=1.82.141"></script>
-<script src="qr.js?v=1.82.141"></script>
-<script src="voice.js?v=1.82.141"></script>
-<script src="instruments.js?v=1.82.141"></script>
-<script src="kart.js?v=1.82.141"></script>
-<script src="explain.js?v=1.82.141"></script>
+<script src="px8.js?v=1.82.142"></script>
+<script src="tune.js?v=1.82.142"></script>
+<script src="gfx.js?v=1.82.142"></script>
+<script src="art.js?v=1.82.142"></script>
+<script src="qr.js?v=1.82.142"></script>
+<script src="voice.js?v=1.82.142"></script>
+<script src="instruments.js?v=1.82.142"></script>
+<script src="kart.js?v=1.82.142"></script>
+<script src="explain.js?v=1.82.142"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -6978,8 +6978,8 @@ var CTFG=(function(){
     list.sort(function(a,b){return a.y-b.y;});
     var sc=Math.max(1,Math.round(V.s/16)),saved=ctx;ctx=g;var sDir=AVDIR;
     try{list.forEach(function(p){var X=V.X(p.x),Y=V.Y(p.y),t=st.teams[p.id],tg=st.tagged[p.id]&&Date.now()-st.tagged[p.id]<1500;
-      g.fillStyle=t===undefined?"#888":C.TEAM[t];g.globalAlpha=0.55;ART.PX.oval(g,X,Y+2,V.s*0.42,V.s*0.18,0);g.globalAlpha=tg?(Math.floor(now/120)%2?0.3:0.8):1;
-      var run=p.sp>0.6,rk=Math.min(1,p.sp/(C.SPEED*C.SPRINT)),bump=-Math.round(Math.pow(1-BEAT.phase(now),3)*1.5*sc);   /* running: a stride from the distance covered; standing: a small bump on each beat */
+      var tc0=t===undefined?"#888":C.TEAM[t];g.fillStyle=tc0;g.globalAlpha=0.8;ART.PX.oval(g,X,Y+2,V.s*0.58,V.s*0.25,0);g.globalAlpha=1;g.strokeStyle=tc0;ART.PX.ringO(g,X,Y+2,V.s*0.62,V.s*0.28,0,Math.max(2,Math.round(V.s/14)));   /* the team disc: bigger, brighter, with a ring */g.globalAlpha=tg?(Math.floor(now/120)%2?0.3:0.8):1;
+      var o2=others[p.id]||{},run=o2.run?p.sp>0.3:p.sp>0.6,rk=Math.min(1,p.sp/(C.SPEED*C.SPRINT)),bump=0;o2.run=run;   /* running: a stride from the distance covered (a little stickiness so it never flickers on and off); standing: still */
       var mv=run?{k:1,ph:p.ph,dx:p.dx,dy:0,sp:0.5*rk*rk}:null;
       if(kart){var kh=p.id===myId?ka:(Math.hypot(p.dx2||0,p.dy2||0)>0.002?Math.atan2(p.dy2,p.dx2):(others[p.id]&&others[p.id].ka)||0);if(others[p.id])others[p.id].ka=kh;if((st.spin[p.id]||0)>Date.now())kh+=now/60;
         var lift=0,aimOn=p.id===myId&&drift;
@@ -6991,7 +6991,8 @@ var CTFG=(function(){
         if((st.shield[p.id]||0)>Date.now()){g.strokeStyle="#3DF2FF";g.lineWidth=2;g.globalAlpha=0.5+0.3*Math.sin(now/90);ART.PX.ring(g,X,Y-6*sc,V.s*0.85);g.globalAlpha=1;}
         if(st.mega[p.id]){g.strokeStyle="#ff6fae";g.lineWidth=2;g.globalAlpha=0.4+0.3*Math.sin(now/70);ART.PX.ring(g,X,Y-6*sc,V.s*0.65);g.globalAlpha=1;}
         var cf2=C.carrying(st,p.id);if(cf2>=0)C.flag(g,X+V.s*0.18,Y-V.s*0.12,cf2,V.s*0.72,now);g.globalAlpha=1;return;}
-      AVDIR=p.f;drawAvatar(X,Y-11*sc+bump,p.v.color,p.id===myId?"":p.v.name,sc,false,false,mv,run?0:4,p.v.seed||0,p.id===myId,[0.25,-0.25,0.05,-0.05],9999,p.v.look||lookOf(null,p.v.color,p.v.name),null);
+      var lk0=p.v.look||lookOf(null,p.v.color,p.v.name),lkT=t===undefined?lk0:Object.assign({},lk0,{topHex:C.TEAM[t]});   /* everyone wears their team's colour */
+      AVDIR=p.f;drawAvatar(X,Y-11*sc+bump,t===undefined?p.v.color:C.TEAM[t],p.id===myId?"":p.v.name,sc,false,false,mv,0,p.v.seed||0,p.id===myId,[0.25,-0.25,0.05,-0.05],9999,lkT,null);
       var cf=C.carrying(st,p.id);if(cf>=0)C.flag(g,X+4*sc,Y-27*sc,cf,V.s,now);g.globalAlpha=1;});}
     finally{ctx=saved;AVDIR=sDir;}
     sparks=sparks.filter(function(sp){var a=(now-sp.t)/320;if(a>1)return false;g.fillStyle=sp.c;g.globalAlpha=1-a;var z=Math.max(2,Math.round(V.s/10));g.fillRect(Math.round(V.X(sp.x))-z/2,Math.round(V.Y(sp.y)-a*V.s*0.4)-z/2,z,z);g.globalAlpha=1;return true;});
@@ -9192,7 +9193,7 @@ var PRACTICE=(function(){
   function skipUnder(e){var pt=e.changedTouches&&e.changedTouches[0]||e;if(typeof pt.clientX!=="number")return null;var bs=document.querySelectorAll(".rb-skip,#prSkip");
     for(var i=0;i<bs.length;i++){var r=bs[i].getBoundingClientRect();if(r.width>0&&r.height>0&&pt.clientX>=r.left-6&&pt.clientX<=r.right+6&&pt.clientY>=r.top-6&&pt.clientY<=r.bottom+6)return bs[i];}return null;}
   ["pointerdown","pointerup","click","touchend"].forEach(function(ev){window.addEventListener(ev,function(e){var t=e.target&&e.target.closest&&e.target.closest(".rb-skip,#prSkip");if(!t&&(document.body.classList.contains("pr-count")||ROUND.counting))t=skipUnder(e);if(!t)return;e.preventDefault();e.stopPropagation();
-    if(ev==="pointerdown"||(ev==="touchend"&&performance.now()-skipAt>600)){skipAt=performance.now();skipTimer();}},{capture:true,passive:false});});   /* on the press, before anything else can grab the pointer */
+    if(ev==="pointerdown"||((ev==="touchend"||ev==="click")&&performance.now()-skipAt>600)){skipAt=performance.now();skipTimer();}},{capture:true,passive:false});});   /* a click alone counts too (a tap the phone turned into a gesture, with a finger on the stick) */   /* on the press, before anything else can grab the pointer */
   window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
   window.ukPracticeBattle=function(){return plan?pub():null;};
   return{get on(){return on;},enter:enter,vote:vote,bvote:bvote,moshBonus:moshBonus,
@@ -9698,7 +9699,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.141",SERVER_VERSION="";
+var PAGE_VERSION="1.82.142",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10792,7 +10793,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.141"></script>
+<script src="lab.js?v=1.82.142"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
