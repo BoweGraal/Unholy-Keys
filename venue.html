@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.125"></script>
-<script src="tune.js?v=1.82.125"></script>
-<script src="gfx.js?v=1.82.125"></script>
-<script src="art.js?v=1.82.125"></script>
-<script src="qr.js?v=1.82.125"></script>
-<script src="voice.js?v=1.82.125"></script>
-<script src="instruments.js?v=1.82.125"></script>
-<script src="kart.js?v=1.82.125"></script>
-<script src="explain.js?v=1.82.125"></script>
+<script src="px8.js?v=1.82.126"></script>
+<script src="tune.js?v=1.82.126"></script>
+<script src="gfx.js?v=1.82.126"></script>
+<script src="art.js?v=1.82.126"></script>
+<script src="qr.js?v=1.82.126"></script>
+<script src="voice.js?v=1.82.126"></script>
+<script src="instruments.js?v=1.82.126"></script>
+<script src="kart.js?v=1.82.126"></script>
+<script src="explain.js?v=1.82.126"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -627,7 +627,7 @@ body.fd-plan #fdUI .fd-pads,body.fd-plan #fdUI .fd-col,body.fd-plan #fdUI .fd-su
 #fdPlan .pl-subs button{border-color:#3DF2FF;color:#3DF2FF;background:rgba(8,26,36,.9)}#fdPlan .pl-subs button.on{background:#3DF2FF;color:#0a1020;border-color:#fff}
 #fdPlan .pl-add{align-self:stretch;border:2px solid #3DF2FF;background:rgba(61,242,255,.12);color:#3DF2FF;font-size:14px;padding:14px;text-align:center}   /* sits where the sub-style box used to be */#fdPlan .pl-add:disabled{opacity:.4}
 #fdUI .fd-moveName{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:42px;font:800 13px 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:0 0 8px #D354A0,0 2px 0 #000;white-space:nowrap;pointer-events:none;letter-spacing:.5px}
-#fdUI .fd-mini{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:8px;display:grid;grid-template-columns:repeat(2,1fr);width:min(112px,32vw);gap:0;pointer-events:none;background:rgba(20,18,32,.88);border:1px solid rgba(245,208,60,.6)}
+#fdUI .fd-mini{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:8px;display:grid;grid-template-columns:repeat(3,1fr);width:min(168px,46vw);gap:0;pointer-events:none;background:rgba(20,18,32,.88);border:1px solid rgba(245,208,60,.6)}
 #fdUI .fd-mini button{pointer-events:auto;padding:9px 0;border-radius:0;clip-path:none!important;border:0;border-left:1px solid rgba(245,208,60,.45);background:transparent;text-align:center;color:#F5D03C;font:800 11px 'Silkscreen',ui-monospace,monospace;white-space:nowrap;cursor:pointer}
 #fdUI .fd-mini button:first-child{border-left:0}
 #fdUI .fd-mini button:active{transform:scale(1.1);background:rgba(245,208,60,.35)}
@@ -956,7 +956,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
   <!-- free dance: dance buttons down both edges, the dance's own moves along the bottom, two control dots in the middle -->
   <div id="fdUI" aria-label="Free dance controls">
     <div class="fd-col fd-l"></div><div class="fd-col fd-r"></div>
-    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div><div class="fd-hand" data-h="0" title="Left hand (hold to control it)"><i></i></div><div class="fd-hand" data-h="1" title="Right hand (hold to control it)"><i></i></div><div class="fd-moveName"></div><div class="fd-mini"><button data-r="turn90" title="90 turn (X)">90</button><button data-r="turn180" title="180 turn (Z)">180</button></div></div>
+    <div class="fd-pads"><div class="fd-ring" data-i="0"><div class="fd-knob"></div></div><div class="fd-ring" data-i="1"><div class="fd-knob"></div></div><div class="fd-hand" data-h="0" title="Left hand (hold to control it)"><i></i></div><div class="fd-hand" data-h="1" title="Right hand (hold to control it)"><i></i></div><div class="fd-moveName"></div><div class="fd-mini"><button data-r="turn90" title="90 turn (X)">90</button><button data-r="turn180" title="180 turn (Z)">180</button><button data-wide="1" title="Zoom out to see the whole room / back in close">WIDE</button></div></div>
     <div class="fd-help"></div>
     <div class="fd-subs"></div>
     <div class="fd-queue" id="fdQueue"></div>
@@ -2198,8 +2198,9 @@ function gzUI(){var k=gzKey(),show=!!k&&((typeof PRACTICE!=="undefined"&&PRACTIC
 setInterval(gzUI,400);
 window.ukGzSet=function(k,z){if(z===1)delete GZS[k];else GZS[k]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}};   /* test hook */
 /* scroll-wheel zoom on the venue floor (PC): wheel up zooms in, wheel down out, anchored low so the dancers grow upward; taps are mapped back through it */
-var VZ=1,VZ_AY=0.62;
+var VZ=1,VZ_AY=0.62,FD_WIDE=false;try{FD_WIDE=localStorage.getItem("uk_fdwide")==="1";}catch(e){}   /* free dance: the WIDE button shows the whole room at normal zoom */
 try{var vzs=localStorage.getItem("uk_vz");VZ=Math.max(1,Math.min(2.6,vzs?+vzs||1:(window.matchMedia&&matchMedia("(pointer:fine)").matches?1.5:1)));}catch(e){}   /* a computer starts a little zoomed in (150%) on the dance floor */
+window.ukWide=function(){return{wide:FD_WIDE,Z:+(VZS.on?VZS.Z:1).toFixed(2)};};
 function vzActive(){return !TVSCREEN&&VZ>1.001&&(!GAME.mode||GAME.mode==="free")&&!(typeof PIPE!=="undefined"&&PIPE.on);}
 /* the camera: the wheel zoom, plus an automatic push in on you while it's your turn in the spotlight, so you can see (and steer) the whole body */
 var VZS={Z:1,cx:0,cy:0,ay:0,on:false},vzTz=0,vzT=0,VZ_ME=null,VZ_H=60,VZ_B=[0,0],RING_C=null,VZ_VB=0;
@@ -2208,9 +2209,9 @@ function vzCalc(){
   var f=null;try{f=GAME.mode==="free"&&typeof ROUND!=="undefined"?ROUND.featured():null;}catch(e){}
   var noPipe=!(typeof PIPE!=="undefined"&&PIPE.on),ring=GAME.mode==="free"&&RING_C&&noPipe;
   var pl=document.body.classList.contains("fd-plan")?document.getElementById("fdPlan"):null;VZ_VB=pl?Math.max(H*0.3,Math.min(H,pl.getBoundingClientRect().top)):H;   /* how much of the screen the planner leaves */
-  var want=(f&&f.id===myId&&VZ_ME&&noPipe)||ring?1:0;
+  var wide=FD_WIDE&&GAME.mode==="free",want=!wide&&((f&&f.id===myId&&VZ_ME&&noPipe)||ring)?1:0;
   vzTz+=(want-vzTz)*Math.min(1,dt*3);if(vzTz<0.01)vzTz=0;
-  var base=vzActive(),gz=window.ukGZ(gzKey());if(gzKey()==="fish"&&typeof FISH!=="undefined")gz=1+(gz-1)*FISH.boatK();var Z0=(base?VZ:1)*gz;if(Math.abs(gz-1)>0.001)base=true;
+  var base=vzActive()&&!wide,gz=wide?1:window.ukGZ(gzKey());if(gzKey()==="fish"&&typeof FISH!=="undefined")gz=1+(gz-1)*FISH.boatK();var Z0=(base?VZ:1)*gz;if(Math.abs(gz-1)>0.001)base=true;
   document.body.classList.toggle("vz-turn",vzTz>0.3);
   if(!base&&!vzTz){VZS.on=false;return;}
   /* zoomed in: the camera follows you, kept inside the room so you never see past the edges */
@@ -3715,7 +3716,8 @@ var GAME=(function(){
     function act(label,fn,title){var b=document.createElement("button");b.className="fd-act";b.innerHTML=label;b.title=title;b.onclick=function(e){e.stopPropagation();b.blur();fn();};return b;}
     function pxi(n,k){var sz=ART.UI.iconSize(n);return '<i class="pxi" style="width:'+sz[0]*k+'px;height:'+sz[1]*k+'px;background-image:url('+ART.UI.icon(n,"#ffffff")+')"></i>';}
     R.appendChild(act(pxi("cross",2)+"Stop",function(){stop();},"Stop dancing (Esc)"));
-    Array.prototype.forEach.call(ui.querySelectorAll(".fd-mini button"),function(mb){mb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();mb.blur();react(mb.getAttribute("data-r"));});});
+    Array.prototype.forEach.call(ui.querySelectorAll(".fd-mini button[data-r]"),function(mb){mb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();mb.blur();react(mb.getAttribute("data-r"));});});
+    var wb=ui.querySelector(".fd-mini [data-wide]");if(wb){var wl=function(){wb.textContent=FD_WIDE?"NEAR":"WIDE";};wl();wb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();wb.blur();FD_WIDE=!FD_WIDE;try{localStorage.setItem("uk_fdwide",FD_WIDE?"1":"0");}catch(x){}wl();});}
     var jb=ui.querySelector(".fd-jump");if(jb)jb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();jb.blur();react("jump");jb.classList.add("pop");setTimeout(function(){jb.classList.remove("pop");},150);});
     if(!document.body.classList.contains("practice"))R.appendChild(act(pxi("talk",2)+"Talk",function(){var t=document.getElementById("talkBtn");if(t)t.click();},"Say something (Enter)"));   /* practice has no chat (only bots), so no Talk */
     ART.DANCES.forEach(function(d,i){
@@ -9265,7 +9267,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.125",SERVER_VERSION="";
+var PAGE_VERSION="1.82.126",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10307,7 +10309,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.125"></script>
+<script src="lab.js?v=1.82.126"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

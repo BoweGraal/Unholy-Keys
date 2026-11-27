@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.126 — Free dance WIDE button; Shake it "Hands up" turned round
+
+- **WIDE / NEAR:** a small button next to 90 / 180 in free dance. WIDE zooms right out to the normal view of the whole room: it overrides the close-up camera, your turn in the middle, the dance circle, and any pinch or wheel zoom. NEAR puts the close-up back. It's remembered on this device.
+- **Shake it → Hands up:** now turned round like Wiggle and Drop it, butt out and shaking to the beat, but standing taller with both hands up in the air, loose and swaying side to side.
+
+1. Free dance: tap WIDE. The camera eases out to the whole room and the button reads NEAR. Tap again to zoom back in. Reload and it stays as you left it.
+2. Shake it → Hands up: back to the crowd, butt shaking, hands up and swaying.
+
 ## v1.82.125 — Each dance jumps its own way; the left stick angles you; robot hands; 90 / 180 bar fixed
 
 - **A flick jump for every dance, each its own way:** two-step tucks; hands on knees keeps the hands on the knees in a squat jump; shake it goes up with the hips out; running man leaps in a stride; skank kick-jumps; the **robot** jumps stiff as a board with its arms locked out; the worm pushes off the floor; **silly** does a star jump; the shuffle kicks its feet out to the sides; **thriller** does a zombie hop; street jam throws a fist up with a knee up; cyber goth reaches up with high knees; **headbang** jumps head down, knees tucked; **lighters up** keeps the lighter held high; techno march punches a fist up; the **puppet** is hauled up limp on its strings.
