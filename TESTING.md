@@ -1688,6 +1688,21 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.119 — The worm, rebuilt as a bending body
+
+The worm used to be the standing sprite tipped on its side, so it couldn't bend: the hips could never go up while the chest stayed down, which is the whole move. Now it's drawn as a jointed body seen side on: a torso, thigh + shin and upper arm + forearm, with your own side-view head (your hair, hat and face). The wave is keyed to three clips (a ballroom floor, a UFC celebration, a wrestling ring), one full wave every 2 beats:
+
+1. Chest down on the floor, hands planted by the chest with the elbows up, hips high, legs kicked up behind.
+2. The wave runs back: the hips come down and the legs lower.
+3. Hips and legs flat, chest pushed right up on straight arms, head up.
+4. The hands leave the floor and fly forward, chest up, knees bending so the feet lift.
+5. The chest drops forward onto the hands as the hips flick back up, and round again.
+
+- **Forward** goes right, **Back** goes left, **Flop** rocks between hips-up and chest-up on the beat, and **Dive in** still jumps and dives into it.
+- The thumbsticks still add chest lift (left stick up) and hip kick (right stick up).
+
+To test: free dance, pick **The worm** (key 7), and watch the moves above. Then try Back, Flop and Dive in, and check other players see it the same way.
+
 ## v1.82.118 — Walking diagonally: the feet point the right way
 
 On the four diagonal facings, the shoes used to point outward (one each way), copied from the straight front and back views. Walking up and to the right, the near foot looked backwards. Now both toes point the way you're heading: right for front-right and back-right, left for front-left and back-left.
