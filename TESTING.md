@@ -1688,6 +1688,25 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.137 — Step dance: a library of step patterns that fits the song; keepy uppy landing spots
+
+- **Step patterns:** Step Dance no longer turns the song's hits into arrows one by one (which on Normal often came out as one arrow a beat for long stretches). It now picks a pattern from a library of 57 hand-designed one-bar patterns for every bar. Each bar takes the pattern that best lands on the song's own hits, with a little randomness. Phrases go A, B, A mirrored, then an ending fill.
+  - **Easy (on the beat):** walk the stairs, ping-pong, box, zig-zag, crossover, double tap, three and rest, hold and step, two holds, hold the bar.
+  - **Normal (half beats, never more than three quick ones in a row):** left right left pause right left right pause, anchor (hold ← for the bar and tap ↓ ↑ ↓ in between), gallop, tresillo (3-3-2), tresillo hold, hold and run, pairs, offbeats, jump in, echo, skip, candle, plus fills (stair run, jump finish, hold out).
+  - **Hard:** staircase stream, trill and roll, anchor offbeats, jump step, gallop runs, box spin, jacks and cross, hold ladder, tresillo stream, tresillo jumps, plus fills.
+  - **Expert (quarter beats):** gallop stream, anchor sixteenths, jump stream, trill burst, tresillo sixteenths, hold swap, ta-ka pairs, crossover run, sixteenth roll.
+  - **Safety rules:**
+    - Calm parts (intro, breakdown, the build before the drop) get calm patterns, choruses and peaks get busier ones, and a bar with no music stays empty.
+    - Above Easy, a bar with one arrow per beat is a rest and never two in a row.
+    - A pattern too fast for the song's tempo at that level is never picked. Above 150 BPM the patterns run at half speed.
+    - The drop lands on a jump (← + →).
+    - The last pass makes sure there are never more than two presses at once (a held arrow counts) and nothing on a held arrow.
+  - **Unchanged:** hand-made charts, and the other games (keys, aim).
+- **Keepy uppy:** a solid black circle on the floor right under the balloon, ball and feather shows where to stand and jump. When it's low enough to reach, a ring in its colour pulses round the circle.
+
+1. Practice → Step Dance on Normal. Expect varied rhythms (gallops, 3-3-2s, held ← with taps between), not long runs of one arrow a beat. Try each level.
+2. Practice → Keepy uppy. Each object has a black circle under it, ringed in its colour when it's low.
+
 ## v1.82.136 — Fishing: nudge the float with the left stick; every fish has its own shadow
 
 - **Nudge:** while you wait for a bite, flick the left stick left or right and the float twitches one small step that way, so you can line it up with a fish. Each flick is one step, and it spooks a fish that's nosing at the float, as reeling does. The hook jerk is now a jerk **down** only, so a sideways flick never counts as an early jerk.
