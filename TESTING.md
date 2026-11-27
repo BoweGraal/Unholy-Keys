@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.132 — Turn arrows swapped sides
+
+The turn arrows trade places: **↻ (turn right)** is now at the left edge and **↺ (turn left)** at the right edge.
+
+1. Free dance: the left-edge arrow turns you right and the right-edge arrow turns you left. Double / triple taps still add up.
+
 ## v1.82.131 — Turn arrows work while your other thumb is on the stick
 
 - **The tap registers:** the arrows react the moment they're touched. A normal tap doesn't register while another finger is on the screen, so holding the left stick blocked them.
