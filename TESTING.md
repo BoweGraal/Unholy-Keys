@@ -1688,6 +1688,23 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.141 — Practice from the menu is really practice (ball run had no ball)
+
+- **Cause:** practice only counted as "on" when the page was opened with `?practice` in the address. The menu's Practice button never switched it on, so every game that asks "is this practice?" got "no" and waited for a host or server that isn't there.
+- **Ball run:** this was the missing ball. With no host page to roll it, nothing rolled it, the bots stood still and only your score went up.
+- **The same bug also hit:**
+  - Dragon riders: no local waves or boss.
+  - The difficulty you pick in the practice menu.
+  - Battle votes.
+  - Capture the flag, coin dive, tug of war and ski in practice.
+  - Jumps and reactions, which were sent to a server that isn't there.
+  - The menu music watchdog.
+- **The fix:** entering practice, however you get there, now switches practice on. Leaving practice reloads the page, which switches it off.
+
+1. Main menu → Practice → Ball run. The ball rolls after you and the bots, and flattens anyone it catches.
+2. Practice → Dragon riders: waves come, then the boss.
+3. Practice on Easy versus Expert: the steps really change.
+
 ## v1.82.140 — Menu: MUSIC ON button in the middle
 
 - The ♫ MUSIC ON / OFF button moved from the top-right corner to the centre under the title, replacing the "Live Venue" line.
