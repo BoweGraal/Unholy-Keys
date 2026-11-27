@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.131 — Turn arrows work while your other thumb is on the stick
+
+- **The tap registers:** the arrows react the moment they're touched. A normal tap doesn't register while another finger is on the screen, so holding the left stick blocked them.
+- **The turn adds on:** turns go on top of whatever way the stick has you facing, angled or walking. Before, walking at the stick's edge set your facing to the walking direction and wiped the turn out. Now, walking left and tapping ↻ turns you from facing left round to the front, and the sweep is relative to where you were. Other players see the same.
+
+1. Hold the left stick (angled or right at the edge) with one thumb and tap ↺ / ↻ with the other: you turn every time.
+2. Let go of the stick: you face where the arrows left you.
+
 ## v1.82.130 — Lighter in the right hand from every angle; turn arrows moved and see-through
 
 - **Lighters up:** the lighter, phone torch and glow stick used to float behind you (at the waist) whenever you were side on or at a mirrored angle, because their position was worked out as if you faced front, and from the wrong arm. Now they sit in your raised right hand in all 8 facings.

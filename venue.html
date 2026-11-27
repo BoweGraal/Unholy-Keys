@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.130"></script>
-<script src="tune.js?v=1.82.130"></script>
-<script src="gfx.js?v=1.82.130"></script>
-<script src="art.js?v=1.82.130"></script>
-<script src="qr.js?v=1.82.130"></script>
-<script src="voice.js?v=1.82.130"></script>
-<script src="instruments.js?v=1.82.130"></script>
-<script src="kart.js?v=1.82.130"></script>
-<script src="explain.js?v=1.82.130"></script>
+<script src="px8.js?v=1.82.131"></script>
+<script src="tune.js?v=1.82.131"></script>
+<script src="gfx.js?v=1.82.131"></script>
+<script src="art.js?v=1.82.131"></script>
+<script src="qr.js?v=1.82.131"></script>
+<script src="voice.js?v=1.82.131"></script>
+<script src="instruments.js?v=1.82.131"></script>
+<script src="kart.js?v=1.82.131"></script>
+<script src="explain.js?v=1.82.131"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3559,7 +3559,7 @@ var GAME=(function(){
   var fStyle=0,fSub=0,fCtl=[0,0,0,0],fHeld=[null,null],fdBuilt=false,fHand=[null,null],fHandP=[null,null],fBack=0;   /* fBack: quarter turns from facing front (0 front, 1 right, 2 away, 3 left): 90 and 180 turn you and you stay that way. Sent as fd.b: 1 = away, 2 = right, 3 = left (1 matches the old turned-round flag) */
   var shufT=0,shufArm=true,shufSpin=false;
   window.ukFdStick=function(x,y){window.__fdStick=x===null?null:[x,y];};window.ukShuf=function(){return{spin:mySpin.on,shufSpin:shufSpin,vel:+mySpin.vel.toFixed(2),arm:shufArm,t:shufT,fd:fdState(),xy:me()?[+me().tx.toFixed(3),+me().ty.toFixed(3)]:null};};   /* tests */   /* Shuffle: stick out sideways = the T-step that way (facing front); stick to the top edge = a turnaround spin, once per push */
-  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fStyle===9&&(shufT||shufSpin)?1:fSub,c:fCtl.map(function(v,i){if(fStyle===9&&i===0&&!shufT)v*=0.6;if(mySpin.on&&mySpin.hold&&(mySpin.left||shufSpin?i<2:i>=2))v=mySpin.hold[i];return Math.round(v*100);})};   /* while you spin, the stick steering it holds the dance where it was (no jump into or out of the spin) */   /* the Shuffle reads the left stick like the games do (x0.6 unless T-stepping) */   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=[0,2,1,3][fBack];if(fTurn)o.f8=turnDir();if(mySpin.on)o.sp=[Math.round((mySpin.ang%(2*Math.PI))*100),Math.round(mySpin.vel*10)];return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
+  function fdState(){if(fStyle<=0)return null;var o={s:fStyle,m:fStyle===9&&(shufT||shufSpin)?1:fSub,c:fCtl.map(function(v,i){if(fStyle===9&&i===0&&!shufT)v*=0.6;if(mySpin.on&&mySpin.hold&&(mySpin.left||shufSpin?i<2:i>=2))v=mySpin.hold[i];return Math.round(v*100);})};   /* while you spin, the stick steering it holds the dance where it was (no jump into or out of the spin) */   /* the Shuffle reads the left stick like the games do (x0.6 unless T-stepping) */   /* while you spin, the right stick only keeps the spin going: no moves, no bounce */if(fHand[0]!==null||fHand[1]!==null)o.h=[fHand[0],fHand[1]];if(fBack)o.b=[0,2,1,3][fBack];if(fTurn)o.ti=Math.round(turnIdx(performance.now()));if(mySpin.on)o.sp=[Math.round((mySpin.ang%(2*Math.PI))*100),Math.round(mySpin.vel*10)];return o;}   /* h: a hand you are holding, as an angle x100 (0 = hanging down, 157 = out to the side, 314 = straight up) */
   function beatPos(){var b=BEAT.get(),now=performance.now();return b.known&&b.period>0?(now-b.t0)/b.period:now/500;}
   /* Move queue: line up dances and moves ahead of time. When it's your turn in the middle, they play in order and
      split your turn evenly between them; the one on now is lit. Kept on this device. */
@@ -3720,7 +3720,7 @@ var GAME=(function(){
     function pxi(n,k){var sz=ART.UI.iconSize(n);return '<i class="pxi" style="width:'+sz[0]*k+'px;height:'+sz[1]*k+'px;background-image:url('+ART.UI.icon(n,"#ffffff")+')"></i>';}
     R.appendChild(act(pxi("cross",2)+"Stop",function(){stop();},"Stop dancing (Esc)"));
     Array.prototype.forEach.call(ui.querySelectorAll(".fd-mini button[data-r]"),function(mb){mb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();mb.blur();react(mb.getAttribute("data-r"));});});
-    Array.prototype.forEach.call(ui.querySelectorAll(".fd-turn"),function(tb){tb.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();tb.blur();turnTap(+tb.getAttribute("data-turn"));tb.classList.add("pop");setTimeout(function(){tb.classList.remove("pop");},140);});});
+    Array.prototype.forEach.call(ui.querySelectorAll(".fd-turn"),function(tb){tb.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();tb.blur();turnTap(+tb.getAttribute("data-turn"));tb.classList.add("pop");setTimeout(function(){tb.classList.remove("pop");},140);});});
     var placeTurns=function(){var pads=ui.querySelector(".fd-pads");if(!pads)return;var r=pads.getBoundingClientRect();if(!r.width)return;
       var L=ui.querySelector('.fd-turn[data-turn="-1"]'),R=ui.querySelector('.fd-turn[data-turn="1"]');if(L){L.style.left=(6-r.left)+"px";L.style.right="auto";}if(R){R.style.right=(6-(window.innerWidth-r.right))+"px";R.style.left="auto";}};   /* the turn arrows sit out at the screen edges, beside the hand controls */
     window.addEventListener("resize",placeTurns);setInterval(placeTurns,1000);setTimeout(placeTurns,50);
@@ -4583,7 +4583,7 @@ var GAME=(function(){
       following:notes.filter(function(n){return n.sliding;}).map(function(n){var b=swAt(n,swU(n,now));return{leftMs:Math.round(n.t+n.hold-now),ball:[Math.round(b[0]),Math.round(b[1])]};}),clockJumps:clkJumps,
       spin:mySpin.on?+mySpin.vel.toFixed(1):0,handles:mode==="free"?floorHandles():null,fd:mode==="free"?fdState():null,hype:Math.round(hype*100)/100,at:me()?{x:me().x,y:me().y,walking:!!me().walk}:null};
   };
-  return{spinStart:spinStart,turnBy:turnBy,turnTap:turnTap,get back(){return fBack;},get spinDir(){return mySpin.on&&mode==="free"?ART.face8(Math.sin(mySpin.ang+fBack*Math.PI/2),Math.cos(mySpin.ang+fBack*Math.PI/2),-1):-1;},get turnDir(){return mode==="free"?turnDir():-1;},get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard","Expert"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},poseNow:function(){applyToMe();sendPose();},REST:REST};
+  return{spinStart:spinStart,turnBy:turnBy,turnTap:turnTap,get back(){return fBack;},get spinDir(){return mySpin.on&&mode==="free"?ART.face8(Math.sin(mySpin.ang+fBack*Math.PI/2),Math.cos(mySpin.ang+fBack*Math.PI/2),-1):-1;},get turnDir(){return mode==="free"?turnDir():-1;},get turnI(){return mode==="free"&&fTurn?Math.round(turnIdx(performance.now())):-999;},get fdEdge(){return mode==="free"&&fStyle>0&&Math.hypot(fCtl[0],fCtl[1])>=0.92;},get fd(){return mode==="free"?fdState():null;},fdPick:fdPick,fdSub:fdSub,get fStyle(){return fStyle;},beatPos:beatPos,get roundM(){return rnd&&rnd.m!==undefined?rnd.m:-1;},boardSteps:boardSteps,KCOL:KCOL,LCOL:LCOL,diffOf:diffOf,DIFFS:["Easy","Normal","Hard","Expert"],start:start,stop:stop,toggle:toggle,press:press,release:release,pressKey:pressKey,releaseKey:releaseKey,limbKey:limbKey,floorGrab:floorGrab,floorDrag:floorDrag,floorRelease:floorRelease,drawHandles:drawHandles,freeS:freeS,get pose(){return pose;},menuOpen:menuOpen,closeMenu:closeMenu,get mode(){return mode;},get four(){return four;},fdKey:fdKey,KCOL4:KCOL4,get score(){return score;},moshPts:function(n){score+=n;if(score>best)best=score;report();},moshPose:function(p){pose=p;applyToMe();sendPose();},poseNow:function(){applyToMe();sendPose();},REST:REST};
 })();
 /* ============================================================
    MOSH PIT ROUND
@@ -9282,7 +9282,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.130",SERVER_VERSION="";
+var PAGE_VERSION="1.82.131",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10261,15 +10261,19 @@ function renderLoop(){
       if(v!==PH&&keepyOn()){AVDIR=KEEPY.facing(v,ids[i]===myId);if(KEEPY.tArms(v,ids[i]===myId)){AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},{armL:1.5,armR:-1.5});}}   /* keepy uppy: face the front; a double jump spins you round with your arms out */
       if(rpo&&rpo.dir!==undefined)AVDIR=cdn===4&&cfd&&cfd.b&&GAME.mode==="free"?rot8(rpo.dir,[0,2,1,3][cfd.b]):rpo.dir;   /* a spin or turn goes round through all the facings */
       if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;
-      if(ids[i]===myId&&GAME.turnDir>=0)AVDIR=GAME.turnDir;else if(ids[i]!==myId&&cfd&&cfd.f8!==undefined)AVDIR=cfd.f8;   /* mid-turn: sweeping round */
       if(v!==PH&&v.dance===4&&DRAGON.on&&!DRAGON.isOut(ids[i],v)){AVDIR=1;AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},DRAGON.seat(ids[i],v));dyy+=(AVO.r.dy||0)*sc2;}   /* dragon riders: side on, sat in the saddle, legs astride, hands on the reins */
       if(v!==PH&&v.dance===4){if(FISH.fishOn())AVDIR=FISH.facing(vx,vy);else if(BOATS.boatsOn()&&!BOATS.isOut(v,ids[i]===myId))AVDIR=BOATS.facing(v,ids[i]===myId);}   /* anglers face the water; boaters face where they're steering */
       if(RINK&&ICE){var ffc=FIG.faceOf(v,ids[i]===myId&&FIG.on);if(ffc>=0)AVDIR=ffc;var slk=FIG.spinLook(v,ids[i]===myId&&FIG.on,sc2);if(slk){AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},slk);}}   /* the ice routine: spins and jumps go round */
       else if(ids[i]!==myId&&cdn===4&&GAME.mode==="free"){var rsd=fdSpinDir(cfd);if(rsd>=0)AVDIR=rsd;}   /* their spin, as they see it */   /* your own spin: the stick keeps it going */   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
       /* free dance: the left stick angles you, feet planted, turning your body three-quarters toward the way you push it (like
          swinging side to side); right at the edge you walk (and face the way you go). Not the Shuffle or the worm, which use the stick their own way */
-      if(cdn===4&&cfd&&cfd.c&&GAME.mode==="free"&&cfd.s!==9&&cfd.s!==7&&!cfd.b&&!(rpo&&rpo.dir!==undefined)&&!(ids[i]===myId&&GAME.spinDir>=0)){var ax9=(cfd.cs||cfd.c)[0]/100,ay9=(cfd.cs||cfd.c)[1]/100;
-        if(Math.hypot(ax9,ay9)<0.92&&Math.abs(ax9)>0.3)AVDIR=ax9>0?4:7;}
+      /* ...and the turn arrows turn you from there, on top: holding the stick (angled, or walking) and tapping a turn arrow still turns you */
+      if(cdn===4&&cfd&&GAME.mode==="free"&&!(rpo&&rpo.dir!==undefined)&&!(ids[i]===myId&&GAME.spinDir>=0)&&!(ids[i]!==myId&&fdSpinDir(cfd)>=0)){
+        var me9=ids[i]===myId,base9=0;
+        if(fdTurn(wk,me9,vx,vy,pnow))base9=wk.face|0;
+        else if(cfd.c&&cfd.s!==9&&cfd.s!==7){var ax9=(cfd.cs||cfd.c)[0]/100,ay9=(cfd.cs||cfd.c)[1]/100;if(Math.hypot(ax9,ay9)<0.92&&Math.abs(ax9)>0.3)base9=ax9>0?4:7;}
+        var ti9=me9?GAME.turnI:(cfd.ti!==undefined?cfd.ti:-999),add9=ti9!==-999?ti9:(cfd.b?2*[0,2,1,3][cfd.b]:0),S8F=[0,4,1,5,2,6,3,7];   /* mid-turn: how far round the sweep is; otherwise where the arrows left you */
+        AVDIR=S8F[(((S8F.indexOf(base9)+add9)%8)+8)%8];}
       if(cdn===4&&cfd&&cfd.s===9&&cfd.m===1&&!cfd.b&&!(rpo&&rpo.dir!==undefined)&&!(ids[i]===myId&&GAME.spinDir>=0)&&!fdSpinDirOn(cfd,ids[i]===myId))AVDIR=0;   /* the T-step faces the crowd while it travels sideways (it never turns to walk) */
       drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,skl?null:walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
       if(VOICE.talking(ids[i]))voiceIcon(vx+9*sc2,dyy-23*sc2,sc2,now);   /* talking on voice */
@@ -10329,7 +10333,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.130"></script>
+<script src="lab.js?v=1.82.131"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
