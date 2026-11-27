@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.143 — Dragon spin breathes a fire barrier
+
+- **What it does:** the corkscrew spin now breathes a small ring of dragon fire round your dragon for 0.8 s.
+  - The organ boss's flaming notes that touch it burn up (BLOCKED).
+  - Imps, skulls, bats and gargoyles that fly into it take a hit and get knocked back. Ones that die give their usual points.
+- **What it looks like:** the ring puffs out fast, holds, then thins away, with sparks circling.
+- **Cooldown:** the gap between spins is now 1.65 s instead of 1.1 s, so the barrier can't be chained into a permanent shield.
+
+1. Dragon riders: flick ↑ then ↓ as enemies or boss notes reach you. They burn up on the ring instead of hitting you.
+
 ## v1.82.142 — Capture the flag: team colours, a bigger team disc, no shaking when standing; Skip fallback
 
 - **Team colours:** everyone in capture the flag now wears their team's colour (red or blue shirt), so you can tell the teams apart at a glance.
