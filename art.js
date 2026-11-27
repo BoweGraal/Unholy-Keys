@@ -1940,7 +1940,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     {name:"Two-step",icon:"\uD83D\uDC63",subs:["Basic","Clap","Point","Shimmy"],help:"Left stick: walk around, wider steps the further you push. Right stick: up raises your arms, left and right swing them."},
     {name:"Hands on knees",icon:"\uD83E\uDDB5",subs:["Knock knees","Bounce","Low","Lean back"],help:"Left stick: shuffle around in the squat, down sinks lower. Right stick: left and right lean."},
     {name:"Shake it",icon:"\uD83C\uDF51",subs:["Wiggle","Drop it","Hands up","Fast"],help:"Wiggle / Fast: turned round, body steady, the butt shaking left and right to the beat. Drop it: butt popping on the beat, dropping low every 4th beat. Right stick: moves the butt itself (let go and it shakes on its own). Left stick: move around the floor."},
-    {name:"Running man",icon:"\uD83C\uDFC3",subs:["Classic","Fast","Moonwalk","Arms pump"],help:"Side-on: the knees take turns coming up as the other foot slides back. Left stick: run around the floor. Right stick: up lifts the knees higher, left and right pump the arms."},
+    {name:"Running man",icon:"\uD83C\uDFC3",subs:["Classic","Fast","Half","Arms pump"],help:"Side-on: the knees take turns coming up as the other foot slides back. Left stick: run around the floor. Right stick: up lifts the knees higher, left and right pump the arms."},
     {name:"Skank",icon:"\uD83C\uDFBA",subs:["Classic","Windmill","Pogo","Elbows","Kicks"],help:"Left stick: skank around the floor, up kicks the knees higher. Right stick: up throws bigger punches."},
     {name:"Robot",icon:"\uD83E\uDD16",subs:["Arms","Wave","Pop","Freeze"],help:"Left stick: walk like a robot, and your left arm points the way you go. Right stick: point your right arm."},
     {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop"],help:"It starts with a dive in. Left stick: wriggle across the floor, up lifts your chest. Right stick: up kicks your hips up. Flick the left stick down and up: a big push up into the air."},
@@ -1952,7 +1952,8 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     {name:"Headbang",icon:"\uD83E\uDD18",subs:["Headbang","Hair windmill","Air guitar","Rock on","Mix it up"],help:"Left stick: move around while you bang. Right stick: how hard and how fast."},
     {name:"Lighters up",icon:"\uD83D\uDD25",subs:["Lighter sway","Phone light","Wave it","Both hands","Glow sticks"],help:"Left stick: sway your way around the floor. Right stick: how high you hold it."},
     {name:"Techno march",icon:"\uD83E\uDD7E",subs:["March","Point","Arm swing","Flex","Mix it up"],help:"Left stick: march around the floor. Right stick: arm power."},
-    {name:"Puppet",hidden:true,icon:"\uD83C\uDFAD",subs:["Arms","Legs","Arms + legs","Cross"],help:"Nothing moves on its own. Left dot is your body: slide it to shift and lean, up to rise, down to crouch. Right dot is your limbs: up raises them, left and right swing them. Hit Spin or Twirl to turn on the spot."}
+    {name:"Puppet",hidden:true,icon:"\uD83C\uDFAD",subs:["Arms","Legs","Arms + legs","Cross"],help:"Nothing moves on its own. Left dot is your body: slide it to shift and lean, up to rise, down to crouch. Right dot is your limbs: up raises them, left and right swing them. Hit Spin or Twirl to turn on the spot."},
+    {name:"MJ",icon:"\uD83C\uDFA9",subs:["Moonwalk","Toe stand","Lean","Spin kick"],help:"Michael Jackson classics. Moonwalk glides backwards; Toe stand rises up onto the toes and freezes; Lean tips forward impossibly far; Spin kick kicks and points, then spins round."}
   ];
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function danceBase(style,sub,c,bp){
@@ -2007,12 +2008,12 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     case 4:{ /* running man (from a clip), side-on facing right: on each beat one knee drives right up in front while the standing
                 foot slides back into a long stride; the knee comes down in front as the next beat starts and the other leg (now at the
                 back) comes up: the legs take turns. Hands bent at the chest, pumping down as the knee rises. The left dot moves you. */
-      var lift=0.5+Math.max(0,-by)*0.7+(sub===1?0.25:0),fast=sub===1?2:1,t4=bp*fast,b4=Math.floor(t4),ph4=t4-b4,up=Math.sin(ph4*Math.PI),
+      var lift=0.5+Math.max(0,-by)*0.7+(sub===1?0.25:0),fast=sub===1?2:sub===2?0.5:1,   /* Half: half the speed, the opposite of Fast */t4=bp*fast,b4=Math.floor(t4),ph4=t4-b4,up=Math.sin(ph4*Math.PI),
           q=Math.sin(bp*Math.PI*fast),kA=1.7+lift*0.4,kn=Math.min(4.4,3.2+lift*1.4),liftL=b4%2===0;
       var lA=0.45*(1-ph4)-0.35*ph4-up*kA,lL=7-up*kn,sA=-0.35*(1-ph4)+0.45*ph4;   /* (side view: a negative angle is forward) */
       o.dir=1;if(liftL){o.legL=lA;o.lgL=lL;o.legR=sA;o.lgR=7;}else{o.legR=lA;o.lgR=lL;o.legL=sA;o.lgL=7;}
       o.bob=ay*4+1.2-up*1.4;o.dx=ax*8;
-      if(sub===2){   /* moonwalk (from a clip): a smooth glide backwards, one heel up with the knee bent, the flat foot sliding back,
+      if(sub===99){   /* moonwalk (from a clip; done from the MJ style now): a smooth glide backwards, one heel up with the knee bent, the flat foot sliding back,
                         swapping every beat; arms hanging, head down, a little lean the way you face. 4 beats one way, 4 back */
         var cyc=((bp%8)+8)%8,dir=cyc<4?-1:1,gl=cyc<4?cyc/4:(cyc-4)/4,ft=((bp%1)+1)%1,ease=ft*ft*(3-2*ft),onL=Math.floor(bp)%2===0;
         o.dx=(dir<0?(1-2*gl):(-1+2*gl))*(6+(ax+1)*4);o.bob=ay*3;o.rot=-dir*0.08;
@@ -2040,11 +2041,19 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       if(sub===3){o.armL=1.6+qq*0.5;o.armR=-1.6+qq*0.5;}                                         /* elbows */
       break;}
     case 6:{ /* robot: each dot points an arm, snapped to 45 degree steps on the half beat */
+      /* the groove, from a clip (a man in a blue polo on a porch), one swing every 2 beats: the left arm (on screen) swings from
+         hanging low and out, in and up across the belly with the forearm bent up to the chest, and back down; the right arm stays
+         out to the side at waist height, reaching straighter as the other comes in, the hand flapping; the knees bounce on every
+         beat with the head bobbing on them, the body swaying a pixel toward the outstretched arm, mouth open laughing */
+      var groove=function(o,bp){var u=((bp/2)%1+1)%1,sw=(1-Math.cos(u*Math.PI*2))/2,bn=(1-Math.cos(u*Math.PI*4))/2;
+        o.armL=0.45-0.95*sw;o.bendL=0.15-2.45*sw;
+        o.armR=-(0.8+0.75*sw);o.bendR=0.45-0.3*sw+0.12*Math.sin(u*Math.PI*8);
+        o.bob=bn*1.4;o.head=0.12*bn;o.legL=0.12;o.legR=-0.12;o.lgL=o.lgR=7-bn*0.5;o.dx=Math.sin(u*Math.PI*2)*0.8;o.mouth=true;o.flex=false;};
       var snap=function(v){return Math.round(v/(Math.PI/4))*(Math.PI/4);};
       var aL=Math.hypot(ax,ay)>0.25?Math.atan2(-ax,ay):0.2,aR=Math.hypot(bx,by)>0.25?Math.atan2(-bx,by):-0.2;
       o.armL=snap(aL);o.armR=snap(aR);o.bob=(Math.floor(bp*2)%2)?-1:0;o.legL=0.12;o.legR=-0.12;
       if(sub===1){var st2=Math.floor(bp*2)%4;o.armL=[1.57,2.36,1.57,0.79][st2];o.armR=-[0.79,1.57,2.36,1.57][st2];}   /* wave */
-      if(sub===2&&ph<0.15){o.bob=-2;o.mouth=true;}                                                /* pop on the beat */
+      if(sub===2){groove(o,bp);break;}   /* "Pop": the groove from the clip (also the default dance) */
       if(sub===3){o.bob=0;}
       break;}
     case 7:{ /* the worm (from 3 clips): flat on the floor, the wave runs through you every 2 beats: hands planted, the hips and
@@ -2233,6 +2242,22 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
         o.armL=0.18+(fl>0?th:th*0.65);o.armR=-0.18+(fl<0?th:th*0.65);o.alL=o.alR=7.4;   /* the arm crossing the body stays lower, across the hips */
         o.dx=-fl*2.6;o.rot=-fl*0.07;o.legL=0.1-fl*0.14;o.legR=-0.1-fl*0.14;o.bob=bh*0.6;}
       else{var mc=bi%8;o.armL=mc<1?1.57:mc<2?1.57:mc<4?2.9:0.9;o.armR=mc<2?-1.57:mc<4?-2.9:-0.9;if(mc>=6){o.dx=Math.sin(bb*Math.PI*2)*2;}}               /* macarena */
+      break;}
+    case 17:{ /* MJ: Michael Jackson classics */
+      var b17=((bp%4)+4)%4,bi17=Math.floor(b17),f17=b17-bi17;
+      if(sub===0){var mw=danceBase(4,99,c,bp);for(var k17 in mw)o[k17]=mw[k17];o.forceSide=1;break;}   /* the moonwalk: always seen side on */
+      if(sub===1){   /* toe stand: three easy sways side to side, then up onto the toes, knees together, and freeze for the last beat */
+        if(bi17<3){var sw17=Math.sin(b17*Math.PI);o.dx=sw17*1.5;o.armL=0.35+Math.max(0,sw17)*0.4;o.armR=-0.35+Math.min(0,sw17)*0.4;o.bob=Math.abs(Math.sin(b17*Math.PI*2))*1.2;o.legL=0.1;o.legR=-0.1;}
+        else{var up17=Math.min(1,f17*5);o.bob=-up17*3;o.legL=-0.06*up17;o.legR=0.06*up17;o.lgL=o.lgR=7+up17*0.8;o.armL=0.25;o.armR=-0.25;o.alL=o.alR=7;o.head=-0.15*up17;}
+        break;}
+      if(sub===2){   /* the lean: side on, stiff as a board, tipping forward from the heels impossibly far, holding, and back up */
+        var ln=b17<1.5?Math.min(1,b17/1.2):b17<3?1:Math.max(0,1-(b17-3)/0.8);ln=ln*ln*(3-2*ln);
+        var th17=ln*0.52;o.dir=1;o.forceSide=1;o.rot=th17;o.dx=Math.sin(th17)*11;o.bob=(1-Math.cos(th17))*11;o.armL=0.05;o.armR=-0.05;o.legL=0;o.legR=0;break;}   /* pivoting at the heels: shifted so the feet stay put */
+      if(sub===3){   /* spin kick: a sharp kick out with an arm pointing up and across (beats 1 and 3, the other leg on 2), then on 4 a fast spin
+                        round on the spot, landing facing front on the toes */
+        if(bi17<3){var kk=Math.max(0,1-f17*3),side17=bi17===1?-1:1;o.legL=side17>0?kk*0.95:0.05;o.legR=side17<0?-kk*0.95:-0.05;o.armL=side17>0?2.5*Math.max(0.4,kk):0.35;o.armR=side17<0?-2.5*Math.max(0.4,kk):-0.35;o.bob=kk*-1;o.mouth=kk>0.5;}
+        else{o.dir=[0,4,1,5,2,6,3,7][Math.min(7,Math.floor(f17*8))];o.armL=1.2;o.armR=-1.2;o.bob=-1;o.legL=0.05;o.legR=-0.05;if(f17>0.85){o.dir=0;o.bob=-3;o.lgL=o.lgR=7.8;}}
+        break;}
       break;}
     }
     o.armL=clamp(o.armL,-3.3,3.3);o.armR=clamp(o.armR,-3.3,3.3);o.legL=clamp(o.legL,-1.2,1.2);o.legR=clamp(o.legR,-1.2,1.2);
@@ -2957,6 +2982,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       mem.t=now;mem.aL=aL;mem.aR=aR;
       bL-=Math.max(-0.55,Math.min(0.55,(mem.vL||0)*0.05));bR-=Math.max(-0.55,Math.min(0.55,(mem.vR||0)*0.05));}
     return[bL,bR];}
-  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.133",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,wormPose:function(ph){return wPose(ph,0,0);},joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.134",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,wormPose:function(ph){return wPose(ph,0,0);},joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

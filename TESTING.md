@@ -1688,6 +1688,25 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.134 — The groove (Robot "Pop" and the default dance); new MJ style; Running man "Half"
+
+- **The groove:** from your clip, one swing every 2 beats.
+  - The left arm (on screen) swings from hanging low and out, in and up across the belly, the forearm bent up to the shoulder, then back down.
+  - The right arm stays out to the side at waist height, rising from about 45° to level as the other comes in, hand flapping.
+  - The knees bounce on every beat with the head bobbing; the body sways a pixel toward the outstretched arm; mouth open.
+  - It's the Robot's **Pop** now, and it's the **default dance**: anyone dancing without a style picked does the groove.
+- **MJ:** a new style button for Michael Jackson classics:
+  - **Moonwalk:** moved here from Running man, and now always seen side on.
+  - **Toe stand:** three easy sways, then up onto the toes, knees together, freeze.
+  - **Lean:** side on, stiff as a board, tipping forward from the heels with the feet staying put, holding, and back up.
+  - **Spin kick:** a sharp kick with an arm pointing up and across, alternating, then a fast spin landing on the toes facing front.
+- **Running man:** the Moonwalk slot is now **Half**, the running man at half speed (the opposite of Fast).
+
+1. Free dance → Robot → Pop: matches the clip (the arm swing, the out-stretched arm, the bounce).
+2. Dance without picking a style: you do the groove.
+3. MJ: try all four moves, and turn round. The moonwalk and the lean stay side on, and the lean always tips forward.
+4. Running man → Half: half as quick as Classic.
+
 ## v1.82.133 — The worm faces the way it wriggles; quicker walking at the stick's edge
 
 - **The worm:** pushing the left stick left or right wriggles you across the floor (a slow crawl), and the worm faces the way you're going: head first to the right when you push right, to the left when you push left. Before, moving right could leave it facing left.
