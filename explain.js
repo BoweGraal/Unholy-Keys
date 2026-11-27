@@ -42,7 +42,7 @@ var EXPLAIN=(function(){
       how:[["Stick to move · tap JUMP to head it","Arrows to move · Space to head it"],"Jump again in the air = double jump"],
       rules:["Hits in a row = multiplier","🪶 and double jumps score most"]},
     fish:{n:"Fishing",i:"🎣",goal:"Biggest catch wins. 🐟",
-      how:[["Drag the water to aim · swoop up fast to cast","Point to aim · swoop the mouse up fast to cast"],"A fish under the float bites · ⟳ pulls it in to line up","❗ jerk ↓","Spin ⟳ to the beat ♩ · 🥅 net it"],
+      how:[["Drag the water to aim · swoop up fast to cast","Point to aim · swoop the mouse up fast to cast"],"A fish under the float bites · ← → nudge it, ⟳ pulls it in","❗ jerk ↓","Spin ⟳ to the beat ♩ · 🥅 net it"],
       rules:["Too fast ⚡ up · slower ⚡ down","⚡ full = 💥 SNAP","⚠ LINE OUT: reel!"]},
     boats:{n:"Bumper boats",i:"🚤",goal:"Knock everyone off the pool.",
       how:[["Steer with the stick · BOOST to ram","Arrows to steer · Space to BOOST"],"Hit them near the edge"],

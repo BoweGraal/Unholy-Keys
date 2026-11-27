@@ -1688,6 +1688,49 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.137 — Step dance: a library of step patterns that fits the song; keepy uppy landing spots
+
+- **Step patterns:** Step Dance no longer turns the song's hits into arrows one by one (which on Normal often came out as one arrow a beat for long stretches). It now picks a pattern from a library of 55 hand-designed one-bar patterns for every bar. Each bar takes the pattern that best lands on the song's own hits, with a little randomness. Phrases go A, B, A mirrored, then an ending fill.
+  - **Easy (on the beat):** walk the stairs, ping-pong, box, zig-zag, crossover, double tap, three and rest, hold and step, two holds, hold the bar.
+  - **Normal (half beats, never more than three quick ones in a row):** left right left pause right left right pause, anchor (hold ← for the bar and tap ↓ ↑ ↓ in between), gallop, tresillo (3-3-2), tresillo hold, hold and run, pairs, offbeats, jump in, echo, skip, candle, plus fills (stair run, jump finish, hold out).
+  - **Hard:** staircase stream, trill and roll, anchor offbeats, jump step, gallop runs, box spin, jacks and cross, hold ladder, tresillo stream, tresillo jumps, plus fills.
+  - **Expert (quarter beats):** gallop stream, anchor sixteenths, jump stream, trill burst, tresillo sixteenths, hold swap, ta-ka pairs, crossover run, sixteenth roll.
+  - **Safety rules:**
+    - Calm parts (intro, breakdown, the build before the drop) get calm patterns, choruses and peaks get busier ones, and a bar with no music stays empty.
+    - Above Easy, a bar with one arrow per beat is a rest and never two in a row.
+    - A pattern too fast for the song's tempo at that level is never picked. Above 150 BPM the patterns run at half speed.
+    - The drop lands on a jump (← + →).
+    - The last pass makes sure there are never more than two presses at once (a held arrow counts) and nothing on a held arrow.
+  - **Unchanged:** hand-made charts, and the other games (keys, aim).
+- **Keepy uppy:** a solid black circle on the floor right under the balloon, ball and feather shows where to stand and jump. When it's low enough to reach, a ring in its colour pulses round the circle.
+
+1. Practice → Step Dance on Normal. Expect varied rhythms (gallops, 3-3-2s, held ← with taps between), not long runs of one arrow a beat. Try each level.
+2. Practice → Keepy uppy. Each object has a black circle under it, ringed in its colour when it's low.
+
+## v1.82.136 — Fishing: nudge the float with the left stick; every fish has its own shadow
+
+- **Nudge:** while you wait for a bite, flick the left stick left or right and the float twitches one small step that way, so you can line it up with a fish. Each flick is one step, and it spooks a fish that's nosing at the float, as reeling does. The hook jerk is now a jerk **down** only, so a sideways flick never counts as an early jerk.
+- **Shadows:** each kind of fish has its own pixel silhouette, nose first the way it's swimming, so a keen eye can pick the best one:
+  - **Knifejaw:** short and tall, a deep disc.
+  - **Salmon:** slim, with a small forked tail.
+  - **Cod:** chunky, big head, rounded tail.
+  - **Barracuda:** very long and thin.
+  - **Kingfish:** a torpedo with a deep forked tail.
+  - **Marlin:** a tall sail fin and a long bill.
+  - **Tuna:** big and round, with finlets and a big forked tail.
+
+1. Cast, then flick the left stick left or right: the float moves a little each time.
+2. Look at the shadows: the shapes differ, and the far-out ones (marlin, tuna) are the big ones.
+3. A jerk down still hooks on ❗; sideways flicks don't.
+
+## v1.82.135 — No more two songs at once in practice
+
+When you left a game early, the dance floor's menu music came back (as intended). But when you then started another game, the menu music only faded out slowly, over about 4½ seconds. On iPhones the fade did nothing at all, because Safari ignores volume changes on that kind of audio player, so the menu track played at full volume over the new game's song. Now the menu music stops the moment a game starts (and again when its song starts, in case anything brought it back), and anywhere else it fades in about half a second.
+
+1. Practice: start a game, skip the timer, then Exit early. The menu music comes back on the dance floor.
+2. Start another game: the menu music stops straight away. Only the game's song plays, on the countdown and after skipping.
+3. On an iPhone especially: never two tracks at once.
+
 ## v1.82.134 — The groove (Robot "Pop" and the default dance); new MJ style; Running man "Half"
 
 - **The groove:** from your clip, one swing every 2 beats.

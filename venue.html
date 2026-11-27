@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.134"></script>
-<script src="tune.js?v=1.82.134"></script>
-<script src="gfx.js?v=1.82.134"></script>
-<script src="art.js?v=1.82.134"></script>
-<script src="qr.js?v=1.82.134"></script>
-<script src="voice.js?v=1.82.134"></script>
-<script src="instruments.js?v=1.82.134"></script>
-<script src="kart.js?v=1.82.134"></script>
-<script src="explain.js?v=1.82.134"></script>
+<script src="px8.js?v=1.82.137"></script>
+<script src="tune.js?v=1.82.137"></script>
+<script src="gfx.js?v=1.82.137"></script>
+<script src="art.js?v=1.82.137"></script>
+<script src="qr.js?v=1.82.137"></script>
+<script src="voice.js?v=1.82.137"></script>
+<script src="instruments.js?v=1.82.137"></script>
+<script src="kart.js?v=1.82.137"></script>
+<script src="explain.js?v=1.82.137"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3445,11 +3445,182 @@ var GAME=(function(){
   /* The notes of a round as the players see them (eased for the round's level, mapped to keys on the highway),
      for drawing someone else's game screen in a battle: [{ms, lanes:[...], hold, x, y}]. Cached per chart. */
   var bsCache={chart:null,key:"",out:null};
+  /* ── Step patterns (step dance) ── a library of hand-designed one-bar patterns, picked bar by bar to fit the song.
+     Notation: one character per slot (8 slots = half beats, 16 = quarter beats). l d u r = tap left/down/up/right;
+     L D U R = hold, '=' keeps it held; J = left+right together, K = down+up; '.' = rest. Layers joined with '/' play at the
+     same time (a hold under taps). d = [lowest, highest] level (0 Easy .. 3 Expert); e = [lowest, highest] energy
+     (0 calm: intro, breakdown, outro, the build before the drop; 1 groove: verses; 2 drive: choruses; 3 peak: the big
+     moments, the drop, the finale); end = good at the end of a 4-bar phrase.
+     Phrases go A B A' C: a pattern, a different one, the first again mirrored, then an ending. Each pick scores how well
+     its notes land on the song's own hits, a pattern too fast for the song's tempo at that level is never picked, a bar
+     with no music in it stays empty, and a last safety pass keeps it playable with two thumbs. Same song + level = the
+     same steps on every phone. */
+  var SPAT=(function(){
+    var LIB=[
+      /* on the beat: Easy and up */
+      {n:"Walk the stairs",p:"l.d.u.r.",d:[0,1],e:[1,3]},
+      {n:"Ping-pong",p:"l.r.l.r.",d:[0,1],e:[1,3]},
+      {n:"Step, wait",p:"l...r...",d:[0,1],e:[0,1]},
+      {n:"Hold and step",p:"L===..r.",d:[0,3],e:[0,2]},
+      {n:"Box",p:"l.u.r.d.",d:[0,1],e:[1,3]},
+      {n:"Two holds",p:"L===R===",d:[0,2],e:[0,1]},
+      {n:"Stairs down",p:"r.u.d.l.",d:[0,1],e:[1,3]},
+      {n:"Call",p:"l.d.....",d:[0,0],e:[0,0]},
+      {n:"Double tap",p:"l.l.r...",d:[0,1],e:[0,2]},
+      {n:"Crossover",p:"l.d.r.d.",d:[0,2],e:[1,3]},
+      {n:"Hold the bar",p:"D=======",d:[0,1],e:[0,0]},
+      {n:"Zig-zag",p:"l.r.d.u.",d:[0,2],e:[1,3]},
+      {n:"Three and rest",p:"l.r.l...",d:[0,1],e:[0,2]},
+      {n:"Rest, two",p:"l...r.l.",d:[0,1],e:[0,2]},
+      {n:"Hold, then two",p:"L===r.l.",d:[0,2],e:[1,3]},
+      {n:"Pairs on the beat",p:"l.l.r.r.",d:[0,1],e:[1,3]},
+      {n:"Up and over",p:"d.u...r.",d:[0,1],e:[0,2]},
+      /* half beats: Normal and up (never more than three quick ones running) */
+      {n:"Left right left, pause",p:"lrl.rlr.",d:[1,2],e:[2,3]},
+      {n:"Anchor",p:"L=======/..d.u.d.",d:[1,3],e:[1,3]},
+      {n:"Gallop",p:"l.ud.ur.",d:[1,2],e:[1,3]},
+      {n:"Tresillo",p:"l..r..u.",d:[1,3],e:[0,2]},
+      {n:"Tresillo hold",p:"L==r..u.",d:[1,2],e:[1,2]},
+      {n:"Hold and run",p:"D===rlr.",d:[1,3],e:[2,3]},
+      {n:"Pairs",p:"ld..ur..",d:[1,2],e:[1,2]},
+      {n:"Offbeats",p:".l.r.l.r",d:[1,3],e:[2,3]},
+      {n:"Jump in",p:"J.d.u.r.",d:[1,2],e:[2,3]},
+      {n:"Breathe",p:"J.......",d:[1,3],e:[0,1]},
+      {n:"Echo",p:"lr..lr..",d:[1,2],e:[1,2]},
+      {n:"Skip",p:"l.rl.rl.",d:[1,2],e:[2,3]},
+      {n:"Candle",p:"d.u.dr..",d:[1,2],e:[1,2]},
+      {n:"Stair run (fill)",p:"l.d.url.",d:[1,2],e:[1,3],end:1},
+      {n:"Jump finish (fill)",p:"lrl.J...",d:[1,2],e:[2,3],end:1},
+      {n:"Hold out (fill)",p:"l.r.U===",d:[1,2],e:[0,2],end:1},
+      /* streams, jumps, anchors: Hard and up */
+      {n:"Staircase stream",p:"ldurldur",d:[2,3],e:[3,3]},
+      {n:"Trill and roll",p:"lrlr.dud",d:[2,3],e:[2,3]},
+      {n:"Anchor offbeats",p:"L=======/.d.u.d.u",d:[2,3],e:[2,3]},
+      {n:"Jump step",p:"J.du.Jd.",d:[2,3],e:[2,3]},
+      {n:"Gallop runs",p:"ld.ur.dl",d:[2,3],e:[2,3]},
+      {n:"Box spin",p:"lurdlurd",d:[2,3],e:[3,3]},
+      {n:"Jacks and cross",p:"ll.rr.du",d:[2,3],e:[2,3]},
+      {n:"Hold ladder",p:"L==dR==u",d:[2,3],e:[1,3]},
+      {n:"Tresillo stream",p:"l.rl.rlr",d:[2,3],e:[2,3]},
+      {n:"Echo steps",p:"ldl.rur.",d:[2,3],e:[2,3]},
+      {n:"Tresillo jumps",p:"J..J..d.",d:[2,3],e:[2,3]},
+      {n:"Double jumps (fill)",p:"ldurJ.J.",d:[2,3],e:[2,3],end:1},
+      {n:"Roll out (fill)",p:"l.r.ldur",d:[2,3],e:[2,3],end:1},
+      /* quarter beats: Expert */
+      {n:"Gallop stream",p:"l.udr.dul.udr.du",d:[3,3],e:[2,3]},
+      {n:"Anchor sixteenths",p:"L===============/..d.u.d.u.d.udud",d:[3,3],e:[2,3]},
+      {n:"Jump stream",p:"J.d.u.d.K.l.r.l.",d:[3,3],e:[3,3]},
+      {n:"Trill burst",p:"l.r.l.r.lrlrlrl.",d:[3,3],e:[3,3]},
+      {n:"Tresillo sixteenths",p:"l..d..u..r..l.r.",d:[3,3],e:[1,3]},
+      {n:"Hold swap",p:"L=======R=======/....d.u.....u.d.",d:[3,3],e:[2,3]},
+      {n:"Ta-ka",p:"lr..du..lr..du..",d:[3,3],e:[2,3]},
+      {n:"Crossover run",p:"l.d.r.d.l.u.r.u.",d:[3,3],e:[2,3]},
+      {n:"Sixteenth roll (fill)",p:"l.d.u.r.ldurldur",d:[3,3],e:[2,3],end:1}
+    ];
+    function parse(p){var ev=[],L=p.split("/"),n=L[0].length;
+      L.forEach(function(s){for(var i=0;i<s.length;i++){var c=s[i],lo="ldur".indexOf(c),up="LDUR".indexOf(c);
+        if(lo>=0)ev.push([i,1<<lo,0]);else if(up>=0){var j=i+1;while(j<s.length&&s[j]==="=")j++;ev.push([i,1<<up,j-i]);}
+        else if(c==="J")ev.push([i,9,0]);else if(c==="K")ev.push([i,6,0]);}});
+      ev.sort(function(a,b){return a[0]-b[0];});var g=1e9;for(var k=1;k<ev.length;k++)if(ev[k][0]>ev[k-1][0])g=Math.min(g,ev[k][0]-ev[k-1][0]);
+      return{n:n,ev:ev,gap:g/n};}   /* gap: the closest two notes, as a fraction of the bar */
+    LIB.forEach(function(P,i){var q=parse(P.p);P.i=i;P.ns=q.n;P.ev=q.ev;P.gap=q.gap;P.straight=q.ev.every(function(e){return e[0]%(q.n/4)===0&&!e[2];});});   /* straight: taps on the beat only */
+    function tf(m,k){if(k&1)m=(m&6)|((m&1)<<3)|((m&8)>>3);if(k&2)m=(m&9)|((m&2)<<1)|((m&4)>>1);return m;}   /* 1 mirror left/right, 2 swap down/up */
+    function cnt(m){var c=0;for(var q=0;q<4;q++)if(m&(1<<q))c++;return c;}
+    function build(chart,diff){
+      var bt0=chart.beats||[],st=chart.steps||[];if(bt0.length<16||st.length<8)return null;
+      diff=Math.max(0,Math.min(3,diff|0));
+      var per=60000/(chart.bpm||120);
+      /* an even beat grid: the found beats wobble (some land on hits between the beats), so each grid beat is the steady tempo,
+         nudged to the median of the found beats around it */
+      var bt=[],nB=Math.ceil(((chart.dur||bt0[bt0.length-1]+per)-bt0[0])/per)+1,lo0=0;
+      for(var gi=0;gi<nB;gi++){var g=bt0[0]+gi*per,rs=[];while(lo0<bt0.length&&bt0[lo0]<g-per*8)lo0++;
+        for(var bj=lo0;bj<bt0.length&&bt0[bj]<=g+per*8;bj++){var r=(bt0[bj]-g)%per;if(r>per/2)r-=per;if(r<-per/2)r+=per;rs.push(r);}
+        rs.sort(function(a,b){return a-b;});bt.push(g+(rs.length?rs[rs.length>>1]:0));}
+      for(gi=1;gi<bt.length;gi++)if(bt[gi]<bt[gi-1]+per*0.5)bt[gi]=bt[gi-1]+per*0.5;
+      /* if the song's hits don't sit on that even grid (a loose tempo), follow the found beats as they are */
+      var onG=0,gk=0;for(var si=0;si<st.length;si++){var tt=st[si][0];while(gk<bt.length-2&&bt[gk+1]<=tt)gk++;var gg=bt[gk+1]-bt[gk],ff=(tt-bt[gk])/gg*4;if(Math.abs(ff-Math.round(ff))*gg/4<45)onG++;}
+      if(onG<st.length*0.9)bt=bt0.slice();
+      var pk=chart.peaks||[],sec=chart.sections||[],drop=chart.drop||0,seed=st.length*7+Math.round(chart.bpm||120);
+      var SW={intro:0.2,verse:0.5,chorus:0.8,breakdown:0.25,finale:1,bridge:0.55,outro:0.2};
+      function secW(ms){var w=0.5;for(var i=0;i<sec.length;i++)if(ms>=sec[i][0])w=SW[sec[i][1]]!==undefined?SW[sec[i][1]]:0.5;return w;}
+      function inPk(ms){for(var q=0;q<pk.length;q++)if(ms>=pk[q][0]&&ms<=pk[q][1])return true;return false;}
+      function I(ms){var w=secW(ms);if(inPk(ms))w=1;if(drop){var d=ms-drop;if(d>-per*6&&d<0)w=Math.min(w,0.3);else if(d>=0&&d<per*8)w=1;}return w;}
+      function bT(x){var n=bt.length;if(x<=0)return bt[0]+x*per;if(x>=n-1)return bt[n-1]+(x-(n-1))*per;var i=Math.floor(x);return bt[i]+(bt[i+1]-bt[i])*(x-i);}
+      function rnd(a,b){var h=Math.imul(a+1,73856093)^Math.imul(b+7,19349663)^Math.imul(seed,83492791);h=Math.imul(h^(h>>>15),2246822519);h^=h>>>13;return (h>>>0)/4294967296;}
+      var ons=st.map(function(s){return +s[0];}).sort(function(a,b){return a-b;});
+      function near(t){var lo=0,hi=ons.length-1;while(lo<hi){var md=(lo+hi)>>1;if(ons[md]<t)lo=md+1;else hi=md;}var d=Math.abs(ons[lo]-t);if(lo>0)d=Math.min(d,Math.abs(ons[lo-1]-t));return d;}
+      function snap(t){var lo=0,hi=ons.length-1;while(lo<hi){var md=(lo+hi)>>1;if(ons[md]<t)lo=md+1;else hi=md;}var bst=null,bd=Math.min(60,per*0.1);[lo-1,lo].forEach(function(q){if(q>=0&&q<ons.length&&Math.abs(ons[q]-t)<bd){bd=Math.abs(ons[q]-t);bst=ons[q];}});return bst;}
+      var minGap=[430,210,170,105][diff];
+      var pool=LIB.filter(function(P){return diff>=P.d[0]&&diff<=P.d[1];});
+      /* how many beats one pattern bar takes: 4, or 8 for a song too fast for this level (so a pattern is never too quick to play),
+         and 8 from the start above 150 BPM (the beat found is then really the half beat) */
+      var k=chart.bpm>150?2:1;while(k<4&&pool.filter(function(P){return P.gap*4*k*per>=minGap;}).length<6)k*=2;var B=4*k;
+      pool=pool.filter(function(P){return P.gap*B*per>=minGap;});
+      if(!pool.length)return null;
+      var lastStraight=false,first=ons[0],lastOn=ons[ons.length-1],evs=[],log=[],hist=[],A=null,tA=0,bar=0,Bb=null;
+      for(var b0=0;b0+B<=bt.length+B-1;b0+=B){
+        var t0=bT(b0),t1=bT(b0+B);if(t1<first-per*0.5){log.push("·");bar++;continue;}if(t0>lastOn+per*0.5)break;
+        var nOn=0;for(var oi=0;oi<ons.length;oi++){if(ons[oi]>=t1-per*0.1)break;if(ons[oi]>=t0-per*0.1)nOn++;}
+        var pos=bar%4;bar++;
+        if(!nOn){hist.push(-1);log.push("·");continue;}   /* no music in this bar: a rest */
+        var w=0;for(var j=0;j<B;j+=Math.max(1,k))w=Math.max(w,I(bT(b0+j)+per*0.25));
+        var tier=w>=0.95?3:w>=0.7?2:w>=0.4?1:0;if(nOn<=2)tier=0;
+        var fit=function(P){return tier>=P.e[0]&&tier<=P.e[1];};
+        var mn=[[1,2,3,3],[1,4,5,5],[2,5,6,7],[2,5,7,8]][diff][tier],dense=function(P){return P.ev.length>=mn;};   /* a busy part never gets a sparse pattern */
+        var cand=pool.filter(function(P){return fit(P)&&dense(P)&&(!P.end||pos===3);});if(!cand.length)cand=pool.filter(function(P){return fit(P)&&(!P.end||pos===3);});if(!cand.length)cand=pool.filter(function(P){return P.e[0]<=tier;});if(!cand.length)cand=pool;
+        var pick=null,tr=Math.floor(rnd(bar,3)*4);
+        if(pos===0){A=null;Bb=null;}
+        if(pos===2&&A&&fit(A)){pick=A;tr=tA^1;}   /* A': the phrase's first pattern again, mirrored */
+        else{
+          var ends=pos===3?cand.filter(function(P){return P.end;}):[];
+          if(ends.length&&rnd(bar,5)<0.65)cand=ends;
+          var best=-1e9;
+          cand.forEach(function(P){
+            var hits=0,off=0;P.ev.forEach(function(e){if(near(bT(b0+e[0]/P.ns*B))<per*0.13*Math.min(k,1.5)){hits++;if(e[0]%(P.ns/4))off++;}});
+            var sc=hits/P.ev.length+0.03*Math.min(hits,8)+0.12*off+0.45*rnd(bar*131+P.i,9);   /* landing on the song's off-beat hits counts extra */
+            if(P.straight&&P.ev.length>=4){sc-=diff>=1?(tier>=1?0.6:0.2):0.25;if(lastStraight)sc-=1;}   /* above Easy, one note a beat is a rest bar, never a run of them */
+            if(hist.slice(-3).indexOf(P.i)>=0)sc-=0.5;if(P===A||P===Bb)sc-=0.6;
+            if(sc>best){best=sc;pick=P;}});
+          if(pos===0){A=pick;tA=tr;}else if(pos===1)Bb=pick;
+        }
+        lastStraight=pick.straight&&pick.ev.length>=4;hist.push(pick.i);log.push(pick.n+(tr?" ~"+tr:""));
+        var nearDrop=diff>=1&&drop&&Math.abs(drop-t0)<per*0.6;
+        pick.ev.forEach(function(e,ei){var t=bT(b0+e[0]/pick.ns*B),m=tf(e[1],tr),h=0,sn=snap(t);if(sn!==null)t=sn;   /* onto the song's own hit when one is right there */
+          if(e[2])h=bT(b0+(e[0]+e[2])/pick.ns*B)-t;
+          if(nearDrop&&ei===0&&!h&&e[0]===0)m=9;   /* the drop lands on a jump */
+          evs.push({t:t,m:m,h:h});});
+      }
+      /* safety pass: never closer than the level allows, at most two presses at once (a held arrow counts), nothing on a held arrow */
+      evs.sort(function(a,b){return a.t-b.t||b.h-a.h;});
+      var out=[],holds=[],last=-1e9,minAbs=[400,190,140,95][diff];
+      evs.forEach(function(e){
+        holds=holds.filter(function(x){return x.end>e.t+30;});
+        if(e.t-last<20){var p=out[out.length-1];if(p&&p.length<3&&!e.h&&!holds.length&&cnt(p[1]|e.m)<=2)p[1]|=e.m;return;}
+        if(e.t-last<minAbs)return;
+        var m=e.m;holds.forEach(function(x){m&=~x.m;});
+        if(!m){var hm=0;holds.forEach(function(x){hm|=x.m;});for(var q=0;q<4;q++){var c=(Math.log2(e.m&-e.m)+2+q)%4;if(!(hm&(1<<c))){m=1<<c;break;}}if(!m)return;}
+        if(holds.length>=2)return;
+        if(holds.length+cnt(m)>2||(e.h&&cnt(m)>1))m=fairBit(m,e.t);
+        var h=e.h<per*0.75?0:Math.round(e.h);
+        out.push(h?[Math.round(e.t),m,h]:[Math.round(e.t),m]);last=e.t;if(h)holds.push({end:e.t+h,m:m});
+      });
+      /* a hold ends well before the next step on the same arrow */
+      var gapH=Math.max(per*0.5,220);
+      for(var hi=0;hi<out.length;hi++){var ho=out[hi];if(ho.length<3)continue;
+        for(var hj=hi+1;hj<out.length;hj++)if(out[hj][1]&ho[1]){var room=out[hj][0]-gapH-ho[0];if(ho[2]>room){if(room>=per*0.75)ho[2]=Math.round(room);else out[hi]=[ho[0],ho[1]];}break;}}
+      if(out.length<8)return null;
+      var c={};for(var kk in chart)c[kk]=chart[kk];c.steps=out;c.pats=log;c.patBeats=B;c.grid=bt;return c;
+    }
+    return{build:build,LIB:LIB};
+  })();
+  /* step dance: the pattern library, or (hand-made steps, or a chart too thin for it) the older pipeline */
+  function stepChart(raw,diff){if(raw&&!raw.hand){var s=SPAT.build(raw,diff);if(s)return s;}var c=easeChart(raw,diff);c=pump4(c,diff,raw);return stepMasks(c,diff);}
+  window.ukStepChart=stepChart;window.ukSPAT=SPAT;
   function boardSteps(chart,n,m){
     if(!chart)return [];
     var key=n+"|"+m;
     if(bsCache.chart===chart&&bsCache.key===key)return bsCache.out;
-    var d=diffOf(n),c=easeChart(chart,d);if(m==="keys4"||m==="keys"||m==="step"||m==="aim")c=pump4(c,d,chart);if(m==="step")c=stepMasks(c,d);var km=m==="keys"?keyLanes(c,d):m==="keys4"?keyLanes4(c,d):null,out=[];
+    var d=diffOf(n),c;if(m==="step")c=stepChart(chart,d);else{c=easeChart(chart,d);if(m==="keys4"||m==="keys"||m==="aim")c=pump4(c,d,chart);}var km=m==="keys"?keyLanes(c,d):m==="keys4"?keyLanes4(c,d):null,out=[];
     for(var i=0;i<c.steps.length;i++){
       var s=c.steps[i],lanes=[];
       if(km)lanes=km[i]||[];else for(var b=0;b<4;b++)if(s[1]&(1<<b))lanes.push(b);
@@ -4483,7 +4654,7 @@ var GAME=(function(){
     if(mode)stop(true);
     four=m==="keys4";if(four)m="keys";
     rnd=round||null;rndIdx=0;sentScore=-1;fCtl=[0,0,0,0];
-    if(window.ukLvRefresh)window.ukLvRefresh();if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart){var rawC=rnd.chart;rnd.chart=easeChart(rnd.chart,rnd.diff);if(four||m==="keys"||m==="step"||m==="aim")rnd.chart=pump4(rnd.chart,rnd.diff,rawC);if(m==="step")rnd.chart=stepMasks(rnd.chart,rnd.diff);}}clkOff=null;clkJumps=0;swoopEnd=-1e9;aimLast={t:-1e9,x:0.5,y:0.5};finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
+    if(window.ukLvRefresh)window.ukLvRefresh();if(rnd){rnd.diff=diffOf(rnd.n);if(rnd.chart){var rawC=rnd.chart;if(m==="step")rnd.chart=stepChart(rawC,rnd.diff);else{rnd.chart=easeChart(rnd.chart,rnd.diff);if(four||m==="keys"||m==="aim")rnd.chart=pump4(rnd.chart,rnd.diff,rawC);}}}clkOff=null;clkJumps=0;swoopEnd=-1e9;aimLast={t:-1e9,x:0.5,y:0.5};finger={};onFire=false;fireT=-1e9;document.getElementById("gamePanel").classList.remove("onfire");laneDown=[false,false,false,false,false,false,false];flash=[0,0,0,0,0,0,0];hype=0.3;keyCur=3;lastFreeHold=-1e9;freeHoldEnd=-1e9;
     initAudio();
     mode=m;myDance=m==="free"||m==="mosh"||m==="skate"||m==="keepy"||m==="kart"||m==="walk"||m==="pipe"||m==="ski"||m==="ctf"||m==="fish"||m==="boats"||m==="swim"||m==="ball"||m==="dragon"?4:5;
     cv=document.getElementById("gameCv");g=cv.getContext("2d");
@@ -4508,7 +4679,7 @@ var GAME=(function(){
     lastFit=0;DEVICE.fit();
     document.getElementById("gameTitle").textContent=m==="dragon"?"🐉 Dragon riders":m==="ball"?"⚪ Ball run":m==="swim"?"🐠 Coin dive":m==="fish"?"🎣 Fishing":m==="boats"?"🚤 Bumper boats":m==="ctf"?"🚩 Capture the flag":m==="ski"?"⛷ Ski":m==="pipe"?"🛹 Half pipe":m==="walk"?"💃 Dance walk race":m==="kart"?"🏍 Mars Rally":m==="keepy"?"🎈 Keepy uppy":m==="skate"?(ICE?"⛸ Ice rink":"🛼 Roller rink"):m==="mosh"?"🤘 Mosh pit":m==="free"?"🕺 Free dance":m==="aim"?"🎯 Target dance":m==="keys"?(four?"🥁 Note highway · 4 keys":"🎹 Note highway"):"⬆️ Step dance";
     if(m==="free")setTimeout(function(){if(fStyle<=0)fdPick(1);else fdRender();},0);   /* no blank freestyle: you start in the Two-step */
-    document.getElementById("moveHint").textContent=m==="dragon"?"Fly: arrows / stick · 🔥 Space / FIRE (fuller bar = bigger) · eat fire notes, E = SUPER · dodge the imps":m==="ball"?"Run with the arrows / WASD or the stick · keep away from the giant ball · last one standing wins the round":m==="swim"?"Swim with the arrows / WASD or the stick · flick the stick or click to dash that way · on the beat = PERFECT · grab the coins":m==="fish"?"Drag the water to aim · swoop up to cast · 🐟 under the float bites, ⟳ pulls it in · ❗ jerk ↓ · ⟳ to the beat ♩ · 🥅 net":m==="boats"?"Steer with the arrows / WASD or the stick · BOOST (Space) to ram · knock them off the edge, don't fall off yourself":m==="ctf"?"Arrows / WASD or the stick to run · hold SPRINT (Space) · grab their flag, bring it home · tag their carrier · block them with your body":m==="ski"?"Point to steer, click to hop · down the mountain; flag zones then jump zones; Space pops you up so you can cut onto a new line":m==="pipe"?"Tap BEAT (Space) on the beat to build speed · swipe at the lip for a dance trick · A/D to lean and spin":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Shuffle round with the arrows / WASD or the stick (push it right out sideways to T-step) · Space to jump, again in the air to double jump · Q spin · E twirl · head them up!":m==="skate"&&ICE?"Figure skating routine: you skate the path with everyone · Space (or TAP) on the beat · hold it to spin · arrows dance in the free dance · build speed, then jump on the drop":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
+    document.getElementById("moveHint").textContent=m==="dragon"?"Fly: arrows / stick · 🔥 Space / FIRE (fuller bar = bigger) · eat fire notes, E = SUPER · dodge the imps":m==="ball"?"Run with the arrows / WASD or the stick · keep away from the giant ball · last one standing wins the round":m==="swim"?"Swim with the arrows / WASD or the stick · flick the stick or click to dash that way · on the beat = PERFECT · grab the coins":m==="fish"?"Drag the water to aim · swoop up to cast · 🐟 under the float bites: ← → nudge it, ⟳ pulls it in · ❗ jerk ↓ · ⟳ to the beat ♩ · 🥅 net":m==="boats"?"Steer with the arrows / WASD or the stick · BOOST (Space) to ram · knock them off the edge, don't fall off yourself":m==="ctf"?"Arrows / WASD or the stick to run · hold SPRINT (Space) · grab their flag, bring it home · tag their carrier · block them with your body":m==="ski"?"Point to steer, click to hop · down the mountain; flag zones then jump zones; Space pops you up so you can cut onto a new line":m==="pipe"?"Tap BEAT (Space) on the beat to build speed · swipe at the lip for a dance trick · A/D to lean and spin":m==="walk"?"Keep your cursor in the circle to dance-walk to the finish":m==="kart"?"Push the stick (or WASD) the way you want to go, further is faster, pull back to reverse · Space taps DRIFT to hop, hold it through the turn":m==="keepy"?"Shuffle round with the arrows / WASD or the stick (push it right out sideways to T-step) · Space to jump, again in the air to double jump · Q spin · E twirl · head them up!":m==="skate"&&ICE?"Figure skating routine: you skate the path with everyone · Space (or TAP) on the beat · hold it to spin · arrows dance in the free dance · build speed, then jump on the drop":m==="skate"?"Skate with the arrows / WASD or the stick · JUMP with Space · in the air: hold a direction for tricks":m==="free"?(("ontouchstart" in window)?"Drag your hands and feet to dance · tap the floor to walk":"Drag your hands and feet (or D F J K) · click the floor or arrow keys to walk · Space to jump · Esc to stop"):m==="aim"?"Click each target as its ring closes on it · arrows or WASD walk · Space to stop":m==="keys"&&four?"Play each note on the beat: D F J K (or the arrows), or tap its key · Space to stop":m==="keys"?"Play each note as it lands: A S D F G H J, or tap its key · Space to stop":"Hit each arrow as it reaches the top: arrow keys or the pad · Space to stop";
     var b=document.getElementById("danceBtn");b.classList.add("on");b.innerHTML="&#128131; Stop";
     closeMenu();foot();
     var mm=me();if(mm)mm.dance=myDance;
@@ -4799,10 +4970,20 @@ var FISH=(function(){
       var pl=$("fiPulse");if(pl){pl.style.setProperty("--pc",spinRpm<8?"rgba(245,197,24,.75)":e<FT("spinWin",0.15)?"rgba(156,255,74,.8)":r<1?"rgba(90,170,255,.7)":"rgba(255,70,60,.8)");pl.classList.add("on");setTimeout(function(){pl.classList.remove("on");},90);}}}
   function windRate(){return spinQ;}
   /* a jerk of the stick: from resting (or nearly) to right out at the edge within a fifth of a second; a key press does it too */
-  var restAt=0,jerkBy=0,marlinHold=false,castAt=-1e9,lineWarn=false,biteFish=null;
+  var restAt=0,jerkBy=0,marlinHold=false,castAt=-1e9,lineWarn=false,biteFish=null,nudgeD=0;
   /* the fish out in the water: real ones. A bite only comes when one swims under your float (at the float's distance), so you line
      it up: cast to the right distance, or reel the float in to drop it into a fish's path. Further out = bigger fish. More players, more fish */
   function noFish(){return tutWanted()?false:true;}
+  /* the fishes' shadows, each kind its own shape so a sharp eye can tell what's down there (facing right: tail left, nose right) */
+  var FSHAPE={
+    0:["...###...","..#####..","#.######.","#########","#.######.","..#####..","...###..."],                       /* knifejaw: short and tall, a deep disc */
+    1:["#.....###....","##.#########.","#############","##.#########.","#.....##....."],        /* salmon: slim, a small forked tail */
+    2:[".....####....","#..########..","############.","#..#########.",".....###.#..."],         /* cod: chunky, big head, rounded tail, a chin barbel */
+    3:["#..........##.....","##################","##################","#.................."].map(function(r){return r.slice(0,18);}),   /* barracuda: very long and thin */
+    4:["#.......###.....","##..##########..","################","##..##########..","#.......###....."],   /* kingfish: a torpedo with a deep forked tail */
+    5:[".......####...........","......######..........","#.##############......","########################","#.##############......","........##............"].map(function(r){return (r+"                        ").slice(0,24).replace(/ /g,".");}),   /* marlin: a tall sail fin and a long bill */
+    6:["#........#####.....","##.#.#.##########..","###################","##.#.#.##########..","#........#####....."]   /* tuna: big and round, finlets, a big forked tail */
+  };
   function tierAt(d){return d<0.51?0:d<0.64?1:d<0.77?2:d<0.9?3:d<0.965?4:6;}
   function newFish(f,edge){f=f||{};f.d=0.33+Math.random()*0.67;var k=tierAt(f.d);if(k>0&&k<6&&Math.random()<0.3)k--;f.k=k;f.l=[3,4,5,6,7,0,8][k];f.sp=(Math.random()<0.5?-1:1)*(0.03+Math.random()*0.05);
     f.x=edge?(f.sp>0?-0.08:1.08):Math.random();f.gone=0;f.scared=0;return f;}
@@ -4813,7 +4994,7 @@ var FISH=(function(){
       f.x+=f.sp*dt*(f.scared>now?3:1);if(f.x>1.1||f.x<-0.1)newFish(f,true);});}
   function fishNear(now){var bx=bobX();for(var i=0;i<shadows.length;i++){var f=shadows[i];if(f.gone||f.scared>now)continue;if(Math.abs(f.x*W-bx)<W*0.04&&Math.abs(f.d-castD)<0.06)return f;}return null;}
   function scare(now){if(biteFish){biteFish.scared=now+3000;biteFish.sp=(biteFish.x*W>bobX()?1:-1)*Math.abs(biteFish.sp);biteFish=null;}}
-  function jerked(inp,now){var m=Math.hypot(inp.x,inp.y);if(m<0.35){restAt=now;return false;}return m>0.85&&now-restAt<220&&(restAt=-1e9,true);}
+  function jerked(inp,now){var m=Math.hypot(inp.x,inp.y);if(m<0.35){restAt=now;return false;}return m>0.85&&inp.y>0.5&&now-restAt<220&&(restAt=-1e9,true);}   /* the hook is a jerk down: a sideways flick nudges the float instead */
   function bobX(){var me2=myPx(),G3=swGeo(me2[0],me2[1]);return me2[0]+(G3.ex-me2[0])*castD;}
   function castNow(pw){power=Math.max(0,Math.min(1,pw));castD=0.35+0.65*power;D=castD;sw=null;set("cast");var now=performance.now();biteFish=null;biteAt=noFish()?Infinity:now+700+(loud()?700+Math.random()*1300:1200+Math.random()*2200);
     castAt=now;if(power>=TOP)pops.push({t:now,txt:"\u2B50 PERFECT",col:"#F5C518"});else if(power>=0.6)pops.push({t:now,txt:"GREAT",col:"#9cff4a"});}
@@ -4925,6 +5106,9 @@ var FISH=(function(){
     /* the beat on the screen's edge the whole game: yellow while casting / waiting (reeling colours it by how you're spinning) */
     var bk=Math.floor(beatNow());if(bk!==pulseK){pulseK=bk;if(st!=="reel"&&st!=="rewind"){var pl=$("fiPulse");if(pl){pl.style.setProperty("--pc","rgba(245,197,24,.7)");pl.classList.add("on");setTimeout(function(){pl.classList.remove("on");},90);}}}
     if(on&&ready())fishTick(now,dt);
+    /* waiting: flick the left stick left or right and the float twitches one small step that way, to nudge it into a fish's path
+       (each flick is one step; it spooks a fish that's nosing at it, like reeling does) */
+    if(st==="wait"&&!marlinHook){var nx0=inp.x>0.55?1:inp.x<-0.55?-1:0;if(nx0&&nx0!==nudgeD){aimX=Math.max(-1,Math.min(1,aimX+nx0*0.05));if(biteFish)scare(now),biteAt=noFish()?Infinity:biteAt;marlinHold=false;}nudgeD=Math.abs(inp.x)<0.3?0:nx0||nudgeD;}
     if(st==="wait"){spinTick(now,dt);var wr=spinRpm>8?Math.min(1.2,spinRpm/bpmNow):(spaceHeld||held.up?0.6:0);
       if(wr>0){castD=Math.max(0,castD-wr*FT("waitReel",0.16)*dt);D=castD;if(biteFish&&!marlinHook)scare(now),biteAt=noFish()?Infinity:biteAt;marlinHold=false;   /* moving the float spooks the one nosing at it */
         if(castD<0.3){castD=0.8;biteAt=Infinity;set("idle");pops.push({t:now,txt:"\u2714 READY",col:"#9cff4a"});}}
@@ -5009,7 +5193,10 @@ var FISH=(function(){
       for(var x=-W-wl*6+off;x<W*2;x+=wl*6)g.fillRect(Math.floor(x/P)*P,Math.floor(wy/P)*P,wl*2,P);}
     for(var m=0;m<10;m++){var k4=m/9,ry4=hz+(ry-hz)*k4,ww=P*(2+k4*6)*(0.6+0.4*Math.sin(now/300+m));if((Math.floor(now/200)+m)%3)continue;g.fillStyle="rgba(242,238,218,.45)";g.fillRect(Math.round(mx-ww/2),Math.floor(ry4/P)*P,Math.round(ww),P);}
     /* fish shadows out in the water */
-    shadows.forEach(function(f){if(f.gone)return;var fy0=ry-(ry-ry*0.56)*f.d,sz=1.25-0.55*f.d;g.fillStyle=f===biteFish?"rgba(5,22,45,.7)":"rgba(5,22,45,.5)";ART.PX.oval(g,f.x*W,fy0,f.l*s*sz,f.l*s*0.35*sz,0);});
+    shadows.forEach(function(f){if(f.gone)return;var fy0=ry-(ry-ry*0.56)*f.d,sz=1.25-0.55*f.d,sh=FSHAPE[f.k]||FSHAPE[2],w0=sh[0].length,h0=sh.length,
+        u=Math.max(1,Math.round(f.l*s*sz*2/w0)),fx0=Math.round(f.x*W-w0*u/2),fy1=Math.round(fy0-h0*u/2),rt=f.sp>=0||f===biteFish&&f.x*W<bobX();
+      g.fillStyle=f===biteFish?"rgba(5,22,45,.7)":"rgba(5,22,45,.5)";
+      for(var ry0=0;ry0<h0;ry0++){var row=sh[ry0];for(var cx0=0;cx0<w0;cx0++)if(row.charAt(cx0)==="#"){var cc=rt?cx0:w0-1-cx0;g.fillRect(fx0+cc*u,fy1+ry0*u,u,u);}}});   /* each kind its own shadow, nose first the way it swims */
     /* the edge of what's left of the dance floor: a jagged broken line, the floor's thickness under it, foam where it meets the water */
     /* the floor carries on past the room's edges (the camera keeps you in the middle, so near the ends you'd see past them) */
     var TT=P*16;if(bk>0)for(var fx0=-W;fx0<W*2;fx0+=TT){if(fx0>=0&&fx0<W)continue;for(var fy0=ry,rw=0;fy0<H*1.6;fy0+=TT,rw++){var ci=Math.abs(Math.floor(fx0/TT)*7+rw*13)%5;g.fillStyle=["#2a1f40","#3a2650","#25304a","#33263a","#2f2244"][ci];g.fillRect(Math.floor(fx0),Math.floor(fy0),TT,TT);g.fillStyle="#140e20";g.fillRect(Math.floor(fx0),Math.floor(fy0),TT,P);g.fillRect(Math.floor(fx0),Math.floor(fy0),P,TT);}}
@@ -8565,7 +8752,7 @@ var PRACTICE=(function(){
     (function(){var sel=$("prLevel"),i=sel.selectedIndex;if(i<0){var q=+sel.value||1;i=q<0.9?0:q<1.1?1:q<1.35?2:3;sel.selectedIndex=i;}window.ukForceDiff=i;try{localStorage.setItem("uk_lv",String(i+1));}catch(e){}if(window.ukLvRefresh)window.ukLvRefresh();})();   /* the menu picks the real difficulty: Easy, Normal, Hard, Expert */
     mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";var kflag=mode==="kflag";if(kflag)mode="ctf";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk"&&mode!=="pipe"&&mode!=="ski"&&mode!=="ctf"&&mode!=="fish"&&mode!=="boats"&&mode!=="swim";plan=null;var secs=Math.max(18,+$("prSecs").value||18),level=+$("prLevel").value;
     var nbt=+$("prBots").value||0;if(mode==="ctf"&&(nbt+1)%2)nbt++;   /* capture the flag needs even teams: one more practice dancer if you'd be odd */
-    stopSong();makeBots(nbt);
+    stopSong();makeBots(nbt);try{MENUMUSIC.kill();}catch(e){}
     document.body.classList.add("pr-busy");
     n++;
     var go=function(c){
@@ -8592,6 +8779,7 @@ var PRACTICE=(function(){
     });
   }
   function playSong(my){
+    try{MENUMUSIC.kill();}catch(e){}
     if(ytSel){YTS.play(my,function(lagMs){afterStart(my,lagMs);});return;}
     var c=Tone.getContext().rawContext;
     if(!gain){gain=c.createGain();gain.gain.value=0.9;gain.connect(c.destination);BEAT.tap(gain);}
@@ -9255,7 +9443,7 @@ var MENUMUSIC=(function(){
   /* the volume, and the fade out when you leave the menu */
   setInterval(function(){if(!a)return;var on=want()&&!muted&&started,target=0;
     if(on)target=BED*Math.min(1,(performance.now()-t0)/FADE);
-    vol=on?target:vol+(target-vol)*0.1;if(!on&&vol<0.003){vol=0;if(!a.paused)a.pause();if(!want())started=false;}setVol(vol);
+    vol=on?target:vol+(target-vol)*0.45;if(!on&&(vol<0.01||plain||!gn)){vol=0;if(!a.paused)a.pause();if(!want())started=false;}setVol(vol);   /* leaving the menu: gone in about half a second (straight away where the volume can't fade), so it never plays over a song */
     if(!started&&!muted&&want()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
   },100);
   /* the watchdog */
@@ -9282,9 +9470,11 @@ var MENUMUSIC=(function(){
   window.ukMenuMusicEnd=function(){if(a)a.dispatchEvent(new Event("ended"));return LIST[cur];};   /* test: as if the song finished */
   window.ukMenuMusicBreak=function(how){if(!a)return;if(how==="pause")a.pause();else if(how==="ctx"&&ac)ac.suspend();else if(how==="src"){a.src="songs/nope.mp3";}};   /* test: break it on purpose */
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
-  return{get on(){return started;}};
+  /* a game's song is starting: the menu music stops now, whatever state it's in */
+  function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
+  return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.134",SERVER_VERSION="";
+var PAGE_VERSION="1.82.137",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10338,7 +10528,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.134"></script>
+<script src="lab.js?v=1.82.137"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
