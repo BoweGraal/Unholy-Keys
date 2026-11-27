@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.130 — Lighter in the right hand from every angle; turn arrows moved and see-through
+
+- **Lighters up:** the lighter, phone torch and glow stick used to float behind you (at the waist) whenever you were side on or at a mirrored angle, because their position was worked out as if you faced front, and from the wrong arm. Now they sit in your raised right hand in all 8 facings.
+- **Turn arrows:** moved out to the screen edges beside the little hand controls (they fit any phone width), and now just the blue arrow shows, with no box, border or background.
+
+1. Lighters up (every move): turn round with the arrows. The lighter stays in the raised hand, side on and from behind too.
+2. The ↺ / ↻ arrows sit at the far left and right edges, level with the hand controls, as plain blue arrows.
+
 ## v1.82.129 — Turn arrows replace 90 / 180
 
 The 90 / 180 buttons are gone. In free dance there are two turn arrows instead, above the little hand controls: **↺** (left) turns you left and **↻** (right) turns you right, a quarter turn per tap. Taps while you're still turning add on: **double tap = 180°, triple tap = 270°**, as one smooth turn. The body sweeps round through the in-between angles (front → front-right → right → back-right → back…), about a tenth of a second each, and other players see the turn sweep round too. On a computer: **,** turns left and **.** turns right. WIDE stays as a small button in the middle.
