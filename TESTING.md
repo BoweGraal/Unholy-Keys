@@ -1688,6 +1688,22 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.136 — Fishing: nudge the float with the left stick; every fish has its own shadow
+
+- **Nudge:** while you wait for a bite, flick the left stick left or right and the float twitches one small step that way, so you can line it up with a fish. Each flick is one step, and it spooks a fish that's nosing at the float, as reeling does. The hook jerk is now a jerk **down** only, so a sideways flick never counts as an early jerk.
+- **Shadows:** each kind of fish has its own pixel silhouette, nose first the way it's swimming, so a keen eye can pick the best one:
+  - **Knifejaw:** short and tall, a deep disc.
+  - **Salmon:** slim, with a small forked tail.
+  - **Cod:** chunky, big head, rounded tail.
+  - **Barracuda:** very long and thin.
+  - **Kingfish:** a torpedo with a deep forked tail.
+  - **Marlin:** a tall sail fin and a long bill.
+  - **Tuna:** big and round, with finlets and a big forked tail.
+
+1. Cast, then flick the left stick left or right: the float moves a little each time.
+2. Look at the shadows: the shapes differ, and the far-out ones (marlin, tuna) are the big ones.
+3. A jerk down still hooks on ❗; sideways flicks don't.
+
 ## v1.82.135 — No more two songs at once in practice
 
 When you left a game early, the dance floor's menu music came back (as intended). But when you then started another game, the menu music only faded out slowly, over about 4½ seconds. On iPhones the fade did nothing at all, because Safari ignores volume changes on that kind of audio player, so the menu track played at full volume over the new game's song. Now the menu music stops the moment a game starts (and again when its song starts, in case anything brought it back), and anywhere else it fades in about half a second.
