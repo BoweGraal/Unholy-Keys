@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.132"></script>
-<script src="tune.js?v=1.82.132"></script>
-<script src="gfx.js?v=1.82.132"></script>
-<script src="art.js?v=1.82.132"></script>
-<script src="qr.js?v=1.82.132"></script>
-<script src="voice.js?v=1.82.132"></script>
-<script src="instruments.js?v=1.82.132"></script>
-<script src="kart.js?v=1.82.132"></script>
-<script src="explain.js?v=1.82.132"></script>
+<script src="px8.js?v=1.82.133"></script>
+<script src="tune.js?v=1.82.133"></script>
+<script src="gfx.js?v=1.82.133"></script>
+<script src="art.js?v=1.82.133"></script>
+<script src="qr.js?v=1.82.133"></script>
+<script src="voice.js?v=1.82.133"></script>
+<script src="instruments.js?v=1.82.133"></script>
+<script src="kart.js?v=1.82.133"></script>
+<script src="explain.js?v=1.82.133"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3843,7 +3843,9 @@ var GAME=(function(){
         if(shufT&&!isFS){var spS=TUNE.v("walk.speed")*fdt*0.6;fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+shufT*spS));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}
         else if(!shufT&&!shufSpin&&!isFS&&lm>0.18){   /* otherwise the stick walks you around the floor, any direction, while the running man keeps going */
           var k9=Math.min(1,(lm-0.18)/0.77),sp9=TUNE.v("walk.speed")*fdt*0.55*k9;fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+lx/lm*sp9));fm.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),fm.ty+ly/lm*sp9*(W/H)));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
-      else if(lm>=0.92&&fStyle!==7&&!(mySpin.on&&mySpin.left)){var ff=ROUND.featured(),isF=ff&&ff.id===myId,k2=0.75,   /* the left stick keeps you planted (it angles you, below); pushed right to the edge, you walk */sp2=TUNE.v("walk.speed")*fdt*0.55*k2;
+      else if(fStyle===7&&Math.abs(lx)>0.3&&!(mySpin.on&&mySpin.left)){var ffw=ROUND.featured();if(!(ffw&&ffw.id===myId)){var spw=TUNE.v("walk.speed")*fdt*0.55*0.4*Math.min(1,(Math.abs(lx)-0.3)/0.5);   /* the worm: the left stick wriggles you along the floor, left or right */
+        fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+(lx>0?1:-1)*spw));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}
+      else if(lm>=0.92&&fStyle!==7&&!(mySpin.on&&mySpin.left)){var ff=ROUND.featured(),isF=ff&&ff.id===myId,k2=1.15,   /* (a bit quicker than a stroll) */   /* the left stick keeps you planted (it angles you, below); pushed right to the edge, you walk */sp2=TUNE.v("walk.speed")*fdt*0.55*k2;
         if(!isF){fm.tx=Math.max(0.03,Math.min(0.97,fm.tx+lx/lm*sp2));fm.ty=Math.max(FLOOR_TOP+0.05,Math.min(floorMaxY(),fm.ty+ly/lm*sp2*(W/H)));fm.x+=(fm.tx-fm.x)*TUNE.v("walk.ease");fm.y+=(fm.ty-fm.y)*TUNE.v("walk.ease");sendPos(fm.tx,fm.ty);}}}
   }
   /* ---------- free dance ----------
@@ -9282,7 +9284,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.132",SERVER_VERSION="";
+var PAGE_VERSION="1.82.133",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10270,7 +10272,8 @@ function renderLoop(){
       /* ...and the turn arrows turn you from there, on top: holding the stick (angled, or walking) and tapping a turn arrow still turns you */
       if(cdn===4&&cfd&&GAME.mode==="free"&&!(rpo&&rpo.dir!==undefined)&&!(ids[i]===myId&&GAME.spinDir>=0)&&!(ids[i]!==myId&&fdSpinDir(cfd)>=0)){
         var me9=ids[i]===myId,base9=0;
-        if(fdTurn(wk,me9,vx,vy,pnow))base9=wk.face|0;
+        if(cfd.s===7&&cfd.c&&Math.abs((cfd.cs||cfd.c)[0])>30)base9=(cfd.cs||cfd.c)[0]>0?1:3;   /* the worm faces the way you're wriggling it */
+        else if(fdTurn(wk,me9,vx,vy,pnow))base9=wk.face|0;
         else if(cfd.c&&cfd.s!==9&&cfd.s!==7){var ax9=(cfd.cs||cfd.c)[0]/100,ay9=(cfd.cs||cfd.c)[1]/100;if(Math.hypot(ax9,ay9)<0.92&&Math.abs(ax9)>0.3)base9=ax9>0?4:7;}
         var ti9=me9?GAME.turnI:(cfd.ti!==undefined?cfd.ti:-999),add9=ti9!==-999?ti9:(cfd.b?2*[0,2,1,3][cfd.b]:0),S8F=[0,4,1,5,2,6,3,7];   /* mid-turn: how far round the sweep is; otherwise where the arrows left you */
         AVDIR=S8F[(((S8F.indexOf(base9)+add9)%8)+8)%8];}
@@ -10333,7 +10336,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.132"></script>
+<script src="lab.js?v=1.82.133"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.133 — The worm faces the way it wriggles; quicker walking at the stick's edge
+
+- **The worm:** pushing the left stick left or right wriggles you across the floor (a slow crawl), and the worm faces the way you're going: head first to the right when you push right, to the left when you push left. Before, moving right could leave it facing left.
+- **Walking:** pushing the left stick right to the edge now walks you about 15% quicker than before.
+
+1. The worm: hold the left stick right. It crawls right, head first. Hold it left: it turns and crawls left.
+2. Any other dance: push the left stick to the edge. You walk a little quicker than before.
+
 ## v1.82.132 — Turn arrows swapped sides
 
 The turn arrows trade places: **↻ (turn right)** is now at the left edge and **↺ (turn left)** at the right edge.
