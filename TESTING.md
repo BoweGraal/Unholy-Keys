@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.120 — Headbang shows from the side; the worm loops cleanly
+
+- **Headbang, side on:** a bowed head only used to drop 3 pixels, which you can't see from the side. Seen side on, the head now pitches forward over the chest and the shoulders lean in after it, then it snaps back on the lift. The other headbang moves (hair windmill, air guitar, rock on) get it too, and so does any move that nods. The front view is unchanged.
+- **The worm loop:** it used to inch sideways for 4 beats and then jump back to its spot in a single frame. Now the body surges forward as the chest pushes up and settles back as the hips flick, so every wave ends exactly where it began. The motion also follows a smooth curve through the key poses instead of pausing at each one. In a check through the whole cycle, nothing moves more than about 0.4 px per 1/100 of a beat.
+
+1. Free dance, **Headbang**, then walk left or right so you're side on: the head clearly whips forward and down on each beat.
+2. **The worm** (Forward and Back): a steady, flowing wave with no snap back at any point.
+
 ## v1.82.119 — The worm, rebuilt as a bending body
 
 The worm used to be the standing sprite tipped on its side, so it couldn't bend: the hips could never go up while the chest stayed down, which is the whole move. Now it's drawn as a jointed body seen side on: a torso, thigh + shin and upper arm + forearm, with your own side-view head (your hair, hat and face). The wave is keyed to three clips (a ballroom floor, a UFC celebration, a wrestling ring), one full wave every 2 beats:
