@@ -1688,6 +1688,20 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.146 — Dungeon: the sword stays in the hand, a slash tail, a lunge, checked in all 8 directions
+
+- **In the hand:** the sword is now drawn in the avatar's real right hand, the way the lighter is. The arm reaches along the blade through the whole slash, so the grip never leaves the fist.
+- **Tail:** the big crescent is gone. A short tail of fading afterimages trails the blade (4 in a swing, 6 in a spin), and the spin keeps a ring of sparks.
+- **Lunge:** each swing carries you a step forward in the way you face. The practice dancers lunge too.
+- **All 8 directions:** every facing does the same move, turned. It starts on the sword-hand side, sweeps 140° across the front and ends on the other side, always with the same hand.
+  - The views facing left are drawn as the right-facing ones flipped, so the hand and arm are worked out in the flipped view.
+  - Facing away, the blade is drawn behind the body.
+  - Checked frame by frame (start, a third, two thirds, end, charge, spin) in front, front-right, right, back-right, back, back-left, left and front-left.
+
+1. Dungeon: swing facing each of the 8 ways. The blade stays in the fist, sweeps across the front with a short tail, and you lunge forward a step.
+2. Face up (away): the sword passes behind your back.
+3. Hold to charge: the blade points ahead and sparkles. Let go: a full spin with the sword in your hand.
+
 ## v1.82.145 — Dungeon (new game): swords, spiders and the spin attack
 
 - **Dungeon** (new game, under Team in practice, also in the crowd vote): the dance floor becomes a stone dungeon seen from above, in the style of A Link to the Past.

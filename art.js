@@ -623,6 +623,7 @@ var ART=(function(){
     var c=drawSprite(L,s);TOFF=null;var q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
     if(NEON){g.save();g.shadowColor=neonCol(L);g.shadowBlur=6*q;}
+    var swB=st.prop==="sword"&&st.sword&&[2,5,6].indexOf(s.dir)>=0;if(swB)handProp(g,x,y,q,dx,bob,s,st);   /* facing away: the blade is beyond them, behind the body */
     if(st.rot){
       /* the whole body turned (the worm: lying on the floor), resting on the floor rather than floating */
       g.save();g.translate(Math.round(x+dx),Math.round(y+8*q*Math.abs(Math.sin(st.rot))+bob));g.rotate(st.rot);if(SX!==1)g.scale(SX,1);   /* still facing left (or squeezed) while leaning */
@@ -632,8 +633,8 @@ var ART=(function(){
     }else g.drawImage(c,Math.round(x+dx-OX*q),Math.round(y-OY*q+bob),CWD*q,CHT*q);
     if(NEON)g.restore();
     g.imageSmoothingEnabled=was;
-    if(st.prop)handProp(g,x,y,q,dx,bob,s,st);
-    else if(L.held&&!st.rot&&!st.skates)heldInst(g,x,y,q,dx,bob,L.held|0,s.dir,SX);
+    if(st.prop&&!swB)handProp(g,x,y,q,dx,bob,s,st);
+    else if(!st.prop&&L.held&&!st.rot&&!st.skates)heldInst(g,x,y,q,dx,bob,L.held|0,s.dir,SX);
   }
   /* ---------------- the worm, drawn as a jointed body seen side on ----------------
      The standing sprite can't bend at the hips, and the worm is all hips, so this builds the figure from parts: a torso,
@@ -724,6 +725,21 @@ var ART=(function(){
       g.save();g.translate(X,Y);g.rotate(-ga*0.2);g.fillStyle=gc2;g.fillRect(Math.round(-q),Math.round(-q*7),q*2,q*7);
       g.shadowBlur=0;g.fillStyle="rgba(255,255,255,.75)";g.fillRect(Math.round(-q*0.5),Math.round(-q*6.5),q,q*6);g.restore();
       g.globalCompositeOperation="lighter";var gg=PX.rg(g,X,Y-q*4,0,X,Y-q*4,q*12);gg.addColorStop(0,gc2+"55");gg.addColorStop(1,gc2+"00");g.fillStyle=gg;g.fillRect(X-q*12,Y-q*16,q*24,q*24);
+    }else if(st.prop==="sword"&&st.sword){
+      /* the dungeon sword, gripped in the real right hand: a short tail of fading afterimages behind the blade as it swings */
+      /* the hand from the drawn (possibly mirrored) right arm: a view facing left is drawn as the right-facing one flipped, so
+         the hand's x flips too; the blade's angle is on screen already */
+      var sD=s.dir|0,sbk=[2,5,6].indexOf(sD)>=0,sside=sD===1||sD===3,sa0=s.armR,sn=Math.max(3,Math.min(9,s.lenR||9)),shx=sside?-Math.sin(sa0)*sn:(sbk?-1:1)*(6.5-Math.sin(sa0)*sn);if(s.mir)shx=-shx;
+      X=shx*q;Y=(-4.5+Math.cos(sa0)*sn)*q;
+      var sw=st.sword,L0=sw.len*q,ca=Math.cos(sw.a),sa=Math.sin(sw.a);
+      for(var ti=sw.tail;ti>=1;ti--){var ta=sw.a-sw.dir*ti*0.17,tb=ta+sw.dir*0.17;g.globalAlpha=0.42*(1-ti/(sw.tail+1));g.fillStyle=sw.spin?"#9fdcff":"#d4efff";
+        g.beginPath();g.moveTo(X+Math.cos(ta)*q*3,Y+Math.sin(ta)*q*3);g.lineTo(X+Math.cos(ta)*L0,Y+Math.sin(ta)*L0);g.lineTo(X+Math.cos(tb)*L0,Y+Math.sin(tb)*L0);g.lineTo(X+Math.cos(tb)*q*3,Y+Math.sin(tb)*q*3);g.closePath();g.fill();}
+      g.globalAlpha=1;var bx=X+ca*q*2.5,by=Y+sa*q*2.5,ex=X+ca*L0,ey=Y+sa*L0;g.lineCap="square";
+      g.strokeStyle="#5a3a1a";g.lineWidth=q*1.4;g.beginPath();g.moveTo(X-ca*q,Y-sa*q);g.lineTo(bx,by);g.stroke();   /* the grip, in the fist */
+      g.strokeStyle="#1d2638";g.lineWidth=q*2.4;g.beginPath();g.moveTo(bx,by);g.lineTo(ex,ey);g.stroke();
+      g.strokeStyle=sw.glow?"#fff6a8":"#e4ecf7";g.lineWidth=q*1.3;g.beginPath();g.moveTo(bx,by);g.lineTo(ex,ey);g.stroke();
+      g.strokeStyle="#c9a227";g.lineWidth=q*1.3;g.beginPath();g.moveTo(bx-sa*q*2.6,by+ca*q*2.6);g.lineTo(bx+sa*q*2.6,by-ca*q*2.6);g.stroke();   /* the crossguard */
+      if(sw.glow&&Math.floor((st.now||Date.now())/80)%2){g.fillStyle="#fff";g.fillRect(Math.round(ex-q*2),Math.round(ey-q*0.5),q*4,q);g.fillRect(Math.round(ex-q*0.5),Math.round(ey-q*2),q,q*4);}   /* charged: it sparkles */
     }else if(st.prop==="phone"){
       /* the torch's glow in stepped pixel rings; from behind (facing the stage) it shines away from us, so it's fainter and up */
       var gy0=Y-q*(bk?6:3),gk=bk?0.55:1;g.globalCompositeOperation="lighter";
@@ -2986,6 +3002,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       mem.t=now;mem.aL=aL;mem.aR=aR;
       bL-=Math.max(-0.55,Math.min(0.55,(mem.vL||0)*0.05));bR-=Math.max(-0.55,Math.min(0.55,(mem.vR||0)*0.05));}
     return[bL,bR];}
-  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.145",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,wormPose:function(ph){return wPose(ph,0,0);},joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.146",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,wormPose:function(ph){return wPose(ph,0,0);},joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
