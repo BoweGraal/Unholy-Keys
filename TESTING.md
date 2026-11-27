@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.122 — The Shuffle spins from a stick circle too
+
+Circling the left stick now works in the Shuffle as well: a full circle (or pushing to the top edge, as before) starts the T-step stomp spin, and it spins the way you're circling: clockwise right, anticlockwise left. Keep circling to keep it going; let go to finish the turn.
+
+1. Free dance, **Shuffle**: circle the left stick clockwise. It stomps and spins right, and keeps going while you circle.
+2. Circle anticlockwise: it spins left.
+3. Let go: it finishes the turn and goes back to the running man.
+
 ## v1.82.121 — Dance facings audit; spin by circling the left stick
 
 **Audit.** I rendered every dance and every sub-move in all 8 facings at 4 points in the beat. That's 16 dances, 72 sub-moves and about 2,300 poses, drawn through the game's own character drawing. An automatic check looked for blank or cut-off sprites (none, apart from a glow stick reaching past the box, which is fine). Fixes:

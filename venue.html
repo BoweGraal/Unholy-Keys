@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.121"></script>
-<script src="tune.js?v=1.82.121"></script>
-<script src="gfx.js?v=1.82.121"></script>
-<script src="art.js?v=1.82.121"></script>
-<script src="qr.js?v=1.82.121"></script>
-<script src="voice.js?v=1.82.121"></script>
-<script src="instruments.js?v=1.82.121"></script>
-<script src="kart.js?v=1.82.121"></script>
-<script src="explain.js?v=1.82.121"></script>
+<script src="px8.js?v=1.82.122"></script>
+<script src="tune.js?v=1.82.122"></script>
+<script src="gfx.js?v=1.82.122"></script>
+<script src="art.js?v=1.82.122"></script>
+<script src="qr.js?v=1.82.122"></script>
+<script src="voice.js?v=1.82.122"></script>
+<script src="instruments.js?v=1.82.122"></script>
+<script src="kart.js?v=1.82.122"></script>
+<script src="explain.js?v=1.82.122"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3775,13 +3775,13 @@ var GAME=(function(){
      (faster); keep circling to keep it going, let go and you finish the turn you're on. (Replaces the Spin / Twirl buttons) */
   var lsC={a:null,acc:0,t:0};
   function stickSpin(now){var lx=fCtl[0],ly=fCtl[1],m=Math.hypot(lx,ly);
-    if(mySpin.on||fStyle<=0||fStyle===9||fStyle===7||m<0.6){lsC.a=null;if(m<0.6)lsC.acc=0;return;}   /* (the Shuffle spins its own way; the worm's on the floor) */
+    if(mySpin.on||fStyle<=0||fStyle===7||m<0.6){lsC.a=null;if(m<0.6)lsC.acc=0;return;}   /* (the worm's on the floor) */
     var a=Math.atan2(ly,lx);if(lsC.a!==null){var d=a-lsC.a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;
       if(d*lsC.acc<0&&Math.abs(d)>0.05)lsC.acc=0;   /* changed direction: start counting again */
       if(Math.abs(d)>0.03)lsC.t=now;else if(now-lsC.t>500)lsC.acc=0;   /* stopped circling */
       lsC.acc+=d;}
     lsC.a=a;
-    if(Math.abs(lsC.acc)>=Math.PI*2){var cw=lsC.acc>0;spinStart(cw?"twirl":"spin");mySpin.vel=(cw?1:-1)*Math.abs(mySpin.vel)*(cw?0.8:1);mySpin.left=true;mySpin.pa=a;lsC.acc=0;lsC.a=null;applyToMe();sendPose(true);}}
+    if(Math.abs(lsC.acc)>=Math.PI*2){var cw=lsC.acc>0;spinStart(cw?"twirl":"spin");mySpin.vel=(cw?1:-1)*Math.abs(mySpin.vel)*(cw?0.8:1);mySpin.left=true;mySpin.pa=a;lsC.acc=0;lsC.a=null;if(fStyle===9){shufSpin=true;shufArm=false;shufT=0;}applyToMe();sendPose(true);}}   /* the Shuffle: it's the T-step stomp spin */
   window.ukStickSpin=function(){return{on:mySpin.on,left:!!mySpin.left,vel:+mySpin.vel.toFixed(2),acc:+lsC.acc.toFixed(2)};};
   function fdSpring(){
     stickSpin(performance.now());spinStep(performance.now());
@@ -3801,7 +3801,7 @@ var GAME=(function(){
     if(fm&&fStyle>0&&fdt>0){var lx=fCtl[0],ly=fCtl[1],lm=Math.hypot(lx,ly);
       if(fStyle===9){   /* the Shuffle, the same as in the games (Keepy uppy): a steady running man while you move around; the stick pushed right out sideways is the T-step, travelling that way */
         var wasT=shufT;shufT=!shufSpin&&Math.abs(lx)>0.85&&Math.abs(lx)>=Math.abs(ly)*0.8?(lx<0?-1:1):0;
-        if(ly<-0.85&&shufArm&&!mySpin.on){shufArm=false;shufSpin=true;spinStart("spin");mySpin.vel=-Math.abs(mySpin.vel);mySpin.pa=Math.atan2(ly,lx);applyToMe();sendPose(true);}   /* up to the top edge: a T-step stomp on the spot that spins you round; circle the stick to keep it going */
+        if(ly<-0.85&&shufArm&&!mySpin.on){shufArm=false;shufSpin=true;spinStart("spin");mySpin.vel=(lsC.acc>0.4?1:-1)*Math.abs(mySpin.vel);mySpin.pa=Math.atan2(ly,lx);lsC.acc=0;applyToMe();sendPose(true);}   /* up to the top edge: a T-step stomp on the spot that spins you round; circle the stick to keep it going */
         if(ly>-0.3&&!shufSpin)shufArm=true;   /* bring the stick back down (once the spin's done) before you can spin again */
         if(wasT!==shufT){applyToMe();sendPose(true);}
         var ffS=ROUND.featured(),isFS=ffS&&ffS.id===myId;
@@ -9247,7 +9247,7 @@ var MENUMUSIC=(function(){
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   return{get on(){return started;}};
 })();
-var PAGE_VERSION="1.82.121",SERVER_VERSION="";
+var PAGE_VERSION="1.82.122",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10255,7 +10255,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.121"></script>
+<script src="lab.js?v=1.82.122"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
