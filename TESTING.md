@@ -1688,6 +1688,59 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.145 — Dungeon (new game): swords, spiders and the spin attack
+
+- **Dungeon** (new game, under Team in practice, also in the crowd vote): the dance floor becomes a stone dungeon seen from above, in the style of A Link to the Past.
+  - **The room:** stone walls, torches that flare on the beat, a door on each side.
+- **Spiders** (the starter mob): they hop at the nearest player on the beat. Some hop bigger. From room 4, some are big ones with 3 HP.
+- **Sword:** SWORD, Space or the controller's A swings a swoopy 140° arc the way you face. You keep facing that way while the blade is out.
+- **Spin attack:** keep holding after the swing and the sword charges. It sparkles at the tip when ready (about 0.65 s); let go for a full-circle spin that hits everything round you for double damage. Let go early and nothing happens, as in Zelda.
+- **Hearts:** you have 3. A spider bite costs one, knocks you back and makes you blink for 1.2 s. Lose all three and you're down for 2.5 s (−50 points), then back with full hearts.
+- **Rooms:** clear one (+100) and the right-hand door opens. Walk through it and the screen slides sideways into the next room, which has more spiders.
+- **Points:** 25 per spider, 40 per big one.
+- **Practice dancers:** they hunt spiders and swing at them.
+- **Multiplayer note:** each phone runs its own spiders for now.
+- **Server:** accepts the new mode (redeploy Render).
+
+1. Practice → Team → Dungeon. Tap SWORD next to a spider to kill it in 2 hits.
+2. Hold SWORD until it sparkles, then let go: you spin and hit everything round you.
+3. Clear the room, walk through the right door: the screen slides into room 2.
+4. Controller: A swings, hold A to charge, release for the spin.
+
+## v1.82.144 — Controller support (first pass) + TV practice
+
+- **Controllers:** any controller the browser sees works. Two-stick controllers get everything, and controllers that report a non-standard layout fall back to a basic one.
+  - **Sticks:** the left stick is the on-screen stick (walk, steer, swim, fly). The right stick is the second stick where a game has one; in free dance that's your hands.
+  - **D-pad:** the arrow keys.
+  - **Buttons:** they press the keys a computer player would, so every game that plays from a keyboard plays from a controller.
+    - A = Space, the main action (jump, fire, cast, boost; held: reel or sprint)
+    - B = E, X = Q, Y = F
+    - LB / RB turn 90° in free dance
+    - LT / RT = Shift (sprint or drift)
+    - Start skips the countdown timer
+    - Back = Esc
+  - **Step dance and the 4-key highway:** the face buttons are arrows too (X ←, A ↓, Y ↑, B →), so it plays like a dance pad.
+  - **Free dance:** Y picks the next dance and B the next move.
+  - **Half pipe:** the left stick leans (A / D).
+- **Menus:** off the dance floor, the d-pad or left stick moves a yellow highlight between buttons, A presses it and B goes back.
+- **TV practice (new main-menu button):** practice laid out for a big screen and a controller. It opens the practice menu, greys out the games that need a phone (target dance, the 7-key highway, dance walk race, ski, ocean fishing), and shows a strip along the bottom with what each button does in the current game.
+
+1. On a computer, plug in a two-stick controller and open the main menu. A "Controller connected" note appears and the d-pad moves the highlight.
+2. Go to 🎮 TV practice, pick a game and a song with the controller, then Start to skip the timer.
+3. Free dance: the left stick moves your feet and walks you at the edge, the right stick moves your hands, Y gives the next dance.
+4. Step dance: hit the arrows with the d-pad or X A Y B.
+5. Dragon, Ball run, Keepy uppy, CTF, Kart, Boats, Pool fishing: the left stick moves you and A is the action.
+
+## v1.82.143 — Dragon spin breathes a fire barrier
+
+- **What it does:** the corkscrew spin now breathes a small ring of dragon fire round your dragon for 0.8 s.
+  - The organ boss's flaming notes that touch it burn up (BLOCKED).
+  - Imps, skulls, bats and gargoyles that fly into it take a hit and get knocked back. Ones that die give their usual points.
+- **What it looks like:** the ring puffs out fast, holds, then thins away, with sparks circling.
+- **Cooldown:** the gap between spins is now 1.65 s instead of 1.1 s, so the barrier can't be chained into a permanent shield.
+
+1. Dragon riders: flick ↑ then ↓ as enemies or boss notes reach you. They burn up on the ring instead of hitting you.
+
 ## v1.82.142 — Capture the flag: team colours, a bigger team disc, no shaking when standing; Skip fallback
 
 - **Team colours:** everyone in capture the flag now wears their team's colour (red or blue shirt), so you can tell the teams apart at a glance.
