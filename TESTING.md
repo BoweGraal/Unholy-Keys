@@ -1688,6 +1688,18 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.123 — Turning mid-dance carries the step straight on
+
+Every facing already shares the dance's beat, so the step was in time. But the view or move changing used to jump to the new pose. Now:
+- **Any turn or switch eases from the old pose to the new one over about a sixth of a second:** the 90 / 180 buttons, a stick spin, turning round while walking, or switching dance or move. Arms and legs carry on from where they were and swing into the new view. It only smooths the change itself; the dance's own sharp hits aren't softened.
+- **Spins hold the dance where it was:** the stick steering the spin (the left one for a stick-circle spin) used to snap that part of the dance to neutral the moment you started spinning, and back when you stopped. Now it keeps its pre-spin value until the spin ends.
+- A side-on move flipping sides (the moonwalk glide, for one) no longer jumps sideways.
+
+1. Free dance, Running man: walk right, then left. The turn reads as one motion, with no pop.
+2. Tap 90 and 180 mid-step: the body turns and the limbs carry on.
+3. Circle the left stick to spin and let go: no jump into or out of the spin, and the dance picks straight up.
+4. Switch between moves (Classic → Fast → Moonwalk): each change eases in.
+
 ## v1.82.122 — The Shuffle spins from a stick circle too
 
 Circling the left stick now works in the Shuffle as well: a full circle (or pushing to the top edge, as before) starts the T-step stomp spin, and it spins the way you're circling: clockwise right, anticlockwise left. Keep circling to keep it going; let go to finish the turn.
