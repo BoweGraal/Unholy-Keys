@@ -614,7 +614,7 @@ var ART=(function(){
      st: {armL, armR, legL, legR, bob (screen px, negative is up), mouth} */
   function drawChar(g,x,y,p,L,st){
     if(HIDECHAR)return;st=st||{};if(!L)L=random(7);
-    if(st.worm!==undefined&&st.worm!==null){drawWorm(g,x+(st.dx||0),y,p,L,st.worm,st.wface||1,st.wcl||0,st.whl||0);return;}   /* the worm: its own jointed side-on body */
+    if(st.worm!==undefined&&st.worm!==null){drawWorm(g,x+(st.dx||0),y+(st.wlift||0),p,L,st.worm,st.wface||1,st.wcl||0,st.whl||0);return;}   /* the worm: its own jointed side-on body */
     var s={snorkel:!!st.snorkel,armL:st.armL!==undefined?st.armL:0.15,armR:st.armR!==undefined?st.armR:-0.15,legL:st.legL||0,legR:st.legR||0,mouth:!!st.mouth,lenL:st.lenL,lenR:st.lenR,bendL:st.bendL||0,bendR:st.bendR||0,legLenL:st.legLenL,legLenR:st.legLenR,knee:st.knee,butt:st.butt,bj:st.bj,bsx:st.bsx,bsy:st.bsy,head:st.head||0,swing:st.swing,skates:st.skates==="ice"?"ice":!!st.skates};
     /* which way they face: 0 front, 1 facing right, 2 back, 3 facing left (the right-facing side view, mirrored) */
     /* 0 front, 1 right, 2 back, 3 left, 4 front-right, 5 back-right, 6 back-left, 7 front-left; the left ones are the right ones mirrored */
@@ -1940,7 +1940,7 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     {name:"Running man",icon:"\uD83C\uDFC3",subs:["Classic","Fast","Moonwalk","Arms pump"],help:"Side-on: the knees take turns coming up as the other foot slides back. Left stick: run around the floor. Right stick: up lifts the knees higher, left and right pump the arms."},
     {name:"Skank",icon:"\uD83C\uDFBA",subs:["Classic","Windmill","Pogo","Elbows","Kicks"],help:"Left stick: skank around the floor, up kicks the knees higher. Right stick: up throws bigger punches."},
     {name:"Robot",icon:"\uD83E\uDD16",subs:["Arms","Wave","Pop","Freeze"],help:"Left stick: walk like a robot, and your left arm points the way you go. Right stick: point your right arm."},
-    {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop","Dive in"],help:"Left stick: wriggle across the floor, up lifts your chest. Right stick: up kicks your hips up."},
+    {name:"The worm",icon:"\uD83D\uDC1B",subs:["Forward","Back","Flop"],help:"It starts with a dive in. Left stick: wriggle across the floor, up lifts your chest. Right stick: up kicks your hips up. Flick the left stick down and up: a big push up into the air."},
     {name:"Silly",icon:"\uD83E\uDD2A",subs:["Chicken","Sprinkler","YMCA","Floss","Macarena"],help:"Left stick: wander around doing it. Right stick: up and down for the bounce."},
     {name:"Shuffle",icon:"\uD83D\uDC5F",subs:["Running man","T-step","Spin","Mix it up"],help:"Left stick: slide around as you step (flip it to slide back). Right stick: UP = step up on your toes, DOWN = low stomp, sideways = arms."},
     {name:"Thriller",icon:"\uD83E\uDDDF",start:1,subs:["Zombie arms","Claw walk","Shoulder pop","Mix it up"],help:"Left stick: lurch around the floor. Right stick: lean and reach your arms."},
@@ -1979,14 +1979,14 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       if(sub===1){   /* drop it (from a clip): turned round, wide stance, bent over with hands on the thighs, the butt popping
                         down-up every half beat with the hips tilting side to side each beat, and a full drop low on beat 4 */
         var lv3=Math.max(-1,Math.min(1,by)),am3=1+Math.abs(bx)*1.2,e3=bp*2,ph3=e3-Math.floor(e3),
-            pp=ph3<0.2?ph3/0.2:1-(ph3-0.2)/0.8,pop=pp*pp*(3-2*pp),br=((bp%4)+4)%4,drop=br>=3?Math.sin((br-3)*Math.PI):0,sd3=(Math.floor(bp)%2)?1:-1;
+            pp=ph3<0.2?ph3/0.2:1-(ph3-0.2)/0.8,pop=pp*pp*(3-2*pp),drop=1,   /* dropped: it stays down low (the button turns to Pop it, which brings you back up to Wiggle) */sd3=(Math.floor(bp)%2)?1:-1;
         o.dir=2;o.knee=1;o.legL=0.3;o.legR=-0.3;   /* feet planted at hip width: the drop comes from bending the knees, not spreading */
         o.lgL=o.lgR=Math.max(4.3,6.3-Math.max(0,lv3)*1.1-pop*0.6*am3-drop*1.8);o.bob=-hop;   /* plant() sinks the body onto the bent legs */
         o.head=Math.max(0.15,0.6+lv3*0.3+drop*0.2);
         o.armL=0.5;o.armR=-0.5;o.alL=o.alR=6;   /* hands on the thighs */
         o.butt=0.8+Math.max(0,lv3)*0.4+drop*0.4+pop*0.2;o.bj=pop>0.5?sd3:0;   /* sticking out, the cheek on one side bouncing on each pop */
         if(Math.hypot(bx,by)>0.2){o.bsx=bx*2.6;o.bsy=by*1.6;}o.rot=0;o.dx=0;}   /* no body sway: the right stick moves the butt itself */
-      if(sub===0||sub===3){   /* wiggle / fast: turned round, bent forward with hands on the knees, the body held steady and just the
+      if(sub===0||sub===2||sub===3){   /* wiggle / fast (and hands up, below): turned round, bent forward with hands on the knees, the body held steady and just the
                                  butt shaking left-right to the beat (a snap each half beat; Fast twice as quick) */
         var e2=bp*(sub===3?4:2),ph2=e2-Math.floor(e2),sn2=ph2<0.3?(function(x){return x*x*(3-2*x);})(ph2/0.3):1,sd2=(Math.floor(e2)%2)?1:-1,hip=sd2*(2*sn2-1)*-1;
         o.dir=2;o.head=0.55;o.knee=1;o.legL=0.24;o.legR=-0.24;o.lgL=o.lgR=5.6;o.dx=0;o.rot=0;   /* no side-to-side sway: the body only goes up and down with the butt */
@@ -1996,7 +1996,10 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
         if(Math.hypot(bx,by)>0.2){o.bsx=bx*2.6;o.bsy=by*1.6;o.bj=0;}else{o.bsx=hip*1.6;o.bsy=sn2<1?1:0;o.bj=sn2<1?0:(hip>0?1:-1);}
         /* the body rides up and down with the butt: dips on each snap, sinks when you push the butt down, rises when you lift it */
         o.bob=Math.max(-3,Math.min(5,o.bsy*2.6+(sn2<1?(1-sn2)*2.4:0)));o.lgL=o.lgR=Math.max(4.3,5.6-Math.max(0,o.bob)*0.3);}
-      if(sub===2){o.armL=2.8+sh*0.2;o.armR=-2.8+sh*0.2;}                                         /* hands up */
+      if(sub===2){   /* hands up: turned round with the butt out shaking like the others, but standing taller with both hands up in
+                        the air, loose, swaying side to side with the beat */
+        var sw2=Math.sin(bp*Math.PI);o.head=0.1;o.lgL=o.lgR=Math.max(5,6.4-Math.max(0,o.bob)*0.3);o.bob=Math.min(o.bob,2.5);o.butt=0.85;
+        o.armL=2.55+sw2*0.3;o.armR=-2.55+sw2*0.3;o.alL=o.alR=8.5;}
       break;}
     case 4:{ /* running man (from a clip), side-on facing right: on each beat one knee drives right up in front while the standing
                 foot slides back into a long stride; the knee comes down in front as the next beat starts and the other leg (now at the
@@ -2527,10 +2530,12 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
     if(k==="confused")drawMap(g,EMO.question,cx+m[0].length*q*0.35,cy-m.length*q*0.95,Math.max(1,Math.round(q*0.6)));}
   function drawMap(g,m,x,y,q){for(var r=0;r<m.length;r++)for(var c=0;c<m[r].length;c++){var ch=m[r][c];if(ch==="."||!EMO_COL[ch])continue;g.fillStyle=EMO_COL[ch];g.fillRect(Math.round(x+c*q),Math.round(y+r*q),Math.ceil(q),Math.ceil(q));}}
   function pixArt(g,rows,x,y,q,col,hi){for(var r=0;r<rows.length;r++)for(var c=0;c<rows[r].length;c++)if(rows[r][c]==="X"){g.fillStyle=hi&&r===1&&c===1?hi:col;g.fillRect(Math.round(x+c*q),Math.round(y+r*q),q,q);}}
-  function reactLive(list,now){var out=[];if(!list)return out;for(var i=0;i<list.length;i++){var a=now-list[i].t;if(a>=0&&a<REACT_MS[list[i].k])out.push({k:list[i].k,a:a});}return out;}
+  function reactLive(list,now){var out=[];if(!list)return out;for(var i=0;i<list.length;i++){var a=now-list[i].t;if(a>=0&&a<REACT_MS[list[i].k])out.push({k:list[i].k,a:a,h:list[i].h});}return out;}
   function reactPose(list,now,p){
     var L=reactLive(list,now);if(!L.length)return null;var r=L[L.length-1],a=r.a,o={lift:0};
-    if(r.k==="jump"){var hop=(a%500)/500;o.lift=-Math.sin(hop*Math.PI)*p*11;o.armL=2.6;o.armR=-2.6;o.legL=-0.35*Math.sin(hop*Math.PI);o.legR=-o.legL;o.mouth=true;}
+    if(r.k==="jump"&&r.h){   /* a flick jump: one leap, as high as the flick was fast; knees tuck up at the top */
+      var jd=450+350*r.h;if(a>jd)return null;var ju=a/jd,js=Math.sin(ju*Math.PI);o.lift=-js*p*(6+26*r.h);o.jump=1;o.js=js;o.ju=ju;o.armL=1.6+js*1.1;o.armR=-o.armL;o.legL=-0.25*js;o.legR=0.25*js;o.lgL=o.lgR=7-js*2.6*r.h;o.mouth=js>0.5;}
+    else if(r.k==="jump"){var hop=(a%500)/500;o.lift=-Math.sin(hop*Math.PI)*p*11;o.armL=2.6;o.armR=-2.6;o.legL=-0.35*Math.sin(hop*Math.PI);o.legR=-o.legL;o.mouth=true;}
     else if(r.k==="spin"||r.k==="twirl"){   /* turn right round on the spot: the body squeezes thin as it turns side-on */
       var tw=r.k==="twirl",u=Math.min(1,a/(tw?1500:800)),ang=u*Math.PI*2*(tw?2:1);
       o.dir=face8(Math.sin(ang),Math.cos(ang),-1);o.lift=-Math.sin(Math.min(1,u*(tw?1.4:1.2))*Math.PI)*p*(tw?7:3);
@@ -2949,6 +2954,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       mem.t=now;mem.aL=aL;mem.aR=aR;
       bL-=Math.max(-0.55,Math.min(0.55,(mem.vL||0)*0.05));bR-=Math.max(-0.55,Math.min(0.55,(mem.vR||0)*0.05));}
     return[bL,bR];}
-  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.122",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,wormPose:function(ph){return wPose(ph,0,0);},joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.129",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,wormPose:function(ph){return wPose(ph,0,0);},joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();

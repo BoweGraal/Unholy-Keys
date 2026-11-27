@@ -1688,6 +1688,83 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.129 — Turn arrows replace 90 / 180
+
+The 90 / 180 buttons are gone. In free dance there are two turn arrows instead, above the little hand controls: **↺** (left) turns you left and **↻** (right) turns you right, a quarter turn per tap. Taps while you're still turning add on: **double tap = 180°, triple tap = 270°**, as one smooth turn. The body sweeps round through the in-between angles (front → front-right → right → back-right → back…), about a tenth of a second each, and other players see the turn sweep round too. On a computer: **,** turns left and **.** turns right. WIDE stays as a small button in the middle.
+
+1. Free dance: tap ↻ once. You turn to face right, passing through front-right.
+2. Double-tap ↻: a half turn. Triple-tap ↺: three quarters the other way, all in one move.
+3. Running man after turning: side on when facing a side, from the back when facing away.
+4. A second phone sees the turn sweep, not a snap.
+
+## v1.82.128 — Running man faces the crowd
+
+Running man (and the other side-on moves: Fast, Moonwalk, Arms pump, the Shuffle's running man) used to start side on even when you faced the crowd. Now facing the crowd it's done **from the front**: the knees drive up toward you in turn and the arms pump bent in front of the chest. Facing away, it's from the back. Facing left or right (or the diagonals) it's side on, turned to that side. The 90 / 180 buttons work the same way: front → right side → back → left side.
+
+1. Free dance → Running man without walking first: it faces you, knees coming up, arms pumping at the chest.
+2. Tap 90: side on to the right. Again: from the back. Again: side on to the left.
+3. Walk left or right, then stop: side on that way.
+
+## v1.82.127 — Shake it: Drop it holds low, Pop it brings you back
+
+- **Drop it** now drops you down low and keeps you there: bent over, hands on the thighs, the butt still popping on the half beats and the hips tilting. It used to bob up and only drop on beat 4.
+- While you're dropped, the **Drop it** button reads **Pop it**. Press it (or X on a computer) and you pop back up into **Wiggle**.
+
+1. Shake it → Drop it: you stay low the whole time, still popping. The button now says Pop it.
+2. Press Pop it: back up into Wiggle, and the button says Drop it again.
+
+## v1.82.126 — Free dance WIDE button; Shake it "Hands up" turned round
+
+- **WIDE / NEAR:** a small button next to 90 / 180 in free dance. WIDE zooms right out to the normal view of the whole room: it overrides the close-up camera, your turn in the middle, the dance circle, and any pinch or wheel zoom. NEAR puts the close-up back. It's remembered on this device.
+- **Shake it → Hands up:** now turned round like Wiggle and Drop it, butt out and shaking to the beat, but standing taller with both hands up in the air, loose and swaying side to side.
+
+1. Free dance: tap WIDE. The camera eases out to the whole room and the button reads NEAR. Tap again to zoom back in. Reload and it stays as you left it.
+2. Shake it → Hands up: back to the crowd, butt shaking, hands up and swaying.
+
+## v1.82.125 — Each dance jumps its own way; the left stick angles you; robot hands; 90 / 180 bar fixed
+
+- **A flick jump for every dance, each its own way:** two-step tucks; hands on knees keeps the hands on the knees in a squat jump; shake it goes up with the hips out; running man leaps in a stride; skank kick-jumps; the **robot** jumps stiff as a board with its arms locked out; the worm pushes off the floor; **silly** does a star jump; the shuffle kicks its feet out to the sides; **thriller** does a zombie hop; street jam throws a fist up with a knee up; cyber goth reaches up with high knees; **headbang** jumps head down, knees tucked; **lighters up** keeps the lighter held high; techno march punches a fist up; the **puppet** is hauled up limp on its strings.
+- **The left stick in free dance keeps you planted:** pushing it left or right angles your body three-quarters toward that side, feet on the spot, like swinging side to side. Only right at the edge of the stick do you walk (and turn to face the way you go). Everyone sees your angle. The Shuffle and the worm still use the stick their own way.
+- **Robot:** the two little hand controls above the sticks now point the arms the same way the sticks do, snapped to the robot's 45° steps.
+- **90 / 180 bar:** it was still sized for four buttons after Spin and Twirl went, leaving half of it empty. Now it fits the two. Both buttons work: 90 goes front, right, back, left; 180 goes back and forth.
+- There are no spin, twirl or jump buttons anywhere now: spin by circling the left stick, jump by flicking it.
+
+1. Free dance: push the left stick halfway left or right. You turn to that side without moving. Push it all the way: you walk.
+2. Flick-jump in a few dances (Robot, Silly, Thriller, Headbang, Puppet): each has its own air pose.
+3. Robot: drag the little hand controls. The arms snap to 45° like with the sticks.
+4. The 90 / 180 bar is compact and centred.
+
+## v1.82.124 — Flick to jump; the worm dives in and pushes off
+
+**Jumping is a flick now.** No more jump buttons (the one between the dance sticks and the one on the reaction bar). Pull the **left stick down and flick it up**:
+- **How fast** you flick sets the height: a quick snap is a big leap, a slower flick a small hop.
+- **The angle** of the flick sets where you land: flick up-left and you leap left across the floor, straight up and you jump on the spot.
+- It has to pass through the middle of the stick, so circling the stick to spin never counts as a jump.
+- It works in free dance on the dance stick (including the Shuffle, where a flick no longer sets off the stomp) and on the main stick when you're just walking around.
+- On a computer, **Space** does a middling straight jump.
+- Everyone sees your jump's real height. **Needs the Render redeploy:** the server now passes the height on.
+
+**The worm:** "Dive in" isn't a move choice any more; it's how the worm starts. Picking the worm, you jump up with your arms out and dive onto the floor, then the wave begins. A flick during the worm is a **big push**: the whole worm launches up into the air and lands back into the wave.
+
+1. Free dance (any style): pull the left stick down and snap it up for a high jump, then flick it slowly for a small one.
+2. Flick up-left or up-right: you leap that way.
+3. Circle the stick: you spin, not jump.
+4. Pick The worm: it dives in, then waves. Flick: it launches into the air and lands back in the wave.
+5. Outside a dance, flick the main stick: same jump.
+6. With two phones: the other phone sees the same height.
+
+## v1.82.123 — Turning mid-dance carries the step straight on
+
+Every facing already shares the dance's beat, so the step was in time. But the view or move changing used to jump to the new pose. Now:
+- **Any turn or switch eases from the old pose to the new one over about a sixth of a second:** the 90 / 180 buttons, a stick spin, turning round while walking, or switching dance or move. Arms and legs carry on from where they were and swing into the new view. It only smooths the change itself; the dance's own sharp hits aren't softened.
+- **Spins hold the dance where it was:** the stick steering the spin (the left one for a stick-circle spin) used to snap that part of the dance to neutral the moment you started spinning, and back when you stopped. Now it keeps its pre-spin value until the spin ends.
+- A side-on move flipping sides (the moonwalk glide, for one) no longer jumps sideways.
+
+1. Free dance, Running man: walk right, then left. The turn reads as one motion, with no pop.
+2. Tap 90 and 180 mid-step: the body turns and the limbs carry on.
+3. Circle the left stick to spin and let go: no jump into or out of the spin, and the dance picks straight up.
+4. Switch between moves (Classic → Fast → Moonwalk): each change eases in.
+
 ## v1.82.122 — The Shuffle spins from a stick circle too
 
 Circling the left stick now works in the Shuffle as well: a full circle (or pushing to the top edge, as before) starts the T-step stomp spin, and it spins the way you're circling: clockwise right, anticlockwise left. Keep circling to keep it going; let go to finish the turn.
