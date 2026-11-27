@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.129 — Turn arrows replace 90 / 180
+
+The 90 / 180 buttons are gone. In free dance there are two turn arrows instead, above the little hand controls: **↺** (left) turns you left and **↻** (right) turns you right, a quarter turn per tap. Taps while you're still turning add on: **double tap = 180°, triple tap = 270°**, as one smooth turn. The body sweeps round through the in-between angles (front → front-right → right → back-right → back…), about a tenth of a second each, and other players see the turn sweep round too. On a computer: **,** turns left and **.** turns right. WIDE stays as a small button in the middle.
+
+1. Free dance: tap ↻ once. You turn to face right, passing through front-right.
+2. Double-tap ↻: a half turn. Triple-tap ↺: three quarters the other way, all in one move.
+3. Running man after turning: side on when facing a side, from the back when facing away.
+4. A second phone sees the turn sweep, not a snap.
+
 ## v1.82.128 — Running man faces the crowd
 
 Running man (and the other side-on moves: Fast, Moonwalk, Arms pump, the Shuffle's running man) used to start side on even when you faced the crowd. Now facing the crowd it's done **from the front**: the knees drive up toward you in turn and the arms pump bent in front of the chest. Facing away, it's from the back. Facing left or right (or the diagonals) it's side on, turned to that side. The 90 / 180 buttons work the same way: front → right side → back → left side.
