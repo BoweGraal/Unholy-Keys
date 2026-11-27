@@ -44,6 +44,9 @@ var EXPLAIN=(function(){
     fish:{n:"Fishing",i:"🎣",goal:"Biggest catch wins. 🐟",
       how:[["Drag the water to aim · swoop up fast to cast","Point to aim · swoop the mouse up fast to cast"],"A fish under the float bites · ← → nudge it, ⟳ pulls it in","❗ jerk ↓","Spin ⟳ to the beat ♩ · 🥅 net it"],
       rules:["Too fast ⚡ up · slower ⚡ down","⚡ full = 💥 SNAP","⚠ LINE OUT: reel!"]},
+    dungeon:{n:"Dungeon",i:"🗡",goal:"Clear the rooms. Most spiders wins. 🕷",
+      how:[["Stick: move · tap SWORD to swing","Arrows / WASD move · Space swings"],["Keep holding SWORD: it charges ✨","Keep holding Space: it charges ✨"],"Let go when it sparkles: SPIN ATTACK","Room clear → the door opens →"],
+      rules:["Spiders hop on the beat ♩","Touch one = −1 ♥ (3)","Spin hits twice as hard"]},
     pond:{n:"Pool fishing",i:"🎣",goal:"Biggest catch wins. 🐟",
       how:[["Tap CAST · the stick walks you round the pool","Space to cast · ← → walk round the pool"],["Hold REEL: the glow rises · let go: it sinks","Hold Space / ↑ / the mouse: the glow rises · let go: it sinks"],["Stick ← → slides the glow · keep it on the 🐟","← → or the mouse slide the glow · keep it on the 🐟"],"Meter full · 🥅 NET when it's over the fish"],
       rules:["Off the fish = the meter drains","Empty = it got away","Big fish bite in the loud parts"]},
@@ -159,6 +162,18 @@ var EXPLAIN=(function(){
   /* fishing: swoop to cast (the power bar is the fish), wait, ❗ jerk, spin the reel to the beat, watch the tension, net it */
   function fishPx(x,y,len,col){x=Math.round(x);y=Math.round(y);ell(col,x,y,len,Math.max(2,len*0.32));R("#fff",x+len-4,y-1,1,1);R(col,x-len-5,y-4,3,3);R(col,x-len-5,y+2,3,3);R(col,x-len-3,y-2,3,5);R("#cfe8ff",x+len,y,6,1);}
   /* pool fishing: cast from the edge of the pool, then the reel box: hold to rise, the stick slides, stay on the fish, net it */
+  /* the dungeon: walk up to a spider, swing (a swoosh), then hold, sparkle, and spin */
+  function d_dungeon(t){var T=t%8,cap="";R("#2a2438",0,0,W,H);for(var y=24;y<H;y+=16)for(var x=0;x<W;x+=16)R(((x+y)/16)%2?"#322b44":"#2d2640",x+1,y+1,14,14);R("#4a3f63",0,0,W,24);R("#1a1426",0,24,W,3);
+    var px=40+Math.min(1,T/1.5)*70,py=96;av(0,px,py,1.5,{dir:1,armL:0.3,armR:T>1.6&&T<2.1?-2.6:-0.4});
+    var sx=170,sy=94-(Math.sin(t*6)>0.6?6:0),alive=T<2.2||T>3.4;
+    if(alive&&T<6){ell("rgba(0,0,0,.4)",sx,100,8,3);ell(T>1.8&&T<2.2?"#fff":"#2b1838",sx,sy,7,6);R("#ff2a3a",sx-3,sy-4,2,2);R("#ff2a3a",sx+1,sy-4,2,2);for(var l=0;l<4;l++){R("#1a1020",sx-13,sy-3+l*3,6,1);R("#1a1020",sx+7,sy-3+l*3,6,1);}}
+    if(T<1.6)cap="1  WALK UP";
+    else if(T<2.2){cap="2  TAP: SWING";for(var i=0;i<6;i++){var a=-1+i*0.35;R("rgba(200,240,255,.6)",px+12+Math.cos(a)*22,py-14+Math.sin(a)*18,4,3);}R(COL.yel,226,104,18,18);finger(235,113,true);}
+    else if(T<4.6){cap=T<3.6?"3  HOLD: CHARGE":"3  …IT SPARKLES";R("#dfe8f5",px+6,py-16,22,3);if(T>3.6&&Math.floor(t*10)%2){R("#fff",px+26,py-19,6,2);R("#fff",px+28,py-21,2,6);}R(COL.yel,226,104,18,18);finger(235,113,true);
+      if(T>3.4&&T<6){ell("rgba(0,0,0,.4)",150,100,8,3);ell("#2b1838",150,94,7,6);R("#ff2a3a",147,90,2,2);}}
+    else if(T<5.4){cap="4  LET GO: SPIN!";var k=(T-4.6)/0.8;for(var j=0;j<12;j++){var a2=k*6.28-j*0.3;R("rgba(150,220,255,"+(0.7-j*0.05)+")",px+Math.cos(a2)*30,py-14+Math.sin(a2)*24,4,4);}pop("+25",150,80,T-4.6,COL.yel,1);}
+    else cap="5  ROOM CLEAR →";
+    if(cap)badge(cap,COL.cyan);}
   function d_pond(t){var T=t%10,cap="";floor("#161233","#1c1840");
     ell("#2b2540",86,96,62,22);ell("#5a5277",86,94,58,19);ell("#1a6f9e",86,94,50,15);ell("rgba(5,30,50,.5)",70+Math.sin(t)*14,96,7,2);
     av(0,40,84,1.4,{dir:4,armL:T<1?2.2:-0.6,armR:0.6});var tipX=58,tipY=62;
@@ -332,7 +347,7 @@ var EXPLAIN=(function(){
     R("rgba(255,255,255,.08)",120,110,16,16);g.fillStyle=["#FF4D6D","#F5C518","#4CC38A","#3DF2FF","#D354A0"][Math.floor(t*4)%5];g.fillRect(122,112,12,12);TX("?",128,113,1,"#fff","center");
     if(u<0.25)pop("LAUNCH: hold, aim…",150,40,0.2,"#3DF2FF",1);else if(u<0.45)pop("…let go!",120,40,0.2,COL.yel,1);else if(u>=0.6&&u<0.75)pop("IMPACT! FLAG HOME",110,30,(u-0.6)/0.15*0.6,COL.red,1);
     TX("RED",90,6,2,COL.red,"center");TX("0",128,6,2,"#fff","center");TX("BLUE",166,6,2,COL.blu,"center");}
-  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:d_ice,keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf,kflag:d_kflag,fish:d_fish,pond:d_pond,boats:d_boats,swim:d_swim,ball:d_ball,dragon:d_dragon};
+  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:d_ice,keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf,kflag:d_kflag,fish:d_fish,pond:d_pond,dungeon:d_dungeon,boats:d_boats,swim:d_swim,ball:d_ball,dragon:d_dragon};
 
   /* ---------- the card ---------- */
   var CSS="#explain{display:none;position:fixed;left:0;right:0;bottom:0;top:0;z-index:60;background:none;pointer-events:none;align-items:flex-start;justify-content:center;padding:4px 10px 10px;box-sizing:border-box;-webkit-tap-highlight-color:transparent}"+

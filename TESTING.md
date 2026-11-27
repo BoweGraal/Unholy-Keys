@@ -1688,6 +1688,25 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.145 — Dungeon (new game): swords, spiders and the spin attack
+
+- **Dungeon** (new game, under Team in practice, also in the crowd vote): the dance floor becomes a stone dungeon seen from above, in the style of A Link to the Past.
+  - **The room:** stone walls, torches that flare on the beat, a door on each side.
+- **Spiders** (the starter mob): they hop at the nearest player on the beat. Some hop bigger. From room 4, some are big ones with 3 HP.
+- **Sword:** SWORD, Space or the controller's A swings a swoopy 140° arc the way you face. You keep facing that way while the blade is out.
+- **Spin attack:** keep holding after the swing and the sword charges. It sparkles at the tip when ready (about 0.65 s); let go for a full-circle spin that hits everything round you for double damage. Let go early and nothing happens, as in Zelda.
+- **Hearts:** you have 3. A spider bite costs one, knocks you back and makes you blink for 1.2 s. Lose all three and you're down for 2.5 s (−50 points), then back with full hearts.
+- **Rooms:** clear one (+100) and the right-hand door opens. Walk through it and the screen slides sideways into the next room, which has more spiders.
+- **Points:** 25 per spider, 40 per big one.
+- **Practice dancers:** they hunt spiders and swing at them.
+- **Multiplayer note:** each phone runs its own spiders for now.
+- **Server:** accepts the new mode (redeploy Render).
+
+1. Practice → Team → Dungeon. Tap SWORD next to a spider to kill it in 2 hits.
+2. Hold SWORD until it sparkles, then let go: you spin and hit everything round you.
+3. Clear the room, walk through the right door: the screen slides into room 2.
+4. Controller: A swings, hold A to charge, release for the spin.
+
 ## v1.82.144 — Controller support (first pass) + TV practice
 
 - **Controllers:** any controller the browser sees works. Two-stick controllers get everything, and controllers that report a non-standard layout fall back to a basic one.
