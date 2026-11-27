@@ -1688,6 +1688,20 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.121 — Dance facings audit; spin by circling the left stick
+
+**Audit.** I rendered every dance and every sub-move in all 8 facings at 4 points in the beat. That's 16 dances, 72 sub-moves and about 2,300 poses, drawn through the game's own character drawing. An automatic check looked for blank or cut-off sprites (none, apart from a glow stick reaching past the box, which is fine). Fixes:
+- **Side-on moves when you're facing a way from walking:** Running man (Classic / Fast / Moonwalk / Arms pump), the Shuffle's running man and the side-on parts of Mix it up used to turn with your facing. So after walking right you saw them from the *back*, and after walking left from the *front*. Now they stay side on, facing your way: right for right / front-right / back-right, left for left / front-left / back-left, and the moonwalk still glides backwards. The 90 / 180 buttons still turn the move round on purpose.
+- **The worm** now faces left when you face left (and Back goes the other way).
+- Everything else read correctly in every facing.
+
+**Spin / Twirl buttons removed.** Circle the **left stick** one full turn and keep going: anticlockwise **spins you left**, clockwise **twirls you right**. Keep circling to keep it going; let go and you finish the turn you're on. You don't walk while spinning. It doesn't apply to the Shuffle, which has its own stomp-spin, or the worm, which is on the floor. On a computer, T / G / V still spin.
+
+1. Free dance, any style (not Shuffle or worm): circle the left stick half a turn and nothing happens. A full turn starts the spin, the opposite way spins the other direction, and letting go finishes it.
+2. The 90 / 180 buttons are still there; Spin and Twirl are gone (from the reaction bar too).
+3. Walk right, then pick Running man: it's side on, facing right. Walk left: facing left. Tap 90: it turns to face front, as before.
+4. The worm faces the way you last walked.
+
 ## v1.82.120 — Headbang shows from the side; the worm loops cleanly
 
 - **Headbang, side on:** a bowed head only used to drop 3 pixels, which you can't see from the side. Seen side on, the head now pitches forward over the chest and the shoulders lean in after it, then it snaps back on the lift. The other headbang moves (hair windmill, air guitar, rock on) get it too, and so does any move that nods. The front view is unchanged.
