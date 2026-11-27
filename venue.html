@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.134"></script>
-<script src="tune.js?v=1.82.134"></script>
-<script src="gfx.js?v=1.82.134"></script>
-<script src="art.js?v=1.82.134"></script>
-<script src="qr.js?v=1.82.134"></script>
-<script src="voice.js?v=1.82.134"></script>
-<script src="instruments.js?v=1.82.134"></script>
-<script src="kart.js?v=1.82.134"></script>
-<script src="explain.js?v=1.82.134"></script>
+<script src="px8.js?v=1.82.135"></script>
+<script src="tune.js?v=1.82.135"></script>
+<script src="gfx.js?v=1.82.135"></script>
+<script src="art.js?v=1.82.135"></script>
+<script src="qr.js?v=1.82.135"></script>
+<script src="voice.js?v=1.82.135"></script>
+<script src="instruments.js?v=1.82.135"></script>
+<script src="kart.js?v=1.82.135"></script>
+<script src="explain.js?v=1.82.135"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -8565,7 +8565,7 @@ var PRACTICE=(function(){
     (function(){var sel=$("prLevel"),i=sel.selectedIndex;if(i<0){var q=+sel.value||1;i=q<0.9?0:q<1.1?1:q<1.35?2:3;sel.selectedIndex=i;}window.ukForceDiff=i;try{localStorage.setItem("uk_lv",String(i+1));}catch(e){}if(window.ukLvRefresh)window.ukLvRefresh();})();   /* the menu picks the real difficulty: Easy, Normal, Hard, Expert */
     mode=$("prMode").value;var ice=mode==="ice";if(ice)mode="skate";var kflag=mode==="kflag";if(kflag)mode="ctf";battle=$("prKind").value==="battle"&&mode!=="mosh"&&mode!=="skate"&&mode!=="keepy"&&mode!=="kart"&&mode!=="walk"&&mode!=="pipe"&&mode!=="ski"&&mode!=="ctf"&&mode!=="fish"&&mode!=="boats"&&mode!=="swim";plan=null;var secs=Math.max(18,+$("prSecs").value||18),level=+$("prLevel").value;
     var nbt=+$("prBots").value||0;if(mode==="ctf"&&(nbt+1)%2)nbt++;   /* capture the flag needs even teams: one more practice dancer if you'd be odd */
-    stopSong();makeBots(nbt);
+    stopSong();makeBots(nbt);try{MENUMUSIC.kill();}catch(e){}
     document.body.classList.add("pr-busy");
     n++;
     var go=function(c){
@@ -8592,6 +8592,7 @@ var PRACTICE=(function(){
     });
   }
   function playSong(my){
+    try{MENUMUSIC.kill();}catch(e){}
     if(ytSel){YTS.play(my,function(lagMs){afterStart(my,lagMs);});return;}
     var c=Tone.getContext().rawContext;
     if(!gain){gain=c.createGain();gain.gain.value=0.9;gain.connect(c.destination);BEAT.tap(gain);}
@@ -9255,7 +9256,7 @@ var MENUMUSIC=(function(){
   /* the volume, and the fade out when you leave the menu */
   setInterval(function(){if(!a)return;var on=want()&&!muted&&started,target=0;
     if(on)target=BED*Math.min(1,(performance.now()-t0)/FADE);
-    vol=on?target:vol+(target-vol)*0.1;if(!on&&vol<0.003){vol=0;if(!a.paused)a.pause();if(!want())started=false;}setVol(vol);
+    vol=on?target:vol+(target-vol)*0.45;if(!on&&(vol<0.01||plain||!gn)){vol=0;if(!a.paused)a.pause();if(!want())started=false;}setVol(vol);   /* leaving the menu: gone in about half a second (straight away where the volume can't fade), so it never plays over a song */
     if(!started&&!muted&&want()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
   },100);
   /* the watchdog */
@@ -9282,9 +9283,11 @@ var MENUMUSIC=(function(){
   window.ukMenuMusicEnd=function(){if(a)a.dispatchEvent(new Event("ended"));return LIST[cur];};   /* test: as if the song finished */
   window.ukMenuMusicBreak=function(how){if(!a)return;if(how==="pause")a.pause();else if(how==="ctx"&&ac)ac.suspend();else if(how==="src"){a.src="songs/nope.mp3";}};   /* test: break it on purpose */
   window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
-  return{get on(){return started;}};
+  /* a game's song is starting: the menu music stops now, whatever state it's in */
+  function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
+  return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.134",SERVER_VERSION="";
+var PAGE_VERSION="1.82.135",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10338,7 +10341,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.134"></script>
+<script src="lab.js?v=1.82.135"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

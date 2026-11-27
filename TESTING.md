@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.135 — No more two songs at once in practice
+
+When you left a game early, the dance floor's menu music came back (as intended). But when you then started another game, the menu music only faded out slowly, over about 4½ seconds. On iPhones the fade did nothing at all, because Safari ignores volume changes on that kind of audio player, so the menu track played at full volume over the new game's song. Now the menu music stops the moment a game starts (and again when its song starts, in case anything brought it back), and anywhere else it fades in about half a second.
+
+1. Practice: start a game, skip the timer, then Exit early. The menu music comes back on the dance floor.
+2. Start another game: the menu music stops straight away. Only the game's song plays, on the countdown and after skipping.
+3. On an iPhone especially: never two tracks at once.
+
 ## v1.82.134 — The groove (Robot "Pop" and the default dance); new MJ style; Running man "Half"
 
 - **The groove:** from your clip, one swing every 2 beats.
