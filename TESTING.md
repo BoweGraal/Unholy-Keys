@@ -1688,6 +1688,16 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.138 — Every button works while you hold a stick
+
+- **The rule:** any button can be tapped while another finger is on a stick, slider or pad, everywhere in the game.
+- **Why some buttons went dead:** iPhones don't send a "click" for a tap made while another finger is already down. Buttons that act on the press already worked (jump, turn arrows, fishing). Buttons that act on click didn't: dance styles, moves, WIDE/NEAR and many more.
+- **The fix:** one global handler. A tap on a button made while another touch is held now presses the button when you lift (if you're still on it). It works even when the phone has taken the fingers for a gesture, and it never fires twice.
+- **Round card:** the "ROUND 1 · …" card at the start of a round sat on top of the left stick and swallowed touches. It now lets touches through, and only its own buttons (skip, votes, tap to close results) take taps.
+
+1. Free dance on a phone: hold the left stick and tap a dance style, a move (Clap, Point…), WIDE/NEAR. Each one works, once per tap.
+2. At the start of a round, use the left stick while the round card is showing.
+
 ## v1.82.137 — Step dance: a library of step patterns that fits the song; keepy uppy landing spots
 
 - **Step patterns:** Step Dance no longer turns the song's hits into arrows one by one (which on Normal often came out as one arrow a beat for long stretches). It now picks a pattern from a library of 55 hand-designed one-bar patterns for every bar. Each bar takes the pattern that best lands on the song's own hits, with a little randomness. Phrases go A, B, A mirrored, then an ending fill.
