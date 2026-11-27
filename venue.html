@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.143"></script>
-<script src="tune.js?v=1.82.143"></script>
-<script src="gfx.js?v=1.82.143"></script>
-<script src="art.js?v=1.82.143"></script>
-<script src="qr.js?v=1.82.143"></script>
-<script src="voice.js?v=1.82.143"></script>
-<script src="instruments.js?v=1.82.143"></script>
-<script src="kart.js?v=1.82.143"></script>
-<script src="explain.js?v=1.82.143"></script>
+<script src="px8.js?v=1.82.144"></script>
+<script src="tune.js?v=1.82.144"></script>
+<script src="gfx.js?v=1.82.144"></script>
+<script src="art.js?v=1.82.144"></script>
+<script src="qr.js?v=1.82.144"></script>
+<script src="voice.js?v=1.82.144"></script>
+<script src="instruments.js?v=1.82.144"></script>
+<script src="kart.js?v=1.82.144"></script>
+<script src="explain.js?v=1.82.144"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -83,6 +83,11 @@ body.sr-ok #songReqBtn{display:block}
 .pxi{display:inline-block;image-rendering:pixelated;background-repeat:no-repeat;background-size:100% 100%;flex:none}
 .mm-btn{position:relative}.mm-btn>.pxi{position:absolute;left:18px;top:50%;transform:translateY(-50%)}
 .mm-back{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:8px;font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700}
+.mm-tvp{background:#2f6e4a!important}
+.padfocus{outline:4px solid #F5C518!important;outline-offset:3px;box-shadow:0 0 0 7px rgba(245,197,24,.35)!important;z-index:5}
+#padToast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:200;padding:8px 14px;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#1a1030;background:#F5C518;border:2px solid #000;opacity:0;pointer-events:none}#padToast.on{animation:padT 3s ease forwards}#padToast.stay{animation:none;opacity:1}body.pad-on #padToast.stay{display:none}@keyframes padT{0%,80%{opacity:1}100%{opacity:0}}
+#padLegend{display:none;position:fixed;left:50%;bottom:10px;transform:translateX(-50%);z-index:60;padding:6px 14px;font:700 13px 'Silkscreen',ui-monospace,monospace;color:#fff;background:rgba(14,11,26,.85);border:2px solid #5b4fc4;white-space:nowrap;max-width:96vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none}body.tvplay #padLegend{display:block}
+body.tvplay #prGames button.tv-no{opacity:.35;filter:grayscale(1)}body.tvplay #prGames button.tv-no::after{content:" · needs a phone";font-size:10px}
 .mm-join{background:#c8407e!important}.mm-prac{background:#5b4fc4!important}.mm-char{background:#2a2440!important}.mm-inst{background:#1f5f6e!important}
 .mm-btn:active{transform:translateY(2px)}
 .mm-back{background:transparent;color:#aaa5c8;border:0;cursor:pointer;font-size:12px!important;padding:6px;box-shadow:none!important;align-self:center}
@@ -919,6 +924,7 @@ select option,select optgroup{background:#1a1530;color:#fff}select option:checke
       <div id="nearRooms"></div>
       <button class="mm-btn mm-join" id="mmJoin"><i class="pxi" data-pxi="play"></i> Join game<small>enter a room code</small></button>
       <button class="mm-btn mm-prac" id="mmPrac"><i class="pxi" data-pxi="dance"></i> Practice<small>the practice zone, no show needed</small></button>
+      <button class="mm-btn mm-tvp" id="mmTvp">🎮 TV practice<small>practice on a big screen with a controller</small></button>
       <button class="mm-btn mm-char" id="mmChar"><i class="pxi" data-pxi="palette"></i> Character<small>change your look</small></button>
       <button class="mm-btn mm-host" id="mmHost"><i class="pxi" data-pxi="keys"></i> Host a room<small>run the show from here: songs, playlists, the TV</small></button>
       <button class="mm-btn mm-inst" id="mmInst"><i class="pxi" data-pxi="keys"></i> Instrument<small>play the phone instrument</small></button>
@@ -1980,6 +1986,7 @@ var MENU=(function(){
   document.getElementById("mmHost").onclick=function(){saveName();location.href="index.html?host";};   /* the host's page, laid out for a phone */
   cv.onclick=function(){view("char");};
   document.getElementById("mmPrac").onclick=function(){saveName();PRACTICE.enter();};
+  document.getElementById("mmTvp").onclick=function(){saveName();TVP.enter();};
   Array.prototype.forEach.call(js.querySelectorAll("[data-to]"),function(b){b.onclick=function(){view(b.getAttribute("data-to"));};});
   var mkW=document.getElementById("mkWarn");function mkLeave(){mkW.style.display="none";view("menu");}
   document.getElementById("mkSave").onclick=function(){mkCommit();mkLeave();};
@@ -4034,6 +4041,7 @@ var GAME=(function(){
         fCtl[i*2]+=(kx*mag-fCtl[i*2])*ek;fCtl[i*2+1]+=(ky*mag-fCtl[i*2+1])*ek;moved=true;}}   /* held keys ease the dot that way: a tap sways, holding pushes it out */
     for(var i=0;i<2;i++)if(fHeld[i]===null&&!Object.keys(fkHeld).some(function(kc){return FKEYS[kc][0]===i;})&&(fCtl[i*2]||fCtl[i*2+1])){fCtl[i*2]*=0.82;fCtl[i*2+1]*=0.82;if(Math.abs(fCtl[i*2])<0.02&&Math.abs(fCtl[i*2+1])<0.02){fCtl[i*2]=0;fCtl[i*2+1]=0;}moved=true;}
     if(window.__fdStick){fCtl[0]=window.__fdStick[0];fCtl[1]=window.__fdStick[1];moved=true;}   /* tests: hold the left stick somewhere */
+    if(window.UKPAD&&UKPAD.on&&fStyle>0){var PS=UKPAD,pv=[[PS.lx,PS.ly],[PS.rx,PS.ry]];for(var pi=0;pi<2;pi++)if(pv[pi][0]||pv[pi][1]){fCtl[pi*2]=pv[pi][0];fCtl[pi*2+1]=pv[pi][1];moved=true;}}   /* a controller: left stick = the left ring, right stick = the right (let go and they drift home) */
     if(moved){fdShow();applyToMe();sendPose();}
     /* the left stick walks you around the floor while the dance loop keeps going (the dance reads the same stick, so the footwork follows) */
     var fm=me(),fdt=Math.min(0.1,(nowS-(fdSpring.t||nowS))/1000);fdSpring.t=nowS;
@@ -9699,7 +9707,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.143",SERVER_VERSION="";
+var PAGE_VERSION="1.82.144",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -9741,6 +9749,100 @@ var PART="";var PART_NAMES={intro:"🌅 INTRO",verse:"🎤 VERSE",chorus:"🔥 C
 function voiceIcon(x,y,s,now){var p=Math.max(2,Math.round(s));x=Math.round(x);y=Math.round(y);ctx.fillStyle="#120d1e";ctx.fillRect(x-p,y-p*3,p*4,p*6);ctx.fillStyle="#4CC38A";ctx.fillRect(x,y-p,p,p*2);ctx.fillRect(x+p,y-p*2,p,p*4);var w=Math.floor(now/180)%3;for(var k=0;k<=w;k++){ctx.fillRect(x+p*(3+k*2),y-p*(1+k),p,p*(2+k*2));}}
 function songPart(k){k=PART_NAMES[k]?k:"";if(k===PART)return;PART=k;if(!k)return;var b=document.getElementById("partBanner");if(!b)return;b.textContent=PART_NAMES[k];b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
 window.ukPart=function(){return PART;};
+
+/* ==== CONTROLLERS ==== */
+/* ============================================================
+   CONTROLLERS (Gamepad API): any controller the browser can see; a two-stick one gets everything.
+   Left stick = the on-screen stick (walk / steer / swim / fly); right stick = the second stick where a game has one (free
+   dance: your hands). D-pad = the arrow keys. The buttons are the keys a computer player would press, so every game that
+   plays from a keyboard plays from a controller:
+     A = Space (jump · fire · cast · boost · dash; held: reel / sprint)   B = E (super / twirl)   X = Q (spin)   Y = F
+     LB / RB = , . (turn 90° in free dance)   LT / RT = Shift (sprint / drift)   Start = skip the timer   Back = Esc
+   Step dance and the 4-key highway: the face buttons are arrows too (X ←, A ↓, Y ↑, B →), so it plays like a dance pad.
+   Free dance: Y = next dance, B = next move.
+   Off the dance floor (the menus, the practice menu, a card) the d-pad or left stick moves a highlight between buttons and
+   A presses it, B goes back. TV practice (main menu → 🎮 TV practice) is practice laid out for a big screen and a controller.
+   ============================================================ */
+var PAD=(function(){
+  var DZ=0.2,prev={},pressed={},state={on:false,lx:0,ly:0,rx:0,ry:0,id:"",n:0},navAt=0,navDir="",joyMine=false,keysHeld={},lastSeen=0;
+  function dz(x,y){var m=Math.hypot(x,y);if(m<DZ)return[0,0];var k=Math.min(1,(m-DZ)/(1-DZ))/m;return[x*k,y*k];}
+  function key(code,down){var map={Space:" ",Enter:"Enter",Escape:"Escape",ShiftLeft:"Shift",Comma:",",Period:".",ArrowUp:"ArrowUp",ArrowDown:"ArrowDown",ArrowLeft:"ArrowLeft",ArrowRight:"ArrowRight"};
+    var k=map[code]||(code.indexOf("Key")===0?code.slice(3).toLowerCase():code);
+    if(down)keysHeld[code]=1;else delete keysHeld[code];
+    try{document.dispatchEvent(new KeyboardEvent(down?"keydown":"keyup",{key:k,code:code,bubbles:true,cancelable:true}));}catch(e){}}
+  function mode(){return (typeof GAME!=="undefined"&&GAME.mode)||"";}
+  function playing(){var m=mode();if(!m)return false;var b=document.body.classList;return !b.contains("pr-open")&&!b.contains("pr-count");}
+  function vis(el){if(!el||el.disabled)return false;var r=el.getBoundingClientRect();if(r.width<4||r.height<4||r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth)return false;var cs=getComputedStyle(el);if(cs.visibility==="hidden"||cs.pointerEvents==="none"||+cs.opacity<0.1)return false;
+    var cx=Math.min(innerWidth-1,Math.max(0,r.left+r.width/2)),cy=Math.min(innerHeight-1,Math.max(0,r.top+r.height/2)),top=document.elementFromPoint(cx,cy);return !!top&&(top===el||el.contains(top)||top.contains(el));}
+  function targets(){return Array.prototype.filter.call(document.querySelectorAll("button,a[href],select,input:not([type=hidden]),[data-tap]"),vis);}
+  var cur=null;
+  function focusEl(el){if(cur)cur.classList.remove("padfocus");cur=el;if(el){el.classList.add("padfocus");try{el.focus({preventScroll:false});}catch(e){}if(el.scrollIntoView)try{el.scrollIntoView({block:"nearest",inline:"nearest"});}catch(e){}}}
+  function nav(dir){var ts=targets();if(!ts.length)return;if(!cur||ts.indexOf(cur)<0){focusEl(ts[0]);return;}
+    var a=cur.getBoundingClientRect(),ax=a.left+a.width/2,ay=a.top+a.height/2,best=null,bs=1e9;
+    ts.forEach(function(el){if(el===cur)return;var r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,dx=x-ax,dy=y-ay,pr=dir==="l"?-dx:dir==="r"?dx:dir==="u"?-dy:dy,or=dir==="l"||dir==="r"?Math.abs(dy):Math.abs(dx);
+      if(pr<=4)return;var s=pr+or*2.2;if(s<bs){bs=s;best=el;}});
+    if(best)focusEl(best);else if(cur.tagName==="SELECT"&&(dir==="l"||dir==="r")){var sel=cur;sel.selectedIndex=Math.max(0,Math.min(sel.options.length-1,sel.selectedIndex+(dir==="r"?1:-1)));sel.dispatchEvent(new Event("change",{bubbles:true}));}}
+  function press(){if(!cur||!vis(cur)){nav("d");return;}if(cur.tagName==="SELECT"){var s=cur;s.selectedIndex=(s.selectedIndex+1)%s.options.length;s.dispatchEvent(new Event("change",{bubbles:true}));return;}if(cur.tagName==="INPUT"){try{cur.focus();}catch(e){}return;}cur.click();}
+  /* free dance: Y = the next dance, B = its next move (the same buttons a phone taps) */
+  function cycle(sel){var bs=Array.prototype.filter.call(document.querySelectorAll(sel),function(b){return b.offsetParent!==null;});if(!bs.length)return;var i=bs.findIndex(function(b){return b.classList.contains("on");});bs[(i+1)%bs.length].click();}
+  /* what each button is in this game */
+  function btnMap(){var m=mode();
+    var face=m==="step"||m==="keys4"?{0:"ArrowDown",1:"ArrowRight",2:"ArrowLeft",3:"ArrowUp"}:m==="free"?{0:"Space"}:{0:"Space",1:"KeyE",2:"KeyQ",3:"KeyF"};
+    face[4]="Comma";face[5]="Period";face[6]="ShiftLeft";face[7]="ShiftLeft";face[12]="ArrowUp";face[13]="ArrowDown";face[14]="ArrowLeft";face[15]="ArrowRight";return face;}
+  function pad(){var gs=navigator.getGamepads?navigator.getGamepads():[];for(var i=0;i<gs.length;i++)if(gs[i]&&gs[i].connected)return gs[i];return null;}
+  function tick(){requestAnimationFrame(tick);var g=pad(),now=performance.now();
+    if(!g){if(state.on){state.on=false;release();document.body.classList.remove("pad-on");}return;}
+    if(!state.on){state.on=true;state.id=g.id;document.body.classList.add("pad-on");toast("🎮 Controller connected"+(g.mapping==="standard"?"":" (basic layout)"));}
+    lastSeen=now;var ax=g.axes||[],L=dz(ax[0]||0,ax[1]||0),R=dz(ax[2]||0,ax[3]||0);state.lx=L[0];state.ly=L[1];state.rx=R[0];state.ry=R[1];
+    var B=(g.buttons||[]).map(function(b){return typeof b==="object"?(b.pressed||b.value>0.5):b>0.5;});
+    if(g.mapping!=="standard"){for(var q=B.length;q<16;q++)B[q]=false;if(ax.length>=6){B[14]=ax[ax.length-2]<-0.5;B[15]=ax[ax.length-2]>0.5;B[12]=ax[ax.length-1]<-0.5;B[13]=ax[ax.length-1]>0.5;}}   /* a d-pad reported as a hat on the last two axes */
+    var menu=!playing();
+    /* the sticks */
+    var fd=typeof GAME!=="undefined"&&GAME.mode==="free"&&GAME.fStyle>0;
+    if(!menu&&!fd&&(L[0]||L[1])){joy.id="pad";joy.x=L[0];joy.y=L[1];joyMine=true;}
+    else if(joyMine){joyMine=false;if(joy.id==="pad"){joy.id=null;joy.x=0;joy.y=0;}}
+    window.UKPAD=state;
+    /* the buttons */
+    var map=btnMap();
+    for(var b=0;b<B.length;b++){var was=!!prev[b],is=!!B[b];if(was===is)continue;prev[b]=is;
+      if(b===9&&is){if(document.body.classList.contains("pr-count")||(typeof ROUND!=="undefined"&&ROUND.counting)){if(window.ukPrSkip)window.ukPrSkip();}else key("Enter",true),key("Enter",false);continue;}   /* Start: skip the timer */
+      if(b===8){if(is){key("Escape",true);key("Escape",false);}continue;}   /* Back */
+      if(menu){if(!is)continue;if(b===0)press();else if(b===1){key("Escape",true);key("Escape",false);}else if(b===12)nav("u");else if(b===13)nav("d");else if(b===14)nav("l");else if(b===15)nav("r");continue;}
+      if(mode()==="free"&&is&&(b===3||b===1)){cycle(b===3?"#fdUI [data-s]":"#fdUI [data-sub]");continue;}
+      var code=map[b];if(code){pressed[b]=code;key(code,is);}}
+    /* the menus: the left stick moves the highlight too (a push, then repeats while held) */
+    if(menu){var d=Math.abs(L[0])>Math.abs(L[1])?(L[0]>0.5?"r":L[0]<-0.5?"l":""):(L[1]>0.5?"d":L[1]<-0.5?"u":"");
+      if(d&&(d!==navDir||now-navAt>(navDir===d?180:0))){nav(d);navAt=now+(d!==navDir?220:0);}navDir=d;}
+    else if(cur){cur.classList.remove("padfocus");cur=null;}
+    /* the half pipe leans with A / D */
+    if(!menu&&mode()==="pipe"){var want=L[0]<-0.5?"KeyA":L[0]>0.5?"KeyD":"";["KeyA","KeyD"].forEach(function(c){if(c===want&&!keysHeld[c])key(c,true);else if(c!==want&&keysHeld[c])key(c,false);});}}
+  function release(){Object.keys(keysHeld).forEach(function(c){key(c,false);});prev={};if(joyMine&&joy.id==="pad"){joy.id=null;joy.x=0;joy.y=0;}joyMine=false;window.UKPAD=null;}
+  function toast(t){var el=document.getElementById("padToast");if(!el){el=document.createElement("div");el.id="padToast";document.body.appendChild(el);}el.textContent=t;el.classList.remove("on");void el.offsetWidth;el.classList.add("on");}
+  window.addEventListener("gamepadconnected",function(){});   /* some browsers only list a pad after this fires */
+  requestAnimationFrame(tick);
+  /* games that need a phone or a mouse (pointing, tapping things on screen, drawing a swoop) */
+  var NEEDS_TOUCH={aim:1,keys:1,walk:1,ski:1,fish:1};
+  window.ukPad=function(){return{on:state.on,id:state.id,lx:+state.lx.toFixed(2),ly:+state.ly.toFixed(2),rx:+state.rx.toFixed(2),ry:+state.ry.toFixed(2),joy:[joy.id,+joy.x.toFixed(2),+joy.y.toFixed(2)],focus:cur?(cur.id||cur.textContent.trim().slice(0,30)):null,menu:!playing()};};
+  return{get on(){return state.on;},get state(){return state;},NEEDS_TOUCH:NEEDS_TOUCH};
+})();
+
+/* TV practice: practice for a big screen and a controller (the menu button below). The games that need a phone are greyed
+   out in the practice menu, and a strip along the bottom shows what each button does in the game you're playing. */
+var TVP=(function(){
+  var on=false;
+  function legend(m){var L={step:"D-pad or X A Y B = ← ↓ ↑ →  ·  Start skips the timer",keys4:"D-pad or X A Y B = the 4 keys",
+    free:"L stick: feet + walk at the edge  ·  R stick: hands  ·  A jump  ·  Y next dance  ·  B next move  ·  LB / RB turn",
+    dragon:"L stick fly  ·  A fire (hold to charge)  ·  B super  ·  flick L ↑ then ↓ to spin",pond:"L stick slides the box  ·  A cast / hold to reel / net",
+    keepy:"L stick shuffle  ·  A jump (twice: double)  ·  X spin  ·  B twirl",ctf:"L stick run  ·  A or LT sprint",kart:"L stick drive  ·  A drift",
+    boats:"L stick steer  ·  A boost",ball:"L stick run",swim:"L stick swim  ·  flick it to dash",skate:"L stick skate  ·  A jump",pipe:"A on the beat  ·  L stick lean",mosh:"L stick move  ·  A jump"};
+    return "🎮 "+(L[m]||"L stick move  ·  A action  ·  Start skips the timer");}
+  setInterval(function(){if(!on)return;var el=document.getElementById("padLegend"),m=(typeof GAME!=="undefined"&&GAME.mode)||"";if(el){var t=m?legend(m):"🎮 D-pad / L stick: move  ·  A: press  ·  B: back";if(el.textContent!==t)el.textContent=t;}
+    Array.prototype.forEach.call(document.querySelectorAll("#prGames button[data-m]"),function(b){var nt=!!PAD.NEEDS_TOUCH[b.getAttribute("data-m")];b.classList.toggle("tv-no",nt);if(nt)b.title="Needs a phone";});},300);
+  function enter(){on=true;document.body.classList.add("tvplay");if(!document.getElementById("padLegend")){var d=document.createElement("div");d.id="padLegend";document.body.appendChild(d);}
+    PRACTICE.enter();document.body.classList.add("pr-open");
+    if(!PAD.on){var t=document.getElementById("padToast");if(!t){t=document.createElement("div");t.id="padToast";document.body.appendChild(t);}t.textContent="🎮 Plug in a controller and press any button";t.classList.add("on","stay");}}
+  return{enter:enter,get on(){return on;}};
+})();
 
 /* ==== BALL RUN: a giant ball rolls round a round disk on the floor and everyone runs for their lives. In a room the host's
    page rolls it (the performer steers it with the arrow keys as they play); in practice this screen rolls it, after the
@@ -10807,7 +10909,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.143"></script>
+<script src="lab.js?v=1.82.144"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

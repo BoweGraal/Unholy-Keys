@@ -1688,6 +1688,30 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.144 — Controller support (first pass) + TV practice
+
+- **Controllers:** any controller the browser sees works. Two-stick controllers get everything, and controllers that report a non-standard layout fall back to a basic one.
+  - **Sticks:** the left stick is the on-screen stick (walk, steer, swim, fly). The right stick is the second stick where a game has one; in free dance that's your hands.
+  - **D-pad:** the arrow keys.
+  - **Buttons:** they press the keys a computer player would, so every game that plays from a keyboard plays from a controller.
+    - A = Space, the main action (jump, fire, cast, boost; held: reel or sprint)
+    - B = E, X = Q, Y = F
+    - LB / RB turn 90° in free dance
+    - LT / RT = Shift (sprint or drift)
+    - Start skips the countdown timer
+    - Back = Esc
+  - **Step dance and the 4-key highway:** the face buttons are arrows too (X ←, A ↓, Y ↑, B →), so it plays like a dance pad.
+  - **Free dance:** Y picks the next dance and B the next move.
+  - **Half pipe:** the left stick leans (A / D).
+- **Menus:** off the dance floor, the d-pad or left stick moves a yellow highlight between buttons, A presses it and B goes back.
+- **TV practice (new main-menu button):** practice laid out for a big screen and a controller. It opens the practice menu, greys out the games that need a phone (target dance, the 7-key highway, dance walk race, ski, ocean fishing), and shows a strip along the bottom with what each button does in the current game.
+
+1. On a computer, plug in a two-stick controller and open the main menu. A "Controller connected" note appears and the d-pad moves the highlight.
+2. Go to 🎮 TV practice, pick a game and a song with the controller, then Start to skip the timer.
+3. Free dance: the left stick moves your feet and walks you at the edge, the right stick moves your hands, Y gives the next dance.
+4. Step dance: hit the arrows with the d-pad or X A Y B.
+5. Dragon, Ball run, Keepy uppy, CTF, Kart, Boats, Pool fishing: the left stick moves you and A is the action.
+
 ## v1.82.143 — Dragon spin breathes a fire barrier
 
 - **What it does:** the corkscrew spin now breathes a small ring of dragon fire round your dragon for 0.8 s.
