@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.162 — Fishing: left stick jerks the float, the reel hooks the fish
+
+1. Cast, then while waiting flick the left stick left or right: the float jerks a clear step that way (twice the old nudge) with a dip and a splash ring. Never says TOO EARLY, even if the flick drifts downward.
+2. When the "!" shows (HOOK!): turn the reel on the right (about an eighth of a turn, either way) → HOOKED, and you're already winding. The reel stays on screen through the bite now.
+3. A tiny touch of the reel (under ~45°) doesn't hook; the left stick never hooks.
+4. Keyboard: S / ↓ still hooks. The how-to card and its demo now say "turn the reel".
+
 ## v1.82.161 — Pool fishing: quicker catch zone, hard fish jump less wildly
 
 1. Hold REEL: the catch zone rises about 20% faster; let go: it sinks about 20% faster.
