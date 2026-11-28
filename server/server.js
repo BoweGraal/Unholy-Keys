@@ -529,7 +529,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.176";
+var VERSION = "1.82.177";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -1022,7 +1022,7 @@ function onMessage(ws, raw, isBinary) {
       if (pv) { pv.pose = a; pv.combo = combo; pv.fd = fd; var prd = rooms[ws.room].round; if (prd && prd.phase === "play") pv.danced = true; }
       var pm = { type: "pose", id: ws.viewerId, a: a, c: combo }; if (fd) pm.fd = fd;
       /* on the roller rink: height in the air (0-60), a wipe-out, the trick (0-4) */
-      if (msg.sk && typeof msg.sk === "object") pm.sk = { h: intIn(msg.sk.h, 0, 60, 0), f: msg.sk.f ? 1 : 0, t: intIn(msg.sk.t, 0, 9, 0), a: intIn(msg.sk.a, -9, 9, 0), d: intIn(msg.sk.d, 0, 11, 7) };
+      if (msg.sk && typeof msg.sk === "object") pm.sk = { h: intIn(msg.sk.h, 0, 60, 0), f: msg.sk.f ? 1 : 0, t: intIn(msg.sk.t, 0, 9, 0), a: intIn(msg.sk.a, -9, 9, 0), d: intIn(msg.sk.d, 0, 11, 7), cx: intIn(msg.sk.cx, 0, 1000, 0), cy: intIn(msg.sk.cy, 0, 1000, 0), cf: intIn(msg.sk.cf, 0, 7, 0) };   /* the supermarket: where a parked cart is */
       broadcast(ws.room, pm, ws);
       return;
     }
