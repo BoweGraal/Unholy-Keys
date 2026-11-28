@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.164 — The performer always looks like they're playing live
+
+1. Dragon riders, boss fight: the demon at the organ now plays it. No instrument in hand, both hands over the keys, striking on the song's eighth notes (alternating hands, both slam on the accents), head nodding, mouth on the hits.
+2. Any song where the performer isn't playing live notes (a backing track, a YouTube song, a party's playlist): the performer on stage plays along on the song's own beat: a phrase walking round the chords, a held note every 4th beat, a quicker fill at the end of every 4 bars. Their band plays along too. (Practice used to be the only place this happened.)
+3. When the performer IS playing live, nothing changes: you see their real notes.
+4. Between songs (no song on): the performer stands idle as before.
+
 ## v1.82.163 — Fishing: the reel lights up on a nibble
 
 1. Cast and wait. When a fish swims up and nibbles under the float, the reel's rim pulses gold with a glow.

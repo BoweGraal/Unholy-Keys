@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.163"></script>
-<script src="tune.js?v=1.82.163"></script>
-<script src="gfx.js?v=1.82.163"></script>
-<script src="art.js?v=1.82.163"></script>
-<script src="qr.js?v=1.82.163"></script>
-<script src="voice.js?v=1.82.163"></script>
-<script src="instruments.js?v=1.82.163"></script>
-<script src="kart.js?v=1.82.163"></script>
-<script src="explain.js?v=1.82.163"></script>
+<script src="px8.js?v=1.82.164"></script>
+<script src="tune.js?v=1.82.164"></script>
+<script src="gfx.js?v=1.82.164"></script>
+<script src="art.js?v=1.82.164"></script>
+<script src="qr.js?v=1.82.164"></script>
+<script src="voice.js?v=1.82.164"></script>
+<script src="instruments.js?v=1.82.164"></script>
+<script src="kart.js?v=1.82.164"></script>
+<script src="explain.js?v=1.82.164"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -9925,13 +9925,23 @@ function drawPerformer(x,y){
   if(isPerformerPlaying){var pulse=0.35+0.25*Math.sin(now*0.008);ctx.save();ctx.globalAlpha=pulse;var gl=ART.PX.rg(ctx,x,y-6*s,2,x,y-6*s,22*s);gl.addColorStop(0,hexA(performer.color,0.9));gl.addColorStop(1,hexA(performer.color,0));ctx.fillStyle=gl;ART.PX.disc(ctx,x,y-6*s,22*s);ctx.restore();}
   var _pk=perfKind(),_ps={midi:lastNoteMidi,on:isPerformerPlaying,t0:lastNoteTime,off:PERF.off,now:now,n:PERF.n};
   /* practice: the stand-in performer plays a little riff on the song's beat (or a steady one when there's no song) */
-  if(typeof PRACTICE!=="undefined"&&PRACTICE.on&&!isPerformerPlaying){var bp=typeof ROUND!=="undefined"&&ROUND.pos?ROUND.pos():-1e9,bb=bp>-1e8?ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),bp):now/500,bi=Math.floor(bb),fr=bb-bi,bms=500;
-    _ps={midi:[60,64,67,72,67,64,62,65][((bi%8)+8)%8],on:fr<0.78,t0:now-fr*bms,off:now-fr*bms+0.78*bms,now:now,n:bi};}
+  if(!isPerformerPlaying){var rf=perfRiff(now);if(rf)_ps=rf;}
   if(PERF.band)ART.INST.drawBand(ctx,x,y,s,PERF.band,_ps,Math.min(x,W-x)-8);   /* a choir or a section plays along around the performer */
   ART.BAND.draw(ctx,x,y,s,now,Math.min(x,W-x)-8);   /* the performer's auto band */
   ART.INST.draw(ctx,x,y,s,performer.look||ART.looks.fromColor(performer.color,1),_pk,_ps);
   if(performer.name){ctx.font="bold 18px 'Silkscreen',ui-monospace,monospace";ctx.textAlign="center";ctx.textBaseline="top";var ny=y+12*s+3+6*s;ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,0.75)";ctx.strokeText(performer.name,x,ny);ctx.fillStyle="#fff";ctx.fillText(performer.name,x,ny);ctx.textBaseline="alphabetic";}
 }
+/* the live-band feel: when the performer isn't sending live notes (a backing track, a YouTube song, practice) but a song is on,
+   they play a riff on the song's own beat, so they always look like they're playing it live. A short phrase that walks round
+   the chord, a held note every 4th beat, a fill at the end of every 4 bars. */
+function perfRiff(now){
+  var bp=typeof ROUND!=="undefined"&&ROUND.pos?ROUND.pos():-1e9,song=bp>-1e8,pr=typeof PRACTICE!=="undefined"&&PRACTICE.on;
+  if(!song&&!pr)return null;
+  var bb=song?ART.PIPE.beatAt(ROUND.chart&&ROUND.chart(),bp):now/500,bi=Math.floor(bb),fr=bb-bi,bms=500,bar=Math.floor(bi/4),inBar=((bi%4)+4)%4,fill=((bar%4)+4)%4===3&&inBar>=2;
+  var PH=[[60,64,67,72],[62,65,69,74],[59,62,67,71],[60,64,67,76]],ph=PH[((bar%4)+4)%4],step=fill?((bi*2+(fr>=0.5?1:0))%4):inBar,midi=ph[step]+(fill&&fr>=0.5?12:0);
+  var len=inBar===3&&!fill?0.95:fill?0.42:0.78,f2=fill?(fr%0.5)*2:fr;
+  return{midi:midi,on:f2<len,t0:now-f2*bms*(fill?0.5:1),off:now-f2*bms*(fill?0.5:1)+len*bms,now:now,n:bi*2+(fill&&fr>=0.5?1:0)};}
+window.ukPerfRiff=function(t){return perfRiff(t);};
 /* the games that cover the whole screen (ski, capture the flag) draw the performer in a corner of their own canvas,
    two thirds size on a little lit stand, so everyone can still see them playing */
 function perfHere(){return !(typeof PH!=="undefined"&&PH.on);}   /* the performer is on stage (in practice, a stand-in plays along) unless they're hanging out on the floor */
@@ -10027,7 +10037,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.163",SERVER_VERSION="";
+var PAGE_VERSION="1.82.164",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10639,9 +10649,11 @@ var DRAGON=(function(){
   /* the demon organist IS the performer: their own character, burned red, with horns, glowing eyes and little wings */
   var DMW=64,DMH=78,dmC=null;
   function demon(now){if(!dmC){dmC=document.createElement("canvas");dmC.width=DMW;dmC.height=DMH;}var d=dmC.getContext("2d");d.setTransform(1,0,0,1,0,0);d.clearRect(0,0,DMW,DMH);d.imageSmoothingEnabled=false;
-    var pf=typeof performer!=="undefined"&&performer?performer:{},L=pf.look||ART.looks.fromColor(pf.color||"#D354A0",1),hm=Math.sin(now/90);
+    var pf=typeof performer!=="undefined"&&performer?performer:{},L0=pf.look||ART.looks.fromColor(pf.color||"#D354A0",1),L=Object.assign({},L0,{held:0}),hm=Math.sin(now/90);
+    var bt=typeof GAME!=="undefined"&&GAME.beatPos?GAME.beatPos():now/500,e8=bt*2,k8=Math.floor(e8),f8=e8-k8,hit=Math.max(0,1-f8*3.2),lft=k8%2===0,chord=k8%8===0||k8%8===6;   /* eighth notes, alternate hands; both slam on the 1 and the "and" of 3 */
+    var aL=0.62-(lft||chord?hit*0.42:0)+(lft||chord?0:0.12),aR=-0.62+(!lft||chord?hit*0.42:0)-(!lft||chord?0:0.12),nod=Math.round(hit*1.5);
     d.fillStyle="#3a0610";d.beginPath();d.moveTo(32,30);d.lineTo(4,10+hm*3);d.lineTo(10,34);d.lineTo(2,40);d.lineTo(28,40);d.fill();d.beginPath();d.moveTo(32,30);d.lineTo(60,10-hm*3);d.lineTo(54,34);d.lineTo(62,40);d.lineTo(36,40);d.fill();
-    try{ART.drawChar(d,32,58,2,L,{armL:1.25+hm*0.35,armR:-1.25+hm*0.35,legL:0.1,legR:-0.1,mouth:true});}catch(e){}
+    try{ART.drawChar(d,32,58+nod,2,L,{armL:aL,armR:aR,legL:0.1,legR:-0.1,mouth:hit>0.4});}catch(e){}   /* hammering the organ: hands down on the keys on the beat */
     d.globalCompositeOperation="source-atop";d.fillStyle="rgba(200,20,20,.5)";d.fillRect(0,0,DMW,DMH);d.globalCompositeOperation="source-over";
     d.fillStyle="#1a0406";d.fillRect(20,10,4,6);d.fillRect(18,6,3,5);d.fillRect(16,3,3,4);d.fillRect(40,10,4,6);d.fillRect(43,6,3,5);d.fillRect(45,3,3,4);
     d.fillStyle="#ffe14a";d.fillRect(26,24,4,2);d.fillRect(34,24,4,2);
@@ -10687,6 +10699,7 @@ var DRAGON=(function(){
   window.ukDragonCharge=function(n){charge=n;supUI();};window.ukDragonHurt=function(n){for(var i=0;i<(n||1);i++){stunTo=0;hurt(performance.now());}};window.ukDragonFire=function(){wantFire=true;};window.ukDragonSuper=fireSuper;
   window.ukDragonKill=function(){bossHit(bossHp);};window.ukDragonSpin=function(){spinAt=performance.now();};window.ukCork=function(cv,col){var g=cv.getContext("2d"),w=viewers[myId]||{color:col},id=myId||"me";g.clearRect(0,0,cv.width,cv.height);for(var i=0;i<9;i++){var x=110+(i%3)*260,y=120+Math.floor(i/3)*170;if(i<8)corkscrew(g,id,w,x,y,col,performance.now(),i/8,false);else{dragonArt(g,id,w,x,y,col,performance.now(),false,false);var se=seat(id,w);ART.drawChar(g,x,y+se.dy*2,2,w.look||ART.looks.fromColor(col,1),{dir:1,legL:se.legL,legR:se.legR,lgL:se.lgL,lgR:se.lgR,armL:se.armL,armR:se.armR});}}};window.ukDragon=function(){return{enc:encN,hearts:hearts,down:down,ended:ended,charge:charge,sup:performance.now()<superTo,on:on,local:local,score:score,enemies:en.length,notes:notes.length,boss:!!bossIn,dead:bossDead,hp:bossHp,max:bossMax,stun:performance.now()<stunTo,waves:waves.length,shots:bossShots.length,t:Math.round(sp()),bossAt:Math.round(bossAt)};};
   window.ukDragonJump=function(ms){jump+=ms;};   /* tests */
+  window.ukDemonFrame=function(t){return demon(t).toDataURL();};
   /* the rider's seat: side on, knees forward over the dragon's flank, hands forward on the reins; dy lifts them so they sit in the saddle */
   function seat(id,w){var now=performance.now(),o=DST[id],L=o?beat(o,now):0,sup=id===myId&&now<superTo;return{legL:-1.25,legR:-1.05,lgL:4.6,lgR:4.6,armL:sup?-2.2:-1.1,armR:sup?-2.4:-0.9,dy:-2+L*0.6};}
   function isOut(id,w){return id===myId?down:!!(w.sk&&w.sk.t===2);}
@@ -11331,7 +11344,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.163"></script>
+<script src="lab.js?v=1.82.164"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
