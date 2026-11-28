@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.149 — Dungeon: swings root you in place, the spin twirls your body, a longer reach
+
+- **Rooted:** a sword swing or a spin attack holds you to the spot until it finishes, plus a short recovery (about 0.1 s). Then you walk again. Rolling still moves you.
+- **Twirl:** during the spin attack your whole body turns round with the blade, through all 8 facings, with the arm following the sword.
+- **Reach:** the blade is drawn further out, a bit longer in a swing and longer still in a spin, so it reaches the area it actually hits.
+
+1. Walk and swing: you stop for the swing, then carry on walking.
+2. Hold to charge, then let go: you twirl round with the sword.
+
 ## v1.82.148 — Dungeon: the shield is held in the off hand, checked in all 8 directions
 
 - **Off hand:** the shield is drawn on the avatar's real off hand (the sword is in the other), with a guard pose that brings the arm across.

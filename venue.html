@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.148"></script>
-<script src="tune.js?v=1.82.148"></script>
-<script src="gfx.js?v=1.82.148"></script>
-<script src="art.js?v=1.82.148"></script>
-<script src="qr.js?v=1.82.148"></script>
-<script src="voice.js?v=1.82.148"></script>
-<script src="instruments.js?v=1.82.148"></script>
-<script src="kart.js?v=1.82.148"></script>
-<script src="explain.js?v=1.82.148"></script>
+<script src="px8.js?v=1.82.149"></script>
+<script src="tune.js?v=1.82.149"></script>
+<script src="gfx.js?v=1.82.149"></script>
+<script src="art.js?v=1.82.149"></script>
+<script src="qr.js?v=1.82.149"></script>
+<script src="voice.js?v=1.82.149"></script>
+<script src="instruments.js?v=1.82.149"></script>
+<script src="kart.js?v=1.82.149"></script>
+<script src="explain.js?v=1.82.149"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5600,7 +5600,7 @@ var DUNGEON=(function(){
   var DV=[[0,1],[1,0],[0,-1],[-1,0],[0.707,0.707],[0.707,-0.707],[-0.707,-0.707],[-0.707,0.707]];   /* facing index -> direction */
   var SWING=200,CHARGE=650,SPIN=380,HURT=1200,ROLL=330,ROLLCD=650,BLOCKARC=1.25;
   var on=false,room=1,mobs=[],st="idle",stAt=0,face=0,holding=false,hearts=3,downTo=0,invTo=0,score=0,pops=[],lastPh=0,lastT=0,clearAt=0,scrollAt=0,botS={},oth={},kills=0,hitSet=null,doorOpen=false,beatN=0,fallbackAt=0;
-  var CODE={idle:0,swing:1,charge:2,spin:3,hurt:4,down:5,block:6,roll:7},rollAt=0,rollV=[0,0],blocking=false,clangs=[],crit=false;
+  var CODE={idle:0,swing:1,charge:2,spin:3,hurt:4,down:5,block:6,roll:7},pin=null,pinTo=0,rollAt=0,rollV=[0,0],blocking=false,clangs=[],crit=false;
   function $(id){return document.getElementById(id);}
   function dunOn(){return GAME.mode==="dungeon"||(typeof ROUND!=="undefined"&&ROUND.mode==="dungeon");}
   function sc(){return Math.max(2,Math.round(Math.min(W/420,H/320)));}
@@ -5615,7 +5615,7 @@ var DUNGEON=(function(){
   function stop(){on=false;holding=false;document.body.classList.remove("gaming-dungeon");$("dgUI").classList.remove("on");}
   function banner(t){var b=$("dgBanner");if(!b)return;if(typeof PXEMO!=="undefined")PXEMO.set(b,t);else b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("dgScore");if(h)h.textContent=score.toLocaleString();var r=$("dgRoom");if(r)r.textContent="ROOM "+room;var hh=$("dgHearts");if(hh){var t="";for(var i=0;i<3;i++)t+=i<hearts?"♥":"♡";hh.textContent=t;}}
-  function set(s){st=s;stAt=performance.now();var b=$("dgBtn");if(b)b.classList.toggle("held",holding);}
+  function set(s){st=s;stAt=performance.now();if(s==="swing"||s==="spin"){var mm=me();if(mm&&!pin)pin=[mm.x,mm.y];pinTo=stAt+(s==="spin"?SPIN:SWING)+90;}var b=$("dgBtn");if(b)b.classList.toggle("held",holding);}
   /* the sword button: a press swings; keep holding to charge; let go when charged to spin */
   function down0(){if(!on||st==="down"||st==="roll")return;holding=true;if(st==="idle"||st==="hurt"){hitSet=[];crit=onBeat(performance.now());set("swing");}}
   function up0(){holding=false;var now=performance.now();if(st==="charge"){if(now-stAt>=CHARGE){hitSet=[];crit=onBeat(now);set("spin");}else set("idle");}var b=$("dgBtn");if(b)b.classList.remove("held");}
@@ -5638,7 +5638,7 @@ var DUNGEON=(function(){
   function nearestPlayer(o){var best=null,bd=1e9;Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4)return;if(id===myId&&st==="down")return;var d=Math.hypot((v.x-o.x)*W,(v.y-o.y)*H);if(d<bd){bd=d;best=v;}});return best;}
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;var m=me();if(!m)return;
-    var FZ=window.__dunFreeze;if(FZ){face=FZ.f;st=FZ.s;stAt=now-FZ.k*(FZ.s==="spin"?SPIN:FZ.s==="charge"?CHARGE*1.2:SWING);m.dance=4;GAME.moshPose(st==="block"?guardFor(face):armsFor(face,bladeAng({s:st,at:stAt,f:face},now)));if(GAME.poseNow)GAME.poseNow();return;}   /* tests: hold a pose */
+    var FZ=window.__dunFreeze;if(FZ){face=FZ.f;st=FZ.s;stAt=now-FZ.k*(FZ.s==="spin"?SPIN:FZ.s==="charge"?CHARGE*1.2:SWING);m.dance=4;var fzb={s:st,at:stAt,f:face};GAME.moshPose(st==="block"?guardFor(face):armsFor(st==="spin"?twirlFace(fzb,now):face,bladeAng(fzb,now)));if(GAME.poseNow)GAME.poseNow();return;}   /* tests: hold a pose */
     /* moving: where you're heading is where you face (not while the blade's out or charging: you strafe) */
     var ix=0,iy=0;if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){ix=joy.x;iy=joy.y;}else{ix=(held.right?1:0)-(held.left?1:0);iy=(held.down?1:0)-(held.up?1:0);}
     if((ix||iy)&&st!=="charge"&&st!=="swing"&&st!=="spin"&&st!=="block"&&st!=="roll")face=ART.face8(ix,iy,face);   /* the shield up: you keep facing your guard (and side-step) */
@@ -5647,6 +5647,8 @@ var DUNGEON=(function(){
     else if(st==="hurt"&&now-stAt>=300)set(blocking?"block":"idle");
     else if(st==="roll"){if(now-stAt>=ROLL)set(blocking?"block":"idle");else if(!scrollAt){var rs=sc()*46*dt/(ROLL/1000),m3=me();setMe(Math.max(X0,Math.min(X1,m3.x+rollV[0]*rs/W)),Math.max(Y0,Math.min(Y1,m3.y+rollV[1]*rs/H)));}}
     else if(st==="down"&&now>=downTo){hearts=3;invTo=now+HURT;set("idle");setMe(0.14,0.72);hud();}
+    /* a swing (or a spin) roots you to the spot until it's done, plus a moment of recovery */
+    if(pin){if(now<pinTo&&st!=="roll"&&st!=="hurt"&&st!=="down"&&!scrollAt){if(m.x!==pin[0]||m.y!==pin[1])setMe(pin[0],pin[1]);}else pin=null;}
     /* the room: stay inside it (the door on the right, once it's open, takes you on) */
     var x=m.x,y=m.y;if(doorOpen&&x>X1-0.01&&Math.abs(y-(Y0+Y1)/2)<0.09&&!scrollAt){scrollAt=now;}
     if(scrollAt){var k=(now-scrollAt)/650;if(k>=1){scrollAt=0;room++;makeRoom(room);setMe(X0+0.04,(Y0+Y1)/2);hud();banner("ROOM "+room);}}
@@ -5668,7 +5670,7 @@ var DUNGEON=(function(){
     mobs=mobs.filter(function(o){return !o.dead||now-o.dead<400;});
     if(!doorOpen&&mobs.every(function(o){return o.dead;})){doorOpen=true;clearAt=now;score+=100;GAME.moshPts(100);pops.push({t:now,txt:"ROOM CLEAR! +100  →",col:"#9cff4a",big:1});hud();}
     m.dance=4;var bl={s:st,at:stAt,f:face};
-    GAME.moshPose(st==="down"?[0.2,-0.2,0,0]:st==="swing"||st==="charge"||st==="spin"?armsFor(face,bladeAng(bl,now)):st==="block"?guardFor(face):st==="roll"?[1.4,-1.4,0.9,-0.9]:[0.25,-0.35,0,0]);if(GAME.poseNow)GAME.poseNow();
+    GAME.moshPose(st==="down"?[0.2,-0.2,0,0]:st==="spin"?armsFor(twirlFace(bl,now),bladeAng(bl,now)):st==="swing"||st==="charge"?armsFor(face,bladeAng(bl,now)):st==="block"?guardFor(face):st==="roll"?[1.4,-1.4,0.9,-0.9]:[0.25,-0.35,0,0]);if(GAME.poseNow)GAME.poseNow();
     if(LBOTS())botTick(dt,now);
   }
   /* practice dancers: walk at the nearest spider and swing when they're close */
@@ -5699,10 +5701,12 @@ var DUNGEON=(function(){
   function rollOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="roll")return null;return Math.min(1,(now-b.at)/ROLL);}
   function rollDir(id,v){var f=faceOf(id,v);return DV[f][0]<-0.1?-1:1;}
   function swordOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="swing"&&b.s!=="charge"&&b.s!=="spin")return null;
-    return{a:bladeAng(b,now),len:b.s==="spin"?15:13,glow:b.s==="charge"&&now-b.at>=CHARGE,tail:b.s==="swing"?4:b.s==="spin"?6:0,dir:1,spin:b.s==="spin"};}
+    return{a:bladeAng(b,now),len:b.s==="spin"?19:15,glow:b.s==="charge"&&now-b.at>=CHARGE,tail:b.s==="swing"?4:b.s==="spin"?6:0,dir:1,spin:b.s==="spin"};}
   function looks(){return{lift:0,rot:0,ns:true};}
   function faceOf(id,v){if(id===myId)return face;if(id.indexOf("bot")===0&&botS[id])return botS[id].face;return v.sk&&isFinite(v.sk.f)?v.sk.f|0:0;}
-  function facing(id,v){return faceOf(id,v);}
+  /* in a spin attack the whole body twirls round with the blade (you face where the sword is) */
+  function twirlFace(b,now){var a=bladeAng(b,now);return ART.face8(Math.cos(a),Math.sin(a),-1);}
+  function facing(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s==="spin")return twirlFace(b,now);return faceOf(id,v);}
   /* someone's blade state: mine directly, others from what they send (their swing timed from when it changed) */
   function bladeOf(id,v,now){if(id===myId)return{s:st,at:stAt,f:face,hold:holding};var t=id.indexOf("bot")===0&&botS[id]?botS[id].st:(v.sk?v.sk.t|0:0),o=oth[id]||(oth[id]={t:-1,at:0});if(t!==o.t){o.t=t;o.at=now;}var names=["idle","swing","charge","spin","hurt","down","block","roll"];return{s:names[t]||"idle",at:o.at,f:faceOf(id,v)};}
   /* the dungeon: stone floor, the walls, torches that flare on the beat, the door; slides sideways between rooms */
@@ -9914,7 +9918,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.148",SERVER_VERSION="";
+var PAGE_VERSION="1.82.149",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11117,7 +11121,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.148"></script>
+<script src="lab.js?v=1.82.149"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
