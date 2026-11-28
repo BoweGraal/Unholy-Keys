@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.169 — One Host button: just phones, phones + a TV, or a computer
+
+**Needs a Render redeploy** (the party remembers whether there's a TV).
+
+1. Main menu: one **🎤 Host** button (replaces "Host a party" and "Host a room"). It asks for your name first if it's empty.
+2. Tap it → choose:
+   - **📱 Just phones**: no TV. You land in your room as the host (playing too). Your phone plays the music, so use a speaker. YouTube videos show on everyone's phone, muted (the music comes from yours).
+   - **📺 Phones + a TV**: same, and a "Put it on the TV" card pops up: Cast (Android + Chromecast), TV mode (mirror), the TV link to open on the TV's browser, or Later. Videos show on the TV only.
+   - **💻 From a computer**: the full show page, as before.
+3. Either phone option: tap 🎉 HOST any time to add songs, start the show, end it, or get the TV options again.
+
 ## v1.82.168 — Party: YouTube ads play out ahead of time; the host's phone has the sound
 
 1. Host a party. A friend adds a YouTube song while you're jamming: a hidden player on the host's phone starts it straight away, muted, so any ad (even a 3-minute one) plays out by itself while everyone jams. You don't see or hear anything.
