@@ -1688,6 +1688,26 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.151 — Dungeon: always right-handed (sword right, shield left) in every direction
+
+- **Why it swapped:** the character art doesn't call the same limb "right" in every view. From the front and from behind the right hand is one limb, side on it's the other, and the left-facing views are the right-facing ones flipped, which swaps them again. So the sword changed hands depending on the way you faced.
+- **The fix:** one table now says which drawn arm is the real right hand in each of the 8 views. The sword always goes in that hand and the shield in the left.
+  - Facing you: the sword is on screen left.
+  - From behind: on screen right.
+  - Side on: in the near hand facing right, the far hand facing left.
+- **The swing** now starts on the right-hand side and sweeps across the front to the left, in every direction. The hit area matches, and so do the practice dancers.
+- **The shield guard** is worked out for the left hand in each view: across the chest from the front, edge on side on, peeking out at the side from behind.
+- Checked frame by frame in all 8 directions (swing start, a third, two thirds, end, charge, block).
+
+1. Dungeon: face each of the 8 ways and swing. The sword is always in the right hand and the swing always starts on the right.
+2. Hold BLOCK in each direction: the shield is always on the left arm.
+
+## v1.82.150 — Dungeon: no body shift at all in a slash
+
+- The slash no longer shifts the body forward at all, not even as a lean. The body stays exactly where you stand for the whole swing, and the reach comes from the arm and the blade. You're still rooted until the swing ends.
+
+1. Face right and slash: the body doesn't slide right at all. Only the arm and sword move.
+
 ## v1.82.149 — Dungeon: swings root you in place, the spin twirls your body, a longer reach
 
 - **Rooted:** a sword swing or a spin attack holds you to the spot until it finishes, plus a short recovery (about 0.1 s). Then you walk again. Rolling still moves you.
