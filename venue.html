@@ -28,15 +28,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.178"></script>
-<script src="tune.js?v=1.82.178"></script>
-<script src="gfx.js?v=1.82.178"></script>
-<script src="art.js?v=1.82.178"></script>
-<script src="qr.js?v=1.82.178"></script>
-<script src="voice.js?v=1.82.178"></script>
-<script src="instruments.js?v=1.82.178"></script>
-<script src="kart.js?v=1.82.178"></script>
-<script src="explain.js?v=1.82.178"></script>
+<script src="px8.js?v=1.82.179"></script>
+<script src="tune.js?v=1.82.179"></script>
+<script src="gfx.js?v=1.82.179"></script>
+<script src="art.js?v=1.82.179"></script>
+<script src="qr.js?v=1.82.179"></script>
+<script src="voice.js?v=1.82.179"></script>
+<script src="instruments.js?v=1.82.179"></script>
+<script src="kart.js?v=1.82.179"></script>
+<script src="explain.js?v=1.82.179"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -607,7 +607,7 @@ body.gaming-fish.fi-casting #fiPerf{display:flex}
 body.gaming-fish #fiPulse{display:block}
 #fiPulse.on{transition:none;box-shadow:inset 0 0 0 8px var(--pc,#9cff4a),inset 0 0 0 12px #000,inset 0 0 0 16px var(--pc,#9cff4a)}   /* hard pixel bands, no blur */
 #fiBpm{display:none;position:absolute;right:max(10px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 212px);width:136px;padding:6px 8px 7px;background:rgba(10,12,22,.82);border:2px solid #3a3f5a;box-shadow:0 0 0 2px #0a0c16;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#c9cbe0;text-align:center;pointer-events:none;image-rendering:pixelated}
-body.fish-reel #fiBpm{display:block}body.fish-wait #fiBpm{display:none}
+body.fish-reel #fiBpm{display:none}body.fish-wait #fiBpm{display:none}
 #fiBpm .fb-top{display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;color:#fff}
 #fiBpm .fb-dot{width:10px;height:10px;background:#3a3f5a}#fiBpm .fb-dot.on{background:#F5C518;box-shadow:0 0 0 2px #000,0 0 0 4px #F5C518}
 #fiBpm .fb-you{margin-top:3px;font-size:11px}#fiBpm.on .fb-you{color:#9cff4a}#fiBpm.near .fb-you{color:#F5C518}#fiBpm.off .fb-you{color:#ff7a6a}
@@ -5105,7 +5105,7 @@ var FISH=(function(){
     var h=$("fiHint"),touch=window.matchMedia&&matchMedia("(pointer:coarse)").matches;if(!h)return;
     /* kept short: symbols, a word or two */
     var hTxt=st==="idle"?(touch?"\uD83D\uDC46 aim \u00B7 \u21D7 swoop fast":"\uD83D\uDDB1 aim \u00B7 \u21D7 swoop fast \u00B7 A/D \u2194"):st==="aim"?"\u21D7 stay in!":st==="cast"?"\u23F3":st==="wait"?"\uD83D\uDC1F \u2192 float \u00B7 \u27F3 pull in":st==="bite"?(touch?"\u2757 TURN THE REEL!":"\u2757 S / \u2193 or turn the reel"):
-      st==="rewind"?"\u27F3 \u23E9":st==="reel"?(touch?"\u27F3 to the \u2669 \u00B7 \u2194 vs fish":"\u27F3 to the \u2669 \u00B7 A/D \u2194"):st==="net"?(touch?"\uD83E\uDD45 NET!":"\uD83E\uDD45 Space"):"";if(h._t!==hTxt){h._t=hTxt;PXEMO.set(h,hTxt);}
+      st==="rewind"?"\u27F3 \u23E9":st==="reel"?(touch?"\u27F3 fast \u00B7 not in the red \u00B7 \u2194 vs fish":"\u27F3 fast \u00B7 not in the red \u00B7 A/D \u2194"):st==="net"?(touch?"\uD83E\uDD45 NET!":"\uD83E\uDD45 Space"):"";if(h._t!==hTxt){h._t=hTxt;PXEMO.set(h,hTxt);}
     if(typeof goalHL==="function")goalHL(st==="net"?b:null,st==="net"?"NET IT":"");}
   /* the button: a quick cast (weak, for anyone who doesn't swoop), the net; on a computer Space / click on the beat reels */
   function press(){if(!on||!ready())return;var now=performance.now();
@@ -5119,17 +5119,19 @@ var FISH=(function(){
   }
   /* the reel's speed: how fast you spin it against the song's tempo. One turn a beat (anywhere round, either way) is full speed; a bit
      off is partial; way off is slow. The tempo comes from the song's beat grid, so it follows the song when it speeds up or slows */
+  /* the power wheel: how fast you wind, against a fixed best speed (not the song's tempo). Faster = more power, up to the red zone, where the line strains */
+  function PWR(){return FT("spinTarget",110);}var PW_MAX=1.6;
   var pulseK=-1,lastFastPop=0,spinRev=0,spinDir=1,spinHist=[],bpmHist=[],bpmNow=120,spinRpm=0,spinQ=0,lastBeatK=-1;
   function spinTick(now,dt){var b=beatNow();bpmHist.push({t:now,b:b});while(bpmHist.length>2&&now-bpmHist[0].t>2000)bpmHist.shift();
     var h0=bpmHist[0];if(now-h0.t>400){var bb=(b-h0.b)/((now-h0.t)/60000);if(isFinite(bb)&&bb>40&&bb<260)bpmNow+=(bb-bpmNow)*Math.min(1,dt*3);}
     spinHist.push({t:now,r:spinRev});while(spinHist.length>2&&now-spinHist[0].t>3000)spinHist.shift();
-    var win=Math.max(700,Math.min(2500,60000/bpmNow*2)),j=0;while(j<spinHist.length-1&&now-spinHist[j].t>win)j++;var s0=spinHist[j],el2=(now-s0.t)/60000;
+    var win=900,j=0;while(j<spinHist.length-1&&now-spinHist[j].t>win)j++;var s0=spinHist[j],el2=(now-s0.t)/60000;
     var rpm=el2>0.004?Math.abs(spinRev-s0.r)/el2:0;spinRpm+=(rpm-spinRpm)*Math.min(1,dt*8);
     /* slower than the beat: the reel turns slower (half the BPM = half speed) and the line eases off; at the beat or over it: full
        speed (over it strains the line, below) */
-    var q=0,ratio=spinRpm/bpmNow;if(spinRpm>8)q=ratio>=1-FT("spinWin",0.15)?1:Math.max(0.1,ratio);spinQ+=(q-spinQ)*Math.min(1,dt*6);
+    var q=0,ratio=spinRpm/PWR();if(spinRpm>8)q=Math.max(0.1,Math.min(1,ratio));spinQ+=(q-spinQ)*Math.min(1,dt*6);
     var k=Math.floor(b);bpmUI(k!==lastBeatK);lastBeatK=k;}
-  function bpmUI(beat){var el=$("fiBpm");if(!el)return;var r=spinRpm/bpmNow,e=spinRpm>8?Math.abs(Math.log(r)):9;
+  function bpmUI(beat){var r=spinRpm/PWR(),e=spinRpm<8?9:r>1+FT("spinWin",0.15)?1:r>=0.8?0:0.5;if(reelPaint)reelPaint(reelA||0);var el=$("fiBpm");if(!el)return;
     el.className=spinRpm<8?"":e<FT("spinWin",0.15)?"on":r<1?"near":"off";
     var t=el.querySelector(".fb-bpm");if(t)t.textContent=Math.round(bpmNow);var y=el.querySelector(".fb-you");if(y)var yt=spinRpm<8?"\u27F3 ?":"\u27F3 "+Math.round(spinRpm);if(y._t!==yt){y._t=yt;PXEMO.set(y,yt);}
     var n=el.querySelector(".fb-n");if(n)n.style.left=(50+Math.max(-1,Math.min(1,spinRpm<8?-1:Math.log(r)/Math.log(2)))*46)+"%";
@@ -5171,7 +5173,7 @@ var FISH=(function(){
   function coachSay(txt,cls,rod){var b=$("fiTut");if(b){if(b._t!==txt){b._t=txt;PXEMO.set(b,txt);}b.className=txt?"on "+cls:"";}
     document.body.classList.toggle("fish-tut-rod",rod!==undefined&&rod!==null);var gh=document.querySelector("#dpad .fi-ghost");if(gh&&rod!=null)gh.style.transform="translate("+Math.round(rod*38)+"px,0)";}
   function coach(now,age){var touch=TOUCHF,want=-runDir,matched=rodA*want>0.5,dir=runDir<0?"LEFT":"RIGHT",push=want<0?(touch?"LEFT ⬅":"A ⬅"):(touch?"RIGHT ➡":"D ➡");
-    if(age<2.5)coachSay("\u27F3 one turn each \u2669","info");
+    if(age<2.5)coachSay("\u27F3 wind it \u00B7 stay out of the red","info");
     else if(T>0.62)coachSay("\u26A0 slow down","warn",burst>0.4?want:null);
     else if(burst>0.4&&!matched)coachSay("\uD83D\uDC1F "+(want<0?"\u2B05":"\u27A1")+" pull "+(touch?"":(want<0?"A":"D")),"run",want);
     else if(burst>0.4)coachSay("\u2714 hold it","ok",want);
@@ -5222,10 +5224,11 @@ var FISH=(function(){
   (function(){var el=$("fiReel");if(!el)return;var kn=el.querySelector(".fr-knob"),arm=el.querySelector(".fr-arm"),sp=el.querySelector(".fr-spool"),pid=null,prev=null;
     /* the reel in real pixels: a 40x40 sprite (stepped rim, 8 spokes that turn with you, the arm and its knob), scaled up crisp */
     var cvs=el.querySelector(".fr-cv"),cg=cvs&&cvs.getContext("2d");
-    function paint(a){if(!cg)return;var N=40,c=19.5,g2=cg;g2.clearRect(0,0,N,N);var held=el.classList.contains("held"),beat=el.classList.contains("beat"),nibC=el.classList.contains("nib"),bitC=el.classList.contains("bite");
+    function paint(a){if(!cg)return;var N=40,c=19.5,g2=cg;g2.clearRect(0,0,N,N);var pwOn=st==="reel",pwF=spinRpm>8?Math.min(1,spinRpm/(PWR()*PW_MAX)):0,pwRed=(1+FT("spinWin",0.15))/PW_MAX;var held=el.classList.contains("held"),beat=el.classList.contains("beat"),nibC=el.classList.contains("nib"),bitC=el.classList.contains("bite");
       function dot(x,y,col){g2.fillStyle=col;g2.fillRect(Math.round(x),Math.round(y),1,1);}
       for(var y=0;y<N;y++)for(var x=0;x<N;x++){var d=Math.hypot(x-c,y-c);
-        if(d<=19.6&&d>(bitC||nibC?16.9:18.2))dot(x,y,bitC?"#ff3b5c":nibC?"#F5C518":held?"#3DF2FF":beat?"#F5C518":"#2a2f45");          /* outer ring: lights when held / on the beat */
+        if(d<=19.6&&d>(bitC||nibC||pwOn?16.9:18.2)){if(pwOn){var fa=((Math.atan2(x-c,-(y-c))/(Math.PI*2))+1)%1,red=fa>=pwRed;dot(x,y,fa<=pwF?(red?"#ff3b3b":fa>pwRed*0.62?"#9cff4a":"#3DF2FF"):(red?"#5a1e1e":"#1e2236"));}
+          else dot(x,y,bitC?"#ff3b5c":nibC?"#F5C518":held?"#3DF2FF":"#2a2f45");}          /* outer ring: the power wheel while reeling (fills clockwise with your winding speed, the red zone strains the line); lights on a nibble / bite */
         else if(d<=18.2&&d>16.8)dot(x,y,"#11131a");                                     /* rim */
         else if(d<=16.8){var an=Math.atan2(y-c,x-c)-a,sp=((an/(Math.PI/4))%1+1)%1;dot(x,y,d<4.2?(d<3?"#e3e6ee":"#11131a"):sp<0.22?"#5d6378":(d>14.5?"#8e94aa":"#a9afc4"));}}   /* spool, turning spokes, hub */
       var ex=c+Math.sin(a)*12.5,ey=c-Math.cos(a)*12.5;for(var t=0;t<=1;t+=0.04){var px2=c+(ex-c)*t,py2=c+(ey-c)*t;dot(px2-1,py2,"#11131a");dot(px2+1,py2,"#11131a");dot(px2,py2-1,"#11131a");dot(px2,py2+1,"#11131a");}
@@ -5280,7 +5283,7 @@ var FISH=(function(){
     /* waiting: flick the left stick left or right and the float twitches one small step that way, to nudge it into a fish's path
        (each flick is one step; it spooks a fish that's nosing at it, like reeling does) */
     if(st==="wait"&&!marlinHook){var nx0=inp.x>0.55?1:inp.x<-0.55?-1:0;if(nx0&&nx0!==nudgeD){var ax0=aimX;aimX=Math.max(-1,Math.min(1,aimX+nx0*0.09));if(aimX!==ax0)nudgeFx={t:now,d:nx0};if(biteFish)scare(now),biteAt=noFish()?Infinity:biteAt;marlinHold=false;}nudgeD=Math.abs(inp.x)<0.3?0:nx0||nudgeD;}
-    if(st==="wait"){spinTick(now,dt);var wr=spinRpm>8?Math.min(1.2,spinRpm/bpmNow):(spaceHeld||held.up?0.6:0);
+    if(st==="wait"){spinTick(now,dt);var wr=spinRpm>8?Math.min(1.2,spinRpm/PWR()):(spaceHeld||held.up?0.6:0);
       if(wr>0){castD=Math.max(0,castD-wr*FT("waitReel",0.16)*dt);D=castD;if(biteFish&&!marlinHook)scare(now),biteAt=noFish()?Infinity:biteAt;marlinHold=false;   /* moving the float spooks the one nosing at it */
         if(castD<0.3){castD=0.8;biteAt=Infinity;set("idle");pops.push({t:now,txt:"\u2714 READY",col:"#9cff4a"});}}
       else if(noFish()&&!marlinHold&&!marlinHook){if(!biteFish){var nf=fishNear(now);if(nf){biteFish=nf;biteAt=now+(loud()?250:450)+Math.random()*500;}}
@@ -5310,11 +5313,11 @@ var FISH=(function(){
       /* the reel: winds on the beat; holding on a computer is a slow steady reel */
       spinTick(now,dt);var rt=Math.min(1,windRate());if(reelHold||spaceHeld||held.up)rt=Math.max(rt,0.3);reelR+=(rt-reelR)*Math.min(1,dt*(rt>reelR?10:4));
       D=Math.max(0,Math.min(1.2,D+(pull*FT("run",0.14)-reelR*FT("reel",0.24)*(tut?0.45:1)*(kind===5?FT("marlinReel",0.55):kind===6?FT("seabassReel",0.65):1)*(1-0.5*Math.min(1,pull)))*dt));
-      var ovs=spinRpm>8?Math.max(0,spinRpm/bpmNow-1-FT("spinWin",0.15)):0;   /* spinning faster than the beat strains the line */
+      var ovs=spinRpm>8?Math.max(0,spinRpm/PWR()-1-FT("spinWin",0.15)):0;   /* winding into the red zone strains the line */
       var Tt=reelR*FT("tenReel",0.45)+pull*(reelR>0.15?FT("tenPull",1.15):FT("tenPull",1.15)*0.43)+Math.abs(rodA)*0.08+ovs*FT("tenOver",0.9);
       if(D>1.08)Tt=Math.max(Tt,1.6);   /* out of line: the spool is empty, so the line goes tight and the tension bar climbs to the top before it snaps */
       if(D>1&&!lineWarn){lineWarn=true;pops.push({t:now,txt:"\u26A0 LINE OUT!",col:"#ff8a5a"});try{if(navigator.vibrate)navigator.vibrate([60,60,60]);}catch(e){}}else if(D<0.9)lineWarn=false;
-      var und=spinRpm>8?Math.max(0,1-FT("spinWin",0.15)-spinRpm/bpmNow):(reelR<0.05?0.3:0);Tt*=1-Math.min(0.6,und*FT("tenUnder",0.8));   /* spinning slower eases the line */
+      var und=spinRpm>8?Math.max(0,0.85-spinRpm/PWR()):(reelR<0.05?0.3:0);Tt*=1-Math.min(0.6,und*FT("tenUnder",0.8));   /* spinning slower eases the line */
       if(ovs>0.15&&now-(lastFastPop||0)>1600){lastFastPop=now;pops.push({t:now,txt:"\u26A0 TOO FAST",col:"#ff8a5a"});}var dT=(Tt-T)*Math.min(1,dt*FT("tenRise",5));   /* tension can only climb so fast (slower still just after the hook); it can drop quicker */
       if(dT>0)dT=Math.min(dT,FT("tenMaxRise",0.35)*dt*(age<2?FT("tenHookEase",0.5):1));else dT=Math.max(dT,-FT("tenMaxFall",0.9)*dt);T+=dT;
       if(T>1)overT+=dt;else overT=Math.max(0,overT-dt*2);if(T<0.06)slackT+=dt;else slackT=0;
@@ -10419,7 +10422,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.178",SERVER_VERSION="";
+var PAGE_VERSION="1.82.179",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11738,7 +11741,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.178"></script>
+<script src="lab.js?v=1.82.179"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

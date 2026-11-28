@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.179 — Fishing: power wheel instead of the BPM meter
+
+1. Reeling a fish in: the BPM box is gone. The reel's outer ring is now a **power wheel**: it fills clockwise as you wind faster (blue, then green = full power), with a **red zone** at the top end.
+2. Winding faster reels the fish in faster, up to full power. Winding into the red strains the line (tension climbs, "⚠ TOO FAST"), and staying there snaps it. Winding slowly eases the line off.
+3. It no longer depends on the song's tempo. The screen-edge flash still pulses on the beat, coloured by your zone (green good, blue slow, red too fast).
+
 ## v1.82.178 — Supermarket sweep: cart swap, 5 per spot, 5 of a kind per cart
 
 1. Every spot on the shelves (and each deli spot) holds **5** and shows "×5"; each one you take counts it down, and a spot swept clean stays empty (no restock). Holding GRAB by a parked cart sweeps the whole spot in, one after another.
