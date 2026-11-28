@@ -28,13 +28,13 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.152"></script>
-<script src="px8.js?v=1.82.152"></script>
-<script src="art.js?v=1.82.152"></script>
-<script src="qr.js?v=1.82.152"></script>
-<script src="voice.js?v=1.82.152"></script>
-<script src="instruments.js?v=1.82.152"></script>
-<script src="kart.js?v=1.82.152"></script>
+<script src="gfx.js?v=1.82.153"></script>
+<script src="px8.js?v=1.82.153"></script>
+<script src="art.js?v=1.82.153"></script>
+<script src="qr.js?v=1.82.153"></script>
+<script src="voice.js?v=1.82.153"></script>
+<script src="instruments.js?v=1.82.153"></script>
+<script src="kart.js?v=1.82.153"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4890,10 +4890,22 @@ function resumeHosting(){var v=HOSTING.saved();if(!v||liveOn||liveWs)return fals
   goLive(v);
   showJamToast("📡 Getting your room back…","#F5C518",2500);return true;}
 setTimeout(resumeHosting,1200);
+var PARTY_ON=/[?&]party\b/.test(location.search);   /* a party hosted from a phone: this page runs hidden inside the host's player screen */
+if(PARTY_ON)window.addEventListener("load",function(){setTimeout(function(){
+  var q=new URLSearchParams(location.search),pn=(q.get("pn")||"").slice(0,16),el=document.getElementById("stageName");if(el)el.value=pn?("DJ "+pn).slice(0,24):"DJ";
+  try{if(typeof jamOn!=="undefined"&&!jamOn)enterJam();}catch(e){}
+  if(!liveOn&&!liveWs)goLive();},600);});
+window.ukParty={on:PARTY_ON,
+  code:function(){return typeof liveOn!=="undefined"&&liveOn&&LIVERC.room?LIVERC.room:"";},
+  state:function(){var st=window.__ukPL.party.state();return{code:this.code(),items:st.items,show:st.show,playing:typeof LSET!=="undefined"&&!!LSET.playing,tvUrl:this.code()?CAST.url(this.code()):""};},
+  start:function(n){return window.__ukPL.party.start(n);},stop:function(){window.__ukPL.party.stop();},remove:function(i){window.__ukPL.party.remove(i);},move:function(i,d){window.__ukPL.party.move(i,d);},add:function(file){window.__ukPL.party.push(file);},
+  skipBreak:function(){try{ROUNDS.skipCount();}catch(e){}},
+  unlock:function(){try{Tone.start();}catch(e){}try{var c=Tone.getContext().rawContext;if(c&&c.resume)c.resume();}catch(e){}try{var a=new Audio();a.muted=true;a.play().catch(function(){});}catch(e){}},   /* called from the host's tap in the player screen */
+  cast:function(){try{CAST.open();var b=document.querySelector("#castPane .cs-cast");if(b)b.click();}catch(e){}}};
 function goLive(rs){
   if(liveOn){endLive();return;}
   var btn=document.getElementById("bLive");
-  if(rs){LIVERC.room=rs.room;LIVERC.key=rs.key;LIVERC.n=0;}else STREAM.start();   /* coming back to your room: no new screen-share prompt */                                          /* must run straight from the click: Chrome only shows the share prompt for a click */
+  if(rs){LIVERC.room=rs.room;LIVERC.key=rs.key;LIVERC.n=0;}else if(!PARTY_ON)STREAM.start();   /* coming back to your room: no new screen-share prompt */                                          /* must run straight from the click: Chrome only shows the share prompt for a click */
   function liveFail(){
     if(liveOn)return;
     STREAM.stop();
@@ -5003,7 +5015,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.152",SERVER_VERSION="";
+var PAGE_VERSION="1.82.153",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5801,7 +5813,15 @@ var LSET=(function(){
   var PL=(function(){
     var D={lists:[],history:[],favs:{}},queue=[],qName="Tonight",reqs=[],sess="h"+Date.now(),cfg={vote:true,voteGame:true,auto:true};
     try{var sd=JSON.parse(localStorage.getItem("uk_pl")||"{}");if(sd.lists)D.lists=sd.lists;if(sd.history)D.history=sd.history;if(sd.favs)D.favs=sd.favs;if(sd.queue)queue=sd.queue;if(sd.qName)qName=sd.qName;if(sd.cfg)for(var k in sd.cfg)cfg[k]=sd.cfg[k];}catch(e){}
-    function save(){try{localStorage.setItem("uk_pl",JSON.stringify({lists:D.lists,history:D.history.slice(0,30),favs:D.favs,queue:queue,qName:qName,cfg:cfg}));}catch(e){}badge();}
+    function save(){try{localStorage.setItem("uk_pl",JSON.stringify({lists:D.lists,history:D.history.slice(0,30),favs:D.favs,queue:queue,qName:qName,cfg:cfg}));}catch(e){}badge();plState();}
+    /* PARTY: the show is N songs off the top of the playlist, played back to back: the crowd votes each game, a break (the
+       countdown, which everyone can vote to skip) between them; then it stops and it's back to jamming */
+    var show={on:false,n:0,i:0,now:""},cfgWas=null;
+    function plState(){if(!PARTY_ON||typeof liveOn==="undefined"||!liveOn)return;liveSend({type:"pl-state",party:1,items:queue.slice(0,40).map(function(x){return{t:x.title||"",by:x.by||""};}),show:{on:show.on?1:0,n:show.n,i:show.i,now:show.now||""}});}
+    setInterval(function(){if(PARTY_ON)plState();},15000);   /* now and then, for anyone who missed it */
+    function showStart(n){if(!queue.length)return false;cfgWas=cfgWas||{auto:cfg.auto,vote:cfg.vote,voteGame:cfg.voteGame};cfg.auto=true;cfg.vote=false;cfg.voteGame=true;
+      show={on:true,n:Math.max(1,Math.min(n|0||queue.length,queue.length)),i:0,now:""};plState();showJamToast("\u{1F389} THE SHOW STARTS: "+show.n+" SONG"+(show.n>1?"S":""),"#F5C518",2600);playItem(queue[0],1500);return true;}
+    function showStop(){if(!show.on)return;show.on=false;if(cfgWas){for(var k in cfgWas)cfg[k]=cfgWas[k];cfgWas=null;}plState();showJamToast("\u{1F389} That's the show! Back to jamming","#9cff4a",3200);}
     /* song files: kept in IndexedDB */
     var dbp=null;function db(){if(!dbp)dbp=new Promise(function(res,rej){try{var r=indexedDB.open("ukPlaylist",1);r.onupgradeneeded=function(){r.result.createObjectStore("songs");};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});return dbp;}
     function idbPut(id,val){return db().then(function(d){return new Promise(function(res,rej){var t=d.transaction("songs","readwrite");t.objectStore("songs").put(val,id);t.oncomplete=function(){res();};t.onerror=function(){rej(t.error);};});});}
@@ -5817,30 +5837,37 @@ var LSET=(function(){
       if(it.kind==="track")return Promise.resolve({key:it.key,kind:"track",title:it.title,f:{name:it.f.name,filename:it.f.filename,url:it.f.url,file:null}});
       return idbGet(it.bid).then(function(v){if(!v)throw new Error("That song file isn't on this computer any more");var name=v.name||it.title,fl=new File([v.blob],name,{type:v.blob.type||"audio/mpeg"});BACKING.addFiles([fl]);
         return new Promise(function(res,rej){var n=0,iv=setInterval(function(){var nf=BACKING.lib.filter(function(f){return f.filename===name;}).pop();if(nf){clearInterval(iv);res({key:"b:"+nf.url,kind:"track",video:!!nf.video,title:it.title,f:nf});}else if(++n>40){clearInterval(iv);rej(new Error("Couldn't load that song file"));}},100);});});}
+    /* how long a song is (ms), 0 if it can't be told quickly (a YouTube video): it decides one game or a pair in the vote */
+    function durOf(o){return new Promise(function(res){var u=o&&o.f&&o.f.url;if(!u||o.vid){res(0);return;}var a=new Audio(),done=false,fin=function(v){if(!done){done=true;res(v);a.src="";}};
+      a.preload="metadata";a.onloadedmetadata=function(){fin(isFinite(a.duration)?a.duration*1000:0);};a.onerror=function(){fin(0);};setTimeout(function(){fin(0);},2500);a.src=u;});}
     /* the next song, picked and started */
     function playItem(it,delay){if(!it)return;toPick(it).then(function(o){
         var ix=queue.indexOf(it);if(ix>=0){queue.splice(ix,1);save();}
         showJamToast("NEXT: "+it.title,"#F5C518",2200);render2();
-        if(cfg.voteGame&&liveOn){ROUNDS.preVote(function(rank){if(rank&&rank.length){games=rank.slice(0,2);game=games[0];}else{games=["crowd"];game="crowd";}choose(o);start();});return;}   /* the crowd votes the games first: the top 2 (just 1 for a song under 3 min) */
+        if(cfg.voteGame&&liveOn){durOf(o).then(function(D){var pairs=D>=180000;ROUNDS.preVote(function(rank){if(rank&&rank.length){games=rank[0].indexOf("+")>0?rank[0].split("+"):pairs?rank.slice(0,2):rank.slice(0,2);game=games[0];}else{games=["crowd"];game="crowd";}choose(o);start();},pairs);});return;}   /* the crowd votes the games first: the top 2 (just 1 for a song under 3 min) */
         choose(o);setTimeout(function(){start();},delay||0);})
       .catch(function(e){showJamToast(e&&e.message?e.message:"Couldn't load that song","#ff8a8a",2500);var ix=queue.indexOf(it);if(ix>=0){queue.splice(ix,1);save();}render2();});}
     /* a song from the queue started: it's in tonight's history */
     function started(o){var ix=-1;queue.forEach(function(q,k){if(ix<0&&q.key===o.key)ix=k;});var it=ix>=0?queue[ix]:null;if(ix>=0)queue.splice(ix,1);
       var h=D.history.filter(function(x){return x.id===sess;})[0];if(!h){h={id:sess,at:Date.now(),name:qName,items:[]};D.history.unshift(h);}
-      if(it)h.items.push(it);else fromPick(o).then(function(x){h.items.push(x);save();}).catch(function(){});h.name=qName;save();render2();}
+      if(it)h.items.push(it);else fromPick(o).then(function(x){h.items.push(x);save();}).catch(function(){});h.name=qName;if(show.on){show.i++;show.now=o.title||(it&&it.title)||"";}save();render2();}
     /* the song ended: the crowd picks the next from the queue (and the game), or the next one just plays */
     var sv2=null;
-    function ended(natural){if(!natural||!cfg.auto||!queue.length)return false;
+    function ended(natural){if(show.on&&(show.i>=show.n||!queue.length)){showStop();return false;}   /* the last song of the show */
+      if(!natural||!cfg.auto||!queue.length)return false;
       if(cfg.vote&&liveOn&&queue.length>=2){sv2={items:queue.slice(0,4),done:false};liveSend({type:"svote-open",opts:sv2.items.map(function(x){return x.title;}),ms:20000});showJamToast("VOTE: NEXT SONG","#D354A0",1600);sv=sv2;return true;}
       playItem(queue[0],4000);return true;}
     function voted(win){var s2=sv2;sv2=null;if(!s2)return false;playItem(s2.items[win|0]||s2.items[0],2500);return true;}
     /* song requests from players */
-    function req(m){if(m.type==="song-req"){var r={rid:m.rid,from:m.from,name:m.name||"Someone",yt:m.yt||null,title:m.yt?(m.title||"YouTube video"):clean(m.file||"A song"),n:m.n||0,got:0,parts:[],mime:m.mime||"audio/mpeg",at:Date.now()};
-        reqs.push(r);if(r.yt)ytTitle(r);showJamToast("\u{1F3B5} "+r.name+" sent a song","#9cff4a",2000);render2();badge();return;}
-      var q=reqs.filter(function(x){return x.rid===m.rid&&x.from===m.from;})[0];if(!q||q.parts[m.i])return;q.parts[m.i]=m.d;q.got++;if(q.got>=q.n||q.got%8===0)render2();}
+    function req(m){if(m.type==="song-req"){var r={rid:m.rid,from:m.from,name:m.name||"Someone",yt:m.yt||null,track:m.track||null,title:m.yt?(m.title||"YouTube video"):clean(m.track||m.file||"A song"),n:m.n||0,got:0,parts:[],mime:m.mime||"audio/mpeg",at:Date.now()};
+        reqs.push(r);if(r.yt)ytTitle(r);showJamToast("\u{1F3B5} "+r.name+" sent a song","#9cff4a",2000);render2();badge();
+        if(PARTY_ON&&(r.yt||r.track))approve(r);   /* a party: everyone's songs go straight on the playlist */
+        return;}
+      var q=reqs.filter(function(x){return x.rid===m.rid&&x.from===m.from;})[0];if(!q||q.parts[m.i])return;q.parts[m.i]=m.d;q.got++;if(q.got>=q.n||q.got%8===0)render2();if(PARTY_ON&&q.got>=q.n)approve(q);}
     function ytTitle(r){fetch("https://www.youtube.com/oembed?format=json&url="+encodeURIComponent("https://youtu.be/"+r.yt)).then(function(x){return x.json();}).then(function(j){if(j&&j.title){r.title=j.title;render2();}}).catch(function(){});}
     function answer(r,ok,why){reqs=reqs.filter(function(x){return x!==r;});liveSend({type:"song-req-res",to:r.from,rid:r.rid,ok:ok,title:r.title,why:why||""});badge();render2();}
     function approve(r){if(r.yt){queue.push({key:"y:"+r.yt,kind:"yt",vid:r.yt,title:r.title,by:r.name});save();answer(r,true);return;}
+      if(r.track){queue.push({key:"t:"+r.track,kind:"track",title:clean(r.track),f:{name:clean(r.track),filename:r.track,url:"songs/"+encodeURIComponent(r.track)},by:r.name});save();answer(r,true);return;}   /* one of the game's own songs */
       if(r.got<r.n)return;var bytes=r.parts.map(function(b64){var bin=atob(b64),a=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a;}),bl=new Blob(bytes,{type:r.mime}),id="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
       idbPut(id,{blob:bl,name:r.title}).then(function(){queue.push({key:"d:"+id,kind:"blob",bid:id,title:r.title,by:r.name});save();answer(r,true);}).catch(function(){answer(r,false,"The host's computer couldn't store it");});}
     function badge(){var n=reqs.length,t=$("lsPlN");if(t)t.textContent=n?" ("+n+")":queue.length?" · "+queue.length:"";var b=$("jSongBtn");if(b)b.classList.toggle("req",n>0);}
@@ -5884,8 +5911,9 @@ var LSET=(function(){
     window.ukPL=function(){return{queue:queue.map(function(x){return x.title;}),reqs:reqs.map(function(r){return{title:r.title,from:r.name,got:r.got,n:r.n};}),lists:D.lists.map(function(L){return L.name+":"+L.items.length;}),history:D.history.map(function(h){return h.items.length;}),favs:Object.keys(D.favs).length,cfg:cfg};};
     window.ukPLadd=function(it){queue.push(it);save();render2();};
     window.ukPLapprove=function(){reqs.slice().forEach(approve);};window.ukPLend=function(){return ended(true);};
-    return{hasLists:function(){return D.lists.length>0;},render:renderP,req:req,started:started,ended:ended,voted:voted,get queue(){return queue;},approveAll:function(){reqs.slice().forEach(approve);}};
-  })();
+    return{party:{start:showStart,stop:showStop,state:function(){return{items:queue.map(function(x){return{t:x.title,by:x.by||""};}),show:show};},remove:function(i){if(queue[i]){queue.splice(i,1);save();render2();}},move:function(i,d){var j=i+d;if(queue[i]&&queue[j]){var t=queue[i];queue[i]=queue[j];queue[j]=t;save();render2();}},push:function(file){queue.push({key:"t:"+file,kind:"track",title:clean(file),f:{name:clean(file),filename:file,url:"songs/"+encodeURIComponent(file)},by:"host"});save();render2();}},
+      hasLists:function(){return D.lists.length>0;},render:renderP,req:req,started:started,ended:ended,voted:voted,get queue(){return queue;},approveAll:function(){reqs.slice().forEach(approve);}};
+  })();window.__ukPL=PL;
   window.ukLsetAdd=function(files){BACKING.addFiles(files);setTimeout(render,100);};   /* for testing: add song files as if picked */
   window.ukLset=function(){return{open:$("lsModal").classList.contains("on"),pick:pick&&pick.key,game:game,cur:cur&&{kind:cur.kind,title:cur.title,game:cur.game,started:cur.started,paused:cur.paused,pos:Math.round(pos()),cd:cur.cd||0}};};
   /* the crowd picks the next song: a vote between 4 random videos from your library (keys in the names are hidden from the room) */
@@ -7059,23 +7087,27 @@ var ROUNDS=(function(){
   function markPlayed(m){if(!fullShow)return;var a=played();if(a.indexOf(m)<0)a.push(m);try{localStorage.setItem("uk_showplayed",JSON.stringify(a));}catch(e){}}
   function resetPlayed(){try{localStorage.removeItem("uk_showplayed");}catch(e){}}
   /* three games for the crowd to choose from: not one already picked for this song, and in a full show not one already played */
-  function voteOpts(){
+  function voteOpts(pairs){
     var taken=set?set.plan.map(function(q){return q.mode;}):[],pool=ALLG.filter(function(m){return m!=="kflag"&&taken.indexOf(m)<0&&(!fullShow||played().indexOf(m)<0);});
     if(pool.length<2){if(fullShow){resetPlayed();status("Every game has been played this show, so they're all back in the vote.");}pool=ALLG.filter(function(m){return m!=="kflag"&&taken.indexOf(m)<0;});}   /* Kart flag takes a whole song, so it is not in the mid-song vote */
     for(var k=pool.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1)),t=pool[k];pool[k]=pool[j];pool[j]=t;}
-    return pool.slice(0,3);
+    if(!pairs)return pool.slice(0,6);   /* six panels */
+    var out=[],seen={},tries=0;   /* a long song plays two games: each panel is a pair, every game used once if there are enough */
+    for(var a=0;a+1<pool.length&&out.length<6;a+=2){out.push(pool[a]+"+"+pool[a+1]);seen[pool[a]+"+"+pool[a+1]]=1;}
+    while(out.length<6&&pool.length>=2&&tries++<200){var x=pool[Math.floor(Math.random()*pool.length)],y=pool[Math.floor(Math.random()*pool.length)];if(x===y||seen[x+"+"+y]||seen[y+"+"+x])continue;seen[x+"+"+y]=1;out.push(x+"+"+y);}
+    return out;
   }
   /* before a song from the playlist: the room votes on the games; the ranking (most votes first, ties drawn at random) comes back,
      and the top one or two are played in that order */
   var pre=null;
-  function preVote(cb){if(typeof liveOn==="undefined"||!liveOn){cb(null);return;}var op=voteOpts();if(pre)clearTimeout(pre.to);
+  function preVote(cb,pairs){if(typeof liveOn==="undefined"||!liveOn){cb(null);return;}var op=voteOpts(!!pairs);if(pre)clearTimeout(pre.to);
     pre={cb:cb,opts:op,to:setTimeout(function(){finishPre(null);},VOTE_MS+6000)};liveSend({type:"gvote-open",opts:op,ms:VOTE_MS});showJamToast("\uD83D\uDDF3 VOTE: THE GAMES","#D354A0",1800);}
   function finishPre(counts){var p=pre;if(!p)return;pre=null;clearTimeout(p.to);
     var rank=p.opts.map(function(m,i){return{m:m,c:counts?(counts[i]||0):0,r:Math.random()};}).sort(function(a,b){return b.c-a.c||a.r-b.r;}).map(function(x){return x.m;});
     p.cb(rank);}
   function onGvote(m){
     if(m.cancel){gv=null;return;}
-    gv={id:m.id,opts:(m.opts||[]).slice(0,4),counts:(m.counts||[]).slice(0,4),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
+    gv={id:m.id,opts:(m.opts||[]).slice(0,6),counts:(m.counts||[]).slice(0,6),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
     if(pre&&gv.done&&gv.opts.join()===pre.opts.join()){finishPre(gv.counts);return;}
     if(set&&gv.done&&ALLG.indexOf(gv.win)>=0)set.plan.forEach(function(q){if(q.voting&&q.voteId===gv.id){q.voting=false;q.mode=gv.win;}});
     setTick();

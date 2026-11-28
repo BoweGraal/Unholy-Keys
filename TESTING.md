@@ -1688,6 +1688,24 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.153 — Host a party (phone host + TV cast), 6-panel game vote with live previews on the TV
+
+**Needs a Render redeploy** (server: `pl-state`, song requests can name one of the game's songs, votes take 6 options and game pairs).
+
+Host a party:
+1. On a phone open the venue → type your name → **🎉 Host a party**. After a few seconds you're in your own room with code shown, as a player (a hidden "DJ <name>" performer runs on your phone and plays the music).
+2. Tap **🎉 HOST** (top right) → the party panel: room code, **Cast / open on the TV**, **Copy TV link**, the playlist (remove / move up), show length (3 / 5 / 8 / All), **START THE SHOW**, and while it runs **Skip the break** / **Stop the show**.
+3. On the TV open the TV link (`venue.html?tv=CODE`): dance floor + the join QR + a **JAM TIME / UP NEXT** list that updates live.
+4. Friends join with the code → **🎵 ADD SONG** → a YouTube link, one of the game's songs (new picker) or a file from their phone. It goes **straight on the playlist** (no approval); their box shows "Up next".
+5. **START THE SHOW** → plays the first N songs back to back, each with its game vote, rounds and the break between games. The TV shows "THE SHOW · SONG 2 / 5" and the song now playing.
+6. The break between games: everyone presses **Skip** on their phone; the TV shows **SKIP THE BREAK x / y** while it counts.
+7. Only the host's phone plays sound. Players' phones and the TV are silent (the TV is pictures only).
+
+6-panel game vote:
+1. The vote before each song now has **6 panels**. A song of 3 min or more: each panel is a **pair** of games ("Mosh pit + Ice rink"); the winning pair is the song's 2 games. A short song (or a YouTube one, whose length isn't known yet): 6 single games.
+2. On the **TV**: a big 3×2 grid, each tile playing the game's **live demo** (two side by side for a pair) with its vote bar; the winner grows, the rest dim.
+3. On **phones**: the simple list (pairs on two lines). If the Add-song box is open when a vote starts, it closes.
+
 ## v1.82.152 — Dungeon: slashes start at the top and come down
 
 - **Direction:** every slash now starts high and comes down.

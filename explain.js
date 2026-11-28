@@ -408,5 +408,7 @@ var EXPLAIN=(function(){
     root.querySelector(".xbar i").style.width=Math.max(0,Math.min(100,(1-(secs-SHOW_MIN)/(SHOW_MAX-SHOW_MIN))*100))+"%";
     root.querySelector(".xn").textContent="⏱ "+Math.ceil(secs);
   }
-  return{tick:tick,hide:hide,show:function(m,o){dismissed={};curKey="demo";show(m,"demo"+Date.now(),o);},get on(){return on;},INFO:INFO,DEMOS:DEMOS,draw:function(m,t){build();curMode=m;DEMOS[m](t);}};
+  return{tick:tick,hide:hide,show:function(m,o){dismissed={};curKey="demo";show(m,"demo"+Date.now(),o);},get on(){return on;},INFO:INFO,DEMOS:DEMOS,draw:function(m,t){build();curMode=m;DEMOS[m](t);},
+    /* a game's demo drawn onto any 256x144 canvas: the TV's vote grid shows them all at once */
+    paint:function(ctx,m,t){var og=g;g=ctx;try{ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;(DEMOS[m]||function(){})(t);}catch(e){}finally{try{ctx.restore();}catch(e){}g=og;}}};
 })();
