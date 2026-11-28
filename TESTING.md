@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.163 — Fishing: the reel lights up on a nibble
+
+1. Cast and wait. When a fish swims up and nibbles under the float, the reel's rim pulses gold with a glow.
+2. When it bites (the "!"), the reel flashes red with a big glow and pops a little bigger: turn it now to hook.
+3. The fish swims off / you hook it: the reel goes back to normal.
+
 ## v1.82.162 — Fishing: left stick jerks the float, the reel hooks the fish
 
 1. Cast, then while waiting flick the left stick left or right: the float jerks a clear step that way (twice the old nudge) with a dip and a splash ring. Never says TOO EARLY, even if the flick drifts downward.

@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.162"></script>
-<script src="tune.js?v=1.82.162"></script>
-<script src="gfx.js?v=1.82.162"></script>
-<script src="art.js?v=1.82.162"></script>
-<script src="qr.js?v=1.82.162"></script>
-<script src="voice.js?v=1.82.162"></script>
-<script src="instruments.js?v=1.82.162"></script>
-<script src="kart.js?v=1.82.162"></script>
-<script src="explain.js?v=1.82.162"></script>
+<script src="px8.js?v=1.82.163"></script>
+<script src="tune.js?v=1.82.163"></script>
+<script src="gfx.js?v=1.82.163"></script>
+<script src="art.js?v=1.82.163"></script>
+<script src="qr.js?v=1.82.163"></script>
+<script src="voice.js?v=1.82.163"></script>
+<script src="instruments.js?v=1.82.163"></script>
+<script src="kart.js?v=1.82.163"></script>
+<script src="explain.js?v=1.82.163"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -610,7 +610,7 @@ body.fish-reel #fiBpm{display:block}body.fish-wait #fiBpm{display:none}
 #fiTen b{top:auto!important;bottom:-18px!important;left:-30px!important;right:-30px!important}
 #fiReel b,#fiTen b{position:absolute;left:-14px;right:-14px;bottom:-16px;text-align:center;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:0 1px 2px #000;text-decoration:none}
 #fiReel .fr-notch{position:absolute;left:50%;top:-12px;width:20px;height:14px;margin-left:-10px;background:#F5C518;clip-path:polygon(0 0,100% 0,50% 100%);pointer-events:none;transition:transform .08s}
-#fiReel.beat .fr-notch{transform:scale(1.5)}#fiReel.beat{filter:drop-shadow(0 0 8px #F5C518)}
+#fiReel.beat .fr-notch{transform:scale(1.5)}#fiReel.nib{filter:drop-shadow(0 0 10px #F5C518)!important}#fiReel.bite{filter:drop-shadow(0 0 16px #ff3b5c)!important}#fiReel.alert.bite{transform:scale(1.06)}#fiReel.beat{filter:drop-shadow(0 0 8px #F5C518)}
 #fiReel .fr-notch.hit{animation:frHit .35s}#fiReel .fr-notch.ok{animation:frOk .35s}#fiReel .fr-notch.miss{animation:frMiss .35s}
 @keyframes frHit{0%{background:#9cff4a;transform:scale(2.2)}}@keyframes frOk{0%{background:#fff;transform:scale(1.6)}}@keyframes frMiss{0%{background:#ff3b5c;transform:scale(1.3)}}
 #fiTen{display:none;position:absolute;left:auto;right:max(18px,env(safe-area-inset-right));top:24%;bottom:auto;transform:none;width:18px;height:min(32vh,240px);border:3px solid #000;background:linear-gradient(to top,#2a6a3a 0 60%,#7a6a1a 60% 80%,#7a2a2a 80% 100%);pointer-events:none}
@@ -5177,10 +5177,10 @@ var FISH=(function(){
   (function(){var el=$("fiReel");if(!el)return;var kn=el.querySelector(".fr-knob"),arm=el.querySelector(".fr-arm"),sp=el.querySelector(".fr-spool"),pid=null,prev=null;
     /* the reel in real pixels: a 40x40 sprite (stepped rim, 8 spokes that turn with you, the arm and its knob), scaled up crisp */
     var cvs=el.querySelector(".fr-cv"),cg=cvs&&cvs.getContext("2d");
-    function paint(a){if(!cg)return;var N=40,c=19.5,g2=cg;g2.clearRect(0,0,N,N);var held=el.classList.contains("held"),beat=el.classList.contains("beat");
+    function paint(a){if(!cg)return;var N=40,c=19.5,g2=cg;g2.clearRect(0,0,N,N);var held=el.classList.contains("held"),beat=el.classList.contains("beat"),nibC=el.classList.contains("nib"),bitC=el.classList.contains("bite");
       function dot(x,y,col){g2.fillStyle=col;g2.fillRect(Math.round(x),Math.round(y),1,1);}
       for(var y=0;y<N;y++)for(var x=0;x<N;x++){var d=Math.hypot(x-c,y-c);
-        if(d<=19.6&&d>18.2)dot(x,y,held?"#3DF2FF":beat?"#F5C518":"#2a2f45");          /* outer ring: lights when held / on the beat */
+        if(d<=19.6&&d>(bitC||nibC?16.9:18.2))dot(x,y,bitC?"#ff3b5c":nibC?"#F5C518":held?"#3DF2FF":beat?"#F5C518":"#2a2f45");          /* outer ring: lights when held / on the beat */
         else if(d<=18.2&&d>16.8)dot(x,y,"#11131a");                                     /* rim */
         else if(d<=16.8){var an=Math.atan2(y-c,x-c)-a,sp=((an/(Math.PI/4))%1+1)%1;dot(x,y,d<4.2?(d<3?"#e3e6ee":"#11131a"):sp<0.22?"#5d6378":(d>14.5?"#8e94aa":"#a9afc4"));}}   /* spool, turning spokes, hub */
       var ex=c+Math.sin(a)*12.5,ey=c-Math.cos(a)*12.5;for(var t=0;t<=1;t+=0.04){var px2=c+(ex-c)*t,py2=c+(ey-c)*t;dot(px2-1,py2,"#11131a");dot(px2+1,py2,"#11131a");dot(px2,py2-1,"#11131a");dot(px2,py2+1,"#11131a");}
@@ -5229,6 +5229,9 @@ var FISH=(function(){
     /* the beat on the screen's edge the whole game: yellow while casting / waiting (reeling colours it by how you're spinning) */
     var bk=Math.floor(beatNow());if(bk!==pulseK){pulseK=bk;if(st!=="reel"&&st!=="rewind"){var pl=$("fiPulse");if(pl){pl.style.setProperty("--pc","rgba(245,197,24,.7)");pl.classList.add("on");setTimeout(function(){pl.classList.remove("on");},90);}}}
     if(on&&ready())fishTick(now,dt);
+    /* the reel lights up: a fish nibbling under the float pulses it gold, the bite ("!") flashes it red: turn it now */
+    var rl=$("fiReel");if(rl){var nib=st==="wait"&&!!biteFish,bit=st==="bite",ph=bit?Math.floor(now/110)%2===0:nib?Math.floor(now/260)%2===0:false;
+      if(rl.classList.contains("nib")!==(nib&&ph))rl.classList.toggle("nib",nib&&ph);if(rl.classList.contains("bite")!==(bit&&ph))rl.classList.toggle("bite",bit&&ph);rl.classList.toggle("alert",nib||bit);}
     /* waiting: flick the left stick left or right and the float twitches one small step that way, to nudge it into a fish's path
        (each flick is one step; it spooks a fish that's nosing at it, like reeling does) */
     if(st==="wait"&&!marlinHook){var nx0=inp.x>0.55?1:inp.x<-0.55?-1:0;if(nx0&&nx0!==nudgeD){var ax0=aimX;aimX=Math.max(-1,Math.min(1,aimX+nx0*0.09));if(aimX!==ax0)nudgeFx={t:now,d:nx0};if(biteFish)scare(now),biteAt=noFish()?Infinity:biteAt;marlinHold=false;}nudgeD=Math.abs(inp.x)<0.3?0:nx0||nudgeD;}
@@ -10024,7 +10027,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.162",SERVER_VERSION="";
+var PAGE_VERSION="1.82.163",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11328,7 +11331,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.162"></script>
+<script src="lab.js?v=1.82.163"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
