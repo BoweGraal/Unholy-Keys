@@ -1688,6 +1688,32 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.164 — The performer always looks like they're playing live
+
+1. Dragon riders, boss fight: the demon at the organ now plays it. No instrument in hand, both hands over the keys, striking on the song's eighth notes (alternating hands, both slam on the accents), head nodding, mouth on the hits.
+2. Any song where the performer isn't playing live notes (a backing track, a YouTube song, a party's playlist): the performer on stage plays along on the song's own beat: a phrase walking round the chords, a held note every 4th beat, a quicker fill at the end of every 4 bars. Their band plays along too. (Practice used to be the only place this happened.)
+3. When the performer IS playing live, nothing changes: you see their real notes.
+4. Between songs (no song on): the performer stands idle as before.
+
+## v1.82.163 — Fishing: the reel lights up on a nibble
+
+1. Cast and wait. When a fish swims up and nibbles under the float, the reel's rim pulses gold with a glow.
+2. When it bites (the "!"), the reel flashes red with a big glow and pops a little bigger: turn it now to hook.
+3. The fish swims off / you hook it: the reel goes back to normal.
+
+## v1.82.162 — Fishing: left stick jerks the float, the reel hooks the fish
+
+1. Cast, then while waiting flick the left stick left or right: the float jerks a clear step that way (twice the old nudge) with a dip and a splash ring. Never says TOO EARLY, even if the flick drifts downward.
+2. When the "!" shows (HOOK!): turn the reel on the right (about an eighth of a turn, either way) → HOOKED, and you're already winding. The reel stays on screen through the bite now.
+3. A tiny touch of the reel (under ~45°) doesn't hook; the left stick never hooks.
+4. Keyboard: S / ↓ still hooks. The how-to card and its demo now say "turn the reel".
+
+## v1.82.161 — Pool fishing: quicker catch zone, hard fish jump less wildly
+
+1. Hold REEL: the catch zone rises about 20% faster; let go: it sinks about 20% faster.
+2. Pike and Golden koi still dart about but no longer leap most of the box or flip end to end; the biggest jump is about half the box. You should be able to stay on a koi most of the time with practice. The koi is still the hardest.
+3. Minnow / Perch / Bass feel about the same, a bit easier with the quicker zone.
+
 ## v1.82.160 — Pool fishing: fish drawn to scale
 
 1. Hook different fish in pool fishing: each is drawn on one shared ruler by its average length (Minnow 7 cm, Perch 25, Bass 40, Golden koi 55, Pike 70). The pike nearly fills the lane; the minnow is a small sliver; perch is clearly smaller than bass.

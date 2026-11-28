@@ -42,7 +42,7 @@ var EXPLAIN=(function(){
       how:[["Stick to move · tap JUMP to head it","Arrows to move · Space to head it"],"Jump again in the air = double jump"],
       rules:["Hits in a row = multiplier","🪶 and double jumps score most"]},
     fish:{n:"Fishing",i:"🎣",goal:"Biggest catch wins. 🐟",
-      how:[["Drag the water to aim · swoop up fast to cast","Point to aim · swoop the mouse up fast to cast"],"A fish under the float bites · ← → nudge it, ⟳ pulls it in","❗ jerk ↓","Spin ⟳ to the beat ♩ · 🥅 net it"],
+      how:[["Drag the water to aim · swoop up fast to cast","Point to aim · swoop the mouse up fast to cast"],"A fish under the float bites · flick ← → to jerk the float, ⟳ pulls it in",["❗ turn the reel to hook it","❗ S / ↓ or turn the reel to hook it"],"Spin ⟳ to the beat ♩ · 🥅 net it"],
       rules:["Too fast ⚡ up · slower ⚡ down","⚡ full = 💥 SNAP","⚠ LINE OUT: reel!"]},
     dungeon:{n:"Dungeon",i:"🗡",goal:"Clear the rooms. Most spiders wins. 🕷",
       how:[["Stick: move · tap SWORD to swing","Arrows / WASD move · Space swings"],"Swing ON the beat ♩ = CRIT (double)",["Hold SWORD to charge · let go: SPIN","Hold Space to charge · let go: SPIN"],["Hold BLOCK: shield up · ROLL: dodge","Hold E: shield up · Q / Shift: roll"]],
@@ -201,7 +201,7 @@ var EXPLAIN=(function(){
       for(var k=0;k<6;k++)R(TC[k],bx0+TS[k]*bw,9,Math.ceil((TS[k+1]-TS[k])*bw)-1,8);R("#fff",bx0+pw*bw-1,5,2,16);
       if(T>1.5){pop("PERFECT! MARLIN",196,26,(T-1.5)*0.5,COL.yel,1);}}
     if(T>=1.6&&T<2.6){var k2=(T-1.6),bxp=tipX+(200-tipX)*k2,byp=tipY-Math.sin(k2*Math.PI)*24+(56-tipY)*k2;bob=[bxp,byp];}
-    if(T>=2.6&&T<3.9){bob=[200,56];bobDy=Math.round(Math.sin(t*6));cap="2  FISH UNDER THE FLOAT";ell("rgba(5,22,45,.6)",120+Math.min(1,(T-2.6)/0.6)*80,60,10,3);if(T>3.1){cap="3  JERK!";R(COL.red,198,40,4,8);R(COL.red,198,50,4,3);if(T>3.4){finger(120,92+Math.min(1,(T-3.4)*6)*20,true);}if(T>3.6)pop("HOOKED",200,30,T-3.6,COL.grn,1);}}
+    if(T>=2.6&&T<3.9){bob=[200,56];bobDy=Math.round(Math.sin(t*6));cap="2  FISH UNDER THE FLOAT";ell("rgba(5,22,45,.6)",120+Math.min(1,(T-2.6)/0.6)*80,60,10,3);if(T>3.1){cap="3  TURN THE REEL!";R(COL.red,198,40,4,8);R(COL.red,198,50,4,3);if(T>3.3){var ha=(T-3.3)*9;ring("#fff",212,118,13,2);R("#000",209,115,6,6);finger(212+Math.cos(ha)*13,118+Math.sin(ha)*13,true);}if(T>3.6)pop("HOOKED",200,30,T-3.6,COL.grn,1);}}
     /* 4: reel: spin to the beat, tension on the right */
     var reel=T>=3.9&&T<8.6,tens=0;
     if(reel){var rk=(T-3.9)/4.7,run=Math.sin((T-3.9)*1.3);bob=[200-rk*130+run*14,58+Math.round(Math.sin(t*9))];cap="4  SPIN ON THE BEAT";
