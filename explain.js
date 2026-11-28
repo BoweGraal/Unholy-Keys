@@ -44,7 +44,7 @@ var EXPLAIN=(function(){
     fish:{n:"Fishing",i:"🎣",goal:"Biggest catch wins. 🐟",
       how:[["Drag the water to aim · swoop up fast to cast","Point to aim · swoop the mouse up fast to cast"],"A fish under the float bites · flick ← → to jerk the float, ⟳ pulls it in",["❗ turn the reel to hook it","❗ S / ↓ or turn the reel to hook it"],"Spin ⟳ to the beat ♩ · 🥅 net it"],
       rules:["Too fast ⚡ up · slower ⚡ down","⚡ full = 💥 SNAP","⚠ LINE OUT: reel!"]},
-    sweep:{n:"Supermarket sweep",i:"🛒",goal:"Biggest grocery bill wins. 💰",
+    sweep:{n:"The Big Sweep",i:"🛒",goal:"Biggest grocery bill wins. 💰",
       how:[["Stick: push your cart down the aisles","Arrows / WASD push your cart"],["GRAB: the item in front of you → your cart (or your hands: GRAB at the cart drops it in)","Space: grab → your cart (or your hands: Space at the cart drops it in)"],"Full cart → push it into the CHECKOUT at the front: banked, new cart",["Bonuses: hold GRAB at the ☕ grinder · 🍬 candy bar: $1.00 ±3¢","Bonuses: hold Space at the ☕ grinder · 🍬 candy bar: $1.00 ±3¢"]],
       rules:["Big things fill the cart fast 🦃🧀","🎈 inflatables pay out at the end","What's in your cart at the buzzer counts"]},
     dungeon:{n:"Dungeon",i:"🗡",goal:"Clear the rooms. Most spiders wins. 🕷",
