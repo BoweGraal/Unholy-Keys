@@ -1688,6 +1688,19 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.152 — Dungeon: slashes start at the top and come down
+
+- **Direction:** every slash now starts high and comes down.
+  - Facing right: from above, down in front of you.
+  - Facing left: from above-left, down.
+  - The diagonals: from their upper side, down across.
+  - Facing us or facing away there's no "up", so it starts from the sword hand and sweeps across.
+- The hit area, the trailing tail and the practice dancers' swings follow the same direction.
+- The sword stays in the right hand. Checked in all 8 directions.
+
+1. Face right and slash: the blade starts above your head and comes down in front.
+2. Face left: the same, mirrored.
+
 ## v1.82.151 — Dungeon: always right-handed (sword right, shield left) in every direction
 
 - **Why it swapped:** the character art doesn't call the same limb "right" in every view. From the front and from behind the right hand is one limb, side on it's the other, and the left-facing views are the right-facing ones flipped, which swaps them again. So the sword changed hands depending on the way you faced.

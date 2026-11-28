@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.151"></script>
-<script src="tune.js?v=1.82.151"></script>
-<script src="gfx.js?v=1.82.151"></script>
-<script src="art.js?v=1.82.151"></script>
-<script src="qr.js?v=1.82.151"></script>
-<script src="voice.js?v=1.82.151"></script>
-<script src="instruments.js?v=1.82.151"></script>
-<script src="kart.js?v=1.82.151"></script>
-<script src="explain.js?v=1.82.151"></script>
+<script src="px8.js?v=1.82.152"></script>
+<script src="tune.js?v=1.82.152"></script>
+<script src="gfx.js?v=1.82.152"></script>
+<script src="art.js?v=1.82.152"></script>
+<script src="qr.js?v=1.82.152"></script>
+<script src="voice.js?v=1.82.152"></script>
+<script src="instruments.js?v=1.82.152"></script>
+<script src="kart.js?v=1.82.152"></script>
+<script src="explain.js?v=1.82.152"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5631,8 +5631,8 @@ var DUNGEON=(function(){
   /* does the blade cover a point (px coords) right now? swing: a sector sweeping 140° across the facing; spin: a full ring */
   function hits(cx,cy,x,y,r,now){var R=reach(),dx=x-cx,dy=(y-cy)*1.25,d=Math.hypot(dx,dy);
     if(st==="spin")return d<R*1.55+r;
-    if(st!=="swing")return false;if(d>R+r)return false;var k=Math.min(1,(now-stAt)/SWING),a0=angOf(face)+1.22,cur=a0-2.44*k,a=Math.atan2(dy,dx),dd=a-cur;while(dd>Math.PI)dd-=2*Math.PI;while(dd<-Math.PI)dd+=2*Math.PI;
-    var from=a0-cur;return dd>=-0.35&&dd<=from+0.35;}   /* the sweep so far: from the start (right side) to where the blade is now */
+    if(st!=="swing")return false;if(d>R+r)return false;var sd=swDir(face),k=Math.min(1,(now-stAt)/SWING),a0=angOf(face)-sd*1.22,cur=a0+sd*2.44*k,a=Math.atan2(dy,dx),dd=(a-cur)*-sd;while(dd>Math.PI)dd-=2*Math.PI;while(dd<-Math.PI)dd+=2*Math.PI;
+    return dd>=-0.35&&dd<=2.44*k+0.35;}   /* the sweep so far: from where it started to where the blade is now */
   function hurtMob(o,dmg,fromX,fromY,who){var now=performance.now();o.hp-=dmg;o.flash=now;var p0=px(o.x,o.y),dx=p0[0]-fromX,dy=p0[1]-fromY,d=Math.hypot(dx,dy)||1;o.kb={vx:dx/d*0.35,vy:dy/d*0.3,at:now};
     if(o.hp<=0){o.dead=now;var p=o.big?40:25;if(who===myId){score+=p;kills++;GAME.moshPts(p);pops.push({t:now,x:o.x,y:o.y,txt:"+"+p,col:"#ffd24a"});hud();}else if(who&&GAME.botPts)GAME.botPts(who,p);}}
   function nearestPlayer(o){var best=null,bd=1e9;Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4)return;if(id===myId&&st==="down")return;var d=Math.hypot((v.x-o.x)*W,(v.y-o.y)*H);if(d<bd){bd=d;best=v;}});return best;}
@@ -5681,11 +5681,14 @@ var DUNGEON=(function(){
     else if(tgt){var dx=(tgt.x-b.x)*W,dy=(tgt.y-b.y)*H,d=Math.hypot(dx,dy)||1;b.face=ART.face8(dx,dy,b.face);if(d>reach()*0.8){b.x+=dx/d*0.16*dt*(W/H>1?0.7:1);b.y+=dy/d*0.16*dt;}
       if(d<reach()*1.05&&now>b.cool&&b.st===0){b.st=1;b.at=now;b.cool=now+700+Math.random()*500;b.hit=[];}}
     else if(doorOpen){b.x=Math.min(X1,b.x+0.12*dt);}
-    if(b.st===1){var k=(now-b.at)/SWING;if(k>=1)b.st=0;else{var p0=px(b.x,b.y),cx=p0[0],cy=p0[1]-sc()*8,R=reach();mobs.forEach(function(o){if(o.dead||b.hit.indexOf(o)>=0)return;var p=px(o.x,o.y),dx2=p[0]-cx,dy2=(p[1]-cy)*1.25;if(Math.hypot(dx2,dy2)<R+sc()*5){var a=Math.atan2(dy2,dx2),c=angOf(b.face)+1.22-2.44*k,dd=a-c;while(dd>Math.PI)dd-=2*Math.PI;while(dd<-Math.PI)dd+=2*Math.PI;if(dd>=-0.35&&dd<=2.8){b.hit.push(o);hurtMob(o,1,cx,cy,id);}}});}}
+    if(b.st===1){var k=(now-b.at)/SWING;if(k>=1)b.st=0;else{var p0=px(b.x,b.y),cx=p0[0],cy=p0[1]-sc()*8,R=reach();mobs.forEach(function(o){if(o.dead||b.hit.indexOf(o)>=0)return;var p=px(o.x,o.y),dx2=p[0]-cx,dy2=(p[1]-cy)*1.25;if(Math.hypot(dx2,dy2)<R+sc()*5){var bsd=swDir(b.face),a=Math.atan2(dy2,dx2),c=angOf(b.face)-bsd*1.22+bsd*2.44*k,dd=(a-c)*-bsd;while(dd>Math.PI)dd-=2*Math.PI;while(dd<-Math.PI)dd+=2*Math.PI;if(dd>=-0.35&&dd<=2.8){b.hit.push(o);hurtMob(o,1,cx,cy,id);}}});}}
     b.x=Math.max(X0,Math.min(X1,b.x));b.y=Math.max(Y0,Math.min(Y1,b.y));v.tx=v.x=b.x;v.ty=v.y=b.y;v.dance=4;v.sk={h:room,f:b.face,t:b.st};v.pose=b.st===1?armsFor(b.face,bladeAng({s:"swing",at:b.at,f:b.face},now)):[0.25,-0.35,0,0];v.fd=null;});}
   function wire(){return{h:room,f:face,t:CODE[st]||0};}
   /* the blade's angle on screen for a blade state: sweeping 140° across the facing, pointing ahead while charging, round and round in a spin */
-  function bladeAng(b,now){var a0=angOf(b.f);if(b.s==="swing"){var k=Math.min(1,(now-b.at)/SWING),e=1-Math.pow(1-k,2);return a0+1.22-2.44*e;}   /* right-handed: from the right side across to the left */if(b.s==="spin")return a0+Math.min(1,(now-b.at)/SPIN)*Math.PI*2;return a0;}
+  /* which way a swing sweeps: from high to low. Side on and at the diagonals that means starting at the top (facing right:
+     clockwise on screen, facing left: anticlockwise); facing us or away it starts from the sword hand's side */
+  function swDir(f){return f===1||f===4||f===5?1:-1;}
+  function bladeAng(b,now){var a0=angOf(b.f);if(b.s==="swing"){var k=Math.min(1,(now-b.at)/SWING),e=1-Math.pow(1-k,2),d=swDir(b.f);return a0-d*1.22+d*2.44*e;}if(b.s==="spin")return a0+Math.min(1,(now-b.at)/SPIN)*Math.PI*2;return a0;}
   /* the right arm reaching along the blade (front and side views count the arm one way, from behind it's mirrored) */
   function armFor(f,a){return [2,5,6].indexOf(f)>=0?Math.PI/2-a:a-Math.PI/2;}
   /* the arms for a blade angle in a facing: the views facing left are drawn as the right-facing ones flipped, with the arms
@@ -5709,7 +5712,7 @@ var DUNGEON=(function(){
   function rollOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="roll")return null;return Math.min(1,(now-b.at)/ROLL);}
   function rollDir(id,v){var f=faceOf(id,v);return DV[f][0]<-0.1?-1:1;}
   function swordOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="swing"&&b.s!=="charge"&&b.s!=="spin")return null;
-    return{a:bladeAng(b,now),len:b.s==="spin"?19:15,glow:b.s==="charge"&&now-b.at>=CHARGE,tail:b.s==="swing"?4:b.s==="spin"?6:0,dir:b.s==="swing"?-1:1,spin:b.s==="spin"};}
+    return{a:bladeAng(b,now),len:b.s==="spin"?19:15,glow:b.s==="charge"&&now-b.at>=CHARGE,tail:b.s==="swing"?4:b.s==="spin"?6:0,dir:b.s==="swing"?swDir(b.f):1,spin:b.s==="spin"};}
   function looks(){return{lift:0,rot:0,ns:true};}
   function faceOf(id,v){if(id===myId)return face;if(id.indexOf("bot")===0&&botS[id])return botS[id].face;return v.sk&&isFinite(v.sk.f)?v.sk.f|0:0;}
   /* in a spin attack the whole body twirls round with the blade (you face where the sword is) */
@@ -9926,7 +9929,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.151",SERVER_VERSION="";
+var PAGE_VERSION="1.82.152",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11129,7 +11132,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.151"></script>
+<script src="lab.js?v=1.82.152"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
