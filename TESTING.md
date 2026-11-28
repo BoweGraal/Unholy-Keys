@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.174 — Bots: wander after a game, talk less, chat stays out of the log
+
+**Needs a Render redeploy** (bot chat flag + chat timing on the server).
+
+1. Practice: after a game ends, the practice dancers walk around the dance floor at a walking pace (to a spot, hang there a few seconds, walk on) instead of standing where the game left them.
+2. In a room with the server's bots: they talk about half as often (each one every 2–5 minutes, rarely at the start of a round).
+3. A bot's chat shows as a speech bubble over them only; it doesn't go into the chat Log. Real people's chat still goes in the log.
+4. Fix (from v1.82.172): every game's countdown card threw an error after Supermarket sweep was added. Rounds start normally again.
+
 ## v1.82.173 — Dungeon: sword and shield in hand the whole time
 
 1. In the dungeon you always hold the sword (blade down, in the right hand) and the shield (on the left arm, at your side), in all 8 directions, walking or standing.

@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.173"></script>
-<script src="tune.js?v=1.82.173"></script>
-<script src="gfx.js?v=1.82.173"></script>
-<script src="art.js?v=1.82.173"></script>
-<script src="qr.js?v=1.82.173"></script>
-<script src="voice.js?v=1.82.173"></script>
-<script src="instruments.js?v=1.82.173"></script>
-<script src="kart.js?v=1.82.173"></script>
-<script src="explain.js?v=1.82.173"></script>
+<script src="px8.js?v=1.82.174"></script>
+<script src="tune.js?v=1.82.174"></script>
+<script src="gfx.js?v=1.82.174"></script>
+<script src="art.js?v=1.82.174"></script>
+<script src="qr.js?v=1.82.174"></script>
+<script src="voice.js?v=1.82.174"></script>
+<script src="instruments.js?v=1.82.174"></script>
+<script src="kart.js?v=1.82.174"></script>
+<script src="explain.js?v=1.82.174"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2620,7 +2620,7 @@ function handleMsg(msg){
     var sColor=safeColor(msg.color,"#888888");
     var sText=safeText(msg.text,300);
     if(!sText)return;
-    addChat(sender,sText,sColor);
+    if(!msg.bot)addChat(sender,sText,sColor);   /* a bot's chatter: just the speech bubble, not the log */
     /* speech bubble */
     if(msg.viewerId==="performer"){PH.bubbleText=sText;PH.bubbleTime=Date.now();}
     else if(msg.viewerId&&viewers[msg.viewerId]){
@@ -8549,7 +8549,7 @@ var ROUND=(function(){
     clearTimeout(hideT);hideT=null;
   }
   function hide(){var b=box();b.className="";b.textContent="";try{EXPLAIN.hide();}catch(e){}}
-  function lvl(){return rd.mode==="free"||rd.mode==="mosh"||rd.mode==="skate"||rd.mode==="keepy"||rd.mode==="kart"||rd.mode==="walk"||rd.mode==="pipe"||rd.mode==="ski"||rd.mode==="ctf"||rd.mode==="fish"||rd.mode==="pond"||rd.mode==="dungeon"||rd.mode==="sweep"||mode==="sweep"||rd.mode==="boats"||rd.mode==="swim"||rd.mode==="ball"||rd.mode==="dragon"?"":" · "+GAME.DIFFS[GAME.diffOf(rd.n)];}
+  function lvl(){return rd.mode==="free"||rd.mode==="mosh"||rd.mode==="skate"||rd.mode==="keepy"||rd.mode==="kart"||rd.mode==="walk"||rd.mode==="pipe"||rd.mode==="ski"||rd.mode==="ctf"||rd.mode==="fish"||rd.mode==="pond"||rd.mode==="dungeon"||rd.mode==="sweep"||rd.mode==="boats"||rd.mode==="swim"||rd.mode==="ball"||rd.mode==="dragon"?"":" · "+GAME.DIFFS[GAME.diffOf(rd.n)];}
   function head(){return mk("div","rb-head","Round "+rd.n+" · "+(rd.isBattle?"⚔ ":"")+(rd.kflag?"Kart flag":NAMES[rd.mode]||"Dance")+(rd.isBattle?" battle":"")+lvl());}
   /* the 2-parter's handover: no explainer, just what's next and how long */
   function linkCard(){var left=Math.max(0,Math.ceil((endAt-performance.now())/1000));
@@ -9548,6 +9548,12 @@ var PRACTICE=(function(){
     updViewerCount();
   }
   var POSES=[[2.1,0.35,0.85,0],[-0.35,-2.1,0,-0.85],[2.55,-2.55,0.1,-0.1],[1.2,-1.2,0.75,-0.75]];
+  /* between games the practice dancers mill about the floor: walk somewhere, hang there a few seconds, walk on */
+  setInterval(function(){if(!bots.length||(typeof GAME!=="undefined"&&GAME.mode))return;var now=Date.now();
+    bots.forEach(function(b){var v=viewers[b.id];if(!v)return;if(v.dance===4){v.dance=0;v.pose=null;v.sk=null;}
+      if(!b.wt||now>b.wt){b.gx=0.08+Math.random()*0.84;b.gy=0.4+Math.random()*0.26;b.wt=now+3500+Math.random()*8000;}
+      var dx=b.gx-v.x,dy=b.gy-v.y,d=Math.hypot(dx,dy),st=0.0055;   /* a walking pace, a step at a time */
+      if(d>st){v.x+=dx/d*st;v.y+=dy/d*st;}else{v.x=b.gx;v.y=b.gy;}v.tx=v.x;v.ty=v.y;});},50);
   function botTick(perStep){
     bots.forEach(function(b){
       var v=viewers[b.id];if(!v)return;
@@ -9792,6 +9798,7 @@ var PRACTICE=(function(){
     if(ev==="pointerdown"||((ev==="touchend"||ev==="click")&&performance.now()-skipAt>600)){skipAt=performance.now();skipTimer();}},{capture:true,passive:false});});   /* a click alone counts too (a tap the phone turned into a gesture, with a finger on the stick) */   /* on the press, before anything else can grab the pointer */
   window.ukPractice=function(){return{on:on,song:title,decoded:!!buf,round:n,mode:mode,chartSteps:chart?chart.steps.length:0,bpm:chart?chart.bpm:null,songPos:src?Math.round(performance.now()-playAt):null,totals:totals};};
   window.ukPracticeBattle=function(){return plan?pub():null;};
+  window.ukPracticeBots=function(){return bots.map(function(b){var v=viewers[b.id];return v?[b.id,+v.x.toFixed(2),+v.y.toFixed(2),+v.tx.toFixed(2),+v.ty.toFixed(2),v.dance]:null;});};
   return{get on(){return on;},enter:enter,vote:vote,bvote:bvote,moshBonus:moshBonus,
      botScore:function(id,s){bots.forEach(function(b){if(b.id===id)b.score=s;});},
      walkDone:function(){var my=job;setTimeout(function(){if(my===job)endRound(my);},3500);}};   /* dance walk race: everyone's over the line */
@@ -10312,7 +10319,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.173",SERVER_VERSION="";
+var PAGE_VERSION="1.82.174",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11630,7 +11637,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.173"></script>
+<script src="lab.js?v=1.82.174"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
