@@ -28,15 +28,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.177"></script>
-<script src="tune.js?v=1.82.177"></script>
-<script src="gfx.js?v=1.82.177"></script>
-<script src="art.js?v=1.82.177"></script>
-<script src="qr.js?v=1.82.177"></script>
-<script src="voice.js?v=1.82.177"></script>
-<script src="instruments.js?v=1.82.177"></script>
-<script src="kart.js?v=1.82.177"></script>
-<script src="explain.js?v=1.82.177"></script>
+<script src="px8.js?v=1.82.179"></script>
+<script src="tune.js?v=1.82.179"></script>
+<script src="gfx.js?v=1.82.179"></script>
+<script src="art.js?v=1.82.179"></script>
+<script src="qr.js?v=1.82.179"></script>
+<script src="voice.js?v=1.82.179"></script>
+<script src="instruments.js?v=1.82.179"></script>
+<script src="kart.js?v=1.82.179"></script>
+<script src="explain.js?v=1.82.179"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -607,7 +607,7 @@ body.gaming-fish.fi-casting #fiPerf{display:flex}
 body.gaming-fish #fiPulse{display:block}
 #fiPulse.on{transition:none;box-shadow:inset 0 0 0 8px var(--pc,#9cff4a),inset 0 0 0 12px #000,inset 0 0 0 16px var(--pc,#9cff4a)}   /* hard pixel bands, no blur */
 #fiBpm{display:none;position:absolute;right:max(10px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 212px);width:136px;padding:6px 8px 7px;background:rgba(10,12,22,.82);border:2px solid #3a3f5a;box-shadow:0 0 0 2px #0a0c16;font:700 10px 'Silkscreen',ui-monospace,monospace;color:#c9cbe0;text-align:center;pointer-events:none;image-rendering:pixelated}
-body.fish-reel #fiBpm{display:block}body.fish-wait #fiBpm{display:none}
+body.fish-reel #fiBpm{display:none}body.fish-wait #fiBpm{display:none}
 #fiBpm .fb-top{display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;color:#fff}
 #fiBpm .fb-dot{width:10px;height:10px;background:#3a3f5a}#fiBpm .fb-dot.on{background:#F5C518;box-shadow:0 0 0 2px #000,0 0 0 4px #F5C518}
 #fiBpm .fb-you{margin-top:3px;font-size:11px}#fiBpm.on .fb-you{color:#9cff4a}#fiBpm.near .fb-you{color:#F5C518}#fiBpm.off .fb-you{color:#ff7a6a}
@@ -5105,7 +5105,7 @@ var FISH=(function(){
     var h=$("fiHint"),touch=window.matchMedia&&matchMedia("(pointer:coarse)").matches;if(!h)return;
     /* kept short: symbols, a word or two */
     var hTxt=st==="idle"?(touch?"\uD83D\uDC46 aim \u00B7 \u21D7 swoop fast":"\uD83D\uDDB1 aim \u00B7 \u21D7 swoop fast \u00B7 A/D \u2194"):st==="aim"?"\u21D7 stay in!":st==="cast"?"\u23F3":st==="wait"?"\uD83D\uDC1F \u2192 float \u00B7 \u27F3 pull in":st==="bite"?(touch?"\u2757 TURN THE REEL!":"\u2757 S / \u2193 or turn the reel"):
-      st==="rewind"?"\u27F3 \u23E9":st==="reel"?(touch?"\u27F3 to the \u2669 \u00B7 \u2194 vs fish":"\u27F3 to the \u2669 \u00B7 A/D \u2194"):st==="net"?(touch?"\uD83E\uDD45 NET!":"\uD83E\uDD45 Space"):"";if(h._t!==hTxt){h._t=hTxt;PXEMO.set(h,hTxt);}
+      st==="rewind"?"\u27F3 \u23E9":st==="reel"?(touch?"\u27F3 fast \u00B7 not in the red \u00B7 \u2194 vs fish":"\u27F3 fast \u00B7 not in the red \u00B7 A/D \u2194"):st==="net"?(touch?"\uD83E\uDD45 NET!":"\uD83E\uDD45 Space"):"";if(h._t!==hTxt){h._t=hTxt;PXEMO.set(h,hTxt);}
     if(typeof goalHL==="function")goalHL(st==="net"?b:null,st==="net"?"NET IT":"");}
   /* the button: a quick cast (weak, for anyone who doesn't swoop), the net; on a computer Space / click on the beat reels */
   function press(){if(!on||!ready())return;var now=performance.now();
@@ -5119,17 +5119,19 @@ var FISH=(function(){
   }
   /* the reel's speed: how fast you spin it against the song's tempo. One turn a beat (anywhere round, either way) is full speed; a bit
      off is partial; way off is slow. The tempo comes from the song's beat grid, so it follows the song when it speeds up or slows */
+  /* the power wheel: how fast you wind, against a fixed best speed (not the song's tempo). Faster = more power, up to the red zone, where the line strains */
+  function PWR(){return FT("spinTarget",110);}var PW_MAX=1.6;
   var pulseK=-1,lastFastPop=0,spinRev=0,spinDir=1,spinHist=[],bpmHist=[],bpmNow=120,spinRpm=0,spinQ=0,lastBeatK=-1;
   function spinTick(now,dt){var b=beatNow();bpmHist.push({t:now,b:b});while(bpmHist.length>2&&now-bpmHist[0].t>2000)bpmHist.shift();
     var h0=bpmHist[0];if(now-h0.t>400){var bb=(b-h0.b)/((now-h0.t)/60000);if(isFinite(bb)&&bb>40&&bb<260)bpmNow+=(bb-bpmNow)*Math.min(1,dt*3);}
     spinHist.push({t:now,r:spinRev});while(spinHist.length>2&&now-spinHist[0].t>3000)spinHist.shift();
-    var win=Math.max(700,Math.min(2500,60000/bpmNow*2)),j=0;while(j<spinHist.length-1&&now-spinHist[j].t>win)j++;var s0=spinHist[j],el2=(now-s0.t)/60000;
+    var win=900,j=0;while(j<spinHist.length-1&&now-spinHist[j].t>win)j++;var s0=spinHist[j],el2=(now-s0.t)/60000;
     var rpm=el2>0.004?Math.abs(spinRev-s0.r)/el2:0;spinRpm+=(rpm-spinRpm)*Math.min(1,dt*8);
     /* slower than the beat: the reel turns slower (half the BPM = half speed) and the line eases off; at the beat or over it: full
        speed (over it strains the line, below) */
-    var q=0,ratio=spinRpm/bpmNow;if(spinRpm>8)q=ratio>=1-FT("spinWin",0.15)?1:Math.max(0.1,ratio);spinQ+=(q-spinQ)*Math.min(1,dt*6);
+    var q=0,ratio=spinRpm/PWR();if(spinRpm>8)q=Math.max(0.1,Math.min(1,ratio));spinQ+=(q-spinQ)*Math.min(1,dt*6);
     var k=Math.floor(b);bpmUI(k!==lastBeatK);lastBeatK=k;}
-  function bpmUI(beat){var el=$("fiBpm");if(!el)return;var r=spinRpm/bpmNow,e=spinRpm>8?Math.abs(Math.log(r)):9;
+  function bpmUI(beat){var r=spinRpm/PWR(),e=spinRpm<8?9:r>1+FT("spinWin",0.15)?1:r>=0.8?0:0.5;if(reelPaint)reelPaint(reelA||0);var el=$("fiBpm");if(!el)return;
     el.className=spinRpm<8?"":e<FT("spinWin",0.15)?"on":r<1?"near":"off";
     var t=el.querySelector(".fb-bpm");if(t)t.textContent=Math.round(bpmNow);var y=el.querySelector(".fb-you");if(y)var yt=spinRpm<8?"\u27F3 ?":"\u27F3 "+Math.round(spinRpm);if(y._t!==yt){y._t=yt;PXEMO.set(y,yt);}
     var n=el.querySelector(".fb-n");if(n)n.style.left=(50+Math.max(-1,Math.min(1,spinRpm<8?-1:Math.log(r)/Math.log(2)))*46)+"%";
@@ -5171,7 +5173,7 @@ var FISH=(function(){
   function coachSay(txt,cls,rod){var b=$("fiTut");if(b){if(b._t!==txt){b._t=txt;PXEMO.set(b,txt);}b.className=txt?"on "+cls:"";}
     document.body.classList.toggle("fish-tut-rod",rod!==undefined&&rod!==null);var gh=document.querySelector("#dpad .fi-ghost");if(gh&&rod!=null)gh.style.transform="translate("+Math.round(rod*38)+"px,0)";}
   function coach(now,age){var touch=TOUCHF,want=-runDir,matched=rodA*want>0.5,dir=runDir<0?"LEFT":"RIGHT",push=want<0?(touch?"LEFT ⬅":"A ⬅"):(touch?"RIGHT ➡":"D ➡");
-    if(age<2.5)coachSay("\u27F3 one turn each \u2669","info");
+    if(age<2.5)coachSay("\u27F3 wind it \u00B7 stay out of the red","info");
     else if(T>0.62)coachSay("\u26A0 slow down","warn",burst>0.4?want:null);
     else if(burst>0.4&&!matched)coachSay("\uD83D\uDC1F "+(want<0?"\u2B05":"\u27A1")+" pull "+(touch?"":(want<0?"A":"D")),"run",want);
     else if(burst>0.4)coachSay("\u2714 hold it","ok",want);
@@ -5222,10 +5224,11 @@ var FISH=(function(){
   (function(){var el=$("fiReel");if(!el)return;var kn=el.querySelector(".fr-knob"),arm=el.querySelector(".fr-arm"),sp=el.querySelector(".fr-spool"),pid=null,prev=null;
     /* the reel in real pixels: a 40x40 sprite (stepped rim, 8 spokes that turn with you, the arm and its knob), scaled up crisp */
     var cvs=el.querySelector(".fr-cv"),cg=cvs&&cvs.getContext("2d");
-    function paint(a){if(!cg)return;var N=40,c=19.5,g2=cg;g2.clearRect(0,0,N,N);var held=el.classList.contains("held"),beat=el.classList.contains("beat"),nibC=el.classList.contains("nib"),bitC=el.classList.contains("bite");
+    function paint(a){if(!cg)return;var N=40,c=19.5,g2=cg;g2.clearRect(0,0,N,N);var pwOn=st==="reel",pwF=spinRpm>8?Math.min(1,spinRpm/(PWR()*PW_MAX)):0,pwRed=(1+FT("spinWin",0.15))/PW_MAX;var held=el.classList.contains("held"),beat=el.classList.contains("beat"),nibC=el.classList.contains("nib"),bitC=el.classList.contains("bite");
       function dot(x,y,col){g2.fillStyle=col;g2.fillRect(Math.round(x),Math.round(y),1,1);}
       for(var y=0;y<N;y++)for(var x=0;x<N;x++){var d=Math.hypot(x-c,y-c);
-        if(d<=19.6&&d>(bitC||nibC?16.9:18.2))dot(x,y,bitC?"#ff3b5c":nibC?"#F5C518":held?"#3DF2FF":beat?"#F5C518":"#2a2f45");          /* outer ring: lights when held / on the beat */
+        if(d<=19.6&&d>(bitC||nibC||pwOn?16.9:18.2)){if(pwOn){var fa=((Math.atan2(x-c,-(y-c))/(Math.PI*2))+1)%1,red=fa>=pwRed;dot(x,y,fa<=pwF?(red?"#ff3b3b":fa>pwRed*0.62?"#9cff4a":"#3DF2FF"):(red?"#5a1e1e":"#1e2236"));}
+          else dot(x,y,bitC?"#ff3b5c":nibC?"#F5C518":held?"#3DF2FF":"#2a2f45");}          /* outer ring: the power wheel while reeling (fills clockwise with your winding speed, the red zone strains the line); lights on a nibble / bite */
         else if(d<=18.2&&d>16.8)dot(x,y,"#11131a");                                     /* rim */
         else if(d<=16.8){var an=Math.atan2(y-c,x-c)-a,sp=((an/(Math.PI/4))%1+1)%1;dot(x,y,d<4.2?(d<3?"#e3e6ee":"#11131a"):sp<0.22?"#5d6378":(d>14.5?"#8e94aa":"#a9afc4"));}}   /* spool, turning spokes, hub */
       var ex=c+Math.sin(a)*12.5,ey=c-Math.cos(a)*12.5;for(var t=0;t<=1;t+=0.04){var px2=c+(ex-c)*t,py2=c+(ey-c)*t;dot(px2-1,py2,"#11131a");dot(px2+1,py2,"#11131a");dot(px2,py2-1,"#11131a");dot(px2,py2+1,"#11131a");}
@@ -5280,7 +5283,7 @@ var FISH=(function(){
     /* waiting: flick the left stick left or right and the float twitches one small step that way, to nudge it into a fish's path
        (each flick is one step; it spooks a fish that's nosing at it, like reeling does) */
     if(st==="wait"&&!marlinHook){var nx0=inp.x>0.55?1:inp.x<-0.55?-1:0;if(nx0&&nx0!==nudgeD){var ax0=aimX;aimX=Math.max(-1,Math.min(1,aimX+nx0*0.09));if(aimX!==ax0)nudgeFx={t:now,d:nx0};if(biteFish)scare(now),biteAt=noFish()?Infinity:biteAt;marlinHold=false;}nudgeD=Math.abs(inp.x)<0.3?0:nx0||nudgeD;}
-    if(st==="wait"){spinTick(now,dt);var wr=spinRpm>8?Math.min(1.2,spinRpm/bpmNow):(spaceHeld||held.up?0.6:0);
+    if(st==="wait"){spinTick(now,dt);var wr=spinRpm>8?Math.min(1.2,spinRpm/PWR()):(spaceHeld||held.up?0.6:0);
       if(wr>0){castD=Math.max(0,castD-wr*FT("waitReel",0.16)*dt);D=castD;if(biteFish&&!marlinHook)scare(now),biteAt=noFish()?Infinity:biteAt;marlinHold=false;   /* moving the float spooks the one nosing at it */
         if(castD<0.3){castD=0.8;biteAt=Infinity;set("idle");pops.push({t:now,txt:"\u2714 READY",col:"#9cff4a"});}}
       else if(noFish()&&!marlinHold&&!marlinHook){if(!biteFish){var nf=fishNear(now);if(nf){biteFish=nf;biteAt=now+(loud()?250:450)+Math.random()*500;}}
@@ -5310,11 +5313,11 @@ var FISH=(function(){
       /* the reel: winds on the beat; holding on a computer is a slow steady reel */
       spinTick(now,dt);var rt=Math.min(1,windRate());if(reelHold||spaceHeld||held.up)rt=Math.max(rt,0.3);reelR+=(rt-reelR)*Math.min(1,dt*(rt>reelR?10:4));
       D=Math.max(0,Math.min(1.2,D+(pull*FT("run",0.14)-reelR*FT("reel",0.24)*(tut?0.45:1)*(kind===5?FT("marlinReel",0.55):kind===6?FT("seabassReel",0.65):1)*(1-0.5*Math.min(1,pull)))*dt));
-      var ovs=spinRpm>8?Math.max(0,spinRpm/bpmNow-1-FT("spinWin",0.15)):0;   /* spinning faster than the beat strains the line */
+      var ovs=spinRpm>8?Math.max(0,spinRpm/PWR()-1-FT("spinWin",0.15)):0;   /* winding into the red zone strains the line */
       var Tt=reelR*FT("tenReel",0.45)+pull*(reelR>0.15?FT("tenPull",1.15):FT("tenPull",1.15)*0.43)+Math.abs(rodA)*0.08+ovs*FT("tenOver",0.9);
       if(D>1.08)Tt=Math.max(Tt,1.6);   /* out of line: the spool is empty, so the line goes tight and the tension bar climbs to the top before it snaps */
       if(D>1&&!lineWarn){lineWarn=true;pops.push({t:now,txt:"\u26A0 LINE OUT!",col:"#ff8a5a"});try{if(navigator.vibrate)navigator.vibrate([60,60,60]);}catch(e){}}else if(D<0.9)lineWarn=false;
-      var und=spinRpm>8?Math.max(0,1-FT("spinWin",0.15)-spinRpm/bpmNow):(reelR<0.05?0.3:0);Tt*=1-Math.min(0.6,und*FT("tenUnder",0.8));   /* spinning slower eases the line */
+      var und=spinRpm>8?Math.max(0,0.85-spinRpm/PWR()):(reelR<0.05?0.3:0);Tt*=1-Math.min(0.6,und*FT("tenUnder",0.8));   /* spinning slower eases the line */
       if(ovs>0.15&&now-(lastFastPop||0)>1600){lastFastPop=now;pops.push({t:now,txt:"\u26A0 TOO FAST",col:"#ff8a5a"});}var dT=(Tt-T)*Math.min(1,dt*FT("tenRise",5));   /* tension can only climb so fast (slower still just after the hook); it can drop quicker */
       if(dT>0)dT=Math.min(dT,FT("tenMaxRise",0.35)*dt*(age<2?FT("tenHookEase",0.5):1));else dT=Math.max(dT,-FT("tenMaxFall",0.9)*dt);T+=dT;
       if(T>1)overT+=dt;else overT=Math.max(0,overT-dt*2);if(T<0.06)slackT+=dt;else slackT=0;
@@ -6015,13 +6018,13 @@ var SWEEP=(function(){
   function dpx(ax,ay,bx,by){return Math.hypot((ax-bx)*W,(ay-by)*H);}
   /* where things stand on the shelves: a slot just outside each face of each unit, and along the deli counter */
   function build(){slots=[];U.forEach(function(u,ui){[["l",u.x0-0.022],["r",u.x1+0.022]].forEach(function(f){var list=u[f[0]];if(!list)return;var n=list.length;
-      for(var i=0;i<n;i++){if(!list[i])continue;slots.push({x:f[1],y:u.y0+(u.y1-u.y0)*(i+0.5)/n,t:list[i],u:ui,side:f[0]});}});});
-    DELIT.forEach(function(t,i){slots.push({x:0.07+i*(0.86/(DELIT.length-1)),y:DELI+0.018,t:t,deli:1});});}
+      for(var i=0;i<n;i++){if(!list[i])continue;slots.push({x:f[1],y:u.y0+(u.y1-u.y0)*(i+0.5)/n,t:list[i],u:ui,side:f[0],n:STOCK});}});});
+    DELIT.forEach(function(t,i){slots.push({x:0.07+i*(0.86/(DELIT.length-1)),y:DELI+0.018,t:t,deli:1,n:STOCK});});}
   function newCart(att){var m=me();cart={x:m?m.x:0.42,y:m?m.y:0.9,att:att!==false,fill:0,val:0,items:[],inf:[]};}
   function placeInflatables(){var spots=[[0.11,0.58],[0.3,0.69],[0.5,0.55],[0.69,0.69],[0.87,0.6],[0.3,0.56],[0.11,0.7],[0.87,0.71]],K=["banana","bottle","turkey","cheese"],P=[50,100,100,150,200,250];
     for(var i=spots.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=spots[i];spots[i]=spots[j];spots[j]=t;}
     infl=K.map(function(k,i){return{x:spots[i][0],y:spots[i][1],k:k,val:P[Math.floor(Math.random()*P.length)],got:false,bob:Math.random()*6};});}
-  function start(){on=true;build();score=0;banked=0;carts=0;pops=[];hands=null;botS={};remote={};bag=[];grind={done:false,p:0};candy={done:false,amt:0,tries:0,msgAt:0};face=2;
+  function start(){on=true;build();stored=[];score=0;banked=0;carts=0;pops=[];hands=null;botS={};remote={};bag=[];grind={done:false,p:0};candy={done:false,amt:0,tries:0,msgAt:0};face=2;
     setMe(0.4+Math.random()*0.2,0.785);newCart(true);placeInflatables();document.body.classList.add("gaming-sweep");$("swpUI").classList.add("on");hud();banner("🛒 SUPERMARKET SWEEP!");}
   function stop(){on=false;grabHeld=false;document.body.classList.remove("gaming-sweep");$("swpUI").classList.remove("on");}
   /* the buzzer: what's still in your cart counts, and the inflatables' prizes are revealed */
@@ -6036,7 +6039,11 @@ var SWEEP=(function(){
   function pop(txt,col,x,y,big){pops.push({t:performance.now(),txt:txt,col:col||"#fff",x:x,y:y,big:big});}
   function add(t,val){if(t==="inflate"){cart.inf.push(val);}else{cart.val+=T[t].v;}cart.fill+=T[t].s;cart.items.push(t);hud();}
   function room(t){return cart.fill+T[t].s<=CAP;}
-  function nearSlot(m){var best=null,bd=1e9,R=sc()*10;slots.forEach(function(s){var d=dpx(s.x,s.y,m.x,m.y);if(d<R&&d<bd){bd=d;best=s;}});
+  /* each spot on the shelves holds 5 and doesn't restock; a cart takes at most 5 of any one thing, so every cart needs a few different aisles */
+  var STOCK=5,PER=5,stored=[];
+  function cnt(t){var n=0;cart.items.forEach(function(x){if(x===t)n++;});return n;}
+  function capped(t){return t!=="inflate"&&cnt(t)>=PER;}
+  function nearSlot(m){var best=null,bd=1e9,R=sc()*10;slots.forEach(function(s){if(s.n<=0)return;var d=dpx(s.x,s.y,m.x,m.y);if(d<R&&d<bd){bd=d;best=s;}});
     infl.forEach(function(o){if(o.got)return;var d=dpx(o.x,o.y,m.x,m.y);if(d<R*1.1&&d<bd){bd=d;best={x:o.x,y:o.y,t:"inflate",inf:o};}});return best;}
   function nearCart(m){return cart&&dpx(cart.x,cart.y,m.x,m.y)<sc()*13;}
   function atStation(m,st){return dpx(st.x,st.y,m.x,m.y)<sc()*11;}
@@ -6044,7 +6051,7 @@ var SWEEP=(function(){
   function grabDown(){if(!on)return;var m=me();if(!m)return;grabHeld=true;var now=performance.now();
     if(!hands&&atStation(m,GRIND)&&!grind.done)return;   /* holding at the grinder grinds */
     if(!hands&&atStation(m,CANDY)&&!candy.done)return;   /* holding at the candy bar scoops */
-    if(hands){if(nearCart(m)){if(!room(hands)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}add(hands,hands==="inflate"?handsVal:0);pop(hands==="inflate"?"🎈 IN THE CART":"+$"+T[hands].v,"#9cff4a",cart.x,cart.y);hands=null;handsVal=0;hud();}
+    if(hands){if(nearCart(m)){if(capped(hands)){pop(PER+" "+T[hands].n.toUpperCase()+" IS THE LIMIT · BANK THIS CART FIRST","#ffd24a",m.x,m.y);return;}if(!room(hands)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}add(hands,hands==="inflate"?handsVal:0);pop(hands==="inflate"?"🎈 IN THE CART":"+$"+T[hands].v,"#9cff4a",cart.x,cart.y);hands=null;handsVal=0;hud();}
       else pop("WALK TO YOUR CART","#ffd24a",m.x,m.y);return;}
     if(cart.att){cart.att=false;nextSweep=now+350;pop(nearSlot(m)?"PARKED · GRAB TO LOAD IT":"PARKED","#cfe3ff",m.x,m.y);return;}   /* pushing: GRAB parks the cart (you can't load it on the move) */
     var s=nearSlot(m);
@@ -6054,9 +6061,11 @@ var SWEEP=(function(){
   function startReach(s,now){if(reach)return;var m=me();reach={at:now,s:s};face=ART.face8((s.x-m.x)*W,(s.y-m.y)*H,face);}
   function takeIt(s,now){var m=me();if(!m)return;
     if(s){var close=!cart.att&&nearCart(m);   /* into the cart only when it's parked right by you */
-      if(close&&room(s.t)){add(s.t,s.inf?s.inf.val:0);if(s.inf)s.inf.got=true;pop(s.inf?"🎈 BONUS!":"+$"+T[s.t].v,s.inf?"#ffe14a":"#9cff4a",s.x,s.y);flash=now;return;}
+      if(!s.inf&&s.n<=0)return;
+      if(close&&capped(s.t)){pop(PER+" "+T[s.t].n.toUpperCase()+" IS THE LIMIT · TRY ANOTHER AISLE","#ffd24a",m.x,m.y);fullWarnAt=now;return;}
+      if(close&&room(s.t)){add(s.t,s.inf?s.inf.val:0);if(s.inf)s.inf.got=true;else s.n--;pop(s.inf?"🎈 BONUS!":"+$"+T[s.t].v,s.inf?"#ffe14a":"#9cff4a",s.x,s.y);flash=now;return;}
       if(close&&!room(s.t)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}
-      cart.att=false;hands=s.t;handsVal=s.inf?s.inf.val:0;if(s.inf)s.inf.got=true;pop("GOT "+T[s.t].n.toUpperCase()+" → TAKE IT TO YOUR CART",T[s.t].c,s.x,s.y);hud();return;}}
+      cart.att=false;hands=s.t;handsVal=s.inf?s.inf.val:0;if(s.inf)s.inf.got=true;else s.n--;pop("GOT "+T[s.t].n.toUpperCase()+" → TAKE IT TO YOUR CART",T[s.t].c,s.x,s.y);hud();return;}}
   var handsVal=0;
   function grabUp(){grabHeld=false;var m=me();if(!on||!m)return;
     if(candy&&!candy.done&&candy.amt>0&&atStation(m,CANDY)){var a=candy.amt,now=performance.now();
@@ -6074,7 +6083,7 @@ var SWEEP=(function(){
     var busy=!!reach||(grabHeld&&!hands&&((atStation(m,GRIND)&&!grind.done)||(atStation(m,CANDY)&&!candy.done)));
     if((ix||iy)&&!busy){face=ART.face8(ix,iy,face);if(cart.att)cartFace=face;}
     if(reach&&now-reach.at>=REACH){var rs=reach.s;reach=null;takeIt(rs,now);nextSweep=now+160;}
-    else if(!reach&&grabHeld&&!cart.att&&nearCart(m)&&!hands&&now>nextSweep&&!atStation(m,GRIND)&&!atStation(m,CANDY)){var sw=nearSlot(m);if(sw&&room(sw.t))startReach(sw,now);}
+    else if(!reach&&grabHeld&&!cart.att&&nearCart(m)&&!hands&&now>nextSweep&&!atStation(m,GRIND)&&!atStation(m,CANDY)){var sw=nearSlot(m);if(sw&&room(sw.t)&&!capped(sw.t))startReach(sw,now);}
     /* the walls and shelves (the floor walker moves you; this keeps you out of the shelving) */
     var x=Math.max(X0,Math.min(X1,m.x)),y=Math.max(Y0,Math.min(Y1,m.y));if(!last)last=[x,y];if(busy){x=last[0];y=last[1];}
     var rr=resolve(x,y,last[0],last[1]);x=rr[0];y=rr[1];if(x!==m.x||y!==m.y)setMe(x,y);last=[x,y];
@@ -6082,7 +6091,7 @@ var SWEEP=(function(){
     if(cart.att){var ca=cartAt(m.x*W,m.y*H,cartFace);cart.x=Math.max(X0+0.02,Math.min(X1-0.02,ca[0]/W));cart.y=Math.max(Y0,Math.min(Y1+0.05,ca[1]/H));}
     /* the checkout: a cart with anything in it, pushed into the lanes at the front, banks and you get a fresh one */
     if(cart.att&&cart.fill>0&&cart.y>CHECK.y0-0.01&&cart.x>CHECK.x0&&cart.x<CHECK.x1){var v=cart.val;score+=v;banked+=v;carts++;bag=bag.concat(cart.inf);GAME.moshPts(v);
-      cheer();pop("CART "+carts+" BANKED +$"+v+(cart.inf.length?"  🎈×"+cart.inf.length+" (revealed at the end)":""),"#9cff4a",cart.x,cart.y-0.03,1);newCart(true);hud();banner("🛒 NEW CART!");}
+      stored.push({items:cart.items.slice(),fill:cart.fill});cheer();pop("CART SWAP! CART "+carts+" STORED +$"+v+(cart.inf.length?"  🎈×"+cart.inf.length+" (revealed at the end)":""),"#9cff4a",cart.x,cart.y-0.03,1);newCart(true);hud();banner("🛒 CART SWAP!");}
     /* the coffee grinder: hold GRAB at it for 3 s */
     if(busy&&atStation(m,GRIND)){grind.p=Math.min(1,grind.p+dt/3);if(grind.p>=1){grind.done=true;grabHeld=false;score+=100;GAME.moshPts(100);pop("☕ FRESH GROUND! COFFEE BONUS +$100","#ffe14a",GRIND.x,GRIND.y,1);hud();}}
     else if(grind&&!grind.done&&grind.p>0&&!busy)grind.p=Math.max(0,grind.p-dt*0.5);
@@ -6096,8 +6105,8 @@ var SWEEP=(function(){
   /* practice dancers: grab things off the nearest shelf, push full carts to the checkout */
   function botTick(dt,now){Object.keys(viewers).filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id){var v=viewers[id];if(!v)return;
     var b=botS[id]||(botS[id]={x:0.3+Math.random()*0.4,y:0.785,face:2,fill:0,val:0,tgt:null,wait:0,lane:null});
-    if(now<b.wait){}else if(b.fill>=CAP-3){var tx=0.5,ty=0.792;mv(b,tx,ty,dt);if(b.y>CHECK.y0-0.005&&b.x>CHECK.x0&&b.x<CHECK.x1){if(GAME.botPts)GAME.botPts(id,b.val);cheer();b.fill=0;b.val=0;b.wait=now+600;}}
-    else{if(!b.tgt)b.tgt=slots[Math.floor(Math.random()*slots.length)];var t=b.tgt;if(mv(b,t.x,t.y,dt)){var it=T[t.t];if(b.fill+it.s<=CAP){b.fill+=it.s;b.val+=it.v;}b.tgt=null;b.wait=now+700+Math.random()*700;var bp=cartAt(b.x*W,b.y*H,b.face);b.park={x:bp[0]/W,y:bp[1]/H,f:b.face};}}
+    if(now<b.wait){}else if(b.fill>=CAP-3){var tx=0.5,ty=0.792;mv(b,tx,ty,dt);if(b.y>CHECK.y0-0.005&&b.x>CHECK.x0&&b.x<CHECK.x1){if(GAME.botPts)GAME.botPts(id,b.val);cheer();b.stored=(b.stored||0)+1;b.fill=0;b.val=0;b.wait=now+600;}}
+    else{if(!b.tgt){var av=slots.filter(function(q){return q.n>0;});b.tgt=av.length?av[Math.floor(Math.random()*av.length)]:null;if(!b.tgt){b.fill=CAP;return;}}var t=b.tgt;if(mv(b,t.x,t.y,dt)){var it=T[t.t];if(t.n>0&&b.fill+it.s<=CAP){t.n--;b.fill+=it.s;b.val+=it.v;}b.tgt=null;b.wait=now+700+Math.random()*700;var bp=cartAt(b.x*W,b.y*H,b.face);b.park={x:bp[0]/W,y:bp[1]/H,f:b.face};}}
     v.tx=v.x=b.x;v.ty=v.y=b.y;v.dance=4;var bw=now<b.wait;v.sk={h:b.fill,t:bw?3:0,d:b.face};v.pose=bw?[1.3+Math.sin(now/120)*0.5,-0.6,0,0]:[0.3,-0.3,0,0];v.fd=null;});}
   /* walk a bot toward a point through the aisles: down to the cross aisle (front) then up the target's aisle */
   /* walk a bot through the store: along the front to the right aisle, up it; the deli across the back from the nearest aisle */
@@ -6201,7 +6210,10 @@ var SWEEP=(function(){
     /* aisle number signs hanging at the top of each aisle */
     AISLE.forEach(function(ax,k){var sx=ax*W,sy=U[1].y0*H+s*4;Rf("rgba(0,0,0,.12)",sx-s*6,sy-s*1.5,s*13,s*7);Rf("#f7f4ee",sx-s*7,sy-s*3,s*14,s*7);dia(sx-s*4.5,sy+s*0.5,s*1.8);dia(sx+s*4.5,sy+s*0.5,s*1.8);
       g.fillStyle="#1a1426";ART.PX.disc(g,sx,sy+s*0.5,s*2.6);g.fillStyle="#fff";g.font="900 "+Math.max(6,s*3)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillText(String(k+1),sx,sy+s*1.6);});
-    slots.forEach(function(sl){if(sl.deli){item(g,sl.t,sl.x*W,(DELI-0.012)*H,s,1.1);return;}var u=U[sl.u],fx=(sl.side==="l"?u.x0:u.x1)*W+(sl.side==="l"?s*2:-s*2);item(g,sl.t,fx,sl.y*H,s,sl.t==="turkey"||sl.t==="fturkey"||sl.t==="wheel"?1:0.85);});
+    slots.forEach(function(sl){var px,py,k;if(sl.deli){px=sl.x*W;py=(DELI-0.012)*H;k=1.1;}else{var u=U[sl.u];px=(sl.side==="l"?u.x0:u.x1)*W+(sl.side==="l"?s*2:-s*2);py=sl.y*H;k=sl.t==="turkey"||sl.t==="fturkey"||sl.t==="wheel"?1:0.85;}
+      if(sl.n<=0){g.fillStyle="rgba(60,50,60,.25)";g.fillRect(Math.round(px-s*3),Math.round(py-s*2.5),s*6,s*5);return;}   /* swept clean */
+      for(var q=Math.min(sl.n,5)-1;q>=0;q--)item(g,sl.t,px+(sl.side==="l"?-1:1)*0+((q%2)?s*0.8:-s*0.8)*(q>0?1:0),py-q*s*1.1,s,k*(q?0.92:1));
+      g.font="900 "+Math.max(6,s*2.2)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=2;g.strokeStyle="rgba(0,0,0,.8)";g.strokeText("×"+sl.n,px+(sl.deli?0:(sl.side==="l"?-s*4:s*4)),py+s*4);g.fillStyle="#fff";g.fillText("×"+sl.n,px+(sl.deli?0:(sl.side==="l"?-s*4:s*4)),py+s*4);});
     /* the coffee grinder (a red machine on the coffee shelf) and the candy bar (bins of candy and a scale) */
     var gx2=U[3].x1*W,gy2=GRIND.y*H;g.fillStyle="#1a1426";g.fillRect(Math.round(gx2-s*7),Math.round(gy2-s*7),s*8,s*12);g.fillStyle="#d03a3a";g.fillRect(Math.round(gx2-s*6),Math.round(gy2-s*6),s*6,s*10);g.fillStyle="#dfe8f5";ART.PX.oval(g,gx2-s*3,gy2-s,s*2.2,s*2.2,0);g.fillStyle="#3a3a3a";g.fillRect(Math.round(gx2-s*3.5),Math.round(gy2+s*2),s,s*2);
     var cx2=U[2].x1*W,cy2=CANDY.y*H,cc=["#ff6ac1","#9fd8ff","#ffb02e","#9cff4a","#ffffff","#e0302a"];for(var ci=0;ci<6;ci++){g.fillStyle="#cfd6e4";g.fillRect(Math.round(cx2-s*6),Math.round(cy2-s*12+ci*s*4),s*6,s*4);g.fillStyle=cc[ci];g.fillRect(Math.round(cx2-s*5),Math.round(cy2-s*11+ci*s*4),s*4,s*2);}
@@ -6217,6 +6229,8 @@ var SWEEP=(function(){
     g.fillStyle="rgba(159,216,255,.55)";g.fillRect(Math.round(W*0.42),Math.round(fy),Math.round(W*0.16),s*5);g.fillStyle="#e8e8e8";for(var pk=0;pk<W;pk+=s*30)g.fillRect(Math.round(pk),Math.round(fy+s*14),s*12,s);
     /* the inflatables */
     infl.forEach(function(o){if(!o.got)inflatable(g,o,now,s);});
+    /* the swapped carts: stored in a row along the front, full */
+    var sx0=X0+0.01,step=(avS()*CU*14)/W,row=0;stored.forEach(function(c,i){var cx=sx0+(i%6)*step,cy=Y1-0.004-Math.floor(i/6)*0.012;cartPic(g,cx*W+avS()*CU*6.5,cy*H,1,c.fill,c.items,s,true);});
     hostDraw(g,now);
     cartsDraw(g,false);
     g.restore();}
@@ -6242,7 +6256,7 @@ var SWEEP=(function(){
   }
   window.ukSweepCheer=cheer;window.ukSweep=function(){var m=me();return{on:on,score:score,banked:banked,carts:carts,hands:hands,cart:cart&&{x:+cart.x.toFixed(3),y:+cart.y.toFixed(3),att:cart.att,fill:cart.fill,val:cart.val,inf:cart.inf.length},grind:grind&&{done:grind.done,p:+grind.p.toFixed(2)},candy:candy&&{done:candy.done,amt:+candy.amt.toFixed(2)},infl:infl.map(function(o){return[o.k,o.got];}),bag:bag.length,face:face,me:m?[+m.x.toFixed(3),+m.y.toFixed(3)]:null,bots:Object.keys(botS).map(function(k){var b=botS[k];return[k,+b.x.toFixed(2),+b.y.toFixed(2),b.fill];})};};
   window.ukSweepForce=function(o){if(o.me){setMe(o.me[0],o.me[1]);last=[o.me[0],o.me[1]];}if(o.face!==undefined)face=o.face;if(o.cf!==undefined)cartFace=o.cf;if(o.fill!==undefined&&cart){cart.fill=o.fill;cart.val=o.val||cart.val;}if(o.att!==undefined&&cart)cart.att=o.att;if(o.cart&&cart){cart.x=o.cart[0];cart.y=o.cart[1];}if(o.candy!==undefined)candy.amt=o.candy;hud();};
-  window.ukSweepSlots=function(){return slots.map(function(s){return[s.t,+s.x.toFixed(3),+s.y.toFixed(3)];});};
+  window.ukSweepSlots=function(){return slots.map(function(s){return[s.t,+s.x.toFixed(3),+s.y.toFixed(3),s.n];});};
   return{look:look,rig:rig,avS:avS,start:start,stop:stop,final:final,tick:tick,under:under,draw:draw,wire:wire,facing:facing,sweepOn:sweepOn,grabDown:grabDown,grabUp:grabUp,cartBtn:cartBtn,maxY:function(){return Y1;}};
 })();
 
@@ -10408,7 +10422,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.177",SERVER_VERSION="";
+var PAGE_VERSION="1.82.179",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11727,7 +11741,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.177"></script>
+<script src="lab.js?v=1.82.179"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
