@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.189 — The Big Sweep: no yellow ring
+
+1. The yellow ring around the shelf spot you're next to is gone (the label over your head still says what it is and what GRAB does).
+
 ## v1.82.188 — The Big Sweep: skinny cart bar on the right edge, a v over your parked cart
 
 1. The cart-full bar is a skinny bar up the right edge of the screen, filling from the bottom (red when full), with "CART $…" just above it.
