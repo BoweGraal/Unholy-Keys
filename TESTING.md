@@ -1688,6 +1688,29 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.159 — Pool fishing: the instructions stay clear of the stick
+
+1. Pool fishing, phone upright: the instruction line ("Tap CAST…", "Hold REEL to rise…") sits just above the stick and the button, centred, never over the stick.
+2. Phone sideways while reeling: the line runs along the bottom between the stick and the reel box, without touching either.
+3. Rotate mid-game: it moves to the right place.
+
+## v1.82.158 — Pool fishing gets the pixel fish, no divider line, zoom control removed
+
+1. Pool fishing → hook a fish: the reel box shows a proper pixel-art fish for each kind (Minnow: slim, silver-blue with a dark stripe; Perch: yellow with dark bars and orange fins; Bass: green with a dark side band; Pike: long, pale spots, fangs; Golden koi: orange with white/red patches and whiskers). Same style as the sea fish in Fishing.
+2. The white line down the water in the reel box is gone.
+3. The "− Game 100% +" zoom box at the top no longer shows in practice (or anywhere). Every game is back at its default zoom. (For testing it still appears with ?zoom in the address.)
+
+## v1.82.157 — Dungeon: walk the whole room in landscape, legs walk
+
+1. Start the dungeon, then turn the phone sideways (or start it sideways): you can walk all the way down to the bottom of the room (it used to stop about halfway, at where the hidden chat bar would be).
+2. Walk around: the legs stride and the body bobs, with the sword and shield still posed (no more gliding). Side-stepping with the shield up or while charging also walks. Other players and the practice dancers walk the same way.
+
+## v1.82.156 — Dungeon: shorter downward sweep, a tiny lean, facing away chops down
+
+1. Slash in each direction: the sweep still starts high but stops about 25° sooner at the bottom (less far down).
+2. A small lean into each slash: the body tips toward the way you face and back (facing us: a small dip; away: a small rise). Watch the feet: they stay exactly where they were. Nothing moves your position.
+3. Facing away (up): the slash starts high over the right shoulder and comes down and out to the left (it used to sweep up from the side).
+
 ## v1.82.155 — Version on the main menu only, UI clears the rounded bottom of the phone
 
 1. Main menu: the version / server line shows (bottom right). Go into any room (party, join, practice) or the TV view: it's gone.

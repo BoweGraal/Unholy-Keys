@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.155"></script>
-<script src="tune.js?v=1.82.155"></script>
-<script src="gfx.js?v=1.82.155"></script>
-<script src="art.js?v=1.82.155"></script>
-<script src="qr.js?v=1.82.155"></script>
-<script src="voice.js?v=1.82.155"></script>
-<script src="instruments.js?v=1.82.155"></script>
-<script src="kart.js?v=1.82.155"></script>
-<script src="explain.js?v=1.82.155"></script>
+<script src="px8.js?v=1.82.159"></script>
+<script src="tune.js?v=1.82.159"></script>
+<script src="gfx.js?v=1.82.159"></script>
+<script src="art.js?v=1.82.159"></script>
+<script src="qr.js?v=1.82.159"></script>
+<script src="voice.js?v=1.82.159"></script>
+<script src="instruments.js?v=1.82.159"></script>
+<script src="kart.js?v=1.82.159"></script>
+<script src="explain.js?v=1.82.159"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -267,7 +267,7 @@ body.gaming-ctf #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #fiScore,#poScore,#dgScore,#bbScore,#swScore{position:absolute;right:14px;top:56px;font:900 26px 'Silkscreen',ui-monospace,monospace;color:#3DF2FF;text-shadow:0 2px 0 #000}
 #bbScore[data-r]::before{content:attr(data-r);display:block;font-size:12px;color:#FF8AE0;text-align:right;letter-spacing:1px}   /* the round: R2/3 */
 #fiCount,#poCount{position:absolute;right:14px;top:90px;font:700 14px 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:0 2px 0 #000}
-body[data-game="pond"] #poHint{top:auto;bottom:calc(var(--chatH) + 18px);left:40%;white-space:normal;text-align:center;width:max-content;max-width:36vw}   /* under the pool, between the stick and the reel box */
+body[data-game="pond"] #poHint{top:auto;bottom:calc(var(--chatH) + 18px);left:50%;white-space:normal;text-align:center;width:max-content;max-width:min(90vw,520px)}   /* under the pool, between the stick and the reel box */
 body[data-game="fish"] #fiHint{top:max(178px,22vh);white-space:normal;text-align:center;width:max-content;max-width:80vw}
 #fiHint,#poHint,#bbHint,#swHint{position:absolute;left:50%;transform:translateX(-50%);top:64px;font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.88);text-shadow:0 1px 3px #000;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
 #fiBtn,#poBtn,#dgBtn,#bbBoost,#swDash{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 12px);width:104px;height:104px;border:3px solid #3DF2FF;background-color:#1f6fa0;color:#fff;font:900 18px 'Silkscreen',ui-monospace,monospace;pointer-events:auto;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:4px 4px 0 #000}
@@ -2244,10 +2244,11 @@ function resize(){
 var GZS={};try{GZS=JSON.parse(localStorage.getItem("uk_gz")||"{}")||{};}catch(e){GZS={};}
 var GZ_PC=!!(window.matchMedia&&matchMedia("(pointer:fine)").matches);
 function gzDef(k){return k==="free"&&GZ_PC?1.5:k==="fish"?1.35:1;}   /* fishing: a little closer, so the line and the fish are easy to see */   /* a computer: free dance starts at 150% */
-window.ukGZ=function(k){if(TVSCREEN)return 1;var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
+var GZ_ON=/[?&]zoom\b/.test(location.search);   /* the zoom control is off for now: only with ?zoom in the address (saved zooms only apply then too) */
+window.ukGZ=function(k){if(TVSCREEN)return 1;var z=GZ_ON&&k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
 var GZNAME={ctf:"CTF",kflag:"Kart flag",ski:"Ski",kart:"Mars Rally",pipe:"Half pipe",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",walk:"Walk race",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Highway 4 keys",crowd:"Crowd vote",fish:"Fishing",pond:"Pool fishing",dungeon:"Dungeon",boats:"Bumper boats",ball:"Ball run",dragon:"Dragon riders",swim:"Coin dive"};
 function gzKey(){var m=typeof GAME!=="undefined"&&GAME.mode;if(!m)return null;if(m==="ctf")return document.body.classList.contains("ctf-kart")?"kflag":"ctf";if(m==="skate"&&typeof ICE!=="undefined"&&ICE)return "ice";return m;}
-function gzUI(){var k=gzKey(),show=!!k&&((typeof PRACTICE!=="undefined"&&PRACTICE.on)||/[?&]zoom\b/.test(location.search)||localStorage.getItem("uk_gzui")==="1"),b=document.getElementById("gzBox");
+function gzUI(){var k=gzKey(),show=!!k&&GZ_ON,b=document.getElementById("gzBox");
   if(!b){if(!show)return;b=document.createElement("div");b.id="gzBox";b.innerHTML='<button data-z="-1" aria-label="Zoom out">\u2212</button><span title="Tap to reset to 100%"></span><button data-z="1" aria-label="Zoom in">+</button>';document.body.appendChild(b);
     b.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();var t=e.target.closest("[data-z],span"),k2=gzKey();if(!t||!k2)return;
       var z=window.ukGZ(k2);z=t.tagName==="SPAN"?1:Math.max(0.5,Math.min(2.5,Math.round((z+0.1*(+t.getAttribute("data-z")))*10)/10));if(Math.abs(z-gzDef(k2))<0.001)delete GZS[k2];else GZS[k2]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}gzUI();},true);}
@@ -2826,7 +2827,8 @@ function share1000(list) {
 function danceStyle(v){v=Math.floor(+v||0);return v>=1&&v<=5?v:0;}
 function safePose(a){if(!Array.isArray(a)||a.length!==4)return null;var o=[];for(var i=0;i<4;i++){var n=+a[i];if(!isFinite(n))return null;o.push(Math.max(-3.2,Math.min(3.2,n/100)));}return o;}
 function floorMaxY(){
-  if(typeof DRAGON!=="undefined"&&DRAGON.on)return DRAGON.maxY();   /* dragon riders: the whole sky (a landscape phone lost half of it to the chat's space) */
+  if(typeof DRAGON!=="undefined"&&DRAGON.on)return DRAGON.maxY();
+  if(typeof DUNGEON!=="undefined"&&DUNGEON.dunOn())return DUNGEON.maxY();   /* the dungeon: the whole room (the hidden chat still has a size in landscape) */   /* dragon riders: the whole sky (a landscape phone lost half of it to the chat's space) */
   var cp=document.getElementById("chatPanel"),top=cp&&getComputedStyle(cp).display!=="none"?cp.getBoundingClientRect().top:H-160;
   return Math.min(FLOOR_BOTTOM-0.02,(top-14)/H);
 }
@@ -5426,7 +5428,18 @@ var FISH=(function(){
     "Bluefin tuna":{L:20,H:4,pw:0.6,back:"#16264a",mid:"#7f8fa8",belly:"#e5e9ee",tail:"cres",tailCol:"#1a2a50",dors:[[0.56,0.72,2.6],[0.36,0.42,2.4]],anal:[0.36,0.42,2.2],fin:"#22345e",
       pat:function(t,v,x,y){if(v>0.35&&t>0.2&&t<0.8&&(x%3===0)&&hz(y*3+x)<0.6)return"#c9d0dc";return null;},finlets:"#f0c419",eyeT:0.88},
     "Marlin":{L:22,H:3.6,pw:0.6,back:"#14306b",mid:"#5f86c4",belly:"#dfe6ee",tail:"cres",tailCol:"#14306b",dors:[[0.45,0.82,4.6]],sail:true,anal:[0.3,0.4,1.6],fin:"#1d3f86",
-      pat:function(t,v){if(v>-0.35&&v<0.55&&t>0.18&&t<0.8&&((t*12)%1)<0.2)return"#9cc6f2";return null;},bill:7,eyeT:0.86}};
+      pat:function(t,v){if(v>-0.35&&v<0.55&&t>0.18&&t<0.8&&((t*12)%1)<0.2)return"#9cc6f2";return null;},bill:7,eyeT:0.86},
+    /* pool fishing's freshwater fish */
+    "Minnow":{L:10,H:2.2,pw:0.7,back:"#5a7f8f",mid:"#9fd8ff",belly:"#e9f6ff",tail:"fork",dors:[[0.45,0.58,1.2]],anal:[0.3,0.4,0.8],fin:"#6f9fb4",
+      pat:function(t,v){if(Math.abs(v-0.02)<0.16&&t>0.12&&t<0.88)return"#2f4f5f";return null;},eyeT:0.85},
+    "Perch":{L:13,H:3.8,pw:0.55,back:"#5d6b1e",mid:"#F5C518",belly:"#fff1b8",tail:"sq",tailCol:"#e0702a",dors:[[0.5,0.82,2.4],[0.22,0.45,1.6]],anal:[0.25,0.38,1.2],fin:"#e0702a",
+      pat:function(t,v){var B=[[0.2,0.27],[0.36,0.43],[0.52,0.59],[0.68,0.75]];if(v<0.35)for(var i=0;i<B.length;i++)if(t>=B[i][0]&&t<=B[i][1])return"#3c4a12";return null;},eyeT:0.86},
+    "Bass":{L:16,H:4.2,pw:0.55,back:"#2f5a2a",mid:"#5bd17a",belly:"#e6f2d2",tail:"sq",dors:[[0.42,0.8,2.2],[0.2,0.4,1.8]],anal:[0.22,0.36,1.4],fin:"#3f6f36",
+      pat:function(t,v,x,y){if(Math.abs(v-0.05)<0.16&&t>0.1&&t<0.9&&hz(x*5+y*3)<0.7)return"#1f3d1c";return null;},eyeT:0.86},
+    "Pike":{L:22,H:2.6,pw:0.55,back:"#3f5230",mid:"#b9c79a",belly:"#eef0dc",tail:"fork",dors:[[0.14,0.26,2]],anal:[0.14,0.24,1.6],fin:"#7a5a2a",
+      pat:function(t,v,x,y){if(v<0.4&&t>0.1&&t<0.86&&hz(x*13+y*7)<0.3)return"#f2f0c8";return null;},fangs:true,eyeT:0.88},
+    "Golden koi":{L:17,H:3.8,pw:0.6,back:"#ff8c1a",mid:"#ffb02e",belly:"#fff3dc",tail:"fork",tailCol:"#fff3dc",dors:[[0.3,0.72,1.8]],anal:[0.22,0.32,1.2],fin:"#fff3dc",
+      pat:function(t,v,x,y){if(v<0.2&&hz(Math.floor(x/3)*17+Math.floor((y+9)/3)*29)<0.28)return"#ffffff";if(v<0.1&&hz(Math.floor(x/3)*7+Math.floor((y+9)/3)*31)<0.14)return"#c8221a";return null;},barbel:true,eyeT:0.88}};
   var FCACHE={};
   function fishSprite(K){if(FCACHE[K.n])return FCACHE[K.n];var F=FSPEC[K.n];if(!F)return null;
     var tw=Math.max(3,Math.round(F.H*1.05)),top=Math.ceil(F.H+5),hgt=top*2+2,bill=F.bill||0,wid=tw+F.L+bill+3,c=document.createElement("canvas");c.width=wid;c.height=hgt;var g=c.getContext("2d"),cy=top,x0=tw+1,OL="#0f1a2a",grid={};
@@ -5456,6 +5469,7 @@ var FISH=(function(){
     if(!sp){var L=K.len*s*0.7,h=Math.max(s*2,L*0.4);g.fillStyle=K.col;ART.PX.oval(g,x,y,L/2,h/2,0);return;}
     var cs=Math.max(1,Math.round(s*0.6)),w=sp.c.width*cs,h2=sp.c.height*cs;g.save();g.imageSmoothingEnabled=false;g.translate(Math.round(x),Math.round(y));if(dir<0)g.scale(-1,1);
     g.drawImage(sp.c,Math.round(-sp.cx*cs),Math.round(-sp.cy*cs),w,h2);g.restore();}
+  window.ukFishIcon=fishIcon;window.ukFishSpriteOf=fishSprite;   /* pool fishing draws its fish with these too */
   window.ukFishSprites=function(){var o=[];KINDS.forEach(function(K){var sp=fishSprite(K);o.push({n:K.n,w:sp&&sp.c.width,h:sp&&sp.c.height,url:sp&&sp.c.toDataURL()});});return o;};
     window.ukFish=function(){var mq=myId&&viewers[myId];return{mx:mq?+(+mq.x).toFixed(3):null,ang:+ang.toFixed(3),aim:+aimX.toFixed(2),on:on,st:st,score:score,count:count,kind:kind,power:+power.toFixed(2),castD:+castD.toFixed(2),D:+D.toFixed(2),T:+T.toFixed(2),reel:+reelR.toFixed(2),rod:+rodA.toFixed(2),fishX:+fishX.toFixed(2),runDir:runDir,sw:sw?{u:+sw.uMax.toFixed(2)}:null,aim:aimX,marlin:marlinNow(),swoop:ready()?(function(){var m=myPx();return swGeo(m[0],m[1]);})():null,zoom:VZS.on?+VZS.Z.toFixed(2):1};};
   window.ukFishSwoop=function(ms,u,end){sw={id:-1,f:[0,0],uMax:u||0,t0:performance.now()-ms};set("aim");if(end)endSwoop();};   /* tests */
@@ -5494,10 +5508,13 @@ var POND=(function(){
   function stop(){on=false;holdB=holdK=holdP=false;document.body.classList.remove("gaming-pond","pond-reel");$("pondUI").classList.remove("on");if(typeof goalHL==="function")goalHL(null,"");}
   function banner(t){var b=$("poBanner");if(!b)return;if(typeof PXEMO!=="undefined")PXEMO.set(b,t);else b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("poScore");if(h)h.textContent=score.toLocaleString();var c=$("poCount");if(c)c.textContent=count?"🐟 ×"+count:"";}
+  addEventListener("resize",function(){if(on)setTimeout(btn,120);});
   function btn(){var b=$("poBtn");if(!b)return;var t=st==="idle"?"CAST":st==="net"?"NET!":st==="reel"?"REEL":st==="cast"||st==="wait"?"…":st==="bite"?"BITE!":"";
     b.firstChild.textContent=t;var sm=b.querySelector("small");if(sm)sm.textContent=st==="reel"?"hold":"Space";
     b.classList.toggle("hot",st==="idle"||st==="net");b.classList.toggle("dim",!(st==="idle"||st==="net"||st==="reel"));b.classList.toggle("held",st==="reel"&&reeling);
     var h=$("poHint");if(!h)return;
+    try{var tp=innerHeight;["dpad","poBtn"].forEach(function(id){var e=$(id);if(e&&e.offsetParent!==null){var r=e.getBoundingClientRect();if(r.height)tp=Math.min(tp,r.top);}});h.style.bottom=Math.round(innerHeight-tp+10)+"px";h.style.left="";h.style.maxWidth="";
+      if(innerWidth>innerHeight&&(st==="reel"||st==="net")){var dp=$("dpad"),dr=dp?dp.getBoundingClientRect().right:0,G0=geo(),gl=G0.bx-12;if(gl-dr>140){h.style.bottom="10px";h.style.left=Math.round((dr+gl)/2)+"px";h.style.maxWidth=Math.round(gl-dr-16)+"px";}}}catch(x){}   /* sideways: along the bottom, between the stick and the reel box */   /* just above the stick and the button, never over them */
     h.textContent=st==="idle"?(TOUCHF?"Tap CAST · the stick walks you round the edge":"Space to cast · ← → walk round the edge"):st==="wait"||st==="cast"?"Waiting for a bite…":st==="reel"?(TOUCHF?"Hold REEL to rise · let go to sink · stick slides left / right · stay on the fish!":"Hold Space / ↑ / the mouse to rise · let go to sink · ← → or the mouse slide · stay on the fish!"):st==="net"?(TOUCHF?"Tap NET when the net is over the fish":"Space when the net is over the fish"):"";
     if(typeof goalHL==="function")goalHL(st==="idle"||st==="net"?b:null,st==="idle"?"CAST":st==="net"?"NET IT":"");}
   /* the button: cast, swing the net; while reeling it's held to reel */
@@ -5603,7 +5620,7 @@ var POND=(function(){
     pops=pops.filter(function(p){var a3=(now-p.t)/1400;if(a3>1)return false;var me=viewers[myId];var ppx=me?me.x*W:W/2,ppy=me?me.y*H-s*36:H/2;g.globalAlpha=1-a3*a3;g.font="900 "+Math.max(14,s*6)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.75)";g.strokeText(p.txt,ppx,ppy-a3*30);g.fillStyle=p.col;g.fillText(p.txt,ppx,ppy-a3*30);return true;});
     g.globalAlpha=1;
   }
-  function fishIcon(g,x,y,s,K,dir){var L=K.len*s*0.7,h=Math.max(s*2,L*0.4),o=Math.max(1.5,s*0.5);
+  function fishIcon(g,x,y,s,K,dir){if(window.ukFishSpriteOf&&ukFishSpriteOf(K)){ukFishIcon(g,x,y,s,K,dir);return;}var L=K.len*s*0.7,h=Math.max(s*2,L*0.4),o=Math.max(1.5,s*0.5);
     g.fillStyle="#13233a";ART.PX.oval(g,x,y,L/2+o,h/2+o,0);PXD.tri(g,x-dir*(L/2-o),y,x-dir*(L/2+h*0.8+o),h*0.6+o);
     g.fillStyle=K.col;ART.PX.oval(g,x,y,L/2,h/2,0);
     PXD.tri(g,x-dir*L/2,y,x-dir*(L/2+h*0.8),h*0.6);g.fillStyle="#000";g.fillRect(Math.round(x+dir*L*0.28-s/2),Math.round(y-h*0.2),s,s);}
@@ -5625,7 +5642,7 @@ var POND=(function(){
     bamboo(g,G.bx,G.by,G.F,G.Hb,true);bamboo(g,G.bx+G.Wb-G.F,G.by,G.F,G.Hb,true);bamboo(g,G.wx+G.ww,G.by,G.F,G.Hb,true);
     bamboo(g,G.bx,G.by,G.Wb,G.F,false);bamboo(g,G.bx,G.by+G.Hb-G.F,G.Wb,G.F,false);
     waterV(g,G.wx,G.wy,G.lw,G.wh,true,now);waterV(g,G.wx+G.lw+G.dv,G.wy,G.ww-G.lw-G.dv,G.wh,false,now);
-    g.fillStyle="#fbf6ea";g.fillRect(G.wx+G.lw,G.wy,G.dv,G.wh);
+    waterV(g,G.wx+G.lw,G.wy,G.dv,G.wh,false,now);   /* no divider line: the water runs across */
     g.font="700 9px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="rgba(255,255,255,.75)";g.fillText(reeling?"REELING ▲":"HOLD TO REEL",G.wx+G.lw/2,G.wy+G.wh-6);
     var pr=st==="net"?1:Math.max(0,Math.min(1,prog));g.fillStyle="#3a2a18";g.fillRect(G.mx,G.wy,G.mw,G.wh);g.fillStyle=pr>0.8?"#9cff4a":"#5bd13a";var mh=Math.round(G.wh*pr/P)*P;g.fillRect(G.mx,G.wy+G.wh-mh,G.mw,mh);
     g.fillStyle="rgba(255,255,255,.3)";g.fillRect(G.mx,G.wy+G.wh-mh,Math.max(1,Math.round(G.mw/4)),mh);
@@ -5755,7 +5772,7 @@ var DUNGEON=(function(){
   /* which way a swing sweeps: from high to low. Side on and at the diagonals that means starting at the top (facing right:
      clockwise on screen, facing left: anticlockwise); facing us or away it starts from the sword hand's side */
   function swDir(f){return f===1||f===4||f===5?1:-1;}
-  function bladeAng(b,now){var a0=angOf(b.f);if(b.s==="swing"){var k=Math.min(1,(now-b.at)/SWING),e=1-Math.pow(1-k,2),d=swDir(b.f);return a0-d*1.22+d*2.44*e;}if(b.s==="spin")return a0+Math.min(1,(now-b.at)/SPIN)*Math.PI*2;return a0;}
+  function bladeAng(b,now){var a0=angOf(b.f);if(b.s==="swing"){var k=Math.min(1,(now-b.at)/SWING),e=1-Math.pow(1-k,2),d=swDir(b.f);if(b.f===2)return a0+0.8-2.02*e;return a0-d*1.22+d*2.02*e;}   /* facing away: from high over the right shoulder, down and out to the left (the short end of the sweep is the high end, so it chops down) */if(b.s==="spin")return a0+Math.min(1,(now-b.at)/SPIN)*Math.PI*2;return a0;}
   /* the right arm reaching along the blade (front and side views count the arm one way, from behind it's mirrored) */
   function armFor(f,a){return [2,5,6].indexOf(f)>=0?Math.PI/2-a:a-Math.PI/2;}
   /* the arms for a blade angle in a facing: the views facing left are drawn as the right-facing ones flipped, with the arms
@@ -5775,7 +5792,11 @@ var DUNGEON=(function(){
   function shieldOf(id,v){return bladeOf(id,v,performance.now()).s==="block";}
   function armsFor(f,a){var r=rArm(f),o=[0.25,-0.25,0,0];setArm(o,f,r,a);return o;}   /* the sword in the RIGHT hand, always */
   /* the lunge: the body leans out over the planted feet and back (it never moves you) */
-  function lungeOf(id,v){return[0,0];}   /* no body shift at all in a slash: the reach is the arm and the blade */
+  function lungeOf(id,v){return[0,0];}   /* the body never shifts in a slash: the reach is the arm and the blade */
+  /* a tiny lean into the swing, drawn only: the body tips toward the way you face and back, pivoting on the planted feet
+     (side on and diagonals a tilt; facing us a small dip forward, facing away a small rise) */
+  function leanOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="swing")return null;var k=Math.min(1,(now-b.at)/SWING),a=Math.sin(k*Math.PI),dv=DV[b.f]||[0,1];
+    return{rot:dv[0]*0.13*a,dip:dv[1]*1.2*a};}
   function rollOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="roll")return null;return Math.min(1,(now-b.at)/ROLL);}
   function rollDir(id,v){var f=faceOf(id,v);return DV[f][0]<-0.1?-1:1;}
   function swordOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="swing"&&b.s!=="charge"&&b.s!=="spin")return null;
@@ -5861,7 +5882,7 @@ var DUNGEON=(function(){
   }
   window.ukDungeon=function(){var m=me();return{on:on,st:st,face:face,room:room,hearts:hearts,score:score,kills:kills,door:doorOpen,mobs:mobs.filter(function(o){return !o.dead;}).map(function(o){return[+o.x.toFixed(3),+o.y.toFixed(3),o.hp];}),me:m?[+m.x.toFixed(3),+m.y.toFixed(3)]:null};};
   window.ukDungeonForce=function(o){if(o.mobs)mobs=o.mobs.map(function(q){return{x:q[0],y:q[1],hp:q[2]||2,hopAt:0,fx:q[0],fy:q[1],tx:q[0],ty:q[1],flash:0,kb:null,dead:0,leg:0,big:0};});if(o.face!==undefined)face=o.face;if(o.me)setMe(o.me[0],o.me[1]);if(o.inv!==undefined)invTo=performance.now()+o.inv;if(o.hearts!==undefined){hearts=o.hearts;if(st==="down")set("idle");hud();}};
-  return{swordOf:swordOf,shieldOf:shieldOf,lungeOf:lungeOf,rollOf:rollOf,rollDir:rollDir,blockDown:blockDown,blockUp:blockUp,roll:roll,start:start,stop:stop,tick:tick,btnDown:down0,btnUp:up0,under:under,draw:draw,wire:wire,looks:looks,facing:facing,dunOn:dunOn,reset:function(){},get on(){return on;},get st(){return st;}};
+  return{swordOf:swordOf,shieldOf:shieldOf,lungeOf:lungeOf,leanOf:leanOf,maxY:function(){return Y1;},rollOf:rollOf,rollDir:rollDir,blockDown:blockDown,blockUp:blockUp,roll:roll,start:start,stop:stop,tick:tick,btnDown:down0,btnUp:up0,under:under,draw:draw,wire:wire,looks:looks,facing:facing,dunOn:dunOn,reset:function(){},get on(){return on;},get st(){return st;}};
 })();
 /* ============================================================
    BUMPER BOATS (the boats round)
@@ -9996,7 +10017,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.155",SERVER_VERSION="";
+var PAGE_VERSION="1.82.159",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10720,6 +10741,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()&&!(fd&&fd.s===7)){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;knee=0;butt=0;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
     }else{
     var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];flex=true;
+    if(dance===4&&moving&&typeof DUNGEON!=="undefined"&&DUNGEON.dunOn()){var dwp=ART.walkPose(moving);legL=dwp.legL;legR=dwp.legR;lgL=dwp.legLenL;lgR=dwp.legLenR;bob=dwp.bob*s;}   /* the dungeon poses the arms (sword, shield), the legs still walk */
     bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
     if(dance===4&&!pose&&!moving){var gv=ART.dance(6,2,[0,0,0,0],GAME.beatPos());armL=gv.armL;armR=gv.armR;gBL=gv.bendL;gBR=gv.bendR;legL=gv.legL;legR=gv.legR;lgL=gv.lgL;lgR=gv.lgR;bob=gv.bob*s;dxs=gv.dx*s;hdA=gv.head;mouth=true;flex=false;}   /* dancing with no style picked: the groove */
     if(hitAge<220){bob-=(1-hitAge/220)*5*s;mouth=true;}
@@ -11239,7 +11261,8 @@ function renderLoop(){
         var ti9=me9?GAME.turnI:(cfd.ti!==undefined?cfd.ti:-999),add9=ti9!==-999?ti9:(cfd.b?2*[0,2,1,3][cfd.b]:0),S8F=[0,4,1,5,2,6,3,7];   /* mid-turn: how far round the sweep is; otherwise where the arrows left you */
         AVDIR=S8F[(((S8F.indexOf(base9)+add9)%8)+8)%8];}
       if(cdn===4&&cfd&&cfd.s===9&&cfd.m===1&&!cfd.b&&!(rpo&&rpo.dir!==undefined)&&!(ids[i]===myId&&GAME.spinDir>=0)&&!fdSpinDirOn(cfd,ids[i]===myId))AVDIR=0;   /* the T-step faces the crowd while it travels sideways (it never turns to walk) */
-      if(v!==PH&&v.dance===4&&DUNGEON.dunOn()){var dlo=DUNGEON.lungeOf(ids[i],v);vx+=dlo[0];dyy+=dlo[1];var drl=DUNGEON.rollOf(ids[i],v);if(drl!==null){AVO=AVO||{};AVO.sk={lift:-Math.sin(drl*Math.PI)*3*sc2,rot:drl*Math.PI*2*(DUNGEON.rollDir(ids[i],v)),ns:true};}}   /* the dungeon: a lunge leans the body out over the feet (you stay where you stand); a roll tumbles you over */
+      if(v!==PH&&v.dance===4&&DUNGEON.dunOn()){var dlo=DUNGEON.lungeOf(ids[i],v);vx+=dlo[0];dyy+=dlo[1];var drl=DUNGEON.rollOf(ids[i],v);if(drl!==null){AVO=AVO||{};AVO.sk={lift:-Math.sin(drl*Math.PI)*3*sc2,rot:drl*Math.PI*2*(DUNGEON.rollDir(ids[i],v)),ns:true};}
+        else{var dln=DUNGEON.leanOf(ids[i],v);if(dln&&(dln.rot||dln.dip)){var lsn=Math.sin(dln.rot||0);AVO=AVO||{};AVO.sk={lift:dln.dip*sc2-9.6*Math.abs(lsn)*sc2,rot:dln.rot||0.0001,lean:1};vx+=lsn*12.5*sc2;}   /* tipped on the feet: the tilt turns round the body, so it is moved back so the feet stay exactly where they were */}}   /* the dungeon: a lunge leans the body out over the feet (you stay where you stand); a roll tumbles you over */
       drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,skl?null:walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
       if(VOICE.talking(ids[i]))voiceIcon(vx+9*sc2,dyy-23*sc2,sc2,now);   /* talking on voice */
       AVO=null;AVDIR=0;
@@ -11298,7 +11321,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.155"></script>
+<script src="lab.js?v=1.82.159"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
