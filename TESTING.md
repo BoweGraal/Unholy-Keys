@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.170 — Party: longer game vote, two games for 2:45+ songs, bots fill to 4
+
+1. The game vote before each song now lasts **25 s** (was 15) — six panels to look at.
+2. Songs **2:45 or longer** get two games (was 3:00, so "3-minute" songs at 2:58 got one). YouTube songs whose length isn't known yet get pairs offered; if the song turns out short, just the first game of the pair plays. At a party, the pre-played YouTube copy usually knows the real length already.
+3. **Bots**: a party now fills to **4 players** with bots by default (you + 3 bots); they leave as real people join. 🎉 HOST → "BOTS: FILL THE ROOM TO" → Off / 4 / 6 / 8 players (remembered on that phone).
+4. The selected show length and bot setting are now highlighted in the panel.
+
 ## v1.82.169 — One Host button: just phones, phones + a TV, or a computer
 
 **Needs a Render redeploy** (the party remembers whether there's a TV).
