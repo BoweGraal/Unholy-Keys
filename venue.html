@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.159"></script>
-<script src="tune.js?v=1.82.159"></script>
-<script src="gfx.js?v=1.82.159"></script>
-<script src="art.js?v=1.82.159"></script>
-<script src="qr.js?v=1.82.159"></script>
-<script src="voice.js?v=1.82.159"></script>
-<script src="instruments.js?v=1.82.159"></script>
-<script src="kart.js?v=1.82.159"></script>
-<script src="explain.js?v=1.82.159"></script>
+<script src="px8.js?v=1.82.160"></script>
+<script src="tune.js?v=1.82.160"></script>
+<script src="gfx.js?v=1.82.160"></script>
+<script src="art.js?v=1.82.160"></script>
+<script src="qr.js?v=1.82.160"></script>
+<script src="voice.js?v=1.82.160"></script>
+<script src="instruments.js?v=1.82.160"></script>
+<script src="kart.js?v=1.82.160"></script>
+<script src="explain.js?v=1.82.160"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5489,7 +5489,7 @@ var FISH=(function(){
    ============================================================ */
 var POND=(function(){
   var CX=0.5,CY=0.52,RX=0.2,RY=0.11,RIM_X=1.3,RIM_Y=1.55;
-  var KINDS=[{n:"Minnow",pts:60,sp:0.7,jit:0.6,col:"#9fd8ff",len:5},{n:"Perch",pts:120,sp:0.95,jit:0.8,col:"#F5C518",len:7},{n:"Bass",pts:220,sp:1.25,jit:1.05,col:"#5bd17a",len:9},{n:"Pike",pts:380,sp:1.6,jit:1.35,col:"#b9c79a",len:12},{n:"Golden koi",pts:650,sp:1.9,jit:1.7,col:"#ffb02e",len:11}];
+  var KINDS=[{n:"Minnow",cm:7,pts:60,sp:0.7,jit:0.6,col:"#9fd8ff",len:5},{n:"Perch",cm:25,pts:120,sp:0.95,jit:0.8,col:"#F5C518",len:7},{n:"Bass",cm:40,pts:220,sp:1.25,jit:1.05,col:"#5bd17a",len:9},{n:"Pike",cm:70,pts:380,sp:1.6,jit:1.35,col:"#b9c79a",len:12},{n:"Golden koi",cm:55,pts:650,sp:1.9,jit:1.7,col:"#ffb02e",len:11}];
   var CODE={idle:0,cast:1,wait:2,bite:3,reel:4,net:5,caught:6,snap:7,lost:8};
   var LC=0.76,px=0.38,py=0.5,fy=0.5,pvx=0,pvy=0,pxT=0.38,holdB=false,holdK=false,holdP=false,mdrag=null;
   var on=false,st="idle",stAt=0,ang=Math.PI/2,score=0,count=0,kind=0,zx=0,reeling=false,prog=0,fx=0,fv=0,ftg=0,ftgAt=0,net=null,pops=[],lastT=0,biteAt=0,openAt=0,shadows=[],botF={},best=0;
@@ -5620,6 +5620,12 @@ var POND=(function(){
     pops=pops.filter(function(p){var a3=(now-p.t)/1400;if(a3>1)return false;var me=viewers[myId];var ppx=me?me.x*W:W/2,ppy=me?me.y*H-s*36:H/2;g.globalAlpha=1-a3*a3;g.font="900 "+Math.max(14,s*6)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.75)";g.strokeText(p.txt,ppx,ppy-a3*30);g.fillStyle=p.col;g.fillText(p.txt,ppx,ppy-a3*30);return true;});
     g.globalAlpha=1;
   }
+  /* in the reel box: one ruler for every fish, so a minnow is small and a pike is long (its average length; the pike fills
+     85% of the lane), in steps of a quarter pixel-size so the pixels stay even */
+  var CM_MAX=70;
+  function fishSized(g,x,y,K,dir,G){var sp=window.ukFishSpriteOf&&ukFishSpriteOf(K);if(!sp)return false;
+    var want=G.lw*0.85*(K.cm||CM_MAX)/CM_MAX,cs=Math.max(1,Math.round(want/sp.c.width*4)/4),w=sp.c.width*cs,h=sp.c.height*cs;
+    g.save();g.imageSmoothingEnabled=false;g.translate(Math.round(x),Math.round(y));if(dir<0)g.scale(-1,1);g.drawImage(sp.c,Math.round(-sp.cx*cs),Math.round(-sp.cy*cs),w,h);g.restore();return true;}
   function fishIcon(g,x,y,s,K,dir){if(window.ukFishSpriteOf&&ukFishSpriteOf(K)){ukFishIcon(g,x,y,s,K,dir);return;}var L=K.len*s*0.7,h=Math.max(s*2,L*0.4),o=Math.max(1.5,s*0.5);
     g.fillStyle="#13233a";ART.PX.oval(g,x,y,L/2+o,h/2+o,0);PXD.tri(g,x-dir*(L/2-o),y,x-dir*(L/2+h*0.8+o),h*0.6+o);
     g.fillStyle=K.col;ART.PX.oval(g,x,y,L/2,h/2,0);
@@ -5650,12 +5656,12 @@ var POND=(function(){
       g.save();g.beginPath();g.rect(G.wx,G.wy,G.ww,G.wh);g.clip();
       var pul=0.08*Math.sin(now/90);g.fillStyle=over?"rgba(90,255,80,"+((reeling?0.72:0.55)+pul).toFixed(2)+")":reeling?"rgba(255,120,120,.38)":"rgba(255,255,255,.22)";ART.PX.disc(g,cxp,cyp,G.padR);
       g.strokeStyle=over?"#b8ff7a":reeling?"#ff8a8a":"#e8ecff";ART.PX.ring(g,cxp,cyp,G.padR,Math.max(P,2));
-      fishIcon(g,X(fx),Y(fy),fs,K,fv>=0?1:-1);
+      if(!fishSized(g,X(fx),Y(fy),K,fv>=0?1:-1,G))fishIcon(g,X(fx),Y(fy),fs,K,fv>=0?1:-1);
       g.restore();}
     else if(net){var NS=netGeo(G),SX=function(u){return NS.x+(u+1)/2*NS.w;},nyy=NS.y+NS.h/2,nx=SX(net.x),fxx=SX(net.fx),hit=Math.abs(net.x-net.fx)<0.13,nw=Math.min(NS.w*0.12,NS.h*0.42);
       g.fillStyle="rgba(0,0,0,.35)";g.fillRect(NS.x-NS.F+3,NS.y-NS.F+3,NS.w+NS.F*2,NS.h+NS.F*2);bamboo(g,NS.x-NS.F,NS.y-NS.F,NS.w+NS.F*2,NS.F,false);bamboo(g,NS.x-NS.F,NS.y+NS.h,NS.w+NS.F*2,NS.F,false);bamboo(g,NS.x-NS.F,NS.y,NS.F,NS.h,true);bamboo(g,NS.x+NS.w,NS.y,NS.F,NS.h,true);
       waterV(g,NS.x,NS.y,NS.w,NS.h,true,now);
-      if(hit){g.fillStyle="rgba(220,255,80,.5)";ART.PX.disc(g,fxx,nyy,G.padR);}fishIcon(g,fxx,nyy,fs,K,1);
+      if(hit){g.fillStyle="rgba(220,255,80,.5)";ART.PX.disc(g,fxx,nyy,G.padR);}if(!fishSized(g,fxx,nyy,K,1,G))fishIcon(g,fxx,nyy,fs,K,1);
       g.strokeStyle=hit?"#c8ff6a":"#fff";ART.PX.ringO(g,nx,nyy,nw,nw*1.2,0,2);g.globalAlpha=0.45;for(var q=-2;q<=2;q++){PXD.line(g,nx+q*nw/2.6,nyy-nw,nx+q*nw/2.6,nyy+nw,1);PXD.line(g,nx-nw*0.85,nyy+q*nw/2.6,nx+nw*0.85,nyy+q*nw/2.6,1);}g.globalAlpha=1;
       g.strokeStyle="#8a531d";PXD.line(g,nx+nw*0.85,nyy-nw*0.6,nx+nw*0.85+(net.dir>0?-1:1)*nw*0.9,NS.y-NS.F-6,4);
       g.font="700 9px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="#fff";g.fillText((net.tries>1?"2 TRIES":"LAST TRY")+" · TAP WHEN IT'S ON THE FISH",NS.x+NS.w/2,NS.y+NS.h+NS.F+12);}
@@ -10017,7 +10023,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.159",SERVER_VERSION="";
+var PAGE_VERSION="1.82.160",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11321,7 +11327,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.159"></script>
+<script src="lab.js?v=1.82.160"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
