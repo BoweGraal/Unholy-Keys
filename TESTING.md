@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.154 — Party: Cast to the TV, TV mode (mirroring), no stand-in bot
+
+1. **Android + Chromecast / Google TV** (Chrome): 🎉 HOST → **📡 Cast to the TV** → pick the TV. The TV shows the party view; your phone keeps the full player + host view. The button becomes **■ Stop casting**. (The music still plays from the phone itself.)
+2. **iPhone** (or no Chromecast found): **Cast to the TV** opens a short help card: open the TV link on something at the TV (keeps your phone view), or **📺 TV mode**.
+3. **TV mode**: this same tab turns into the TV view (dance floor, playlist, QR, the vote grid) with a small 🎉 HOST button in the corner. Mirror the phone (iPhone: Control Centre → Screen Mirroring; Android: Cast / Smart View) and turn it sideways. The music comes out of the TV. 🎉 HOST → **Back to the phone view** returns to dancing. The screen is kept awake.
+4. Cast never opens a new tab any more (the phone paused the old tab, and the music with it).
+5. The hidden DJ's stand-in bot no longer walks the dance floor at a party (the host is there as themselves).
+6. TV view: the empty "Room:" label in the corner is gone (the code is in the QR box).
+
 ## v1.82.153 — Host a party (phone host + TV cast), 6-panel game vote with live previews on the TV
 
 **Needs a Render redeploy** (server: `pl-state`, song requests can name one of the game's songs, votes take 6 options and game pairs).
