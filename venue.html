@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.158"></script>
-<script src="tune.js?v=1.82.158"></script>
-<script src="gfx.js?v=1.82.158"></script>
-<script src="art.js?v=1.82.158"></script>
-<script src="qr.js?v=1.82.158"></script>
-<script src="voice.js?v=1.82.158"></script>
-<script src="instruments.js?v=1.82.158"></script>
-<script src="kart.js?v=1.82.158"></script>
-<script src="explain.js?v=1.82.158"></script>
+<script src="px8.js?v=1.82.159"></script>
+<script src="tune.js?v=1.82.159"></script>
+<script src="gfx.js?v=1.82.159"></script>
+<script src="art.js?v=1.82.159"></script>
+<script src="qr.js?v=1.82.159"></script>
+<script src="voice.js?v=1.82.159"></script>
+<script src="instruments.js?v=1.82.159"></script>
+<script src="kart.js?v=1.82.159"></script>
+<script src="explain.js?v=1.82.159"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -267,7 +267,7 @@ body.gaming-ctf #moveCtl{display:flex;bottom:calc(var(--chatH) + 14px)}
 #fiScore,#poScore,#dgScore,#bbScore,#swScore{position:absolute;right:14px;top:56px;font:900 26px 'Silkscreen',ui-monospace,monospace;color:#3DF2FF;text-shadow:0 2px 0 #000}
 #bbScore[data-r]::before{content:attr(data-r);display:block;font-size:12px;color:#FF8AE0;text-align:right;letter-spacing:1px}   /* the round: R2/3 */
 #fiCount,#poCount{position:absolute;right:14px;top:90px;font:700 14px 'Silkscreen',ui-monospace,monospace;color:#fff;text-shadow:0 2px 0 #000}
-body[data-game="pond"] #poHint{top:auto;bottom:calc(var(--chatH) + 18px);left:40%;white-space:normal;text-align:center;width:max-content;max-width:36vw}   /* under the pool, between the stick and the reel box */
+body[data-game="pond"] #poHint{top:auto;bottom:calc(var(--chatH) + 18px);left:50%;white-space:normal;text-align:center;width:max-content;max-width:min(90vw,520px)}   /* under the pool, between the stick and the reel box */
 body[data-game="fish"] #fiHint{top:max(178px,22vh);white-space:normal;text-align:center;width:max-content;max-width:80vw}
 #fiHint,#poHint,#bbHint,#swHint{position:absolute;left:50%;transform:translateX(-50%);top:64px;font:600 12px 'Silkscreen',ui-monospace,monospace;color:rgba(255,255,255,.88);text-shadow:0 1px 3px #000;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
 #fiBtn,#poBtn,#dgBtn,#bbBoost,#swDash{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--chatH) + 12px);width:104px;height:104px;border:3px solid #3DF2FF;background-color:#1f6fa0;color:#fff;font:900 18px 'Silkscreen',ui-monospace,monospace;pointer-events:auto;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:4px 4px 0 #000}
@@ -5508,10 +5508,13 @@ var POND=(function(){
   function stop(){on=false;holdB=holdK=holdP=false;document.body.classList.remove("gaming-pond","pond-reel");$("pondUI").classList.remove("on");if(typeof goalHL==="function")goalHL(null,"");}
   function banner(t){var b=$("poBanner");if(!b)return;if(typeof PXEMO!=="undefined")PXEMO.set(b,t);else b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("poScore");if(h)h.textContent=score.toLocaleString();var c=$("poCount");if(c)c.textContent=count?"🐟 ×"+count:"";}
+  addEventListener("resize",function(){if(on)setTimeout(btn,120);});
   function btn(){var b=$("poBtn");if(!b)return;var t=st==="idle"?"CAST":st==="net"?"NET!":st==="reel"?"REEL":st==="cast"||st==="wait"?"…":st==="bite"?"BITE!":"";
     b.firstChild.textContent=t;var sm=b.querySelector("small");if(sm)sm.textContent=st==="reel"?"hold":"Space";
     b.classList.toggle("hot",st==="idle"||st==="net");b.classList.toggle("dim",!(st==="idle"||st==="net"||st==="reel"));b.classList.toggle("held",st==="reel"&&reeling);
     var h=$("poHint");if(!h)return;
+    try{var tp=innerHeight;["dpad","poBtn"].forEach(function(id){var e=$(id);if(e&&e.offsetParent!==null){var r=e.getBoundingClientRect();if(r.height)tp=Math.min(tp,r.top);}});h.style.bottom=Math.round(innerHeight-tp+10)+"px";h.style.left="";h.style.maxWidth="";
+      if(innerWidth>innerHeight&&(st==="reel"||st==="net")){var dp=$("dpad"),dr=dp?dp.getBoundingClientRect().right:0,G0=geo(),gl=G0.bx-12;if(gl-dr>140){h.style.bottom="10px";h.style.left=Math.round((dr+gl)/2)+"px";h.style.maxWidth=Math.round(gl-dr-16)+"px";}}}catch(x){}   /* sideways: along the bottom, between the stick and the reel box */   /* just above the stick and the button, never over them */
     h.textContent=st==="idle"?(TOUCHF?"Tap CAST · the stick walks you round the edge":"Space to cast · ← → walk round the edge"):st==="wait"||st==="cast"?"Waiting for a bite…":st==="reel"?(TOUCHF?"Hold REEL to rise · let go to sink · stick slides left / right · stay on the fish!":"Hold Space / ↑ / the mouse to rise · let go to sink · ← → or the mouse slide · stay on the fish!"):st==="net"?(TOUCHF?"Tap NET when the net is over the fish":"Space when the net is over the fish"):"";
     if(typeof goalHL==="function")goalHL(st==="idle"||st==="net"?b:null,st==="idle"?"CAST":st==="net"?"NET IT":"");}
   /* the button: cast, swing the net; while reeling it's held to reel */
@@ -10014,7 +10017,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.158",SERVER_VERSION="";
+var PAGE_VERSION="1.82.159",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11318,7 +11321,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.158"></script>
+<script src="lab.js?v=1.82.159"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

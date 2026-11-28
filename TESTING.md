@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.159 — Pool fishing: the instructions stay clear of the stick
+
+1. Pool fishing, phone upright: the instruction line ("Tap CAST…", "Hold REEL to rise…") sits just above the stick and the button, centred, never over the stick.
+2. Phone sideways while reeling: the line runs along the bottom between the stick and the reel box, without touching either.
+3. Rotate mid-game: it moves to the right place.
+
 ## v1.82.158 — Pool fishing gets the pixel fish, no divider line, zoom control removed
 
 1. Pool fishing → hook a fish: the reel box shows a proper pixel-art fish for each kind (Minnow: slim, silver-blue with a dark stripe; Perch: yellow with dark bars and orange fins; Bass: green with a dark side band; Pike: long, pale spots, fangs; Golden koi: orange with white/red patches and whiskers). Same style as the sea fish in Fishing.
