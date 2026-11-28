@@ -1688,6 +1688,28 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.149 — Dungeon: swings root you in place, the spin twirls your body, a longer reach
+
+- **Rooted:** a sword swing or a spin attack holds you to the spot until it finishes, plus a short recovery (about 0.1 s). Then you walk again. Rolling still moves you.
+- **Twirl:** during the spin attack your whole body turns round with the blade, through all 8 facings, with the arm following the sword.
+- **Reach:** the blade is drawn further out, a bit longer in a swing and longer still in a spin, so it reaches the area it actually hits.
+
+1. Walk and swing: you stop for the swing, then carry on walking.
+2. Hold to charge, then let go: you twirl round with the sword.
+
+## v1.82.148 — Dungeon: the shield is held in the off hand, checked in all 8 directions
+
+- **Off hand:** the shield is drawn on the avatar's real off hand (the sword is in the other), with a guard pose that brings the arm across.
+  - Front: up across the chest, face on, with its gold boss.
+  - Front diagonals: a three-quarter oval out toward the way you face.
+  - Side on: edge on, straight ahead.
+  - From behind: held out at the shield side, peeking past the body, showing its back and strap.
+- **Drawn with the body:** it moves with the body, including the lean and the roll. It's drawn behind the body when you face away.
+- The old shield that floated in front of the face is gone.
+- Checked in front, front-right, right, back-right, back, back-left, left and front-left.
+
+1. Dungeon: hold BLOCK facing each way. The shield is in the off hand, never floating, and the sword arm hangs ready.
+
 ## v1.82.147 — Dungeon: shield + BLOCK, ROLL, crits on the beat, a lunge that doesn't move you
 
 - **The lunge** is now just the body leaning out over the planted feet and back. Your position never changes.
