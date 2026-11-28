@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.158 — Pool fishing gets the pixel fish, no divider line, zoom control removed
+
+1. Pool fishing → hook a fish: the reel box shows a proper pixel-art fish for each kind (Minnow: slim, silver-blue with a dark stripe; Perch: yellow with dark bars and orange fins; Bass: green with a dark side band; Pike: long, pale spots, fangs; Golden koi: orange with white/red patches and whiskers). Same style as the sea fish in Fishing.
+2. The white line down the water in the reel box is gone.
+3. The "− Game 100% +" zoom box at the top no longer shows in practice (or anywhere). Every game is back at its default zoom. (For testing it still appears with ?zoom in the address.)
+
 ## v1.82.157 — Dungeon: walk the whole room in landscape, legs walk
 
 1. Start the dungeon, then turn the phone sideways (or start it sideways): you can walk all the way down to the bottom of the room (it used to stop about halfway, at where the hidden chat bar would be).

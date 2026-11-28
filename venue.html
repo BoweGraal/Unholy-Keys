@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.157"></script>
-<script src="tune.js?v=1.82.157"></script>
-<script src="gfx.js?v=1.82.157"></script>
-<script src="art.js?v=1.82.157"></script>
-<script src="qr.js?v=1.82.157"></script>
-<script src="voice.js?v=1.82.157"></script>
-<script src="instruments.js?v=1.82.157"></script>
-<script src="kart.js?v=1.82.157"></script>
-<script src="explain.js?v=1.82.157"></script>
+<script src="px8.js?v=1.82.158"></script>
+<script src="tune.js?v=1.82.158"></script>
+<script src="gfx.js?v=1.82.158"></script>
+<script src="art.js?v=1.82.158"></script>
+<script src="qr.js?v=1.82.158"></script>
+<script src="voice.js?v=1.82.158"></script>
+<script src="instruments.js?v=1.82.158"></script>
+<script src="kart.js?v=1.82.158"></script>
+<script src="explain.js?v=1.82.158"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2244,10 +2244,11 @@ function resize(){
 var GZS={};try{GZS=JSON.parse(localStorage.getItem("uk_gz")||"{}")||{};}catch(e){GZS={};}
 var GZ_PC=!!(window.matchMedia&&matchMedia("(pointer:fine)").matches);
 function gzDef(k){return k==="free"&&GZ_PC?1.5:k==="fish"?1.35:1;}   /* fishing: a little closer, so the line and the fish are easy to see */   /* a computer: free dance starts at 150% */
-window.ukGZ=function(k){if(TVSCREEN)return 1;var z=k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
+var GZ_ON=/[?&]zoom\b/.test(location.search);   /* the zoom control is off for now: only with ?zoom in the address (saved zooms only apply then too) */
+window.ukGZ=function(k){if(TVSCREEN)return 1;var z=GZ_ON&&k&&+GZS[k];return z>0.2&&z<5?z:gzDef(k);};
 var GZNAME={ctf:"CTF",kflag:"Kart flag",ski:"Ski",kart:"Mars Rally",pipe:"Half pipe",free:"Free dance",mosh:"Mosh pit",skate:"Roller rink",ice:"Ice rink",keepy:"Keepy uppy",walk:"Walk race",step:"Step dance",aim:"Target dance",keys:"Note highway",keys4:"Highway 4 keys",crowd:"Crowd vote",fish:"Fishing",pond:"Pool fishing",dungeon:"Dungeon",boats:"Bumper boats",ball:"Ball run",dragon:"Dragon riders",swim:"Coin dive"};
 function gzKey(){var m=typeof GAME!=="undefined"&&GAME.mode;if(!m)return null;if(m==="ctf")return document.body.classList.contains("ctf-kart")?"kflag":"ctf";if(m==="skate"&&typeof ICE!=="undefined"&&ICE)return "ice";return m;}
-function gzUI(){var k=gzKey(),show=!!k&&((typeof PRACTICE!=="undefined"&&PRACTICE.on)||/[?&]zoom\b/.test(location.search)||localStorage.getItem("uk_gzui")==="1"),b=document.getElementById("gzBox");
+function gzUI(){var k=gzKey(),show=!!k&&GZ_ON,b=document.getElementById("gzBox");
   if(!b){if(!show)return;b=document.createElement("div");b.id="gzBox";b.innerHTML='<button data-z="-1" aria-label="Zoom out">\u2212</button><span title="Tap to reset to 100%"></span><button data-z="1" aria-label="Zoom in">+</button>';document.body.appendChild(b);
     b.addEventListener("pointerdown",function(e){e.preventDefault();e.stopPropagation();var t=e.target.closest("[data-z],span"),k2=gzKey();if(!t||!k2)return;
       var z=window.ukGZ(k2);z=t.tagName==="SPAN"?1:Math.max(0.5,Math.min(2.5,Math.round((z+0.1*(+t.getAttribute("data-z")))*10)/10));if(Math.abs(z-gzDef(k2))<0.001)delete GZS[k2];else GZS[k2]=z;try{localStorage.setItem("uk_gz",JSON.stringify(GZS));}catch(x){}gzUI();},true);}
@@ -5427,7 +5428,18 @@ var FISH=(function(){
     "Bluefin tuna":{L:20,H:4,pw:0.6,back:"#16264a",mid:"#7f8fa8",belly:"#e5e9ee",tail:"cres",tailCol:"#1a2a50",dors:[[0.56,0.72,2.6],[0.36,0.42,2.4]],anal:[0.36,0.42,2.2],fin:"#22345e",
       pat:function(t,v,x,y){if(v>0.35&&t>0.2&&t<0.8&&(x%3===0)&&hz(y*3+x)<0.6)return"#c9d0dc";return null;},finlets:"#f0c419",eyeT:0.88},
     "Marlin":{L:22,H:3.6,pw:0.6,back:"#14306b",mid:"#5f86c4",belly:"#dfe6ee",tail:"cres",tailCol:"#14306b",dors:[[0.45,0.82,4.6]],sail:true,anal:[0.3,0.4,1.6],fin:"#1d3f86",
-      pat:function(t,v){if(v>-0.35&&v<0.55&&t>0.18&&t<0.8&&((t*12)%1)<0.2)return"#9cc6f2";return null;},bill:7,eyeT:0.86}};
+      pat:function(t,v){if(v>-0.35&&v<0.55&&t>0.18&&t<0.8&&((t*12)%1)<0.2)return"#9cc6f2";return null;},bill:7,eyeT:0.86},
+    /* pool fishing's freshwater fish */
+    "Minnow":{L:10,H:2.2,pw:0.7,back:"#5a7f8f",mid:"#9fd8ff",belly:"#e9f6ff",tail:"fork",dors:[[0.45,0.58,1.2]],anal:[0.3,0.4,0.8],fin:"#6f9fb4",
+      pat:function(t,v){if(Math.abs(v-0.02)<0.16&&t>0.12&&t<0.88)return"#2f4f5f";return null;},eyeT:0.85},
+    "Perch":{L:13,H:3.8,pw:0.55,back:"#5d6b1e",mid:"#F5C518",belly:"#fff1b8",tail:"sq",tailCol:"#e0702a",dors:[[0.5,0.82,2.4],[0.22,0.45,1.6]],anal:[0.25,0.38,1.2],fin:"#e0702a",
+      pat:function(t,v){var B=[[0.2,0.27],[0.36,0.43],[0.52,0.59],[0.68,0.75]];if(v<0.35)for(var i=0;i<B.length;i++)if(t>=B[i][0]&&t<=B[i][1])return"#3c4a12";return null;},eyeT:0.86},
+    "Bass":{L:16,H:4.2,pw:0.55,back:"#2f5a2a",mid:"#5bd17a",belly:"#e6f2d2",tail:"sq",dors:[[0.42,0.8,2.2],[0.2,0.4,1.8]],anal:[0.22,0.36,1.4],fin:"#3f6f36",
+      pat:function(t,v,x,y){if(Math.abs(v-0.05)<0.16&&t>0.1&&t<0.9&&hz(x*5+y*3)<0.7)return"#1f3d1c";return null;},eyeT:0.86},
+    "Pike":{L:22,H:2.6,pw:0.55,back:"#3f5230",mid:"#b9c79a",belly:"#eef0dc",tail:"fork",dors:[[0.14,0.26,2]],anal:[0.14,0.24,1.6],fin:"#7a5a2a",
+      pat:function(t,v,x,y){if(v<0.4&&t>0.1&&t<0.86&&hz(x*13+y*7)<0.3)return"#f2f0c8";return null;},fangs:true,eyeT:0.88},
+    "Golden koi":{L:17,H:3.8,pw:0.6,back:"#ff8c1a",mid:"#ffb02e",belly:"#fff3dc",tail:"fork",tailCol:"#fff3dc",dors:[[0.3,0.72,1.8]],anal:[0.22,0.32,1.2],fin:"#fff3dc",
+      pat:function(t,v,x,y){if(v<0.2&&hz(Math.floor(x/3)*17+Math.floor((y+9)/3)*29)<0.28)return"#ffffff";if(v<0.1&&hz(Math.floor(x/3)*7+Math.floor((y+9)/3)*31)<0.14)return"#c8221a";return null;},barbel:true,eyeT:0.88}};
   var FCACHE={};
   function fishSprite(K){if(FCACHE[K.n])return FCACHE[K.n];var F=FSPEC[K.n];if(!F)return null;
     var tw=Math.max(3,Math.round(F.H*1.05)),top=Math.ceil(F.H+5),hgt=top*2+2,bill=F.bill||0,wid=tw+F.L+bill+3,c=document.createElement("canvas");c.width=wid;c.height=hgt;var g=c.getContext("2d"),cy=top,x0=tw+1,OL="#0f1a2a",grid={};
@@ -5457,6 +5469,7 @@ var FISH=(function(){
     if(!sp){var L=K.len*s*0.7,h=Math.max(s*2,L*0.4);g.fillStyle=K.col;ART.PX.oval(g,x,y,L/2,h/2,0);return;}
     var cs=Math.max(1,Math.round(s*0.6)),w=sp.c.width*cs,h2=sp.c.height*cs;g.save();g.imageSmoothingEnabled=false;g.translate(Math.round(x),Math.round(y));if(dir<0)g.scale(-1,1);
     g.drawImage(sp.c,Math.round(-sp.cx*cs),Math.round(-sp.cy*cs),w,h2);g.restore();}
+  window.ukFishIcon=fishIcon;window.ukFishSpriteOf=fishSprite;   /* pool fishing draws its fish with these too */
   window.ukFishSprites=function(){var o=[];KINDS.forEach(function(K){var sp=fishSprite(K);o.push({n:K.n,w:sp&&sp.c.width,h:sp&&sp.c.height,url:sp&&sp.c.toDataURL()});});return o;};
     window.ukFish=function(){var mq=myId&&viewers[myId];return{mx:mq?+(+mq.x).toFixed(3):null,ang:+ang.toFixed(3),aim:+aimX.toFixed(2),on:on,st:st,score:score,count:count,kind:kind,power:+power.toFixed(2),castD:+castD.toFixed(2),D:+D.toFixed(2),T:+T.toFixed(2),reel:+reelR.toFixed(2),rod:+rodA.toFixed(2),fishX:+fishX.toFixed(2),runDir:runDir,sw:sw?{u:+sw.uMax.toFixed(2)}:null,aim:aimX,marlin:marlinNow(),swoop:ready()?(function(){var m=myPx();return swGeo(m[0],m[1]);})():null,zoom:VZS.on?+VZS.Z.toFixed(2):1};};
   window.ukFishSwoop=function(ms,u,end){sw={id:-1,f:[0,0],uMax:u||0,t0:performance.now()-ms};set("aim");if(end)endSwoop();};   /* tests */
@@ -5604,7 +5617,7 @@ var POND=(function(){
     pops=pops.filter(function(p){var a3=(now-p.t)/1400;if(a3>1)return false;var me=viewers[myId];var ppx=me?me.x*W:W/2,ppy=me?me.y*H-s*36:H/2;g.globalAlpha=1-a3*a3;g.font="900 "+Math.max(14,s*6)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.75)";g.strokeText(p.txt,ppx,ppy-a3*30);g.fillStyle=p.col;g.fillText(p.txt,ppx,ppy-a3*30);return true;});
     g.globalAlpha=1;
   }
-  function fishIcon(g,x,y,s,K,dir){var L=K.len*s*0.7,h=Math.max(s*2,L*0.4),o=Math.max(1.5,s*0.5);
+  function fishIcon(g,x,y,s,K,dir){if(window.ukFishSpriteOf&&ukFishSpriteOf(K)){ukFishIcon(g,x,y,s,K,dir);return;}var L=K.len*s*0.7,h=Math.max(s*2,L*0.4),o=Math.max(1.5,s*0.5);
     g.fillStyle="#13233a";ART.PX.oval(g,x,y,L/2+o,h/2+o,0);PXD.tri(g,x-dir*(L/2-o),y,x-dir*(L/2+h*0.8+o),h*0.6+o);
     g.fillStyle=K.col;ART.PX.oval(g,x,y,L/2,h/2,0);
     PXD.tri(g,x-dir*L/2,y,x-dir*(L/2+h*0.8),h*0.6);g.fillStyle="#000";g.fillRect(Math.round(x+dir*L*0.28-s/2),Math.round(y-h*0.2),s,s);}
@@ -5626,7 +5639,7 @@ var POND=(function(){
     bamboo(g,G.bx,G.by,G.F,G.Hb,true);bamboo(g,G.bx+G.Wb-G.F,G.by,G.F,G.Hb,true);bamboo(g,G.wx+G.ww,G.by,G.F,G.Hb,true);
     bamboo(g,G.bx,G.by,G.Wb,G.F,false);bamboo(g,G.bx,G.by+G.Hb-G.F,G.Wb,G.F,false);
     waterV(g,G.wx,G.wy,G.lw,G.wh,true,now);waterV(g,G.wx+G.lw+G.dv,G.wy,G.ww-G.lw-G.dv,G.wh,false,now);
-    g.fillStyle="#fbf6ea";g.fillRect(G.wx+G.lw,G.wy,G.dv,G.wh);
+    waterV(g,G.wx+G.lw,G.wy,G.dv,G.wh,false,now);   /* no divider line: the water runs across */
     g.font="700 9px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="rgba(255,255,255,.75)";g.fillText(reeling?"REELING ▲":"HOLD TO REEL",G.wx+G.lw/2,G.wy+G.wh-6);
     var pr=st==="net"?1:Math.max(0,Math.min(1,prog));g.fillStyle="#3a2a18";g.fillRect(G.mx,G.wy,G.mw,G.wh);g.fillStyle=pr>0.8?"#9cff4a":"#5bd13a";var mh=Math.round(G.wh*pr/P)*P;g.fillRect(G.mx,G.wy+G.wh-mh,G.mw,mh);
     g.fillStyle="rgba(255,255,255,.3)";g.fillRect(G.mx,G.wy+G.wh-mh,Math.max(1,Math.round(G.mw/4)),mh);
@@ -10001,7 +10014,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.157",SERVER_VERSION="";
+var PAGE_VERSION="1.82.158",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11305,7 +11318,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.157"></script>
+<script src="lab.js?v=1.82.158"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
