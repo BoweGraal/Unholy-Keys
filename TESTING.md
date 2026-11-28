@@ -1688,6 +1688,37 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.184 — Fishing: no beat outline
+
+1. Fishing: the coloured frame round the edge of the screen that pulsed on the beat is gone (casting, waiting and reeling).
+
+## v1.82.183 — The Big Sweep: one bonus each, bonuses at the end, the finale; dog food
+
+1. **One inflatable per player**: once you've grabbed one, the others are off-limits to you (HUD 🎈0/1 → 1/1).
+2. The coffee grinder and candy bar are **earned** during the game ("PAID AT THE END") and added at the end with your inflatable; during the game your score is groceries only.
+3. **The finale** (when the round ends): everyone lined up at podiums with the host at the end holding his cue card; each player holds their inflatable. The scoreboards count up the groceries, then add each bonus (+$100 COFFEE, +$100 CANDY, +$ BONUS) quickly; then "AND THE WINNER IS…", the winner's name and total, and the winner jumps up and down with the host, confetti. Tap to close (it closes itself after ~13 s), the round results are behind it. Other players' bonuses show too (needs the server redeploy).
+4. **Dog food**: big red sacks on the top of the left wall (now PET & BABY): heavy (5 of a 24 cart each) but good value ($48).
+
+## v1.82.182 — The Big Sweep: big inflatable bonuses, a variety; renamed
+
+1. The supermarket game is now called **The Big Sweep** everywhere (menus, vote panels, practice, the start banner, the how-to-play card).
+2. Inflatable bonuses are big: standing on the floor, more than half a player's height, swaying a little, each with a white BONUS tag. Nine kinds, four picked at random each game: a giant banana, soda bottle, turkey, cheese wedge, a shaggy grey dog, a lavender bunny, an eagle, an ice-cream bar and a chocolate bar.
+3. You carry the bonus over your head (same size) while you run it to the front.
+
+## v1.82.181 — Supermarket sweep: the hand-off animation
+
+1. Taking something off a shelf with your cart parked by you: both arms reach out to the item, bring it in to your chest, then you turn and toss it in an arc into the basket. It lands in the cart at the end (the cart shows it then).
+2. It works wherever the cart is: beside you, behind you, below you, ahead of you, diagonal. The arms and the way you face follow the item the whole way. Any item works (turkeys, cheese wheels, snacks, salami…).
+3. Too far from your cart: the same reach, then the item goes up over your head to carry. Dropping a carried item in the cart: it comes down from over your head, then in.
+4. Bonuses: the reach, then up over your head.
+5. Hold GRAB to sweep a spot: one smooth hand-off after another. Practice bots do the same hand-off into their parked carts.
+
+## v1.82.180 — Supermarket sweep: bonuses are run to the front by hand
+
+1. GRAB an inflatable bonus: it always goes in your hands (even with your cart parked right there) and you carry it over your head: "🎈 GOT A BONUS → RUN IT TO THE FRONT!". Your cart stays where it is.
+2. Run it to the front of the store (the checkouts or the host): it's turned in automatically, the host cheers, "🎈 BONUS TURNED IN! (REVEALED AT THE END) · BACK TO YOUR CART". Then go back to your cart.
+3. You can't put a bonus in the cart; pressing GRAB anywhere else while carrying one reminds you to run it to the front.
+
 ## v1.82.179 — Fishing: power wheel instead of the BPM meter
 
 1. Reeling a fish in: the BPM box is gone. The reel's outer ring is now a **power wheel**: it fills clockwise as you wind faster (blue, then green = full power), with a **red zone** at the top end.
