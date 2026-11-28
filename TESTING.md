@@ -1688,6 +1688,10 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.184 — Fishing: no beat outline
+
+1. Fishing: the coloured frame round the edge of the screen that pulsed on the beat is gone (casting, waiting and reeling).
+
 ## v1.82.183 — The Big Sweep: one bonus each, bonuses at the end, the finale; dog food
 
 1. **One inflatable per player**: once you've grabbed one, the others are off-limits to you (HUD 🎈0/1 → 1/1).
