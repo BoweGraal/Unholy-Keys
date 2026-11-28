@@ -28,15 +28,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.182"></script>
-<script src="tune.js?v=1.82.182"></script>
-<script src="gfx.js?v=1.82.182"></script>
-<script src="art.js?v=1.82.182"></script>
-<script src="qr.js?v=1.82.182"></script>
-<script src="voice.js?v=1.82.182"></script>
-<script src="instruments.js?v=1.82.182"></script>
-<script src="kart.js?v=1.82.182"></script>
-<script src="explain.js?v=1.82.182"></script>
+<script src="px8.js?v=1.82.183"></script>
+<script src="tune.js?v=1.82.183"></script>
+<script src="gfx.js?v=1.82.183"></script>
+<script src="art.js?v=1.82.183"></script>
+<script src="qr.js?v=1.82.183"></script>
+<script src="voice.js?v=1.82.183"></script>
+<script src="instruments.js?v=1.82.183"></script>
+<script src="kart.js?v=1.82.183"></script>
+<script src="explain.js?v=1.82.183"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5967,9 +5967,9 @@ var SWEEP=(function(){
     coffee:{n:"Coffee",s:1,v:8,c:"#6b4226",c2:"#e8c547"},cereal:{n:"Cereal",s:1,v:5,c:"#f5c518",c2:"#e0302a"},canned:{n:"Canned ham",s:2,v:12,c:"#c0c8d8",c2:"#e05a2a"},
     diapers:{n:"Diapers",s:3,v:25,c:"#9fd8ff",c2:"#ffffff"},vitamins:{n:"Vitamins",s:1,v:18,c:"#ff8ad8",c2:"#ffffff"},soda:{n:"Soda",s:2,v:6,c:"#e0302a",c2:"#ffffff"},
     snack:{n:"Snacks",s:1,v:4,c:"#ff9a1f",c2:"#ffe14a"},wheel:{n:"Cheese wheel",s:5,v:45,c:"#f5c518",c2:"#d89a10"},block:{n:"Cheese block",s:2,v:14,c:"#ffd95a",c2:"#e8b020"},
-    salami:{n:"Jumbo salami",s:3,v:24,c:"#9a3a2a",c2:"#e8c9b0"},inflate:{n:"Inflatable bonus",s:3,v:0,c:"#ffe14a",c2:"#3a62c9"}};
+    salami:{n:"Jumbo salami",s:3,v:24,c:"#9a3a2a",c2:"#e8c9b0"},dogfood:{n:"Dog food",s:5,v:48,c:"#c8202a",c2:"#ffe14a"},inflate:{n:"Inflatable bonus",s:3,v:0,c:"#ffe14a",c2:"#3a62c9"}};
   /* the store: shelving units (top-down rectangles), the meat case along the right wall, a shelf along the left wall */
-  var U=[{x0:0.03,x1:0.06,y0:0.52,y1:0.735,r:["diapers","vitamins","diapers","vitamins"],l:null,lab:"HEALTH & BABY"},
+  var U=[{x0:0.03,x1:0.06,y0:0.52,y1:0.735,r:["dogfood","dogfood","diapers","vitamins"],l:null,lab:"PET & BABY",pet:1},
     {x0:0.17,x1:0.23,y0:0.52,y1:0.735,l:["cereal","cereal","canned","cereal"],r:["canned","soda","canned","soda"],lab:"GROCERY"},
     {x0:0.37,x1:0.43,y0:0.52,y1:0.735,l:["soda","snack","soda","snack"],r:["snack",null,null,"snack"],lab:"SNACKS"},
     {x0:0.57,x1:0.63,y0:0.52,y1:0.735,l:["snack","snack","snack","snack"],r:["coffee",null,"coffee","coffee"],lab:"COFFEE"},
@@ -6039,17 +6039,25 @@ var SWEEP=(function(){
   function placeInflatables(){var spots=[[0.11,0.58],[0.3,0.69],[0.5,0.55],[0.69,0.69],[0.87,0.6],[0.3,0.56],[0.11,0.7],[0.87,0.71]],K=BONUSK.slice().sort(function(){return Math.random()-0.5;}).slice(0,4),P=[50,100,100,150,200,250];
     for(var i=spots.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=spots[i];spots[i]=spots[j];spots[j]=t;}
     infl=K.map(function(k,i){return{x:spots[i][0],y:spots[i][1],k:k,val:P[Math.floor(Math.random()*P.length)],got:false,bob:Math.random()*6};});}
-  function start(){on=true;build();stored=[];score=0;banked=0;carts=0;pops=[];hands=null;botS={};remote={};bag=[];grind={done:false,p:0};candy={done:false,amt:0,tries:0,msgAt:0};face=2;
+  function start(){on=true;build();stored=[];finSk=null;myB=null;myInfK=null;score=0;banked=0;carts=0;pops=[];hands=null;botS={};remote={};bag=[];grind={done:false,p:0};candy={done:false,amt:0,tries:0,msgAt:0};face=2;
     setMe(0.4+Math.random()*0.2,0.785);newCart(true);placeInflatables();document.body.classList.add("gaming-sweep");$("swpUI").classList.add("on");hud();banner("🛒 THE BIG SWEEP!");}
   function stop(){on=false;grabHeld=false;document.body.classList.remove("gaming-sweep");$("swpUI").classList.remove("on");}
   /* the buzzer: what's still in your cart counts, and the inflatables' prizes are revealed */
+  /* the buzzer: what's still in your cart counts; then the bonuses (coffee, candy, your one inflatable) are added. The finale shows them */
+  var myInfK=null,myB=null;
   function final(){if(!on)return;var now=performance.now(),extra=0;if(cart&&cart.val>0){extra+=cart.val;pops.push({t:now,txt:"CART AT THE BUZZER +$"+cart.val,col:"#9cff4a",big:1});}
-    var inf=bag.concat(cart?cart.inf:[]).concat(hands==="inflate"&&cart?[]:[]);var iv=inf.reduce(function(a,b){return a+b;},0);
-    if(inf.length){extra+=iv;pops.push({t:now+300,txt:"🎈 INFLATABLE BONUS ×"+inf.length+": +$"+iv,col:"#ffe14a",big:1});}
-    if(extra){score+=extra;GAME.moshPts(extra);hud();}}
+    myB={g:score+extra,coffee:grind&&grind.done?100:0,candy:candy&&candy.done?100:0,inf:bag.length?bag[0]:0,k:bag.length?myInfK:null};
+    extra+=myB.coffee+myB.candy+myB.inf;
+    if(extra){score+=extra;GAME.moshPts(extra);hud();}
+    /* practice dancers: a bonus or two each too */
+    var left=BONUSK.filter(function(k){return k!==myInfK;});
+    Object.keys(botS).forEach(function(id,i){var b=botS[id];b.bn={coffee:Math.random()<0.4?100:0,candy:Math.random()<0.3?100:0,inf:Math.random()<0.6?[50,100,150,200,250][Math.floor(Math.random()*5)]:0,k:left[(i*3+1)%left.length]};if(!b.bn.inf)b.bn.k=null;var bt=b.bn.coffee+b.bn.candy+b.bn.inf;if(bt&&GAME.botPts)GAME.botPts(id,bt);});
+    /* tell everyone what your bonuses were (the pose's game fields: t 9 = final, cx = inflatable $, cy = coffee 1 + candy 2 + kind × 4) */
+    finSk={t:9,cx:myB.inf,cy:(myB.coffee?1:0)+(myB.candy?2:0)+4*(myB.k?BONUSK.indexOf(myB.k)+1:0)};if(GAME.poseNow)GAME.poseNow();}
+  var finSk=null;
   function banner(t){var b=$("swpBanner");if(!b)return;if(typeof PXEMO!=="undefined")PXEMO.set(b,t);else b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");}
   function hud(){var h=$("swpScore");if(h)h.textContent="$"+score.toLocaleString();var c=$("swpCart");if(c&&cart){c.style.setProperty("--f",Math.round(cart.fill/CAP*100)+"%");c.classList.toggle("full",cart.fill>=CAP-1);c.setAttribute("data-v","CART $"+cart.val+(cart.inf.length?" +🎈"+cart.inf.length:""));}
-    var b=$("swpBonus");if(b)b.textContent=(grind&&grind.done?"☕✔ ":"☕ ")+(candy&&candy.done?"🍬✔ ":"🍬 ")+"🎈"+(bag.length+(cart?cart.inf.length:0))+"/"+infl.length;
+    var b=$("swpBonus");if(b)b.textContent=(grind&&grind.done?"☕✔ ":"☕ ")+(candy&&candy.done?"🍬✔ ":"🍬 ")+"🎈"+(bag.length||hands==="inflate"?1:0)+"/1";
     var g=$("swpGrab");if(g)g.firstChild.nodeValue=hands?"DROP":"GRAB";}
   function pop(txt,col,x,y,big){pops.push({t:performance.now(),txt:txt,col:col||"#fff",x:x,y:y,big:big});}
   function add(t,val){if(t==="inflate"){cart.inf.push(val);}else{cart.val+=T[t].v;}cart.fill+=T[t].s;cart.items.push(t);hud();}
@@ -6059,9 +6067,9 @@ var SWEEP=(function(){
   function cnt(t){var n=0;cart.items.forEach(function(x){if(x===t)n++;});return n;}
   function capped(t){return t!=="inflate"&&cnt(t)>=PER;}
   function nearSlot(m){var best=null,bd=1e9,R=sc()*10;slots.forEach(function(s){if(s.n<=0)return;var d=dpx(s.x,s.y,m.x,m.y);if(d<R&&d<bd){bd=d;best=s;}});
-    infl.forEach(function(o){if(o.got)return;var d=dpx(o.x,o.y,m.x,m.y);if(d<R*1.1&&d<bd){bd=d;best={x:o.x,y:o.y,t:"inflate",inf:o};}});return best;}
+    if(!bag.length&&hands!=="inflate")infl.forEach(function(o){if(o.got)return;var d=dpx(o.x,o.y,m.x,m.y);if(d<R*1.1&&d<bd){bd=d;best={x:o.x,y:o.y,t:"inflate",inf:o};}});return best;}
   function atFront(m){return m.y>CHECK.y0-0.02||dpx(HOST.x,HOST.y,m.x,m.y)<sc()*16;}
-  function turnIn(m){bag.push(handsVal);hands=null;handsVal=0;cheer();pop("🎈 BONUS TURNED IN! (REVEALED AT THE END) · BACK TO YOUR CART","#ffe14a",m.x,m.y,1);hud();}
+  function turnIn(m){bag.push(handsVal);myInfK=handsInf?handsInf.k:"banana";hands=null;handsVal=0;cheer();pop("🎈 BONUS TURNED IN! (REVEALED AT THE END) · BACK TO YOUR CART","#ffe14a",m.x,m.y,1);hud();}
   function nearCart(m){return cart&&dpx(cart.x,cart.y,m.x,m.y)<sc()*13;}
   function atStation(m,st){return dpx(st.x,st.y,m.x,m.y)<sc()*11;}
   /* GRAB: by the grinder or the candy bar it starts the bonus (held); otherwise it takes / drops */
@@ -6091,7 +6099,7 @@ var SWEEP=(function(){
   var handsVal=0,handsInf=null;
   function grabUp(){grabHeld=false;var m=me();if(!on||!m)return;
     if(candy&&!candy.done&&candy.amt>0&&atStation(m,CANDY)){var a=candy.amt,now=performance.now();
-      if(a>=0.97&&a<=1.03){candy.done=true;score+=100;GAME.moshPts(100);pop("$"+a.toFixed(2)+" — CANDY BONUS +$100!","#ffe14a",CANDY.x,CANDY.y,1);hud();}
+      if(a>=0.97&&a<=1.03){candy.done=true;pop("$"+a.toFixed(2)+" — CANDY BONUS EARNED · PAID AT THE END","#ffe14a",CANDY.x,CANDY.y,1);hud();}
       else if(a>1.03){pop("$"+a.toFixed(2)+" — TOO MUCH! TIPPED OUT","#ff8a8a",CANDY.x,CANDY.y);candy.amt=0;candy.tries++;}
       else pop("$"+a.toFixed(2)+" — KEEP GOING","#cfe3ff",CANDY.x,CANDY.y);}}
   function cartBtn(){if(!on)return;var m=me();if(!m)return;if(cart.att){cart.att=false;pop("LET GO","#cfe3ff",m.x,m.y);}else if(nearCart(m)){if(hands){grabDown();grabHeld=false;return;}cart.att=true;pop("PUSHING","#cfe3ff",m.x,m.y);}else pop("WALK TO YOUR CART","#ffd24a",m.x,m.y);}
@@ -6117,7 +6125,7 @@ var SWEEP=(function(){
       stored.push({items:cart.items.slice(),fill:cart.fill});cheer();pop("CART SWAP! CART "+carts+" STORED +$"+v+(cart.inf.length?"  🎈×"+cart.inf.length+" (revealed at the end)":""),"#9cff4a",cart.x,cart.y-0.03,1);newCart(true);hud();banner("🛒 CART SWAP!");}
     if(hands==="inflate"&&atFront(m))turnIn(m);
     /* the coffee grinder: hold GRAB at it for 3 s */
-    if(busy&&atStation(m,GRIND)){grind.p=Math.min(1,grind.p+dt/3);if(grind.p>=1){grind.done=true;grabHeld=false;score+=100;GAME.moshPts(100);pop("☕ FRESH GROUND! COFFEE BONUS +$100","#ffe14a",GRIND.x,GRIND.y,1);hud();}}
+    if(busy&&atStation(m,GRIND)){grind.p=Math.min(1,grind.p+dt/3);if(grind.p>=1){grind.done=true;grabHeld=false;pop("☕ FRESH GROUND! COFFEE BONUS EARNED · PAID AT THE END","#ffe14a",GRIND.x,GRIND.y,1);hud();}}
     else if(grind&&!grind.done&&grind.p>0&&!busy)grind.p=Math.max(0,grind.p-dt*0.5);
     /* the candy bar: hold GRAB to scoop (it pours in unevenly), let go to weigh */
     if(busy&&atStation(m,CANDY)){candy.amt+=dt*(0.11+Math.random()*0.12);}
@@ -6143,10 +6151,12 @@ var SWEEP=(function(){
     var dx=(gx-b.x)*W,dy=(gy-b.y)*H,d=Math.hypot(dx,dy);if(d<3){b.x=gx;b.y=gy;return Math.hypot((tx-b.x)*W,(ty-b.y)*H)<6;}b.face=ART.face8(dx,dy,b.face);
     var st=Math.min(d,sp*H),nx=b.x+dx/d*st/W,ny=b.y+dy/d*st/H;var r=resolve(nx,ny,b.x,b.y);if(r[0]===b.x&&r[1]===b.y){b.x=nx;b.y=ny;}else{b.x=r[0];b.y=r[1];}return false;}
   function inAisleSame(a,b){for(var i=0;i<U.length;i++){var u=U[i];if((a<u.x0&&b>u.x1)||(b<u.x0&&a>u.x1))return false;}return true;}
-  function wire(){var st=grabHeld&&!hands?3:hands?2:cart&&cart.att?0:1;var o={h:cart?Math.min(60,cart.fill):0,t:st,d:cart&&cart.att?cartFace:face};if(cart&&!cart.att){o.cx=Math.round(cart.x*1000);o.cy=Math.round(cart.y*1000);o.cf=cartFace;}return o;}
+  function wire(){var st=grabHeld&&!hands?3:hands?2:cart&&cart.att?0:1;if(finSk)return{h:0,t:9,d:face,cx:finSk.cx,cy:finSk.cy,cf:0};var o={h:cart?Math.min(60,cart.fill):0,t:st,d:cart&&cart.att?cartFace:face};if(cart&&!cart.att){o.cx=Math.round(cart.x*1000);o.cy=Math.round(cart.y*1000);o.cf=cartFace;}return o;}
   function facing(id,v){if(id===myId)return face;if(id.indexOf("bot")===0&&botS[id])return botS[id].face;return v.sk&&isFinite(v.sk.d)?Math.min(7,v.sk.d|0):0;}
   /* ---- drawing ---- */
   function item(g,t,x,y,s,k){var o=T[t];if(!o)return;k=(k||1)*1.05;var w=s*4*k,h=s*3*k;
+    if(t==="dogfood"){var bw=s*4.4*k,bh=s*5.6*k,R2=function(c,x0,y0,w0,h0){g.fillStyle=c;g.fillRect(Math.round(x0),Math.round(y0),Math.max(1,Math.round(w0)),Math.max(1,Math.round(h0)));};   /* a big sack of dog food: heavy, good value */
+      R2("#5a1010",x-bw/2-s*0.4*k,y-bh/2-s*0.4*k,bw+s*0.8*k,bh+s*0.8*k);R2(o.c,x-bw/2,y-bh/2,bw,bh);R2("#e0d6c0",x-bw/2,y-bh/2,bw,s*0.9*k);R2(o.c2,x-bw/2,y-s*0.6*k,bw,s*1.6*k);R2("#3a2010",x-s*0.9*k,y+s*1.4*k,s*1.8*k,s*1.2*k);R2("#3a2010",x-s*1.4*k,y+s*0.9*k,s*0.6*k,s*0.6*k);R2("#3a2010",x+s*0.8*k,y+s*0.9*k,s*0.6*k,s*0.6*k);return;}
     if(t==="turkey"||t==="fturkey"){g.fillStyle=o.c;ART.PX.oval(g,x,y,w*0.75,h*0.7,0);g.fillStyle=o.c2;g.fillRect(Math.round(x-w*0.5),Math.round(y-s*0.5*k),Math.round(w),Math.round(s*k));g.fillStyle="#f2b84a";g.fillRect(Math.round(x-s*k*0.6),Math.round(y-s*k*0.4),Math.round(s*1.2*k),Math.round(s*0.8*k));}
     else if(t==="wheel"){g.fillStyle=o.c2;ART.PX.oval(g,x,y,w*0.85,h*0.75,0);g.fillStyle=o.c;ART.PX.oval(g,x,y-s*0.6*k,w*0.75,h*0.55,0);g.fillStyle="#fff7b0";g.fillRect(Math.round(x-s*0.5*k),Math.round(y-s*1.2*k),Math.round(s*k),Math.round(s*0.6*k));}
     else if(t==="salami"){g.fillStyle=o.c;g.fillRect(Math.round(x-s*0.8*k),Math.round(y-h*0.9),Math.round(s*1.6*k),Math.round(h*1.8));g.fillStyle=o.c2;for(var q=0;q<3;q++)g.fillRect(Math.round(x-s*0.5*k+q*s*0.4*k),Math.round(y-h*0.5+q*s*0.7*k),Math.max(1,Math.round(s*0.35*k)),Math.max(1,Math.round(s*0.35*k)));g.fillStyle="#e8c547";g.fillRect(Math.round(x-s*0.2*k),Math.round(y-h*0.9-s*k),Math.max(1,Math.round(s*0.4*k)),Math.round(s*k));}
@@ -6223,7 +6233,7 @@ var SWEEP=(function(){
     Rf("#f4f2ee",X0*W,DELI*H-s*10,(X1-X0)*W,s*10);Rf("#cfe7f7",X0*W+s,DELI*H-s*9,(X1-X0)*W-s*2,s*4);Rf("rgba(255,255,255,.7)",X0*W+s,DELI*H-s*9,(X1-X0)*W-s*2,s);Rf("#c8323a",X0*W,DELI*H-s*2.5,(X1-X0)*W,s*1.5);Rf("#b9c4d8",X0*W,DELI*H-s,(X1-X0)*W,s);
     for(var hs=0;hs<9;hs++){var hx=W*(0.1+hs*0.1);g.fillStyle="#5a3a1a";g.fillRect(Math.round(hx),Math.round(DELI*H-s*24),1,s*5);item(g,"salami",hx,DELI*H-s*17,s,0.8);}
     /* the shelving: seen from above, stocked both sides; the end facing the front shows its shelves (it's tall) */
-    var PAL={GROCERY:["#f5c518","#e0302a","#f7f3e8","#3a62c9","#f08a24","#2aa84a"],SNACKS:["#ff9a1f","#e0302a","#ffe14a","#2aa84a","#7a3ac9","#f7f3e8"],COFFEE:["#6b4226","#c8102e","#e8c547","#2a2420","#f2e6c9","#3a62c9"],"HEALTH & BABY":["#9fd8ff","#f7f3e8","#ff8ad8","#6ad0c0","#ffe14a"]};
+    var PAL={"PET & BABY":["#c8202a","#ffe14a","#9fd8ff","#f7f3e8","#ff8ad8"],GROCERY:["#f5c518","#e0302a","#f7f3e8","#3a62c9","#f08a24","#2aa84a"],SNACKS:["#ff9a1f","#e0302a","#ffe14a","#2aa84a","#7a3ac9","#f7f3e8"],COFFEE:["#6b4226","#c8102e","#e8c547","#2a2420","#f2e6c9","#3a62c9"],"HEALTH & BABY":["#9fd8ff","#f7f3e8","#ff8ad8","#6ad0c0","#ffe14a"]};
     var hsh=function(a,b){var h=Math.sin(a*12.9898+b*78.233)*43758.5453;return h-Math.floor(h);};
     var stock=function(x,y,w,h,pal,seed,edgeRight){var rh=s*3.2;for(var q=0,r=0;q<h-s;q+=rh,r++){var c=pal[Math.floor(hsh(seed,r)*pal.length)],run=1+Math.floor(hsh(seed+3,r)*3);
         Rf(c,x,y+q,w,rh-s*0.5);Rf("rgba(255,255,255,.35)",x,y+q,w,Math.max(1,s*0.5));Rf("rgba(0,0,0,.18)",x,y+q+rh-s*1.1,w,Math.max(1,s*0.6));
@@ -6292,10 +6302,55 @@ var SWEEP=(function(){
     /* others carrying something: a box over their head */
     Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4||id===myId||id.indexOf("bot")===0)return;if(!v.sk||(v.sk.t|0)!==2)return;var vx=(v.dx!==undefined?v.dx:v.x)*W,vy=(v.dy!==undefined?v.dy:v.y)*H;item(g,"cereal",vx,vy-34,s,1);});
   }
+  /* ---- the finale: everyone lined up with the host, holding their inflatable; the scoreboards add up groceries, then each bonus,
+     quickly; the winner's announced and jumps up and down with the host ---- */
+  var FIN=null;
+  function finale(ranking){if(!ranking||!ranking.length)return;var list=ranking.slice(0,6).map(function(r){var v=viewers[r.id]||{},bn=null;
+      if(r.id===myId&&myB)bn=myB;else if(botS[r.id]&&botS[r.id].bn){var q=botS[r.id].bn;bn={coffee:q.coffee,candy:q.candy,inf:q.inf,k:q.k};}
+      else if(v.sk&&(v.sk.t|0)===9){var cy=v.sk.cy|0,ki=(cy>>2)-1;bn={coffee:cy&1?100:0,candy:cy&2?100:0,inf:v.sk.cx|0,k:ki>=0?BONUSK[ki]:null};}
+      bn=bn||{coffee:0,candy:0,inf:0,k:null};var tot=r.score,g=Math.max(0,tot-bn.coffee-bn.candy-bn.inf);
+      return{id:r.id,name:r.name||v.name||"?",look:look(typeof v.look==="object"&&v.look?v.look:lookOf(v.look||null,v.color,r.name||v.name)),g:g,bn:bn,tot:tot,me:r.id===myId};});
+    var best=list.reduce(function(a,b){return b.tot>a.tot?b:a;},list[0]);
+    var el=document.getElementById("swpFin");if(!el){el=document.createElement("div");el.id="swpFin";el.innerHTML='<canvas></canvas><div class="sf-x">TAP TO CLOSE</div>';document.body.appendChild(el);
+      var st=document.createElement("style");st.textContent="#swpFin{position:fixed;inset:0;z-index:60;background:#1a1426;display:none;touch-action:none}#swpFin.on{display:block}#swpFin canvas{width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}#swpFin .sf-x{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));text-align:center;font:700 11px 'Silkscreen',ui-monospace,monospace;color:#8a8ca8}";document.head.appendChild(st);
+      el.addEventListener("pointerdown",function(){FIN=null;el.classList.remove("on");});}
+    FIN={t0:performance.now(),list:list,win:best,el:el};el.classList.add("on");requestAnimationFrame(finFrame);}
+  function money(n){return "$"+Math.round(n).toLocaleString();}
+  function finFrame(){if(!FIN)return;var now=performance.now(),t=(now-FIN.t0)/1000;if(t>13){FIN.el.classList.remove("on");FIN=null;return;}
+    var cv=FIN.el.querySelector("canvas"),dpr=Math.min(2,window.devicePixelRatio||1),CW=Math.round(innerWidth*dpr),CH=Math.round(innerHeight*dpr);if(cv.width!==CW||cv.height!==CH){cv.width=CW;cv.height=CH;}
+    var g=cv.getContext("2d");g.imageSmoothingEnabled=false;var L=FIN.list,n=L.length,slot=CW/(n+1.3),q=Math.max(1,Math.floor(Math.min(slot/26,CH/110))),fy=Math.round(CH*0.62);
+    /* the store behind: pink wall, signs, the floor */
+    g.fillStyle="#e8c7bf";g.fillRect(0,0,CW,fy);g.fillStyle="#cfa79c";g.fillRect(0,fy-4*q,CW,4*q);g.fillStyle="#e6e3dc";g.fillRect(0,fy,CW,CH-fy);
+    for(var sx=0;sx<CW;sx+=q*22){g.fillStyle="#3f8a3a";ART.PX.oval(g,sx,fy-6*q,q*7,q*4,0);g.fillStyle=["#e04a5a","#ffd24a","#ff9ac8"][Math.round(sx/(q*22))%3];g.fillRect(sx,fy-9*q,2*q,2*q);}
+    g.font="900 "+(7*q)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="#2a4a8a";g.fillText("THE BIG SWEEP",CW/2,12*q);g.font="900 "+(4*q)+"px 'Silkscreen',ui-monospace,monospace";g.fillStyle="#5b2d8e";g.fillText(t<5.6?"FINAL TOTALS":"AND THE WINNER IS…",CW/2,19*q);
+    var winT=6.4,won=t>winT;
+    /* the host, at the left end, cue card up; jumping with the winner at the end */
+    var hx=Math.round(slot*0.6),jmp=function(on2,ph){return on2?-Math.round(Math.abs(Math.sin(t*9+ph))*10*q):0;};
+    var hst={dir:0,mouth:true,armL:won?2.6+Math.sin(t*16)*0.25:-0.4,armR:won?-2.6+Math.sin(t*16)*0.25:1.9,lenL:won?9:6,lenR:9,legL:won?0.25:0.05,legR:won?-0.25:-0.05,bob:jmp(won,0)};
+    ART.drawChar(g,hx,fy-12*q,q,HLOOK,hst);if(!won){g.fillStyle="#fff7c8";g.fillRect(hx+6*q,fy-30*q+hst.bob,6*q,4*q);}
+    L.forEach(function(p,i){var cx=Math.round(slot*(i+1.3)),isW=p===FIN.win&&won,st2={dir:0,mouth:isW,armL:isW?2.6+Math.sin(t*15+i)*0.3:0.9,armR:isW?-2.6+Math.sin(t*15+i)*0.3:-0.25,legL:isW?0.3:0.05,legR:isW?-0.3:-0.05,bob:jmp(isW,i)};
+      /* their inflatable, held beside them */
+      if(p.bn.k)inflatableAt(g,cx-11*q,fy+2*q+st2.bob*0.5,q,p.bn.k,t+i);
+      ART.drawChar(g,cx,fy-12*q,q,p.look,st2);
+      /* the podium and its scoreboard */
+      var pw=24*q,ph=22*q,px=cx-pw/2,py=fy+6*q;g.fillStyle="#c9ccd4";g.fillRect(px,py,pw,ph);g.fillStyle="#9aa3b8";g.fillRect(px,py+ph-3*q,pw,3*q);g.fillStyle="#d03a3a";g.fillRect(px,py,pw,2*q);
+      g.fillStyle="#0e1a12";g.fillRect(px+2*q,py+4*q,pw-4*q,10*q);
+      var k1=Math.min(1,Math.max(0,(t-1.0)/1.6)),cur=p.g*k1,lines=[],tB=2.8;[["COFFEE",p.bn.coffee],["CANDY",p.bn.candy],["BONUS",p.bn.inf]].forEach(function(b,j){if(!b[1])return;var tj=tB+lines.length*0.9;if(t>tj){cur+=b[1]*Math.min(1,(t-tj)/0.5);}lines.push([b[0],b[1],tj]);});
+      g.font="900 "+(4*q)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle=isW?"#ffe14a":"#9cff4a";g.fillText(money(cur),cx,py+11*q);
+      var lb=null;lines.forEach(function(l){if(t>l[2]&&t<l[2]+0.9)lb="+"+money(l[1])+" "+l[0];});if(t>1&&t<2.7)lb="GROCERIES";
+      if(lb){g.font="900 "+Math.max(6,3*q)+"px 'Silkscreen',ui-monospace,monospace";g.fillStyle="#3a3040";g.fillText(lb,cx,py+ph+6*q);}
+      g.font="900 "+Math.max(6,3*q)+"px 'Silkscreen',ui-monospace,monospace";g.fillStyle=p.me?"#1a6a8a":"#3a3040";g.fillText(String(p.name).toUpperCase().slice(0,10),cx,py+18*q);});
+    if(won){var w=FIN.win;g.font="900 "+(6*q)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";var msg=(w.me?"YOU WIN":String(w.name).toUpperCase()+" WINS")+"! "+money(w.tot);var tw=g.measureText(msg).width+8*q;
+      g.fillStyle="#5b2d8e";g.fillRect(CW/2-tw/2,24*q,tw,10*q);g.fillStyle="#ffe14a";g.fillText(msg,CW/2,32*q);
+      for(var c=0;c<40;c++){var cxp=(c*97.3+t*60*(c%3+1))%CW,cyp=((c*53.1)+t*120*(1+c%4))%fy;g.fillStyle=["#ffe14a","#3DF2FF","#ff6ac1","#9cff4a"][c%4];g.fillRect(Math.round(cxp),Math.round(cyp),2*q,2*q);}}
+    requestAnimationFrame(finFrame);}
+  /* an inflatable drawn at any scale (the finale) */
+  function inflatableAt(g,x,y,q,k,ph){var sv=avS;avS=function(){return q;};var sW=W,sH=H;try{inflatable(g,{x:x/sW,y:y/sH,k:k,bob:ph},performance.now(),q*2);}finally{avS=sv;}}
+  window.ukSweepFinale=function(r){finale(r);};window.ukSweepBuzz=function(){final();};window.ukSweepFinaleTest=function(){var r=Object.keys(viewers).filter(function(k){return viewers[k]&&viewers[k]!==PH&&viewers[k].name;}).map(function(id,i){return{id:id,name:viewers[id].name,score:id===myId?score:300+i*170};});finale(r);return r.length;};
   window.ukSweepCheer=cheer;window.ukSweepInflSet=function(x,y,dx){infl=BONUSK.map(function(k,i){return{x:x+i*dx,y:y,k:k,val:100,got:false,bob:i};});};window.ukSweepInfl=function(){return infl.map(function(o){return[o.x,o.y,o.got,o.val];});};window.ukSweep=function(){var m=me();return{on:on,score:score,banked:banked,carts:carts,hands:hands,cart:cart&&{x:+cart.x.toFixed(3),y:+cart.y.toFixed(3),att:cart.att,fill:cart.fill,val:cart.val,inf:cart.inf.length},grind:grind&&{done:grind.done,p:+grind.p.toFixed(2)},candy:candy&&{done:candy.done,amt:+candy.amt.toFixed(2)},infl:infl.map(function(o){return[o.k,o.got];}),bag:bag.length,face:face,me:m?[+m.x.toFixed(3),+m.y.toFixed(3)]:null,bots:Object.keys(botS).map(function(k){var b=botS[k];return[k,+b.x.toFixed(2),+b.y.toFixed(2),b.fill];})};};
   window.ukSweepForce=function(o){if(o.me){setMe(o.me[0],o.me[1]);last=[o.me[0],o.me[1]];}if(o.face!==undefined)face=o.face;if(o.cf!==undefined)cartFace=o.cf;if(o.fill!==undefined&&cart){cart.fill=o.fill;cart.val=o.val||cart.val;}if(o.att!==undefined&&cart)cart.att=o.att;if(o.cart&&cart){cart.x=o.cart[0];cart.y=o.cart[1];}if(o.candy!==undefined)candy.amt=o.candy;hud();};
   window.ukSweepSlots=function(){return slots.map(function(s){return[s.t,+s.x.toFixed(3),+s.y.toFixed(3),s.n];});};
-  return{look:look,rig:rig,avS:avS,start:start,stop:stop,final:final,tick:tick,under:under,draw:draw,wire:wire,facing:facing,sweepOn:sweepOn,grabDown:grabDown,grabUp:grabUp,cartBtn:cartBtn,maxY:function(){return Y1;}};
+  return{look:look,rig:rig,avS:avS,finale:finale,start:start,stop:stop,final:final,tick:tick,under:under,draw:draw,wire:wire,facing:facing,sweepOn:sweepOn,grabDown:grabDown,grabUp:grabUp,cartBtn:cartBtn,maxY:function(){return Y1;}};
 })();
 
 /* ============================================================
@@ -8923,7 +8978,7 @@ var ROUND=(function(){
       if(GAME.mode)GAME.stop();
       setTotals(m.totals);
       var res={n:rd.n,mode:rd.mode,battle:!!(m.battle||rd.isBattle),title:rd.title,ranking:Array.isArray(m.ranking)?m.ranking.slice(0,10).map(function(r){return{id:String(r.id),name:safeText(r.name,24),score:Math.max(0,Math.floor(+r.score||0)),pts:Math.max(0,Math.floor(+r.pts||0)),place:Math.max(1,Math.floor(+r.place||1))};}):[]};
-      end();drawResult(res);updHudBR();
+      end();drawResult(res);updHudBR();if(res.mode==="sweep"&&typeof SWEEP!=="undefined")try{SWEEP.finale(res.ranking);}catch(e){}
     }
     else if(ph==="off"){if(GAME.mode)GAME.stop();end();hide();}
   }
@@ -10460,7 +10515,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.182",SERVER_VERSION="";
+var PAGE_VERSION="1.82.183",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11779,7 +11834,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.182"></script>
+<script src="lab.js?v=1.82.183"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

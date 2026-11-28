@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.183 — The Big Sweep: one bonus each, bonuses at the end, the finale; dog food
+
+1. **One inflatable per player**: once you've grabbed one, the others are off-limits to you (HUD 🎈0/1 → 1/1).
+2. The coffee grinder and candy bar are **earned** during the game ("PAID AT THE END") and added at the end with your inflatable; during the game your score is groceries only.
+3. **The finale** (when the round ends): everyone lined up at podiums with the host at the end holding his cue card; each player holds their inflatable. The scoreboards count up the groceries, then add each bonus (+$100 COFFEE, +$100 CANDY, +$ BONUS) quickly; then "AND THE WINNER IS…", the winner's name and total, and the winner jumps up and down with the host, confetti. Tap to close (it closes itself after ~13 s), the round results are behind it. Other players' bonuses show too (needs the server redeploy).
+4. **Dog food**: big red sacks on the top of the left wall (now PET & BABY): heavy (5 of a 24 cart each) but good value ($48).
+
 ## v1.82.182 — The Big Sweep: big inflatable bonuses, a variety; renamed
 
 1. The supermarket game is now called **The Big Sweep** everywhere (menus, vote panels, practice, the start banner, the how-to-play card).
