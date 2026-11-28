@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.161 — Pool fishing: quicker catch zone, hard fish jump less wildly
+
+1. Hold REEL: the catch zone rises about 20% faster; let go: it sinks about 20% faster.
+2. Pike and Golden koi still dart about but no longer leap most of the box or flip end to end; the biggest jump is about half the box. You should be able to stay on a koi most of the time with practice. The koi is still the hardest.
+3. Minnow / Perch / Bass feel about the same, a bit easier with the quicker zone.
+
 ## v1.82.160 — Pool fishing: fish drawn to scale
 
 1. Hook different fish in pool fishing: each is drawn on one shared ruler by its average length (Minnow 7 cm, Perch 25, Bass 40, Golden koi 55, Pike 70). The pike nearly fills the lane; the minnow is a small sliver; perch is clearly smaller than bass.
