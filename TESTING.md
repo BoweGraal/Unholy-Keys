@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.166 — Party: End the show really ends it, background music, YouTube titles, video on the TV only
+
+**Needs a Render redeploy** (server looks up YouTube titles).
+
+1. Host a party, start the show, then 🎉 HOST → **End the show**, mid-song or during the game vote: the song stops, the game round ends, everyone's back to jamming at once. A song that was still in its game vote goes back to the top of the playlist.
+2. Jam time (no song on): the normal background music plays from the host's phone (so out of the TV in TV mode). It fades out when a song starts and comes back after, in the breaks too.
+3. Add a YouTube link from any phone: the playlist (host panel, Up next, the TV) shows the video's real title instead of "YouTube video".
+4. A YouTube song at a party: the video plays on the TV only (with its sound). Phones don't show the video; the hidden host plays it muted to keep time.
+
 ## v1.82.165 — Bumper boats: the last boat floating ends the round
 
 1. Bumper boats with 2+ players (or practice bots): knock everyone else off. As soon as only one boat is left, "🏆 <NAME> WINS THE ROUND!" (or "YOU WIN" if it's you) and about 2 seconds later the next round starts: pool refills, everyone back in their boat. No more waiting out the clock alone.

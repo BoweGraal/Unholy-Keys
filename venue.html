@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.165"></script>
-<script src="tune.js?v=1.82.165"></script>
-<script src="gfx.js?v=1.82.165"></script>
-<script src="art.js?v=1.82.165"></script>
-<script src="qr.js?v=1.82.165"></script>
-<script src="voice.js?v=1.82.165"></script>
-<script src="instruments.js?v=1.82.165"></script>
-<script src="kart.js?v=1.82.165"></script>
-<script src="explain.js?v=1.82.165"></script>
+<script src="px8.js?v=1.82.166"></script>
+<script src="tune.js?v=1.82.166"></script>
+<script src="gfx.js?v=1.82.166"></script>
+<script src="art.js?v=1.82.166"></script>
+<script src="qr.js?v=1.82.166"></script>
+<script src="voice.js?v=1.82.166"></script>
+<script src="instruments.js?v=1.82.166"></script>
+<script src="kart.js?v=1.82.166"></script>
+<script src="explain.js?v=1.82.166"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -9591,6 +9591,7 @@ function handleVideo(msg){
   if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};}   /* the player stays clickable (YouTube's rules): if someone pauses or seeks their copy, the sync puts it back with the performer */
   if(+msg.dur>0)vYT.exp=+msg.dur;   /* the real length, from the performer: a different length means an ad is on */
   if(msg.action==="stop"){JT.video=false;vYT.clear();updTapHint();return;}
+  if(window.__partyRoom&&!TVSCREEN){if(JT.video||vYT.vid){JT.video=false;vYT.clear();updTapHint();}return;}   /* a party: the video (and its sound) is on the TV, not on everyone's phone */
   var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
   if(!vid)return;
   JT.video=true;
@@ -9609,6 +9610,7 @@ function handleVideo(msg){
   if(Math.abs(rate-(vYT.rate||1))>0.01)vYT.cmd("setPlaybackRate",[rate]);
   vYT.want=playing?"play":"pause";
 }
+window.ukVideo=function(m){handleVideo(m);return{video:JT.video,party:!!window.__partyRoom};};   /* tests */
 /* an ad on this screen: the video is a different length from the song. Hide it and mute it until it ends, then it unmutes and the next sync puts it back on the beat */
 setInterval(function(){
   if(!vYT||!vYT.vid)return;
@@ -9980,7 +9982,11 @@ var MENUMUSIC=(function(){
   try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
   function menuOn(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&getComputedStyle(j).display!=="none";}
   /* it also keeps playing in practice while you're just on the dance floor or free dancing (no round or other game running) */
-  function want(){var b=document.body,g=b&&b.getAttribute("data-game");return menuOn()||(!!b&&b.classList.contains("practice")&&!b.classList.contains("pr-busy")&&(!g||g==="free"));}
+  function want(){var b=document.body,g=b&&b.getAttribute("data-game");return menuOn()||(!!b&&b.classList.contains("practice")&&!b.classList.contains("pr-busy")&&(!g||g==="free"))||partyIdle(b,g);}
+  /* hosting a party: the normal music plays from the host's phone (so out of the TV when it's mirrored) whenever no song is on:
+     jam time, the game vote, the breaks between songs */
+  function partyIdle(b,g){try{if(!b||!b.classList.contains("party-host")||!window.PARTYHOST||!PARTYHOST.on)return false;var e=PARTYHOST.eng(),s=e&&e.state();
+    return !!s&&!s.playing&&!(typeof ROUND!=="undefined"&&ROUND.active&&ROUND.active())&&(!g||g==="free");}catch(x){return false;}}
   var LIST=["After-hours Entry.mp3","Queue Lights.mp3"],cur=0;   /* After-hours Entry, then Queue Lights when it ends, and round again */
   function url(i){return "songs/"+encodeURIComponent(LIST[i])+(bust?"?r="+bust:"");}
   function setVol(v){if(gn&&ac&&!plain)gn.gain.setTargetAtTime(v,ac.currentTime,0.05);else if(a)a.volume=Math.max(0,Math.min(1,v));}
@@ -10042,7 +10048,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.165",SERVER_VERSION="";
+var PAGE_VERSION="1.82.166",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10168,7 +10174,7 @@ var PARTYHOST=(function(){
 /* ---- the playlist everyone's building (from the host): on the TV a panel, on phones in the Add a song box ---- */
 var PLV=(function(){var st=null,songs=null;
   function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
-  function set(m){st=m&&m.party?{items:m.items||[],show:m.show||null}:null;var sb=document.getElementById("srSub");if(sb)sb.textContent=st?"It goes straight on the party playlist.":"The host sees it and adds it to the playlist.";render();}
+  function set(m){st=m&&m.party?{items:m.items||[],show:m.show||null}:null;window.__partyRoom=!!st;var sb=document.getElementById("srSub");if(sb)sb.textContent=st?"It goes straight on the party playlist.":"The host sees it and adds it to the playlist.";render();}
   function render(){var tv=document.getElementById("plTv");
     if(TVSCREEN){if(!tv){tv=document.createElement("div");tv.id="plTv";document.body.appendChild(tv);}
       if(!st){tv.style.display="none";return;}tv.style.display="block";var sh=st.show||{},skip=typeof SKIPS!=="undefined"&&SKIPS&&typeof ROUND!=="undefined"&&ROUND.counting&&SKIPS.need?SKIPS:null;
@@ -11349,7 +11355,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.165"></script>
+<script src="lab.js?v=1.82.166"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
