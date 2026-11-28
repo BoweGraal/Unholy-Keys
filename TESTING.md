@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.155 — Version on the main menu only, UI clears the rounded bottom of the phone
+
+1. Main menu: the version / server line shows (bottom right). Go into any room (party, join, practice) or the TV view: it's gone.
+2. iPhone with a home bar (and Safari or the home-screen app): the chat bar (Log / Say something / Send) sits above the home bar and clear of the rounded corners; the stick, emotes and buttons move up with it. In games with no chat bar, the controls also stay above the home bar.
+3. Landscape on a notched phone: the stick and the chat bar keep clear of the notch side.
+
 ## v1.82.154 — Party: Cast to the TV, TV mode (mirroring), no stand-in bot
 
 1. **Android + Chromecast / Google TV** (Chrome): 🎉 HOST → **📡 Cast to the TV** → pick the TV. The TV shows the party view; your phone keeps the full player + host view. The button becomes **■ Stop casting**. (The music still plays from the phone itself.)
