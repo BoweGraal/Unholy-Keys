@@ -28,15 +28,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.184"></script>
-<script src="tune.js?v=1.82.184"></script>
-<script src="gfx.js?v=1.82.184"></script>
-<script src="art.js?v=1.82.184"></script>
-<script src="qr.js?v=1.82.184"></script>
-<script src="voice.js?v=1.82.184"></script>
-<script src="instruments.js?v=1.82.184"></script>
-<script src="kart.js?v=1.82.184"></script>
-<script src="explain.js?v=1.82.184"></script>
+<script src="px8.js?v=1.82.185"></script>
+<script src="tune.js?v=1.82.185"></script>
+<script src="gfx.js?v=1.82.185"></script>
+<script src="art.js?v=1.82.185"></script>
+<script src="qr.js?v=1.82.185"></script>
+<script src="voice.js?v=1.82.185"></script>
+<script src="instruments.js?v=1.82.185"></script>
+<script src="kart.js?v=1.82.185"></script>
+<script src="explain.js?v=1.82.185"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -10457,39 +10457,42 @@ var MENUMUSIC=(function(){
   var LIST=["After-hours Entry.mp3","Queue Lights.mp3"],cur=0;   /* After-hours Entry, then Queue Lights when it ends, and round again */
   function url(i){return "songs/"+encodeURIComponent(LIST[i])+(bust?"?r="+bust:"");}
   function setVol(v){if(gn&&ac&&!plain)gn.gain.setTargetAtTime(v,ac.currentTime,0.05);else if(a)a.volume=Math.max(0,Math.min(1,v));}
-  function tryPlay(){if(!a)return;var my=++tries,p;try{p=a.play();}catch(e){p=null;}started=true;t0=performance.now();
+  /* held: the phone took the sound away (a call, Siri, another app's audio) or the page is hidden. It never starts again by itself then; a tap brings it back */
+  var sysHeld=false;function us(f){if(a){a._us=performance.now();try{f();}catch(e){}}}
+  function tryPlay(){if(!a||document.hidden||sysHeld)return;var my=++tries,p;try{p=a.play();}catch(e){p=null;}started=true;t0=performance.now();
     if(p&&p.then)p.then(function(){if(my===tries){t0=performance.now();fails=0;}},function(){if(my===tries&&a.paused){started=false;fails++;}});}
   function build(gesture){
     a=new Audio();a.preload="auto";a.loop=false;a.setAttribute("playsinline","");a.src=url(cur);
-    a.addEventListener("ended",function(){cur=(cur+1)%LIST.length;a.src=url(cur);if(started&&want())tryPlay();});
-    a.addEventListener("error",function(){cur=(cur+1)%LIST.length;bust=Date.now();setTimeout(function(){if(!a)return;a.src=url(cur);if(started&&want())tryPlay();},400);});   /* won't load: the other song, fresh */
+    a.addEventListener("pause",function(){if(a&&!(performance.now()-(a._us||-1e9)<600)&&started&&!a.ended&&!document.hidden)sysHeld=true;});   /* paused, and not by us: the phone did it */
+    a.addEventListener("ended",function(){cur=(cur+1)%LIST.length;a._us=performance.now();a.src=url(cur);if(started&&want())tryPlay();});
+    a.addEventListener("error",function(){cur=(cur+1)%LIST.length;bust=Date.now();setTimeout(function(){if(!a)return;a._us=performance.now();a.src=url(cur);if(started&&want())tryPlay();},400);});   /* won't load: the other song, fresh */
     if(!plain&&gesture){try{
       /* through the game's own audio (when it's there), so the tempo detector hears the song and free dance stays on its beat */
       var tc=null;try{tc=window.Tone&&Tone.getContext&&Tone.getContext().rawContext;}catch(x){tc=null;}shared=!!(tc&&tc.createMediaElementSource);
-      var AC=window.AudioContext||window.webkitAudioContext;ac=shared?tc:new AC();gn=ac.createGain();gn.gain.value=0;var src=ac.createMediaElementSource(a);src.connect(gn);gn.connect(ac.destination);a.volume=1;
+      var AC=window.AudioContext||window.webkitAudioContext;ac=shared?tc:new AC();try{ac.addEventListener("statechange",function(){if(ac&&ac.state==="interrupted"){sysHeld=true;us(function(){a.pause();});}});}catch(x){}gn=ac.createGain();gn.gain.value=0;var src=ac.createMediaElementSource(a);src.connect(gn);gn.connect(ac.destination);a.volume=1;
       if(shared&&typeof BEAT!=="undefined"&&BEAT.tap)BEAT.tap(src);
     }catch(e){ac=gn=null;plain=true;shared=false;}}
     if(!ac){ac=gn=null;a.volume=0;}}
   function wake(){if(!ac)return;try{if(shared&&window.Tone&&Tone.start)Tone.start().catch(function(){});if(ac.state!=="running")ac.resume().catch(function(){});var bf=ac.createBuffer(1,1,22050),sn=ac.createBufferSource();sn.buffer=bf;sn.connect(ac.destination);sn.start(0);}catch(e){}}   /* the silent blip that unlocks iOS */
   /* throw the player away and make a fresh one (inside the next tap) */
-  function rebuild(goPlain){try{if(a){a.pause();a.removeAttribute("src");a.load();}}catch(e){}try{if(ac&&!shared)ac.close();}catch(e){}shared=false;a=null;ac=gn=null;if(goPlain)plain=true;started=false;lastT=-1;stuck=0;}
-  function start(e){if(muted||!want())return;var gesture=!!(e&&e.type&&e.isTrusted!==false);
+  function rebuild(goPlain){try{if(a){a._us=performance.now();a.pause();a.removeAttribute("src");a.load();}}catch(e){}try{if(ac&&!shared)ac.close();}catch(e){}shared=false;a=null;ac=gn=null;if(goPlain)plain=true;started=false;lastT=-1;stuck=0;}
+  function start(e){if(muted||!want())return;var gesture=!!(e&&e.type&&e.isTrusted!==false);if(e&&e.isTrusted===true&&!document.hidden)sysHeld=false;if(sysHeld||document.hidden)return;
     if(a&&!ac&&!plain&&gesture){var keep=a.currentTime;rebuild(false);build(true);try{a.currentTime=keep;}catch(x){}}   /* the tap-less first try had no volume node: rebuild it properly inside this tap */
     if(!a){if(!gesture&&!(navigator.userActivation&&navigator.userActivation.isActive))return;build(gesture);}
     wake();if(started&&!a.paused&&(plain||!ac||ac.state==="running"))return;tryPlay();}
   ["pointerdown","pointerup","touchstart","touchend","mousedown","click","keydown"].forEach(function(ev){window.addEventListener(ev,start,{capture:true,passive:true});});   /* browsers only let sound start after a tap or key */
   setTimeout(function(){if(muted||!want())return;build(false);tryPlay();},300);   /* ...unless this page is already allowed to play (no volume node yet: the first tap rebuilds it properly) */
-  document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&a&&want()&&!muted){wake();tryPlay();}});
-  window.addEventListener("pageshow",function(){if(a&&want()&&!muted){wake();tryPlay();}});
+  document.addEventListener("visibilitychange",function(){if(document.hidden){if(a&&!a.paused)us(function(){a.pause();});return;}if(a&&want()&&!muted&&!sysHeld){wake();tryPlay();}});   /* hidden (another app, a call): silent; back: only if the phone didn't take the sound */
+  window.addEventListener("pageshow",function(){if(a&&want()&&!muted&&!sysHeld&&!document.hidden){wake();tryPlay();}});
   /* the volume, and the fade out when you leave the menu */
   setInterval(function(){if(!a)return;var on=want()&&!muted&&started,target=0;
     if(on)target=BED*Math.min(1,(performance.now()-t0)/FADE);
-    vol=on?target:vol+(target-vol)*0.45;if(!on&&(vol<0.01||plain||!gn)){vol=0;if(!a.paused)a.pause();if(!want())started=false;}setVol(vol);   /* leaving the menu: gone in about half a second (straight away where the volume can't fade), so it never plays over a song */
-    if(!started&&!muted&&want()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
+    vol=on?target:vol+(target-vol)*0.45;if(!on&&(vol<0.01||plain||!gn)){vol=0;if(!a.paused)us(function(){a.pause();});if(!want())started=false;}setVol(vol);   /* leaving the menu: gone in about half a second (straight away where the volume can't fade), so it never plays over a song */
+    if(!started&&!muted&&!sysHeld&&!document.hidden&&want()&&navigator.userActivation&&navigator.userActivation.hasBeenActive)start();   /* back on the menu: it comes back in */
   },100);
   /* the watchdog */
   setInterval(function(){var bt=document.getElementById("mmMusic");
-    if(!a||muted||!want()){stuck=0;lastT=-1;if(bt)bt.classList.remove("tapme");btn();return;}
+    if(!a||muted||!want()||sysHeld||document.hidden){stuck=0;lastT=-1;acBad=0;if(bt)bt.classList.remove("tapme");btn();return;}   /* held by the phone / hidden: no healing, no restarts */
     /* the first, tap-less try had no volume node: once there's been a tap, rebuild it the proper way */
     var ct=a.currentTime,moving=!a.paused&&ct!==lastT&&a.readyState>=2;lastT=ct;
     if(ac&&ac.state!=="running"&&!a.paused)acBad++;else acBad=0;
@@ -10497,7 +10500,7 @@ var MENUMUSIC=(function(){
     if(acBad>=6&&heal<3){heal=3;rebuild(true);start({type:"tap"});return;}   /* the volume node won't wake: no node */
     if(stuck>=2){stuck=0;heal++;
       if(heal===1){wake();tryPlay();}                             /* nudge it */
-      else if(heal===2){bust=Date.now();a.src=url(cur);a.load();tryPlay();}   /* reload the song */
+      else if(heal===2){bust=Date.now();a._us=performance.now();a.src=url(cur);a.load();tryPlay();}   /* reload the song */
       else if(heal===3){rebuild(false);start({type:"tap"});}      /* a fresh player */
       else if(heal===4){rebuild(true);start({type:"tap"});}       /* last resort: plain, no volume node */
       else heal=4;}
@@ -10510,12 +10513,12 @@ var MENUMUSIC=(function(){
     muted=!muted;try{localStorage.setItem("uk_menumusic",muted?"0":"1");}catch(x){}btn();if(!muted)start(e);});}
   window.ukMenuMusicEnd=function(){if(a)a.dispatchEvent(new Event("ended"));return LIST[cur];};   /* test: as if the song finished */
   window.ukMenuMusicBreak=function(how){if(!a)return;if(how==="pause")a.pause();else if(how==="ctx"&&ac)ac.suspend();else if(how==="src"){a.src="songs/nope.mp3";}};   /* test: break it on purpose */
-  window.ukMenuMusic=function(){return{ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
+  window.ukMenuMusic=function(){return{held:sysHeld,ctx:ac?ac.state:null,started:started,muted:muted,vol:+vol.toFixed(3),paused:a?a.paused:null,src:a?a.src:null,menu:menuOn(),want:want(),track:LIST[cur],gain:!!gn,plain:plain,heal:heal,t:a?+a.currentTime.toFixed(1):0};};
   /* a game's song is starting: the menu music stops now, whatever state it's in */
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.184",SERVER_VERSION="";
+var PAGE_VERSION="1.82.185",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11834,7 +11837,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.184"></script>
+<script src="lab.js?v=1.82.185"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
