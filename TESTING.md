@@ -1688,6 +1688,40 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.168 — Party: YouTube ads play out ahead of time; the host's phone has the sound
+
+1. Host a party. A friend adds a YouTube song while you're jamming: a hidden player on the host's phone starts it straight away, muted, so any ad (even a 3-minute one) plays out by itself while everyone jams. You don't see or hear anything.
+2. When that song's turn comes, the same player plays it from the start WITH sound: no new ad, the game starts with the song.
+3. Sound: the host's phone plays the music (in TV mode that comes out of the TV). The TV shows the video muted. No "tap for sound" on the TV.
+4. If the host's phone refuses to play sound, after ~2 s it switches: the host copy goes muted and the TV plays the sound instead.
+5. If the song comes up before its ad has finished, the game holds at the start as before (Ad break), then goes.
+6. Only the next YouTube song in the playlist is pre-played at a time; the one after starts its ad as soon as the first begins.
+
+## v1.82.167 — Party: YouTube songs actually play (ads, then the game)
+
+The hidden host copy of the game ran in a 2×2-pixel frame, so its YouTube player was ~2 px and YouTube refused to play it: no ad pre-play, the song never "started", and games waited forever (e.g. the mosh pit stuck on its first move). It now runs in an invisible 480×360 frame behind everything.
+
+1. Host a party, put a YouTube song on, start the show.
+2. If YouTube runs an ad: the game holds at the start ("Ad break · back in a moment") and the TV hides the ad, then the song and the game start together.
+3. The game (mosh pit or any other) actually runs through the song.
+4. Nothing new is visible on the host's phone.
+
+## v1.82.166 — Party: End the show really ends it, background music, YouTube titles, video on the TV only
+
+**Needs a Render redeploy** (server looks up YouTube titles).
+
+1. Host a party, start the show, then 🎉 HOST → **End the show**, mid-song or during the game vote: the song stops, the game round ends, everyone's back to jamming at once. A song that was still in its game vote goes back to the top of the playlist.
+2. Jam time (no song on): the normal background music plays from the host's phone (so out of the TV in TV mode). It fades out when a song starts and comes back after, in the breaks too.
+3. Add a YouTube link from any phone: the playlist (host panel, Up next, the TV) shows the video's real title instead of "YouTube video".
+4. A YouTube song at a party: the video plays on the TV only (with its sound). Phones don't show the video; the hidden host plays it muted to keep time.
+
+## v1.82.165 — Bumper boats: the last boat floating ends the round
+
+1. Bumper boats with 2+ players (or practice bots): knock everyone else off. As soon as only one boat is left, "🏆 <NAME> WINS THE ROUND!" (or "YOU WIN" if it's you) and about 2 seconds later the next round starts: pool refills, everyone back in their boat. No more waiting out the clock alone.
+2. If it happens in the final round, the pool refills for another go (the game still ends with the song's game time).
+3. The round still ends on the clock if nobody wins it first.
+4. Practice bots that fall out now show as out on the bench properly.
+
 ## v1.82.164 — The performer always looks like they're playing live
 
 1. Dragon riders, boss fight: the demon at the organ now plays it. No instrument in hand, both hands over the keys, striking on the song's eighth notes (alternating hands, both slam on the accents), head nodding, mouth on the hits.

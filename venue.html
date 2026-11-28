@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.164"></script>
-<script src="tune.js?v=1.82.164"></script>
-<script src="gfx.js?v=1.82.164"></script>
-<script src="art.js?v=1.82.164"></script>
-<script src="qr.js?v=1.82.164"></script>
-<script src="voice.js?v=1.82.164"></script>
-<script src="instruments.js?v=1.82.164"></script>
-<script src="kart.js?v=1.82.164"></script>
-<script src="explain.js?v=1.82.164"></script>
+<script src="px8.js?v=1.82.168"></script>
+<script src="tune.js?v=1.82.168"></script>
+<script src="gfx.js?v=1.82.168"></script>
+<script src="art.js?v=1.82.168"></script>
+<script src="qr.js?v=1.82.168"></script>
+<script src="voice.js?v=1.82.168"></script>
+<script src="instruments.js?v=1.82.168"></script>
+<script src="kart.js?v=1.82.168"></script>
+<script src="explain.js?v=1.82.168"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -84,7 +84,7 @@ body.sr-ok #songReqBtn{display:block}
 .mm-btn{position:relative}.mm-btn>.pxi{position:absolute;left:18px;top:50%;transform:translateY(-50%)}
 .mm-back{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:8px;font-family:'Silkscreen',ui-monospace,monospace!important;font-weight:700}
 .mm-tvp{background:#2f6e4a!important}.mm-party{background:#b8407a!important}
-#partyEngine{position:fixed;left:-20px;top:-20px;width:2px;height:2px;opacity:0;pointer-events:none;border:0}
+#partyEngine{position:fixed;left:0;bottom:0;width:480px;height:360px;opacity:0.01;pointer-events:none;border:0;z-index:-1}   /* big enough that YouTube will play in it (and run its ads), but unseen behind everything */
 #partyWait{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(8,5,18,.92);color:#fff;font:700 16px 'Silkscreen',ui-monospace,monospace}#partyWait small{font:12px system-ui;opacity:.75}
 .party-toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:260;background:#16112a;border:2px solid #F5C518;color:#fff;padding:8px 14px;font:700 13px system-ui;max-width:90vw;text-align:center}
 #partyBtn{display:none;position:fixed;right:10px;top:calc(env(safe-area-inset-top) + 120px);z-index:70;padding:8px 12px;font:700 13px 'Silkscreen',ui-monospace,monospace;background:#b8407a;color:#fff;border:2px solid #ffd1e6}body.party-host #venue.on~#partyBtn,body.party-host #partyBtn{display:block}
@@ -5916,7 +5916,7 @@ var BOATS=(function(){
   function toScr(pu,pv){return[CX+pu*RX,CY+pv*RY];}
   /* rounds: the game splits into 2 or 3 rounds by the clock (the same on every screen). Each round the pool fills back up and
      everyone's back in, then it visibly shrinks, down to 45% by the end of the round */
-  var t0=0,REFILL=1500;function gameLen(){var c=ROUND.chart&&ROUND.chart();return c&&c.gameMs>20000?c.gameMs:90000;}
+  var t0=0,REFILL=1500,endAt=0;function gameLen(){var c=ROUND.chart&&ROUND.chart();return c&&c.gameMs>20000?c.gameMs:90000;}
   function nRounds(){return gameLen()>=60000?3:2;}
   function rLen(){return gameLen()/nRounds();}
   function rndAt(now){return t0?Math.max(0,Math.min(nRounds()-1,Math.floor((now-t0)/rLen()))):0;}
@@ -5966,7 +5966,7 @@ var BOATS=(function(){
   }
   /* a new round: everyone's back in their boat at the start spots as the pool fills back up */
   function newRound(first,now){
-    lastBonus=false;rivals=0;seenOut={};myHits={};tip=0;edgeIn=false;
+    lastBonus=false;endAt=0;rivals=0;seenOut={};myHits={};tip=0;edgeIn=false;
     if(!first){out=false;var a=startAng(myId);u=Math.cos(a)*0.55;v=Math.sin(a)*0.55;vu=vv=0;hd=a+Math.PI;graceTo=now+REFILL+800;
       Object.keys(botB).forEach(function(k){var b=botB[k],ba=startAng(k);b.out=false;b.u=Math.cos(ba)*0.55;b.v=Math.sin(ba)*0.55;b.vu=b.vv=0;});
       banner("🚤 ROUND "+(rnd+1)+" OF "+nRounds()+(rnd===nRounds()-1?" · FINAL!":""));btn();}
@@ -5977,6 +5977,11 @@ var BOATS=(function(){
     var me=myId&&viewers[myId];if(!me)return;
     var rn=rndAt(now);if(rn!==rnd){var first=rnd<0;rnd=rn;newRound(first,now);}
     var list=others(now);rivals=Math.max(rivals,list.length);
+    /* the last boat floating wins the round: everyone's back in for the next one (each screen sees who's out, so they all move on together) */
+    var parts=0,alive2=0,winId=null;if(myId){parts++;if(!out){alive2++;winId=myId;}}
+    Object.keys(viewers).forEach(function(id){var w=viewers[id];if(!w||w===PH||id===myId||w.dance!==4)return;parts++;if(!(w.sk&&w.sk.t===9)){alive2++;winId=id;}});
+    if(!endAt&&parts>=2&&alive2<=1&&now>graceTo){endAt=now+2200;if(winId!==myId){var wv=winId&&viewers[winId];banner("\uD83C\uDFC6 "+(wv&&wv.name?String(wv.name).toUpperCase():"NOBODY")+" WINS THE ROUND!");}}
+    if(endAt&&now>=endAt){endAt=0;if(rnd<nRounds()-1)t0=now-(rnd+1)*rLen();else{t0=now-rnd*rLen();newRound(false,now);}}
     if(!out){
       var i=input(),acc=T("accel",1.3);vu+=i.x*acc*dt;vv+=i.y*acc*dt;
       /* the lip: near the edge the water pushes you back in, so only a proper hit (or driving off) puts you over */
@@ -6016,7 +6021,7 @@ var BOATS=(function(){
       if(alive<=1||now<graceTo){if(rb2>R*0.92){b.u*=R*0.92/rb2;b.v*=R*0.92/rb2;}b.tip=0;}   /* the last boat floating stays afloat */
       else if(rb2>R){b.tip+=((rb2-R)/(BR*0.9)*1.6+Math.max(0,(b.vu*b.u+b.vv*b.v)/rb2)*2.2)*dt;b.vu-=b.u/rb2*0.9*dt;b.vv-=b.v/rb2*0.9*dt;if(b.tip>=1||rb2>R+BR*1.1)b.out=true;}   /* bots tip too, and paddle back in */
       else b.tip=Math.max(0,b.tip-dt*2.2);
-      var p=toScr(b.u,b.v);w.tx=w.x=p[0];w.ty=w.y=p[1];w.dance=4;w.sk={h:Math.round((b.tip||0)*100),f:0,t:0};w.pose=[1.1,-1.1,0.1,-0.1];w.fd=null;});
+      var p=toScr(b.u,b.v);w.tx=w.x=p[0];w.ty=w.y=p[1];w.dance=4;w.sk={h:Math.round((b.tip||0)*100),f:0,t:b.out?9:0};w.pose=[1.1,-1.1,0.1,-0.1];w.fd=null;});
   }
   function wire(){return{h:out?0:Math.round(tip*100),f:performance.now()<boostAt+500?1:0,t:out?9:((Math.round(hd/(Math.PI/4))%8)+8)%8};}
   function isOut(w,isMe){return isMe?out&&performance.now()-outAt>1100:!!(w.sk&&w.sk.t===9);}
@@ -6090,7 +6095,7 @@ var BOATS=(function(){
   }
   window.ukBoats=function(){return{on:on,out:out,score:score,tip:+tip.toFixed(2),saves:saves,rnd:rndAt(performance.now()),nr:nRounds(),R:+rad().toFixed(3),u:+u.toFixed(3),v:+v.toFixed(3),vu:+vu.toFixed(3),vv:+vv.toFixed(3),rivals:rivals,bots:Object.keys(botB).map(function(k){return[k,botB[k].out];})};};
   window.ukBoatsAt=function(a,b,c,d){u=a;v=b;vu=c||0;vv=d||0;};
-  window.ukBoatsSet=function(o){if(o.saves!==undefined)saves=o.saves;if(o.grace!==undefined)graceTo=performance.now()+o.grace;if(o.t0!==undefined)t0=performance.now()-o.t0;if(o.tip!==undefined)tip=o.tip;};
+  window.ukBoatsSet=function(o){if(o.saves!==undefined)saves=o.saves;if(o.grace!==undefined)graceTo=performance.now()+o.grace;if(o.t0!==undefined)t0=performance.now()-o.t0;if(o.tip!==undefined)tip=o.tip;if(o.botsOut)Object.keys(botB).forEach(function(k){botB[k].out=true;});};
   return{start:start,stop:stop,tick:tick,boost:boost,under:under,draw:draw,wire:wire,looks:looks,facing:facing,isOut:isOut,boatsOn:boatsOn,reset:function(){dropAt=0;},get on(){return on;},get out(){return out;}};
 })();
 /* ============================================================
@@ -9586,15 +9591,17 @@ function handleVideo(msg){
   if(!vYT){vYT=ytBridge(frame);vYT.onState=function(st){updTapHint();};}   /* the player stays clickable (YouTube's rules): if someone pauses or seeks their copy, the sync puts it back with the performer */
   if(+msg.dur>0)vYT.exp=+msg.dur;   /* the real length, from the performer: a different length means an ad is on */
   if(msg.action==="stop"){JT.video=false;vYT.clear();updTapHint();return;}
+  if(window.__partyRoom&&!TVSCREEN){if(JT.video||vYT.vid){JT.video=false;vYT.clear();updTapHint();}return;}   /* a party: the video (and its sound) is on the TV, not on everyone's phone */
   var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
   if(!vid)return;
   JT.video=true;
+  if(TVSCREEN&&msg.snd){var wm=msg.snd==="host";if(wm!==!!window.__tvMute){window.__tvMute=wm;if(vYT.vid)vYT.cmd(wm?"mute":"unMute");}else if(wm&&vYT.vid&&!vYT.muted)vYT.cmd("mute");}   /* a party: the host's phone has the sound, the TV the picture (or the TV has the sound if the phone couldn't) */
   var playing=msg.action==="play";
   var target=Math.max(0,+msg.time||0)+(playing?0.2:0);   /* ~network delay */
   vYT.target=target;
   var rate=+msg.rate;if(!(rate>0&&rate<=4))rate=1;
   if(vYT.vid!==vid){
-    vYT.load(vid,target,{paused:!playing});
+    vYT.load(vid,target,{paused:!playing,mute:TVSCREEN&&!!window.__tvMute});
     clearTimeout(handleVideo._hint);handleVideo._hint=setTimeout(updTapHint,3000);
   }else{
     if(!vYT.ad&&Math.abs(vYT.now()-target)>1.2)vYT.cmd("seekTo",[target,true]);
@@ -9604,16 +9611,17 @@ function handleVideo(msg){
   if(Math.abs(rate-(vYT.rate||1))>0.01)vYT.cmd("setPlaybackRate",[rate]);
   vYT.want=playing?"play":"pause";
 }
+window.ukVideo=function(m){handleVideo(m);return{video:JT.video,party:!!window.__partyRoom};};   /* tests */
 /* an ad on this screen: the video is a different length from the song. Hide it and mute it until it ends, then it unmutes and the next sync puts it back on the beat */
 setInterval(function(){
   if(!vYT||!vYT.vid)return;
   var fr=vYT.iframe,ad=vYT.exp>0&&vYT.dur>0&&Math.abs(vYT.dur-vYT.exp)>3&&vYT.state!==0&&vYT.state!==-1;
-  if(ad!==!!vYT.ad){vYT.ad=ad;fr.style.visibility=ad?"hidden":"";vYT.cmd(ad?"mute":"unMute");if(!ad)vYT.cmd("seekTo",[Math.max(0,vYT.target||0),true]);updTapHint();}
+  if(ad!==!!vYT.ad){vYT.ad=ad;fr.style.visibility=ad?"hidden":"";vYT.cmd(ad||window.__tvMute?"mute":"unMute");if(!ad)vYT.cmd("seekTo",[Math.max(0,vYT.target||0),true]);updTapHint();}
 },300);
 function updTapHint(){
   var h=document.getElementById("tapHint");if(!h)return;
   var stuck=vYT&&vYT.vid&&vYT.want==="play"&&vYT.state!==1&&vYT.state!==3&&!vYT.ad;
-  var muted=vYT&&vYT.vid&&vYT.state===1&&vYT.muted&&!vYT.ad;
+  var muted=vYT&&vYT.vid&&vYT.state===1&&vYT.muted&&!vYT.ad&&!window.__tvMute;   /* muted on purpose at a party (the host's phone has the sound): no "tap for sound" */
   h.textContent=vYT&&vYT.ad?"Ad playing \u00b7 the music joins when it ends":muted?"Tap the speaker on the video for sound":"Tap \u25B6 on the video for the music";
   h.style.display=(stuck||muted||(vYT&&vYT.ad))?"block":"none";
   if(vYT&&vYT.iframe)vYT.iframe.style.pointerEvents=(stuck||muted)?"auto":"none";   /* only clickable while a phone needs the one tap to allow sound */
@@ -9975,7 +9983,11 @@ var MENUMUSIC=(function(){
   try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
   function menuOn(){var j=document.getElementById("joinScreen");return !!j&&!j.classList.contains("hidden")&&getComputedStyle(j).display!=="none";}
   /* it also keeps playing in practice while you're just on the dance floor or free dancing (no round or other game running) */
-  function want(){var b=document.body,g=b&&b.getAttribute("data-game");return menuOn()||(!!b&&b.classList.contains("practice")&&!b.classList.contains("pr-busy")&&(!g||g==="free"));}
+  function want(){var b=document.body,g=b&&b.getAttribute("data-game");return menuOn()||(!!b&&b.classList.contains("practice")&&!b.classList.contains("pr-busy")&&(!g||g==="free"))||partyIdle(b,g);}
+  /* hosting a party: the normal music plays from the host's phone (so out of the TV when it's mirrored) whenever no song is on:
+     jam time, the game vote, the breaks between songs */
+  function partyIdle(b,g){try{if(!b||!b.classList.contains("party-host")||!window.PARTYHOST||!PARTYHOST.on)return false;var e=PARTYHOST.eng(),s=e&&e.state();
+    return !!s&&!s.playing&&!(typeof ROUND!=="undefined"&&ROUND.active&&ROUND.active())&&(!g||g==="free");}catch(x){return false;}}
   var LIST=["After-hours Entry.mp3","Queue Lights.mp3"],cur=0;   /* After-hours Entry, then Queue Lights when it ends, and round again */
   function url(i){return "songs/"+encodeURIComponent(LIST[i])+(bust?"?r="+bust:"");}
   function setVol(v){if(gn&&ac&&!plain)gn.gain.setTargetAtTime(v,ac.currentTime,0.05);else if(a)a.volume=Math.max(0,Math.min(1,v));}
@@ -10037,7 +10049,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.164",SERVER_VERSION="";
+var PAGE_VERSION="1.82.168",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10163,7 +10175,7 @@ var PARTYHOST=(function(){
 /* ---- the playlist everyone's building (from the host): on the TV a panel, on phones in the Add a song box ---- */
 var PLV=(function(){var st=null,songs=null;
   function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
-  function set(m){st=m&&m.party?{items:m.items||[],show:m.show||null}:null;var sb=document.getElementById("srSub");if(sb)sb.textContent=st?"It goes straight on the party playlist.":"The host sees it and adds it to the playlist.";render();}
+  function set(m){st=m&&m.party?{items:m.items||[],show:m.show||null}:null;window.__partyRoom=!!st;var sb=document.getElementById("srSub");if(sb)sb.textContent=st?"It goes straight on the party playlist.":"The host sees it and adds it to the playlist.";render();}
   function render(){var tv=document.getElementById("plTv");
     if(TVSCREEN){if(!tv){tv=document.createElement("div");tv.id="plTv";document.body.appendChild(tv);}
       if(!st){tv.style.display="none";return;}tv.style.display="block";var sh=st.show||{},skip=typeof SKIPS!=="undefined"&&SKIPS&&typeof ROUND!=="undefined"&&ROUND.counting&&SKIPS.need?SKIPS:null;
@@ -11344,7 +11356,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.164"></script>
+<script src="lab.js?v=1.82.168"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

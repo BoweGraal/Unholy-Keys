@@ -11,6 +11,20 @@ var http = require("http");
 var fs = require("fs");
 var path = require("path");
 var YT = require("./ytcharts.js");
+/* a YouTube video's real title (YouTube's oEmbed), cached; null if it can't be had in a couple of seconds */
+var YTT = {};
+function ytTitle(id, cb) {
+  if (YTT[id]) return cb(YTT[id]);
+  var done = false, fin = function(t) { if (done) return; done = true; if (t) YTT[id] = t; cb(t || null); };
+  try {
+    var rq = require("https").get({ hostname: "www.youtube.com", path: "/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + id), headers: { "User-Agent": "UnholyKeys/1.0" }, timeout: 2500 }, function(res) {
+      var b = ""; res.setEncoding("utf8"); res.on("data", function(c) { if (b.length < 20000) b += c; });
+      res.on("end", function() { try { var j = JSON.parse(b); fin(String(j.title || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 100)); } catch (e) { fin(null); } });
+    });
+    rq.on("timeout", function() { rq.destroy(); fin(null); }); rq.on("error", function() { fin(null); });
+  } catch (e) { fin(null); }
+  setTimeout(function() { fin(null); }, 3000);
+}
 var PORT = process.env.PORT || 8080;
 var rooms = {};
 var STARTED = Date.now();
@@ -509,7 +523,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.164";
+var VERSION = "1.82.168";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -698,7 +712,9 @@ function onMessage(ws, raw, isBinary) {
       if (msg.yt) { var yid = str(msg.yt, 11); if (!/^[A-Za-z0-9_-]{11}$/.test(yid)) return; out.yt = yid; out.title = str(msg.title, 120); }
       else if (msg.track) { var trk = str(msg.track, 120); if (!/^[^\/\\]+\.(mp3|m4a|wav|ogg|flac|aac|opus)$/i.test(trk)) return; out.track = trk; }   /* one of the game's own songs, by file name */
       else { out.file = str(msg.file, 120); out.size = Math.min(16 * 1024 * 1024, Math.max(0, +msg.size || 0)); out.n = Math.min(120, Math.max(1, +msg.n || 1)); out.mime = str(msg.mime, 40); }
-      if (rq.performer) send(rq.performer, out); else send(ws, { type: "song-req-res", rid: out.rid, ok: false, why: "The host isn't here right now" });
+      var deliver = function() { if (rq.performer) send(rq.performer, out); else send(ws, { type: "song-req-res", rid: out.rid, ok: false, why: "The host isn't here right now" }); };
+      if (out.yt && (!out.title || /^youtube video$/i.test(out.title))) ytTitle(out.yt, function(t) { if (t) out.title = t; deliver(); });   /* the video's real name */
+      else deliver();
       return;
     }
     if (!allow(ws, "sreqc", 130, 30)) return;   /* the pieces of a file: a song's worth in a few seconds, no more */
