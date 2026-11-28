@@ -1688,6 +1688,21 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.147 — Dungeon: shield + BLOCK, ROLL, crits on the beat, a lunge that doesn't move you
+
+- **The lunge** is now just the body leaning out over the planted feet and back. Your position never changes.
+- **BLOCK** (hold; E on a keyboard, B on a controller): raises a round wooden shield with an iron rim and a gold boss in front of you.
+  - A spider biting from the front (about 70° either side) glances off it: CLANG, sparks, it gets knocked back and you lose no heart. From behind or the side it still bites.
+  - While blocking you keep facing your guard, so you can side-step. From behind, the shield is drawn on your back.
+- **ROLL** (Q or Shift; X on a controller): a quick tumble the way you're pushing, or facing if you aren't. The body rolls over and you can't be bitten mid-roll. It covers about an eighth of the room, with a short cooldown.
+- **Crits:** a swing or spin that starts on the beat does double damage, with a pink CRIT! and a burst. An on-beat swing kills a normal spider in one hit.
+- The intro card, the hint line and the controller strip list the new controls.
+
+1. Dungeon: swing and check you don't slide forward. The body leans out and back.
+2. Hold BLOCK facing a spider: it bounces off (CLANG). Turn your back and it bites.
+3. ROLL through a spider: no damage.
+4. Swing right on the beat: CRIT!, and a spider dies in one hit.
+
 ## v1.82.146 — Dungeon: the sword stays in the hand, a slash tail, a lunge, checked in all 8 directions
 
 - **In the hand:** the sword is now drawn in the avatar's real right hand, the way the lighter is. The arm reaches along the blade through the whole slash, so the grip never leaves the fist.
