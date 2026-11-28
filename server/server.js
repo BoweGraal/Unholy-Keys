@@ -79,7 +79,7 @@ function liveVideo(r) {
     v.time = v.time + ((Date.now() - r.videoAt) / 1000) * (typeof v.rate === "number" && v.rate > 0 ? v.rate : 1);
   return v;
 }
-var PERFORMER_TYPES = { tvpos: 1, av: 1, cal: 1, band: 1, "song-on": 1, note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1, "song-part": 1 };
+var PERFORMER_TYPES = { tvpos: 1, av: 1, cal: 1, band: 1, "song-on": 1, note: 1, inst: 1, state: 1, info: 1, video: 1, stream: 1, "perf-name": 1, "show-fx": 1, "perf-pos": 1, "perf-chat": 1, "song-part": 1, "pl-state": 1 };
 
 /* ── Live sound/visual stream ──
    The performer sends binary packets: byte 0 is the kind (1 = audio, 2 = visuals), the rest is
@@ -420,7 +420,8 @@ function gvoteStop(r) { if (r.gvote) { clearTimeout(r.gvote.timer); r.gvote = nu
 function gvoteOpen(code, msg) {
   var r = rooms[code]; if (!r) return;
   gvoteStop(r);
-  var opts = (Array.isArray(msg.opts) ? msg.opts : []).filter(function(m, i, a) { return GV_MODES.indexOf(m) >= 0 && a.indexOf(m) === i; }).slice(0, 4);
+  var gvOk = function(m) { if (typeof m !== "string") return false; var p = m.split("+"); return p.length <= 2 && p.every(function(x) { return GV_MODES.indexOf(x) >= 0; }) && (p.length < 2 || p[0] !== p[1]); };   /* one game, or a pair "mosh+ice" for a long song */
+  var opts = (Array.isArray(msg.opts) ? msg.opts : []).filter(function(m, i, a) { return gvOk(m) && a.indexOf(m) === i; }).slice(0, 6);
   if (opts.length < 2) return;
   var ms = intIn(msg.ms, 5000, 60000, 15000);
   var g = r.gvote = { id: (r.gvoteN = (r.gvoteN || 0) + 1), opts: opts, picks: new Map(), end: Date.now() + ms, done: false, win: null };
@@ -508,7 +509,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.152";
+var VERSION = "1.82.153";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -665,6 +666,7 @@ function onMessage(ws, raw, isBinary) {
       svote: r.svote && !r.svote.done ? svotePublic(r.svote) : null,
       voiceOpen: r.voice && Object.keys(r.voice).some(function(k) { return r.voice[k].mic; }) ? 1 : 0,   /* someone's talking: join in, listening */
       voiceSongs: r.voiceSongs ? 1 : 0,   /* the host lets voice stay on during songs */
+      pl: r.pl || null,   /* party: the playlist being built and the show's progress */
       totals: totalsList(r),
       fx: r.fx || null,
       perfPos: r.perfPos || null,
@@ -694,6 +696,7 @@ function onMessage(ws, raw, isBinary) {
       if (!allow(ws, "sreq", 4, 0.1)) { send(ws, { type: "song-req-res", ok: false, why: "Slow down: one song at a time" }); return; }
       var out = { type: "song-req", from: ws.viewerId, name: ws.viewerName, rid: str(msg.rid, 20) };
       if (msg.yt) { var yid = str(msg.yt, 11); if (!/^[A-Za-z0-9_-]{11}$/.test(yid)) return; out.yt = yid; out.title = str(msg.title, 120); }
+      else if (msg.track) { var trk = str(msg.track, 120); if (!/^[^\/\\]+\.(mp3|m4a|wav|ogg|flac|aac|opus)$/i.test(trk)) return; out.track = trk; }   /* one of the game's own songs, by file name */
       else { out.file = str(msg.file, 120); out.size = Math.min(16 * 1024 * 1024, Math.max(0, +msg.size || 0)); out.n = Math.min(120, Math.max(1, +msg.n || 1)); out.mime = str(msg.mime, 40); }
       if (rq.performer) send(rq.performer, out); else send(ws, { type: "song-req-res", rid: out.rid, ok: false, why: "The host isn't here right now" });
       return;
@@ -789,6 +792,15 @@ function onMessage(ws, raw, isBinary) {
     if (msg.type === "state") rooms[ws.room].state = msg;
     if (msg.type === "video") { if (msg.action === "stop") rooms[ws.room].video = null; else { rooms[ws.room].video = msg; rooms[ws.room].videoAt = Date.now(); } }
     if (msg.type === "stream") rooms[ws.room].stream = msg.active ? msg : null;
+    if (msg.type === "pl-state") {
+      /* party: the playlist everyone's building (title + who added it) and the show's progress, kept for latecomers and the TV */
+      if (!allow(ws, "pl", 10, 3)) return;
+      var items = Array.isArray(msg.items) ? msg.items.slice(0, 40).map(function(it) { return { t: str(it && it.t, 80), by: str(it && it.by, 24) }; }) : [];
+      var sh = msg.show && typeof msg.show === "object" ? { on: msg.show.on ? 1 : 0, n: intIn(msg.show.n, 0, 99, 0), i: intIn(msg.show.i, 0, 99, 0), now: str(msg.show.now, 80) } : null;
+      rooms[ws.room].pl = { items: items, show: sh, party: msg.party ? 1 : 0 };
+      broadcast(ws.room, { type: "pl-state", items: items, show: sh, party: msg.party ? 1 : 0 }, ws);
+      return;
+    }
     if (msg.type === "show-fx") {
       // the show's effects (lights, fog, lasers, darkness, weather, sunset, fire, fireworks): kept for latecomers
       var fx = showFx(msg.fx); if (!fx) return;
