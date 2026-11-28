@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.167"></script>
-<script src="tune.js?v=1.82.167"></script>
-<script src="gfx.js?v=1.82.167"></script>
-<script src="art.js?v=1.82.167"></script>
-<script src="qr.js?v=1.82.167"></script>
-<script src="voice.js?v=1.82.167"></script>
-<script src="instruments.js?v=1.82.167"></script>
-<script src="kart.js?v=1.82.167"></script>
-<script src="explain.js?v=1.82.167"></script>
+<script src="px8.js?v=1.82.168"></script>
+<script src="tune.js?v=1.82.168"></script>
+<script src="gfx.js?v=1.82.168"></script>
+<script src="art.js?v=1.82.168"></script>
+<script src="qr.js?v=1.82.168"></script>
+<script src="voice.js?v=1.82.168"></script>
+<script src="instruments.js?v=1.82.168"></script>
+<script src="kart.js?v=1.82.168"></script>
+<script src="explain.js?v=1.82.168"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -9595,12 +9595,13 @@ function handleVideo(msg){
   var vid=String(msg.vid||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,20);
   if(!vid)return;
   JT.video=true;
+  if(TVSCREEN&&msg.snd){var wm=msg.snd==="host";if(wm!==!!window.__tvMute){window.__tvMute=wm;if(vYT.vid)vYT.cmd(wm?"mute":"unMute");}else if(wm&&vYT.vid&&!vYT.muted)vYT.cmd("mute");}   /* a party: the host's phone has the sound, the TV the picture (or the TV has the sound if the phone couldn't) */
   var playing=msg.action==="play";
   var target=Math.max(0,+msg.time||0)+(playing?0.2:0);   /* ~network delay */
   vYT.target=target;
   var rate=+msg.rate;if(!(rate>0&&rate<=4))rate=1;
   if(vYT.vid!==vid){
-    vYT.load(vid,target,{paused:!playing});
+    vYT.load(vid,target,{paused:!playing,mute:TVSCREEN&&!!window.__tvMute});
     clearTimeout(handleVideo._hint);handleVideo._hint=setTimeout(updTapHint,3000);
   }else{
     if(!vYT.ad&&Math.abs(vYT.now()-target)>1.2)vYT.cmd("seekTo",[target,true]);
@@ -9615,12 +9616,12 @@ window.ukVideo=function(m){handleVideo(m);return{video:JT.video,party:!!window._
 setInterval(function(){
   if(!vYT||!vYT.vid)return;
   var fr=vYT.iframe,ad=vYT.exp>0&&vYT.dur>0&&Math.abs(vYT.dur-vYT.exp)>3&&vYT.state!==0&&vYT.state!==-1;
-  if(ad!==!!vYT.ad){vYT.ad=ad;fr.style.visibility=ad?"hidden":"";vYT.cmd(ad?"mute":"unMute");if(!ad)vYT.cmd("seekTo",[Math.max(0,vYT.target||0),true]);updTapHint();}
+  if(ad!==!!vYT.ad){vYT.ad=ad;fr.style.visibility=ad?"hidden":"";vYT.cmd(ad||window.__tvMute?"mute":"unMute");if(!ad)vYT.cmd("seekTo",[Math.max(0,vYT.target||0),true]);updTapHint();}
 },300);
 function updTapHint(){
   var h=document.getElementById("tapHint");if(!h)return;
   var stuck=vYT&&vYT.vid&&vYT.want==="play"&&vYT.state!==1&&vYT.state!==3&&!vYT.ad;
-  var muted=vYT&&vYT.vid&&vYT.state===1&&vYT.muted&&!vYT.ad;
+  var muted=vYT&&vYT.vid&&vYT.state===1&&vYT.muted&&!vYT.ad&&!window.__tvMute;   /* muted on purpose at a party (the host's phone has the sound): no "tap for sound" */
   h.textContent=vYT&&vYT.ad?"Ad playing \u00b7 the music joins when it ends":muted?"Tap the speaker on the video for sound":"Tap \u25B6 on the video for the music";
   h.style.display=(stuck||muted||(vYT&&vYT.ad))?"block":"none";
   if(vYT&&vYT.iframe)vYT.iframe.style.pointerEvents=(stuck||muted)?"auto":"none";   /* only clickable while a phone needs the one tap to allow sound */
@@ -10048,7 +10049,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.167",SERVER_VERSION="";
+var PAGE_VERSION="1.82.168",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11355,7 +11356,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.167"></script>
+<script src="lab.js?v=1.82.168"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

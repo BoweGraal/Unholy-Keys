@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.168 — Party: YouTube ads play out ahead of time; the host's phone has the sound
+
+1. Host a party. A friend adds a YouTube song while you're jamming: a hidden player on the host's phone starts it straight away, muted, so any ad (even a 3-minute one) plays out by itself while everyone jams. You don't see or hear anything.
+2. When that song's turn comes, the same player plays it from the start WITH sound: no new ad, the game starts with the song.
+3. Sound: the host's phone plays the music (in TV mode that comes out of the TV). The TV shows the video muted. No "tap for sound" on the TV.
+4. If the host's phone refuses to play sound, after ~2 s it switches: the host copy goes muted and the TV plays the sound instead.
+5. If the song comes up before its ad has finished, the game holds at the start as before (Ad break), then goes.
+6. Only the next YouTube song in the playlist is pre-played at a time; the one after starts its ad as soon as the first begins.
+
 ## v1.82.167 — Party: YouTube songs actually play (ads, then the game)
 
 The hidden host copy of the game ran in a 2×2-pixel frame, so its YouTube player was ~2 px and YouTube refused to play it: no ad pre-play, the song never "started", and games waited forever (e.g. the mosh pit stuck on its first move). It now runs in an invisible 480×360 frame behind everything.
