@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.181 — Supermarket sweep: the hand-off animation
+
+1. Taking something off a shelf with your cart parked by you: both arms reach out to the item, bring it in to your chest, then you turn and toss it in an arc into the basket. It lands in the cart at the end (the cart shows it then).
+2. It works wherever the cart is: beside you, behind you, below you, ahead of you, diagonal. The arms and the way you face follow the item the whole way. Any item works (turkeys, cheese wheels, snacks, salami…).
+3. Too far from your cart: the same reach, then the item goes up over your head to carry. Dropping a carried item in the cart: it comes down from over your head, then in.
+4. Bonuses: the reach, then up over your head.
+5. Hold GRAB to sweep a spot: one smooth hand-off after another. Practice bots do the same hand-off into their parked carts.
+
 ## v1.82.180 — Supermarket sweep: bonuses are run to the front by hand
 
 1. GRAB an inflatable bonus: it always goes in your hands (even with your cart parked right there) and you carry it over your head: "🎈 GOT A BONUS → RUN IT TO THE FRONT!". Your cart stays where it is.

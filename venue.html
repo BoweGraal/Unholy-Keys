@@ -28,15 +28,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.180"></script>
-<script src="tune.js?v=1.82.180"></script>
-<script src="gfx.js?v=1.82.180"></script>
-<script src="art.js?v=1.82.180"></script>
-<script src="qr.js?v=1.82.180"></script>
-<script src="voice.js?v=1.82.180"></script>
-<script src="instruments.js?v=1.82.180"></script>
-<script src="kart.js?v=1.82.180"></script>
-<script src="explain.js?v=1.82.180"></script>
+<script src="px8.js?v=1.82.181"></script>
+<script src="tune.js?v=1.82.181"></script>
+<script src="gfx.js?v=1.82.181"></script>
+<script src="art.js?v=1.82.181"></script>
+<script src="qr.js?v=1.82.181"></script>
+<script src="voice.js?v=1.82.181"></script>
+<script src="instruments.js?v=1.82.181"></script>
+<script src="kart.js?v=1.82.181"></script>
+<script src="explain.js?v=1.82.181"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5977,7 +5977,7 @@ var SWEEP=(function(){
     {x0:0.93,x1:0.97,y0:0.505,y1:0.745,l:["turkey","beef","chicken","turkey","beef"],r:null,lab:"MEAT",meat:1}];
   var GRIND={x:0.655,y:0.57},CANDY={x:0.455,y:0.625},CHECK={x0:0.35,x1:0.65,y0:0.772,y1:0.8},CORRAL={x0:0.67,x1:0.77,y0:0.775,y1:0.8};
   var DELIT=["wheel","block","salami","wheel","block","salami","block","wheel","salami","block","wheel","salami"];
-  var on=false,slots=[],face=2,cartFace=2,reach=null,nextSweep=0,REACH=420,LK=typeof WeakMap!=="undefined"?new WeakMap():null,cart=null,hands=null,score=0,banked=0,carts=0,pops=[],grabHeld=false,lastT=0,botS={},grind=null,candy=null,infl=[],bag=[],remote={},flash=0,fullWarnAt=0;
+  var on=false,slots=[],face=2,cartFace=2,reach=null,nextSweep=0,REACH=266,LK=typeof WeakMap!=="undefined"?new WeakMap():null,cart=null,hands=null,score=0,banked=0,carts=0,pops=[],grabHeld=false,lastT=0,botS={},grind=null,candy=null,infl=[],bag=[],remote={},flash=0,fullWarnAt=0;
   function $(id){return document.getElementById(id);}
   /* everyone in a long-sleeved sweatshirt in their own shirt colour (the hoodie top: sleeves to the wrist, the front pocket) */
   function look(L){if(!L)return L;var c=LK&&LK.get(L);if(c)return c;c=Object.assign({},L,{top:2,held:0});if(LK)LK.set(L,c);return c;}
@@ -6008,10 +6008,25 @@ var SWEEP=(function(){
   function cartAt(px,py,f){var A=avS(),h=handMid(f),k=handleOf(f);return[px+(h[0]-k[0])*A,py+(h[1]-k[1])*A];}
   var CU=1.6;
   /* the figure's arms for someone: on the handle while pushing */
-  function rig(id,v){if(!on&&!sweepOn())return null;var f=facing(id,v);
+  function rig(id,v){if(!on&&!sweepOn())return null;var f=facing(id,v),ar=animRig(id,f,performance.now());if(ar)return ar;
     if(id===myId)return cart&&cart.att&&!hands&&!reach?pushArms(cartFace):null;
     if(id.indexOf("bot")===0){var b=botS[id];return b&&!(performance.now()<b.wait)?pushArms(b.face):null;}
     return v.sk&&(v.sk.t|0)===0?pushArms(f):null;}
+  /* the hand-off: the arms reach for the item, bring it in to the chest and toss it into the basket (or up over the head).
+     Any item, any spot, wherever the cart is: the path runs between the real points, and the arms follow the item */
+  var ANIM={},DUR=700,PICK=0.38;
+  function slotPos(sl){var s=sc();if(sl.inf)return[sl.x*W,sl.y*H-s*6];if(sl.deli)return[sl.x*W,(DELI-0.012)*H];var u=U[sl.u];return[(sl.side==="l"?u.x0:u.x1)*W+(sl.side==="l"?s*2:-s*2),sl.y*H];}
+  function basket(cx,cy,f){var u=avS()*CU,side=Math.abs(DV[f][0])>0.6;return[cx,cy-(side?u*5.7:u*2.5)];}
+  function animPt(A,now){var k=(now-A.t0)/DUR;if(k>=1||k<0)return null;var A0=A.a,C=[A.p[0],A.p[1]-6*avS()],B=A.b,e,e2;
+    if(k<PICK)return{x:A0[0],y:A0[1],k:k,ph:0};var j=(k-PICK)/(1-PICK);
+    if(j<0.35){e=j/0.35;e2=e*e*(3-2*e);return{x:A0[0]+(C[0]-A0[0])*e2,y:A0[1]+(C[1]-A0[1])*e2,k:k,ph:1};}
+    e=(j-0.35)/0.65;e2=e*(2-e);return{x:C[0]+(B[0]-C[0])*e2,y:C[1]+(B[1]-C[1])*e2-Math.sin(e*Math.PI)*10*avS(),k:k,ph:2};}
+  /* both arms pointed at a spot (the figure's arm angles by facing; the left-facing ones mirrored) */
+  function aimArms(f,dx,dy,len){var b=MIRB[f],D=b===undefined?f:b;if(b!==undefined)dx=-dx;var bk=D===2||D===5,a=bk?Math.atan2(dx,dy):Math.atan2(-dx,dy),sp=0.2;
+    return b===undefined?{armL:a+sp,armR:a-sp,alL:len,alR:len,still:1}:{armL:-(a-sp),armR:-(a+sp),alL:len,alR:len,still:1};}
+  function animRig(id,f,now){var A=ANIM[id];if(!A)return null;var p=animPt(A,now);if(!p)return null;var Av=avS(),sx=A.p[0],sy=A.p[1]-4.5*Av,dx=p.x-sx,dy=p.y-sy;
+    var reachK=p.ph===0?Math.min(1,p.k/PICK*1.6):1,len=Math.max(4,Math.min(9,Math.hypot(dx,dy)/Av))*reachK+(1-reachK)*5;return aimArms(f,dx,dy,len);}
+  function pendingIn(){var A=ANIM[myId];if(!A||!A.cart)return 0;var k=(performance.now()-A.t0)/DUR;return k>=PICK&&k<1?1:0;}
   function fz(n){var z=window.ukGZ?window.ukGZ("sweep"):1;return Math.max(5,Math.round(n/Math.max(1,z/1.5)));}   /* a font size that stays sensible when the camera's zoomed in */
   function me(){return myId&&viewers[myId];}
   function setMe(x,y){var m=me();if(!m)return;m.tx=m.x=x;m.ty=m.y=y;sendPos(x,y);}
@@ -6054,14 +6069,17 @@ var SWEEP=(function(){
     if(!hands&&atStation(m,GRIND)&&!grind.done)return;   /* holding at the grinder grinds */
     if(!hands&&atStation(m,CANDY)&&!candy.done)return;   /* holding at the candy bar scoops */
     if(hands==="inflate"){if(atFront(m))turnIn(m);else pop("🎈 RUN IT TO THE FRONT (THE HOST)","#ffe14a",m.x,m.y);return;}
-    if(hands){if(nearCart(m)){if(capped(hands)){pop(PER+" "+T[hands].n.toUpperCase()+" IS THE LIMIT · BANK THIS CART FIRST","#ffd24a",m.x,m.y);return;}if(!room(hands)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}add(hands,hands==="inflate"?handsVal:0);pop(hands==="inflate"?"🎈 IN THE CART":"+$"+T[hands].v,"#9cff4a",cart.x,cart.y);hands=null;handsVal=0;hud();}
+    if(hands){if(nearCart(m)){if(capped(hands)){pop(PER+" "+T[hands].n.toUpperCase()+" IS THE LIMIT · BANK THIS CART FIRST","#ffd24a",m.x,m.y);return;}if(!room(hands)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}var mpx=m.x*W,mpy=m.y*H;ANIM[myId]={t:hands,a:[mpx,mpy-34],p:[mpx,mpy],b:basket(cart.x*W,cart.y*H,cartFace),t0:now-PICK*DUR,cart:true};add(hands,hands==="inflate"?handsVal:0);pop(hands==="inflate"?"🎈 IN THE CART":"+$"+T[hands].v,"#9cff4a",cart.x,cart.y);hands=null;handsVal=0;hud();}
       else pop("WALK TO YOUR CART","#ffd24a",m.x,m.y);return;}
     if(cart.att){cart.att=false;nextSweep=now+350;pop(nearSlot(m)?"PARKED · GRAB TO LOAD IT":"PARKED","#cfe3ff",m.x,m.y);return;}   /* pushing: GRAB parks the cart (you can't load it on the move) */
     var s=nearSlot(m);
     if(s){startReach(s,now);return;}
     if(nearCart(m)){cart.att=true;pop("PUSHING","#cfe3ff",m.x,m.y);}}
   /* reaching for something takes a moment (you stop, turn to the shelf, sweep it off); holding GRAB as you push along a shelf keeps sweeping */
-  function startReach(s,now){if(reach)return;var m=me();reach={at:now,s:s};face=ART.face8((s.x-m.x)*W,(s.y-m.y)*H,face);}
+  function startReach(s,now){if(reach)return;var m=me();reach={at:now,s:s};face=ART.face8((s.x-m.x)*W,(s.y-m.y)*H,face);
+    var px=m.x*W,py=m.y*H,from=slotPos(s),close=!cart.att&&nearCart(m),to=null,inCart=false;
+    if(s.inf)to=[px,py-12-sc()*6];else if(close&&!capped(s.t)&&room(s.t)){to=basket(cart.x*W,cart.y*H,cartFace);inCart=true;}else if(!close)to=[px,py-34];
+    if(to)ANIM[myId]={t:s.inf?"inflate":s.t,inf:s.inf,a:from,p:[px,py],b:to,t0:now,cart:inCart};}
   function takeIt(s,now){var m=me();if(!m)return;
     if(s){var close=!cart.att&&nearCart(m);   /* into the cart only when it's parked right by you */
       if(!s.inf&&s.n<=0)return;
@@ -6084,9 +6102,10 @@ var SWEEP=(function(){
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;var m=me();if(!m)return;
     var ix=0,iy=0;if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){ix=joy.x;iy=joy.y;}else{ix=(held.right?1:0)-(held.left?1:0);iy=(held.down?1:0)-(held.up?1:0);}
-    var busy=!!reach||(grabHeld&&!hands&&((atStation(m,GRIND)&&!grind.done)||(atStation(m,CANDY)&&!candy.done)));
+    var hA=ANIM[myId],hP=hA&&animPt(hA,now);if(hA&&!hP)delete ANIM[myId];if(hP){var fz2=ART.face8(hP.x-m.x*W,hP.y-m.y*H+4,face);if(Math.hypot(hP.x-m.x*W,hP.y-m.y*H)>4)face=fz2;}
+    var busy=!!reach||!!hP||(grabHeld&&!hands&&((atStation(m,GRIND)&&!grind.done)||(atStation(m,CANDY)&&!candy.done)));
     if((ix||iy)&&!busy){face=ART.face8(ix,iy,face);if(cart.att)cartFace=face;}
-    if(reach&&now-reach.at>=REACH){var rs=reach.s;reach=null;takeIt(rs,now);nextSweep=now+160;}
+    if(reach&&now-reach.at>=REACH){var rs=reach.s;reach=null;takeIt(rs,now);nextSweep=now+(DUR-REACH)+60;}
     else if(!reach&&grabHeld&&!cart.att&&nearCart(m)&&!hands&&now>nextSweep&&!atStation(m,GRIND)&&!atStation(m,CANDY)){var sw=nearSlot(m);if(sw&&room(sw.t)&&!capped(sw.t))startReach(sw,now);}
     /* the walls and shelves (the floor walker moves you; this keeps you out of the shelving) */
     var x=Math.max(X0,Math.min(X1,m.x)),y=Math.max(Y0,Math.min(Y1,m.y));if(!last)last=[x,y];if(busy){x=last[0];y=last[1];}
@@ -6111,8 +6130,8 @@ var SWEEP=(function(){
   function botTick(dt,now){Object.keys(viewers).filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id){var v=viewers[id];if(!v)return;
     var b=botS[id]||(botS[id]={x:0.3+Math.random()*0.4,y:0.785,face:2,fill:0,val:0,tgt:null,wait:0,lane:null});
     if(now<b.wait){}else if(b.fill>=CAP-3){var tx=0.5,ty=0.792;mv(b,tx,ty,dt);if(b.y>CHECK.y0-0.005&&b.x>CHECK.x0&&b.x<CHECK.x1){if(GAME.botPts)GAME.botPts(id,b.val);cheer();b.stored=(b.stored||0)+1;b.fill=0;b.val=0;b.wait=now+600;}}
-    else{if(!b.tgt){var av=slots.filter(function(q){return q.n>0;});b.tgt=av.length?av[Math.floor(Math.random()*av.length)]:null;if(!b.tgt){b.fill=CAP;return;}}var t=b.tgt;if(mv(b,t.x,t.y,dt)){var it=T[t.t];if(t.n>0&&b.fill+it.s<=CAP){t.n--;b.fill+=it.s;b.val+=it.v;}b.tgt=null;b.wait=now+700+Math.random()*700;var bp=cartAt(b.x*W,b.y*H,b.face);b.park={x:bp[0]/W,y:bp[1]/H,f:b.face};}}
-    v.tx=v.x=b.x;v.ty=v.y=b.y;v.dance=4;var bw=now<b.wait;v.sk={h:b.fill,t:bw?3:0,d:b.face};v.pose=bw?[1.3+Math.sin(now/120)*0.5,-0.6,0,0]:[0.3,-0.3,0,0];v.fd=null;});}
+    else{if(!b.tgt){var av=slots.filter(function(q){return q.n>0;});b.tgt=av.length?av[Math.floor(Math.random()*av.length)]:null;if(!b.tgt){b.fill=CAP;return;}}var t=b.tgt;if(mv(b,t.x,t.y,dt)){var it=T[t.t];if(t.n>0&&b.fill+it.s<=CAP){t.n--;b.fill+=it.s;b.val+=it.v;}b.tgt=null;b.wait=now+700+Math.random()*700;var bp=cartAt(b.x*W,b.y*H,b.face);b.park={x:bp[0]/W,y:bp[1]/H,f:b.face};ANIM[id]={t:t.t,a:slotPos(t),p:[b.x*W,b.y*H],b:basket(bp[0],bp[1],b.face),t0:now,cart:true};}}
+    v.tx=v.x=b.x;v.ty=v.y=b.y;v.dance=4;var ba=ANIM[id],bpp=ba&&animPt(ba,now);if(bpp&&Math.hypot(bpp.x-b.x*W,bpp.y-b.y*H)>4)b.face=ART.face8(bpp.x-b.x*W,bpp.y-b.y*H+4,b.face);var bw=now<b.wait;v.sk={h:b.fill,t:bw?3:0,d:b.face};v.pose=bw?[1.3+Math.sin(now/120)*0.5,-0.6,0,0]:[0.3,-0.3,0,0];v.fd=null;});}
   /* walk a bot toward a point through the aisles: down to the cross aisle (front) then up the target's aisle */
   /* walk a bot through the store: along the front to the right aisle, up it; the deli across the back from the nearest aisle */
   var AISLE=[0.115,0.3,0.5,0.69,0.87],FRONT=0.765,BACK=0.488;
@@ -6171,7 +6190,7 @@ var SWEEP=(function(){
       cartPic(g,cx,cy,cf,fill,null,s,false);});
     if(on&&cart){var m=me(),mv0=viewers[myId],cx2=cart.x*W,cy2=cart.y*H;
       if(cart.att&&mv0){var c2=cartAt((mv0.dx!==undefined?mv0.dx:m.x)*W,(mv0.dy!==undefined?mv0.dy:m.y)*H,cartFace);cx2=c2[0];cy2=c2[1];}   /* drawn from where you're drawn, so it never slips off your hands */
-      var inFront=cart.att?DV[cartFace][1]>0.3:(m&&cart.y>m.y);if(inFront===front)cartPic(g,cx2,cy2,cartFace,cart.fill,cart.items,s,true);}}
+      var inFront=cart.att?DV[cartFace][1]>0.3:(m&&cart.y>m.y);if(inFront===front){var pn=pendingIn(),its=pn?cart.items.slice(0,cart.items.length-1):cart.items,lt=pn?cart.items[cart.items.length-1]:null;cartPic(g,cx2,cy2,cartFace,cart.fill-(lt&&T[lt]?T[lt].s:0),its,s,true);}}}
   function under(g){
     if(!sweepOn())return;var now=performance.now(),s=sc(),y0=FLOOR*H,tile=s*12;
     g.save();g.fillStyle="#e9e6dc";g.fillRect(0,y0,W,H-y0);
@@ -6241,10 +6260,11 @@ var SWEEP=(function(){
     g.restore();}
   function draw(g){
     if(!sweepOn())return;var now=performance.now(),s=sc(),m=me();cartsDraw(g,true);
+    Object.keys(ANIM).forEach(function(id){var A=ANIM[id],p=animPt(A,now);if(!p){if(id!==myId)delete ANIM[id];return;}if(A.t==="inflate")inflatable(g,{x:p.x/W,y:(p.y+s*6)/H,k:A.inf?A.inf.k:"banana",bob:0},now,s);else item(g,A.t,p.x,p.y,s,p.ph===2?0.9:1);});
     if(on&&m){
       /* what GRAB would do right now */
       var tip=null,hx=m.x*W,hy=m.y*H;
-      if(hands==="inflate"){if(handsInf)inflatable(g,{x:m.x,y:(hy-12)/H,k:handsInf.k,bob:0},now,s);tip="🎈 RUN IT TO THE FRONT";}else if(hands){item(g,hands,hx,hy-34,s,1);tip=nearCart(m)?"GRAB: INTO THE CART":"WALK TO YOUR CART";}
+      if(hands==="inflate"){if(handsInf&&!ANIM[myId])inflatable(g,{x:m.x,y:(hy-12)/H,k:handsInf.k,bob:0},now,s);tip="🎈 RUN IT TO THE FRONT";}else if(hands){if(!ANIM[myId])item(g,hands,hx,hy-34,s,1);tip=nearCart(m)?"GRAB: INTO THE CART":"WALK TO YOUR CART";}
       else if(atStation(m,GRIND)&&!grind.done)tip="HOLD GRAB TO GRIND ☕";
       else if(atStation(m,CANDY)&&!candy.done)tip="HOLD GRAB TO SCOOP · $1.00 ±3¢";
       else{var sl=nearSlot(m);if(sl){var o=T[sl.t];g.strokeStyle="#ffe14a";ART.PX.ringO(g,sl.x*W,sl.y*H,s*7,s*5,0);tip=(sl.inf?"🎈 BONUS":o.n.toUpperCase()+" $"+o.v)+(cart.att?" · GRAB TO PARK":nearCart(m)?" · HOLD GRAB":" · GRAB");}}
@@ -10427,7 +10447,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.180",SERVER_VERSION="";
+var PAGE_VERSION="1.82.181",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11746,7 +11766,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.180"></script>
+<script src="lab.js?v=1.82.181"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
