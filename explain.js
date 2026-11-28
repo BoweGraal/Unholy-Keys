@@ -44,6 +44,9 @@ var EXPLAIN=(function(){
     fish:{n:"Fishing",i:"🎣",goal:"Biggest catch wins. 🐟",
       how:[["Drag the water to aim · swoop up fast to cast","Point to aim · swoop the mouse up fast to cast"],"A fish under the float bites · flick ← → to jerk the float, ⟳ pulls it in",["❗ turn the reel to hook it","❗ S / ↓ or turn the reel to hook it"],"Spin ⟳ to the beat ♩ · 🥅 net it"],
       rules:["Too fast ⚡ up · slower ⚡ down","⚡ full = 💥 SNAP","⚠ LINE OUT: reel!"]},
+    sweep:{n:"Supermarket sweep",i:"🛒",goal:"Biggest grocery bill wins. 💰",
+      how:[["Stick: push your cart down the aisles","Arrows / WASD push your cart"],["GRAB: the item in front of you → your cart (or your hands: GRAB at the cart drops it in)","Space: grab → your cart (or your hands: Space at the cart drops it in)"],"Full cart → push it into the CHECKOUT at the front: banked, new cart",["Bonuses: hold GRAB at the ☕ grinder · 🍬 candy bar: $1.00 ±3¢","Bonuses: hold Space at the ☕ grinder · 🍬 candy bar: $1.00 ±3¢"]],
+      rules:["Big things fill the cart fast 🦃🧀","🎈 inflatables pay out at the end","What's in your cart at the buzzer counts"]},
     dungeon:{n:"Dungeon",i:"🗡",goal:"Clear the rooms. Most spiders wins. 🕷",
       how:[["Stick: move · tap SWORD to swing","Arrows / WASD move · Space swings"],"Swing ON the beat ♩ = CRIT (double)",["Hold SWORD to charge · let go: SPIN","Hold Space to charge · let go: SPIN"],["Hold BLOCK: shield up · ROLL: dodge","Hold E: shield up · Q / Shift: roll"]],
       rules:["Spiders hop on the beat ♩","Touch one = −1 ♥ (3)","Shield stops bites from the front"]},
@@ -162,6 +165,20 @@ var EXPLAIN=(function(){
   /* fishing: swoop to cast (the power bar is the fish), wait, ❗ jerk, spin the reel to the beat, watch the tension, net it */
   function fishPx(x,y,len,col){x=Math.round(x);y=Math.round(y);ell(col,x,y,len,Math.max(2,len*0.32));R("#fff",x+len-4,y-1,1,1);R(col,x-len-5,y-4,3,3);R(col,x-len-5,y+2,3,3);R(col,x-len-3,y-2,3,5);R("#cfe8ff",x+len,y,6,1);}
   /* pool fishing: cast from the edge of the pool, then the reel box: hold to rise, the stick slides, stay on the fish, net it */
+  /* the supermarket: push the cart down an aisle, grab a turkey (+$30, the cart fills), push it to the checkout: banked */
+  function d_sweep(t){var T=t%8,cap="";R("#e9e6dc",0,0,W,H);for(var y=0;y<H;y+=16)for(var x=0;x<W;x+=16)if(((x+y)/16)%2<1)R("#d8d4c8",x,y,16,16);
+    R("#7a8aa8",0,0,W,18);R("#f4f4f4",0,18,W,8);R("#f5c518",30,19,10,6);R("#9a3a2a",60,17,5,9);R("#f5c518",90,19,10,6);
+    R("#8a6a4a",70,40,14,62);R("#8a6a4a",170,40,14,62);for(var i=0;i<5;i++){R("#f4f1e8",160,46+i*11,9,7);R("#3a62c9",160,49+i*11,9,2);R(["#f5c518","#e0302a","#9fd8ff"][i%3],86,46+i*11,7,7);}
+    R("rgba(156,255,74,.35)",8,110,90,14);R("#2a2f45",30,111,4,12);R("#2a2f45",60,111,4,12);
+    var px,py,fill=0;if(T<2){px=126;py=110-T*30;}else if(T<3.2){px=126;py=50;}else if(T<5.6){var k=(T-3.2)/2.4;px=126-k*70;py=50+k*66;}else{px=56;py=116;}
+    if(T>=2.6)fill=4;
+    var cx=px,cy=py-(T<3.2?10:-10);R("#d7dce8",cx-9,cy-6,18,12);R("#3a4256",cx-8,cy-5,16,10);if(fill)R("#f4f1e8",cx-6,cy-3,8,6);R("#d03a3a",cx-2,cy+(T<3.2?5:-7),4,3);
+    av(0,px,py,1.4,{dir:T<3.2?2:4,armL:1.1,armR:-1.1});
+    if(T<2)cap="1  PUSH YOUR CART";
+    else if(T<3.2){cap="2  GRAB!";R(COL.yel,226,104,18,18);finger(235,113,true);if(T>2.6)pop("+$30",150,40,T-2.6);}
+    else if(T<5.6)cap="3  TO THE CHECKOUT";
+    else{cap="4  BANKED! NEW CART";pop("+$30",56,96,T-5.6);}
+    if(cap)badge(cap,COL.cyan);}
   /* the dungeon: walk up to a spider, swing (a swoosh), then hold, sparkle, and spin */
   function d_dungeon(t){var T=t%8,cap="";R("#2a2438",0,0,W,H);for(var y=24;y<H;y+=16)for(var x=0;x<W;x+=16)R(((x+y)/16)%2?"#322b44":"#2d2640",x+1,y+1,14,14);R("#4a3f63",0,0,W,24);R("#1a1426",0,24,W,3);
     var px=40+Math.min(1,T/1.5)*70,py=96;av(0,px,py,1.5,{dir:1,armL:0.3,armR:T>1.6&&T<2.1?-2.6:-0.4});
@@ -347,7 +364,7 @@ var EXPLAIN=(function(){
     R("rgba(255,255,255,.08)",120,110,16,16);g.fillStyle=["#FF4D6D","#F5C518","#4CC38A","#3DF2FF","#D354A0"][Math.floor(t*4)%5];g.fillRect(122,112,12,12);TX("?",128,113,1,"#fff","center");
     if(u<0.25)pop("LAUNCH: hold, aim…",150,40,0.2,"#3DF2FF",1);else if(u<0.45)pop("…let go!",120,40,0.2,COL.yel,1);else if(u>=0.6&&u<0.75)pop("IMPACT! FLAG HOME",110,30,(u-0.6)/0.15*0.6,COL.red,1);
     TX("RED",90,6,2,COL.red,"center");TX("0",128,6,2,"#fff","center");TX("BLUE",166,6,2,COL.blu,"center");}
-  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:d_ice,keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf,kflag:d_kflag,fish:d_fish,pond:d_pond,dungeon:d_dungeon,boats:d_boats,swim:d_swim,ball:d_ball,dragon:d_dragon};
+  var DEMOS={step:d_step,aim:d_aim,keys:d_keys,keys4:d_keys4,free:d_free,mosh:d_mosh,skate:function(t){d_skate(t,false);},ice:d_ice,keepy:d_keepy,kart:d_kart,walk:d_walk,pipe:d_pipe,ski:d_ski,ctf:d_ctf,kflag:d_kflag,fish:d_fish,pond:d_pond,sweep:d_sweep,dungeon:d_dungeon,boats:d_boats,swim:d_swim,ball:d_ball,dragon:d_dragon};
 
   /* ---------- the card ---------- */
   var CSS="#explain{display:none;position:fixed;left:0;right:0;bottom:0;top:0;z-index:60;background:none;pointer-events:none;align-items:flex-start;justify-content:center;padding:4px 10px 10px;box-sizing:border-box;-webkit-tap-highlight-color:transparent}"+

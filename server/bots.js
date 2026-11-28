@@ -51,7 +51,7 @@ module.exports = function(api) {
     b.send = function(data) { try { hear(b, JSON.parse(data)); } catch (e) {} };
     b.act = function(msg) { if (b.room && rooms[b.room]) api.onMessage(b, Buffer.from(JSON.stringify(msg)), false); };
     var now = Date.now();
-    b.nextMove = now + wait(1000, 5000); b.nextChat = now + wait(15000, 45000) / b.chat; b.nextReact = now + wait(5000, 15000); b.nextDance = now + wait(8000, 30000);
+    b.nextMove = now + wait(1000, 5000); b.nextChat = now + wait(40000, 90000) / b.chat; b.nextReact = now + wait(5000, 15000); b.nextDance = now + wait(8000, 30000);
     api.onMessage(b, Buffer.from(JSON.stringify({ type: "join-room", room: code, name: name, color: as ? (as.color || pick(COLORS)) : pick(COLORS), look: as && as.look ? as.look : randomLook() })), false);
     if (!b.viewerId) return null;
     var me = r.viewers.get(b.viewerId); if (me) { b.x = me.x; b.y = me.y; }
@@ -97,7 +97,7 @@ module.exports = function(api) {
         var rd = b.rd; rd.phase = m.phase; rd.mode = m.mode || rd.mode; rd.battle = !!m.battle; if (m.chart) rd.chart = m.chart;
         if (m.phase === "play") { rd.playAt = Date.now() - (+m.pos || 0); if (m.b) rd.b = m.b; }
         if (m.phase === "vote") { rd.dancers = m.dancers || []; rd.voteAt = Date.now() + rnd(2000, 9000); }
-        if (fresh && Math.random() < 0.35) setTimeout(function() { say(b, pick(CHAT.round)); }, rnd(800, 5000));
+        if (fresh && Math.random() < 0.15) setTimeout(function() { say(b, pick(CHAT.round)); }, rnd(800, 5000));
       } else { endRound(b); }
     }
     if (m.type === "battle" && b.rd && m.b) b.rd.b = m.b;
@@ -143,7 +143,7 @@ module.exports = function(api) {
     if (now > b.nextChat) {
       var lines = rd && rd.phase === "vote" ? CHAT.vote : songOn ? CHAT.song : CHAT.hang;
       if (!playing || Math.random() < 0.3) say(b, pick(lines));
-      b.nextChat = now + wait(50000, 150000) / b.chat;
+      b.nextChat = now + wait(120000, 300000) / b.chat;   /* about every 2-5 minutes each */
     }
     /* react while music is on */
     if (songOn && now > b.nextReact) { b.act({ type: "react", k: pick(REACTS) }); b.nextReact = now + wait(7000, 22000); }

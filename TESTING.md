@@ -1688,6 +1688,55 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.174 — Bots: wander after a game, talk less, chat stays out of the log
+
+**Needs a Render redeploy** (bot chat flag + chat timing on the server).
+
+1. Practice: after a game ends, the practice dancers walk around the dance floor at a walking pace (to a spot, hang there a few seconds, walk on) instead of standing where the game left them.
+2. In a room with the server's bots: they talk about half as often (each one every 2–5 minutes, rarely at the start of a round).
+3. A bot's chat shows as a speech bubble over them only; it doesn't go into the chat Log. Real people's chat still goes in the log.
+4. Fix (from v1.82.172): every game's countdown card threw an error after Supermarket sweep was added. Rounds start normally again.
+
+## v1.82.173 — Dungeon: sword and shield in hand the whole time
+
+1. In the dungeon you always hold the sword (blade down, in the right hand) and the shield (on the left arm, at your side), in all 8 directions, walking or standing.
+2. Hold **BLOCK** (E): the shield comes up in front. Spiders that hit you from the front glance off (CLANG!, no heart lost); from behind they still bite.
+3. Swinging and the spin attack work as before (the sword leaves the rest pose for the swing). Rolling and being down hide them for a moment.
+
+## v1.82.172 — New minigame: Supermarket sweep 🛒
+
+**Needs a Render redeploy** (the server has to know the new game).
+
+Practice → pick **Supermarket sweep** (Ride group), or it turns up in game votes.
+
+1. The floor becomes a supermarket seen from above. Everyone starts at the front with a cart.
+2. The store: the **deli** across the back (cheese wheels, cheese blocks, jumbo salamis hanging over the counter); the **meat case** down the far right (turkeys, beef, chicken) with the **freezer** next to it (frozen turkeys, pizza, ice cream); the **coffee** aisle next (with the red **coffee grinder**); the **snacks** aisle next (with the **candy bar** bins); grocery and health & baby (diapers, vitamins) on the left.
+3. **GRAB** (button / Space): the item in front of you (it's ringed in gold with its price). With your cart right there → straight into the cart. Otherwise you pop off the cart and carry it overhead → walk back and GRAB at your cart to drop it in.
+4. **CART** (button / E): let go of the cart, or take it back.
+5. The cart fills by size (turkey 4, cheese wheel 5, coffee 1… holds 16). "CART FULL" → push it into the green **CHECKOUT** lanes at the front: banked, and you get a new cart.
+6. **Coffee grinder**: stand at it and hold GRAB 3 s → +$100 (once).
+7. **Candy bar**: hold GRAB to scoop (it pours unevenly), let go to weigh. **$0.97–$1.03** → +$100. Over → tipped out, try again. Under → keep scooping.
+8. **Inflatable bonuses** (banana, bottle, turkey, cheese) float around the store: grab them like anything else; their prize ($50–$250) is only revealed at the end.
+9. **The buzzer**: whatever's still in your cart counts, and the inflatables pay out.
+10. Practice bots shop the aisles and bank their carts. Other players' carts show in front of them; when they're carrying something it's over their head.
+11. On a phone the checkouts are in the gap between the stick and the buttons, so nothing's hidden under the controls.
+
+## v1.82.171 — Game vote: 20 s after the first, 🎲 Random and a spinning wheel
+
+**Needs a Render redeploy** (the server picks the random game).
+
+1. The first game vote of a show is 25 s; every vote after that (the 2nd song on, and mid-song votes) is **20 s**.
+2. Every game vote has a **🎲 Random: spin the wheel** choice (on phones under the six games; on the TV its votes show in the heading).
+3. If Random wins, nobody votes, or it's a tie: **the wheel spins**. A gold frame and ▼ arrow hop along the tops of the games, fast then slowing, and land on one (about 3.5 s). A tie spins between the tied games only. On phones the list hops the same way.
+4. The landed game then plays: the game waits for the wheel to land before starting.
+
+## v1.82.170 — Party: longer game vote, two games for 2:45+ songs, bots fill to 4
+
+1. The game vote before each song now lasts **25 s** (was 15) — six panels to look at.
+2. Songs **2:45 or longer** get two games (was 3:00, so "3-minute" songs at 2:58 got one). YouTube songs whose length isn't known yet get pairs offered; if the song turns out short, just the first game of the pair plays. At a party, the pre-played YouTube copy usually knows the real length already.
+3. **Bots**: a party now fills to **4 players** with bots by default (you + 3 bots); they leave as real people join. 🎉 HOST → "BOTS: FILL THE ROOM TO" → Off / 4 / 6 / 8 players (remembered on that phone).
+4. The selected show length and bot setting are now highlighted in the panel.
+
 ## v1.82.169 — One Host button: just phones, phones + a TV, or a computer
 
 **Needs a Render redeploy** (the party remembers whether there's a TV).
