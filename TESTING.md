@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.187 — The Big Sweep: never stuck holding something the cart can't take
+
+1. You can't pick something up into your hands if your cart couldn't take it anyway (cart full, or already 5 of that item): it tells you why instead.
+2. Holding something and the cart's full (or at the limit for it): GRAB at the cart puts it back on its shelf ("CART FULL · PUT IT BACK") and your hands are free.
+3. CART while holding something, anywhere: puts it back (and by the cart, takes the cart). The tip over your head says so ("WON'T FIT · GRAB TO PUT IT BACK", "CART = PUT IT BACK").
+4. A put-back item goes back on its spot (the ×count goes back up).
+
 ## v1.82.186 — UAT fixes: hint overlaps, kart HUD, the carried item
 
 1. Bumper boats and coin dive: the how-to line sits under the standings box (it was behind it and cut off) and wraps instead of being cut short.
