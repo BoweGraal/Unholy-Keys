@@ -28,13 +28,13 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.170"></script>
-<script src="px8.js?v=1.82.170"></script>
-<script src="art.js?v=1.82.170"></script>
-<script src="qr.js?v=1.82.170"></script>
-<script src="voice.js?v=1.82.170"></script>
-<script src="instruments.js?v=1.82.170"></script>
-<script src="kart.js?v=1.82.170"></script>
+<script src="gfx.js?v=1.82.171"></script>
+<script src="px8.js?v=1.82.171"></script>
+<script src="art.js?v=1.82.171"></script>
+<script src="qr.js?v=1.82.171"></script>
+<script src="voice.js?v=1.82.171"></script>
+<script src="instruments.js?v=1.82.171"></script>
+<script src="kart.js?v=1.82.171"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5034,7 +5034,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.170",SERVER_VERSION="";
+var PAGE_VERSION="1.82.171",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5867,7 +5867,7 @@ var LSET=(function(){
     function playItem(it,delay){if(!it)return;toPick(it).then(function(o){
         var ix=queue.indexOf(it);if(ix>=0){queue.splice(ix,1);save();}pendingIt=it;
         showJamToast("NEXT: "+it.title,"#F5C518",2200);render2();
-        if(cfg.voteGame&&liveOn){var gen0=showGen;durOf(o).then(function(D){if(gen0!==showGen)return;var pairs=D>=165000||!D;   /* 2:45 or longer plays two games; length not known yet (YouTube): offer pairs, a short song keeps just the first */ROUNDS.preVote(function(rank){if(gen0!==showGen)return;if(rank&&rank.length){games=rank[0].indexOf("+")>0?rank[0].split("+"):pairs?rank.slice(0,2):rank.slice(0,2);game=games[0];}else{games=["crowd"];game="crowd";}choose(o);start();},pairs);});return;}   /* the crowd votes the games first: the top 2 (just 1 for a song under 3 min) */
+        if(cfg.voteGame&&liveOn){var gen0=showGen;durOf(o).then(function(D){if(gen0!==showGen)return;var pairs=D>=165000||!D;   /* 2:45 or longer plays two games; length not known yet (YouTube): offer pairs, a short song keeps just the first */ROUNDS.preVote(function(rank){if(gen0!==showGen)return;if(rank&&rank.length){games=rank[0].indexOf("+")>0?rank[0].split("+"):pairs?rank.slice(0,2):rank.slice(0,2);game=games[0];}else{games=["crowd"];game="crowd";}choose(o);start();},pairs,show.on&&show.i===0?25000:20000);});return;}   /* the crowd votes the games first: the top 2 (just 1 for a song under 3 min) */
         var gen1=showGen;choose(o);setTimeout(function(){if(gen1===showGen)start();},delay||0);})
       .catch(function(e){showJamToast(e&&e.message?e.message:"Couldn't load that song","#ff8a8a",2500);var ix=queue.indexOf(it);if(ix>=0){queue.splice(ix,1);save();}render2();});}
     /* a song from the queue started: it's in tonight's history */
@@ -7107,7 +7107,7 @@ var ROUNDS=(function(){
      song: as long as fits, up to 90), starts after a free dance intro on a bar or part change, and the second one comes after a
      short break (the first one's results show then). What's left over is free dance between and at the end. */
   var set=null,fullShow=false,gv=null;
-  var GAME_MIN=60000,GAME_MAX=90000,VOTE_MS=15000,PRE_VOTE_MS=25000,ALLG=["step","aim","keys","keys4","mosh","skate","ice","keepy","kart","walk","pipe","ski","ctf","kflag","fish","pond","dungeon","boats","swim","ball","dragon"],LINK2={"ice>ski":["ice","ski"],"fish>boats":["fish","boats"]};
+  var GAME_MIN=60000,GAME_MAX=90000,VOTE_MS=20000,PRE_VOTE_MS=25000,SPIN_MS=3400,ALLG=["step","aim","keys","keys4","mosh","skate","ice","keepy","kart","walk","pipe","ski","ctf","kflag","fish","pond","dungeon","boats","swim","ball","dragon"],LINK2={"ice>ski":["ice","ski"],"fish>boats":["fish","boats"]};
   /* the full show: games already played this show (kept on this computer until New show) */
   function played(){try{var a=JSON.parse(localStorage.getItem("uk_showplayed")||"[]");return Array.isArray(a)?a.filter(function(x){return ALLG.indexOf(x)>=0;}):[];}catch(e){return [];}}
   function markPlayed(m){if(!fullShow)return;var a=played();if(a.indexOf(m)<0)a.push(m);try{localStorage.setItem("uk_showplayed",JSON.stringify(a));}catch(e){}}
@@ -7117,24 +7117,25 @@ var ROUNDS=(function(){
     var taken=set?set.plan.map(function(q){return q.mode;}):[],pool=ALLG.filter(function(m){return m!=="kflag"&&taken.indexOf(m)<0&&(!fullShow||played().indexOf(m)<0);});
     if(pool.length<2){if(fullShow){resetPlayed();status("Every game has been played this show, so they're all back in the vote.");}pool=ALLG.filter(function(m){return m!=="kflag"&&taken.indexOf(m)<0;});}   /* Kart flag takes a whole song, so it is not in the mid-song vote */
     for(var k=pool.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1)),t=pool[k];pool[k]=pool[j];pool[j]=t;}
-    if(!pairs)return pool.slice(0,6);   /* six panels */
+    if(!pairs)return pool.slice(0,6).concat(["rand"]);   /* six panels, and 🎲 Random */
     var out=[],seen={},tries=0;   /* a long song plays two games: each panel is a pair, every game used once if there are enough */
     for(var a=0;a+1<pool.length&&out.length<6;a+=2){out.push(pool[a]+"+"+pool[a+1]);seen[pool[a]+"+"+pool[a+1]]=1;}
     while(out.length<6&&pool.length>=2&&tries++<200){var x=pool[Math.floor(Math.random()*pool.length)],y=pool[Math.floor(Math.random()*pool.length)];if(x===y||seen[x+"+"+y]||seen[y+"+"+x])continue;seen[x+"+"+y]=1;out.push(x+"+"+y);}
-    return out;
+    return out.concat(["rand"]);
   }
   /* before a song from the playlist: the room votes on the games; the ranking (most votes first, ties drawn at random) comes back,
      and the top one or two are played in that order */
   var pre=null;
-  function preVote(cb,pairs){if(typeof liveOn==="undefined"||!liveOn){cb(null);return;}var op=voteOpts(!!pairs);if(pre)clearTimeout(pre.to);
-    pre={cb:cb,opts:op,to:setTimeout(function(){finishPre(null);},PRE_VOTE_MS+6000)};liveSend({type:"gvote-open",opts:op,ms:PRE_VOTE_MS});   /* six panels to look at: 25 s */showJamToast("\uD83D\uDDF3 VOTE: THE GAMES","#D354A0",1800);}
-  function finishPre(counts){var p=pre;if(!p)return;pre=null;clearTimeout(p.to);
-    var rank=p.opts.map(function(m,i){return{m:m,c:counts?(counts[i]||0):0,r:Math.random()};}).sort(function(a,b){return b.c-a.c||a.r-b.r;}).map(function(x){return x.m;});
-    p.cb(rank);}
+  function preVote(cb,pairs,ms){if(typeof liveOn==="undefined"||!liveOn){cb(null);return;}var op=voteOpts(!!pairs);if(pre)clearTimeout(pre.to);var VMS=ms||PRE_VOTE_MS;
+    pre={cb:cb,opts:op,to:setTimeout(function(){finishPre(null);},VMS+6000)};liveSend({type:"gvote-open",opts:op,ms:VMS});   /* the first vote of a show 25 s, the rest 20 s */showJamToast("\uD83D\uDDF3 VOTE: THE GAMES","#D354A0",1800);}
+  function finishPre(counts,win,spin){var p=pre;if(!p)return;pre=null;clearTimeout(p.to);
+    var rank=p.opts.map(function(m,i){return{m:m,c:counts?(counts[i]||0):0,r:Math.random()};}).filter(function(x){return x.m!=="rand";}).sort(function(a,b){return b.c-a.c||a.r-b.r;}).map(function(x){return x.m;});
+    if(win&&win!=="rand"){rank=[win].concat(rank.filter(function(m){return m!==win;}));}   /* the server's pick (a spin lands on a game) */
+    if(spin)setTimeout(function(){p.cb(rank);},SPIN_MS+700);else p.cb(rank);}   /* let the wheel land first */
   function onGvote(m){
     if(m.cancel){gv=null;return;}
-    gv={id:m.id,opts:(m.opts||[]).slice(0,6),counts:(m.counts||[]).slice(0,6),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
-    if(pre&&gv.done&&gv.opts.join()===pre.opts.join()){finishPre(gv.counts);return;}
+    gv={id:m.id,opts:(m.opts||[]).slice(0,7),counts:(m.counts||[]).slice(0,7),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
+    if(pre&&gv.done&&gv.opts.join()===pre.opts.join()){finishPre(gv.counts,gv.win,!!m.spin);return;}
     if(set&&gv.done&&ALLG.indexOf(gv.win)>=0)set.plan.forEach(function(q){if(q.voting&&q.voteId===gv.id){q.voting=false;q.mode=gv.win;}});
     setTick();
   }

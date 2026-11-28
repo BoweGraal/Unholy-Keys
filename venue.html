@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.170"></script>
-<script src="tune.js?v=1.82.170"></script>
-<script src="gfx.js?v=1.82.170"></script>
-<script src="art.js?v=1.82.170"></script>
-<script src="qr.js?v=1.82.170"></script>
-<script src="voice.js?v=1.82.170"></script>
-<script src="instruments.js?v=1.82.170"></script>
-<script src="kart.js?v=1.82.170"></script>
-<script src="explain.js?v=1.82.170"></script>
+<script src="px8.js?v=1.82.171"></script>
+<script src="tune.js?v=1.82.171"></script>
+<script src="gfx.js?v=1.82.171"></script>
+<script src="art.js?v=1.82.171"></script>
+<script src="qr.js?v=1.82.171"></script>
+<script src="voice.js?v=1.82.171"></script>
+<script src="instruments.js?v=1.82.171"></script>
+<script src="kart.js?v=1.82.171"></script>
+<script src="explain.js?v=1.82.171"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -888,6 +888,9 @@ body.chat-open #chatInput #chatLogBtn{border-color:var(--pk);color:var(--pk)}
 #gvTv .gtH{font:700 3.2vh 'Silkscreen',ui-monospace,monospace;color:#F5C518;text-align:center;margin-bottom:1.6vh;text-shadow:3px 3px 0 #000}
 #gvTv .gtG{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:1.6vh 1.4vw;min-height:0}
 #gvTv .gtT{display:flex;flex-direction:column;background:#1f1836;border:3px solid #4a3f78;padding:.8vh;min-height:0;transition:opacity .4s,transform .4s}
+#gvTv .gtT{position:relative}#gvTv .gtA{position:absolute;left:50%;top:-3.4vh;transform:translateX(-50%);font:700 3vh 'Silkscreen',ui-monospace,monospace;color:#F5C518;text-shadow:2px 2px 0 #000;display:none}
+#gvTv .gtT.spin{border-color:#F5C518;box-shadow:0 0 0 3px #F5C518}#gvTv .gtT.spin .gtA,#gvTv .gtT.win .gtA{display:block}
+#gvPanel .gvB.spin{outline:3px solid #F5C518;background:#3a3000}#gvPanel .gvB.spin::before{content:"\25B6";position:absolute;left:-14px;top:50%;transform:translateY(-50%);color:#F5C518}#gvPanel .gvB{position:relative}#gvPanel .gvB.rand span{color:#F5C518}
 #gvTv .gtT.win{border-color:#F5C518;transform:scale(1.04);box-shadow:0 0 0 3px #F5C518}
 #gvTv .gtT.lose{opacity:.35}
 #gvTv .gtV{flex:1;display:flex;gap:.5vw;min-height:0;align-items:center;justify-content:center}
@@ -2387,14 +2390,21 @@ function connectWS(){
 /* ── The crowd picks the next game: a vote panel with the choices, live counts and a timer ── */
 var GVOTE=(function(){
   var NM={ctf:"\uD83D\uDEA9 Capture the flag",kflag:"\uD83C\uDFCE\uFE0F Kart flag",step:"\u2B06\uFE0F Step dance",aim:"\uD83C\uDFAF Target dance",keys:"\uD83C\uDFB9 Note highway",keys4:"\uD83E\uDD41 Highway \u00B7 4 keys",mosh:"\uD83E\uDD18 Mosh pit",skate:"\uD83D\uDEFC Roller rink",ice:"\u26F8\uFE0F Ice rink",keepy:"\uD83C\uDF88 Keepy uppy",kart:"\uD83C\uDFCD Mars Rally",walk:"\uD83D\uDC83 Dance walk race",pipe:"\uD83D\uDEF9 Half pipe",ski:"\u26F7 Ski",fish:"\uD83C\uDFA3 Fishing",pond:"\uD83C\uDFA3 Pool fishing",dungeon:"\uD83D\uDDE1 Dungeon",boats:"\uD83D\uDEA4 Bumper boats",ball:"\u26AA Ball run",dragon:"\uD83D\uDC09 Dragon riders",swim:"\uD83D\uDC20 Coin dive"};
-  var st=null,mine=null,tmr=null,hideT=null;
+  var st=null,mine=null,tmr=null,hideT=null,SPIN_MS=3400;
+  /* the wheel: an arrow hops along the tops of the games, quick then slowing, and lands on the one picked */
+  function spinPlan(){var g=[];st.opts.forEach(function(m,k){if(m!=="rand")g.push(k);});var wk=g.indexOf(st.opts.indexOf(st.win));if(wk<0)wk=0;
+    var hops=g.length*2+((wk-0+g.length)%g.length)+1,ts=[],t=0,d=55;for(var i=0;i<hops;i++){ts.push(t);t+=d;d*=1.13;}
+    var sc=SPIN_MS/t;st.spinTs=ts.map(function(x){return x*sc;});st.spinG=g;st.spinN=hops;}
+  function spinK(){if(!st||!st.spin)return -1;var e=performance.now()-st.spinAt;if(e>=SPIN_MS)return -1;var i=0;while(i+1<st.spinN&&st.spinTs[i+1]<=e)i++;return st.spinG[i%st.spinG.length];}
+  function spinning(){return !!(st&&st.spin&&performance.now()-st.spinAt<SPIN_MS);}
   function el(){var p=document.getElementById("gvPanel");if(!p){p=document.createElement("div");p.id="gvPanel";document.body.appendChild(p);}return p;}
   function draw(){var p=el();if(!st){p.className="";return;}
     var left=Math.max(0,Math.ceil((st.left-(performance.now()-st.at))/1000)),tot=st.counts.reduce(function(a,b){return a+b;},0);
-    p.textContent="";var h=document.createElement("div");h.className="gvH";h.textContent=st.done?(st.song?"NEXT SONG":"NEXT UP"):st.song?"\uD83D\uDDF3 PICK THE NEXT SONG":st.opts.some(function(x){return String(x).indexOf("+")>0;})?"\uD83D\uDDF3 PICK THE NEXT 2 GAMES":"\uD83D\uDDF3 PICK THE NEXT GAME";p.appendChild(h);
-    st.opts.forEach(function(m,k){var key=st.song?k:m;var b=document.createElement("button");b.className="gvB"+(mine===key?" me":"")+(st.done?(key===st.win?" win":" lose"):"");
+    var sk=spinK(),spn=sk>=0;
+    p.textContent="";var h=document.createElement("div");h.className="gvH";h.textContent=spn?"\uD83C\uDFB2 SPINNING…":st.done?(st.song?"NEXT SONG":"NEXT UP"):st.song?"\uD83D\uDDF3 PICK THE NEXT SONG":st.opts.some(function(x){return String(x).indexOf("+")>0;})?"\uD83D\uDDF3 PICK THE NEXT 2 GAMES":"\uD83D\uDDF3 PICK THE NEXT GAME";p.appendChild(h);
+    st.opts.forEach(function(m,k){var key=st.song?k:m;var b=document.createElement("button");b.className="gvB"+(mine===key?" me":"")+(spn?(k===sk?" spin":""):st.done?(key===st.win?" win":" lose"):"")+(m==="rand"?" rand":"");
       var bar=document.createElement("i");bar.style.width=(tot?Math.round(st.counts[k]/tot*100):0)+"%";b.appendChild(bar);
-      var n=document.createElement("span");n.textContent=String(m).split("+").map(function(x){return NM[x]||x;}).join("\n+ ");if(String(m).indexOf("+")>0)b.classList.add("pair");b.appendChild(n);var c=document.createElement("b");c.textContent=String(st.counts[k]||0);b.appendChild(c);
+      var n=document.createElement("span");n.textContent=m==="rand"?"\uD83C\uDFB2 Random: spin the wheel":String(m).split("+").map(function(x){return NM[x]||x;}).join("\n+ ");if(String(m).indexOf("+")>0)b.classList.add("pair");b.appendChild(n);var c=document.createElement("b");c.textContent=String(st.counts[k]||0);b.appendChild(c);
       if(st.song)n.textContent=String(m).replace(/\s+-\s+[A-G][#b]?(\s+[A-G][#b])?\s+[A-Za-z]+(\s+[a-z]+)?(\.[A-G][#b]?\s+[A-Za-z]+)?\s*$/,"");   /* hide the key in the name */
       if(!st.done)b.onclick=function(e){e.stopPropagation();mine=key;wsSend(st.song?{type:"svote-pick",k:k}:{type:"gvote-pick",m:m});draw();};p.appendChild(b);});
     var f=document.createElement("div");f.className="gvF";f.textContent=st.done?"":left+" s left"+(mine?"":" \u00B7 tap one");p.appendChild(f);
@@ -2402,10 +2412,12 @@ var GVOTE=(function(){
   function on(m,song){
     song=!!song;if(m.cancel){if(!st||st.song===song){st=null;clearInterval(tmr);draw();}return;}
     if(!st||st.id!==m.id||st.song!==song)mine=null;
-    st={song:song,id:m.id,opts:(m.opts||[]).slice(0,6),counts:(m.counts||[]).slice(0,6).map(function(x){return +x||0;}),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
+    var was=st&&st.id===m.id&&st.song===song?st:null;
+    st={song:song,id:m.id,opts:(m.opts||[]).slice(0,7),counts:(m.counts||[]).slice(0,7).map(function(x){return +x||0;}),left:+m.left||0,at:performance.now(),done:!!m.done,win:m.win};
+    if(st.done&&m.spin&&!song){if(was&&was.spin){st.spin=true;st.spinAt=was.spinAt;st.spinTs=was.spinTs;st.spinG=was.spinG;st.spinN=was.spinN;}else{st.spin=true;st.spinAt=performance.now();spinPlan();}}
     clearInterval(tmr);clearTimeout(hideT);draw();
     if(!st.done&&!TVSCREEN){var sr=document.getElementById("songReq");if(sr&&sr.classList.contains("on")){var cb=sr.querySelector(".sr-close,[data-close],#srClose");if(cb)cb.click();else sr.classList.remove("on");}}   /* a vote opened: the song box gets out of the way */
-    if(st.done)hideT=setTimeout(function(){st=null;draw();},4500);else tmr=setInterval(draw,500);
+    if(st.done){if(st.spin){tmr=setInterval(function(){draw();if(!spinning()){clearInterval(tmr);draw();}},40);}hideT=setTimeout(function(){st=null;draw();},4500+(st.spin?SPIN_MS:0));}else tmr=setInterval(draw,500);
   }
   /* ---- the TV: six live previews, each with its votes, so the room can see what they're picking ---- */
   var tvRaf=0,tvT0=0;
@@ -2413,7 +2425,8 @@ var GVOTE=(function(){
   function tvBuild(){var p=tvEl();p.textContent="";
     var h=document.createElement("div");h.className="gtH";p.appendChild(h);
     var grid=document.createElement("div");grid.className="gtG";p.appendChild(grid);
-    st.opts.forEach(function(m,k){var ms=String(m).split("+"),tile=document.createElement("div");tile.className="gtT";tile.setAttribute("data-k",k);
+    st.opts.forEach(function(m,k){if(m==="rand")return;var ms=String(m).split("+"),tile=document.createElement("div");tile.className="gtT";tile.setAttribute("data-k",k);
+      var ar=document.createElement("div");ar.className="gtA";ar.textContent="\u25BC";tile.appendChild(ar);
       var vw=document.createElement("div");vw.className="gtV"+(ms.length>1?" two":"");ms.forEach(function(x){var c=document.createElement("canvas");c.width=256;c.height=144;c.setAttribute("data-m",x);vw.appendChild(c);});tile.appendChild(vw);
       var nm=document.createElement("div");nm.className="gtN";nm.textContent=ms.map(function(x){return NM[x]||x;}).join("  +  ");tile.appendChild(nm);
       var bar=document.createElement("div");bar.className="gtB";bar.appendChild(document.createElement("i"));var c=document.createElement("b");bar.appendChild(c);tile.appendChild(bar);
@@ -2422,10 +2435,11 @@ var GVOTE=(function(){
   function tvDraw(){var p=document.getElementById("gvTv");if(!st||st.song){if(p)p.className="";if(tvRaf){cancelAnimationFrame(tvRaf);tvRaf=0;}return;}
     if(!p||p.getAttribute("data-id")!==String(st.id)){tvBuild();tvT0=performance.now();p=tvEl();}
     var left=Math.max(0,Math.ceil((st.left-(performance.now()-st.at))/1000)),tot=st.counts.reduce(function(a,b){return a+b;},0),pair=st.opts.some(function(x){return String(x).indexOf("+")>0;});
-    p.querySelector(".gtH").textContent=st.done?"NEXT UP: "+String(st.win||"").split("+").map(function(x){return NM[x]||x;}).join(" + "):"\uD83D\uDDF3 VOTE ON YOUR PHONE \u00B7 "+(pair?"THE NEXT 2 GAMES":"THE NEXT GAME")+" \u00B7 "+left+" s";
+    var sk=spinK(),spn=sk>=0,ri=st.opts.indexOf("rand"),rv=ri>=0?st.counts[ri]||0:0;
+    p.querySelector(".gtH").textContent=spn?"\uD83C\uDFB2 SPINNING…":st.done?(st.spin?"\uD83C\uDFB2 ":"")+"NEXT UP: "+String(st.win||"").split("+").map(function(x){return NM[x]||x;}).join(" + "):"\uD83D\uDDF3 VOTE ON YOUR PHONE \u00B7 "+(pair?"THE NEXT 2 GAMES":"THE NEXT GAME")+" \u00B7 "+left+" s"+(ri>=0?" \u00B7 \uD83C\uDFB2 RANDOM: "+rv:"");
     Array.prototype.forEach.call(p.querySelectorAll(".gtT"),function(tile){var k=+tile.getAttribute("data-k"),n=st.counts[k]||0;
       tile.querySelector(".gtB i").style.width=(tot?Math.round(n/tot*100):0)+"%";tile.querySelector(".gtB b").textContent=n+(n===1?" vote":" votes");
-      tile.className="gtT"+(st.done?(st.opts[k]===st.win?" win":" lose"):"");});
+      tile.className="gtT"+(spn?(k===sk?" spin":""):st.done?(st.opts[k]===st.win?" win":" lose"):"");});
     p.className="on";
     if(!tvRaf){var loop=function(){tvRaf=0;var q=document.getElementById("gvTv");if(!st||st.song||!q||!q.classList.contains("on"))return;var t=(performance.now()-tvT0)/1000;
       Array.prototype.forEach.call(q.querySelectorAll("canvas[data-m]"),function(c,i){try{EXPLAIN.paint(c.getContext("2d"),c.getAttribute("data-m"),t+i*0.7);}catch(e){}});
@@ -10062,7 +10076,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.170",SERVER_VERSION="";
+var PAGE_VERSION="1.82.171",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11380,7 +11394,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.170"></script>
+<script src="lab.js?v=1.82.171"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

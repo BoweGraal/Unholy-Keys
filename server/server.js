@@ -427,15 +427,15 @@ var GV_MODES = ["step", "aim", "keys", "keys4", "mosh", "skate", "ice", "keepy",
 function gvotePublic(g) {
   var c = g.opts.map(function() { return 0; });
   g.picks.forEach(function(m) { var i = g.opts.indexOf(m); if (i >= 0) c[i]++; });
-  return { type: "gvote", id: g.id, opts: g.opts, counts: c, left: Math.max(0, g.end - Date.now()), done: g.done, win: g.win };
+  return { type: "gvote", id: g.id, opts: g.opts, counts: c, left: Math.max(0, g.end - Date.now()), done: g.done, win: g.win, spin: g.spin ? 1 : 0 };
 }
 function gvoteTell(code, g) { var r = rooms[code]; if (!r) return; var p = gvotePublic(g); broadcast(code, p); if (r.performer) send(r.performer, p); }
 function gvoteStop(r) { if (r.gvote) { clearTimeout(r.gvote.timer); r.gvote = null; } }
 function gvoteOpen(code, msg) {
   var r = rooms[code]; if (!r) return;
   gvoteStop(r);
-  var gvOk = function(m) { if (typeof m !== "string") return false; var p = m.split("+"); return p.length <= 2 && p.every(function(x) { return GV_MODES.indexOf(x) >= 0; }) && (p.length < 2 || p[0] !== p[1]); };   /* one game, or a pair "mosh+ice" for a long song */
-  var opts = (Array.isArray(msg.opts) ? msg.opts : []).filter(function(m, i, a) { return gvOk(m) && a.indexOf(m) === i; }).slice(0, 6);
+  var gvOk = function(m) { if (m === "rand") return true; if (typeof m !== "string") return false; var p = m.split("+"); return p.length <= 2 && p.every(function(x) { return GV_MODES.indexOf(x) >= 0; }) && (p.length < 2 || p[0] !== p[1]); };   /* one game, or a pair "mosh+ice" for a long song */
+  var opts = (Array.isArray(msg.opts) ? msg.opts : []).filter(function(m, i, a) { return gvOk(m) && a.indexOf(m) === i; }).slice(0, 7);
   if (opts.length < 2) return;
   var ms = intIn(msg.ms, 5000, 60000, 15000);
   var g = r.gvote = { id: (r.gvoteN = (r.gvoteN || 0) + 1), opts: opts, picks: new Map(), end: Date.now() + ms, done: false, win: null };
@@ -454,7 +454,13 @@ function gvoteClose(code, g) {
   clearTimeout(g.timer); g.done = true;
   var c = gvotePublic(g).counts, best = -1, top = [];
   c.forEach(function(n, i) { if (n > best) { best = n; top = [i]; } else if (n === best) top.push(i); });
-  g.win = g.opts[top[Math.floor(Math.random() * top.length)]];
+  var games = g.opts.filter(function(m) { return m !== "rand"; });
+  var tied = top.map(function(i) { return g.opts[i]; }).filter(function(m) { return m !== "rand"; });
+  if (best <= 0 || top.length > 1 || g.opts[top[0]] === "rand") {   /* nobody voted, a tie, or Random won: the wheel spins */
+    g.spin = true;
+    var from = best > 0 && tied.length > 1 && g.opts[top[0]] !== "rand" && top.every(function(i) { return g.opts[i] !== "rand"; }) ? tied : games;
+    g.win = from[Math.floor(Math.random() * from.length)];
+  } else g.win = g.opts[top[0]];
   gvoteTell(code, g);
   setTimeout(function() { if (r.gvote === g) r.gvote = null; }, 8000);
 }
@@ -523,7 +529,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.170";
+var VERSION = "1.82.171";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);

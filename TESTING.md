@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.171 — Game vote: 20 s after the first, 🎲 Random and a spinning wheel
+
+**Needs a Render redeploy** (the server picks the random game).
+
+1. The first game vote of a show is 25 s; every vote after that (the 2nd song on, and mid-song votes) is **20 s**.
+2. Every game vote has a **🎲 Random: spin the wheel** choice (on phones under the six games; on the TV its votes show in the heading).
+3. If Random wins, nobody votes, or it's a tie: **the wheel spins**. A gold frame and ▼ arrow hop along the tops of the games, fast then slowing, and land on one (about 3.5 s). A tie spins between the tied games only. On phones the list hops the same way.
+4. The landed game then plays: the game waits for the wheel to land before starting.
+
 ## v1.82.170 — Party: longer game vote, two games for 2:45+ songs, bots fill to 4
 
 1. The game vote before each song now lasts **25 s** (was 15) — six panels to look at.
