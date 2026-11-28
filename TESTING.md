@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.180 — Supermarket sweep: bonuses are run to the front by hand
+
+1. GRAB an inflatable bonus: it always goes in your hands (even with your cart parked right there) and you carry it over your head: "🎈 GOT A BONUS → RUN IT TO THE FRONT!". Your cart stays where it is.
+2. Run it to the front of the store (the checkouts or the host): it's turned in automatically, the host cheers, "🎈 BONUS TURNED IN! (REVEALED AT THE END) · BACK TO YOUR CART". Then go back to your cart.
+3. You can't put a bonus in the cart; pressing GRAB anywhere else while carrying one reminds you to run it to the front.
+
 ## v1.82.179 — Fishing: power wheel instead of the BPM meter
 
 1. Reeling a fish in: the BPM box is gone. The reel's outer ring is now a **power wheel**: it fills clockwise as you wind faster (blue, then green = full power), with a **red zone** at the top end.

@@ -28,15 +28,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.179"></script>
-<script src="tune.js?v=1.82.179"></script>
-<script src="gfx.js?v=1.82.179"></script>
-<script src="art.js?v=1.82.179"></script>
-<script src="qr.js?v=1.82.179"></script>
-<script src="voice.js?v=1.82.179"></script>
-<script src="instruments.js?v=1.82.179"></script>
-<script src="kart.js?v=1.82.179"></script>
-<script src="explain.js?v=1.82.179"></script>
+<script src="px8.js?v=1.82.180"></script>
+<script src="tune.js?v=1.82.180"></script>
+<script src="gfx.js?v=1.82.180"></script>
+<script src="art.js?v=1.82.180"></script>
+<script src="qr.js?v=1.82.180"></script>
+<script src="voice.js?v=1.82.180"></script>
+<script src="instruments.js?v=1.82.180"></script>
+<script src="kart.js?v=1.82.180"></script>
+<script src="explain.js?v=1.82.180"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -6045,12 +6045,15 @@ var SWEEP=(function(){
   function capped(t){return t!=="inflate"&&cnt(t)>=PER;}
   function nearSlot(m){var best=null,bd=1e9,R=sc()*10;slots.forEach(function(s){if(s.n<=0)return;var d=dpx(s.x,s.y,m.x,m.y);if(d<R&&d<bd){bd=d;best=s;}});
     infl.forEach(function(o){if(o.got)return;var d=dpx(o.x,o.y,m.x,m.y);if(d<R*1.1&&d<bd){bd=d;best={x:o.x,y:o.y,t:"inflate",inf:o};}});return best;}
+  function atFront(m){return m.y>CHECK.y0-0.02||dpx(HOST.x,HOST.y,m.x,m.y)<sc()*16;}
+  function turnIn(m){bag.push(handsVal);hands=null;handsVal=0;cheer();pop("🎈 BONUS TURNED IN! (REVEALED AT THE END) · BACK TO YOUR CART","#ffe14a",m.x,m.y,1);hud();}
   function nearCart(m){return cart&&dpx(cart.x,cart.y,m.x,m.y)<sc()*13;}
   function atStation(m,st){return dpx(st.x,st.y,m.x,m.y)<sc()*11;}
   /* GRAB: by the grinder or the candy bar it starts the bonus (held); otherwise it takes / drops */
   function grabDown(){if(!on)return;var m=me();if(!m)return;grabHeld=true;var now=performance.now();
     if(!hands&&atStation(m,GRIND)&&!grind.done)return;   /* holding at the grinder grinds */
     if(!hands&&atStation(m,CANDY)&&!candy.done)return;   /* holding at the candy bar scoops */
+    if(hands==="inflate"){if(atFront(m))turnIn(m);else pop("🎈 RUN IT TO THE FRONT (THE HOST)","#ffe14a",m.x,m.y);return;}
     if(hands){if(nearCart(m)){if(capped(hands)){pop(PER+" "+T[hands].n.toUpperCase()+" IS THE LIMIT · BANK THIS CART FIRST","#ffd24a",m.x,m.y);return;}if(!room(hands)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}add(hands,hands==="inflate"?handsVal:0);pop(hands==="inflate"?"🎈 IN THE CART":"+$"+T[hands].v,"#9cff4a",cart.x,cart.y);hands=null;handsVal=0;hud();}
       else pop("WALK TO YOUR CART","#ffd24a",m.x,m.y);return;}
     if(cart.att){cart.att=false;nextSweep=now+350;pop(nearSlot(m)?"PARKED · GRAB TO LOAD IT":"PARKED","#cfe3ff",m.x,m.y);return;}   /* pushing: GRAB parks the cart (you can't load it on the move) */
@@ -6062,11 +6065,12 @@ var SWEEP=(function(){
   function takeIt(s,now){var m=me();if(!m)return;
     if(s){var close=!cart.att&&nearCart(m);   /* into the cart only when it's parked right by you */
       if(!s.inf&&s.n<=0)return;
+      if(s.inf){cart.att=false;hands="inflate";handsVal=s.inf.val;handsInf=s.inf;s.inf.got=true;pop("🎈 GOT A BONUS → RUN IT TO THE FRONT!","#ffe14a",s.x,s.y);hud();return;}   /* a bonus is carried to the front by hand, then back to your cart */
       if(close&&capped(s.t)){pop(PER+" "+T[s.t].n.toUpperCase()+" IS THE LIMIT · TRY ANOTHER AISLE","#ffd24a",m.x,m.y);fullWarnAt=now;return;}
       if(close&&room(s.t)){add(s.t,s.inf?s.inf.val:0);if(s.inf)s.inf.got=true;else s.n--;pop(s.inf?"🎈 BONUS!":"+$"+T[s.t].v,s.inf?"#ffe14a":"#9cff4a",s.x,s.y);flash=now;return;}
       if(close&&!room(s.t)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}
       cart.att=false;hands=s.t;handsVal=s.inf?s.inf.val:0;if(s.inf)s.inf.got=true;else s.n--;pop("GOT "+T[s.t].n.toUpperCase()+" → TAKE IT TO YOUR CART",T[s.t].c,s.x,s.y);hud();return;}}
-  var handsVal=0;
+  var handsVal=0,handsInf=null;
   function grabUp(){grabHeld=false;var m=me();if(!on||!m)return;
     if(candy&&!candy.done&&candy.amt>0&&atStation(m,CANDY)){var a=candy.amt,now=performance.now();
       if(a>=0.97&&a<=1.03){candy.done=true;score+=100;GAME.moshPts(100);pop("$"+a.toFixed(2)+" — CANDY BONUS +$100!","#ffe14a",CANDY.x,CANDY.y,1);hud();}
@@ -6092,6 +6096,7 @@ var SWEEP=(function(){
     /* the checkout: a cart with anything in it, pushed into the lanes at the front, banks and you get a fresh one */
     if(cart.att&&cart.fill>0&&cart.y>CHECK.y0-0.01&&cart.x>CHECK.x0&&cart.x<CHECK.x1){var v=cart.val;score+=v;banked+=v;carts++;bag=bag.concat(cart.inf);GAME.moshPts(v);
       stored.push({items:cart.items.slice(),fill:cart.fill});cheer();pop("CART SWAP! CART "+carts+" STORED +$"+v+(cart.inf.length?"  🎈×"+cart.inf.length+" (revealed at the end)":""),"#9cff4a",cart.x,cart.y-0.03,1);newCart(true);hud();banner("🛒 CART SWAP!");}
+    if(hands==="inflate"&&atFront(m))turnIn(m);
     /* the coffee grinder: hold GRAB at it for 3 s */
     if(busy&&atStation(m,GRIND)){grind.p=Math.min(1,grind.p+dt/3);if(grind.p>=1){grind.done=true;grabHeld=false;score+=100;GAME.moshPts(100);pop("☕ FRESH GROUND! COFFEE BONUS +$100","#ffe14a",GRIND.x,GRIND.y,1);hud();}}
     else if(grind&&!grind.done&&grind.p>0&&!busy)grind.p=Math.max(0,grind.p-dt*0.5);
@@ -6239,7 +6244,7 @@ var SWEEP=(function(){
     if(on&&m){
       /* what GRAB would do right now */
       var tip=null,hx=m.x*W,hy=m.y*H;
-      if(hands){item(g,hands,hx,hy-34,s,1);tip=nearCart(m)?"GRAB: INTO THE CART":"WALK TO YOUR CART";}
+      if(hands==="inflate"){if(handsInf)inflatable(g,{x:m.x,y:(hy-12)/H,k:handsInf.k,bob:0},now,s);tip="🎈 RUN IT TO THE FRONT";}else if(hands){item(g,hands,hx,hy-34,s,1);tip=nearCart(m)?"GRAB: INTO THE CART":"WALK TO YOUR CART";}
       else if(atStation(m,GRIND)&&!grind.done)tip="HOLD GRAB TO GRIND ☕";
       else if(atStation(m,CANDY)&&!candy.done)tip="HOLD GRAB TO SCOOP · $1.00 ±3¢";
       else{var sl=nearSlot(m);if(sl){var o=T[sl.t];g.strokeStyle="#ffe14a";ART.PX.ringO(g,sl.x*W,sl.y*H,s*7,s*5,0);tip=(sl.inf?"🎈 BONUS":o.n.toUpperCase()+" $"+o.v)+(cart.att?" · GRAB TO PARK":nearCart(m)?" · HOLD GRAB":" · GRAB");}}
@@ -6254,7 +6259,7 @@ var SWEEP=(function(){
     /* others carrying something: a box over their head */
     Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4||id===myId||id.indexOf("bot")===0)return;if(!v.sk||(v.sk.t|0)!==2)return;var vx=(v.dx!==undefined?v.dx:v.x)*W,vy=(v.dy!==undefined?v.dy:v.y)*H;item(g,"cereal",vx,vy-34,s,1);});
   }
-  window.ukSweepCheer=cheer;window.ukSweep=function(){var m=me();return{on:on,score:score,banked:banked,carts:carts,hands:hands,cart:cart&&{x:+cart.x.toFixed(3),y:+cart.y.toFixed(3),att:cart.att,fill:cart.fill,val:cart.val,inf:cart.inf.length},grind:grind&&{done:grind.done,p:+grind.p.toFixed(2)},candy:candy&&{done:candy.done,amt:+candy.amt.toFixed(2)},infl:infl.map(function(o){return[o.k,o.got];}),bag:bag.length,face:face,me:m?[+m.x.toFixed(3),+m.y.toFixed(3)]:null,bots:Object.keys(botS).map(function(k){var b=botS[k];return[k,+b.x.toFixed(2),+b.y.toFixed(2),b.fill];})};};
+  window.ukSweepCheer=cheer;window.ukSweepInfl=function(){return infl.map(function(o){return[o.x,o.y,o.got,o.val];});};window.ukSweep=function(){var m=me();return{on:on,score:score,banked:banked,carts:carts,hands:hands,cart:cart&&{x:+cart.x.toFixed(3),y:+cart.y.toFixed(3),att:cart.att,fill:cart.fill,val:cart.val,inf:cart.inf.length},grind:grind&&{done:grind.done,p:+grind.p.toFixed(2)},candy:candy&&{done:candy.done,amt:+candy.amt.toFixed(2)},infl:infl.map(function(o){return[o.k,o.got];}),bag:bag.length,face:face,me:m?[+m.x.toFixed(3),+m.y.toFixed(3)]:null,bots:Object.keys(botS).map(function(k){var b=botS[k];return[k,+b.x.toFixed(2),+b.y.toFixed(2),b.fill];})};};
   window.ukSweepForce=function(o){if(o.me){setMe(o.me[0],o.me[1]);last=[o.me[0],o.me[1]];}if(o.face!==undefined)face=o.face;if(o.cf!==undefined)cartFace=o.cf;if(o.fill!==undefined&&cart){cart.fill=o.fill;cart.val=o.val||cart.val;}if(o.att!==undefined&&cart)cart.att=o.att;if(o.cart&&cart){cart.x=o.cart[0];cart.y=o.cart[1];}if(o.candy!==undefined)candy.amt=o.candy;hud();};
   window.ukSweepSlots=function(){return slots.map(function(s){return[s.t,+s.x.toFixed(3),+s.y.toFixed(3),s.n];});};
   return{look:look,rig:rig,avS:avS,start:start,stop:stop,final:final,tick:tick,under:under,draw:draw,wire:wire,facing:facing,sweepOn:sweepOn,grabDown:grabDown,grabUp:grabUp,cartBtn:cartBtn,maxY:function(){return Y1;}};
@@ -10422,7 +10427,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.179",SERVER_VERSION="";
+var PAGE_VERSION="1.82.180",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11741,7 +11746,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.179"></script>
+<script src="lab.js?v=1.82.180"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
