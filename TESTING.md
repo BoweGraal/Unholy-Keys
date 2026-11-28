@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.167 — Party: YouTube songs actually play (ads, then the game)
+
+The hidden host copy of the game ran in a 2×2-pixel frame, so its YouTube player was ~2 px and YouTube refused to play it: no ad pre-play, the song never "started", and games waited forever (e.g. the mosh pit stuck on its first move). It now runs in an invisible 480×360 frame behind everything.
+
+1. Host a party, put a YouTube song on, start the show.
+2. If YouTube runs an ad: the game holds at the start ("Ad break · back in a moment") and the TV hides the ad, then the song and the game start together.
+3. The game (mosh pit or any other) actually runs through the song.
+4. Nothing new is visible on the host's phone.
+
 ## v1.82.166 — Party: End the show really ends it, background music, YouTube titles, video on the TV only
 
 **Needs a Render redeploy** (server looks up YouTube titles).
