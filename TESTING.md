@@ -1688,6 +1688,13 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.165 — Bumper boats: the last boat floating ends the round
+
+1. Bumper boats with 2+ players (or practice bots): knock everyone else off. As soon as only one boat is left, "🏆 <NAME> WINS THE ROUND!" (or "YOU WIN" if it's you) and about 2 seconds later the next round starts: pool refills, everyone back in their boat. No more waiting out the clock alone.
+2. If it happens in the final round, the pool refills for another go (the game still ends with the song's game time).
+3. The round still ends on the clock if nobody wins it first.
+4. Practice bots that fall out now show as out on the bench properly.
+
 ## v1.82.164 — The performer always looks like they're playing live
 
 1. Dragon riders, boss fight: the demon at the organ now plays it. No instrument in hand, both hands over the keys, striking on the song's eighth notes (alternating hands, both slam on the accents), head nodding, mouth on the hits.
