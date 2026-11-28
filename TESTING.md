@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.175 — TV practice off the phone menu
+
+1. Phone / tablet main menu: no TV practice button.
+2. A computer (mouse or trackpad): TV practice is still there.
+
 ## v1.82.174 — Bots: wander after a game, talk less, chat stays out of the log
 
 **Needs a Render redeploy** (bot chat flag + chat timing on the server).
