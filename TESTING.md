@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.188 — The Big Sweep: skinny cart bar on the right edge, a v over your parked cart
+
+1. The cart-full bar is a skinny bar up the right edge of the screen, filling from the bottom (red when full), with "CART $…" just above it.
+2. When you've let go of your cart, a little bouncing cyan v sits over it so you can find it. It goes away when you're pushing it.
+
 ## v1.82.187 — The Big Sweep: never stuck holding something the cart can't take
 
 1. You can't pick something up into your hands if your cart couldn't take it anyway (cart full, or already 5 of that item): it tells you why instead.
