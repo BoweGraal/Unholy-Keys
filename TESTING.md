@@ -1688,6 +1688,14 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.177 — Supermarket sweep: hands on the handle, park to load, the host, a real-looking store
+
+1. Pushing a cart, both hands are on the red handle bar in every direction: pushing down the bar is at your waist with the cart in front of you; side on the handle post is in your hands with the basket at hip height; pushing up the cart sticks out ahead of you. No bouncing on the beat while pushing, so your hands never slip off.
+2. **You can't load a cart you're pushing.** Pushing, press GRAB: you park it ("PARKED · GRAB TO LOAD IT"). Then GRAB by a shelf with the parked cart right beside you sweeps the item into it (hold GRAB to keep sweeping). Too far from the parked cart and it goes in your hands instead. GRAB (or CART) by the cart, away from a shelf, takes it again.
+3. Practice bots park beside the shelf while they grab too. Other players' parked carts now show for everyone (needs the server redeploy).
+4. The host: a man in a purple sweater (teal collar, jagged pattern) by the checkouts, clapping; every cart banked (yours or anyone's) he jumps with his arms up and shouts ("WHAT A SWEEP!").
+5. The store: polished pale floor with the lights shining down each aisle; shelves stocked both sides with rows of products, shelf edges and price tags, and a tall end cap showing its shelves at the front; numbered aisle signs with red-and-white diamonds; a pink back wall with department signs, diamonds and plants; a white glass deli case; white chest freezers with glass lids; a white meat case with a red kick plate.
+
 ## v1.82.176 — Supermarket sweep: life-size store, real carts held at the handle, sweatshirts
 
 1. Supermarket sweep on a phone: the camera zooms in close and follows you; the store is life size (bigger than the screen). Aisles are about three people wide; products, carts and people are to scale. On the TV the whole store fits the screen.
