@@ -28,15 +28,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.177"></script>
-<script src="tune.js?v=1.82.177"></script>
-<script src="gfx.js?v=1.82.177"></script>
-<script src="art.js?v=1.82.177"></script>
-<script src="qr.js?v=1.82.177"></script>
-<script src="voice.js?v=1.82.177"></script>
-<script src="instruments.js?v=1.82.177"></script>
-<script src="kart.js?v=1.82.177"></script>
-<script src="explain.js?v=1.82.177"></script>
+<script src="px8.js?v=1.82.178"></script>
+<script src="tune.js?v=1.82.178"></script>
+<script src="gfx.js?v=1.82.178"></script>
+<script src="art.js?v=1.82.178"></script>
+<script src="qr.js?v=1.82.178"></script>
+<script src="voice.js?v=1.82.178"></script>
+<script src="instruments.js?v=1.82.178"></script>
+<script src="kart.js?v=1.82.178"></script>
+<script src="explain.js?v=1.82.178"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -6015,13 +6015,13 @@ var SWEEP=(function(){
   function dpx(ax,ay,bx,by){return Math.hypot((ax-bx)*W,(ay-by)*H);}
   /* where things stand on the shelves: a slot just outside each face of each unit, and along the deli counter */
   function build(){slots=[];U.forEach(function(u,ui){[["l",u.x0-0.022],["r",u.x1+0.022]].forEach(function(f){var list=u[f[0]];if(!list)return;var n=list.length;
-      for(var i=0;i<n;i++){if(!list[i])continue;slots.push({x:f[1],y:u.y0+(u.y1-u.y0)*(i+0.5)/n,t:list[i],u:ui,side:f[0]});}});});
-    DELIT.forEach(function(t,i){slots.push({x:0.07+i*(0.86/(DELIT.length-1)),y:DELI+0.018,t:t,deli:1});});}
+      for(var i=0;i<n;i++){if(!list[i])continue;slots.push({x:f[1],y:u.y0+(u.y1-u.y0)*(i+0.5)/n,t:list[i],u:ui,side:f[0],n:STOCK});}});});
+    DELIT.forEach(function(t,i){slots.push({x:0.07+i*(0.86/(DELIT.length-1)),y:DELI+0.018,t:t,deli:1,n:STOCK});});}
   function newCart(att){var m=me();cart={x:m?m.x:0.42,y:m?m.y:0.9,att:att!==false,fill:0,val:0,items:[],inf:[]};}
   function placeInflatables(){var spots=[[0.11,0.58],[0.3,0.69],[0.5,0.55],[0.69,0.69],[0.87,0.6],[0.3,0.56],[0.11,0.7],[0.87,0.71]],K=["banana","bottle","turkey","cheese"],P=[50,100,100,150,200,250];
     for(var i=spots.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=spots[i];spots[i]=spots[j];spots[j]=t;}
     infl=K.map(function(k,i){return{x:spots[i][0],y:spots[i][1],k:k,val:P[Math.floor(Math.random()*P.length)],got:false,bob:Math.random()*6};});}
-  function start(){on=true;build();score=0;banked=0;carts=0;pops=[];hands=null;botS={};remote={};bag=[];grind={done:false,p:0};candy={done:false,amt:0,tries:0,msgAt:0};face=2;
+  function start(){on=true;build();stored=[];score=0;banked=0;carts=0;pops=[];hands=null;botS={};remote={};bag=[];grind={done:false,p:0};candy={done:false,amt:0,tries:0,msgAt:0};face=2;
     setMe(0.4+Math.random()*0.2,0.785);newCart(true);placeInflatables();document.body.classList.add("gaming-sweep");$("swpUI").classList.add("on");hud();banner("🛒 SUPERMARKET SWEEP!");}
   function stop(){on=false;grabHeld=false;document.body.classList.remove("gaming-sweep");$("swpUI").classList.remove("on");}
   /* the buzzer: what's still in your cart counts, and the inflatables' prizes are revealed */
@@ -6036,7 +6036,11 @@ var SWEEP=(function(){
   function pop(txt,col,x,y,big){pops.push({t:performance.now(),txt:txt,col:col||"#fff",x:x,y:y,big:big});}
   function add(t,val){if(t==="inflate"){cart.inf.push(val);}else{cart.val+=T[t].v;}cart.fill+=T[t].s;cart.items.push(t);hud();}
   function room(t){return cart.fill+T[t].s<=CAP;}
-  function nearSlot(m){var best=null,bd=1e9,R=sc()*10;slots.forEach(function(s){var d=dpx(s.x,s.y,m.x,m.y);if(d<R&&d<bd){bd=d;best=s;}});
+  /* each spot on the shelves holds 5 and doesn't restock; a cart takes at most 5 of any one thing, so every cart needs a few different aisles */
+  var STOCK=5,PER=5,stored=[];
+  function cnt(t){var n=0;cart.items.forEach(function(x){if(x===t)n++;});return n;}
+  function capped(t){return t!=="inflate"&&cnt(t)>=PER;}
+  function nearSlot(m){var best=null,bd=1e9,R=sc()*10;slots.forEach(function(s){if(s.n<=0)return;var d=dpx(s.x,s.y,m.x,m.y);if(d<R&&d<bd){bd=d;best=s;}});
     infl.forEach(function(o){if(o.got)return;var d=dpx(o.x,o.y,m.x,m.y);if(d<R*1.1&&d<bd){bd=d;best={x:o.x,y:o.y,t:"inflate",inf:o};}});return best;}
   function nearCart(m){return cart&&dpx(cart.x,cart.y,m.x,m.y)<sc()*13;}
   function atStation(m,st){return dpx(st.x,st.y,m.x,m.y)<sc()*11;}
@@ -6044,7 +6048,7 @@ var SWEEP=(function(){
   function grabDown(){if(!on)return;var m=me();if(!m)return;grabHeld=true;var now=performance.now();
     if(!hands&&atStation(m,GRIND)&&!grind.done)return;   /* holding at the grinder grinds */
     if(!hands&&atStation(m,CANDY)&&!candy.done)return;   /* holding at the candy bar scoops */
-    if(hands){if(nearCart(m)){if(!room(hands)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}add(hands,hands==="inflate"?handsVal:0);pop(hands==="inflate"?"🎈 IN THE CART":"+$"+T[hands].v,"#9cff4a",cart.x,cart.y);hands=null;handsVal=0;hud();}
+    if(hands){if(nearCart(m)){if(capped(hands)){pop(PER+" "+T[hands].n.toUpperCase()+" IS THE LIMIT · BANK THIS CART FIRST","#ffd24a",m.x,m.y);return;}if(!room(hands)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}add(hands,hands==="inflate"?handsVal:0);pop(hands==="inflate"?"🎈 IN THE CART":"+$"+T[hands].v,"#9cff4a",cart.x,cart.y);hands=null;handsVal=0;hud();}
       else pop("WALK TO YOUR CART","#ffd24a",m.x,m.y);return;}
     if(cart.att){cart.att=false;nextSweep=now+350;pop(nearSlot(m)?"PARKED · GRAB TO LOAD IT":"PARKED","#cfe3ff",m.x,m.y);return;}   /* pushing: GRAB parks the cart (you can't load it on the move) */
     var s=nearSlot(m);
@@ -6054,9 +6058,11 @@ var SWEEP=(function(){
   function startReach(s,now){if(reach)return;var m=me();reach={at:now,s:s};face=ART.face8((s.x-m.x)*W,(s.y-m.y)*H,face);}
   function takeIt(s,now){var m=me();if(!m)return;
     if(s){var close=!cart.att&&nearCart(m);   /* into the cart only when it's parked right by you */
-      if(close&&room(s.t)){add(s.t,s.inf?s.inf.val:0);if(s.inf)s.inf.got=true;pop(s.inf?"🎈 BONUS!":"+$"+T[s.t].v,s.inf?"#ffe14a":"#9cff4a",s.x,s.y);flash=now;return;}
+      if(!s.inf&&s.n<=0)return;
+      if(close&&capped(s.t)){pop(PER+" "+T[s.t].n.toUpperCase()+" IS THE LIMIT · TRY ANOTHER AISLE","#ffd24a",m.x,m.y);fullWarnAt=now;return;}
+      if(close&&room(s.t)){add(s.t,s.inf?s.inf.val:0);if(s.inf)s.inf.got=true;else s.n--;pop(s.inf?"🎈 BONUS!":"+$"+T[s.t].v,s.inf?"#ffe14a":"#9cff4a",s.x,s.y);flash=now;return;}
       if(close&&!room(s.t)){pop("CART FULL! BANK IT AT THE CHECKOUT","#ff8a8a",m.x,m.y);fullWarnAt=now;return;}
-      cart.att=false;hands=s.t;handsVal=s.inf?s.inf.val:0;if(s.inf)s.inf.got=true;pop("GOT "+T[s.t].n.toUpperCase()+" → TAKE IT TO YOUR CART",T[s.t].c,s.x,s.y);hud();return;}}
+      cart.att=false;hands=s.t;handsVal=s.inf?s.inf.val:0;if(s.inf)s.inf.got=true;else s.n--;pop("GOT "+T[s.t].n.toUpperCase()+" → TAKE IT TO YOUR CART",T[s.t].c,s.x,s.y);hud();return;}}
   var handsVal=0;
   function grabUp(){grabHeld=false;var m=me();if(!on||!m)return;
     if(candy&&!candy.done&&candy.amt>0&&atStation(m,CANDY)){var a=candy.amt,now=performance.now();
@@ -6074,7 +6080,7 @@ var SWEEP=(function(){
     var busy=!!reach||(grabHeld&&!hands&&((atStation(m,GRIND)&&!grind.done)||(atStation(m,CANDY)&&!candy.done)));
     if((ix||iy)&&!busy){face=ART.face8(ix,iy,face);if(cart.att)cartFace=face;}
     if(reach&&now-reach.at>=REACH){var rs=reach.s;reach=null;takeIt(rs,now);nextSweep=now+160;}
-    else if(!reach&&grabHeld&&!cart.att&&nearCart(m)&&!hands&&now>nextSweep&&!atStation(m,GRIND)&&!atStation(m,CANDY)){var sw=nearSlot(m);if(sw&&room(sw.t))startReach(sw,now);}
+    else if(!reach&&grabHeld&&!cart.att&&nearCart(m)&&!hands&&now>nextSweep&&!atStation(m,GRIND)&&!atStation(m,CANDY)){var sw=nearSlot(m);if(sw&&room(sw.t)&&!capped(sw.t))startReach(sw,now);}
     /* the walls and shelves (the floor walker moves you; this keeps you out of the shelving) */
     var x=Math.max(X0,Math.min(X1,m.x)),y=Math.max(Y0,Math.min(Y1,m.y));if(!last)last=[x,y];if(busy){x=last[0];y=last[1];}
     var rr=resolve(x,y,last[0],last[1]);x=rr[0];y=rr[1];if(x!==m.x||y!==m.y)setMe(x,y);last=[x,y];
@@ -6082,7 +6088,7 @@ var SWEEP=(function(){
     if(cart.att){var ca=cartAt(m.x*W,m.y*H,cartFace);cart.x=Math.max(X0+0.02,Math.min(X1-0.02,ca[0]/W));cart.y=Math.max(Y0,Math.min(Y1+0.05,ca[1]/H));}
     /* the checkout: a cart with anything in it, pushed into the lanes at the front, banks and you get a fresh one */
     if(cart.att&&cart.fill>0&&cart.y>CHECK.y0-0.01&&cart.x>CHECK.x0&&cart.x<CHECK.x1){var v=cart.val;score+=v;banked+=v;carts++;bag=bag.concat(cart.inf);GAME.moshPts(v);
-      cheer();pop("CART "+carts+" BANKED +$"+v+(cart.inf.length?"  🎈×"+cart.inf.length+" (revealed at the end)":""),"#9cff4a",cart.x,cart.y-0.03,1);newCart(true);hud();banner("🛒 NEW CART!");}
+      stored.push({items:cart.items.slice(),fill:cart.fill});cheer();pop("CART SWAP! CART "+carts+" STORED +$"+v+(cart.inf.length?"  🎈×"+cart.inf.length+" (revealed at the end)":""),"#9cff4a",cart.x,cart.y-0.03,1);newCart(true);hud();banner("🛒 CART SWAP!");}
     /* the coffee grinder: hold GRAB at it for 3 s */
     if(busy&&atStation(m,GRIND)){grind.p=Math.min(1,grind.p+dt/3);if(grind.p>=1){grind.done=true;grabHeld=false;score+=100;GAME.moshPts(100);pop("☕ FRESH GROUND! COFFEE BONUS +$100","#ffe14a",GRIND.x,GRIND.y,1);hud();}}
     else if(grind&&!grind.done&&grind.p>0&&!busy)grind.p=Math.max(0,grind.p-dt*0.5);
@@ -6096,8 +6102,8 @@ var SWEEP=(function(){
   /* practice dancers: grab things off the nearest shelf, push full carts to the checkout */
   function botTick(dt,now){Object.keys(viewers).filter(function(id){return id.indexOf("bot")===0;}).forEach(function(id){var v=viewers[id];if(!v)return;
     var b=botS[id]||(botS[id]={x:0.3+Math.random()*0.4,y:0.785,face:2,fill:0,val:0,tgt:null,wait:0,lane:null});
-    if(now<b.wait){}else if(b.fill>=CAP-3){var tx=0.5,ty=0.792;mv(b,tx,ty,dt);if(b.y>CHECK.y0-0.005&&b.x>CHECK.x0&&b.x<CHECK.x1){if(GAME.botPts)GAME.botPts(id,b.val);cheer();b.fill=0;b.val=0;b.wait=now+600;}}
-    else{if(!b.tgt)b.tgt=slots[Math.floor(Math.random()*slots.length)];var t=b.tgt;if(mv(b,t.x,t.y,dt)){var it=T[t.t];if(b.fill+it.s<=CAP){b.fill+=it.s;b.val+=it.v;}b.tgt=null;b.wait=now+700+Math.random()*700;var bp=cartAt(b.x*W,b.y*H,b.face);b.park={x:bp[0]/W,y:bp[1]/H,f:b.face};}}
+    if(now<b.wait){}else if(b.fill>=CAP-3){var tx=0.5,ty=0.792;mv(b,tx,ty,dt);if(b.y>CHECK.y0-0.005&&b.x>CHECK.x0&&b.x<CHECK.x1){if(GAME.botPts)GAME.botPts(id,b.val);cheer();b.stored=(b.stored||0)+1;b.fill=0;b.val=0;b.wait=now+600;}}
+    else{if(!b.tgt){var av=slots.filter(function(q){return q.n>0;});b.tgt=av.length?av[Math.floor(Math.random()*av.length)]:null;if(!b.tgt){b.fill=CAP;return;}}var t=b.tgt;if(mv(b,t.x,t.y,dt)){var it=T[t.t];if(t.n>0&&b.fill+it.s<=CAP){t.n--;b.fill+=it.s;b.val+=it.v;}b.tgt=null;b.wait=now+700+Math.random()*700;var bp=cartAt(b.x*W,b.y*H,b.face);b.park={x:bp[0]/W,y:bp[1]/H,f:b.face};}}
     v.tx=v.x=b.x;v.ty=v.y=b.y;v.dance=4;var bw=now<b.wait;v.sk={h:b.fill,t:bw?3:0,d:b.face};v.pose=bw?[1.3+Math.sin(now/120)*0.5,-0.6,0,0]:[0.3,-0.3,0,0];v.fd=null;});}
   /* walk a bot toward a point through the aisles: down to the cross aisle (front) then up the target's aisle */
   /* walk a bot through the store: along the front to the right aisle, up it; the deli across the back from the nearest aisle */
@@ -6201,7 +6207,10 @@ var SWEEP=(function(){
     /* aisle number signs hanging at the top of each aisle */
     AISLE.forEach(function(ax,k){var sx=ax*W,sy=U[1].y0*H+s*4;Rf("rgba(0,0,0,.12)",sx-s*6,sy-s*1.5,s*13,s*7);Rf("#f7f4ee",sx-s*7,sy-s*3,s*14,s*7);dia(sx-s*4.5,sy+s*0.5,s*1.8);dia(sx+s*4.5,sy+s*0.5,s*1.8);
       g.fillStyle="#1a1426";ART.PX.disc(g,sx,sy+s*0.5,s*2.6);g.fillStyle="#fff";g.font="900 "+Math.max(6,s*3)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillText(String(k+1),sx,sy+s*1.6);});
-    slots.forEach(function(sl){if(sl.deli){item(g,sl.t,sl.x*W,(DELI-0.012)*H,s,1.1);return;}var u=U[sl.u],fx=(sl.side==="l"?u.x0:u.x1)*W+(sl.side==="l"?s*2:-s*2);item(g,sl.t,fx,sl.y*H,s,sl.t==="turkey"||sl.t==="fturkey"||sl.t==="wheel"?1:0.85);});
+    slots.forEach(function(sl){var px,py,k;if(sl.deli){px=sl.x*W;py=(DELI-0.012)*H;k=1.1;}else{var u=U[sl.u];px=(sl.side==="l"?u.x0:u.x1)*W+(sl.side==="l"?s*2:-s*2);py=sl.y*H;k=sl.t==="turkey"||sl.t==="fturkey"||sl.t==="wheel"?1:0.85;}
+      if(sl.n<=0){g.fillStyle="rgba(60,50,60,.25)";g.fillRect(Math.round(px-s*3),Math.round(py-s*2.5),s*6,s*5);return;}   /* swept clean */
+      for(var q=Math.min(sl.n,5)-1;q>=0;q--)item(g,sl.t,px+(sl.side==="l"?-1:1)*0+((q%2)?s*0.8:-s*0.8)*(q>0?1:0),py-q*s*1.1,s,k*(q?0.92:1));
+      g.font="900 "+Math.max(6,s*2.2)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.lineWidth=2;g.strokeStyle="rgba(0,0,0,.8)";g.strokeText("×"+sl.n,px+(sl.deli?0:(sl.side==="l"?-s*4:s*4)),py+s*4);g.fillStyle="#fff";g.fillText("×"+sl.n,px+(sl.deli?0:(sl.side==="l"?-s*4:s*4)),py+s*4);});
     /* the coffee grinder (a red machine on the coffee shelf) and the candy bar (bins of candy and a scale) */
     var gx2=U[3].x1*W,gy2=GRIND.y*H;g.fillStyle="#1a1426";g.fillRect(Math.round(gx2-s*7),Math.round(gy2-s*7),s*8,s*12);g.fillStyle="#d03a3a";g.fillRect(Math.round(gx2-s*6),Math.round(gy2-s*6),s*6,s*10);g.fillStyle="#dfe8f5";ART.PX.oval(g,gx2-s*3,gy2-s,s*2.2,s*2.2,0);g.fillStyle="#3a3a3a";g.fillRect(Math.round(gx2-s*3.5),Math.round(gy2+s*2),s,s*2);
     var cx2=U[2].x1*W,cy2=CANDY.y*H,cc=["#ff6ac1","#9fd8ff","#ffb02e","#9cff4a","#ffffff","#e0302a"];for(var ci=0;ci<6;ci++){g.fillStyle="#cfd6e4";g.fillRect(Math.round(cx2-s*6),Math.round(cy2-s*12+ci*s*4),s*6,s*4);g.fillStyle=cc[ci];g.fillRect(Math.round(cx2-s*5),Math.round(cy2-s*11+ci*s*4),s*4,s*2);}
@@ -6217,6 +6226,8 @@ var SWEEP=(function(){
     g.fillStyle="rgba(159,216,255,.55)";g.fillRect(Math.round(W*0.42),Math.round(fy),Math.round(W*0.16),s*5);g.fillStyle="#e8e8e8";for(var pk=0;pk<W;pk+=s*30)g.fillRect(Math.round(pk),Math.round(fy+s*14),s*12,s);
     /* the inflatables */
     infl.forEach(function(o){if(!o.got)inflatable(g,o,now,s);});
+    /* the swapped carts: stored in a row along the front, full */
+    var sx0=X0+0.01,step=(avS()*CU*14)/W,row=0;stored.forEach(function(c,i){var cx=sx0+(i%6)*step,cy=Y1-0.004-Math.floor(i/6)*0.012;cartPic(g,cx*W+avS()*CU*6.5,cy*H,1,c.fill,c.items,s,true);});
     hostDraw(g,now);
     cartsDraw(g,false);
     g.restore();}
@@ -6242,7 +6253,7 @@ var SWEEP=(function(){
   }
   window.ukSweepCheer=cheer;window.ukSweep=function(){var m=me();return{on:on,score:score,banked:banked,carts:carts,hands:hands,cart:cart&&{x:+cart.x.toFixed(3),y:+cart.y.toFixed(3),att:cart.att,fill:cart.fill,val:cart.val,inf:cart.inf.length},grind:grind&&{done:grind.done,p:+grind.p.toFixed(2)},candy:candy&&{done:candy.done,amt:+candy.amt.toFixed(2)},infl:infl.map(function(o){return[o.k,o.got];}),bag:bag.length,face:face,me:m?[+m.x.toFixed(3),+m.y.toFixed(3)]:null,bots:Object.keys(botS).map(function(k){var b=botS[k];return[k,+b.x.toFixed(2),+b.y.toFixed(2),b.fill];})};};
   window.ukSweepForce=function(o){if(o.me){setMe(o.me[0],o.me[1]);last=[o.me[0],o.me[1]];}if(o.face!==undefined)face=o.face;if(o.cf!==undefined)cartFace=o.cf;if(o.fill!==undefined&&cart){cart.fill=o.fill;cart.val=o.val||cart.val;}if(o.att!==undefined&&cart)cart.att=o.att;if(o.cart&&cart){cart.x=o.cart[0];cart.y=o.cart[1];}if(o.candy!==undefined)candy.amt=o.candy;hud();};
-  window.ukSweepSlots=function(){return slots.map(function(s){return[s.t,+s.x.toFixed(3),+s.y.toFixed(3)];});};
+  window.ukSweepSlots=function(){return slots.map(function(s){return[s.t,+s.x.toFixed(3),+s.y.toFixed(3),s.n];});};
   return{look:look,rig:rig,avS:avS,start:start,stop:stop,final:final,tick:tick,under:under,draw:draw,wire:wire,facing:facing,sweepOn:sweepOn,grabDown:grabDown,grabUp:grabUp,cartBtn:cartBtn,maxY:function(){return Y1;}};
 })();
 
@@ -10408,7 +10419,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.177",SERVER_VERSION="";
+var PAGE_VERSION="1.82.178",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11727,7 +11738,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.177"></script>
+<script src="lab.js?v=1.82.178"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
