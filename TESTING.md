@@ -1688,6 +1688,15 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.176 — Supermarket sweep: life-size store, real carts held at the handle, sweatshirts
+
+1. Supermarket sweep on a phone: the camera zooms in close and follows you; the store is life size (bigger than the screen). Aisles are about three people wide; products, carts and people are to scale. On the TV the whole store fits the screen.
+2. Everyone wears a long-sleeved sweatshirt in their own shirt colour (and no instrument on their back).
+3. The cart is a real cart: wire basket with mesh and a bright rim, the folded child seat, the red handle bar, frame and wheels. You hold it at the handle with both hands. Pushing up an aisle it's ahead of you; pushing down it's in front of you (over your legs, wheels showing); side on it's long with its side panel.
+4. Grabbing takes a moment: you stop, turn to the shelf and sweep your arm. **Hold GRAB while pushing along a shelf** and you keep sweeping things into the cart, one after another.
+5. Carts hold more (24) so they take longer to fill. Practice bots take longer per item too.
+6. Labels and pop-ups are sized for the zoom.
+
 ## v1.82.175 — TV practice off the phone menu
 
 1. Phone / tablet main menu: no TV practice button.
