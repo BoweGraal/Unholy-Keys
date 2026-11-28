@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.150 — Dungeon: no body shift at all in a slash
+
+- The slash no longer shifts the body forward at all, not even as a lean. The body stays exactly where you stand for the whole swing, and the reach comes from the arm and the blade. You're still rooted until the swing ends.
+
+1. Face right and slash: the body doesn't slide right at all. Only the arm and sword move.
+
 ## v1.82.149 — Dungeon: swings root you in place, the spin twirls your body, a longer reach
 
 - **Rooted:** a sword swing or a spin attack holds you to the spot until it finishes, plus a short recovery (about 0.1 s). Then you walk again. Rolling still moves you.
