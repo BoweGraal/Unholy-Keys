@@ -523,7 +523,7 @@ var TUG_AT = 0, TUG_MS = 10000;
 /* voice between songs: how many people can talk at once in a room (everyone connects to everyone, so keep it small) */
 var VOICE_MAX = +process.env.VOICE_MAX || 8;   /* talkers (mic on) at once; anyone can listen */   /* the walls meet right on the drop (the charge starts 0.8 s before it) */
 /* the build, shown at the bottom of both pages so you can tell which version is running (bump it with each release) */
-var VERSION = "1.82.168";
+var VERSION = "1.82.169";
 /* where this server runs: Render sets RENDER=true; anything else is self-hosted (UK_HOST can name it) */
 var HOSTED = process.env.RENDER ? "render" : "self";
 var HOST_NAME = String(process.env.UK_HOST || "").slice(0, 40);
@@ -813,8 +813,9 @@ function onMessage(ws, raw, isBinary) {
       if (!allow(ws, "pl", 10, 3)) return;
       var items = Array.isArray(msg.items) ? msg.items.slice(0, 40).map(function(it) { return { t: str(it && it.t, 80), by: str(it && it.by, 24) }; }) : [];
       var sh = msg.show && typeof msg.show === "object" ? { on: msg.show.on ? 1 : 0, n: intIn(msg.show.n, 0, 99, 0), i: intIn(msg.show.i, 0, 99, 0), now: str(msg.show.now, 80) } : null;
-      rooms[ws.room].pl = { items: items, show: sh, party: msg.party ? 1 : 0 };
-      broadcast(ws.room, { type: "pl-state", items: items, show: sh, party: msg.party ? 1 : 0 }, ws);
+      var tv = msg.tv === 0 ? 0 : 1;   /* 0: just phones, no TV */
+      rooms[ws.room].pl = { items: items, show: sh, party: msg.party ? 1 : 0, tv: tv };
+      broadcast(ws.room, { type: "pl-state", items: items, show: sh, party: msg.party ? 1 : 0, tv: tv }, ws);
       return;
     }
     if (msg.type === "show-fx") {

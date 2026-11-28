@@ -28,13 +28,13 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="gfx.js?v=1.82.168"></script>
-<script src="px8.js?v=1.82.168"></script>
-<script src="art.js?v=1.82.168"></script>
-<script src="qr.js?v=1.82.168"></script>
-<script src="voice.js?v=1.82.168"></script>
-<script src="instruments.js?v=1.82.168"></script>
-<script src="kart.js?v=1.82.168"></script>
+<script src="gfx.js?v=1.82.169"></script>
+<script src="px8.js?v=1.82.169"></script>
+<script src="art.js?v=1.82.169"></script>
+<script src="qr.js?v=1.82.169"></script>
+<script src="voice.js?v=1.82.169"></script>
+<script src="instruments.js?v=1.82.169"></script>
+<script src="kart.js?v=1.82.169"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4909,7 +4909,7 @@ function resumeHosting(){var v=HOSTING.saved();if(!v||liveOn||liveWs)return fals
   goLive(v);
   showJamToast("📡 Getting your room back…","#F5C518",2500);return true;}
 setTimeout(resumeHosting,1200);
-var PARTY_ON=/[?&]party\b/.test(location.search);   /* a party hosted from a phone: this page runs hidden inside the host's player screen */
+var PARTY_ON=/[?&]party\b/.test(location.search),PARTY_TV=!/[?&]tv=0\b/.test(location.search);   /* tv=0: just phones, no TV (videos show on everyone's phone) */   /* a party hosted from a phone: this page runs hidden inside the host's player screen */
 if(PARTY_ON)window.addEventListener("load",function(){setTimeout(function(){
   var q=new URLSearchParams(location.search),pn=(q.get("pn")||"").slice(0,16),el=document.getElementById("stageName");if(el)el.value=pn?("DJ "+pn).slice(0,24):"DJ";
   try{if(typeof jamOn!=="undefined"&&!jamOn)enterJam();}catch(e){}
@@ -5034,7 +5034,7 @@ document.getElementById("liveStop").onclick=function(){endLive();};
 /* your own playing, for the lights that follow it (Show tab), in your previews and stage view */
 /* the version label at the bottom of the sidebar: this page's version, a warning if a cached script is older,
    and the server's version once you're live (so you can tell Render has the new build) */
-var PAGE_VERSION="1.82.168",SERVER_VERSION="";
+var PAGE_VERSION="1.82.169",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -5837,7 +5837,7 @@ var LSET=(function(){
        countdown, which everyone can vote to skip) between them; then it stops and it's back to jamming */
     var show={on:false,n:0,i:0,now:""},cfgWas=null;
     function plState(){if(PARTY_ON){var ny=queue.filter(function(x){return x.kind==="yt"&&x.vid;})[0];if(ny)try{YT.preroll(ny.vid);}catch(e){}}   /* the next YouTube song plays its ad now, while everyone jams */
-      if(!PARTY_ON||typeof liveOn==="undefined"||!liveOn)return;liveSend({type:"pl-state",party:1,items:queue.slice(0,40).map(function(x){return{t:x.title||"",by:x.by||""};}),show:{on:show.on?1:0,n:show.n,i:show.i,now:show.now||""}});}
+      if(!PARTY_ON||typeof liveOn==="undefined"||!liveOn)return;liveSend({type:"pl-state",party:1,tv:PARTY_TV?1:0,items:queue.slice(0,40).map(function(x){return{t:x.title||"",by:x.by||""};}),show:{on:show.on?1:0,n:show.n,i:show.i,now:show.now||""}});}
     setInterval(function(){if(PARTY_ON)plState();},15000);   /* now and then, for anyone who missed it */
     if(PARTY_ON){var plFirst=setInterval(function(){if(typeof liveOn!=="undefined"&&liveOn&&LIVERC.room){clearInterval(plFirst);plState();}},300);}   /* as soon as the room is up: everyone knows it's a party (the video goes to the TV) */
     function showStart(n){if(!queue.length)return false;cfgWas=cfgWas||{auto:cfg.auto,vote:cfg.vote,voteGame:cfg.voteGame};cfg.auto=true;cfg.vote=false;cfg.voteGame=true;
