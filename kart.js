@@ -632,8 +632,8 @@
     "#ktSpeed{position:absolute;right:14px;top:236px;display:none;align-items:center;gap:6px;pointer-events:auto;background:rgba(18,14,34,.85);border:1px solid rgba(155,127,224,.5);border-radius:10px;padding:4px 8px;font:700 12px 'Silkscreen',ui-monospace,monospace;color:#c9c0ee}#ktSpeed button{width:30px;height:28px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:#2a2440;color:#fff;font:800 16px 'Silkscreen',ui-monospace,monospace;padding:0}#ktSpeed b{min-width:30px;text-align:center;color:#3DF2FF;font-size:15px}" +
     "#ktDrift{right:18px;bottom:140px;width:112px;height:112px}body.practice #ktDrift{bottom:60px}@media (pointer:fine){#ktDrift{width:88px;height:88px;font-size:15px;bottom:120px}}" +
     /* phones: the race readout moves up to the top corner and shrinks, the DRIFT button is smaller and see-through, so more of the track shows */
-    "@media (max-width:640px),(max-height:520px){#ktRank{top:66px;right:10px;font-size:24px}#ktRank small{font-size:11px;margin-top:2px}#ktScore{top:100px;right:10px;font-size:15px}#ktBars{top:122px;right:10px;width:120px}#ktBars div{height:6px;margin-bottom:4px}#ktSpeed{top:146px}" +
-    ".ktB{background:radial-gradient(circle,rgba(255,61,216,.3),rgba(20,8,30,.5))}#ktDrift{width:92px;height:92px;font-size:15px;bottom:104px;right:14px}body.practice #ktDrift{bottom:78px}#ktHint{top:96px}}" +
+    "@media (max-width:640px),(max-height:520px){#ktRank{top:66px;right:10px;font-size:24px}#ktRank small{font-size:11px;margin-top:2px}#ktScore{top:112px;right:10px;font-size:15px}#ktBars{top:134px;right:10px;width:120px}#ktBars div{height:6px;margin-bottom:4px}#ktSpeed{top:146px}" +
+    ".ktB{background:radial-gradient(circle,rgba(255,61,216,.3),rgba(20,8,30,.5))}#ktDrift{width:92px;height:92px;font-size:15px;bottom:104px;right:14px}body.practice #ktDrift{bottom:78px}#ktHint{top:168px}}" +
     "body.gaming-kart #reactBar{display:none}body.gaming-kart #moveHint{display:none}body.gaming-kart #moveCtl{transition:transform .6s cubic-bezier(.2,1.2,.4,1)}body.gaming-kart:not(.kt-ready) #moveCtl{transform:translateY(110vh)}";
   function ui(show) {
     var el = $("ktUI");
