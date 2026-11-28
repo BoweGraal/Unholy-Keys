@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.172"></script>
-<script src="tune.js?v=1.82.172"></script>
-<script src="gfx.js?v=1.82.172"></script>
-<script src="art.js?v=1.82.172"></script>
-<script src="qr.js?v=1.82.172"></script>
-<script src="voice.js?v=1.82.172"></script>
-<script src="instruments.js?v=1.82.172"></script>
-<script src="kart.js?v=1.82.172"></script>
-<script src="explain.js?v=1.82.172"></script>
+<script src="px8.js?v=1.82.173"></script>
+<script src="tune.js?v=1.82.173"></script>
+<script src="gfx.js?v=1.82.173"></script>
+<script src="art.js?v=1.82.173"></script>
+<script src="qr.js?v=1.82.173"></script>
+<script src="voice.js?v=1.82.173"></script>
+<script src="instruments.js?v=1.82.173"></script>
+<script src="kart.js?v=1.82.173"></script>
+<script src="explain.js?v=1.82.173"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5776,7 +5776,7 @@ var DUNGEON=(function(){
   function nearestPlayer(o){var best=null,bd=1e9;Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4)return;if(id===myId&&st==="down")return;var d=Math.hypot((v.x-o.x)*W,(v.y-o.y)*H);if(d<bd){bd=d;best=v;}});return best;}
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;var m=me();if(!m)return;
-    var FZ=window.__dunFreeze;if(FZ){face=FZ.f;st=FZ.s;stAt=now-FZ.k*(FZ.s==="spin"?SPIN:FZ.s==="charge"?CHARGE*1.2:SWING);m.dance=4;var fzb={s:st,at:stAt,f:face};GAME.moshPose(st==="block"?guardFor(face):armsFor(st==="spin"?twirlFace(fzb,now):face,bladeAng(fzb,now)));if(GAME.poseNow)GAME.poseNow();return;}   /* tests: hold a pose */
+    var FZ=window.__dunFreeze;if(FZ){face=FZ.f;st=FZ.s;stAt=now-FZ.k*(FZ.s==="spin"?SPIN:FZ.s==="charge"?CHARGE*1.2:SWING);m.dance=4;var fzb={s:st,at:stAt,f:face};GAME.moshPose(st==="block"?guardFor(face):st==="idle"?[0.25,-0.35,0,0]:armsFor(st==="spin"?twirlFace(fzb,now):face,bladeAng(fzb,now)));if(GAME.poseNow)GAME.poseNow();return;}   /* tests: hold a pose */
     /* moving: where you're heading is where you face (not while the blade's out or charging: you strafe) */
     var ix=0,iy=0;if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){ix=joy.x;iy=joy.y;}else{ix=(held.right?1:0)-(held.left?1:0);iy=(held.down?1:0)-(held.up?1:0);}
     if((ix||iy)&&st!=="charge"&&st!=="swing"&&st!=="spin"&&st!=="block"&&st!=="roll")face=ART.face8(ix,iy,face);   /* the shield up: you keep facing your guard (and side-step) */
@@ -5843,7 +5843,8 @@ var DUNGEON=(function(){
   /* the guard: the left hand brings the shield across in front (from behind: out at the side, peeking past the body) */
   var GUARDTH={0:2.5,4:1.75,1:0.2,5:2.0,2:2.0,3:Math.PI-0.2,6:2.0,7:2.3};
   function guardFor(f){var r=rArm(f),l=r==="L"?"R":"L",o=[0.25,-0.25,0,0];setArm(o,f,l,GUARDTH[f]);setArm(o,f,r,Math.PI/2+(DV[f][0]>=0?-0.5:0.5));return o;}
-  function shieldOf(id,v){return bladeOf(id,v,performance.now()).s==="block";}
+  /* the shield's on the left arm the whole time (hanging at the side; held up in front while blocking); not while down or mid-roll */
+  function shieldOf(id,v){var s=bladeOf(id,v,performance.now()).s;return s!=="down"&&s!=="roll";}
   function armsFor(f,a){var r=rArm(f),o=[0.25,-0.25,0,0];setArm(o,f,r,a);return o;}   /* the sword in the RIGHT hand, always */
   /* the lunge: the body leans out over the planted feet and back (it never moves you) */
   function lungeOf(id,v){return[0,0];}   /* the body never shifts in a slash: the reach is the arm and the blade */
@@ -5853,7 +5854,11 @@ var DUNGEON=(function(){
     return{rot:dv[0]*0.13*a,dip:dv[1]*1.2*a};}
   function rollOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="roll")return null;return Math.min(1,(now-b.at)/ROLL);}
   function rollDir(id,v){var f=faceOf(id,v);return DV[f][0]<-0.1?-1:1;}
-  function swordOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="swing"&&b.s!=="charge"&&b.s!=="spin")return null;
+  /* the sword at rest, the whole time you're not swinging: blade down and a little out from the right hand (side on, a little forward) */
+  var RESTA={0:Math.PI/2+0.35,1:Math.PI/2-0.6,2:Math.PI/2-0.35,3:Math.PI/2+0.6,4:Math.PI/2-0.4,5:Math.PI/2-0.4,6:Math.PI/2+0.4,7:Math.PI/2+0.4};
+  function swordOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);
+    if(b.s==="idle"||b.s==="hurt"||b.s==="block")return{a:RESTA[b.f]!==undefined?RESTA[b.f]:Math.PI/2,len:12,glow:false,tail:0,dir:1,spin:false,rest:true};
+    if(b.s!=="swing"&&b.s!=="charge"&&b.s!=="spin")return null;
     return{a:bladeAng(b,now),len:b.s==="spin"?19:15,glow:b.s==="charge"&&now-b.at>=CHARGE,tail:b.s==="swing"?4:b.s==="spin"?6:0,dir:b.s==="swing"?swDir(b.f):1,spin:b.s==="spin"};}
   function looks(){return{lift:0,rot:0,ns:true};}
   function faceOf(id,v){if(id===myId)return face;if(id.indexOf("bot")===0&&botS[id])return botS[id].face;return v.sk&&isFinite(v.sk.f)?v.sk.f|0:0;}
@@ -10307,7 +10312,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.172",SERVER_VERSION="";
+var PAGE_VERSION="1.82.173",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11625,7 +11630,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.172"></script>
+<script src="lab.js?v=1.82.173"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

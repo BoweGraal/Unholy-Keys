@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.173 — Dungeon: sword and shield in hand the whole time
+
+1. In the dungeon you always hold the sword (blade down, in the right hand) and the shield (on the left arm, at your side), in all 8 directions, walking or standing.
+2. Hold **BLOCK** (E): the shield comes up in front. Spiders that hit you from the front glance off (CLANG!, no heart lost); from behind they still bite.
+3. Swinging and the spin attack work as before (the sword leaves the rest pose for the swing). Rolling and being down hide them for a moment.
+
 ## v1.82.172 — New minigame: Supermarket sweep 🛒
 
 **Needs a Render redeploy** (the server has to know the new game).
