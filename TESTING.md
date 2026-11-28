@@ -1688,6 +1688,11 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.157 — Dungeon: walk the whole room in landscape, legs walk
+
+1. Start the dungeon, then turn the phone sideways (or start it sideways): you can walk all the way down to the bottom of the room (it used to stop about halfway, at where the hidden chat bar would be).
+2. Walk around: the legs stride and the body bobs, with the sword and shield still posed (no more gliding). Side-stepping with the shield up or while charging also walks. Other players and the practice dancers walk the same way.
+
 ## v1.82.156 — Dungeon: shorter downward sweep, a tiny lean, facing away chops down
 
 1. Slash in each direction: the sweep still starts high but stops about 25° sooner at the bottom (less far down).

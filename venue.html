@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.156"></script>
-<script src="tune.js?v=1.82.156"></script>
-<script src="gfx.js?v=1.82.156"></script>
-<script src="art.js?v=1.82.156"></script>
-<script src="qr.js?v=1.82.156"></script>
-<script src="voice.js?v=1.82.156"></script>
-<script src="instruments.js?v=1.82.156"></script>
-<script src="kart.js?v=1.82.156"></script>
-<script src="explain.js?v=1.82.156"></script>
+<script src="px8.js?v=1.82.157"></script>
+<script src="tune.js?v=1.82.157"></script>
+<script src="gfx.js?v=1.82.157"></script>
+<script src="art.js?v=1.82.157"></script>
+<script src="qr.js?v=1.82.157"></script>
+<script src="voice.js?v=1.82.157"></script>
+<script src="instruments.js?v=1.82.157"></script>
+<script src="kart.js?v=1.82.157"></script>
+<script src="explain.js?v=1.82.157"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2826,7 +2826,8 @@ function share1000(list) {
 function danceStyle(v){v=Math.floor(+v||0);return v>=1&&v<=5?v:0;}
 function safePose(a){if(!Array.isArray(a)||a.length!==4)return null;var o=[];for(var i=0;i<4;i++){var n=+a[i];if(!isFinite(n))return null;o.push(Math.max(-3.2,Math.min(3.2,n/100)));}return o;}
 function floorMaxY(){
-  if(typeof DRAGON!=="undefined"&&DRAGON.on)return DRAGON.maxY();   /* dragon riders: the whole sky (a landscape phone lost half of it to the chat's space) */
+  if(typeof DRAGON!=="undefined"&&DRAGON.on)return DRAGON.maxY();
+  if(typeof DUNGEON!=="undefined"&&DUNGEON.dunOn())return DUNGEON.maxY();   /* the dungeon: the whole room (the hidden chat still has a size in landscape) */   /* dragon riders: the whole sky (a landscape phone lost half of it to the chat's space) */
   var cp=document.getElementById("chatPanel"),top=cp&&getComputedStyle(cp).display!=="none"?cp.getBoundingClientRect().top:H-160;
   return Math.min(FLOOR_BOTTOM-0.02,(top-14)/H);
 }
@@ -5865,7 +5866,7 @@ var DUNGEON=(function(){
   }
   window.ukDungeon=function(){var m=me();return{on:on,st:st,face:face,room:room,hearts:hearts,score:score,kills:kills,door:doorOpen,mobs:mobs.filter(function(o){return !o.dead;}).map(function(o){return[+o.x.toFixed(3),+o.y.toFixed(3),o.hp];}),me:m?[+m.x.toFixed(3),+m.y.toFixed(3)]:null};};
   window.ukDungeonForce=function(o){if(o.mobs)mobs=o.mobs.map(function(q){return{x:q[0],y:q[1],hp:q[2]||2,hopAt:0,fx:q[0],fy:q[1],tx:q[0],ty:q[1],flash:0,kb:null,dead:0,leg:0,big:0};});if(o.face!==undefined)face=o.face;if(o.me)setMe(o.me[0],o.me[1]);if(o.inv!==undefined)invTo=performance.now()+o.inv;if(o.hearts!==undefined){hearts=o.hearts;if(st==="down")set("idle");hud();}};
-  return{swordOf:swordOf,shieldOf:shieldOf,lungeOf:lungeOf,leanOf:leanOf,rollOf:rollOf,rollDir:rollDir,blockDown:blockDown,blockUp:blockUp,roll:roll,start:start,stop:stop,tick:tick,btnDown:down0,btnUp:up0,under:under,draw:draw,wire:wire,looks:looks,facing:facing,dunOn:dunOn,reset:function(){},get on(){return on;},get st(){return st;}};
+  return{swordOf:swordOf,shieldOf:shieldOf,lungeOf:lungeOf,leanOf:leanOf,maxY:function(){return Y1;},rollOf:rollOf,rollDir:rollDir,blockDown:blockDown,blockUp:blockUp,roll:roll,start:start,stop:stop,tick:tick,btnDown:down0,btnUp:up0,under:under,draw:draw,wire:wire,looks:looks,facing:facing,dunOn:dunOn,reset:function(){},get on(){return on;},get st(){return st;}};
 })();
 /* ============================================================
    BUMPER BOATS (the boats round)
@@ -10000,7 +10001,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.156",SERVER_VERSION="";
+var PAGE_VERSION="1.82.157",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10724,6 +10725,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
       if(moving&&moving.adv&&typeof WALK!=="undefined"&&WALK.walkRound()&&!(fd&&fd.s===7)){var ww=ART.walkPose({k:1,ph:GAME.beatPos(),dx:1,dy:0,sp:0.3}),mk2=1;legL=ww.legL*mk2+legL*0.35;legR=ww.legR*mk2+legR*0.35;knee=0;butt=0;lgL=ww.legLenL;lgR=ww.legLenR;bob=bob*0.6+ww.bob*s;dxs=0;rot=(rot||0)*0.3;}
     }else{
     var ps=pose||GAME.REST;armL=ps[0];armR=ps[1];legL=ps[2];legR=ps[3];flex=true;
+    if(dance===4&&moving&&typeof DUNGEON!=="undefined"&&DUNGEON.dunOn()){var dwp=ART.walkPose(moving);legL=dwp.legL;legR=dwp.legR;lgL=dwp.legLenL;lgR=dwp.legLenR;bob=dwp.bob*s;}   /* the dungeon poses the arms (sword, shield), the legs still walk */
     bob=-Math.pow(1-BEAT.phase(performance.now()),2)*3*s;
     if(dance===4&&!pose&&!moving){var gv=ART.dance(6,2,[0,0,0,0],GAME.beatPos());armL=gv.armL;armR=gv.armR;gBL=gv.bendL;gBR=gv.bendR;legL=gv.legL;legR=gv.legR;lgL=gv.lgL;lgR=gv.lgR;bob=gv.bob*s;dxs=gv.dx*s;hdA=gv.head;mouth=true;flex=false;}   /* dancing with no style picked: the groove */
     if(hitAge<220){bob-=(1-hitAge/220)*5*s;mouth=true;}
@@ -11303,7 +11305,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.156"></script>
+<script src="lab.js?v=1.82.157"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
