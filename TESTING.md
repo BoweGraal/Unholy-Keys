@@ -1688,6 +1688,17 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.186 — UAT fixes: hint overlaps, kart HUD, the carried item
+
+1. Bumper boats and coin dive: the how-to line sits under the standings box (it was behind it and cut off) and wraps instead of being cut short.
+2. Kart (phone): the score no longer overlaps "LAP 1/5", and the early "push the stick" hint sits below the stage instead of over the performer.
+3. The Big Sweep: an item you carry is held just over your head in your hands (it floated well above you); others carrying something too.
+
+## v1.82.185 — Menu music never comes back on by itself during a phone call
+
+1. The menu / practice background music: when the phone takes the sound away (a phone call, Siri, another app playing) it stays off. It no longer restarts itself (the watchdog that "heals" stuck music is off while it's held). Tap the screen to bring it back.
+2. Switching away from the game (another app, the call screen): the music pauses straight away and never starts while the game's hidden. Coming back resumes it, unless the phone took it (then tap).
+
 ## v1.82.184 — Fishing: no beat outline
 
 1. Fishing: the coloured frame round the edge of the screen that pulsed on the beat is gone (casting, waiting and reeling).
