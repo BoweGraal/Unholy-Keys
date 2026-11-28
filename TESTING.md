@@ -1688,6 +1688,12 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.156 — Dungeon: shorter downward sweep, a tiny lean, facing away chops down
+
+1. Slash in each direction: the sweep still starts high but stops about 25° sooner at the bottom (less far down).
+2. A small lean into each slash: the body tips toward the way you face and back (facing us: a small dip; away: a small rise). Watch the feet: they stay exactly where they were. Nothing moves your position.
+3. Facing away (up): the slash starts high over the right shoulder and comes down and out to the left (it used to sweep up from the side).
+
 ## v1.82.155 — Version on the main menu only, UI clears the rounded bottom of the phone
 
 1. Main menu: the version / server line shows (bottom right). Go into any room (party, join, practice) or the TV view: it's gone.

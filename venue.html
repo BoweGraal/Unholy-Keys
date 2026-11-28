@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.155"></script>
-<script src="tune.js?v=1.82.155"></script>
-<script src="gfx.js?v=1.82.155"></script>
-<script src="art.js?v=1.82.155"></script>
-<script src="qr.js?v=1.82.155"></script>
-<script src="voice.js?v=1.82.155"></script>
-<script src="instruments.js?v=1.82.155"></script>
-<script src="kart.js?v=1.82.155"></script>
-<script src="explain.js?v=1.82.155"></script>
+<script src="px8.js?v=1.82.156"></script>
+<script src="tune.js?v=1.82.156"></script>
+<script src="gfx.js?v=1.82.156"></script>
+<script src="art.js?v=1.82.156"></script>
+<script src="qr.js?v=1.82.156"></script>
+<script src="voice.js?v=1.82.156"></script>
+<script src="instruments.js?v=1.82.156"></script>
+<script src="kart.js?v=1.82.156"></script>
+<script src="explain.js?v=1.82.156"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5755,7 +5755,7 @@ var DUNGEON=(function(){
   /* which way a swing sweeps: from high to low. Side on and at the diagonals that means starting at the top (facing right:
      clockwise on screen, facing left: anticlockwise); facing us or away it starts from the sword hand's side */
   function swDir(f){return f===1||f===4||f===5?1:-1;}
-  function bladeAng(b,now){var a0=angOf(b.f);if(b.s==="swing"){var k=Math.min(1,(now-b.at)/SWING),e=1-Math.pow(1-k,2),d=swDir(b.f);return a0-d*1.22+d*2.44*e;}if(b.s==="spin")return a0+Math.min(1,(now-b.at)/SPIN)*Math.PI*2;return a0;}
+  function bladeAng(b,now){var a0=angOf(b.f);if(b.s==="swing"){var k=Math.min(1,(now-b.at)/SWING),e=1-Math.pow(1-k,2),d=swDir(b.f);if(b.f===2)return a0+0.8-2.02*e;return a0-d*1.22+d*2.02*e;}   /* facing away: from high over the right shoulder, down and out to the left (the short end of the sweep is the high end, so it chops down) */if(b.s==="spin")return a0+Math.min(1,(now-b.at)/SPIN)*Math.PI*2;return a0;}
   /* the right arm reaching along the blade (front and side views count the arm one way, from behind it's mirrored) */
   function armFor(f,a){return [2,5,6].indexOf(f)>=0?Math.PI/2-a:a-Math.PI/2;}
   /* the arms for a blade angle in a facing: the views facing left are drawn as the right-facing ones flipped, with the arms
@@ -5775,7 +5775,11 @@ var DUNGEON=(function(){
   function shieldOf(id,v){return bladeOf(id,v,performance.now()).s==="block";}
   function armsFor(f,a){var r=rArm(f),o=[0.25,-0.25,0,0];setArm(o,f,r,a);return o;}   /* the sword in the RIGHT hand, always */
   /* the lunge: the body leans out over the planted feet and back (it never moves you) */
-  function lungeOf(id,v){return[0,0];}   /* no body shift at all in a slash: the reach is the arm and the blade */
+  function lungeOf(id,v){return[0,0];}   /* the body never shifts in a slash: the reach is the arm and the blade */
+  /* a tiny lean into the swing, drawn only: the body tips toward the way you face and back, pivoting on the planted feet
+     (side on and diagonals a tilt; facing us a small dip forward, facing away a small rise) */
+  function leanOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="swing")return null;var k=Math.min(1,(now-b.at)/SWING),a=Math.sin(k*Math.PI),dv=DV[b.f]||[0,1];
+    return{rot:dv[0]*0.13*a,dip:dv[1]*1.2*a};}
   function rollOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="roll")return null;return Math.min(1,(now-b.at)/ROLL);}
   function rollDir(id,v){var f=faceOf(id,v);return DV[f][0]<-0.1?-1:1;}
   function swordOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="swing"&&b.s!=="charge"&&b.s!=="spin")return null;
@@ -5861,7 +5865,7 @@ var DUNGEON=(function(){
   }
   window.ukDungeon=function(){var m=me();return{on:on,st:st,face:face,room:room,hearts:hearts,score:score,kills:kills,door:doorOpen,mobs:mobs.filter(function(o){return !o.dead;}).map(function(o){return[+o.x.toFixed(3),+o.y.toFixed(3),o.hp];}),me:m?[+m.x.toFixed(3),+m.y.toFixed(3)]:null};};
   window.ukDungeonForce=function(o){if(o.mobs)mobs=o.mobs.map(function(q){return{x:q[0],y:q[1],hp:q[2]||2,hopAt:0,fx:q[0],fy:q[1],tx:q[0],ty:q[1],flash:0,kb:null,dead:0,leg:0,big:0};});if(o.face!==undefined)face=o.face;if(o.me)setMe(o.me[0],o.me[1]);if(o.inv!==undefined)invTo=performance.now()+o.inv;if(o.hearts!==undefined){hearts=o.hearts;if(st==="down")set("idle");hud();}};
-  return{swordOf:swordOf,shieldOf:shieldOf,lungeOf:lungeOf,rollOf:rollOf,rollDir:rollDir,blockDown:blockDown,blockUp:blockUp,roll:roll,start:start,stop:stop,tick:tick,btnDown:down0,btnUp:up0,under:under,draw:draw,wire:wire,looks:looks,facing:facing,dunOn:dunOn,reset:function(){},get on(){return on;},get st(){return st;}};
+  return{swordOf:swordOf,shieldOf:shieldOf,lungeOf:lungeOf,leanOf:leanOf,rollOf:rollOf,rollDir:rollDir,blockDown:blockDown,blockUp:blockUp,roll:roll,start:start,stop:stop,tick:tick,btnDown:down0,btnUp:up0,under:under,draw:draw,wire:wire,looks:looks,facing:facing,dunOn:dunOn,reset:function(){},get on(){return on;},get st(){return st;}};
 })();
 /* ============================================================
    BUMPER BOATS (the boats round)
@@ -9996,7 +10000,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.155",SERVER_VERSION="";
+var PAGE_VERSION="1.82.156",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -11239,7 +11243,8 @@ function renderLoop(){
         var ti9=me9?GAME.turnI:(cfd.ti!==undefined?cfd.ti:-999),add9=ti9!==-999?ti9:(cfd.b?2*[0,2,1,3][cfd.b]:0),S8F=[0,4,1,5,2,6,3,7];   /* mid-turn: how far round the sweep is; otherwise where the arrows left you */
         AVDIR=S8F[(((S8F.indexOf(base9)+add9)%8)+8)%8];}
       if(cdn===4&&cfd&&cfd.s===9&&cfd.m===1&&!cfd.b&&!(rpo&&rpo.dir!==undefined)&&!(ids[i]===myId&&GAME.spinDir>=0)&&!fdSpinDirOn(cfd,ids[i]===myId))AVDIR=0;   /* the T-step faces the crowd while it travels sideways (it never turns to walk) */
-      if(v!==PH&&v.dance===4&&DUNGEON.dunOn()){var dlo=DUNGEON.lungeOf(ids[i],v);vx+=dlo[0];dyy+=dlo[1];var drl=DUNGEON.rollOf(ids[i],v);if(drl!==null){AVO=AVO||{};AVO.sk={lift:-Math.sin(drl*Math.PI)*3*sc2,rot:drl*Math.PI*2*(DUNGEON.rollDir(ids[i],v)),ns:true};}}   /* the dungeon: a lunge leans the body out over the feet (you stay where you stand); a roll tumbles you over */
+      if(v!==PH&&v.dance===4&&DUNGEON.dunOn()){var dlo=DUNGEON.lungeOf(ids[i],v);vx+=dlo[0];dyy+=dlo[1];var drl=DUNGEON.rollOf(ids[i],v);if(drl!==null){AVO=AVO||{};AVO.sk={lift:-Math.sin(drl*Math.PI)*3*sc2,rot:drl*Math.PI*2*(DUNGEON.rollDir(ids[i],v)),ns:true};}
+        else{var dln=DUNGEON.leanOf(ids[i],v);if(dln&&(dln.rot||dln.dip)){var lsn=Math.sin(dln.rot||0);AVO=AVO||{};AVO.sk={lift:dln.dip*sc2-9.6*Math.abs(lsn)*sc2,rot:dln.rot||0.0001,lean:1};vx+=lsn*12.5*sc2;}   /* tipped on the feet: the tilt turns round the body, so it is moved back so the feet stay exactly where they were */}}   /* the dungeon: a lunge leans the body out over the feet (you stay where you stand); a roll tumbles you over */
       drawAvatar(vx,dyy,v.color,v.name,sc2,false,false,skl?null:walking,cdn,v.seed,ids[i]===myId,cp,now-(v.hitT||0),v.look,cfd);
       if(VOICE.talking(ids[i]))voiceIcon(vx+9*sc2,dyy-23*sc2,sc2,now);   /* talking on voice */
       AVO=null;AVDIR=0;
@@ -11298,7 +11303,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.155"></script>
+<script src="lab.js?v=1.82.156"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>
