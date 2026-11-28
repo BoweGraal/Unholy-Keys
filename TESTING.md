@@ -1688,6 +1688,24 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.172 — New minigame: Supermarket sweep 🛒
+
+**Needs a Render redeploy** (the server has to know the new game).
+
+Practice → pick **Supermarket sweep** (Ride group), or it turns up in game votes.
+
+1. The floor becomes a supermarket seen from above. Everyone starts at the front with a cart.
+2. The store: the **deli** across the back (cheese wheels, cheese blocks, jumbo salamis hanging over the counter); the **meat case** down the far right (turkeys, beef, chicken) with the **freezer** next to it (frozen turkeys, pizza, ice cream); the **coffee** aisle next (with the red **coffee grinder**); the **snacks** aisle next (with the **candy bar** bins); grocery and health & baby (diapers, vitamins) on the left.
+3. **GRAB** (button / Space): the item in front of you (it's ringed in gold with its price). With your cart right there → straight into the cart. Otherwise you pop off the cart and carry it overhead → walk back and GRAB at your cart to drop it in.
+4. **CART** (button / E): let go of the cart, or take it back.
+5. The cart fills by size (turkey 4, cheese wheel 5, coffee 1… holds 16). "CART FULL" → push it into the green **CHECKOUT** lanes at the front: banked, and you get a new cart.
+6. **Coffee grinder**: stand at it and hold GRAB 3 s → +$100 (once).
+7. **Candy bar**: hold GRAB to scoop (it pours unevenly), let go to weigh. **$0.97–$1.03** → +$100. Over → tipped out, try again. Under → keep scooping.
+8. **Inflatable bonuses** (banana, bottle, turkey, cheese) float around the store: grab them like anything else; their prize ($50–$250) is only revealed at the end.
+9. **The buzzer**: whatever's still in your cart counts, and the inflatables pay out.
+10. Practice bots shop the aisles and bank their carts. Other players' carts show in front of them; when they're carrying something it's over their head.
+11. On a phone the checkouts are in the gap between the stick and the buttons, so nothing's hidden under the controls.
+
 ## v1.82.171 — Game vote: 20 s after the first, 🎲 Random and a spinning wheel
 
 **Needs a Render redeploy** (the server picks the random game).
