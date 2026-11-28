@@ -27,15 +27,15 @@ body.chat-typing #chatLogBtn{display:none}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script src="px8.js?v=1.82.147"></script>
-<script src="tune.js?v=1.82.147"></script>
-<script src="gfx.js?v=1.82.147"></script>
-<script src="art.js?v=1.82.147"></script>
-<script src="qr.js?v=1.82.147"></script>
-<script src="voice.js?v=1.82.147"></script>
-<script src="instruments.js?v=1.82.147"></script>
-<script src="kart.js?v=1.82.147"></script>
-<script src="explain.js?v=1.82.147"></script>
+<script src="px8.js?v=1.82.148"></script>
+<script src="tune.js?v=1.82.148"></script>
+<script src="gfx.js?v=1.82.148"></script>
+<script src="art.js?v=1.82.148"></script>
+<script src="qr.js?v=1.82.148"></script>
+<script src="voice.js?v=1.82.148"></script>
+<script src="instruments.js?v=1.82.148"></script>
+<script src="kart.js?v=1.82.148"></script>
+<script src="explain.js?v=1.82.148"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -5594,7 +5594,7 @@ var POND=(function(){
    down for a moment. Clear a room and the door on the right opens: walk through and the screen slides on to the next room
    (more spiders each time). Points for every spider and every room. Each phone runs its own spiders for now.
    ============================================================ */
-var AVSWORD=null;   /* the sword the avatar being drawn holds (the dungeon), drawn in its real right hand */
+var AVSWORD=null,AVSHIELD=false;   /* the sword the avatar being drawn holds (the dungeon), drawn in its real right hand */
 var DUNGEON=(function(){
   var X0=0.08,X1=0.92,Y0=0.5,Y1=0.94,FLOOR=0.38;   /* the room (fractions of the screen) and where the dungeon starts below the stage */
   var DV=[[0,1],[1,0],[0,-1],[-1,0],[0.707,0.707],[0.707,-0.707],[-0.707,-0.707],[-0.707,0.707]];   /* facing index -> direction */
@@ -5638,7 +5638,7 @@ var DUNGEON=(function(){
   function nearestPlayer(o){var best=null,bd=1e9;Object.keys(viewers).forEach(function(id){var v=viewers[id];if(!v||v===PH||v.dance!==4)return;if(id===myId&&st==="down")return;var d=Math.hypot((v.x-o.x)*W,(v.y-o.y)*H);if(d<bd){bd=d;best=v;}});return best;}
   function tick(){
     if(!on)return;var now=performance.now(),dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;var m=me();if(!m)return;
-    var FZ=window.__dunFreeze;if(FZ){face=FZ.f;st=FZ.s;stAt=now-FZ.k*(FZ.s==="spin"?SPIN:FZ.s==="charge"?CHARGE*1.2:SWING);m.dance=4;GAME.moshPose(armsFor(face,bladeAng({s:st,at:stAt,f:face},now)));if(GAME.poseNow)GAME.poseNow();return;}   /* tests: hold a pose */
+    var FZ=window.__dunFreeze;if(FZ){face=FZ.f;st=FZ.s;stAt=now-FZ.k*(FZ.s==="spin"?SPIN:FZ.s==="charge"?CHARGE*1.2:SWING);m.dance=4;GAME.moshPose(st==="block"?guardFor(face):armsFor(face,bladeAng({s:st,at:stAt,f:face},now)));if(GAME.poseNow)GAME.poseNow();return;}   /* tests: hold a pose */
     /* moving: where you're heading is where you face (not while the blade's out or charging: you strafe) */
     var ix=0,iy=0;if(joy.id!==null&&Math.hypot(joy.x,joy.y)>0.15){ix=joy.x;iy=joy.y;}else{ix=(held.right?1:0)-(held.left?1:0);iy=(held.down?1:0)-(held.up?1:0);}
     if((ix||iy)&&st!=="charge"&&st!=="swing"&&st!=="spin"&&st!=="block"&&st!=="roll")face=ART.face8(ix,iy,face);   /* the shield up: you keep facing your guard (and side-step) */
@@ -5668,7 +5668,7 @@ var DUNGEON=(function(){
     mobs=mobs.filter(function(o){return !o.dead||now-o.dead<400;});
     if(!doorOpen&&mobs.every(function(o){return o.dead;})){doorOpen=true;clearAt=now;score+=100;GAME.moshPts(100);pops.push({t:now,txt:"ROOM CLEAR! +100  →",col:"#9cff4a",big:1});hud();}
     m.dance=4;var bl={s:st,at:stAt,f:face};
-    GAME.moshPose(st==="down"?[0.2,-0.2,0,0]:st==="swing"||st==="charge"||st==="spin"?armsFor(face,bladeAng(bl,now)):st==="block"?[-1.2,-0.4,0,0]:st==="roll"?[1.4,-1.4,0.9,-0.9]:[0.25,-0.35,0,0]);if(GAME.poseNow)GAME.poseNow();
+    GAME.moshPose(st==="down"?[0.2,-0.2,0,0]:st==="swing"||st==="charge"||st==="spin"?armsFor(face,bladeAng(bl,now)):st==="block"?guardFor(face):st==="roll"?[1.4,-1.4,0.9,-0.9]:[0.25,-0.35,0,0]);if(GAME.poseNow)GAME.poseNow();
     if(LBOTS())botTick(dt,now);
   }
   /* practice dancers: walk at the nearest spider and swing when they're close */
@@ -5688,6 +5688,11 @@ var DUNGEON=(function(){
   function armFor(f,a){return [2,5,6].indexOf(f)>=0?Math.PI/2-a:a-Math.PI/2;}
   /* the arms for a blade angle in a facing: the views facing left are drawn as the right-facing ones flipped, with the arms
      swapped, so there the sword arm is worked out in the flipped view and handed over as the other arm */
+  /* the guard: the left arm brings the shield across in front (front: over the chest; diagonal: out toward the way you face;
+     side on: straight ahead; from behind: in front of them, so behind the body for us); the sword arm hangs ready */
+  var GUARD={0:-0.93,4:-1.12,1:-1.37,5:0.3,2:0.35};   /* from behind: held out at the shield side, peeking past the body */
+  function guardFor(f){var M={3:1,6:5,7:4}[f];if(M===undefined)return[GUARD[f],-0.35,0,0];return[0.35,-GUARD[M],0,0];}
+  function shieldOf(id,v){return bladeOf(id,v,performance.now()).s==="block";}
   function armsFor(f,a){var M={3:1,6:5,7:4}[f];if(M===undefined)return[0.3,armFor(f,a),0,0];return[-armFor(M,Math.PI-a),-0.3,0,0];}
   /* the lunge: the body leans out over the planted feet and back (it never moves you) */
   function lungeOf(id,v){var now=performance.now(),b=bladeOf(id,v,now);if(b.s!=="swing")return[0,0];var k=Math.min(1,(now-b.at)/SWING),e=Math.sin(Math.min(1,k*1.3)*Math.PI),L=sc()*6*e;return[DV[b.f][0]*L,DV[b.f][1]*L*0.7];}
@@ -5721,7 +5726,7 @@ var DUNGEON=(function(){
       else{g.fillStyle="rgba(156,255,74,"+(0.25+0.2*Math.sin(now/150)).toFixed(2)+")";g.fillRect(ox+X1*W+s*8,dy0-dh/2,s*3,dh);g.fillStyle="#9cff4a";g.font="900 "+(s*8)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillText("→",ox+X1*W-s*6+Math.sin(now/200)*s*2,dy0+s*3);}}
     /* the spiders' shadows */
     if(!sk)mobs.forEach(function(o){if(o.dead)return;var p=px(o.x,o.y);g.fillStyle="rgba(0,0,0,.4)";ART.PX.oval(g,p[0],p[1]+s,s*(o.big?7:5),s*(o.big?2.6:2),0);});
-    g.restore();shields(g,true);
+    g.restore();
     /* blades of anyone facing away from us draw behind them */
   }
   /* the shield: a round wooden one with an iron rim and a gold boss, held up in front of whoever's blocking (behind them, from our side, when they face away) */
@@ -5766,7 +5771,7 @@ var DUNGEON=(function(){
   function draw(g){
     if(!dunOn())return;var now=performance.now(),s=sc();
     if(!scrollAt)mobs.slice().sort(function(a,b){return a.y-b.y;}).forEach(function(o){spider(g,o,now);});
-    sparkles(g);shields(g,false);clangs=clangs.filter(function(c){return now-c.t<300;});clangs.forEach(function(c){var a=(now-c.t)/300;g.fillStyle=c.crit?"rgba(255,90,209,"+(1-a).toFixed(2)+")":"rgba(255,240,180,"+(1-a).toFixed(2)+")";var n=c.crit?10:6;for(var q=0;q<n;q++){var an=q/n*Math.PI*2,rr=s*(3+a*(c.crit?14:8));g.fillRect(Math.round(c.x+Math.cos(an)*rr)-s/2,Math.round(c.y-s*10+Math.sin(an)*rr)-s/2,c.crit?s*2:s,c.crit?s*2:s);}});   /* sparks: off a shield, or a CRIT burst */
+    sparkles(g);clangs=clangs.filter(function(c){return now-c.t<300;});clangs.forEach(function(c){var a=(now-c.t)/300;g.fillStyle=c.crit?"rgba(255,90,209,"+(1-a).toFixed(2)+")":"rgba(255,240,180,"+(1-a).toFixed(2)+")";var n=c.crit?10:6;for(var q=0;q<n;q++){var an=q/n*Math.PI*2,rr=s*(3+a*(c.crit?14:8));g.fillRect(Math.round(c.x+Math.cos(an)*rr)-s/2,Math.round(c.y-s*10+Math.sin(an)*rr)-s/2,c.crit?s*2:s,c.crit?s*2:s);}});   /* sparks: off a shield, or a CRIT burst */
     if(on){var m=me();if(m&&now<invTo&&Math.floor(now/90)%2){g.fillStyle="rgba(255,255,255,.25)";ART.PX.oval(g,m.x*W,m.y*H-s*10,s*7,s*11,0);}}
     if(on&&st==="down"){g.font="900 "+Math.max(16,s*7)+"px 'Silkscreen',ui-monospace,monospace";g.textAlign="center";g.fillStyle="#ff8a8a";g.fillText("DOWN… "+Math.ceil((downTo-now)/1000),W/2,H*0.46);}
     pops=pops.filter(function(p){return now-p.t<1500;});pops.forEach(function(p,i){var a=1-Math.max(0,(now-p.t-700)/800),x=p.x!==undefined?p.x*W:W/2,y=p.y!==undefined?p.y*H-s*14:H*0.45+i*26;y-=(now-p.t)/40;
@@ -5774,7 +5779,7 @@ var DUNGEON=(function(){
   }
   window.ukDungeon=function(){var m=me();return{on:on,st:st,face:face,room:room,hearts:hearts,score:score,kills:kills,door:doorOpen,mobs:mobs.filter(function(o){return !o.dead;}).map(function(o){return[+o.x.toFixed(3),+o.y.toFixed(3),o.hp];}),me:m?[+m.x.toFixed(3),+m.y.toFixed(3)]:null};};
   window.ukDungeonForce=function(o){if(o.mobs)mobs=o.mobs.map(function(q){return{x:q[0],y:q[1],hp:q[2]||2,hopAt:0,fx:q[0],fy:q[1],tx:q[0],ty:q[1],flash:0,kb:null,dead:0,leg:0,big:0};});if(o.face!==undefined)face=o.face;if(o.me)setMe(o.me[0],o.me[1]);if(o.inv!==undefined)invTo=performance.now()+o.inv;if(o.hearts!==undefined){hearts=o.hearts;if(st==="down")set("idle");hud();}};
-  return{swordOf:swordOf,lungeOf:lungeOf,rollOf:rollOf,rollDir:rollDir,blockDown:blockDown,blockUp:blockUp,roll:roll,start:start,stop:stop,tick:tick,btnDown:down0,btnUp:up0,under:under,draw:draw,wire:wire,looks:looks,facing:facing,dunOn:dunOn,reset:function(){},get on(){return on;},get st(){return st;}};
+  return{swordOf:swordOf,shieldOf:shieldOf,lungeOf:lungeOf,rollOf:rollOf,rollDir:rollDir,blockDown:blockDown,blockUp:blockUp,roll:roll,start:start,stop:stop,tick:tick,btnDown:down0,btnUp:up0,under:under,draw:draw,wire:wire,looks:looks,facing:facing,dunOn:dunOn,reset:function(){},get on(){return on;},get st(){return st;}};
 })();
 /* ============================================================
    BUMPER BOATS (the boats round)
@@ -9909,7 +9914,7 @@ var MENUMUSIC=(function(){
   function kill(){if(!a)return;vol=0;setVol(0);try{if(!a.paused)a.pause();}catch(e){}started=false;}
   return{get on(){return started;},kill:kill};
 })();
-var PAGE_VERSION="1.82.147",SERVER_VERSION="";
+var PAGE_VERSION="1.82.148",SERVER_VERSION="";
 /* Staying up to date. Phones (most of all a home-screen app on iPhone) keep their own copy of this page and can open an old
    one even after a new version is out. On opening, when the app comes back to the front, and from the Check for update
    button, ask the site for the page with caching off and compare its version number with ours. Newer: on first open (or
@@ -10578,7 +10583,7 @@ function drawAvatar(x,y,color,name,scale,isPerf,isPlaying,moving,dance,seed,isMe
   var sxv=AVO&&AVO.r&&AVO.r.sx!==undefined?AVO.r.sx:1;var sko=AVO&&AVO.sk;if(sko){bob+=sko.lift;if(sko.rot)rot=sko.rot;}      /* on the rink: up in the air, or flat out */
   /* soft elbows on freely posed arms (not the robot, not a move that shapes its own arms) */
   var bnd=null;if(flex&&alL===undefined&&alR===undefined&&ART.elbows){var fk=(name||"")+"|"+(seed||0),fm=AVFLEX[fk]||(AVFLEX[fk]={});bnd=ART.elbows(armL,armR,fm,performance.now());}
-  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{wlift:wormV&&AVO&&AVO.r&&AVO.r.jump?bob*1.3:0,worm:wormV&&(!(AVO&&AVO.r)||AVO.r.jump)?wormV.worm:undefined,wface:wormV?wormV.wface*(AVDIR===3||AVDIR===6||AVDIR===7?-1:1):1,wcl:wormV?wormV.wcl:0,whl:wormV?wormV.whl:0,bendL:gBL!==undefined?gBL:bnd?bnd[0]:0,bendR:gBR!==undefined?gBR:bnd?bnd[1]:0,snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:AVSWORD?"sword":prA||(ART.neon&&!isMe?"glowstick":""),sword:AVSWORD,skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
+  ART.drawChar(ctx,cx,cy,s,look||ART.looks.fromColor(color,seed||1),{wlift:wormV&&AVO&&AVO.r&&AVO.r.jump?bob*1.3:0,worm:wormV&&(!(AVO&&AVO.r)||AVO.r.jump)?wormV.worm:undefined,wface:wormV?wormV.wface*(AVDIR===3||AVDIR===6||AVDIR===7?-1:1):1,wcl:wormV?wormV.wcl:0,whl:wormV?wormV.whl:0,bendL:gBL!==undefined?gBL:bnd?bnd[0]:0,bendR:gBR!==undefined?gBR:bnd?bnd[1]:0,snorkel:!!(AVO&&AVO.snork),armL:armL,armR:armR,legL:legL,legR:legR,legLenL:lgL,legLenR:lgR,knee:knee,butt:butt,bj:bj,bsx:bsx,bsy:bsy,lenL:alL,lenR:alR,bob:bob,mouth:mouth,dx:dxs,rot:rot,sx:sxv,head:hdA,swing:swg,prop:AVSWORD?"sword":prA||(ART.neon&&!isMe?"glowstick":""),sword:AVSWORD,shield:AVSHIELD,skates:!!sko&&!sko.ns?(ICE?"ice":true):false,dir:AVDIR});
   /* bumper boats only: a gold star over your own head, since you're hard to pick out on the water */
   if(isMe&&!isPerf&&typeof GAME!=="undefined"&&GAME.mode==="boats"){var su=Math.max(1,Math.round(s*0.8)),SP=["...#...","..###..","#######",".#####.","..###..",".##.##.","##...##"],sx0=Math.round(x-3.5*su),sy0=Math.round(cy-27*s+Math.sin(Date.now()/250)*s);
     ctx.save();ctx.fillStyle="#120D1E";SP.forEach(function(r,j){for(var i=0;i<7;i++)if(r[i]==="#")ctx.fillRect(sx0+i*su-su,sy0+j*su-su,su*3,su*3);});
@@ -11039,7 +11044,7 @@ function renderLoop(){
       if(rpo&&rpo.dir!==undefined)AVDIR=cdn===4&&cfd&&cfd.b&&GAME.mode==="free"?rot8(rpo.dir,[0,2,1,3][cfd.b]):rpo.dir;   /* a spin or turn goes round through all the facings */
       if(ids[i]===myId&&GAME.spinDir>=0)AVDIR=GAME.spinDir;
       if(v!==PH&&v.dance===4&&DRAGON.on&&!DRAGON.isOut(ids[i],v)){AVDIR=1;AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},DRAGON.seat(ids[i],v));dyy+=(AVO.r.dy||0)*sc2;}   /* dragon riders: side on, sat in the saddle, legs astride, hands on the reins */
-      AVSWORD=null;if(v!==PH&&v.dance===4){if(FISH.fishOn())AVDIR=FISH.facing(vx,vy);else if(POND.pondOn())AVDIR=POND.facing(vx,vy);else if(DUNGEON.dunOn()){AVDIR=DUNGEON.facing(ids[i],v);AVSWORD=DUNGEON.swordOf(ids[i],v);}else if(BOATS.boatsOn()&&!BOATS.isOut(v,ids[i]===myId))AVDIR=BOATS.facing(v,ids[i]===myId);}   /* anglers face the water; boaters face where they're steering */
+      AVSWORD=null;AVSHIELD=false;if(v!==PH&&v.dance===4){if(FISH.fishOn())AVDIR=FISH.facing(vx,vy);else if(POND.pondOn())AVDIR=POND.facing(vx,vy);else if(DUNGEON.dunOn()){AVDIR=DUNGEON.facing(ids[i],v);AVSWORD=DUNGEON.swordOf(ids[i],v);AVSHIELD=DUNGEON.shieldOf(ids[i],v);}else if(BOATS.boatsOn()&&!BOATS.isOut(v,ids[i]===myId))AVDIR=BOATS.facing(v,ids[i]===myId);}   /* anglers face the water; boaters face where they're steering */
       if(RINK&&ICE){var ffc=FIG.faceOf(v,ids[i]===myId&&FIG.on);if(ffc>=0)AVDIR=ffc;var slk=FIG.spinLook(v,ids[i]===myId&&FIG.on,sc2);if(slk){AVO=AVO||{};AVO.r=Object.assign({},AVO.r||{},slk);}}   /* the ice routine: spins and jumps go round */
       else if(ids[i]!==myId&&cdn===4&&GAME.mode==="free"){var rsd=fdSpinDir(cfd);if(rsd>=0)AVDIR=rsd;}   /* their spin, as they see it */   /* your own spin: the stick keeps it going */   /* facing the way they walk, skate or run, in all 8 directions; standing still in a game, or doing a dance, faces the stage (skaters keep their heading) */
       /* free dance: the left stick angles you, feet planted, turning your body three-quarters toward the way you push it (like
@@ -11112,7 +11117,7 @@ updHudBR();
 }
 })();
 </script>
-<script src="lab.js?v=1.82.147"></script>
+<script src="lab.js?v=1.82.148"></script>
 <script>(function(){var v=document.getElementById("venue");function ap(){if(v)v.style.filter=GFX.filter();}GFX.onChange(ap);ap();})();</script>
 </body>
 </html>

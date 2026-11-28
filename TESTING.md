@@ -1688,6 +1688,19 @@ Needs a Render redeploy (server.js changed).
 - The panel background is more see-through (and no longer blurred), so the dance floor and the other dancers show through behind the lanes.
 - Check: play a round to a big combo/score: the panel stays put. Dancers and floor are visible behind it.
 
+## v1.82.148 — Dungeon: the shield is held in the off hand, checked in all 8 directions
+
+- **Off hand:** the shield is drawn on the avatar's real off hand (the sword is in the other), with a guard pose that brings the arm across.
+  - Front: up across the chest, face on, with its gold boss.
+  - Front diagonals: a three-quarter oval out toward the way you face.
+  - Side on: edge on, straight ahead.
+  - From behind: held out at the shield side, peeking past the body, showing its back and strap.
+- **Drawn with the body:** it moves with the body, including the lean and the roll. It's drawn behind the body when you face away.
+- The old shield that floated in front of the face is gone.
+- Checked in front, front-right, right, back-right, back, back-left, left and front-left.
+
+1. Dungeon: hold BLOCK facing each way. The shield is in the off hand, never floating, and the sword arm hangs ready.
+
 ## v1.82.147 — Dungeon: shield + BLOCK, ROLL, crits on the beat, a lunge that doesn't move you
 
 - **The lunge** is now just the body leaning out over the planted feet and back. Your position never changes.

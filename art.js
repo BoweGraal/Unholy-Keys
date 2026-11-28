@@ -623,7 +623,8 @@ var ART=(function(){
     var c=drawSprite(L,s);TOFF=null;var q=Math.max(1,p),bob=Math.round((st.bob||0)/q)*q,dx=Math.round((st.dx||0)/q)*q;
     var was=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;
     if(NEON){g.save();g.shadowColor=neonCol(L);g.shadowBlur=6*q;}
-    var swB=st.prop==="sword"&&st.sword&&[2,5,6].indexOf(s.dir)>=0;if(swB)handProp(g,x,y,q,dx,bob,s,st);   /* facing away: the blade is beyond them, behind the body */
+    var swB=st.prop==="sword"&&st.sword&&[2,5,6].indexOf(s.dir)>=0;if(swB)handProp(g,x,y,q,dx,bob,s,st);
+    var shB=st.shield&&[2,5,6].indexOf(s.dir)>=0;if(shB)shieldProp(g,x,y,q,dx,bob,s,st);   /* facing away: the shield is beyond them too */   /* facing away: the blade is beyond them, behind the body */
     if(st.rot){
       /* the whole body turned (the worm: lying on the floor), resting on the floor rather than floating */
       g.save();g.translate(Math.round(x+dx),Math.round(y+8*q*Math.abs(Math.sin(st.rot))+bob));g.rotate(st.rot);if(SX!==1)g.scale(SX,1);   /* still facing left (or squeezed) while leaning */
@@ -633,6 +634,7 @@ var ART=(function(){
     }else g.drawImage(c,Math.round(x+dx-OX*q),Math.round(y-OY*q+bob),CWD*q,CHT*q);
     if(NEON)g.restore();
     g.imageSmoothingEnabled=was;
+    if(st.shield&&!shB)shieldProp(g,x,y,q,dx,bob,s,st);
     if(st.prop&&!swB)handProp(g,x,y,q,dx,bob,s,st);
     else if(!st.prop&&L.held&&!st.rot&&!st.skates)heldInst(g,x,y,q,dx,bob,L.held|0,s.dir,SX);
   }
@@ -712,6 +714,17 @@ var ART=(function(){
     g.restore();
   }
   /* something held up in the right hand: a lit lighter or a phone torch, with a warm (or white) glow round it */
+  /* the dungeon shield, strapped to the real LEFT hand (the sword's in the right): face on from the front, a three-quarter oval
+     at the diagonals, edge on side on; from behind we see its back (planks and the strap) and it's drawn behind the body */
+  function shieldProp(g,x,y,q,dx,bob,s,st){
+    var D=s.dir|0,bk=[2,5,6].indexOf(D)>=0,side=D===1||D===3,aL=s.armL,n=Math.max(3,Math.min(9,s.lenL||9)),hx=side?-Math.sin(aL)*n:(bk?-1:1)*(-6.5-Math.sin(aL)*n),hy=-4.5+Math.cos(aL)*n;if(s.mir)hx=-hx;
+    var rx=side?1.8:(D===4||D===5)?4.2:5.2,ry=6,X=hx*q,Y=hy*q;
+    g.save();if(st.rot){g.translate(Math.round(x+dx),Math.round(y+8*q*Math.abs(Math.sin(st.rot))+bob));g.rotate(st.rot);}else g.translate(Math.round(x+dx),Math.round(y+bob));
+    g.fillStyle="#2a1a10";PX.oval(g,X,Y,(rx+1)*q,(ry+1)*q,0);g.fillStyle=bk?"#6c7488":"#9aa3b8";PX.oval(g,X,Y,rx*q,ry*q,0);g.fillStyle=bk?"#5e3a1c":"#7a4a22";PX.oval(g,X,Y,Math.max(0.6,rx-1.2)*q,(ry-1.2)*q,0);
+    if(bk){g.fillStyle="#3a2414";g.fillRect(Math.round(X-rx*0.7*q),Math.round(Y-q*0.5),Math.round(rx*1.4*q),q);}   /* the back: the strap across */
+    else if(!side){g.fillStyle="#5a3416";g.fillRect(Math.round(X-q*0.5),Math.round(Y-(ry-1.5)*q),q,Math.round((ry*2-3)*q));g.fillStyle="#e8c547";PX.oval(g,X,Y,Math.max(1,rx*0.32)*q,q*1.6,0);}   /* the front: a plank seam and the gold boss */
+    else{g.fillStyle="#e8c547";g.fillRect(Math.round(X+(s.mir?-1:1)*q*0.8-q*0.5),Math.round(Y-q),q,q*2);}   /* edge on: just the boss poking out */
+    g.restore();}
   function handProp(g,x,y,q,dx,bob,s,st){
     /* where the right hand really is, from the pose as given (before any mirroring: a mirrored view swaps which arm is which), for the way they face:
        front / three-quarter front: the right hand's shoulder is out to the right; from behind it's on the left; side on both shoulders are at the middle */
@@ -3002,6 +3015,6 @@ theirs.at=id;add(100,id);ev.push({k:"take",id:id,t:t});}
       mem.t=now;mem.aL=aL;mem.aR=aR;
       bL-=Math.max(-0.55,Math.min(0.55,(mem.vL||0)*0.05));bR-=Math.max(-0.55,Math.min(0.55,(mem.vR||0)*0.05));}
     return[bL,bR];}
-  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.147",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,wormPose:function(ph){return wPose(ph,0,0);},joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
+  return{elbows:elbows,BALLSIM:BALLSIM,neonOf:function(L){return NEON?neonCol(L):null;},SWIM:SWIMX,BAND:BANDX,emoteIcon:emoteIcon,EMOTES:["hearts","bigheart","clap","exclaim","confused","happy","excited","wow","omg","surprised"],UI:UI,PX:PX,MOSH:MOSHX,FIG:FIG,CTF:CTF,face8:face8,get neon(){return !!NEON;},setForce:function(f){FORCE=f||null;},get forcing(){return !!FORCE;},SKI:SK,PIPE:PP,KEEPY:{TYPES:KTYPES,make:keepyMake,advance:keepyAdvance,hit:keepyHit,draw:function(g,objs,P,sc,now){objs.forEach(function(o){withAdj("prop:"+o.type,g,function(){keepyDraw(g,[o],P,sc,now);});});}},rink:function(g,G0,now,k,ice){return withAdj(ice?"prop:ice":"prop:rink",g,function(){return rink(g,G0,now,k,ice);});},rinkGeom:rinkGeom,walkStep:walkStep,walkPose:walkPose,footShadow:footShadow,keyPad:keyPad,keyPadSpot:keyPadSpot,VERSION:"1.82.148",REACTS:REACTS,REACT_MS:REACT_MS,reactPose:reactPose,reactFx:reactFx,envPose:envPose,envFx:envFx,waterY:waterY,crowdPose:crowdPose,follower:follower,primeFx:primeFx,jumboFrame:jumboFrame,crowdFx:crowdFx,crowdLift:crowdLift,CROWD_MS:CROWD_MS,CROWD_KINDS:CROWD_KINDS,fxBack:fxBack,fxFront:fxFront,FX_DEFAULT:FX_DEFAULT,DANCES:DANCES,dance:dance,danceMove:danceMove,base:danceBase,DTWEAK:DTWEAK,maker:maker,drawChar:drawChar,wormPose:function(ph){return wPose(ph,0,0);},joints:joints,LIMB:LIMB,pixText:pixText,nameTag:nameTag,botIcon:botIcon,scene:scene,sceneP:sceneP,keyboard:function(g,x,y,p,l,c){return withAdj("prop:keyboard",g,function(){var r=PAINT.holes("keyboard",g,x,y,p,function(gg){return keyboard(PAINT.replaced("keyboard")?PAINT.dummy():gg,x,y,p,l,c);});PAINT.at(g,"keyboard",x,y,p);return r;});},micStand:function(g,x,y,p){return withAdj("prop:mic",g,function(){var r=PAINT.holes("mic",g,x,y,p,function(gg){return micStand(PAINT.replaced("mic")?PAINT.dummy():gg,x,y,p);});PAINT.at(g,"mic",x,y,p);return r;});},reloadAdj:adjLoad,paint:PAINT,isolate:function(p){ISO=p||null;},hideChars:function(b){HIDECHAR=!!b;},noAdj:function(b){NOADJ=!!b;},withAdj:withAdj,
     looks:{OPTS:OPTS,KEYS:KEYS,count:count,pack:pack,unpack:unpack,random:random,fromColor:fromColor,topColor:topColor,colOf:colOf,SKIN:SKIN,HAIRCOL:HAIRCOL,CLOTH:CLOTH},shade:shade};
 })();
